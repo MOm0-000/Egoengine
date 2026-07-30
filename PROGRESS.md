@@ -21,7 +21,7 @@
 | Depth Anything metric 权重 | done | Hypersim ViT-L metric checkpoint 已存在；0 字节 relative-depth 文件明确禁止使用 |
 | FoundationPose 权重 | done | scorer/refiner 两套权重已存在；`v2s-foundationpose` import preflight 通过 |
 | SPIDER uv 环境 | done | `../spider/.venv` 已存在；`uv run --frozen --no-sync` 可 import `spider/torch/mujoco/warp` |
-| 代码实现 | in_progress | WP0/WP1/WP2/WP5/WP6/WP7/WP8/WP9 已完成；WP10 artifact 边界已实现；28 个 CPU 单测通过，真实 EgoDex 90-frame perception/tracking/optimization/SPIDER/MJWP 与 simulation video 已通过 |
+| 代码实现 | in_progress | WP0/WP1/WP2/WP5/WP6/WP7/WP8/WP9 已完成；WP10 artifact 边界已实现；29 个 CPU 单测通过，真实 EgoDex 90-frame perception/tracking/optimization/SPIDER/MJWP、三类诊断视频与 simulation video 已通过 |
 
 ## 执行环境
 
@@ -47,12 +47,12 @@
 | WP2 | instruction parser、SAM 3 adapter | done | WP0/WP1 | 真实 90-frame text-only coin/hand masks；自动恢复 frames 0–11，frame 30 因完全遮挡显式 invalid；object valid `0.9889`、hand valid `1.0`；旧 artifact/OOM 证据均保留 | 作为 WP6 完整 tracking 输入 |
 | WP3 | WiLoR adapter | done | WP0/WP1 | 真实 90-frame 完整 MANO/joints/vertices/camera translation、overlay、GT metrics | 作为 WP7 的 hand observation 输入 |
 | WP4 | Depth Anything adapter | done | WP0/WP1 | 真实 90-frame 原分辨率 metric Zarr、uncertainty、warp QC 和视频 | 作为 WP5/WP7 的鲁棒先验；不得覆盖相机/手尺度 |
-| WP5 | SAM 3D Objects mesh | done | WP2/WP4 | low-VRAM stage-wise CUDA offload 真实生成 3/3 合格 held-coin proposals；raw GLB、canonical visual/collision mesh、静态 ranking 与历史失败证据均保留 | WP6 对 proposals 作最终 tracking selection |
-| WP6 | FoundationPose adapter | done | WP1/WP2/WP4/WP5 | 完整 90-frame masks 上筛选 3 个真实 proposals，仍选 seed 42；86/90 valid、17 次自动重注册、mean mask IoU `0.3574`、tracking score `0.5710` | 作为 WP7 raw pose 输入；invalid gaps 保留 |
-| WP7 | sequence optimizer、contact | done | WP1/WP3/WP6 | 真实 90-frame aligned/contact；episode-level `s_object 0.0890 -> 0.02269 m`，jitter `16.63 -> 0.946 m/s²`、reprojection `11.57 -> 4.65 px`、silhouette IoU `0.3452 -> 0.3503`；depth scale 冲突与不可观测项显式保留 | 作为 WP8 SPIDER export 输入 |
+| WP5 | SAM 3D Objects mesh | done | WP2/WP4 | low-VRAM stage-wise CUDA offload 真实生成 3/3 合格 held-coin proposals；raw GLB、canonical visual/collision mesh、静态 ranking、自动转台对比视频与历史失败证据均保留 | WP6 对 proposals 作最终 tracking selection |
+| WP6 | FoundationPose adapter | done | WP1/WP2/WP4/WP5 | 完整 90-frame masks 上筛选 3 个真实 proposals，仍选 seed 42；86/90 valid、17 次自动重注册、mean mask IoU `0.3574`、tracking score `0.5710`；自动保存 mask/mesh/invalid/register overlay | 作为 WP7 raw pose 输入；invalid gaps 保留 |
+| WP7 | sequence optimizer、contact | done | WP1/WP3/WP6 | 真实 90-frame aligned/contact；episode-level `s_object 0.0890 -> 0.02269 m`，jitter `16.63 -> 0.946 m/s²`、reprojection `11.57 -> 4.65 px`、silhouette IoU `0.3452 -> 0.3503`；自动保存 raw-vs-aligned/contact 视频；depth scale 冲突与不可观测项显式保留 | 作为 WP8 SPIDER export 输入 |
 | WP8 | SPIDER exporter、runner | done | WP0/WP6/WP7 | 真实 bimanual xhand dataset；decomposition、contact cross-check、scene、148-frame IK 与 MJWP 全部返回 0；EGL headless 生成 148-frame IK 与 150-frame ref-vs-sim MJWP 视频 | 当前真实 rollout 完成；质量误差单独保留 |
-| WP9 | metrics、visualization | done | WP0/WP1 | 真实 raw-vs-aligned、contact、SPIDER/MJWP metrics 与 artifact-only unified report；`12/12` available、`m4_complete=true` | 扩展到批量 episode 时复用 |
-| WP10 | CLI、编排、端到端测试 | in_progress | WP0-WP9 | 已有 scan/ingest/oracle/evaluate/optimize/export-spider/run-spider CLI 与 synthetic M0 fixture | 增加跨 Conda 环境 run-stage/run-all 与缓存恢复 |
+| WP9 | metrics、visualization | done | WP0/WP1 | 真实 mesh proposal turntable、FoundationPose overlay、raw-vs-aligned/contact、SPIDER/MJWP 视频与 artifact-only unified report；诊断 manifest 不参与 M4 通过条件 | 扩展到批量 episode 时复用 |
+| WP10 | CLI、编排、端到端测试 | in_progress | WP0-WP9 | 已有 scan/ingest/oracle/evaluate/optimize/export-spider/run-spider/visualize-run CLI 与 synthetic M0 fixture | 增加跨 Conda 环境 run-stage/run-all 与缓存恢复 |
 
 ## 执行波次
 
@@ -89,6 +89,7 @@ EgoDex recursive scan                 done
   -> contact inference                done (real hysteresis/local-frame artifact)
   -> SPIDER export                    done (real bimanual xhand dataset)
   -> MJWP rollout                     done (15 records; full command success)
+  -> diagnostic visualization         done (mesh/tracking/raw-vs-aligned-contact)
   -> batch metrics/report              done for target clip (12/12; M4 complete)
 ```
 
@@ -123,6 +124,7 @@ UV_CACHE_DIR=/tmp/video-to-spider-uv-cache uv run --frozen --no-sync python ...
 
 ### 2026-07-30
 
+- WP9 可视化补齐：新增 CPU-only `visualize-run`，从已保存 artifact 自动生成 120-frame mesh proposal turntable、90-frame FoundationPose mask/mesh/invalid/register overlay、90-frame raw-vs-aligned/contact 对比视频及 `visualization_manifest.json`。三个阶段结束时自动尝试生成；诊断编码失败只写 warning，不会推翻有效数值 artifact。真实视频分别为 `1280x720`、`960x540`、`1280x438`，均经 ffprobe 和抽帧检查；统一报告在独立 `diagnostics.visualization` 字段暴露状态，不改变 M4 的 `12/12` 验收边界。
 - M4 完成：真实 `egodex_flip_coin_0_f000_090` 导出 149-frame/50 Hz bimanual xhand dataset。SPIDER `decompose_fast`、contact cross-check、`generate_xml`、148-frame `ik_fast`、256-sample/8-iteration MJWP 全部返回 0；IK/MJWP NPZ 全部有限。无 DISPLAY 的首次 GLFW 失败日志保留；runner 固定 `MUJOCO_GL=egl`/`PYOPENGL_PLATFORM=egl` 后，正式生成 148-frame IK video 与 150-frame ref-vs-sim MJWP simulation video。
 - 统一报告 verifier 已强化为必须同时存在非空 MJWP trajectory 与 simulation video；当前达到 `12/12 stages available`、`spider_chain_complete=true`、`simulation_video_complete=true`、`m4_complete=true`，且 `ground_truth_consumed_by_inference=false`。全局 scale 修正后的 MJWP object error 为 `0.0864 m / 1.1971 rad`：position 达到 `0.1 m` 门槛，rotation 未达到 `0.5 rad`；链路完成与质量门槛分开记录。
 - WP6 完成：在完整 90-frame SAM masks 上按固定策略筛选 3 个真实 proposals，仍选 `proposal_00_f000000_s42`。最终 FoundationPose valid `86/90`、mean mask IoU `0.3574`、tracking score `0.5710`，17 次自动重注册，所有 invalid gaps 保留。
