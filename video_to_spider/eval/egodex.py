@@ -69,6 +69,7 @@ def evaluate_wilor(run_dir: str | Path, *, confidence_threshold: float = 0.0) ->
         else:
             acceleration_jitter = np.zeros(0)
         report["sides"][side_name] = {
+            "ground_truth_confidence_source": gt["confidence_source"],
             "valid_rate": float(np.mean(wilor["valid"][:, hand_index])),
             "absolute_wrist_and_fingertip_mpjpe_m": _summary(absolute_error[valid]),
             "wrist_translation_error_m": _summary(absolute_error[:, 0][valid_frames]),
@@ -83,4 +84,3 @@ def evaluate_wilor(run_dir: str | Path, *, confidence_threshold: float = 0.0) ->
     path = output_dir / "wilor_hand_metrics.json"
     path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     return path
-

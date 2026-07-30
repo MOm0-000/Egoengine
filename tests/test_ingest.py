@@ -31,3 +31,15 @@ def test_ground_truth_reader_is_explicit(tmp_path: Path):
     result = load_hand_ground_truth(path, "right")
     assert result["T_world_joint"].shape == (2, 6, 4, 4)
     assert result["confidence"].shape == (2, 6)
+    assert result["confidence_source"] == "recorded"
+
+
+def test_ground_truth_reader_accepts_missing_optional_confidence(tmp_path: Path):
+    path = tmp_path / "episode_without_confidence.hdf5"
+    names = ["leftHand", "leftThumbTip", "leftIndexFingerTip", "leftMiddleFingerTip", "leftRingFingerTip", "leftLittleFingerTip"]
+    with h5py.File(path, "w") as handle:
+        for name in names:
+            handle.create_dataset(f"transforms/{name}", data=np.repeat(np.eye(4)[None], 3, axis=0))
+    result = load_hand_ground_truth(path, "left")
+    np.testing.assert_array_equal(result["confidence"], np.ones((3, 6)))
+    assert result["confidence_source"] == "missing_assumed_valid"

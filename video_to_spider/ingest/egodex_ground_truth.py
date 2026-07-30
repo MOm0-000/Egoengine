@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import json
+from typing import Any
 
 import cv2
 import h5py
@@ -16,15 +17,30 @@ from ..schemas import validate_transforms
 FINGERTIP_NAMES = ("ThumbTip", "IndexFingerTip", "MiddleFingerTip", "RingFingerTip", "LittleFingerTip")
 
 
-def load_hand_ground_truth(path: str | Path, side: str) -> dict[str, np.ndarray]:
+def _load_confidence(
+    handle: h5py.File, names: list[str], frame_count: int,
+) -> tuple[np.ndarray, str]:
+    paths = [f"confidences/{name}" for name in names]
+    if all(path in handle for path in paths):
+        return (
+            np.stack([np.asarray(handle[path], dtype=np.float64) for path in paths], axis=1),
+            "recorded",
+        )
+    return np.ones((frame_count, len(names)), dtype=np.float64), "missing_assumed_valid"
+
+
+def load_hand_ground_truth(path: str | Path, side: str) -> dict[str, Any]:
     if side not in {"left", "right"}:
         raise ValueError("side must be 'left' or 'right'")
     names = [f"{side}Hand", *(f"{side}{suffix}" for suffix in FINGERTIP_NAMES)]
     with h5py.File(path, "r") as handle:
         transforms = np.stack([np.asarray(handle[f"transforms/{name}"], dtype=np.float64) for name in names], axis=1)
-        confidence = np.stack([np.asarray(handle[f"confidences/{name}"], dtype=np.float64) for name in names], axis=1)
+        confidence, confidence_source = _load_confidence(handle, names, transforms.shape[0])
     validate_transforms(f"{side}_hand_ground_truth", transforms)
-    return {"names": np.asarray(names), "T_world_joint": transforms, "confidence": confidence}
+    return {
+        "names": np.asarray(names), "T_world_joint": transforms,
+        "confidence": confidence, "confidence_source": confidence_source,
+    }
 
 
 def _project(K: np.ndarray, points_camera: np.ndarray, width: int, height: int) -> tuple[np.ndarray, dict[str, float]]:
@@ -58,7 +74,7 @@ def validate_camera_direction_oracle(run_dir: str | Path, *, frame_index: int | 
         K = np.asarray(handle["camera/intrinsic"], dtype=np.float64)
         raw_camera = np.asarray(handle["transforms/camera"], dtype=np.float64)
         points_world = np.stack([np.asarray(handle[f"transforms/{name}"][:, :3, 3]) for name in names], axis=1)
-        confidence = np.stack([np.asarray(handle[f"confidences/{name}"]) for name in names], axis=1)
+        confidence, confidence_source = _load_confidence(handle, names, points_world.shape[0])
     ones = np.ones(points_world.shape[:-1] + (1,), dtype=points_world.dtype)
     points_h = np.concatenate([points_world, ones], axis=-1)
     interpretations = {
@@ -76,10 +92,11 @@ def validate_camera_direction_oracle(run_dir: str | Path, *, frame_index: int | 
     projected: dict[str, np.ndarray] = {}
     for label, T_camera_world in interpretations.items():
         points_camera = np.einsum("tij,tkj->tki", T_camera_world, points_h)[..., :3]
-        uv, metrics = _project(K, points_camera, width, height)
-        confident = confidence > 0
+        selected_points = points_camera[selected]
+        uv, metrics = _project(K, selected_points, width, height)
+        confident = confidence[selected] > 0
         metrics["confident_in_frame_ratio"] = float(np.mean(
-            confident & (points_camera[..., 2] > 1e-6)
+            confident & (selected_points[..., 2] > 1e-6)
             & (uv[..., 0] >= 0) & (uv[..., 0] < width) & (uv[..., 1] >= 0) & (uv[..., 1] < height)
         ))
         results[label] = metrics
@@ -93,7 +110,7 @@ def validate_camera_direction_oracle(run_dir: str | Path, *, frame_index: int | 
     colors = {"provided_is_T_world_camera": (0, 255, 0), "provided_is_T_camera_world": (0, 0, 255)}
     overlay = rgb.copy()
     for label, uv in projected.items():
-        for point in uv[selected]:
+        for point in uv:
             if np.all(np.isfinite(point)):
                 cv2.circle(overlay, tuple(np.rint(point).astype(int)), 7, colors[label], -1, lineType=cv2.LINE_AA)
     overlay_path = diagnostic_dir / f"frame_{selected:06d}.jpg"
@@ -101,6 +118,7 @@ def validate_camera_direction_oracle(run_dir: str | Path, *, frame_index: int | 
     report = {
         "schema_version": "1.0", "uses_ground_truth": True,
         "purpose": "oracle coordinate-direction diagnostic only; excluded from the inference path and V1 metrics",
+        "ground_truth_confidence_source": confidence_source,
         "frame_index": selected, "selected_interpretation": selected_label,
         "selection_margin_in_frame_ratio": margin, "interpretations": results,
         "overlay": str(overlay_path.relative_to(root)),
