@@ -185,3 +185,23 @@ def test_sequence_optimizer_writes_valid_artifacts(tmp_path):
     aligned, contact = optimize_run(tmp_path)
     validate_npz(aligned, "aligned_trajectory")
     validate_npz(contact, "contact")
+
+    with np.load(tmp_path / "hands/wilor_raw.npz") as artifact:
+        hands = {key: np.asarray(artifact[key]) for key in artifact.files}
+    hands["valid"][:, 0] = False
+    hands["score"][:, 0] = 0.0
+    hands["joints_camera_rootrel"][:, 0] = 0.0
+    np.savez_compressed(tmp_path / "hands/wilor_raw.npz", **hands)
+
+    aligned, contact = optimize_run(tmp_path, overwrite=True)
+
+    with np.load(aligned) as artifact:
+        assert artifact["T_sim_wrist"].shape[1] == 1
+        assert artifact["valid_hand"].all()
+    with np.load(contact) as artifact:
+        assert artifact["contact"].shape[1] == 1
+    metrics = __import__("json").loads(
+        (tmp_path / "optimization/optimization_metrics.json").read_text()
+    )
+    assert metrics["hands"]["roles"]["left"] == "invalid"
+    assert metrics["hands"]["artifact_hand_order"] == ["right"]

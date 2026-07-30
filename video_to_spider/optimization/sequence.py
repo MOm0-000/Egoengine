@@ -478,26 +478,34 @@ def optimize_run(
     T_sim_object, T_sim_wrist, fingertips_sim, floor_metrics = enforce_simulation_floor(
         mesh_m, T_sim_object, T_sim_wrist, fingertips_sim, hand_roles,
     )
+    retained_hands = np.asarray([
+        index for index, role in enumerate(hand_roles) if role != "invalid"
+    ], dtype=np.int64)
+    if retained_hands.size == 0:
+        raise ValueError("sequence optimization requires at least one reconstructed hand")
+    artifact_hand_order = [HAND_ORDER[index] for index in retained_hands]
     shared_betas = np.stack([
         np.median(hands_raw["mano_betas"][hand_valid[:, hand], hand], axis=0)
         if hand_valid[:, hand].any() else np.zeros(10)
         for hand in range(2)
-    ])
+    ])[retained_hands]
     aligned = {
         "frame_indices": frame_indices, "timestamps_s": timestamps,
         "T_sim_object": T_sim_object[:, None].astype(np.float32),
-        "T_sim_wrist": T_sim_wrist.astype(np.float32),
-        "fingertips_sim": fingertips_sim.astype(np.float32),
-        "mano_pose": hands_raw["mano_hand_pose"].astype(np.float32),
+        "T_sim_wrist": T_sim_wrist[:, retained_hands].astype(np.float32),
+        "fingertips_sim": fingertips_sim[:, retained_hands].astype(np.float32),
+        "mano_pose": hands_raw["mano_hand_pose"][:, retained_hands].astype(np.float32),
         "mano_betas": shared_betas.astype(np.float32),
         "object_scale_to_m": np.array([scale_to_m], dtype=np.float32),
         "valid_object": object_raw["valid"][:, None].astype(bool),
-        "valid_hand": hand_valid, "confidence_object": object_raw["confidence"][:, None].astype(np.float32),
-        "confidence_hand": hand_confidence.astype(np.float32),
+        "valid_hand": hand_valid[:, retained_hands],
+        "confidence_object": object_raw["confidence"][:, None].astype(np.float32),
+        "confidence_hand": hand_confidence[:, retained_hands].astype(np.float32),
     }
     validate_aligned_trajectory(aligned)
     contact, contact_positions, contact_metrics = infer_contact(
-        mesh_m, T_sim_object, fingertips_sim, timestamps, hand_valid
+        mesh_m, T_sim_object, fingertips_sim[:, retained_hands], timestamps,
+        hand_valid[:, retained_hands],
     )
     T_sim_object_raw = np.einsum("ij,tjk,tkl->til", T_sim_world, T_world_camera, T_camera_object_raw)
     raw_fingertip_homogeneous = np.concatenate([
@@ -508,7 +516,8 @@ def optimize_run(
         "tij,thfj->thfi", T_sim_camera, raw_fingertip_homogeneous,
     )[..., :3]
     _, _, raw_contact_metrics = infer_contact(
-        mesh_m, T_sim_object_raw, fingertips_sim_raw, timestamps, hand_valid
+        mesh_m, T_sim_object_raw, fingertips_sim_raw[:, retained_hands], timestamps,
+        hand_valid[:, retained_hands],
     )
     contact_artifact = {
         "frame_indices": frame_indices, "timestamps_s": timestamps,
@@ -537,6 +546,7 @@ def optimize_run(
         "hand_order": HAND_ORDER, "left_absolute_confidence_multiplier": 0.45,
         "hands": {
             "roles": dict(zip(HAND_ORDER, hand_roles)),
+            "artifact_hand_order": artifact_hand_order,
             "role_policy": "visible reliable hands are retained; activity only controls interaction constraints",
             "role_metrics": hand_role_metrics,
             "wrist_position_source": "translated MANO wrist joint 0",
