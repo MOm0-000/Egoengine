@@ -387,6 +387,12 @@ def render_optimization(
     comparison = metrics["raw_vs_aligned"]
     initial_scale = float(selected["scale_to_m"])
     optimized_scale = float(aligned["object_scale_to_m"][0])
+    hand_count = aligned["valid_hand"].shape[1]
+    default_hand_order = ["left", "right"][:hand_count]
+    artifact_hand_order = metrics.get("hands", {}).get("artifact_hand_order", default_hand_order)
+    if len(artifact_hand_order) != hand_count:
+        raise ValueError("optimization hand order does not match aligned hand dimension")
+    hand_colors = {"left": (255, 180, 45), "right": (70, 220, 255)}
     try:
         for index, raw_frame_index in enumerate(aligned["frame_indices"]):
             frame_index = int(raw_frame_index)
@@ -418,7 +424,8 @@ def render_optimization(
                 _draw_contour(aligned_panel, aligned_render, (255, 195, 70), 2)
             _draw_tail(raw_panel, raw_centers, index, raw_valid, (220, 100, 245))
             _draw_tail(aligned_panel, aligned_centers, index, aligned_valid, (255, 195, 70))
-            for hand_index, hand_color in ((0, (255, 180, 45)), (1, (70, 220, 255))):
+            for hand_index, side in enumerate(artifact_hand_order):
+                hand_color = hand_colors[side]
                 if not bool(aligned["valid_hand"][index, hand_index]):
                     continue
                 for fingertip_index, point in enumerate(fingertip_pixels[index, hand_index]):
@@ -445,7 +452,8 @@ def render_optimization(
             active_count = int(np.count_nonzero(contact["contact"][index] >= 0.5))
             _label(
                 canvas,
-                f"global scale {initial_scale:.4f} -> {optimized_scale:.4f} m | active fingertips {active_count}/10",
+                f"global scale {initial_scale:.4f} -> {optimized_scale:.4f} m | "
+                f"active fingertips {active_count}/{hand_count * 5}",
                 (14, 72), color=(205, 210, 215), scale=0.43,
             )
             if not aligned_valid[index]:

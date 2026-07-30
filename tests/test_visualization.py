@@ -132,3 +132,29 @@ def test_run_visualizations_write_decodable_videos_and_manifest(tmp_path):
         capture.release()
         assert success
         assert frame.size > 0
+
+
+def test_run_visualizations_support_single_right_hand_artifact(tmp_path):
+    _make_visualization_run(tmp_path)
+    aligned_path = tmp_path / "optimization/aligned_trajectory.npz"
+    with np.load(aligned_path) as artifact:
+        aligned = {key: np.asarray(artifact[key]) for key in artifact.files}
+    for key in ("T_sim_wrist", "fingertips_sim", "valid_hand"):
+        aligned[key] = aligned[key][:, 1:2]
+    np.savez_compressed(aligned_path, **aligned)
+    contact_path = tmp_path / "optimization/contact.npz"
+    with np.load(contact_path) as artifact:
+        contact = {key: np.asarray(artifact[key]) for key in artifact.files}
+    contact["contact"] = contact["contact"][:, 1:2]
+    np.savez_compressed(contact_path, **contact)
+    metrics_path = tmp_path / "optimization/optimization_metrics.json"
+    metrics = json.loads(metrics_path.read_text())
+    metrics["hands"] = {"artifact_hand_order": ["right"]}
+    metrics_path.write_text(json.dumps(metrics))
+
+    manifest_path = render_run_visualizations(
+        tmp_path, max_side=160, mesh_duration_s=0.4,
+    )
+
+    assert (tmp_path / "visualization" / OPTIMIZATION_VIDEO).is_file()
+    assert OPTIMIZATION_VIDEO in manifest_path.read_text()
