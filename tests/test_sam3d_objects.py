@@ -3,6 +3,7 @@ import numpy as np
 import trimesh
 
 from video_to_spider.adapters.sam3d_objects import (
+    _parser,
     mesh_integrity,
     repair_and_canonicalize,
     static_fit_metrics,
@@ -38,3 +39,14 @@ def test_static_fit_returns_finite_traceable_metrics():
     assert np.isfinite(transform).all()
     assert 0.0 <= metrics["silhouette_iou"] <= 1.0
     assert metrics["point_count"] > 0
+
+
+def test_low_vram_sparse_coordinate_cap_is_configurable():
+    args = _parser().parse_args([
+        "--run-dir", "/tmp/run",
+        "--config-path", "/tmp/pipeline.yaml",
+        "--low-vram",
+        "--max-slat-coords", "20000",
+    ])
+    assert args.low_vram
+    assert args.max_slat_coords == 20_000

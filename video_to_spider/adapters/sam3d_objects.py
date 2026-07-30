@@ -394,6 +394,7 @@ def _load_inference(config_file: Path, *, compile_model: bool, low_vram: bool) -
 
 def _run_low_vram_pipeline(
     pipeline: Any, image: np.ndarray, *, seed: int, moge_resolution_level: int,
+    max_slat_coords: int,
 ) -> dict[str, Any]:
     """Run the official pipeline with one model family resident on CUDA at a time."""
     import torch
@@ -447,6 +448,16 @@ def _run_low_vram_pipeline(
     )
     ss_result["scale"] = ss_result["scale"] * ss_result["downsample_factor"]
     coords = ss_result["coords"]
+    if coords.shape[0] > max_slat_coords:
+        from sam3d_objects.pipeline.inference_utils import downsample_sparse_structure
+
+        coords, extra_downsample_factor = downsample_sparse_structure(
+            coords, max_coords=max_slat_coords,
+        )
+        ss_result["coords"] = coords
+        ss_result["downsample_factor"] *= extra_downsample_factor
+        ss_result["scale"] *= extra_downsample_factor
+        ss_result["low_vram_coord_count"] = int(coords.shape[0])
     slat_input = pipeline.preprocess_image(image, pipeline.slat_preprocessor)
     slat_embedder, cached_slat_embedder = _cached_condition_embedder(
         pipeline, "slat_condition_embedder", slat_input,
@@ -500,6 +511,7 @@ def _run_impl(
     run_dir: str | Path, *, config_path: str | Path, seeds: Iterable[int] = (42, 43, 44),
     max_keyframes: int = 2, max_proposals: int = 5, compile_model: bool = False,
     low_vram: bool = False, moge_resolution_level: int = 6,
+    max_slat_coords: int = 42_000,
     overwrite: bool = False, dry_run: bool = False,
 ) -> Path:
     root = Path(run_dir).resolve()
@@ -558,6 +570,7 @@ def _run_impl(
                 output = _run_low_vram_pipeline(
                     inference, rgba, seed=seed,
                     moge_resolution_level=moge_resolution_level,
+                    max_slat_coords=max_slat_coords,
                 )
             else:
                 output = inference._pipeline.run(
@@ -648,6 +661,7 @@ def run(
     run_dir: str | Path, *, config_path: str | Path, seeds: Iterable[int] = (42, 43, 44),
     max_keyframes: int = 2, max_proposals: int = 5, compile_model: bool = False,
     low_vram: bool = False, moge_resolution_level: int = 6,
+    max_slat_coords: int = 42_000,
     overwrite: bool = False, dry_run: bool = False,
 ) -> Path:
     root = Path(run_dir).resolve()
@@ -659,6 +673,7 @@ def run(
             run_dir, config_path=config_path, seeds=seeds, max_keyframes=max_keyframes,
             max_proposals=max_proposals, compile_model=compile_model,
             low_vram=low_vram, moge_resolution_level=moge_resolution_level,
+            max_slat_coords=max_slat_coords,
             overwrite=overwrite, dry_run=True,
         )
     config_file = Path(config_path).resolve()
@@ -667,6 +682,7 @@ def run(
         "seeds": seed_list, "max_keyframes": max_keyframes,
         "max_proposals": max_proposals, "compile_model": compile_model,
         "low_vram": low_vram, "moge_resolution_level": moge_resolution_level,
+        "max_slat_coords": max_slat_coords,
     }
     inputs = [
         root / "segmentation/object_masks.npz", root / "segmentation/hand_masks.npz",
@@ -683,6 +699,7 @@ def run(
             max_keyframes=max_keyframes, max_proposals=max_proposals,
             compile_model=compile_model, low_vram=low_vram,
             moge_resolution_level=moge_resolution_level,
+            max_slat_coords=max_slat_coords,
             overwrite=overwrite, dry_run=False,
         )
     except Exception as exc:
@@ -724,6 +741,10 @@ def _parser() -> argparse.ArgumentParser:
         "--moge-resolution-level", type=int, choices=range(10), default=6,
         help="MoGe token resolution level used by low-VRAM mode (0-9; output size is unchanged)",
     )
+    parser.add_argument(
+        "--max-slat-coords", type=int, default=42_000,
+        help="Maximum sparse-latent coordinates before official 2x downsampling in low-VRAM mode",
+    )
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     return parser
@@ -736,6 +757,7 @@ def main(argv: list[str] | None = None) -> int:
         max_keyframes=args.max_keyframes, max_proposals=args.max_proposals,
         compile_model=args.compile, low_vram=args.low_vram,
         moge_resolution_level=args.moge_resolution_level,
+        max_slat_coords=args.max_slat_coords,
         overwrite=args.overwrite, dry_run=args.dry_run,
     ))
     return 0
