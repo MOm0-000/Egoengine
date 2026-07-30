@@ -78,6 +78,8 @@ test -s third_party/sam-3d-objects/checkpoints/hf/pipeline.yaml
 test -s third_party/FoundationPose/weights/2024-01-11-20-02-45/model_best.pth
 test -s third_party/FoundationPose/weights/2023-10-28-18-33-37/model_best.pth
 test -d /data_all/liyunhao/egoengine/spider/.venv
+command -v ffmpeg
+command -v ffprobe
 
 nvidia-smi
 ```
@@ -88,6 +90,9 @@ nvidia-smi
 conda run -n v2s-core python -c "import cv2,h5py,numpy,scipy,trimesh,zarr; print('v2s-core ok')"
 conda run -n v2s-core pytest -q
 ```
+
+仓库生成的诊断 MP4 统一通过系统 `ffmpeg` 编码为 H.264 (`libx264`)、
+`yuv420p`，并启用 faststart，便于在浏览器和常用播放器中直接查看。
 
 ## 完整执行示例
 

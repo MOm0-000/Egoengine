@@ -10,6 +10,8 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+from ..video import FFmpegVideoWriter, VIDEO_ENCODING
+
 
 MODEL_CONFIGS = {
     "vits": {"encoder": "vits", "features": 64, "out_channels": [48, 96, 192, 384]},
@@ -160,13 +162,18 @@ def run(args: argparse.Namespace) -> Path:
     source = json.loads((run_dir / "input/source.json").read_text(encoding="utf-8"))
     overlay_path = output_dir / "metric_depth.mp4"
     height, width = visual_frames[0].shape[:2]
-    writer = cv2.VideoWriter(str(overlay_path), cv2.VideoWriter_fourcc(*"mp4v"), float(source["video"]["fps"]), (width, height))
-    for frame in visual_frames:
-        writer.write(frame)
-    writer.release()
+    writer = FFmpegVideoWriter(
+        overlay_path, float(source["video"]["fps"]), (width, height), overwrite=True,
+    )
+    try:
+        for frame in visual_frames:
+            writer.write(frame)
+    finally:
+        writer.release()
     metadata = {
         "schema_version": "1.0", "model": "Depth Anything V2 metric Hypersim",
         "checkpoint": str(checkpoint), "encoder": args.encoder, "device": args.device,
+        "video_encoding": VIDEO_ENCODING,
         "cuda_device_name": torch.cuda.get_device_name(0) if args.device == "cuda" else None,
         "input_size": args.input_size, "max_depth_m": args.max_depth,
         "original_resolution": [int(depth.shape[2]), int(depth.shape[1])],
@@ -200,4 +207,3 @@ def build_parser() -> argparse.ArgumentParser:
 
 if __name__ == "__main__":
     print(run(build_parser().parse_args()))
-

@@ -117,6 +117,10 @@ def test_run_visualizations_write_decodable_videos_and_manifest(tmp_path):
     assert manifest["diagnostic_only"] is True
     assert manifest["ground_truth_consumed"] is False
     assert manifest["invalid_gaps_preserved"] is True
+    assert manifest["video_encoding"] == {
+        "backend": "ffmpeg", "codec": "h264", "encoder": "libx264",
+        "pixel_format": "yuv420p", "faststart": True,
+    }
     assert set(manifest["outputs"]) == {
         f"visualization/{MESH_VIDEO}",
         f"visualization/{FOUNDATIONPOSE_VIDEO}",

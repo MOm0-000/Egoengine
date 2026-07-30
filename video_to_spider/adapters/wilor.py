@@ -11,6 +11,8 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+from ..video import FFmpegVideoWriter, VIDEO_ENCODING
+
 
 def _camera_translation(pred_cam, box_center, box_size, K):
     """Convert crop weak-perspective camera using the episode's real K."""
@@ -156,16 +158,21 @@ def run(args: argparse.Namespace) -> Path:
     overlay_path = output_dir / "wilor_overlay.mp4"
     source = json.loads((run_dir / "input/source.json").read_text(encoding="utf-8"))
     height, width = overlay_frames[0].shape[:2]
-    writer = cv2.VideoWriter(str(overlay_path), cv2.VideoWriter_fourcc(*"mp4v"), float(source["video"]["fps"]), (width, height))
-    for frame in overlay_frames:
-        writer.write(frame)
-    writer.release()
+    writer = FFmpegVideoWriter(
+        overlay_path, float(source["video"]["fps"]), (width, height), overwrite=True,
+    )
+    try:
+        for frame in overlay_frames:
+            writer.write(frame)
+    finally:
+        writer.release()
     metadata = {
         "schema_version": "1.0", "model": "WiLoR", "checkpoint": str(checkpoint),
         "detector_checkpoint": str(detector_checkpoint), "device": str(device),
         "cuda_device_name": torch.cuda.get_device_name(0) if device.type == "cuda" else None,
         "camera_intrinsics_source": "calibration/intrinsics.npy",
         "camera_translation_conversion": "crop weak-perspective to full OpenCV camera using EgoDex fx/fy/cx/cy",
+        "video_encoding": VIDEO_ENCODING,
         "hand_order": ["left", "right"], "frame_count": t,
         "valid_rate_left": float(np.mean(valid[:, 0])), "valid_rate_right": float(np.mean(valid[:, 1])),
         "shared_beta_initial": {

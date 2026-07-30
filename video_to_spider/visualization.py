@@ -12,6 +12,7 @@ import numpy as np
 import trimesh
 
 from .schemas import SCHEMA_VERSION
+from .video import FFmpegVideoWriter, VIDEO_ENCODING
 
 
 MESH_VIDEO = "05_mesh_proposals.mp4"
@@ -38,14 +39,8 @@ def _frame_rows(root: Path) -> tuple[dict[int, tuple[Path, int]], float]:
     return lookup, float(source["video"]["fps"])
 
 
-def _writer(path: Path, fps: float, size: tuple[int, int], overwrite: bool) -> cv2.VideoWriter:
-    if path.exists() and not overwrite:
-        raise FileExistsError(f"output exists: {path}; pass --overwrite")
-    path.parent.mkdir(parents=True, exist_ok=True)
-    writer = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*"mp4v"), fps, size)
-    if not writer.isOpened():
-        raise RuntimeError(f"cannot open video writer: {path}")
-    return writer
+def _writer(path: Path, fps: float, size: tuple[int, int], overwrite: bool) -> FFmpegVideoWriter:
+    return FFmpegVideoWriter(path, fps, size, overwrite=overwrite)
 
 
 def _record_output(root: Path, output: Path, sources: list[str]) -> None:
@@ -64,6 +59,7 @@ def _record_output(root: Path, output: Path, sources: list[str]) -> None:
     relative_output = str(output.relative_to(root))
     payload["outputs"] = sorted(set(payload.get("outputs", [])) | {relative_output})
     payload["sources"] = sorted(set(payload.get("sources", [])) | set(sources))
+    payload["video_encoding"] = VIDEO_ENCODING
     manifest_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
 

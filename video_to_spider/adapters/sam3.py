@@ -20,6 +20,8 @@ from typing import Any
 import cv2
 import numpy as np
 
+from ..video import FFmpegVideoWriter, VIDEO_ENCODING
+
 
 def _numpy(value: Any) -> np.ndarray:
     if hasattr(value, "detach"):
@@ -428,15 +430,21 @@ def _recover_invalid_spans(
 
 def _write_overlay(frame_paths: list[Path], object_masks: np.ndarray, hand_masks: np.ndarray, path: Path, fps: float) -> None:
     first = cv2.imread(str(frame_paths[0]))
-    writer = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*"mp4v"), fps, (first.shape[1], first.shape[0]))
-    for index, frame_path in enumerate(frame_paths):
-        frame = cv2.imread(str(frame_path))
-        overlay = frame.copy()
-        overlay[object_masks[index]] = (0, 220, 0)
-        overlay[hand_masks[index]] = (0, 0, 220)
-        frame = cv2.addWeighted(frame, 0.70, overlay, 0.30, 0)
-        writer.write(frame)
-    writer.release()
+    if first is None:
+        raise RuntimeError(f"cannot read first RGB frame: {frame_paths[0]}")
+    writer = FFmpegVideoWriter(path, fps, (first.shape[1], first.shape[0]), overwrite=True)
+    try:
+        for index, frame_path in enumerate(frame_paths):
+            frame = cv2.imread(str(frame_path))
+            if frame is None:
+                raise RuntimeError(f"cannot read RGB frame: {frame_path}")
+            overlay = frame.copy()
+            overlay[object_masks[index]] = (0, 220, 0)
+            overlay[hand_masks[index]] = (0, 0, 220)
+            frame = cv2.addWeighted(frame, 0.70, overlay, 0.30, 0)
+            writer.write(frame)
+    finally:
+        writer.release()
 
 
 def run(args: argparse.Namespace) -> Path:
@@ -583,6 +591,7 @@ def run(args: argparse.Namespace) -> Path:
         "batched_grounding_batch_size": 1,
         "grounding_max_num_objects": args.max_instances, "hand_max_num_objects": 2,
         "object_tracking_max_num_objects": args.max_instances,
+        "video_encoding": VIDEO_ENCODING,
         "selected_prompt": selected["result"]["prompt"], "frame_count": len(frame_paths),
         "automatic_invalid_span_recovery": recoveries,
         "candidates": [{
