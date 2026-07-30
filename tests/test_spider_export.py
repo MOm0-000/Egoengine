@@ -1,0 +1,55 @@
+from pathlib import Path
+
+import numpy as np
+
+from video_to_spider.export.spider import export_spider_dataset
+
+
+def _write_artifacts(tmp_path: Path):
+    t = 4
+    timestamps = np.arange(t) / 30.0
+    identity = np.repeat(np.eye(4)[None], t, axis=0)
+    wrist = identity.copy()
+    wrist[:, :3, 3] = [0.0, 0.0, 0.2]
+    obj = identity.copy()
+    obj[:, :3, 3] = [0.05, 0.0, 0.05]
+    fingertips = np.zeros((t, 1, 5, 3))
+    fingertips[..., 2] = 0.1
+    aligned = tmp_path / "aligned.npz"
+    np.savez(aligned, frame_indices=np.arange(t), timestamps_s=timestamps,
+             T_sim_object=obj[:, None], T_sim_wrist=wrist[:, None], fingertips_sim=fingertips,
+             mano_pose=np.repeat(np.eye(3)[None, None, None], t * 1 * 15, axis=0).reshape(t, 1, 15, 3, 3),
+             mano_betas=np.zeros((1, 10)), object_scale_to_m=np.array([0.5]),
+             valid_object=np.ones((t, 1), bool), valid_hand=np.ones((t, 1), bool),
+             confidence_object=np.ones((t, 1)), confidence_hand=np.ones((t, 1)))
+    contact = tmp_path / "contact.npz"
+    np.savez(contact, frame_indices=np.arange(t), timestamps_s=timestamps,
+             contact=np.zeros((t, 1, 5)), contact_pos_object_local=np.zeros((1, 5, 3)))
+    mesh = tmp_path / "visual.obj"
+    mesh.write_text("v 0 0 0\nv 0.1 0 0\nv 0 0.1 0\nf 1 2 3\n")
+    return aligned, contact, mesh
+
+
+def test_spider_export_shapes_and_inactive_identity(tmp_path: Path):
+    aligned, contact, mesh = _write_artifacts(tmp_path)
+    spider_package = tmp_path / "spider_package"
+    for robot in ("mano", "xhand"):
+        robot_dir = spider_package / "assets/robots" / robot
+        robot_dir.mkdir(parents=True)
+        (robot_dir / "right.xml").write_text("<mujoco/>")
+    result = export_spider_dataset(
+        aligned_path=aligned, contact_path=contact, visual_mesh_path=mesh,
+        dataset_root=tmp_path / "dataset", task="synthetic", data_id=0, source_run_id="run",
+        hand_sides=["right"], spider_package_root=spider_package, embodiment_type="right",
+    )
+    data = np.load(result["keypoints"])
+    assert set(data.files) == {
+        "qpos_obj_right", "qpos_obj_left", "qpos_wrist_right", "qpos_finger_right",
+        "contact_right", "contact_pos_right", "qpos_wrist_left", "qpos_finger_left",
+        "contact_left", "contact_pos_left",
+    }
+    assert data["qpos_finger_right"].shape[1:] == (5, 7)
+    np.testing.assert_allclose(data["qpos_obj_left"][:, 3], 1)
+    np.testing.assert_allclose(data["qpos_wrist_left"][:, 3], 1)
+    exported_mesh = __import__("trimesh").load_mesh(result["object_dir"] / "visual.obj", process=False)
+    assert np.isclose(exported_mesh.extents.max(), 0.05)
