@@ -95,6 +95,10 @@ def main(argv: list[str] | None = None) -> int:
         run_dir = args.run_dir.resolve()
         source = json.loads((run_dir / "input/source.json").read_text(encoding="utf-8"))
         selected = json.loads((run_dir / "object_tracking/selected_mesh.json").read_text(encoding="utf-8"))
+        optimization_metrics = json.loads(
+            (run_dir / "optimization/optimization_metrics.json").read_text(encoding="utf-8")
+        )
+        hand_roles = optimization_metrics.get("hands", {}).get("roles")
         dataset_root = args.dataset_root or run_dir / "spider_export/dataset"
         print(export_spider_dataset(
             aligned_path=run_dir / "optimization/aligned_trajectory.npz",
@@ -103,6 +107,7 @@ def main(argv: list[str] | None = None) -> int:
             dataset_root=dataset_root, task=args.task or source["task_directory"],
             data_id=args.data_id, source_run_id=run_dir.name, hand_sides=args.hand_sides,
             spider_package_root=args.spider_package_root,
+            hand_roles=hand_roles,
             embodiment_type=args.embodiment_type, robot_type=args.robot_type,
         ))
         return 0

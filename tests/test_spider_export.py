@@ -1,6 +1,8 @@
 from pathlib import Path
+import json
 
 import numpy as np
+import pytest
 
 from video_to_spider.export.spider import export_spider_dataset
 
@@ -41,6 +43,7 @@ def test_spider_export_shapes_and_inactive_identity(tmp_path: Path):
         aligned_path=aligned, contact_path=contact, visual_mesh_path=mesh,
         dataset_root=tmp_path / "dataset", task="synthetic", data_id=0, source_run_id="run",
         hand_sides=["right"], spider_package_root=spider_package, embodiment_type="right",
+        hand_roles={"right": "passive"},
     )
     data = np.load(result["keypoints"])
     assert set(data.files) == {
@@ -53,3 +56,37 @@ def test_spider_export_shapes_and_inactive_identity(tmp_path: Path):
     np.testing.assert_allclose(data["qpos_wrist_left"][:, 3], 1)
     exported_mesh = __import__("trimesh").load_mesh(result["object_dir"] / "visual.obj", process=False)
     assert np.isclose(exported_mesh.extents.max(), 0.05)
+    task_info = json.loads(result["task_info"].read_text())
+    assert task_info["hand_roles"] == {"right": "passive"}
+    assert task_info["simulation_preflight"]["passed"]
+
+
+def test_spider_export_rejects_underground_object(tmp_path: Path):
+    aligned, contact, mesh = _write_artifacts(tmp_path)
+    with np.load(aligned) as artifact:
+        arrays = {key: np.asarray(artifact[key]) for key in artifact.files}
+    arrays["T_sim_object"][:, 0, 2, 3] = -0.01
+    np.savez(aligned, **arrays)
+    spider_package = tmp_path / "spider_package"
+    for robot in ("mano", "xhand"):
+        robot_dir = spider_package / "assets/robots" / robot
+        robot_dir.mkdir(parents=True)
+        (robot_dir / "right.xml").write_text("<mujoco/>")
+    with pytest.raises(ValueError, match="object trajectory penetrates the floor"):
+        export_spider_dataset(
+            aligned_path=aligned, contact_path=contact, visual_mesh_path=mesh,
+            dataset_root=tmp_path / "dataset", task="synthetic", data_id=0,
+            source_run_id="run", hand_sides=["right"], spider_package_root=spider_package,
+            embodiment_type="right", hand_roles={"right": "active"},
+        )
+
+
+def test_bimanual_export_requires_both_visible_hands(tmp_path: Path):
+    aligned, contact, mesh = _write_artifacts(tmp_path)
+    with pytest.raises(ValueError, match="bimanual embodiment requires"):
+        export_spider_dataset(
+            aligned_path=aligned, contact_path=contact, visual_mesh_path=mesh,
+            dataset_root=tmp_path / "dataset", task="synthetic", data_id=0,
+            source_run_id="run", hand_sides=["right"], spider_package_root=tmp_path,
+            embodiment_type="bimanual",
+        )

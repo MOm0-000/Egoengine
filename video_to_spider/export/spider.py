@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import shutil
 from pathlib import Path
-from typing import Sequence
+from typing import Mapping, Sequence
 
 import numpy as np
 import trimesh
@@ -14,6 +14,7 @@ from ..coordinates import matrix_to_quaternion_wxyz, resample_transforms
 from ..schemas import validate_aligned_trajectory, validate_contact
 
 DATASET_NAME = "video_to_spider_egodex"
+HAND_ROLES = {"invalid", "passive", "active"}
 
 
 def _pose7(transforms: np.ndarray) -> np.ndarray:
@@ -51,10 +52,67 @@ def _copy_robot_assets(spider_package_root: Path, dataset_root: Path, robot_type
         shutil.copytree(source, destination_root / name, dirs_exist_ok=True)
 
 
+def _object_minimum_z(mesh: trimesh.Trimesh, transforms: np.ndarray) -> np.ndarray:
+    vertices = np.asarray(mesh.vertices, dtype=np.float64)
+    return np.asarray([
+        float((vertices @ transform[:3, :3].T + transform[:3, 3]).min(axis=0)[2])
+        for transform in transforms
+    ])
+
+
+def _simulation_preflight(
+    aligned: Mapping[str, np.ndarray], visual_mesh: trimesh.Trimesh,
+    hand_sides: Sequence[str], hand_roles: Mapping[str, str], *, floor_tolerance_m: float = 1e-4,
+) -> dict[str, object]:
+    roles = {side: hand_roles.get(side, "active") for side in hand_sides}
+    unsupported = {side: role for side, role in roles.items() if role not in HAND_ROLES}
+    if unsupported:
+        raise ValueError(f"unsupported hand roles: {unsupported}")
+    invalid = [side for side, role in roles.items() if role == "invalid"]
+    if invalid:
+        raise ValueError(
+            f"SPIDER export blocked: requested hands failed reconstruction quality: {invalid}"
+        )
+
+    object_min_z = _object_minimum_z(visual_mesh, aligned["T_sim_object"][:, 0])
+    if float(object_min_z.min()) < -floor_tolerance_m:
+        raise ValueError(
+            "SPIDER export blocked: object trajectory penetrates the floor; "
+            f"minimum z={float(object_min_z.min()):.6f} m"
+        )
+    hand_metrics: dict[str, dict[str, float | str]] = {}
+    for side in hand_sides:
+        hand = hand_sides.index(side)
+        wrist = aligned["T_sim_wrist"][:, hand, :3, 3]
+        fingertips = aligned["fingertips_sim"][:, hand]
+        target_min_z = min(float(wrist[:, 2].min()), float(fingertips[..., 2].min()))
+        if target_min_z < -floor_tolerance_m:
+            raise ValueError(
+                f"SPIDER export blocked: {side} hand targets penetrate the floor; "
+                f"minimum z={target_min_z:.6f} m"
+            )
+        wrist_tip_distance = np.linalg.norm(fingertips - wrist[:, None], axis=-1)
+        if float(np.max(wrist_tip_distance)) > 0.35:
+            raise ValueError(
+                f"SPIDER export blocked: {side} wrist/fingertip geometry is inconsistent; "
+                f"maximum distance={float(np.max(wrist_tip_distance)):.4f} m"
+            )
+        hand_metrics[side] = {
+            "role": roles[side], "target_min_z_m": target_min_z,
+            "wrist_tip_distance_median_m": float(np.median(wrist_tip_distance)),
+            "wrist_tip_distance_max_m": float(np.max(wrist_tip_distance)),
+        }
+    return {
+        "passed": True, "floor_tolerance_m": floor_tolerance_m,
+        "object_min_z_m": float(object_min_z.min()), "hands": hand_metrics,
+    }
+
+
 def export_spider_dataset(
     *, aligned_path: str | Path, contact_path: str | Path, visual_mesh_path: str | Path,
     dataset_root: str | Path, task: str, data_id: int, source_run_id: str,
     hand_sides: Sequence[str], spider_package_root: str | Path,
+    hand_roles: Mapping[str, str] | None = None,
     embodiment_type: str = "right", robot_type: str = "xhand", ref_dt: float = 0.02,
 ) -> dict[str, Path]:
     """Export one trial. A single real object always occupies right_object."""
@@ -62,6 +120,14 @@ def export_spider_dataset(
         raise ValueError("embodiment_type must be right, left, or bimanual")
     if len(set(hand_sides)) != len(hand_sides) or any(side not in {"left", "right"} for side in hand_sides):
         raise ValueError("hand_sides must contain unique left/right values")
+    expected_sides = {
+        "right": {"right"}, "left": {"left"}, "bimanual": {"left", "right"},
+    }[embodiment_type]
+    if set(hand_sides) != expected_sides:
+        raise ValueError(
+            f"{embodiment_type} embodiment requires hand_sides={sorted(expected_sides)}, "
+            f"got {sorted(hand_sides)}"
+        )
     aligned_file, contact_file = Path(aligned_path), Path(contact_path)
     with np.load(aligned_file, allow_pickle=False) as aligned_npz:
         aligned = {key: np.asarray(aligned_npz[key]) for key in aligned_npz.files}
@@ -76,6 +142,10 @@ def export_spider_dataset(
         raise ValueError("hand_sides length does not match hand dimensions")
     if aligned["T_sim_object"].shape[1] != 1:
         raise ValueError("V1 SPIDER export requires exactly one object")
+    visual_mesh = trimesh.load_mesh(visual_mesh_path, process=False)
+    visual_mesh.apply_scale(float(aligned["object_scale_to_m"][0]))
+    resolved_roles = dict(hand_roles or {side: "active" for side in hand_sides})
+    preflight = _simulation_preflight(aligned, visual_mesh, hand_sides, resolved_roles)
     target_t = np.arange(source_t[0], source_t[-1] + ref_dt * 0.25, ref_dt, dtype=np.float64)
     if target_t[-1] > source_t[-1] + 1e-9:
         target_t = target_t[:-1]
@@ -112,8 +182,6 @@ def export_spider_dataset(
     # Aligned trajectories express object poses in meters while WP5 preserves a
     # normalized canonical mesh. Materialize the single episode-level scale in
     # the exported visual mesh so SPIDER never sees a unit-sized object.
-    visual_mesh = trimesh.load_mesh(visual_mesh_path, process=False)
-    visual_mesh.apply_scale(float(aligned["object_scale_to_m"][0]))
     visual_mesh.export(object_dir / "visual.obj")
     _copy_robot_assets(Path(spider_package_root).resolve(), root, robot_type)
     task_info = {
@@ -123,6 +191,7 @@ def export_spider_dataset(
         "right_object_convex_dir": None, "left_object_convex_dir": None,
         "source_run_id": source_run_id, "num_frames": int(count),
         "hand_sides": list(hand_sides), "inactive_side_encoding": "zero_xyz_identity_wxyz",
+        "hand_roles": resolved_roles, "simulation_preflight": preflight,
     }
     task_info_path = mano_dir.parent / "task_info.json"
     task_info_path.write_text(json.dumps(task_info, indent=2) + "\n", encoding="utf-8")
@@ -133,6 +202,7 @@ def export_spider_dataset(
         "source_aligned": str(aligned_file.resolve()), "source_contact": str(contact_file.resolve()),
         "source_visual_mesh": str(Path(visual_mesh_path).resolve()),
         "object_scale_to_m_materialized": float(aligned["object_scale_to_m"][0]),
+        "hand_roles": resolved_roles, "simulation_preflight": preflight,
     }
     export_manifest_path = mano_dir / "export_manifest.json"
     export_manifest_path.write_text(json.dumps(export_manifest, indent=2) + "\n", encoding="utf-8")
