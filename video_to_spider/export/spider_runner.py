@@ -9,6 +9,7 @@ import re
 import shutil
 import subprocess
 import time
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
 
@@ -59,6 +60,27 @@ def _contact_difference(visual_path: Path, spider_path: Path) -> dict[str, Any]:
                 "shape_mismatch": bool(first.shape != second.shape),
             }
     return report
+
+
+def _inspect_hand_floor_contacts(scene_paths: list[Path]) -> dict[str, Any]:
+    """Verify that SPIDER materialized the requested hand-floor contacts."""
+    pair_counts: dict[str, int] = {}
+    for scene_path in scene_paths:
+        if not scene_path.exists():
+            raise RuntimeError(f"SPIDER did not generate expected scene: {scene_path}")
+        tree = ET.parse(scene_path)
+        pairs = [
+            pair for pair in tree.getroot().findall("./contact/pair")
+            if pair.get("name", "").startswith("collision_hand_")
+            and pair.get("name", "").endswith("_floor")
+        ]
+        if not pairs:
+            raise RuntimeError(f"SPIDER scene has no hand-floor contact pairs: {scene_path}")
+        pair_counts[scene_path.name] = len(pairs)
+    return {
+        "hand_floor_collision_enabled": True,
+        "pair_count_by_scene": pair_counts,
+    }
 
 
 def _mjwp_metrics(path: Path, log_path: Path | None = None) -> dict[str, Any]:
@@ -141,9 +163,13 @@ def run_spider_chain(
         shutil.copy2(visual_contact, keypoints)
     commands.append(_run(
         base + ["spider.preprocess.generate_xml"] + common
-        + ["--robot-type", robot_type, "--no-show-viewer"],
+        + ["--robot-type", robot_type, "--hand-floor-collision", "--no-show-viewer"],
         cwd=spider, env=environment, log_path=logs / "03_generate_xml.log",
     ))
+    scene = robot_dir.parent / "scene.xml"
+    geometry_constraints = _inspect_hand_floor_contacts([
+        scene, robot_dir.parent / "scene_eq.xml",
+    ])
     commands.append(_run(
         base + ["spider.preprocess.ik_fast"] + common
         + ["--robot-type", robot_type, "--end-idx", str(ik_end_idx), "--no-show-viewer"]
@@ -151,7 +177,6 @@ def run_spider_chain(
         cwd=spider, env=environment, log_path=logs / "04_ik_fast.log",
     ))
     trajectory_kinematic = robot_dir / "trajectory_kinematic.npz"
-    scene = robot_dir.parent / "scene.xml"
     if not trajectory_kinematic.exists() or not scene.exists():
         raise RuntimeError("SPIDER IK did not produce scene.xml and trajectory_kinematic.npz")
     mjwp_path = robot_dir / "trajectory_mjwp.npz"
@@ -181,6 +206,7 @@ def run_spider_chain(
         "schema_version": "1.0", "dataset_root": str(dataset), "dataset_name": DATASET_NAME,
         "task": task, "data_id": data_id, "embodiment_type": embodiment_type,
         "robot_type": robot_type, "gpu_physical_index": gpu, "commands": commands,
+        "simulation_geometry": geometry_constraints,
         "artifacts": {
             "visual_contact": str(visual_contact), "spider_detected_contact": str(detected_contact),
             "scene": str(scene), "trajectory_kinematic": str(trajectory_kinematic),

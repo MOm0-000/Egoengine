@@ -184,7 +184,7 @@ def object_minimum_z(mesh_m: trimesh.Trimesh, transforms: np.ndarray) -> np.ndar
 def enforce_simulation_floor(
     mesh_m: trimesh.Trimesh, T_sim_object: np.ndarray, T_sim_wrist: np.ndarray,
     fingertips_sim: np.ndarray, hand_roles: list[str], *, object_clearance_m: float = 0.002,
-    hand_clearance_m: float = 0.015,
+    hand_clearance_m: float = 0.060,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, dict[str, Any]]:
     """Keep active interaction groups and passive visible hands above the simulator floor."""
     if any(role not in HAND_ROLES for role in hand_roles):

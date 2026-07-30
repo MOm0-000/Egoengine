@@ -59,6 +59,7 @@ def test_spider_export_shapes_and_inactive_identity(tmp_path: Path):
     task_info = json.loads(result["task_info"].read_text())
     assert task_info["hand_roles"] == {"right": "passive"}
     assert task_info["simulation_preflight"]["passed"]
+    assert task_info["simulation_preflight"]["hand_target_clearance_m"] == 0.060
 
 
 def test_spider_export_rejects_underground_object(tmp_path: Path):
@@ -73,6 +74,27 @@ def test_spider_export_rejects_underground_object(tmp_path: Path):
         robot_dir.mkdir(parents=True)
         (robot_dir / "right.xml").write_text("<mujoco/>")
     with pytest.raises(ValueError, match="object trajectory penetrates the floor"):
+        export_spider_dataset(
+            aligned_path=aligned, contact_path=contact, visual_mesh_path=mesh,
+            dataset_root=tmp_path / "dataset", task="synthetic", data_id=0,
+            source_run_id="run", hand_sides=["right"], spider_package_root=spider_package,
+            embodiment_type="right", hand_roles={"right": "active"},
+        )
+
+
+def test_spider_export_requires_xhand_floor_clearance(tmp_path: Path):
+    aligned, contact, mesh = _write_artifacts(tmp_path)
+    with np.load(aligned) as artifact:
+        arrays = {key: np.asarray(artifact[key]) for key in artifact.files}
+    arrays["T_sim_wrist"][:, 0, 2, 3] = 0.015
+    arrays["fingertips_sim"][:, 0, :, 2] = 0.015
+    np.savez(aligned, **arrays)
+    spider_package = tmp_path / "spider_package"
+    for robot in ("mano", "xhand"):
+        robot_dir = spider_package / "assets/robots" / robot
+        robot_dir.mkdir(parents=True)
+        (robot_dir / "right.xml").write_text("<mujoco/>")
+    with pytest.raises(ValueError, match="lack xHand floor clearance"):
         export_spider_dataset(
             aligned_path=aligned, contact_path=contact, visual_mesh_path=mesh,
             dataset_root=tmp_path / "dataset", task="synthetic", data_id=0,

@@ -63,6 +63,7 @@ def _object_minimum_z(mesh: trimesh.Trimesh, transforms: np.ndarray) -> np.ndarr
 def _simulation_preflight(
     aligned: Mapping[str, np.ndarray], visual_mesh: trimesh.Trimesh,
     hand_sides: Sequence[str], hand_roles: Mapping[str, str], *, floor_tolerance_m: float = 1e-4,
+    hand_target_clearance_m: float = 0.060,
 ) -> dict[str, object]:
     roles = {side: hand_roles.get(side, "active") for side in hand_sides}
     unsupported = {side: role for side, role in roles.items() if role not in HAND_ROLES}
@@ -86,10 +87,10 @@ def _simulation_preflight(
         wrist = aligned["T_sim_wrist"][:, hand, :3, 3]
         fingertips = aligned["fingertips_sim"][:, hand]
         target_min_z = min(float(wrist[:, 2].min()), float(fingertips[..., 2].min()))
-        if target_min_z < -floor_tolerance_m:
+        if target_min_z < hand_target_clearance_m - floor_tolerance_m:
             raise ValueError(
-                f"SPIDER export blocked: {side} hand targets penetrate the floor; "
-                f"minimum z={target_min_z:.6f} m"
+                f"SPIDER export blocked: {side} hand targets lack xHand floor clearance; "
+                f"minimum z={target_min_z:.6f} m, required={hand_target_clearance_m:.6f} m"
             )
         wrist_tip_distance = np.linalg.norm(fingertips - wrist[:, None], axis=-1)
         if float(np.max(wrist_tip_distance)) > 0.35:
@@ -104,6 +105,7 @@ def _simulation_preflight(
         }
     return {
         "passed": True, "floor_tolerance_m": floor_tolerance_m,
+        "hand_target_clearance_m": hand_target_clearance_m,
         "object_min_z_m": float(object_min_z.min()), "hands": hand_metrics,
     }
 

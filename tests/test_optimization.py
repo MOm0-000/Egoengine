@@ -100,8 +100,8 @@ def test_floor_constraint_preserves_active_group_and_passive_hand():
         mesh, objects, wrists, fingertips, ["active", "passive"],
     )
     assert object_minimum_z(mesh, adjusted_object).min() >= 0.002 - 1e-9
-    assert adjusted_wrist[:, :, 2, 3].min() >= 0.015 - 1e-9
-    assert adjusted_tips[..., 2].min() >= 0.015 - 1e-9
+    assert adjusted_wrist[:, :, 2, 3].min() >= 0.060 - 1e-9
+    assert adjusted_tips[..., 2].min() >= 0.060 - 1e-9
     np.testing.assert_allclose(
         adjusted_wrist[:, 0, 2, 3] - adjusted_object[:, 2, 3], relative_before,
     )
