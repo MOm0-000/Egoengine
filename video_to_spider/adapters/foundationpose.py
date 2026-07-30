@@ -353,13 +353,30 @@ def _run_impl(
         "iou_reregister": iou_reregister, "relative_depth_reregister": relative_depth_reregister,
         "max_input_side": max_input_side,
     })
+    from ..visualization import render_foundationpose, render_mesh_proposals
+
+    visualization_outputs: list[str] = []
+    visualization_warnings: list[str] = []
+    for renderer in (render_mesh_proposals, render_foundationpose):
+        try:
+            visualization_path = renderer(root, overwrite=True)
+            visualization_outputs.append(str(visualization_path.relative_to(root)))
+        except Exception as error:
+            visualization_warnings.append(
+                f"{renderer.__name__} failed without invalidating tracking artifacts: "
+                f"{type(error).__name__}: {error}"
+            )
     manifest = RunManifest.load(root / "manifest.json")
     warnings = ["Depth Anything scale is retained as the raw FoundationPose observation and corrected only in WP7"]
     if bool(selected_proposal.get("canonical", {}).get("debug_only")):
         warnings.append("Selected mesh is marked debug_only and must not be promoted as a real WP5 result")
+    warnings.extend(visualization_warnings)
     manifest.finish_stage(
         "foundationpose", success=True,
-        outputs=[str(output_path.relative_to(root)), str(selected_path.relative_to(root))],
+        outputs=[
+            str(output_path.relative_to(root)), str(selected_path.relative_to(root)),
+            *visualization_outputs,
+        ],
         quality_metrics=final_metrics,
         warnings=warnings,
     )

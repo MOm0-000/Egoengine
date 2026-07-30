@@ -13,6 +13,7 @@ from .eval.metrics import build_run_report
 from .export.spider import export_spider_dataset
 from .export.spider_runner import run_spider_chain
 from .optimization.sequence import optimize_run
+from .visualization import render_run_visualizations
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -64,6 +65,11 @@ def _parser() -> argparse.ArgumentParser:
     report = commands.add_parser("evaluate-run")
     report.add_argument("--run-dir", type=Path, required=True)
     report.add_argument("--spider-report", type=Path)
+    visualize = commands.add_parser("visualize-run")
+    visualize.add_argument("--run-dir", type=Path, required=True)
+    visualize.add_argument("--max-side", type=int, default=960)
+    visualize.add_argument("--mesh-duration-s", type=float, default=4.0)
+    visualize.add_argument("--overwrite", action="store_true")
     return parser
 
 
@@ -110,6 +116,12 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "evaluate-run":
         print(build_run_report(args.run_dir, spider_report=args.spider_report))
+        return 0
+    if args.command == "visualize-run":
+        print(render_run_visualizations(
+            args.run_dir, overwrite=args.overwrite, max_side=args.max_side,
+            mesh_duration_s=args.mesh_duration_s,
+        ))
         return 0
     episode = find_episode(args.root, args.task, args.episode_id)
     path = ingest_episode(

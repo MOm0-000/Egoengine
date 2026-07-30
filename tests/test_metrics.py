@@ -11,6 +11,7 @@ def test_unified_report_marks_missing_stages(tmp_path):
     report = json.loads(report_path.read_text())
     assert report["stages"]["manifest"]["status"] == "available"
     assert report["stages"]["mesh_proposals"]["status"] == "missing"
+    assert report["diagnostics"]["visualization"]["status"] == "missing"
     assert not report["completion"]["m4_complete"]
     assert report["ground_truth_policy"]["ground_truth_consumed_by_inference"] is False
 

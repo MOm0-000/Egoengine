@@ -618,11 +618,26 @@ def _run_impl(
         "failure_reason": None if qualified_count else "mesh_failed_no_qualified_proposal",
     }
     _write_json(ranking_path, payload)
+    from ..visualization import render_mesh_proposals
+
+    visualization_outputs: list[str] = []
+    visualization_warnings: list[str] = []
+    try:
+        visualization_path = render_mesh_proposals(root, overwrite=True)
+        visualization_outputs.append(str(visualization_path.relative_to(root)))
+    except Exception as error:
+        visualization_warnings.append(
+            f"mesh proposal visualization failed without invalidating mesh artifacts: {type(error).__name__}: {error}"
+        )
     manifest = RunManifest.load(root / "manifest.json")
     manifest.finish_stage(
-        "sam3d_objects", success=bool(qualified_count), outputs=[str(ranking_path.relative_to(root))],
+        "sam3d_objects", success=bool(qualified_count),
+        outputs=[str(ranking_path.relative_to(root)), *visualization_outputs],
         quality_metrics={"proposal_count": len(ordered), "qualified_count": qualified_count},
-        warnings=["metric depth is a low-weight scale prior due to the recorded scene-scale conflict"],
+        warnings=[
+            "metric depth is a low-weight scale prior due to the recorded scene-scale conflict",
+            *visualization_warnings,
+        ],
     )
     if not qualified_count:
         raise RuntimeError("mesh_failed: no qualified SAM 3D proposal")

@@ -398,6 +398,18 @@ def optimize_run(
     }
     metrics_path = output_dir / "optimization_metrics.json"
     metrics_path.write_text(json.dumps(_safe_json(metrics), indent=2, allow_nan=False) + "\n", encoding="utf-8")
+    from ..visualization import render_optimization
+
+    visualization_outputs: list[str] = []
+    visualization_warnings: list[str] = []
+    try:
+        visualization_path = render_optimization(root, overwrite=True)
+        visualization_outputs.append(str(visualization_path.relative_to(root)))
+    except Exception as error:
+        visualization_warnings.append(
+            f"optimization visualization failed without invalidating trajectory artifacts: "
+            f"{type(error).__name__}: {error}"
+        )
     manifest = RunManifest.load(root / "manifest.json")
     cache_key = stage_cache_key(
         "sequence_optimization", {"smoothing_strength": smoothing_strength,
@@ -408,10 +420,14 @@ def optimize_run(
     manifest.start_stage("sequence_optimization", cache_key=cache_key, command=sys.argv, environment="v2s-opt")
     manifest.finish_stage(
         "sequence_optimization", success=True,
-        outputs=[str(aligned_path.relative_to(root)), str(contact_path.relative_to(root)), str(metrics_path.relative_to(root))],
+        outputs=[
+            str(aligned_path.relative_to(root)), str(contact_path.relative_to(root)),
+            str(metrics_path.relative_to(root)), *visualization_outputs,
+        ],
         quality_metrics=metrics["raw_vs_aligned"],
         warnings=["left absolute hand confidence is reduced from its measured GT diagnostic",
-                  "penetration is an unsigned nearest-surface proxy in the current V1 optimizer"],
+                  "penetration is an unsigned nearest-surface proxy in the current V1 optimizer",
+                  *visualization_warnings],
     )
     return aligned_path, contact_path
 

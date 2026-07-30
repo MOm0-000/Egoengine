@@ -77,6 +77,9 @@ def build_run_report(run_dir: str | Path, *, spider_report: str | Path | None = 
     )
     report = {
         "schema_version": SCHEMA_VERSION, "run_dir": str(root), "stages": stages,
+        "diagnostics": {
+            "visualization": _json_or_missing(root / "visualization/visualization_manifest.json"),
+        },
         "completion": {
             "available_stage_count": sum(record["status"] == "available" for record in stages.values()),
             "total_stage_count": len(stages), "missing_stages": missing, "invalid_stages": invalid,
