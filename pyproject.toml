@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "video-to-spider"
+version = "0.1.0"
+description = "Artifact-oriented EgoDex to SPIDER V1 pipeline"
+requires-python = ">=3.10"
+dependencies = [
+  "h5py>=3.8",
+  "numpy>=1.24,<2",
+  "opencv-python>=4.8,<5",
+  "scipy>=1.10",
+  "trimesh>=4.0",
+  "zarr>=2.16,<3",
+  "numcodecs>=0.12,<0.14",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4"]
+
+[project.scripts]
+video-to-spider = "video_to_spider.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["video_to_spider*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
