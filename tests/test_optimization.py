@@ -70,6 +70,28 @@ def test_xhand_wrist_frames_are_landmark_derived_and_handed():
     np.testing.assert_allclose(np.linalg.det(left), 1.0)
 
 
+def test_xhand_wrist_frames_interpolate_missing_mano_frames():
+    joints = np.zeros((5, 21, 3), dtype=np.float64)
+    joints[[0, 4], 9, 2] = 1.0
+    joints[[0, 4], 5, 1] = 1.0
+    joints[[0, 4], 13, 1] = -1.0
+    valid = np.array([True, False, False, False, True])
+
+    rotations = xhand_wrist_frames_from_joints(joints, "right", valid)
+
+    np.testing.assert_allclose(rotations, np.repeat(np.eye(3)[None], 5, axis=0))
+
+
+def test_xhand_wrist_frames_keep_fully_missing_hand_invalid_but_finite():
+    joints = np.zeros((3, 21, 3), dtype=np.float64)
+
+    rotations = xhand_wrist_frames_from_joints(joints, "left", np.zeros(3, dtype=bool))
+
+    np.testing.assert_allclose(
+        rotations, np.repeat(np.diag([-1.0, -1.0, 1.0])[None], 3, axis=0),
+    )
+
+
 def test_roles_keep_visible_noninteracting_hand_passive():
     count = 4
     objects = np.repeat(np.eye(4)[None], count, axis=0)

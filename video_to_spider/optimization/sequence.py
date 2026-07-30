@@ -109,33 +109,55 @@ def _build_T_sim_world(T_world_object: np.ndarray, mesh_m: trimesh.Trimesh) -> n
     return transform
 
 
-def xhand_wrist_frames_from_joints(joints_camera: np.ndarray, side: str) -> np.ndarray:
+def xhand_wrist_frames_from_joints(
+    joints_camera: np.ndarray, side: str, valid: np.ndarray | None = None,
+) -> np.ndarray:
     """Build the xHand palm-site frame from observed MANO landmarks."""
     if side not in {"left", "right"}:
         raise ValueError("side must be left or right")
     joints = np.asarray(joints_camera, dtype=np.float64)
     if joints.ndim != 3 or joints.shape[1:] != (21, 3):
         raise ValueError(f"joints_camera must have shape (T, 21, 3), got {joints.shape}")
+    measured = np.ones(len(joints), dtype=bool) if valid is None else np.asarray(valid, dtype=bool)
+    if measured.shape != (len(joints),):
+        raise ValueError(f"valid must have shape ({len(joints)},), got {measured.shape}")
 
     z_axis = joints[:, 9] - joints[:, 0]
     y_aux = joints[:, 5] - joints[:, 13]
-
-    def normalize(values: np.ndarray, name: str) -> np.ndarray:
-        norms = np.linalg.norm(values, axis=1)
-        if np.any(norms < 1e-8):
-            raise ValueError(f"cannot construct xHand wrist frame: degenerate {name} axis")
-        return values / norms[:, None]
-
-    z_axis = normalize(z_axis, "finger")
-    x_axis = normalize(np.cross(y_aux, z_axis), "palm")
-    y_axis = normalize(np.cross(z_axis, x_axis), "thumb")
+    z_norm = np.linalg.norm(z_axis, axis=1)
+    z_unit = z_axis / np.maximum(z_norm[:, None], 1e-12)
+    x_axis = np.cross(y_aux, z_unit)
+    x_norm = np.linalg.norm(x_axis, axis=1)
+    x_unit = x_axis / np.maximum(x_norm[:, None], 1e-12)
+    y_axis = np.cross(z_unit, x_unit)
+    y_norm = np.linalg.norm(y_axis, axis=1)
+    usable = measured & (z_norm >= 1e-8) & (x_norm >= 1e-8) & (y_norm >= 1e-8)
+    if measured.any() and not usable.any():
+        raise ValueError("cannot construct xHand wrist frame from any valid MANO frame")
     if side == "left":
-        x_axis *= -1.0
+        x_unit *= -1.0
         y_axis *= -1.0
-    rotations = np.stack([x_axis, y_axis, z_axis], axis=-1)
-    if np.any(np.linalg.det(rotations) < 0.999):
+    rotations = np.stack([x_unit, y_axis, z_unit], axis=-1)
+    valid_indices = np.flatnonzero(usable)
+    if valid_indices.size == 0:
+        canonical = np.diag([-1.0, -1.0, 1.0]) if side == "left" else np.eye(3)
+        return np.repeat(canonical[None], len(joints), axis=0)
+    valid_rotations = rotations[usable]
+    if np.any(np.linalg.det(valid_rotations) < 0.999):
         raise ValueError("constructed xHand wrist frame is not a proper rotation")
-    return rotations
+    if valid_indices.size == 1:
+        return np.repeat(valid_rotations, len(joints), axis=0)
+
+    from scipy.spatial.transform import Rotation, Slerp
+
+    result = np.empty((len(joints), 3, 3), dtype=np.float64)
+    result[: valid_indices[0]] = valid_rotations[0]
+    result[valid_indices[-1] + 1 :] = valid_rotations[-1]
+    interpolation_indices = np.arange(valid_indices[0], valid_indices[-1] + 1)
+    result[interpolation_indices] = Slerp(
+        valid_indices, Rotation.from_matrix(valid_rotations),
+    )(interpolation_indices).as_matrix()
+    return result
 
 
 def classify_hand_roles(
@@ -426,7 +448,7 @@ def optimize_run(
             fingertips_camera[:, hand], weights, hand_smoothing_strength
         )
         xhand_rotation = xhand_wrist_frames_from_joints(
-            joints_camera[:, hand], HAND_ORDER[hand],
+            joints_camera[:, hand], HAND_ORDER[hand], hand_valid[:, hand],
         )
         wrist_rotation_camera[:, hand] = smooth_rotations(
             xhand_rotation, weights, hand_smoothing_strength,
