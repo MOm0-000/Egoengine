@@ -37,3 +37,11 @@ def test_resample_transform_translation_and_rotation():
     midpoint = Rotation.from_matrix(result[1, :3, :3]).magnitude()
     np.testing.assert_allclose(midpoint, np.pi / 2, atol=1e-8)
 
+
+def test_resample_transform_clamps_endpoint_within_validation_tolerance():
+    source_t = np.array([0.0, 1.0])
+    transforms = np.stack([_transform([0, 0, 0], [0, 0, 0]), _transform([0, 0, 0], [1, 2, 3])])
+
+    result = resample_transforms(source_t, transforms, np.array([0.0, 1.0 + 5e-10]))
+
+    np.testing.assert_allclose(result[-1], transforms[-1], atol=1e-8)

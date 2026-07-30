@@ -76,10 +76,11 @@ def resample_transforms(
         raise ArtifactValidationError("source and target timestamps must be strictly increasing")
     if target_t[0] < source_t[0] - 1e-9 or target_t[-1] > source_t[-1] + 1e-9:
         raise ArtifactValidationError("target timestamps may not extrapolate")
+    # Match the validation tolerance before calling SciPy's strict Slerp bounds check.
+    target_t = np.clip(target_t, source_t[0], source_t[-1])
     result = np.repeat(np.eye(4, dtype=values.dtype)[None], target_t.size, axis=0)
     for axis in range(3):
         result[:, axis, 3] = np.interp(target_t, source_t, values[:, axis, 3])
     rotations = Rotation.from_matrix(values[:, :3, :3])
     result[:, :3, :3] = Slerp(source_t, rotations)(target_t).as_matrix()
     return result
-
