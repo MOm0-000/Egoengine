@@ -359,9 +359,10 @@ jq '{hands,simulation_floor,anchor,raw_vs_aligned,contact,quality_control}' \
 ```
 
 优化以 FoundationPose 物体深度为主，只在 Depth Anything 或邻近手部深度与其尺度一致时融合；
-WiLoR 的弱透视平移按手分别标定。全局物体尺度限制在初值的 `0.75-1.50` 倍。
+WiLoR 的弱透视平移按手分别评估深度标定，但只有完整手部投影仍处于二维信任域内才会应用。
+全局物体尺度限制在初值的 `0.75-1.50` 倍。
 只有 `quality_control.export_ready == true` 的结果允许进入 `export-spider`，避免二维轮廓改善但
-三维深度或尺度退化的轨迹被导出。
+三维深度、尺度或手部二维对齐退化的轨迹被导出。
 
 角色规则：
 

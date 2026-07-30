@@ -26,6 +26,10 @@ MIN_OBJECT_DEPTH_RATIO = 0.75
 MAX_OBJECT_DEPTH_RATIO = 1.33
 MIN_GLOBAL_SCALE_RATIO = 0.75
 MAX_GLOBAL_SCALE_RATIO = 1.50
+MAX_HAND_CALIBRATION_MEDIAN_REPROJECTION_PX = 12.0
+MAX_HAND_CALIBRATION_P95_REPROJECTION_PX = 25.0
+MAX_HAND_EXPORT_MEDIAN_REPROJECTION_PX = 20.0
+MAX_HAND_EXPORT_P95_REPROJECTION_PX = 40.0
 
 
 def _project(K: np.ndarray, points: np.ndarray) -> np.ndarray:
@@ -90,12 +94,14 @@ def calibrate_hand_depth_scale(
     hand_confidence: np.ndarray, object_translation: np.ndarray,
     mask_centroid: np.ndarray, object_valid: np.ndarray, *, max_pixel_distance: float = 160.0,
 ) -> tuple[np.ndarray, dict[str, Any]]:
-    """Calibrate WiLoR translation scale to the metric object trajectory.
+    """Calibrate WiLoR translation scale without breaking its 2D evidence.
 
     WiLoR root-relative hand geometry is metric, but its weak-perspective camera
     translation can have a different episode-level depth scale. Estimate that
-    scale only where a reconstructed hand is visibly near the object, then move
-    each hand root along its original camera ray so its 2D position is preserved.
+    scale only where a reconstructed hand is visibly near the object. A root-only
+    depth change preserves the root projection but can collapse the projected
+    hand around it, so reject any candidate that moves the full hand too far in
+    image space.
     """
     joints = np.asarray(joints_camera, dtype=np.float64)
     calibrated = joints.copy()
@@ -118,15 +124,46 @@ def calibrate_hand_depth_scale(
     records: dict[str, dict[str, Any]] = {}
     for hand in range(joints.shape[1]):
         raw_ratio = float(np.median(ratios[hand])) if ratios[hand] else 1.0
-        applied_ratio = float(np.clip(raw_ratio, 0.25, 5.0)) if len(ratios[hand]) >= 3 else 1.0
+        candidate_ratio = float(np.clip(raw_ratio, 0.25, 5.0)) if len(ratios[hand]) >= 3 else 1.0
         roots = joints[:, hand, 0]
         usable = np.isfinite(roots).all(axis=1) & (roots[:, 2] > 0.05)
-        target_roots = roots[usable] * applied_ratio
-        calibrated[usable, hand] += (target_roots - roots[usable])[:, None, :]
+        candidate = joints[:, hand].copy()
+        target_roots = roots[usable] * candidate_ratio
+        candidate[usable] += (target_roots - roots[usable])[:, None, :]
+        projected_raw = _project(K, joints[:, hand])
+        projected_candidate = _project(K, candidate)
+        reprojection = np.linalg.norm(projected_candidate - projected_raw, axis=-1)
+        reprojection_usable = hand_valid[:, hand, None] & np.isfinite(reprojection)
+        reprojection_values = reprojection[reprojection_usable]
+        median_reprojection = (
+            float(np.median(reprojection_values)) if reprojection_values.size else None
+        )
+        p95_reprojection = (
+            float(np.percentile(reprojection_values, 95)) if reprojection_values.size else None
+        )
+        accepted = bool(
+            len(ratios[hand]) >= 3
+            and median_reprojection is not None
+            and p95_reprojection is not None
+            and median_reprojection <= MAX_HAND_CALIBRATION_MEDIAN_REPROJECTION_PX
+            and p95_reprojection <= MAX_HAND_CALIBRATION_P95_REPROJECTION_PX
+        )
+        applied_ratio = candidate_ratio if accepted else 1.0
+        if accepted:
+            calibrated[:, hand] = candidate
         records[HAND_ORDER[hand] if hand < len(HAND_ORDER) else str(hand)] = {
             "sample_count": len(ratios[hand]),
             "raw_scale_ratio": raw_ratio,
+            "candidate_scale_ratio": candidate_ratio,
             "applied_scale_ratio": applied_ratio,
+            "candidate_reprojection_median_px": median_reprojection,
+            "candidate_reprojection_p95_px": p95_reprojection,
+            "accepted": accepted,
+            "rejection_reason": (
+                None if accepted else
+                "insufficient_samples" if len(ratios[hand]) < 3 else
+                "full_hand_reprojection_exceeds_trust_region"
+            ),
             "median_pixel_distance": (
                 float(np.median(distances[hand])) if distances[hand] else None
             ),
@@ -136,6 +173,10 @@ def calibrate_hand_depth_scale(
         "per_hand": records,
         "ratio_clip": [0.25, 5.0],
         "max_pixel_distance": max_pixel_distance,
+        "full_hand_reprojection_trust_region_px": {
+            "median": MAX_HAND_CALIBRATION_MEDIAN_REPROJECTION_PX,
+            "p95": MAX_HAND_CALIBRATION_P95_REPROJECTION_PX,
+        },
     }
 
 
@@ -541,9 +582,58 @@ def _safe_json(value: Any) -> Any:
     return value
 
 
+def _hand_reprojection_metrics(
+    K: np.ndarray, raw_fingertips_camera: np.ndarray,
+    exported_fingertips_camera: np.ndarray, valid_hand: np.ndarray,
+    hand_order: list[str],
+) -> dict[str, Any]:
+    """Measure whether exported hand targets still match the WiLoR image evidence."""
+    raw = np.asarray(raw_fingertips_camera, dtype=np.float64)
+    exported = np.asarray(exported_fingertips_camera, dtype=np.float64)
+    valid = np.asarray(valid_hand, dtype=bool)
+    if raw.shape != exported.shape or raw.shape[:2] != valid.shape:
+        raise ValueError("hand reprojection inputs have incompatible shapes")
+    pixel_error = np.linalg.norm(_project(K, exported) - _project(K, raw), axis=-1)
+    positive_depth = (raw[..., 2] > 0.05) & (exported[..., 2] > 0.05)
+    finite = np.isfinite(pixel_error) & np.isfinite(raw).all(axis=-1) & np.isfinite(exported).all(axis=-1)
+    per_hand: dict[str, dict[str, Any]] = {}
+    all_errors: list[np.ndarray] = []
+    for hand, side in enumerate(hand_order):
+        usable = valid[:, hand, None] & positive_depth[:, hand] & finite[:, hand]
+        values = pixel_error[:, hand][usable]
+        median = float(np.median(values)) if values.size else None
+        p95 = float(np.percentile(values, 95)) if values.size else None
+        passed = bool(
+            median is not None and p95 is not None
+            and median <= MAX_HAND_EXPORT_MEDIAN_REPROJECTION_PX
+            and p95 <= MAX_HAND_EXPORT_P95_REPROJECTION_PX
+        )
+        per_hand[side] = {
+            "sample_count": int(values.size),
+            "median_px": median,
+            "p95_px": p95,
+            "passed": passed,
+        }
+        if values.size:
+            all_errors.append(values)
+    combined = np.concatenate(all_errors) if all_errors else np.zeros(0, dtype=np.float64)
+    return {
+        "per_hand": per_hand,
+        "median_px": float(np.median(combined)) if combined.size else None,
+        "p95_px": float(np.percentile(combined, 95)) if combined.size else None,
+        "threshold_px": {
+            "median": MAX_HAND_EXPORT_MEDIAN_REPROJECTION_PX,
+            "p95": MAX_HAND_EXPORT_P95_REPROJECTION_PX,
+        },
+        "passed": bool(per_hand and all(record["passed"] for record in per_hand.values())),
+        "reference": "raw WiLoR fingertip projections",
+    }
+
+
 def _optimization_quality_control(
     object_translation_raw: np.ndarray, object_translation_aligned: np.ndarray,
     scale_metrics: dict[str, Any], render_metrics: dict[str, Any],
+    hand_reprojection_metrics: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     usable = (
         np.isfinite(object_translation_raw).all(axis=1)
@@ -572,12 +662,15 @@ def _optimization_quality_control(
         "metric_depth_residual_preserved": metric_depth_preserved,
         "global_scale_within_bounds": scale_preserved,
     }
+    if hand_reprojection_metrics is not None:
+        checks["hand_image_alignment_preserved"] = bool(hand_reprojection_metrics["passed"])
     return {
         "export_ready": bool(all(checks.values())),
         "checks": checks,
         "median_aligned_to_raw_camera_depth_ratio": median_depth_ratio,
         "camera_depth_ratio_bounds": [MIN_OBJECT_DEPTH_RATIO, MAX_OBJECT_DEPTH_RATIO],
         "metric_depth_residual_policy": "aligned <= max(3 * raw, raw + 0.10)",
+        "hand_reprojection": hand_reprojection_metrics,
     }
 
 
@@ -774,8 +867,20 @@ def optimize_run(
         T_camera_object_raw, initial_scale_to_m, T_camera_object_exported,
         scale_to_m, depth_group,
     )
+    exported_fingertip_homogeneous = np.concatenate([
+        fingertips_sim[:, retained_hands],
+        np.ones((*fingertips_sim[:, retained_hands].shape[:-1], 1)),
+    ], axis=-1)
+    exported_fingertips_camera = np.einsum(
+        "tij,thfj->thfi", np.linalg.inv(T_sim_camera), exported_fingertip_homogeneous,
+    )[..., :3]
+    hand_reprojection_metrics = _hand_reprojection_metrics(
+        K, joints_camera_raw[:, retained_hands][:, :, FINGERTIP_INDICES],
+        exported_fingertips_camera, hand_valid[:, retained_hands], artifact_hand_order,
+    )
     quality_control = _optimization_quality_control(
         object_translation_raw, exported_translation_camera, scale_metrics, render_metrics,
+        hand_reprojection_metrics,
     )
     raw_slip = raw_contact_metrics.get("contact_local_slip_p95_m_s")
     aligned_slip = contact_metrics.get("contact_local_slip_p95_m_s")
@@ -791,6 +896,7 @@ def optimize_run(
             "wrist_position_source": "translated MANO wrist joint 0",
             "wrist_orientation_source": "landmark-derived xHand palm frame",
             "depth_calibration": hand_depth_calibration,
+            "reprojection": hand_reprojection_metrics,
         },
         "simulation_floor": floor_metrics,
         "anchor": anchor_metrics,
@@ -849,7 +955,7 @@ def optimize_run(
         quality_metrics=metrics["raw_vs_aligned"],
         warnings=["left absolute hand confidence is reduced from its measured GT diagnostic",
                   "penetration is an unsigned nearest-surface proxy in the current V1 optimizer",
-                  *([] if quality_control["export_ready"] else ["optimization failed metric depth/scale export QC"]),
+                  *([] if quality_control["export_ready"] else ["optimization failed object or hand export QC"]),
                   *visualization_warnings],
     )
     if not quality_control["export_ready"]:

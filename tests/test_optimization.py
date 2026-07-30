@@ -4,6 +4,7 @@ import trimesh
 from video_to_spider.manifest import RunManifest
 from video_to_spider.optimization.contact import infer_contact
 from video_to_spider.optimization.sequence import (
+    _hand_reprojection_metrics,
     _optimization_quality_control,
     _optimize_global_scale,
     calibrate_hand_depth_scale,
@@ -65,23 +66,67 @@ def test_object_observation_rejects_inconsistent_hand_depth():
     assert metrics["hand_depth_rejected_frame_count"] == count
 
 
-def test_hand_depth_calibration_preserves_root_relative_geometry():
+def test_hand_depth_calibration_rejects_full_hand_reprojection_collapse():
     count = 5
-    K = np.array([[100.0, 0.0, 50.0], [0.0, 100.0, 40.0], [0.0, 0.0, 1.0]])
+    K = np.array([[700.0, 0.0, 500.0], [0.0, 700.0, 300.0], [0.0, 0.0, 1.0]])
     joints = np.zeros((count, 1, 21, 3), dtype=np.float64)
     joints[..., 2] = 0.30
-    joints[:, 0, 8, 0] = 0.01
-    raw_relative = joints[:, :, 8] - joints[:, :, 0]
+    joints[:, 0, :, 0] = np.linspace(-0.08, 0.08, 21)
+    joints[:, 0, :, 1] = np.linspace(-0.04, 0.04, 21)
     objects = np.repeat([[0.0, 0.0, 1.2]], count, axis=0)
 
     calibrated, metrics = calibrate_hand_depth_scale(
         K, joints, np.ones((count, 1), bool), np.ones((count, 1)), objects,
-        np.repeat([[50.0, 40.0]], count, axis=0), np.ones(count, bool),
+        np.repeat([[500.0, 300.0]], count, axis=0), np.ones(count, bool),
     )
 
-    assert metrics["per_hand"]["left"]["applied_scale_ratio"] == 4.0
-    np.testing.assert_allclose(calibrated[:, 0, 0, 2], 1.2)
-    np.testing.assert_allclose(calibrated[:, :, 8] - calibrated[:, :, 0], raw_relative)
+    record = metrics["per_hand"]["left"]
+    assert record["candidate_scale_ratio"] == 4.0
+    assert record["applied_scale_ratio"] == 1.0
+    assert record["accepted"] is False
+    assert record["rejection_reason"] == "full_hand_reprojection_exceeds_trust_region"
+    np.testing.assert_allclose(calibrated, joints)
+
+
+def test_hand_depth_calibration_accepts_projection_safe_adjustment():
+    count = 5
+    K = np.array([[700.0, 0.0, 500.0], [0.0, 700.0, 300.0], [0.0, 0.0, 1.0]])
+    joints = np.zeros((count, 1, 21, 3), dtype=np.float64)
+    joints[..., 2] = 1.0
+    joints[:, 0, :, 0] = np.linspace(-0.01, 0.01, 21)
+    objects = np.repeat([[0.0, 0.0, 1.05]], count, axis=0)
+
+    calibrated, metrics = calibrate_hand_depth_scale(
+        K, joints, np.ones((count, 1), bool), np.ones((count, 1)), objects,
+        np.repeat([[500.0, 300.0]], count, axis=0), np.ones(count, bool),
+    )
+
+    record = metrics["per_hand"]["left"]
+    assert np.isclose(record["applied_scale_ratio"], 1.05)
+    assert record["accepted"] is True
+    np.testing.assert_allclose(calibrated[:, 0, 0, 2], 1.05)
+
+
+def test_hand_reprojection_qc_detects_exported_fingertip_shift():
+    K = np.array([[700.0, 0.0, 500.0], [0.0, 700.0, 300.0], [0.0, 0.0, 1.0]])
+    raw = np.zeros((4, 1, 5, 3), dtype=np.float64)
+    raw[..., 2] = 1.0
+    exported = raw.copy()
+    exported[..., 0] = 0.10
+
+    hand_metrics = _hand_reprojection_metrics(
+        K, raw, exported, np.ones((4, 1), bool), ["right"],
+    )
+    qc = _optimization_quality_control(
+        np.repeat([[0.0, 0.0, 1.2]], 4, axis=0),
+        np.repeat([[0.0, 0.0, 1.2]], 4, axis=0),
+        {"scale_ratio": 1.0}, {}, hand_metrics,
+    )
+
+    assert hand_metrics["per_hand"]["right"]["median_px"] == 70.0
+    assert hand_metrics["passed"] is False
+    assert qc["checks"]["hand_image_alignment_preserved"] is False
+    assert qc["export_ready"] is False
 
 
 def test_global_scale_is_clipped_to_conservative_bounds():
