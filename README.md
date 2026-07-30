@@ -354,9 +354,14 @@ conda run -n v2s-opt python -m video_to_spider.cli optimize \
 检查优化指标和最终保留的手：
 
 ```bash
-jq '{hands,simulation_floor,anchor,raw_vs_aligned,contact}' \
+jq '{hands,simulation_floor,anchor,raw_vs_aligned,contact,quality_control}' \
   "$RUN_DIR/optimization/optimization_metrics.json"
 ```
+
+优化以 FoundationPose 物体深度为主，只在 Depth Anything 或邻近手部深度与其尺度一致时融合；
+WiLoR 的弱透视平移按手分别标定。全局物体尺度限制在初值的 `0.75-1.50` 倍。
+只有 `quality_control.export_ready == true` 的结果允许进入 `export-spider`，避免二维轮廓改善但
+三维深度或尺度退化的轨迹被导出。
 
 角色规则：
 
@@ -365,6 +370,7 @@ jq '{hands,simulation_floor,anchor,raw_vs_aligned,contact}' \
 - `invalid`：重建有效率不足，不进入导出 artifact。
 - 画面中双手都可靠时，无论是否只有一只手实际操作，`artifact_hand_order` 都保留双手。
 - 某只手全程不可见或不可靠时，才自动降级为 `left` 或 `right` 单手 artifact。
+- passive 手如果需要超过 5 cm 的整体地面修正，会被视为绝对平移不可靠并降级为 invalid。
 
 读取 SPIDER 应使用的手顺序：
 

@@ -4,10 +4,15 @@ import trimesh
 from video_to_spider.manifest import RunManifest
 from video_to_spider.optimization.contact import infer_contact
 from video_to_spider.optimization.sequence import (
+    _optimization_quality_control,
+    _optimize_global_scale,
+    calibrate_hand_depth_scale,
     classify_hand_roles,
     enforce_simulation_floor,
+    hand_anchored_object_observation,
     object_minimum_z,
     optimize_run,
+    reject_unphysical_passive_hands,
     xhand_wrist_frames_from_joints,
 )
 from video_to_spider.optimization.smoothing import smooth_rotations, smooth_second_difference
@@ -38,6 +43,75 @@ def test_rotation_smoothing_preserves_so3():
     np.testing.assert_allclose(
         np.swapaxes(result, 1, 2) @ result, np.repeat(np.eye(3)[None], 8, axis=0), atol=1e-7
     )
+
+
+def test_object_observation_rejects_inconsistent_hand_depth():
+    count = 6
+    K = np.array([[100.0, 0.0, 50.0], [0.0, 100.0, 40.0], [0.0, 0.0, 1.0]])
+    raw = np.repeat([[0.0, 0.0, 1.2]], count, axis=0)
+    centroids = np.repeat([[50.0, 40.0]], count, axis=0)
+    joints = np.zeros((count, 1, 21, 3), dtype=np.float64)
+    joints[..., 2] = 0.30
+
+    observations, _, metrics = hand_anchored_object_observation(
+        K, raw, centroids, joints, np.ones((count, 1), bool), np.ones((count, 1)),
+        object_valid=np.ones(count, bool), object_confidence=np.ones(count),
+        mask_valid=np.ones(count, bool), metric_mask_depth=np.full(count, 1.25),
+    )
+
+    np.testing.assert_allclose(observations[:, 2], 1.2125)
+    assert metrics["metric_depth_accepted_frame_count"] == count
+    assert metrics["hand_depth_accepted_frame_count"] == 0
+    assert metrics["hand_depth_rejected_frame_count"] == count
+
+
+def test_hand_depth_calibration_preserves_root_relative_geometry():
+    count = 5
+    K = np.array([[100.0, 0.0, 50.0], [0.0, 100.0, 40.0], [0.0, 0.0, 1.0]])
+    joints = np.zeros((count, 1, 21, 3), dtype=np.float64)
+    joints[..., 2] = 0.30
+    joints[:, 0, 8, 0] = 0.01
+    raw_relative = joints[:, :, 8] - joints[:, :, 0]
+    objects = np.repeat([[0.0, 0.0, 1.2]], count, axis=0)
+
+    calibrated, metrics = calibrate_hand_depth_scale(
+        K, joints, np.ones((count, 1), bool), np.ones((count, 1)), objects,
+        np.repeat([[50.0, 40.0]], count, axis=0), np.ones(count, bool),
+    )
+
+    assert metrics["per_hand"]["left"]["applied_scale_ratio"] == 4.0
+    np.testing.assert_allclose(calibrated[:, 0, 0, 2], 1.2)
+    np.testing.assert_allclose(calibrated[:, :, 8] - calibrated[:, :, 0], raw_relative)
+
+
+def test_global_scale_is_clipped_to_conservative_bounds():
+    mesh = trimesh.creation.box(extents=[1.0, 1.0, 1.0])
+    K = np.array([[100.0, 0.0, 50.0], [0.0, 100.0, 40.0], [0.0, 0.0, 1.0]])
+    poses = np.repeat(np.eye(4)[None], 3, axis=0)
+    poses[:, 2, 3] = 1.0
+    masks = np.ones((3, 80, 100), dtype=bool)
+
+    scale, metrics = _optimize_global_scale(
+        mesh, 0.1, K, poses, masks, np.ones(3, bool),
+    )
+
+    assert np.isclose(scale, 0.15)
+    assert metrics["scale_ratio"] == 1.5
+    assert metrics["raw_scale_ratio"] > 1.5
+    assert metrics["ratio_was_clipped"] is True
+
+
+def test_optimization_qc_rejects_depth_collapse():
+    raw = np.repeat([[0.0, 0.0, 1.2]], 5, axis=0)
+    collapsed = np.repeat([[0.0, 0.0, 0.3]], 5, axis=0)
+    qc = _optimization_quality_control(
+        raw, collapsed, {"scale_ratio": 0.75},
+        {"relative_depth_residual_raw": 0.02, "relative_depth_residual_aligned": 0.7},
+    )
+
+    assert qc["export_ready"] is False
+    assert qc["checks"]["camera_depth_scale_preserved"] is False
+    assert qc["checks"]["metric_depth_residual_preserved"] is False
 
 
 def test_contact_hysteresis_and_local_positions():
@@ -128,6 +202,22 @@ def test_floor_constraint_preserves_active_group_and_passive_hand():
         adjusted_wrist[:, 0, 2, 3] - adjusted_object[:, 2, 3], relative_before,
     )
     assert metrics["passive_hand_constant_shift_m"]["right"] > 0
+
+
+def test_unphysical_passive_hand_is_rejected_before_floor_shift():
+    count = 3
+    wrists = np.repeat(np.eye(4)[None, None], count * 2, axis=0).reshape(count, 2, 4, 4)
+    fingertips = np.zeros((count, 2, 5, 3), dtype=np.float64)
+    wrists[:, 1, 2, 3] = -0.10
+    fingertips[:, 1, :, 2] = -0.08
+
+    roles, metrics = reject_unphysical_passive_hands(
+        wrists, fingertips, ["active", "passive"],
+    )
+
+    assert roles == ["active", "invalid"]
+    assert metrics["right"]["rejected"] is True
+    assert metrics["right"]["required_floor_correction_m"] > 0.05
 
 
 def test_sequence_optimizer_writes_valid_artifacts(tmp_path):

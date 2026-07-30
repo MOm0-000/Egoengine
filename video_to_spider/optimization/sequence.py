@@ -22,6 +22,10 @@ from .smoothing import smooth_rotations, smooth_second_difference
 FINGERTIP_INDICES = np.array([4, 8, 12, 16, 20])
 HAND_ORDER = ["left", "right"]
 HAND_ROLES = {"invalid", "passive", "active"}
+MIN_OBJECT_DEPTH_RATIO = 0.75
+MAX_OBJECT_DEPTH_RATIO = 1.33
+MIN_GLOBAL_SCALE_RATIO = 0.75
+MAX_GLOBAL_SCALE_RATIO = 1.50
 
 
 def _project(K: np.ndarray, points: np.ndarray) -> np.ndarray:
@@ -38,17 +42,147 @@ def _mask_centroids(masks: np.ndarray) -> np.ndarray:
     return centroids
 
 
+def _interpolate_valid_vectors(values: np.ndarray, valid: np.ndarray) -> np.ndarray:
+    """Fill invalid samples without changing measured samples."""
+    result = np.asarray(values, dtype=np.float64).copy()
+    usable = np.asarray(valid, dtype=bool) & np.isfinite(result).all(axis=1)
+    usable &= result[:, 2] > 0.05
+    indices = np.flatnonzero(usable)
+    if not indices.size:
+        raise ValueError("no valid positive-depth object translations")
+    timeline = np.arange(len(result))
+    for axis in range(result.shape[1]):
+        result[:, axis] = np.interp(timeline, indices, result[indices, axis])
+    return result
+
+
+def _metric_mask_depths(
+    depth_group: Any | None, frame_indices: np.ndarray, masks: np.ndarray, mask_valid: np.ndarray,
+) -> np.ndarray:
+    """Read robust object depths without assuming the Zarr and run use identical offsets."""
+    depths = np.full(len(frame_indices), np.nan, dtype=np.float64)
+    if depth_group is None:
+        return depths
+    lookup = {
+        int(frame): index for index, frame in enumerate(np.asarray(depth_group["frame_indices"]))
+    }
+    for index, frame_index in enumerate(frame_indices):
+        depth_at = lookup.get(int(frame_index))
+        if depth_at is None or not mask_valid[index]:
+            continue
+        mask = masks[index].astype(bool)
+        ys, xs = np.where(mask)
+        if not xs.size:
+            continue
+        y_slice = slice(int(ys.min()), int(ys.max()) + 1)
+        x_slice = slice(int(xs.min()), int(xs.max()) + 1)
+        local_mask = mask[y_slice, x_slice]
+        depth = np.asarray(depth_group["depth_m"][depth_at, y_slice, x_slice], dtype=np.float32)
+        valid = np.asarray(depth_group["valid"][depth_at, y_slice, x_slice], dtype=bool)
+        usable = local_mask & valid & np.isfinite(depth) & (depth > 0)
+        if usable.any():
+            depths[index] = float(np.median(depth[usable]))
+    return depths
+
+
+def calibrate_hand_depth_scale(
+    K: np.ndarray, joints_camera: np.ndarray, hand_valid: np.ndarray,
+    hand_confidence: np.ndarray, object_translation: np.ndarray,
+    mask_centroid: np.ndarray, object_valid: np.ndarray, *, max_pixel_distance: float = 160.0,
+) -> tuple[np.ndarray, dict[str, Any]]:
+    """Calibrate WiLoR translation scale to the metric object trajectory.
+
+    WiLoR root-relative hand geometry is metric, but its weak-perspective camera
+    translation can have a different episode-level depth scale. Estimate that
+    scale only where a reconstructed hand is visibly near the object, then move
+    each hand root along its original camera ray so its 2D position is preserved.
+    """
+    joints = np.asarray(joints_camera, dtype=np.float64)
+    calibrated = joints.copy()
+    ratios: list[list[float]] = [[] for _ in range(joints.shape[1])]
+    distances: list[list[float]] = [[] for _ in range(joints.shape[1])]
+    for index in range(len(joints)):
+        if not object_valid[index] or object_translation[index, 2] <= 0.05:
+            continue
+        for hand in range(joints.shape[1]):
+            if not hand_valid[index, hand] or hand_confidence[index, hand] <= 0.2:
+                continue
+            projected = _project(K, joints[index, hand])
+            pixel_distances = np.linalg.norm(projected - mask_centroid[index], axis=1)
+            closest = np.argsort(pixel_distances)[:4]
+            pixel_distance = float(np.median(pixel_distances[closest]))
+            hand_depth = float(np.median(joints[index, hand, closest, 2]))
+            if pixel_distance <= max_pixel_distance and hand_depth > 0.05:
+                ratios[hand].append(float(object_translation[index, 2] / hand_depth))
+                distances[hand].append(pixel_distance)
+    records: dict[str, dict[str, Any]] = {}
+    for hand in range(joints.shape[1]):
+        raw_ratio = float(np.median(ratios[hand])) if ratios[hand] else 1.0
+        applied_ratio = float(np.clip(raw_ratio, 0.25, 5.0)) if len(ratios[hand]) >= 3 else 1.0
+        roots = joints[:, hand, 0]
+        usable = np.isfinite(roots).all(axis=1) & (roots[:, 2] > 0.05)
+        target_roots = roots[usable] * applied_ratio
+        calibrated[usable, hand] += (target_roots - roots[usable])[:, None, :]
+        records[HAND_ORDER[hand] if hand < len(HAND_ORDER) else str(hand)] = {
+            "sample_count": len(ratios[hand]),
+            "raw_scale_ratio": raw_ratio,
+            "applied_scale_ratio": applied_ratio,
+            "median_pixel_distance": (
+                float(np.median(distances[hand])) if distances[hand] else None
+            ),
+        }
+    return calibrated, {
+        "source": "object_depth_over_nearby_wilor_joint_depth",
+        "per_hand": records,
+        "ratio_clip": [0.25, 5.0],
+        "max_pixel_distance": max_pixel_distance,
+    }
+
+
 def hand_anchored_object_observation(
     K: np.ndarray, object_translation_raw: np.ndarray, mask_centroid: np.ndarray,
     joints_camera: np.ndarray, hand_valid: np.ndarray, hand_confidence: np.ndarray,
+    *, object_valid: np.ndarray | None = None, object_confidence: np.ndarray | None = None,
+    mask_valid: np.ndarray | None = None, metric_mask_depth: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray, dict[str, Any]]:
-    """Place the object on its image ray using nearby visual hand joints as metric depth anchors."""
+    """Constrain image position while preserving the metric object depth source."""
     count = len(object_translation_raw)
-    observations = object_translation_raw.copy().astype(np.float64)
-    weights = np.full(count, 0.08, dtype=np.float64)  # raw depth remains a weak prior
+    object_valid = (
+        np.asarray(object_valid, dtype=bool) if object_valid is not None
+        else np.asarray(object_translation_raw)[:, 2] > 0.05
+    )
+    object_confidence = (
+        np.asarray(object_confidence, dtype=np.float64) if object_confidence is not None
+        else np.ones(count, dtype=np.float64)
+    )
+    mask_valid = np.ones(count, dtype=bool) if mask_valid is None else np.asarray(mask_valid, dtype=bool)
+    metric_mask_depth = (
+        np.full(count, np.nan, dtype=np.float64) if metric_mask_depth is None
+        else np.asarray(metric_mask_depth, dtype=np.float64)
+    )
+    baseline = _interpolate_valid_vectors(object_translation_raw, object_valid)
+    observations = baseline.copy()
+    weights = np.where(
+        object_valid, 0.35 + 0.65 * np.clip(object_confidence, 0.0, 1.0), 0.08,
+    )
     anchor_distance = np.full(count, np.inf, dtype=np.float64)
     anchor_depth = np.zeros(count, dtype=np.float64)
+    metric_depth_accepted = 0
+    metric_depth_rejected = 0
+    hand_depth_accepted = 0
+    hand_depth_rejected = 0
     for index in range(count):
+        if not mask_valid[index]:
+            continue
+        object_depth = float(baseline[index, 2])
+        metric_depth = float(metric_mask_depth[index])
+        if np.isfinite(metric_depth) and metric_depth > 0.05:
+            ratio = metric_depth / object_depth
+            if MIN_OBJECT_DEPTH_RATIO <= ratio <= MAX_OBJECT_DEPTH_RATIO:
+                object_depth = 0.75 * object_depth + 0.25 * metric_depth
+                metric_depth_accepted += 1
+            else:
+                metric_depth_rejected += 1
         candidates = []
         for hand in range(joints_camera.shape[1]):
             if not hand_valid[index, hand]:
@@ -59,26 +193,38 @@ def hand_anchored_object_observation(
             for joint_at in np.argsort(distance)[:4]:
                 candidates.append((float(distance[joint_at]), float(joints_camera[index, hand, joint_at, 2]),
                                    float(hand_confidence[index, hand])))
-        if not candidates:
-            continue
         candidates.sort(key=lambda item: item[0])
         nearby = [item for item in candidates[:4] if item[1] > 0.05]
-        if not nearby:
-            continue
-        pixel_distance = float(np.median([item[0] for item in nearby]))
-        z_hand = float(np.median([item[1] for item in nearby]))
-        confidence = float(np.mean([item[2] for item in nearby]))
+        if nearby:
+            pixel_distance = float(np.median([item[0] for item in nearby]))
+            z_hand = float(np.median([item[1] for item in nearby]))
+            confidence = float(np.mean([item[2] for item in nearby]))
+            depth_ratio = z_hand / object_depth
+            if pixel_distance <= 160.0 and MIN_OBJECT_DEPTH_RATIO <= depth_ratio <= MAX_OBJECT_DEPTH_RATIO:
+                blend = 0.15 * math.exp(-pixel_distance / 120.0) * np.clip(confidence, 0.0, 1.0)
+                object_depth = (1.0 - blend) * object_depth + blend * z_hand
+                hand_depth_accepted += 1
+            elif pixel_distance <= 160.0:
+                hand_depth_rejected += 1
+            anchor_distance[index] = pixel_distance
+            anchor_depth[index] = z_hand
         ray = np.linalg.inv(K) @ np.array([mask_centroid[index, 0], mask_centroid[index, 1], 1.0])
-        observations[index] = ray * z_hand
-        anchor_distance[index] = pixel_distance
-        anchor_depth[index] = z_hand
-        proximity = math.exp(-pixel_distance / 120.0)
-        weights[index] = 0.25 + 0.75 * proximity * confidence
+        observations[index] = ray * (object_depth / max(float(ray[2]), 1e-8))
     return observations, weights, {
         "anchor_pixel_distance_median": float(np.median(anchor_distance[np.isfinite(anchor_distance)]))
         if np.isfinite(anchor_distance).any() else None,
         "anchor_depth_median_m": float(np.median(anchor_depth[anchor_depth > 0])) if np.any(anchor_depth > 0) else None,
-        "raw_foundationpose_weight": 0.08,
+        "object_depth_median_m": float(np.median(baseline[:, 2])),
+        "metric_mask_depth_median_m": (
+            float(np.median(metric_mask_depth[np.isfinite(metric_mask_depth)]))
+            if np.isfinite(metric_mask_depth).any() else None
+        ),
+        "metric_depth_accepted_frame_count": metric_depth_accepted,
+        "metric_depth_rejected_frame_count": metric_depth_rejected,
+        "hand_depth_accepted_frame_count": hand_depth_accepted,
+        "hand_depth_rejected_frame_count": hand_depth_rejected,
+        "object_depth_ratio_gate": [MIN_OBJECT_DEPTH_RATIO, MAX_OBJECT_DEPTH_RATIO],
+        "depth_source_policy": "FoundationPose primary; compatible mask depth and calibrated hand depth are low-weight refinements",
     }
 
 
@@ -203,6 +349,32 @@ def object_minimum_z(mesh_m: trimesh.Trimesh, transforms: np.ndarray) -> np.ndar
     ])
 
 
+def reject_unphysical_passive_hands(
+    T_sim_wrist: np.ndarray, fingertips_sim: np.ndarray, hand_roles: list[str], *,
+    hand_clearance_m: float = 0.060, max_correction_m: float = 0.050,
+) -> tuple[list[str], dict[str, Any]]:
+    """Drop passive hands whose absolute translation cannot satisfy floor geometry."""
+    roles = list(hand_roles)
+    diagnostics: dict[str, Any] = {}
+    for hand, role in enumerate(roles):
+        if role != "passive":
+            continue
+        hand_min = min(
+            float(T_sim_wrist[:, hand, 2, 3].min()),
+            float(fingertips_sim[:, hand, :, 2].min()),
+        )
+        required = max(0.0, hand_clearance_m - hand_min)
+        rejected = required > max_correction_m
+        if rejected:
+            roles[hand] = "invalid"
+        diagnostics[HAND_ORDER[hand]] = {
+            "required_floor_correction_m": required,
+            "maximum_allowed_correction_m": max_correction_m,
+            "rejected": rejected,
+        }
+    return roles, diagnostics
+
+
 def enforce_simulation_floor(
     mesh_m: trimesh.Trimesh, T_sim_object: np.ndarray, T_sim_wrist: np.ndarray,
     fingertips_sim: np.ndarray, hand_roles: list[str], *, object_clearance_m: float = 0.002,
@@ -275,7 +447,7 @@ def _optimize_global_scale(
     canonical_mesh: trimesh.Trimesh, initial_scale_m: float, K: np.ndarray,
     poses_camera_object: np.ndarray, masks: np.ndarray, valid: np.ndarray,
 ) -> tuple[float, dict[str, Any]]:
-    """Estimate one episode-level mesh scale from aligned silhouette areas."""
+    """Estimate a conservative episode-level mesh scale from silhouette areas."""
     ratios: list[float] = []
     sampled = _sample_indices(valid, 18)
     for index in sampled:
@@ -292,12 +464,15 @@ def _optimize_global_scale(
             "scale_ratio": 1.0, "sample_count": 0,
             "method": "fallback_initial_scale_no_valid_silhouette",
         }
-    ratio = float(np.clip(np.median(ratios), 0.10, 3.0))
+    raw_ratio = float(np.median(ratios))
+    ratio = float(np.clip(raw_ratio, MIN_GLOBAL_SCALE_RATIO, MAX_GLOBAL_SCALE_RATIO))
     optimized = float(initial_scale_m * ratio)
     return optimized, {
         "initial_scale_to_m": initial_scale_m, "optimized_scale_to_m": optimized,
-        "scale_ratio": ratio, "sample_count": len(ratios),
-        "method": "median_sqrt_observed_to_rendered_mask_area_ratio",
+        "raw_scale_ratio": raw_ratio, "scale_ratio": ratio, "sample_count": len(ratios),
+        "ratio_clip": [MIN_GLOBAL_SCALE_RATIO, MAX_GLOBAL_SCALE_RATIO],
+        "ratio_was_clipped": bool(not math.isclose(raw_ratio, ratio)),
+        "method": "clipped_median_sqrt_observed_to_rendered_mask_area_ratio",
     }
 
 
@@ -310,7 +485,9 @@ def _render_comparison(
     aligned_iou: list[float] = []
     raw_depth: list[float] = []
     aligned_depth: list[float] = []
-    sampled = _sample_indices(valid, 30)
+    # Full-resolution CPU triangle rasterization dominates optimizer runtime;
+    # twelve evenly spaced frames retain episode-wide QC coverage.
+    sampled = _sample_indices(valid, 12)
     for index in sampled:
         mask = masks[index].astype(bool)
         depth_m = valid_depth = None
@@ -364,6 +541,46 @@ def _safe_json(value: Any) -> Any:
     return value
 
 
+def _optimization_quality_control(
+    object_translation_raw: np.ndarray, object_translation_aligned: np.ndarray,
+    scale_metrics: dict[str, Any], render_metrics: dict[str, Any],
+) -> dict[str, Any]:
+    usable = (
+        np.isfinite(object_translation_raw).all(axis=1)
+        & np.isfinite(object_translation_aligned).all(axis=1)
+        & (object_translation_raw[:, 2] > 0.05)
+        & (object_translation_aligned[:, 2] > 0.05)
+    )
+    depth_ratios = (
+        object_translation_aligned[usable, 2] / object_translation_raw[usable, 2]
+        if usable.any() else np.zeros(0, dtype=np.float64)
+    )
+    median_depth_ratio = float(np.median(depth_ratios)) if depth_ratios.size else None
+    depth_scale_preserved = bool(
+        median_depth_ratio is not None
+        and MIN_OBJECT_DEPTH_RATIO <= median_depth_ratio <= MAX_OBJECT_DEPTH_RATIO
+    )
+    raw_residual = render_metrics.get("relative_depth_residual_raw")
+    aligned_residual = render_metrics.get("relative_depth_residual_aligned")
+    metric_depth_preserved = True
+    if isinstance(raw_residual, (int, float)) and isinstance(aligned_residual, (int, float)):
+        metric_depth_preserved = bool(aligned_residual <= max(float(raw_residual) * 3.0, float(raw_residual) + 0.10))
+    scale_ratio = float(scale_metrics["scale_ratio"])
+    scale_preserved = bool(MIN_GLOBAL_SCALE_RATIO <= scale_ratio <= MAX_GLOBAL_SCALE_RATIO)
+    checks = {
+        "camera_depth_scale_preserved": depth_scale_preserved,
+        "metric_depth_residual_preserved": metric_depth_preserved,
+        "global_scale_within_bounds": scale_preserved,
+    }
+    return {
+        "export_ready": bool(all(checks.values())),
+        "checks": checks,
+        "median_aligned_to_raw_camera_depth_ratio": median_depth_ratio,
+        "camera_depth_ratio_bounds": [MIN_OBJECT_DEPTH_RATIO, MAX_OBJECT_DEPTH_RATIO],
+        "metric_depth_residual_policy": "aligned <= max(3 * raw, raw + 0.10)",
+    }
+
+
 def optimize_run(
     run_dir: str | Path, *, smoothing_strength: float = 18.0,
     hand_smoothing_strength: float = 5.0, overwrite: bool = False,
@@ -400,13 +617,31 @@ def optimize_run(
 
     T_camera_object_raw = object_raw["T_camera_object"].astype(np.float64)
     object_translation_raw = T_camera_object_raw[:, :3, 3]
-    joints_camera = (
+    hand_valid = hands_raw["valid"].astype(bool)
+    hand_confidence = hands_raw["score"].astype(np.float64)
+    object_valid = object_raw["valid"].astype(bool)
+    mask_valid = masks_raw["valid"].astype(bool)
+    joints_camera_raw = (
         hands_raw["joints_camera_rootrel"].astype(np.float64)
         + hands_raw["translation_camera"].astype(np.float64)[:, :, None, :]
     )
     centroids = _mask_centroids(masks_raw["masks"].astype(bool))
+    depth_group = None
+    depth_path = root / "depth/metric_depth.zarr"
+    if depth_path.exists():
+        import zarr
+        depth_group = zarr.open(str(depth_path), mode="r")
+    metric_mask_depth = _metric_mask_depths(
+        depth_group, frame_indices, masks_raw["masks"].astype(bool), mask_valid,
+    )
+    joints_camera, hand_depth_calibration = calibrate_hand_depth_scale(
+        K, joints_camera_raw, hand_valid, hand_confidence, object_translation_raw,
+        centroids, object_valid & mask_valid,
+    )
     observations, observation_weights, anchor_metrics = hand_anchored_object_observation(
         K, object_translation_raw, centroids, joints_camera, hands_raw["valid"], hands_raw["score"],
+        object_valid=object_valid, object_confidence=object_raw["confidence"],
+        mask_valid=mask_valid, metric_mask_depth=metric_mask_depth,
     )
     aligned_translation_camera = smooth_second_difference(observations, observation_weights, smoothing_strength)
     object_rotation_camera = smooth_rotations(
@@ -427,8 +662,6 @@ def optimize_run(
     mesh_m.apply_scale(scale_to_m)
     T_world_object = np.einsum("tij,tjk->tik", T_world_camera, T_camera_object_aligned)
 
-    hand_valid = hands_raw["valid"].astype(bool)
-    hand_confidence = hands_raw["score"].astype(np.float64)
     # Preserve the measured left-hand weakness as lower absolute confidence.
     hand_confidence[:, 0] *= 0.45
     # WiLoR translation locates the MANO model origin, not the anatomical wrist.
@@ -475,8 +708,15 @@ def optimize_run(
     hand_roles, hand_role_metrics = classify_hand_roles(
         T_sim_object, fingertips_sim, hand_valid, scale_to_m,
     )
+    hand_roles, passive_hand_qc = reject_unphysical_passive_hands(
+        T_sim_wrist, fingertips_sim, hand_roles,
+    )
     T_sim_object, T_sim_wrist, fingertips_sim, floor_metrics = enforce_simulation_floor(
         mesh_m, T_sim_object, T_sim_wrist, fingertips_sim, hand_roles,
+    )
+    T_sim_camera = np.einsum("ij,tjk->tik", T_sim_world, T_world_camera)
+    T_camera_object_exported = np.einsum(
+        "tij,tjk->tik", np.linalg.inv(T_sim_camera), T_sim_object,
     )
     retained_hands = np.asarray([
         index for index, role in enumerate(hand_roles) if role != "invalid"
@@ -511,7 +751,6 @@ def optimize_run(
     raw_fingertip_homogeneous = np.concatenate([
         fingertips_camera, np.ones((*fingertips_camera.shape[:-1], 1))
     ], axis=-1)
-    T_sim_camera = np.einsum("ij,tjk->tik", T_sim_world, T_world_camera)
     fingertips_sim_raw = np.einsum(
         "tij,thfj->thfi", T_sim_camera, raw_fingertip_homogeneous,
     )[..., :3]
@@ -528,16 +767,15 @@ def optimize_run(
     np.savez_compressed(aligned_path, **aligned)
     np.savez_compressed(contact_path, **contact_artifact)
     raw_reprojection = _reprojection_residual(K, object_translation_raw, centroids)
-    aligned_reprojection = _reprojection_residual(K, aligned_translation_camera, centroids)
-    depth_group = None
-    depth_path = root / "depth/metric_depth.zarr"
-    if depth_path.exists():
-        import zarr
-        depth_group = zarr.open(str(depth_path), mode="r")
+    exported_translation_camera = T_camera_object_exported[:, :3, 3]
+    aligned_reprojection = _reprojection_residual(K, exported_translation_camera, centroids)
     render_metrics = _render_comparison(
         canonical_mesh, K, masks_raw["masks"].astype(bool), scale_valid,
-        T_camera_object_raw, initial_scale_to_m, T_camera_object_aligned,
+        T_camera_object_raw, initial_scale_to_m, T_camera_object_exported,
         scale_to_m, depth_group,
+    )
+    quality_control = _optimization_quality_control(
+        object_translation_raw, exported_translation_camera, scale_metrics, render_metrics,
     )
     raw_slip = raw_contact_metrics.get("contact_local_slip_p95_m_s")
     aligned_slip = contact_metrics.get("contact_local_slip_p95_m_s")
@@ -549,14 +787,16 @@ def optimize_run(
             "artifact_hand_order": artifact_hand_order,
             "role_policy": "visible reliable hands are retained; activity only controls interaction constraints",
             "role_metrics": hand_role_metrics,
+            "passive_hand_qc": passive_hand_qc,
             "wrist_position_source": "translated MANO wrist joint 0",
             "wrist_orientation_source": "landmark-derived xHand palm frame",
+            "depth_calibration": hand_depth_calibration,
         },
         "simulation_floor": floor_metrics,
         "anchor": anchor_metrics,
         "raw_vs_aligned": {
             "object_translation_acceleration_jitter_raw_m_s2": _acceleration_jitter(object_translation_raw, timestamps),
-            "object_translation_acceleration_jitter_aligned_m_s2": _acceleration_jitter(aligned_translation_camera, timestamps),
+            "object_translation_acceleration_jitter_aligned_m_s2": _acceleration_jitter(exported_translation_camera, timestamps),
             "object_mask_centroid_reprojection_raw_px": raw_reprojection,
             "object_mask_centroid_reprojection_aligned_px": aligned_reprojection,
             "object_mask_centroid_reprojection_change_px": aligned_reprojection - raw_reprojection,
@@ -571,11 +811,12 @@ def optimize_run(
         },
         "contact": {"raw": raw_contact_metrics, "aligned": contact_metrics},
         "optimization": {
-            "translation_objective": "weighted hand-ray metric observation + second-difference regularization",
+            "translation_objective": "mask-ray reprojection with FoundationPose-primary metric depth + second-difference regularization",
             "smoothing_strength": smoothing_strength, "hand_smoothing_strength": hand_smoothing_strength,
-            "depth_policy": "FoundationPose/Depth Anything raw translation weight 0.08; no per-frame mesh scale",
+            "depth_policy": "FoundationPose primary; compatible mask and calibrated hand depth are gated refinements",
             "global_object_scale": scale_metrics,
         },
+        "quality_control": quality_control,
     }
     metrics_path = output_dir / "optimization_metrics.json"
     metrics_path.write_text(json.dumps(_safe_json(metrics), indent=2, allow_nan=False) + "\n", encoding="utf-8")
@@ -600,7 +841,7 @@ def optimize_run(
     )
     manifest.start_stage("sequence_optimization", cache_key=cache_key, command=sys.argv, environment="v2s-opt")
     manifest.finish_stage(
-        "sequence_optimization", success=True,
+        "sequence_optimization", success=bool(quality_control["export_ready"]),
         outputs=[
             str(aligned_path.relative_to(root)), str(contact_path.relative_to(root)),
             str(metrics_path.relative_to(root)), *visualization_outputs,
@@ -608,8 +849,11 @@ def optimize_run(
         quality_metrics=metrics["raw_vs_aligned"],
         warnings=["left absolute hand confidence is reduced from its measured GT diagnostic",
                   "penetration is an unsigned nearest-surface proxy in the current V1 optimizer",
+                  *([] if quality_control["export_ready"] else ["optimization failed metric depth/scale export QC"]),
                   *visualization_warnings],
     )
+    if not quality_control["export_ready"]:
+        raise RuntimeError("sequence_optimization_failed: aligned trajectory did not pass metric depth/scale QC")
     return aligned_path, contact_path
 
 

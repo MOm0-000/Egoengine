@@ -98,6 +98,11 @@ def main(argv: list[str] | None = None) -> int:
         optimization_metrics = json.loads(
             (run_dir / "optimization/optimization_metrics.json").read_text(encoding="utf-8")
         )
+        quality_control = optimization_metrics.get("quality_control", {})
+        if quality_control.get("export_ready") is not True:
+            raise RuntimeError(
+                "optimization artifact is not export-ready; rerun optimization and inspect quality_control"
+            )
         hand_roles = optimization_metrics.get("hands", {}).get("roles")
         dataset_root = args.dataset_root or run_dir / "spider_export/dataset"
         print(export_spider_dataset(
