@@ -8,6 +8,7 @@ from video_to_spider.adapters.sam3 import (
     _load_mask_artifact,
     _mask_iou,
     _offload_session_frames,
+    _rank_instances,
 )
 
 
@@ -78,3 +79,29 @@ def test_load_mask_artifact_normalizes_suppression_sentinels(tmp_path):
     assert np.allclose(timestamps, [0.0, 1.0 / 30.0, 2.0 / 30.0])
     assert result["confidence"].tolist() == [np.float32(0.8), 0.0, np.float32(0.9)]
     assert result["valid"].tolist() == [True, False, False]
+
+
+def test_instance_ranking_prefers_moving_handheld_target_over_static_container():
+    shape = (100, 120)
+    container = np.zeros(shape, dtype=bool)
+    container[30:80, 55:115] = True
+    handheld = np.zeros(shape, dtype=bool)
+    handheld[45:60, 35:50] = True
+    hand = np.zeros(shape, dtype=bool)
+    hand[40:70, 42:72] = True
+    per_frame = {}
+    for frame_index, offset in enumerate((0, 15, 30, 45)):
+        moving = np.zeros(shape, dtype=bool)
+        moving[45:60, 35 + offset:50 + offset] = True
+        per_frame[frame_index] = {
+            "out_obj_ids": np.array([1, 2]),
+            "out_binary_masks": np.stack([container, moving]),
+            "out_probs": np.array([0.95, 0.85]),
+        }
+    selected, diagnostics = _rank_instances(
+        np.array([1, 2]), np.stack([container, handheld]), np.array([0.95, 0.85]),
+        hand, per_frame,
+    )
+    assert selected == 1
+    assert diagnostics["motion_span_px"][1] > diagnostics["motion_span_px"][0]
+    assert diagnostics["area_ratio_to_hand"][0] > diagnostics["area_ratio_to_hand"][1]

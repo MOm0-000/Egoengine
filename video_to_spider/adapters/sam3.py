@@ -136,6 +136,60 @@ def _configure_state_offload(predictor: Any) -> None:
     model._init_new_sam2_state = types.MethodType(_init_new_sam2_state, model)
 
 
+def _rank_instances(
+    initial_ids: np.ndarray, initial_masks: np.ndarray, initial_probabilities: np.ndarray,
+    anchor_hand_mask: np.ndarray, per_frame: dict[int, dict[str, Any]],
+) -> tuple[int, dict[str, np.ndarray]]:
+    """Rank text detections after propagation so a moving handheld target beats static namesakes."""
+    if not initial_ids.size:
+        return -1, {
+            "distance_to_hand_px": np.zeros(0), "motion_span_px": np.zeros(0),
+            "motion_score": np.zeros(0), "area_ratio_to_hand": np.zeros(0),
+            "size_score": np.zeros(0), "instance_score": np.zeros(0),
+        }
+    distance_to_hand = cv2.distanceTransform(
+        (~anchor_hand_mask).astype(np.uint8), cv2.DIST_L2, 3,
+    )
+    distances = np.asarray([
+        float(np.min(distance_to_hand[mask])) if mask.any() else float("inf")
+        for mask in initial_masks
+    ])
+    proximity = np.exp(-np.minimum(distances, 1000.0) / 80.0)
+    hand_area = max(int(np.count_nonzero(anchor_hand_mask)), 1)
+    areas = initial_masks.reshape(initial_masks.shape[0], -1).sum(axis=1)
+    area_ratio = areas / hand_area
+    # Handheld objects span a broad range, but scene containers larger than both
+    # hands should not win solely because a hand passes over their silhouette.
+    size_score = np.exp(-np.abs(np.log(np.maximum(area_ratio, 1e-6) / 0.45)))
+    motion_span = np.zeros(initial_ids.shape[0], dtype=np.float64)
+    for candidate_index, object_id in enumerate(initial_ids):
+        centroids = []
+        for outputs in per_frame.values():
+            ids, masks, probabilities = _output_arrays(outputs)
+            matches = np.flatnonzero(ids == object_id)
+            if not matches.size:
+                continue
+            match = int(matches[0])
+            if probabilities[match] <= 0.0 or not masks[match].any():
+                continue
+            moments = cv2.moments(masks[match].astype(np.uint8))
+            centroids.append([moments["m10"] / moments["m00"], moments["m01"] / moments["m00"]])
+        if len(centroids) >= 2:
+            points = np.asarray(centroids, dtype=np.float64)
+            motion_span[candidate_index] = float(np.linalg.norm(points.max(axis=0) - points.min(axis=0)))
+    motion_score = 1.0 - np.exp(-motion_span / 120.0)
+    nonempty = areas > 0
+    instance_score = (
+        0.35 * initial_probabilities + 0.20 * proximity
+        + 0.30 * motion_score + 0.15 * size_score + nonempty * 1e-4
+    )
+    return int(np.argmax(instance_score)), {
+        "distance_to_hand_px": distances, "motion_span_px": motion_span,
+        "motion_score": motion_score, "area_ratio_to_hand": area_ratio,
+        "size_score": size_score, "instance_score": instance_score,
+    }
+
+
 def _offload_session_frames(predictor: Any, session_id: str) -> None:
     """Keep the full resized clip on CPU; SAM already transfers each indexed frame on demand."""
     state = predictor._all_inference_states[session_id]["state"]
@@ -150,43 +204,44 @@ def _offload_session_frames(predictor: Any, session_id: str) -> None:
 
 def _run_prompt(
     predictor: Any, frame_dir: Path, prompt: str, anchor: int, frame_count: int,
-    anchor_hand_mask: np.ndarray,
+    anchor_hand_mask: np.ndarray, max_instances: int = 4,
 ) -> dict[str, Any]:
     # Preserve several detections for automatic hand-proximity ranking. The
     # multiplex implementation owns a coupled detector/tracker cache, so object
     # removal before its first propagation can invalidate cached frame outputs.
     # Tracker state and the full input clip are CPU-offloaded instead.
-    _set_max_objects(predictor, 4)
+    _set_max_objects(predictor, max_instances)
     session_id = _start_session_compat(predictor, frame_dir)
     try:
         response = predictor.handle_request({
             "type": "add_prompt", "session_id": session_id, "frame_index": anchor, "text": prompt,
         })
         initial_ids, initial_masks, initial_probabilities = _output_arrays(response["outputs"])
-        if initial_ids.size:
-            nonempty = initial_masks.reshape(initial_masks.shape[0], -1).sum(axis=1)
-            distance_to_hand = cv2.distanceTransform((~anchor_hand_mask).astype(np.uint8), cv2.DIST_L2, 3)
-            distances = np.asarray([
-                float(np.min(distance_to_hand[mask])) if mask.any() else float("inf") for mask in initial_masks
-            ])
-            proximity = np.exp(-np.minimum(distances, 1000.0) / 80.0)
-            instance_scores = 0.55 * initial_probabilities + 0.45 * proximity + (nonempty > 0) * 1e-4
-            target_at = int(np.argmax(instance_scores))
-            target_id = int(initial_ids[target_at])
-            target_anchor_confidence = float(initial_probabilities[target_at])
-            target_anchor_hand_distance_px = float(distances[target_at])
-            target_instance_score = float(instance_scores[target_at])
-        else:
-            target_id = -1
-            target_anchor_confidence = 0.0
-            target_anchor_hand_distance_px = -1.0
-            target_instance_score = 0.0
         per_frame = {anchor: response["outputs"]}
         for item in predictor.handle_stream_request({
             "type": "propagate_in_video", "session_id": session_id,
             "propagation_direction": "both", "start_frame_index": anchor,
         }):
             per_frame[int(item["frame_index"])] = item["outputs"]
+        target_at, ranking = _rank_instances(
+            initial_ids, initial_masks, initial_probabilities, anchor_hand_mask, per_frame,
+        )
+        if target_at >= 0:
+            target_id = int(initial_ids[target_at])
+            target_anchor_confidence = float(initial_probabilities[target_at])
+            target_anchor_hand_distance_px = float(ranking["distance_to_hand_px"][target_at])
+            target_instance_score = float(ranking["instance_score"][target_at])
+            target_anchor_area_ratio_to_hand = float(ranking["area_ratio_to_hand"][target_at])
+            target_motion_span_px = float(ranking["motion_span_px"][target_at])
+            target_motion_score = float(ranking["motion_score"][target_at])
+        else:
+            target_id = -1
+            target_anchor_confidence = 0.0
+            target_anchor_hand_distance_px = -1.0
+            target_instance_score = 0.0
+            target_anchor_area_ratio_to_hand = 0.0
+            target_motion_span_px = 0.0
+            target_motion_score = 0.0
         sample_masks = initial_masks
         if sample_masks.size:
             height, width = sample_masks.shape[-2:]
@@ -211,6 +266,9 @@ def _run_prompt(
             "target_anchor_confidence": target_anchor_confidence,
             "target_anchor_hand_distance_px": target_anchor_hand_distance_px,
             "target_instance_score": target_instance_score,
+            "target_anchor_area_ratio_to_hand": target_anchor_area_ratio_to_hand,
+            "target_motion_span_px": target_motion_span_px,
+            "target_motion_score": target_motion_score,
             "masks": masks, "valid": valid, "confidence": confidence, "object_ids": object_ids,
         }
     finally:
@@ -300,7 +358,7 @@ def _hand_union(predictor: Any, frame_dir: Path, anchor: int, frame_count: int) 
 
 def _recover_invalid_spans(
     predictor: Any, frame_paths: list[Path], frame_dir: Path, prompt: str,
-    result: dict[str, Any], hand: dict[str, Any],
+    result: dict[str, Any], hand: dict[str, Any], max_instances: int = 4,
 ) -> list[dict[str, Any]]:
     """Automatically re-ground invalid temporal spans and merge identity-consistent masks."""
     recoveries: list[dict[str, Any]] = []
@@ -320,7 +378,7 @@ def _recover_invalid_spans(
         local_hand = _hand_union(predictor, subset_dir, anchor_local, local_count)
         local_result = _run_prompt(
             predictor, subset_dir, prompt, anchor_local, local_count,
-            local_hand["masks"][anchor_local],
+            local_hand["masks"][anchor_local], max_instances=max_instances,
         )
         overlap_ious = []
         for global_index in range(expanded_start, expanded_end):
@@ -419,7 +477,8 @@ def run(args: argparse.Namespace) -> Path:
         anchor = _choose_anchor(frame_paths)
         predictor = build_sam3_multiplex_video_predictor(
             checkpoint_path=str(args.checkpoint), use_fa3=False, use_rope_real=False,
-            max_num_objects=4, compile=False, warm_up=False, async_loading_frames=False,
+            max_num_objects=args.max_instances, compile=False, warm_up=False,
+            async_loading_frames=False,
         )
         _configure_state_offload(predictor)
         # The upstream multiplex default batches 16 video frames for grounding,
@@ -428,7 +487,7 @@ def run(args: argparse.Namespace) -> Path:
         # single-frame grounding batch and four-instance cap preserve semantics
         # while making full-clip inference viable on a shared 40 GiB GPU.
         predictor.model.batched_grounding_batch_size = 1
-        _set_max_objects(predictor, 4)
+        _set_max_objects(predictor, args.max_instances)
         try:
             candidate_dir = output_dir / "candidates"
             candidate_dir.mkdir(exist_ok=True)
@@ -468,6 +527,11 @@ def run(args: argparse.Namespace) -> Path:
                         prior_candidate.get("target_anchor_hand_distance_px", -1.0)
                     ),
                     "target_instance_score": float(prior_candidate.get("target_instance_score", 0.0)),
+                    "target_anchor_area_ratio_to_hand": float(
+                        prior_candidate.get("target_anchor_area_ratio_to_hand", 0.0)
+                    ),
+                    "target_motion_span_px": float(prior_candidate.get("target_motion_span_px", 0.0)),
+                    "target_motion_score": float(prior_candidate.get("target_motion_score", 0.0)),
                 })
                 hand.update({"prompt": "hand"})
                 resumed_result["metrics"] = _metrics(resumed_result)
@@ -486,7 +550,8 @@ def run(args: argparse.Namespace) -> Path:
                 hand = _hand_union(predictor, frame_dir, anchor, len(frame_paths))
                 for prompt in prompts:
                     result = _run_prompt(
-                        predictor, frame_dir, prompt, anchor, len(frame_paths), hand["masks"][anchor]
+                        predictor, frame_dir, prompt, anchor, len(frame_paths), hand["masks"][anchor],
+                        max_instances=args.max_instances,
                     )
                     metrics = _metrics(result)
                     result["metrics"] = metrics
@@ -496,7 +561,7 @@ def run(args: argparse.Namespace) -> Path:
                 selected = max(candidates, key=lambda item: item["result"]["metrics"]["selection_score"])
             recoveries = _recover_invalid_spans(
                 predictor, frame_paths, frame_dir, selected["result"]["prompt"],
-                selected["result"], hand,
+                selected["result"], hand, max_instances=args.max_instances,
             )
             _save_mask_artifact(
                 output_dir / selected["artifact"], frame_indices, timestamps, selected["result"]
@@ -516,8 +581,8 @@ def run(args: argparse.Namespace) -> Path:
         "offload_tracker_state_to_cpu": True,
         "resumed_existing_artifact": bool(args.resume_existing),
         "batched_grounding_batch_size": 1,
-        "grounding_max_num_objects": 4, "hand_max_num_objects": 2,
-        "object_tracking_max_num_objects": 4,
+        "grounding_max_num_objects": args.max_instances, "hand_max_num_objects": 2,
+        "object_tracking_max_num_objects": args.max_instances,
         "selected_prompt": selected["result"]["prompt"], "frame_count": len(frame_paths),
         "automatic_invalid_span_recovery": recoveries,
         "candidates": [{
@@ -526,6 +591,9 @@ def run(args: argparse.Namespace) -> Path:
             "target_anchor_confidence": item["result"]["target_anchor_confidence"],
             "target_anchor_hand_distance_px": item["result"]["target_anchor_hand_distance_px"],
             "target_instance_score": item["result"]["target_instance_score"],
+            "target_anchor_area_ratio_to_hand": item["result"]["target_anchor_area_ratio_to_hand"],
+            "target_motion_span_px": item["result"]["target_motion_span_px"],
+            "target_motion_score": item["result"]["target_motion_score"],
         } for item in candidates],
         "hand_metrics": _metrics(hand),
         "outputs": ["object_masks.npz", "hand_masks.npz", "perception_overlay.mp4"],
@@ -544,6 +612,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--device", choices=["cuda"], default="cuda")
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--max-candidates", type=int, default=12)
+    parser.add_argument("--max-instances", type=int, choices=range(1, 9), default=4)
     parser.add_argument(
         "--resume-existing", action="store_true",
         help="automatically rerun only invalid spans from an existing artifact",
@@ -570,5 +639,6 @@ if __name__ == "__main__":
             "interval": [parsed_args.start_frame, parsed_args.end_frame],
             "checkpoint": str(parsed_args.checkpoint.resolve()),
             "max_candidates": int(parsed_args.max_candidates),
+            "max_instances": int(parsed_args.max_instances),
         }, indent=2) + "\n", encoding="utf-8")
         raise
