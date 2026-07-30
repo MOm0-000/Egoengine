@@ -21,6 +21,7 @@ from .smoothing import smooth_rotations, smooth_second_difference
 
 FINGERTIP_INDICES = np.array([4, 8, 12, 16, 20])
 HAND_ORDER = ["left", "right"]
+HAND_ROLES = {"invalid", "passive", "active"}
 
 
 def _project(K: np.ndarray, points: np.ndarray) -> np.ndarray:
@@ -106,6 +107,134 @@ def _build_T_sim_world(T_world_object: np.ndarray, mesh_m: trimesh.Trimesh) -> n
     transform[:3, :3] = rotation
     transform[:3, 3] = desired_center - initial_center
     return transform
+
+
+def xhand_wrist_frames_from_joints(joints_camera: np.ndarray, side: str) -> np.ndarray:
+    """Build the xHand palm-site frame from observed MANO landmarks."""
+    if side not in {"left", "right"}:
+        raise ValueError("side must be left or right")
+    joints = np.asarray(joints_camera, dtype=np.float64)
+    if joints.ndim != 3 or joints.shape[1:] != (21, 3):
+        raise ValueError(f"joints_camera must have shape (T, 21, 3), got {joints.shape}")
+
+    z_axis = joints[:, 9] - joints[:, 0]
+    y_aux = joints[:, 5] - joints[:, 13]
+
+    def normalize(values: np.ndarray, name: str) -> np.ndarray:
+        norms = np.linalg.norm(values, axis=1)
+        if np.any(norms < 1e-8):
+            raise ValueError(f"cannot construct xHand wrist frame: degenerate {name} axis")
+        return values / norms[:, None]
+
+    z_axis = normalize(z_axis, "finger")
+    x_axis = normalize(np.cross(y_aux, z_axis), "palm")
+    y_axis = normalize(np.cross(z_axis, x_axis), "thumb")
+    if side == "left":
+        x_axis *= -1.0
+        y_axis *= -1.0
+    rotations = np.stack([x_axis, y_axis, z_axis], axis=-1)
+    if np.any(np.linalg.det(rotations) < 0.999):
+        raise ValueError("constructed xHand wrist frame is not a proper rotation")
+    return rotations
+
+
+def classify_hand_roles(
+    T_sim_object: np.ndarray, fingertips_sim: np.ndarray, valid_hand: np.ndarray,
+    object_scale_m: float,
+) -> tuple[list[str], list[dict[str, Any]]]:
+    """Separate hand visibility/quality from participation in manipulation."""
+    object_centers = np.asarray(T_sim_object)[:, :3, 3]
+    roles: list[str] = []
+    diagnostics: list[dict[str, Any]] = []
+    active_distance_m = max(0.08, 2.0 * float(object_scale_m))
+    for hand in range(fingertips_sim.shape[1]):
+        valid = np.asarray(valid_hand[:, hand], dtype=bool)
+        valid_rate = float(np.mean(valid))
+        nearest = np.min(
+            np.linalg.norm(fingertips_sim[:, hand] - object_centers[:, None], axis=-1), axis=1,
+        )
+        valid_nearest = nearest[valid]
+        median_distance = float(np.median(valid_nearest)) if valid_nearest.size else None
+        minimum_distance = float(np.min(valid_nearest)) if valid_nearest.size else None
+        if valid_rate < 0.5:
+            role = "invalid"
+        elif minimum_distance is not None and minimum_distance <= active_distance_m:
+            role = "active"
+        else:
+            role = "passive"
+        roles.append(role)
+        diagnostics.append({
+            "side": HAND_ORDER[hand], "role": role, "valid_rate": valid_rate,
+            "minimum_fingertip_object_center_distance_m": minimum_distance,
+            "median_fingertip_object_center_distance_m": median_distance,
+            "active_distance_threshold_m": active_distance_m,
+        })
+    return roles, diagnostics
+
+
+def object_minimum_z(mesh_m: trimesh.Trimesh, transforms: np.ndarray) -> np.ndarray:
+    vertices = np.asarray(mesh_m.vertices, dtype=np.float64)
+    values = np.asarray(transforms, dtype=np.float64)
+    return np.asarray([
+        float((vertices @ transform[:3, :3].T + transform[:3, 3]).min(axis=0)[2])
+        for transform in values
+    ])
+
+
+def enforce_simulation_floor(
+    mesh_m: trimesh.Trimesh, T_sim_object: np.ndarray, T_sim_wrist: np.ndarray,
+    fingertips_sim: np.ndarray, hand_roles: list[str], *, object_clearance_m: float = 0.002,
+    hand_clearance_m: float = 0.015,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, dict[str, Any]]:
+    """Keep active interaction groups and passive visible hands above the simulator floor."""
+    if any(role not in HAND_ROLES for role in hand_roles):
+        raise ValueError(f"unsupported hand role in {hand_roles}")
+    objects = np.asarray(T_sim_object, dtype=np.float64).copy()
+    wrists = np.asarray(T_sim_wrist, dtype=np.float64).copy()
+    fingertips = np.asarray(fingertips_sim, dtype=np.float64).copy()
+    active = [index for index, role in enumerate(hand_roles) if role == "active"]
+    before_object_min = object_minimum_z(mesh_m, objects)
+    interaction_shift = np.zeros(len(objects), dtype=np.float64)
+    for frame in range(len(objects)):
+        required = object_clearance_m - before_object_min[frame]
+        if active:
+            hand_min = min(
+                float(wrists[frame, active, 2, 3].min()),
+                float(fingertips[frame, active, :, 2].min()),
+            )
+            required = max(required, hand_clearance_m - hand_min)
+        interaction_shift[frame] = max(0.0, required)
+    objects[:, 2, 3] += interaction_shift
+    for hand in active:
+        wrists[:, hand, 2, 3] += interaction_shift
+        fingertips[:, hand, :, 2] += interaction_shift[:, None]
+
+    passive_shift: dict[str, float] = {}
+    for hand, role in enumerate(hand_roles):
+        if role != "passive":
+            continue
+        hand_min = min(float(wrists[:, hand, 2, 3].min()), float(fingertips[:, hand, :, 2].min()))
+        shift = max(0.0, hand_clearance_m - hand_min)
+        wrists[:, hand, 2, 3] += shift
+        fingertips[:, hand, :, 2] += shift
+        passive_shift[HAND_ORDER[hand]] = shift
+
+    after_object_min = object_minimum_z(mesh_m, objects)
+    return objects, wrists, fingertips, {
+        "object_clearance_m": object_clearance_m,
+        "hand_target_clearance_m": hand_clearance_m,
+        "object_min_z_before_m": float(before_object_min.min()),
+        "object_min_z_after_m": float(after_object_min.min()),
+        "interaction_shift_max_m": float(interaction_shift.max()),
+        "interaction_shift_nonzero_frame_count": int(np.count_nonzero(interaction_shift > 0)),
+        "passive_hand_constant_shift_m": passive_shift,
+        "wrist_min_z_after_m": {
+            HAND_ORDER[hand]: float(wrists[:, hand, 2, 3].min()) for hand in range(len(HAND_ORDER))
+        },
+        "fingertip_min_z_after_m": {
+            HAND_ORDER[hand]: float(fingertips[:, hand, :, 2].min()) for hand in range(len(HAND_ORDER))
+        },
+    }
 
 
 def _transform_series(left: np.ndarray, right: np.ndarray) -> np.ndarray:
@@ -280,7 +409,10 @@ def optimize_run(
     hand_confidence = hands_raw["score"].astype(np.float64)
     # Preserve the measured left-hand weakness as lower absolute confidence.
     hand_confidence[:, 0] *= 0.45
-    wrists_camera = hands_raw["translation_camera"].astype(np.float64)
+    # WiLoR translation locates the MANO model origin, not the anatomical wrist.
+    # Use the same translated joint array as the fingertip targets so one hand
+    # cannot contain mutually inconsistent wrist and finger positions.
+    wrists_camera = joints_camera[:, :, 0]
     fingertips_camera = joints_camera[:, :, FINGERTIP_INDICES]
     wrists_camera_aligned = np.empty_like(wrists_camera)
     fingertips_camera_aligned = np.empty_like(fingertips_camera)
@@ -293,8 +425,11 @@ def optimize_run(
         fingertips_camera_aligned[:, hand] = smooth_second_difference(
             fingertips_camera[:, hand], weights, hand_smoothing_strength
         )
+        xhand_rotation = xhand_wrist_frames_from_joints(
+            joints_camera[:, hand], HAND_ORDER[hand],
+        )
         wrist_rotation_camera[:, hand] = smooth_rotations(
-            hands_raw["mano_global_orient"][:, hand], weights, hand_smoothing_strength
+            xhand_rotation, weights, hand_smoothing_strength,
         )
     wrist_world = np.repeat(np.eye(4)[None, None], len(frame_indices) * 2, axis=0).reshape(len(frame_indices), 2, 4, 4)
     fingertips_world = np.empty_like(fingertips_camera_aligned)
@@ -315,6 +450,12 @@ def optimize_run(
         "ij,thfj->thfi", T_sim_world,
         np.concatenate([fingertips_world, np.ones((*fingertips_world.shape[:-1], 1))], axis=-1),
     )[..., :3]
+    hand_roles, hand_role_metrics = classify_hand_roles(
+        T_sim_object, fingertips_sim, hand_valid, scale_to_m,
+    )
+    T_sim_object, T_sim_wrist, fingertips_sim, floor_metrics = enforce_simulation_floor(
+        mesh_m, T_sim_object, T_sim_wrist, fingertips_sim, hand_roles,
+    )
     shared_betas = np.stack([
         np.median(hands_raw["mano_betas"][hand_valid[:, hand], hand], axis=0)
         if hand_valid[:, hand].any() else np.zeros(10)
@@ -372,6 +513,14 @@ def optimize_run(
     metrics = {
         "schema_version": SCHEMA_VERSION, "T_sim_world": T_sim_world.tolist(),
         "hand_order": HAND_ORDER, "left_absolute_confidence_multiplier": 0.45,
+        "hands": {
+            "roles": dict(zip(HAND_ORDER, hand_roles)),
+            "role_policy": "visible reliable hands are retained; activity only controls interaction constraints",
+            "role_metrics": hand_role_metrics,
+            "wrist_position_source": "translated MANO wrist joint 0",
+            "wrist_orientation_source": "landmark-derived xHand palm frame",
+        },
+        "simulation_floor": floor_metrics,
         "anchor": anchor_metrics,
         "raw_vs_aligned": {
             "object_translation_acceleration_jitter_raw_m_s2": _acceleration_jitter(object_translation_raw, timestamps),

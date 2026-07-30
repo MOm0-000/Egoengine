@@ -3,7 +3,13 @@ import trimesh
 
 from video_to_spider.manifest import RunManifest
 from video_to_spider.optimization.contact import infer_contact
-from video_to_spider.optimization.sequence import optimize_run
+from video_to_spider.optimization.sequence import (
+    classify_hand_roles,
+    enforce_simulation_floor,
+    object_minimum_z,
+    optimize_run,
+    xhand_wrist_frames_from_joints,
+)
 from video_to_spider.optimization.smoothing import smooth_rotations, smooth_second_difference
 from video_to_spider.schemas import validate_npz
 
@@ -51,6 +57,57 @@ def test_contact_hysteresis_and_local_positions():
     assert metrics["contact_rate"] == 1.0
 
 
+def test_xhand_wrist_frames_are_landmark_derived_and_handed():
+    joints = np.zeros((2, 21, 3), dtype=np.float64)
+    joints[:, 9, 2] = 1.0
+    joints[:, 5, 1] = 1.0
+    joints[:, 13, 1] = -1.0
+    right = xhand_wrist_frames_from_joints(joints, "right")
+    left = xhand_wrist_frames_from_joints(joints, "left")
+    np.testing.assert_allclose(right, np.repeat(np.eye(3)[None], 2, axis=0))
+    np.testing.assert_allclose(left, np.repeat(np.diag([-1.0, -1.0, 1.0])[None], 2, axis=0))
+    np.testing.assert_allclose(np.linalg.det(right), 1.0)
+    np.testing.assert_allclose(np.linalg.det(left), 1.0)
+
+
+def test_roles_keep_visible_noninteracting_hand_passive():
+    count = 4
+    objects = np.repeat(np.eye(4)[None], count, axis=0)
+    fingertips = np.zeros((count, 2, 5, 3), dtype=np.float64)
+    fingertips[:, 0, :, 0] = 0.03
+    fingertips[:, 1, :, 0] = 0.30
+    valid = np.ones((count, 2), dtype=bool)
+    roles, _ = classify_hand_roles(objects, fingertips, valid, 0.04)
+    assert roles == ["active", "passive"]
+    valid[1:, 1] = False
+    roles, _ = classify_hand_roles(objects, fingertips, valid, 0.04)
+    assert roles == ["active", "invalid"]
+
+
+def test_floor_constraint_preserves_active_group_and_passive_hand():
+    count = 3
+    mesh = trimesh.creation.box(extents=[0.1, 0.1, 0.1])
+    objects = np.repeat(np.eye(4)[None], count, axis=0)
+    objects[:, 2, 3] = -0.02
+    wrists = np.repeat(np.eye(4)[None, None], count * 2, axis=0).reshape(count, 2, 4, 4)
+    wrists[:, 0, 2, 3] = -0.04
+    wrists[:, 1, 2, 3] = -0.10
+    fingertips = np.zeros((count, 2, 5, 3), dtype=np.float64)
+    fingertips[:, 0, :, 2] = -0.03
+    fingertips[:, 1, :, 2] = -0.08
+    relative_before = wrists[:, 0, 2, 3] - objects[:, 2, 3]
+    adjusted_object, adjusted_wrist, adjusted_tips, metrics = enforce_simulation_floor(
+        mesh, objects, wrists, fingertips, ["active", "passive"],
+    )
+    assert object_minimum_z(mesh, adjusted_object).min() >= 0.002 - 1e-9
+    assert adjusted_wrist[:, :, 2, 3].min() >= 0.015 - 1e-9
+    assert adjusted_tips[..., 2].min() >= 0.015 - 1e-9
+    np.testing.assert_allclose(
+        adjusted_wrist[:, 0, 2, 3] - adjusted_object[:, 2, 3], relative_before,
+    )
+    assert metrics["passive_hand_constant_shift_m"]["right"] > 0
+
+
 def test_sequence_optimizer_writes_valid_artifacts(tmp_path):
     count, height, width = 8, 80, 100
     for relative in ("object_tracking", "hands", "segmentation", "calibration", "mesh_proposals/p0"):
@@ -79,7 +136,10 @@ def test_sequence_optimizer_writes_valid_artifacts(tmp_path):
     identity = np.eye(3)
     joints = np.zeros((count, 2, 21, 3))
     joints[..., 2] = 0.30
-    joints[:, :, :, 0] = np.linspace(-0.01, 0.01, 21)
+    joints[:, :, 9, 2] = 0.40
+    joints[:, :, 5, 1] = 0.03
+    joints[:, :, 13, 1] = -0.03
+    joints[:, :, [4, 8, 12, 16, 20], 2] = 0.36
     np.savez_compressed(
         tmp_path / "hands/wilor_raw.npz", frame_indices=frame_indices, timestamps_s=timestamps,
         valid=np.ones((count, 2), bool), score=np.ones((count, 2)),
