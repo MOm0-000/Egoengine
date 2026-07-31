@@ -354,15 +354,18 @@ conda run -n v2s-opt python -m video_to_spider.cli optimize \
 检查优化指标和最终保留的手：
 
 ```bash
-jq '{hands,simulation_floor,anchor,raw_vs_aligned,contact,quality_control}' \
+jq '{hands,simulation_floor,anchor,optimization,raw_vs_aligned,contact,quality_control}' \
   "$RUN_DIR/optimization/optimization_metrics.json"
 ```
 
-优化以 FoundationPose 物体深度为主，只在 Depth Anything 或邻近手部深度与其尺度一致时融合；
-WiLoR 的弱透视平移按手分别评估深度标定，但只有完整手部投影仍处于二维信任域内才会应用。
-全局物体尺度限制在初值的 `0.75-1.50` 倍。
+优化先以 FoundationPose/Depth Anything 作为物体深度先验，并以物体 mask 优化轮廓尺度；
+如果连续多帧存在可靠的二维指尖/物体接触候选，则同步缩放物体网格和相机平移，搜索与
+MANO 指尖最一致的三维表面尺度。同步缩放不会改变物体二维投影，但结果的绝对公制尺度会标记为
+`contact_calibrated_not_externally_validated`，需要真实物体尺寸才能进一步验证。
+WiLoR 的弱透视平移只有在完整手部投影仍处于二维信任域内时才允许校准。
 只有 `quality_control.export_ready == true` 的结果允许进入 `export-spider`，避免二维轮廓改善但
-三维深度、尺度或手部二维对齐退化的轨迹被导出。
+手部二维对齐或 manipulation 接触退化的轨迹被导出。默认要求至少一只 active 手具有连续接触；
+仅处理非操作视频时可显式增加 `--allow-no-contact`。
 
 角色规则：
 
@@ -428,6 +431,8 @@ printf 'embodiment=%s hands=%s\n' "$EMBODIMENT_TYPE" "${HAND_SIDES[*]}"
 ```
 
 后续 export 和 run-spider 必须复用同一个 `EMBODIMENT_TYPE`。
+`export-spider` 未显式传入 `--embodiment-type/--hand-sides` 时，也会根据
+`artifact_hand_order` 自动推断；上面的变量仍应继续用于 `run-spider`。
 
 ### 9. 导出 SPIDER dataset
 
@@ -448,6 +453,7 @@ conda run -n v2s-core python -m video_to_spider.cli export-spider \
 - 物体轨迹不能穿透地面。
 - 手腕和指尖必须高于 xHand 地面安全高度。
 - 手腕到指尖距离必须合理。
+- manipulation 优化必须具有 active 手和连续有效接触。
 
 检查导出 manifest：
 

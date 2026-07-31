@@ -4,7 +4,10 @@ import trimesh
 from video_to_spider.manifest import RunManifest
 from video_to_spider.optimization.contact import infer_contact
 from video_to_spider.optimization.sequence import (
+    _build_T_sim_world,
     _hand_reprojection_metrics,
+    _manipulation_contact_metrics,
+    _optimize_contact_similarity,
     _optimization_quality_control,
     _optimize_global_scale,
     calibrate_hand_depth_scale,
@@ -144,6 +147,114 @@ def test_global_scale_is_clipped_to_conservative_bounds():
     assert metrics["scale_ratio"] == 1.5
     assert metrics["raw_scale_ratio"] > 1.5
     assert metrics["ratio_was_clipped"] is True
+
+
+def test_contact_similarity_recovers_surface_scale_without_changing_projection():
+    count = 6
+    mesh = trimesh.creation.icosphere(subdivisions=1, radius=1.0)
+    K = np.array([[100.0, 0.0, 50.0], [0.0, 100.0, 50.0], [0.0, 0.0, 1.0]])
+    poses = np.repeat(np.eye(4)[None], count, axis=0)
+    poses[:, 2, 3] = 1.0
+    fingertips = np.zeros((count, 1, 5, 3), dtype=np.float64)
+    fingertips[..., 0] = 0.025
+    fingertips[..., 2] = 0.25
+    masks = np.zeros((count, 100, 100), dtype=np.uint8)
+    for mask in masks:
+        __import__("cv2").circle(mask, (50, 50), 15, 1, -1)
+
+    ratio, active_hint, metrics = _optimize_contact_similarity(
+        mesh, 0.1, K, poses, fingertips, masks,
+        np.ones(count, bool), np.ones((count, 1), bool), np.ones((count, 1)),
+    )
+
+    assert metrics["applied"] is True
+    assert np.isclose(ratio, 0.25, atol=0.01)
+    assert active_hint.tolist() == [True]
+    assert metrics["surface_contact_sample_count"] == count * 5
+    projected_before = poses[:, :3, 3] @ K.T
+    projected_after = (poses[:, :3, 3] * ratio) @ K.T
+    np.testing.assert_allclose(
+        projected_before[:, :2] / projected_before[:, 2:],
+        projected_after[:, :2] / projected_after[:, 2:],
+    )
+
+
+def test_manipulation_contact_metrics_require_active_continuous_contact():
+    contact = np.zeros((5, 1, 5), dtype=np.float32)
+    missing = _manipulation_contact_metrics(
+        contact, ["active"], ["right"], require_contact=True,
+    )
+    contact[2:4, 0, 1] = 1.0
+    present = _manipulation_contact_metrics(
+        contact, ["active"], ["right"], require_contact=True,
+    )
+
+    assert missing["passed"] is False
+    assert present["passed"] is True
+    assert present["per_hand"]["right"]["longest_consecutive_contact_run"] == 2
+
+
+def test_manipulation_contact_metrics_reject_disconnected_contact_frames():
+    contact = np.zeros((5, 1, 5), dtype=np.float32)
+    contact[[1, 3], 0, 1] = 1.0
+
+    metrics = _manipulation_contact_metrics(
+        contact, ["active"], ["right"], require_contact=True,
+    )
+
+    assert metrics["active_contact_frame_count"] == 2
+    assert metrics["longest_active_contact_run"] == 1
+    assert metrics["passed"] is False
+
+
+def test_global_simulation_frame_clears_floor_without_changing_camera_pose():
+    count = 3
+    mesh = trimesh.creation.box(extents=[0.1, 0.1, 0.1])
+    world_object = np.repeat(np.eye(4)[None], count, axis=0)
+    world_object[:, 1, 3] = [0.00, -0.02, 0.01]
+    world_camera = np.repeat(np.eye(4)[None], count, axis=0)
+    wrists = np.repeat(np.eye(4)[None, None], count, axis=0)
+    wrists[:, 0, 1, 3] = -0.08
+    fingertips = np.zeros((count, 1, 5, 3), dtype=np.float64)
+    fingertips[:, 0, :, 1] = -0.07
+
+    sim_world = _build_T_sim_world(
+        world_object, mesh, wrist_world=wrists, fingertips_world=fingertips,
+        active_hint=np.array([True]),
+    )
+    sim_object = np.einsum("ij,tjk->tik", sim_world, world_object)
+    sim_camera = np.einsum("ij,tjk->tik", sim_world, world_camera)
+    recovered_camera_object = np.einsum(
+        "tij,tjk->tik", np.linalg.inv(sim_camera), sim_object,
+    )
+
+    assert object_minimum_z(mesh, sim_object).min() >= 0.002 - 1e-9
+    transformed_wrists = np.einsum("ij,thjk->thik", sim_world, wrists)
+    assert transformed_wrists[..., 2, 3].min() >= 0.060 - 1e-9
+    np.testing.assert_allclose(recovered_camera_object, world_object, atol=1e-12)
+
+
+def test_contact_supported_similarity_can_override_monocular_metric_depth():
+    raw = np.repeat([[0.0, 0.0, 1.2]], 5, axis=0)
+    aligned = np.repeat([[0.0, 0.0, 0.3]], 5, axis=0)
+    contact_similarity = {
+        "applied": True,
+        "optimized_similarity_ratio": 0.25,
+        "surface_contact_sample_count": 8,
+        "minimum_required_surface_samples": 4,
+    }
+    manipulation = {"passed": True}
+
+    qc = _optimization_quality_control(
+        raw, aligned, {"scale_ratio": 0.3},
+        {"relative_depth_residual_raw": 0.02, "relative_depth_residual_aligned": 0.7},
+        contact_similarity_metrics=contact_similarity, manipulation_metrics=manipulation,
+    )
+
+    assert qc["export_ready"] is True
+    assert qc["metric_depth_overridden_by_contact"] is True
+    assert qc["metric_depth_preserved"] is False
+    assert qc["checks"]["contact_similarity_scale_supported"] is True
 
 
 def test_optimization_qc_rejects_depth_collapse():

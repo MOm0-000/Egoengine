@@ -30,6 +30,12 @@ MAX_HAND_CALIBRATION_MEDIAN_REPROJECTION_PX = 12.0
 MAX_HAND_CALIBRATION_P95_REPROJECTION_PX = 25.0
 MAX_HAND_EXPORT_MEDIAN_REPROJECTION_PX = 20.0
 MAX_HAND_EXPORT_P95_REPROJECTION_PX = 40.0
+CONTACT_CANDIDATE_DISTANCE_PX = 16.0
+MIN_CONTACT_CANDIDATE_SAMPLES = 8
+MIN_CONTACT_CANDIDATE_FRAMES = 4
+MIN_CONTACT_CANDIDATE_RUN = 3
+MIN_CONTACT_SIMILARITY_RATIO = 0.15
+MAX_CONTACT_SIMILARITY_RATIO = 1.50
 
 
 def _project(K: np.ndarray, points: np.ndarray) -> np.ndarray:
@@ -282,17 +288,36 @@ def _reprojection_residual(K: np.ndarray, translations: np.ndarray, centroids: n
     return float(np.median(np.linalg.norm(projected - centroids, axis=1)))
 
 
-def _build_T_sim_world(T_world_object: np.ndarray, mesh_m: trimesh.Trimesh) -> np.ndarray:
+def _build_T_sim_world(
+    T_world_object: np.ndarray, mesh_m: trimesh.Trimesh, *,
+    wrist_world: np.ndarray | None = None, fingertips_world: np.ndarray | None = None,
+    active_hint: np.ndarray | None = None, object_clearance_m: float = 0.002,
+    hand_clearance_m: float = 0.060,
+) -> np.ndarray:
+    """Choose one simulation frame that clears the floor for the whole interaction."""
     # EgoDex world is +Y up; rotate it to MuJoCo +Z up while preserving handedness.
     rotation = np.array([[1.0, 0.0, 0.0], [0.0, 0.0, -1.0], [0.0, 1.0, 0.0]])
-    initial_rotation = rotation @ T_world_object[0, :3, :3]
     initial_center = rotation @ T_world_object[0, :3, 3]
-    rotated_vertices = np.asarray(mesh_m.vertices) @ initial_rotation.T
-    lowest_relative = float(rotated_vertices[:, 2].min())
-    desired_center = np.array([0.0, -0.06, -lowest_relative + 0.002])
+    vertices = np.asarray(mesh_m.vertices, dtype=np.float64)
+    object_minimum = min(
+        float((vertices @ (rotation @ pose[:3, :3]).T + rotation @ pose[:3, 3]).min(axis=0)[2])
+        for pose in np.asarray(T_world_object, dtype=np.float64)
+    )
+    z_translation = object_clearance_m - object_minimum
+    if wrist_world is not None and fingertips_world is not None and active_hint is not None:
+        active = np.flatnonzero(np.asarray(active_hint, dtype=bool))
+        if active.size:
+            wrist_points = np.asarray(wrist_world, dtype=np.float64)[:, active, :3, 3]
+            fingertip_points = np.asarray(fingertips_world, dtype=np.float64)[:, active]
+            hand_minimum = min(
+                float((wrist_points @ rotation.T)[..., 2].min()),
+                float((fingertip_points @ rotation.T)[..., 2].min()),
+            )
+            z_translation = max(z_translation, hand_clearance_m - hand_minimum)
     transform = np.eye(4, dtype=np.float64)
     transform[:3, :3] = rotation
-    transform[:3, 3] = desired_center - initial_center
+    transform[:2, 3] = np.array([0.0, -0.06]) - initial_center[:2]
+    transform[2, 3] = z_translation
     return transform
 
 
@@ -349,10 +374,16 @@ def xhand_wrist_frames_from_joints(
 
 def classify_hand_roles(
     T_sim_object: np.ndarray, fingertips_sim: np.ndarray, valid_hand: np.ndarray,
-    object_scale_m: float,
+    object_scale_m: float, active_hint: np.ndarray | None = None,
 ) -> tuple[list[str], list[dict[str, Any]]]:
     """Separate hand visibility/quality from participation in manipulation."""
     object_centers = np.asarray(T_sim_object)[:, :3, 3]
+    hinted = (
+        np.zeros(fingertips_sim.shape[1], dtype=bool)
+        if active_hint is None else np.asarray(active_hint, dtype=bool)
+    )
+    if hinted.shape != (fingertips_sim.shape[1],):
+        raise ValueError("active_hint does not match hand dimension")
     roles: list[str] = []
     diagnostics: list[dict[str, Any]] = []
     active_distance_m = max(0.08, 2.0 * float(object_scale_m))
@@ -367,7 +398,7 @@ def classify_hand_roles(
         minimum_distance = float(np.min(valid_nearest)) if valid_nearest.size else None
         if valid_rate < 0.5:
             role = "invalid"
-        elif minimum_distance is not None and minimum_distance <= active_distance_m:
+        elif hinted[hand] or (minimum_distance is not None and minimum_distance <= active_distance_m):
             role = "active"
         else:
             role = "passive"
@@ -377,6 +408,7 @@ def classify_hand_roles(
             "minimum_fingertip_object_center_distance_m": minimum_distance,
             "median_fingertip_object_center_distance_m": median_distance,
             "active_distance_threshold_m": active_distance_m,
+            "persistent_2d_contact_hint": bool(hinted[hand]),
         })
     return roles, diagnostics
 
@@ -517,6 +549,210 @@ def _optimize_global_scale(
     }
 
 
+def _longest_true_run(values: np.ndarray) -> int:
+    longest = current = 0
+    for value in np.asarray(values, dtype=bool):
+        current = current + 1 if value else 0
+        longest = max(longest, current)
+    return longest
+
+
+def _fingertip_mask_distances(
+    K: np.ndarray, fingertips_camera: np.ndarray, masks: np.ndarray, *, downsample: int = 4,
+) -> np.ndarray:
+    """Approximate fingertip-to-mask distances without a full-resolution distance transform."""
+    fingertips = np.asarray(fingertips_camera, dtype=np.float64)
+    mask_values = np.asarray(masks, dtype=bool)
+    if fingertips.ndim != 4 or fingertips.shape[2:] != (5, 3):
+        raise ValueError(f"fingertips_camera must have shape (T, H, 5, 3), got {fingertips.shape}")
+    if len(mask_values) != len(fingertips):
+        raise ValueError("fingertips and masks have different timelines")
+    pixels = _project(K, fingertips) / float(downsample)
+    distances = np.full(fingertips.shape[:3], np.inf, dtype=np.float64)
+    for frame, mask in enumerate(mask_values):
+        height, width = mask.shape
+        target_size = (
+            max(1, int(math.ceil(width / downsample))),
+            max(1, int(math.ceil(height / downsample))),
+        )
+        reduced = cv2.resize(
+            mask.astype(np.uint8), target_size, interpolation=cv2.INTER_NEAREST,
+        ).astype(bool)
+        if not reduced.any():
+            continue
+        outside = cv2.distanceTransform(
+            (~reduced).astype(np.uint8), cv2.DIST_L2, 5,
+        ) * float(downsample)
+        rounded = np.rint(pixels[frame]).astype(np.int64)
+        for hand in range(fingertips.shape[1]):
+            for finger in range(5):
+                x, y = rounded[hand, finger]
+                if (
+                    fingertips[frame, hand, finger, 2] > 0.05
+                    and 0 <= x < target_size[0] and 0 <= y < target_size[1]
+                ):
+                    distances[frame, hand, finger] = float(outside[y, x])
+    return distances
+
+
+def _optimize_contact_similarity(
+    canonical_mesh: trimesh.Trimesh, base_scale_m: float, K: np.ndarray,
+    poses_camera_object: np.ndarray, fingertips_camera: np.ndarray,
+    masks: np.ndarray, object_valid: np.ndarray, hand_valid: np.ndarray,
+    hand_confidence: np.ndarray, *, candidate_distance_px: float = CONTACT_CANDIDATE_DISTANCE_PX,
+    enter_distance_m: float = 0.012,
+) -> tuple[float, np.ndarray, dict[str, Any]]:
+    """Resolve monocular object scale from persistent 2D hand-object contact evidence.
+
+    Scaling the canonical mesh and camera-space object translation by the same
+    episode-level ratio leaves its image projection unchanged. Search that one
+    degree of freedom for a scale that places persistent 2D fingertip candidates
+    on the reconstructed object surface while preserving the metric MANO hand.
+    """
+    poses = np.asarray(poses_camera_object, dtype=np.float64)
+    fingertips = np.asarray(fingertips_camera, dtype=np.float64)
+    valid_object = np.asarray(object_valid, dtype=bool)
+    valid_hand_values = np.asarray(hand_valid, dtype=bool)
+    confidence = np.asarray(hand_confidence, dtype=np.float64)
+    mask_distances = _fingertip_mask_distances(K, fingertips, masks)
+    candidate = (
+        (mask_distances <= candidate_distance_px)
+        & valid_object[:, None, None]
+        & valid_hand_values[:, :, None]
+        & (confidence[:, :, None] >= 0.5)
+        & np.isfinite(fingertips).all(axis=-1)
+        & (fingertips[..., 2] > 0.05)
+        & (poses[:, None, None, 2, 3] > 0.05)
+    )
+    hand_records: dict[str, dict[str, Any]] = {}
+    qualifying_hands = np.zeros(fingertips.shape[1], dtype=bool)
+    for hand in range(fingertips.shape[1]):
+        frame_candidate = candidate[:, hand].any(axis=1)
+        sample_count = int(candidate[:, hand].sum())
+        frame_count = int(frame_candidate.sum())
+        longest_run = _longest_true_run(frame_candidate)
+        qualifies = bool(
+            sample_count >= MIN_CONTACT_CANDIDATE_SAMPLES
+            and frame_count >= MIN_CONTACT_CANDIDATE_FRAMES
+            and longest_run >= MIN_CONTACT_CANDIDATE_RUN
+        )
+        qualifying_hands[hand] = qualifies
+        side = HAND_ORDER[hand] if hand < len(HAND_ORDER) else str(hand)
+        hand_records[side] = {
+            "sample_count": sample_count,
+            "frame_count": frame_count,
+            "longest_consecutive_frame_run": longest_run,
+            "qualifies": qualifies,
+            "minimum_mask_distance_px": (
+                float(np.min(mask_distances[:, hand][np.isfinite(mask_distances[:, hand])]))
+                if np.isfinite(mask_distances[:, hand]).any() else None
+            ),
+        }
+    selected = candidate & qualifying_hands[None, :, None]
+    selected_indices = np.argwhere(selected)
+    if not selected_indices.size:
+        return 1.0, np.zeros_like(qualifying_hands), {
+            "applied": False,
+            "reason": "insufficient_persistent_2d_contact_candidates",
+            "candidate_distance_px": candidate_distance_px,
+            "hands": hand_records,
+            "candidate_sample_count": 0,
+        }
+
+    center_depth = poses[selected_indices[:, 0], 2, 3]
+    fingertip_depth = fingertips[
+        selected_indices[:, 0], selected_indices[:, 1], selected_indices[:, 2], 2,
+    ]
+    depth_ratios = fingertip_depth / center_depth
+    usable_ratio = (
+        np.isfinite(depth_ratios)
+        & (depth_ratios >= MIN_CONTACT_SIMILARITY_RATIO)
+        & (depth_ratios <= MAX_CONTACT_SIMILARITY_RATIO)
+    )
+    selected_indices = selected_indices[usable_ratio]
+    depth_ratios = depth_ratios[usable_ratio]
+    if len(depth_ratios) < MIN_CONTACT_CANDIDATE_SAMPLES:
+        return 1.0, np.zeros_like(qualifying_hands), {
+            "applied": False,
+            "reason": "candidate_depth_ratios_outside_bounds",
+            "candidate_distance_px": candidate_distance_px,
+            "hands": hand_records,
+            "candidate_sample_count": int(len(depth_ratios)),
+        }
+
+    p10, p90 = np.percentile(depth_ratios, [10, 90])
+    lower = max(MIN_CONTACT_SIMILARITY_RATIO, float(p10) - 0.05)
+    upper = min(MAX_CONTACT_SIMILARITY_RATIO, float(p90) + 0.05)
+    if upper <= lower:
+        lower = max(MIN_CONTACT_SIMILARITY_RATIO, float(np.median(depth_ratios)) - 0.05)
+        upper = min(MAX_CONTACT_SIMILARITY_RATIO, float(np.median(depth_ratios)) + 0.05)
+    ratios = np.linspace(lower, upper, 81)
+    canonical_vertices = np.asarray(canonical_mesh.vertices, dtype=np.float64) * float(base_scale_m)
+    frame_groups: dict[int, np.ndarray] = {}
+    base_vertices_camera: dict[int, np.ndarray] = {}
+    for frame in np.unique(selected_indices[:, 0]):
+        frame_groups[int(frame)] = selected_indices[selected_indices[:, 0] == frame]
+        pose = poses[frame]
+        base_vertices_camera[int(frame)] = canonical_vertices @ pose[:3, :3].T + pose[:3, 3]
+
+    best: tuple[int, int, float] | None = None
+    best_ratio = 1.0
+    best_distances = np.full(len(selected_indices), np.inf, dtype=np.float64)
+    for ratio in ratios:
+        distances = np.empty(len(selected_indices), dtype=np.float64)
+        offset = 0
+        for frame, indices in frame_groups.items():
+            points = fingertips[frame, indices[:, 1], indices[:, 2]]
+            vertices = base_vertices_camera[frame] * ratio
+            delta = points[:, None, :] - vertices[None, :, :]
+            count = len(indices)
+            distances[offset : offset + count] = np.sqrt(np.sum(delta * delta, axis=-1)).min(axis=1)
+            offset += count
+        enter_count = int(np.count_nonzero(distances <= enter_distance_m))
+        exit_count = int(np.count_nonzero(distances <= 0.020))
+        truncated_loss = float(np.mean(np.minimum(distances, 0.030)))
+        score = (enter_count, exit_count, -truncated_loss)
+        if best is None or score > best:
+            best = score
+            best_ratio = float(ratio)
+            best_distances = distances
+
+    fitted_contact = best_distances <= enter_distance_m
+    fitted_frames = selected_indices[fitted_contact, 0]
+    fitted_hands = selected_indices[fitted_contact, 1]
+    minimum_fit_samples = max(4, int(math.ceil(0.15 * len(selected_indices))))
+    fit_supported = bool(
+        fitted_contact.sum() >= minimum_fit_samples and np.unique(fitted_frames).size >= 2
+    )
+    activity_hint = np.zeros(fingertips.shape[1], dtype=bool)
+    if fit_supported:
+        for hand in np.unique(fitted_hands):
+            activity_hint[int(hand)] = np.count_nonzero(fitted_hands == hand) >= 2
+    return (best_ratio if fit_supported else 1.0), activity_hint, {
+        "applied": fit_supported,
+        "reason": None if fit_supported else "surface_fit_has_insufficient_contact_support",
+        "method": "persistent_2d_candidates_plus_truncated_nearest_surface_grid_search",
+        "candidate_distance_px": candidate_distance_px,
+        "ratio_bounds": [MIN_CONTACT_SIMILARITY_RATIO, MAX_CONTACT_SIMILARITY_RATIO],
+        "search_interval": [lower, upper],
+        "raw_depth_ratio_median": float(np.median(depth_ratios)),
+        "raw_depth_ratio_p10": float(p10),
+        "raw_depth_ratio_p90": float(p90),
+        "optimized_similarity_ratio": best_ratio,
+        "candidate_sample_count": int(len(selected_indices)),
+        "surface_contact_sample_count": int(fitted_contact.sum()),
+        "surface_contact_frame_count": int(np.unique(fitted_frames).size),
+        "minimum_required_surface_samples": minimum_fit_samples,
+        "surface_distance_median_m": float(np.median(best_distances)),
+        "surface_distance_p25_m": float(np.percentile(best_distances, 25)),
+        "hands": hand_records,
+        "activity_hint": {
+            HAND_ORDER[hand]: bool(activity_hint[hand]) for hand in range(len(activity_hint))
+        },
+        "absolute_metric_scale_status": "contact_calibrated_not_externally_validated",
+    }
+
+
 def _render_comparison(
     canonical_mesh: trimesh.Trimesh, K: np.ndarray, masks: np.ndarray, valid: np.ndarray,
     raw_poses: np.ndarray, raw_scale_m: float, aligned_poses: np.ndarray,
@@ -630,10 +866,61 @@ def _hand_reprojection_metrics(
     }
 
 
+def _manipulation_contact_metrics(
+    contact: np.ndarray, hand_roles: list[str], hand_order: list[str], *,
+    require_contact: bool,
+) -> dict[str, Any]:
+    values = np.asarray(contact) >= 0.5
+    if values.ndim != 3 or values.shape[1] != len(hand_roles) or len(hand_roles) != len(hand_order):
+        raise ValueError("contact, hand roles, and hand order are inconsistent")
+    per_hand: dict[str, dict[str, Any]] = {}
+    active_contact_frames = 0
+    active_contact_samples = 0
+    longest_active_contact_run = 0
+    for hand, (side, role) in enumerate(zip(hand_order, hand_roles)):
+        frame_contact = values[:, hand].any(axis=1)
+        frame_count = int(frame_contact.sum())
+        sample_count = int(values[:, hand].sum())
+        if role == "active":
+            active_contact_frames += frame_count
+            active_contact_samples += sample_count
+            longest_active_contact_run = max(
+                longest_active_contact_run, _longest_true_run(frame_contact),
+            )
+        per_hand[side] = {
+            "role": role,
+            "contact_rate": float(values[:, hand].mean()),
+            "contact_frame_count": frame_count,
+            "contact_sample_count": sample_count,
+            "longest_consecutive_contact_run": _longest_true_run(frame_contact),
+        }
+    active_hands = [side for side, role in zip(hand_order, hand_roles) if role == "active"]
+    contact_present = bool(
+        active_hands
+        and active_contact_frames >= 2
+        and active_contact_samples >= 2
+        and longest_active_contact_run >= 2
+    )
+    return {
+        "required": require_contact,
+        "passed": bool(contact_present or not require_contact),
+        "active_hands": active_hands,
+        "active_contact_frame_count": active_contact_frames,
+        "active_contact_sample_count": active_contact_samples,
+        "longest_active_contact_run": longest_active_contact_run,
+        "minimum_active_contact_frames": 2,
+        "minimum_active_contact_samples": 2,
+        "minimum_consecutive_active_contact_frames": 2,
+        "per_hand": per_hand,
+    }
+
+
 def _optimization_quality_control(
     object_translation_raw: np.ndarray, object_translation_aligned: np.ndarray,
     scale_metrics: dict[str, Any], render_metrics: dict[str, Any],
     hand_reprojection_metrics: dict[str, Any] | None = None,
+    contact_similarity_metrics: dict[str, Any] | None = None,
+    manipulation_metrics: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     usable = (
         np.isfinite(object_translation_raw).all(axis=1)
@@ -655,28 +942,50 @@ def _optimization_quality_control(
     metric_depth_preserved = True
     if isinstance(raw_residual, (int, float)) and isinstance(aligned_residual, (int, float)):
         metric_depth_preserved = bool(aligned_residual <= max(float(raw_residual) * 3.0, float(raw_residual) + 0.10))
+    contact_override = bool(contact_similarity_metrics and contact_similarity_metrics.get("applied"))
     scale_ratio = float(scale_metrics["scale_ratio"])
-    scale_preserved = bool(MIN_GLOBAL_SCALE_RATIO <= scale_ratio <= MAX_GLOBAL_SCALE_RATIO)
-    checks = {
-        "camera_depth_scale_preserved": depth_scale_preserved,
-        "metric_depth_residual_preserved": metric_depth_preserved,
-        "global_scale_within_bounds": scale_preserved,
-    }
+    if contact_override:
+        similarity_ratio = float(contact_similarity_metrics["optimized_similarity_ratio"])
+        scale_supported = bool(
+            MIN_CONTACT_SIMILARITY_RATIO <= similarity_ratio <= MAX_CONTACT_SIMILARITY_RATIO
+            and int(contact_similarity_metrics["surface_contact_sample_count"])
+            >= int(contact_similarity_metrics["minimum_required_surface_samples"])
+        )
+        checks = {
+            "contact_similarity_scale_supported": scale_supported,
+        }
+    else:
+        scale_supported = bool(MIN_GLOBAL_SCALE_RATIO <= scale_ratio <= MAX_GLOBAL_SCALE_RATIO)
+        checks = {
+            "camera_depth_scale_preserved": depth_scale_preserved,
+            "metric_depth_residual_preserved": metric_depth_preserved,
+            "global_scale_within_bounds": scale_supported,
+        }
     if hand_reprojection_metrics is not None:
         checks["hand_image_alignment_preserved"] = bool(hand_reprojection_metrics["passed"])
+    if manipulation_metrics is not None:
+        checks["manipulation_contact_present"] = bool(manipulation_metrics["passed"])
     return {
         "export_ready": bool(all(checks.values())),
         "checks": checks,
         "median_aligned_to_raw_camera_depth_ratio": median_depth_ratio,
         "camera_depth_ratio_bounds": [MIN_OBJECT_DEPTH_RATIO, MAX_OBJECT_DEPTH_RATIO],
         "metric_depth_residual_policy": "aligned <= max(3 * raw, raw + 0.10)",
+        "metric_depth_preserved": metric_depth_preserved,
+        "metric_depth_overridden_by_contact": contact_override,
+        "scale_policy": (
+            "persistent 2D contact plus 3D surface fit overrides monocular metric depth"
+            if contact_override else "preserve FoundationPose/Depth Anything metric scale"
+        ),
         "hand_reprojection": hand_reprojection_metrics,
+        "manipulation": manipulation_metrics,
     }
 
 
 def optimize_run(
     run_dir: str | Path, *, smoothing_strength: float = 18.0,
-    hand_smoothing_strength: float = 5.0, overwrite: bool = False,
+    hand_smoothing_strength: float = 5.0, require_contact: bool = True,
+    overwrite: bool = False,
 ) -> tuple[Path, Path]:
     root = Path(run_dir).resolve()
     output_dir = root / "optimization"
@@ -747,13 +1056,10 @@ def optimize_run(
         object_raw["valid"].astype(bool) & masks_raw["valid"].astype(bool)
         & (T_camera_object_aligned[:, 2, 3] > 0)
     )
-    scale_to_m, scale_metrics = _optimize_global_scale(
+    silhouette_scale_to_m, silhouette_scale_metrics = _optimize_global_scale(
         canonical_mesh, initial_scale_to_m, K, T_camera_object_aligned,
         masks_raw["masks"].astype(bool), scale_valid,
     )
-    mesh_m = canonical_mesh.copy()
-    mesh_m.apply_scale(scale_to_m)
-    T_world_object = np.einsum("tij,tjk->tik", T_world_camera, T_camera_object_aligned)
 
     # Preserve the measured left-hand weakness as lower absolute confidence.
     hand_confidence[:, 0] *= 0.45
@@ -779,6 +1085,38 @@ def optimize_run(
         wrist_rotation_camera[:, hand] = smooth_rotations(
             xhand_rotation, weights, hand_smoothing_strength,
         )
+    contact_similarity_ratio, active_hint, contact_similarity_metrics = _optimize_contact_similarity(
+        canonical_mesh, silhouette_scale_to_m, K, T_camera_object_aligned,
+        fingertips_camera_aligned, masks_raw["masks"].astype(bool),
+        object_valid & mask_valid, hand_valid, hand_confidence,
+    )
+    scale_to_m = float(silhouette_scale_to_m * contact_similarity_ratio)
+    T_camera_object_aligned[:, :3, 3] *= contact_similarity_ratio
+    scale_metrics = {
+        "initial_scale_to_m": initial_scale_to_m,
+        "silhouette_optimized_scale_to_m": silhouette_scale_to_m,
+        "silhouette_raw_scale_ratio": silhouette_scale_metrics.get("raw_scale_ratio"),
+        "silhouette_scale_ratio": silhouette_scale_metrics["scale_ratio"],
+        "silhouette_ratio_clip": silhouette_scale_metrics.get("ratio_clip"),
+        "silhouette_ratio_was_clipped": silhouette_scale_metrics.get("ratio_was_clipped", False),
+        "silhouette_sample_count": silhouette_scale_metrics["sample_count"],
+        "contact_similarity_ratio": contact_similarity_ratio,
+        "optimized_scale_to_m": scale_to_m,
+        "scale_ratio": float(scale_to_m / initial_scale_to_m),
+        "scale_ratio_semantics": "final optimized scale divided by selected-mesh initial scale",
+        "final_similarity_ratio_bounds": (
+            [MIN_CONTACT_SIMILARITY_RATIO, MAX_CONTACT_SIMILARITY_RATIO]
+            if contact_similarity_metrics["applied"]
+            else [MIN_GLOBAL_SCALE_RATIO, MAX_GLOBAL_SCALE_RATIO]
+        ),
+        "method": (
+            "silhouette_scale_then_contact_similarity"
+            if contact_similarity_metrics["applied"] else silhouette_scale_metrics["method"]
+        ),
+    }
+    mesh_m = canonical_mesh.copy()
+    mesh_m.apply_scale(scale_to_m)
+    T_world_object = np.einsum("tij,tjk->tik", T_world_camera, T_camera_object_aligned)
     wrist_world = np.repeat(np.eye(4)[None, None], len(frame_indices) * 2, axis=0).reshape(len(frame_indices), 2, 4, 4)
     fingertips_world = np.empty_like(fingertips_camera_aligned)
     for hand in range(2):
@@ -791,7 +1129,10 @@ def optimize_run(
         fingertips_world[:, hand] = np.einsum(
             "tij,tfj->tfi", T_world_camera[:, :3, :3], fingertips_camera_aligned[:, hand]
         ) + T_world_camera[:, None, :3, 3]
-    T_sim_world = _build_T_sim_world(T_world_object, mesh_m)
+    T_sim_world = _build_T_sim_world(
+        T_world_object, mesh_m, wrist_world=wrist_world,
+        fingertips_world=fingertips_world, active_hint=active_hint,
+    )
     T_sim_object = _transform_series(T_sim_world, T_world_object)
     T_sim_wrist = np.einsum("ij,thjk->thik", T_sim_world, wrist_world)
     fingertips_sim = np.einsum(
@@ -799,7 +1140,7 @@ def optimize_run(
         np.concatenate([fingertips_world, np.ones((*fingertips_world.shape[:-1], 1))], axis=-1),
     )[..., :3]
     hand_roles, hand_role_metrics = classify_hand_roles(
-        T_sim_object, fingertips_sim, hand_valid, scale_to_m,
+        T_sim_object, fingertips_sim, hand_valid, scale_to_m, active_hint,
     )
     hand_roles, passive_hand_qc = reject_unphysical_passive_hands(
         T_sim_wrist, fingertips_sim, hand_roles,
@@ -839,6 +1180,10 @@ def optimize_run(
     contact, contact_positions, contact_metrics = infer_contact(
         mesh_m, T_sim_object, fingertips_sim[:, retained_hands], timestamps,
         hand_valid[:, retained_hands],
+    )
+    retained_roles = [hand_roles[index] for index in retained_hands]
+    manipulation_metrics = _manipulation_contact_metrics(
+        contact, retained_roles, artifact_hand_order, require_contact=require_contact,
     )
     T_sim_object_raw = np.einsum("ij,tjk,tkl->til", T_sim_world, T_world_camera, T_camera_object_raw)
     raw_fingertip_homogeneous = np.concatenate([
@@ -880,7 +1225,7 @@ def optimize_run(
     )
     quality_control = _optimization_quality_control(
         object_translation_raw, exported_translation_camera, scale_metrics, render_metrics,
-        hand_reprojection_metrics,
+        hand_reprojection_metrics, contact_similarity_metrics, manipulation_metrics,
     )
     raw_slip = raw_contact_metrics.get("contact_local_slip_p95_m_s")
     aligned_slip = contact_metrics.get("contact_local_slip_p95_m_s")
@@ -917,10 +1262,11 @@ def optimize_run(
         },
         "contact": {"raw": raw_contact_metrics, "aligned": contact_metrics},
         "optimization": {
-            "translation_objective": "mask-ray reprojection with FoundationPose-primary metric depth + second-difference regularization",
+            "translation_objective": "mask-ray smoothing followed by contact-aware global similarity calibration",
             "smoothing_strength": smoothing_strength, "hand_smoothing_strength": hand_smoothing_strength,
-            "depth_policy": "FoundationPose primary; compatible mask and calibrated hand depth are gated refinements",
+            "depth_policy": "monocular metric depth is a prior; persistent contact may override it with a documented global similarity",
             "global_object_scale": scale_metrics,
+            "contact_similarity": contact_similarity_metrics,
         },
         "quality_control": quality_control,
     }
@@ -941,7 +1287,8 @@ def optimize_run(
     manifest = RunManifest.load(root / "manifest.json")
     cache_key = stage_cache_key(
         "sequence_optimization", {"smoothing_strength": smoothing_strength,
-        "hand_smoothing_strength": hand_smoothing_strength},
+        "hand_smoothing_strength": hand_smoothing_strength,
+        "require_contact": require_contact},
         [root / "object_tracking/foundationpose_raw.npz", root / "object_tracking/selected_mesh.json",
          root / "hands/wilor_raw.npz", root / "segmentation/object_masks.npz"],
     )
@@ -955,11 +1302,11 @@ def optimize_run(
         quality_metrics=metrics["raw_vs_aligned"],
         warnings=["left absolute hand confidence is reduced from its measured GT diagnostic",
                   "penetration is an unsigned nearest-surface proxy in the current V1 optimizer",
-                  *([] if quality_control["export_ready"] else ["optimization failed object or hand export QC"]),
+                  *([] if quality_control["export_ready"] else ["optimization failed object, hand, or manipulation export QC"]),
                   *visualization_warnings],
     )
     if not quality_control["export_ready"]:
-        raise RuntimeError("sequence_optimization_failed: aligned trajectory did not pass metric depth/scale QC")
+        raise RuntimeError("sequence_optimization_failed: aligned trajectory did not pass export QC")
     return aligned_path, contact_path
 
 
@@ -968,6 +1315,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--run-dir", type=Path, required=True)
     parser.add_argument("--smoothing-strength", type=float, default=18.0)
     parser.add_argument("--hand-smoothing-strength", type=float, default=5.0)
+    parser.add_argument("--allow-no-contact", action="store_true")
     parser.add_argument("--overwrite", action="store_true")
     return parser
 
@@ -976,7 +1324,8 @@ def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     aligned, contact = optimize_run(
         args.run_dir, smoothing_strength=args.smoothing_strength,
-        hand_smoothing_strength=args.hand_smoothing_strength, overwrite=args.overwrite,
+        hand_smoothing_strength=args.hand_smoothing_strength,
+        require_contact=not args.allow_no_contact, overwrite=args.overwrite,
     )
     print(aligned)
     print(contact)

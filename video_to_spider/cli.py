@@ -41,6 +41,7 @@ def _parser() -> argparse.ArgumentParser:
     optimize.add_argument("--run-dir", type=Path, required=True)
     optimize.add_argument("--smoothing-strength", type=float, default=18.0)
     optimize.add_argument("--hand-smoothing-strength", type=float, default=5.0)
+    optimize.add_argument("--allow-no-contact", action="store_true")
     optimize.add_argument("--overwrite", action="store_true")
     export = commands.add_parser("export-spider")
     export.add_argument("--run-dir", type=Path, required=True)
@@ -48,8 +49,8 @@ def _parser() -> argparse.ArgumentParser:
     export.add_argument("--spider-package-root", type=Path, required=True)
     export.add_argument("--task")
     export.add_argument("--data-id", type=int, default=0)
-    export.add_argument("--embodiment-type", choices=["right", "left", "bimanual"], default="bimanual")
-    export.add_argument("--hand-sides", nargs="+", choices=["left", "right"], default=["left", "right"])
+    export.add_argument("--embodiment-type", choices=["right", "left", "bimanual"])
+    export.add_argument("--hand-sides", nargs="+", choices=["left", "right"])
     export.add_argument("--robot-type", default="xhand")
     spider = commands.add_parser("run-spider")
     spider.add_argument("--dataset-root", type=Path, required=True)
@@ -88,7 +89,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "optimize":
         print(optimize_run(
             args.run_dir, smoothing_strength=args.smoothing_strength,
-            hand_smoothing_strength=args.hand_smoothing_strength, overwrite=args.overwrite,
+            hand_smoothing_strength=args.hand_smoothing_strength,
+            require_contact=not args.allow_no_contact, overwrite=args.overwrite,
         ))
         return 0
     if args.command == "export-spider":
@@ -104,16 +106,28 @@ def main(argv: list[str] | None = None) -> int:
                 "optimization artifact is not export-ready; rerun optimization and inspect quality_control"
             )
         hand_roles = optimization_metrics.get("hands", {}).get("roles")
+        artifact_hand_order = optimization_metrics.get("hands", {}).get("artifact_hand_order")
+        hand_sides = args.hand_sides or artifact_hand_order
+        if not hand_sides:
+            raise RuntimeError("optimization report does not define artifact_hand_order")
+        inferred_embodiment = {
+            ("right",): "right",
+            ("left",): "left",
+            ("left", "right"): "bimanual",
+        }.get(tuple(hand_sides))
+        embodiment_type = args.embodiment_type or inferred_embodiment
+        if embodiment_type is None:
+            raise RuntimeError(f"cannot infer SPIDER embodiment from hand order: {hand_sides}")
         dataset_root = args.dataset_root or run_dir / "spider_export/dataset"
         print(export_spider_dataset(
             aligned_path=run_dir / "optimization/aligned_trajectory.npz",
             contact_path=run_dir / "optimization/contact.npz",
             visual_mesh_path=run_dir / selected["canonical_visual_mesh"],
             dataset_root=dataset_root, task=args.task or source["task_directory"],
-            data_id=args.data_id, source_run_id=run_dir.name, hand_sides=args.hand_sides,
+            data_id=args.data_id, source_run_id=run_dir.name, hand_sides=hand_sides,
             spider_package_root=args.spider_package_root,
             hand_roles=hand_roles,
-            embodiment_type=args.embodiment_type, robot_type=args.robot_type,
+            embodiment_type=embodiment_type, robot_type=args.robot_type,
         ))
         return 0
     if args.command == "run-spider":
