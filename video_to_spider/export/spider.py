@@ -60,10 +60,52 @@ def _object_minimum_z(mesh: trimesh.Trimesh, transforms: np.ndarray) -> np.ndarr
     ])
 
 
+def _align_initial_support(
+    aligned: Mapping[str, np.ndarray], contact: Mapping[str, np.ndarray],
+    visual_mesh: trimesh.Trimesh, *, object_clearance_m: float = 0.002,
+    floor_tolerance_m: float = 1e-4,
+) -> tuple[dict[str, np.ndarray], dict[str, float | int]]:
+    """Place the pre-contact object support surface on the simulation floor."""
+    adjusted = {key: np.asarray(value).copy() for key, value in aligned.items()}
+    object_poses = adjusted["T_sim_object"][:, 0]
+    contact_frames = np.asarray(contact["contact"]).astype(bool).any(axis=(1, 2))
+    first_contact = (
+        int(np.flatnonzero(contact_frames)[0]) if contact_frames.any() else len(object_poses)
+    )
+    support_frame_count = max(1, min(first_contact, 10))
+    minimum_before = _object_minimum_z(visual_mesh, object_poses)
+    support_minimum = float(np.median(minimum_before[:support_frame_count]))
+    if support_minimum < -floor_tolerance_m:
+        raise ValueError(
+            "SPIDER export blocked: object trajectory penetrates the floor; "
+            f"minimum z={support_minimum:.6f} m"
+        )
+    shift = object_clearance_m - support_minimum
+    adjusted["T_sim_object"][:, :, 2, 3] += shift
+    adjusted["T_sim_wrist"][:, :, 2, 3] += shift
+    adjusted["fingertips_sim"][:, :, :, 2] += shift
+    minimum_after = _object_minimum_z(visual_mesh, adjusted["T_sim_object"][:, 0])
+    if float(minimum_after.min()) < -1e-4:
+        correction = object_clearance_m - float(minimum_after.min())
+        shift += correction
+        adjusted["T_sim_object"][:, :, 2, 3] += correction
+        adjusted["T_sim_wrist"][:, :, 2, 3] += correction
+        adjusted["fingertips_sim"][:, :, :, 2] += correction
+        minimum_after = _object_minimum_z(visual_mesh, adjusted["T_sim_object"][:, 0])
+    return adjusted, {
+        "support_frame_count": support_frame_count,
+        "first_contact_frame": first_contact,
+        "object_min_z_support_before_m": support_minimum,
+        "global_z_shift_m": float(shift),
+        "object_min_z_after_m": float(minimum_after.min()),
+        "object_clearance_m": object_clearance_m,
+    }
+
+
 def _simulation_preflight(
     aligned: Mapping[str, np.ndarray], visual_mesh: trimesh.Trimesh,
     hand_sides: Sequence[str], hand_roles: Mapping[str, str], *, floor_tolerance_m: float = 1e-4,
-    hand_target_clearance_m: float = 0.060,
+    hand_target_clearance_m: float = 0.002,
 ) -> dict[str, object]:
     roles = {side: hand_roles.get(side, "active") for side in hand_sides}
     unsupported = {side: role for side, role in roles.items() if role not in HAND_ROLES}
@@ -146,6 +188,9 @@ def export_spider_dataset(
         raise ValueError("V1 SPIDER export requires exactly one object")
     visual_mesh = trimesh.load_mesh(visual_mesh_path, process=False)
     visual_mesh.apply_scale(float(aligned["object_scale_to_m"][0]))
+    aligned, support_alignment = _align_initial_support(
+        aligned, contact, visual_mesh,
+    )
     resolved_roles = dict(hand_roles or {side: "active" for side in hand_sides})
     preflight = _simulation_preflight(aligned, visual_mesh, hand_sides, resolved_roles)
     target_t = np.arange(source_t[0], source_t[-1] + ref_dt * 0.25, ref_dt, dtype=np.float64)
@@ -194,6 +239,7 @@ def export_spider_dataset(
         "source_run_id": source_run_id, "num_frames": int(count),
         "hand_sides": list(hand_sides), "inactive_side_encoding": "zero_xyz_identity_wxyz",
         "hand_roles": resolved_roles, "simulation_preflight": preflight,
+        "support_alignment": support_alignment,
     }
     task_info_path = mano_dir.parent / "task_info.json"
     task_info_path.write_text(json.dumps(task_info, indent=2) + "\n", encoding="utf-8")
@@ -205,6 +251,7 @@ def export_spider_dataset(
         "source_visual_mesh": str(Path(visual_mesh_path).resolve()),
         "object_scale_to_m_materialized": float(aligned["object_scale_to_m"][0]),
         "hand_roles": resolved_roles, "simulation_preflight": preflight,
+        "support_alignment": support_alignment,
     }
     export_manifest_path = mano_dir / "export_manifest.json"
     export_manifest_path.write_text(json.dumps(export_manifest, indent=2) + "\n", encoding="utf-8")

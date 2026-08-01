@@ -59,7 +59,8 @@ def test_spider_export_shapes_and_inactive_identity(tmp_path: Path):
     task_info = json.loads(result["task_info"].read_text())
     assert task_info["hand_roles"] == {"right": "passive"}
     assert task_info["simulation_preflight"]["passed"]
-    assert task_info["simulation_preflight"]["hand_target_clearance_m"] == 0.060
+    assert task_info["simulation_preflight"]["hand_target_clearance_m"] == 0.002
+    assert np.isclose(task_info["support_alignment"]["object_min_z_after_m"], 0.002)
 
 
 def test_spider_export_rejects_underground_object(tmp_path: Path):
@@ -86,8 +87,8 @@ def test_spider_export_requires_xhand_floor_clearance(tmp_path: Path):
     aligned, contact, mesh = _write_artifacts(tmp_path)
     with np.load(aligned) as artifact:
         arrays = {key: np.asarray(artifact[key]) for key in artifact.files}
-    arrays["T_sim_wrist"][:, 0, 2, 3] = 0.015
-    arrays["fingertips_sim"][:, 0, :, 2] = 0.015
+    arrays["T_sim_wrist"][:, 0, 2, 3] = -0.10
+    arrays["fingertips_sim"][:, 0, :, 2] = -0.10
     np.savez(aligned, **arrays)
     spider_package = tmp_path / "spider_package"
     for robot in ("mano", "xhand"):

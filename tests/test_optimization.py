@@ -179,24 +179,47 @@ def test_contact_similarity_recovers_surface_scale_without_changing_projection()
     )
 
 
+def test_contact_similarity_rejects_unvalidated_hand_depth():
+    count = 6
+    mesh = trimesh.creation.icosphere(subdivisions=1, radius=1.0)
+    K = np.array([[100.0, 0.0, 50.0], [0.0, 100.0, 50.0], [0.0, 0.0, 1.0]])
+    poses = np.repeat(np.eye(4)[None], count, axis=0)
+    poses[:, 2, 3] = 1.0
+    fingertips = np.zeros((count, 1, 5, 3), dtype=np.float64)
+    fingertips[..., 2] = 0.25
+    masks = np.ones((count, 100, 100), dtype=np.uint8)
+
+    ratio, active_hint, metrics = _optimize_contact_similarity(
+        mesh, 0.1, K, poses, fingertips, masks,
+        np.ones(count, bool), np.ones((count, 1), bool), np.ones((count, 1)),
+        metric_hand_depth_valid=np.array([False]),
+    )
+
+    assert ratio == 1.0
+    assert active_hint.tolist() == [False]
+    assert metrics["applied"] is False
+    assert metrics["reason"] == "unvalidated_metric_hand_depth"
+
+
 def test_manipulation_contact_metrics_require_active_continuous_contact():
-    contact = np.zeros((5, 1, 5), dtype=np.float32)
+    contact = np.zeros((6, 1, 5), dtype=np.float32)
     missing = _manipulation_contact_metrics(
         contact, ["active"], ["right"], require_contact=True,
     )
-    contact[2:4, 0, 1] = 1.0
+    contact[2:5, 0, :2] = 1.0
     present = _manipulation_contact_metrics(
         contact, ["active"], ["right"], require_contact=True,
+        contact_local_slip_p95_m_s=0.1,
     )
 
     assert missing["passed"] is False
     assert present["passed"] is True
-    assert present["per_hand"]["right"]["longest_consecutive_contact_run"] == 2
+    assert present["longest_active_opposed_run"] == 3
 
 
 def test_manipulation_contact_metrics_reject_disconnected_contact_frames():
     contact = np.zeros((5, 1, 5), dtype=np.float32)
-    contact[[1, 3], 0, 1] = 1.0
+    contact[[1, 3], 0, :2] = 1.0
 
     metrics = _manipulation_contact_metrics(
         contact, ["active"], ["right"], require_contact=True,
@@ -204,6 +227,19 @@ def test_manipulation_contact_metrics_reject_disconnected_contact_frames():
 
     assert metrics["active_contact_frame_count"] == 2
     assert metrics["longest_active_contact_run"] == 1
+    assert metrics["passed"] is False
+
+
+def test_manipulation_contact_metrics_reject_excessive_slip():
+    contact = np.zeros((5, 1, 5), dtype=np.float32)
+    contact[1:4, 0, :2] = 1.0
+
+    metrics = _manipulation_contact_metrics(
+        contact, ["active"], ["right"], require_contact=True,
+        contact_local_slip_p95_m_s=0.31,
+    )
+
+    assert metrics["longest_active_opposed_run"] == 3
     assert metrics["passed"] is False
 
 
@@ -242,6 +278,11 @@ def test_contact_supported_similarity_can_override_monocular_metric_depth():
         "optimized_similarity_ratio": 0.25,
         "surface_contact_sample_count": 8,
         "minimum_required_surface_samples": 4,
+        "surface_opposed_frame_count": 4,
+        "minimum_required_opposed_frames": 3,
+        "surface_opposed_longest_run": 3,
+        "minimum_required_opposed_run": 3,
+        "metric_hand_depth_valid": [True],
     }
     manipulation = {"passed": True}
 
@@ -428,7 +469,7 @@ def test_sequence_optimizer_writes_valid_artifacts(tmp_path):
     (tmp_path / "object_tracking/selected_mesh.json").write_text(
         '{"canonical_visual_mesh":"mesh_proposals/p0/visual.obj","scale_to_m":0.08}'
     )
-    aligned, contact = optimize_run(tmp_path)
+    aligned, contact = optimize_run(tmp_path, require_contact=False)
     validate_npz(aligned, "aligned_trajectory")
     validate_npz(contact, "contact")
 
@@ -439,7 +480,7 @@ def test_sequence_optimizer_writes_valid_artifacts(tmp_path):
     hands["joints_camera_rootrel"][:, 0] = 0.0
     np.savez_compressed(tmp_path / "hands/wilor_raw.npz", **hands)
 
-    aligned, contact = optimize_run(tmp_path, overwrite=True)
+    aligned, contact = optimize_run(tmp_path, require_contact=False, overwrite=True)
 
     with np.load(aligned) as artifact:
         assert artifact["T_sim_wrist"].shape[1] == 1

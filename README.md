@@ -479,9 +479,14 @@ spider_export/dataset/processed/video_to_spider_egodex/
 01 decompose_fast
 02 detect_contact
 03 generate_xml
-04 ik_fast
+04 ik (contact-aware)
 05 MJWP
 ```
+
+IK 阶段会保留原生 `contact` 和 `contact_pos` 数组，供 MJWP 的接触目标使用。
+导出前会将 episode 初始物体的支撑面对齐到仿真地面，同时保持手物相对几何关系。
+优化器只有在手部公制深度校准通过后，才允许使用接触证据修正物体尺度；如需实验性
+放宽限制，可显式使用 `--allow-unvalidated-contact-scale`。
 
 执行完整链路并保存 IK/MJWP 视频：
 

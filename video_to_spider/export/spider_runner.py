@@ -17,6 +17,8 @@ import numpy as np
 
 from .spider import DATASET_NAME
 
+FINGER_ORDER = ("thumb", "index", "middle", "ring", "pinky")
+
 
 def _run(command: list[str], *, cwd: Path, env: dict[str, str], log_path: Path) -> dict[str, Any]:
     started = time.monotonic()
@@ -80,6 +82,77 @@ def _inspect_hand_floor_contacts(scene_paths: list[Path]) -> dict[str, Any]:
     return {
         "hand_floor_collision_enabled": True,
         "pair_count_by_scene": pair_counts,
+    }
+
+
+def _configure_contact_reward(
+    scene_path: Path, task_info_path: Path, embodiment_type: str,
+) -> dict[str, Any]:
+    """Resolve the hand tracking sites that MJWP uses for contact rewards."""
+    sides = {
+        "right": ("right",),
+        "left": ("left",),
+        "bimanual": ("right", "left"),
+    }[embodiment_type]
+    site_names = [
+        site.get("name")
+        for site in ET.parse(scene_path).getroot().iter("site")
+    ]
+    expected = [
+        f"track_hand_{side}_{finger}_tip"
+        for side in sides for finger in FINGER_ORDER
+    ]
+    missing = [name for name in expected if name not in site_names]
+    if missing:
+        raise RuntimeError(f"SPIDER scene lacks hand contact tracking sites: {missing}")
+    site_ids = [site_names.index(name) for name in expected]
+    task_info = json.loads(task_info_path.read_text(encoding="utf-8"))
+    task_info["contact_site_ids"] = site_ids
+    task_info["contact_site_names"] = expected
+    task_info_path.write_text(json.dumps(task_info, indent=2) + "\n", encoding="utf-8")
+    return {
+        "site_ids": site_ids,
+        "site_names": expected,
+        "task_info": str(task_info_path),
+    }
+
+
+def _normalize_kinematic_contact(
+    trajectory_path: Path, expected_contacts: int,
+) -> dict[str, Any]:
+    """Align native IK contact arrays to its filtered qpos timeline."""
+    with np.load(trajectory_path, allow_pickle=False) as artifact:
+        arrays = {key: np.asarray(artifact[key]) for key in artifact.files}
+    if "contact" not in arrays or "contact_pos" not in arrays:
+        raise RuntimeError(f"SPIDER IK omitted contact arrays: {trajectory_path}")
+    count = len(arrays["qpos"])
+    contact = arrays["contact"]
+    contact_pos = arrays["contact_pos"]
+    if contact.ndim != 2 or contact_pos.ndim != 3 or contact_pos.shape[-1] != 3:
+        raise RuntimeError("SPIDER IK contact arrays have unsupported shapes")
+    if len(contact) < count or len(contact_pos) < count:
+        raise RuntimeError("SPIDER IK contact timeline is shorter than qpos")
+    contact_start = (len(contact) - count) // 2
+    position_start = (len(contact_pos) - count) // 2
+    contact = contact[contact_start : contact_start + count, -expected_contacts:]
+    contact_pos = contact_pos[
+        position_start : position_start + count, -expected_contacts:
+    ]
+    if contact.shape != (count, expected_contacts):
+        raise RuntimeError(f"normalized contact has unexpected shape: {contact.shape}")
+    if contact_pos.shape != (count, expected_contacts, 3):
+        raise RuntimeError(
+            f"normalized contact positions have unexpected shape: {contact_pos.shape}"
+        )
+    arrays["contact"] = contact.astype(np.float32)
+    arrays["contact_pos"] = contact_pos.astype(np.float32)
+    np.savez_compressed(trajectory_path, **arrays)
+    return {
+        "frame_count": count,
+        "contact_shape": list(contact.shape),
+        "contact_pos_shape": list(contact_pos.shape),
+        "contact_rate": float((contact >= 0.5).mean()),
+        "active_contact_frame_count": int((contact >= 0.5).any(axis=1).sum()),
     }
 
 
@@ -171,14 +244,22 @@ def run_spider_chain(
         scene, robot_dir.parent / "scene_eq.xml",
     ])
     commands.append(_run(
-        base + ["spider.preprocess.ik_fast"] + common
+        base + ["spider.preprocess.ik"] + common
         + ["--robot-type", robot_type, "--end-idx", str(ik_end_idx), "--no-show-viewer"]
         + (["--save-video"] if save_video else ["--no-save-video"]),
-        cwd=spider, env=environment, log_path=logs / "04_ik_fast.log",
+        cwd=spider, env=environment, log_path=logs / "04_ik.log",
     ))
     trajectory_kinematic = robot_dir / "trajectory_kinematic.npz"
     if not trajectory_kinematic.exists() or not scene.exists():
         raise RuntimeError("SPIDER IK did not produce scene.xml and trajectory_kinematic.npz")
+    expected_contacts = 10 if embodiment_type == "bimanual" else 5
+    contact_artifact = _normalize_kinematic_contact(
+        trajectory_kinematic, expected_contacts,
+    )
+    task_info_path = robot_dir.parent / "task_info.json"
+    contact_reward = _configure_contact_reward(
+        scene, task_info_path, embodiment_type,
+    )
     mjwp_path = robot_dir / "trajectory_mjwp.npz"
     if run_mjwp:
         mjwp_command = [
@@ -189,7 +270,8 @@ def run_spider_chain(
             f"output_dir={robot_dir}", "device=cuda:0", "show_viewer=false", "viewer=mujoco",
             f"save_video={'true' if save_video else 'false'}", "save_rerun=false", "save_viser=false",
             f"num_samples={mjwp_num_samples}", f"max_num_iterations={mjwp_iterations}",
-            "horizon=0.4", "ctrl_dt=0.2", "knot_dt=0.2", "+sanity_check_seconds=0.0",
+            "horizon=0.4", "ctrl_dt=0.2", "knot_dt=0.2",
+            "+contact_rew_scale=5.0", "+sanity_check_seconds=0.0",
         ]
         commands.append(_run(
             mjwp_command, cwd=spider, env=environment, log_path=logs / "05_mjwp.log"
@@ -207,6 +289,11 @@ def run_spider_chain(
         "task": task, "data_id": data_id, "embodiment_type": embodiment_type,
         "robot_type": robot_type, "gpu_physical_index": gpu, "commands": commands,
         "simulation_geometry": geometry_constraints,
+        "contact_pipeline": {
+            "kinematic_artifact": contact_artifact,
+            "reward_configuration": contact_reward,
+            "contact_reward_scale": 5.0,
+        },
         "artifacts": {
             "visual_contact": str(visual_contact), "spider_detected_contact": str(detected_contact),
             "scene": str(scene), "trajectory_kinematic": str(trajectory_kinematic),

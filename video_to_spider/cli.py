@@ -42,6 +42,7 @@ def _parser() -> argparse.ArgumentParser:
     optimize.add_argument("--smoothing-strength", type=float, default=18.0)
     optimize.add_argument("--hand-smoothing-strength", type=float, default=5.0)
     optimize.add_argument("--allow-no-contact", action="store_true")
+    optimize.add_argument("--allow-unvalidated-contact-scale", action="store_true")
     optimize.add_argument("--overwrite", action="store_true")
     export = commands.add_parser("export-spider")
     export.add_argument("--run-dir", type=Path, required=True)
@@ -90,7 +91,9 @@ def main(argv: list[str] | None = None) -> int:
         print(optimize_run(
             args.run_dir, smoothing_strength=args.smoothing_strength,
             hand_smoothing_strength=args.hand_smoothing_strength,
-            require_contact=not args.allow_no_contact, overwrite=args.overwrite,
+            require_contact=not args.allow_no_contact,
+            allow_unvalidated_contact_scale=args.allow_unvalidated_contact_scale,
+            overwrite=args.overwrite,
         ))
         return 0
     if args.command == "export-spider":
