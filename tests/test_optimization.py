@@ -1,6 +1,7 @@
 import numpy as np
 import trimesh
 
+import video_to_spider.optimization.sequence as sequence
 from video_to_spider.manifest import RunManifest
 from video_to_spider.optimization.contact import infer_contact
 from video_to_spider.optimization.sequence import (
@@ -199,6 +200,42 @@ def test_contact_similarity_rejects_unvalidated_hand_depth():
     assert active_hint.tolist() == [False]
     assert metrics["applied"] is False
     assert metrics["reason"] == "unvalidated_metric_hand_depth"
+
+
+def test_contact_similarity_prefers_qc_passing_opposed_contact(monkeypatch):
+    count = 6
+    mesh = trimesh.creation.icosphere(subdivisions=1, radius=1.0)
+    K = np.array([[100.0, 0.0, 50.0], [0.0, 100.0, 50.0], [0.0, 0.0, 1.0]])
+    poses = np.repeat(np.eye(4)[None], count, axis=0)
+    poses[:, 2, 3] = 1.0
+    fingertips = np.zeros((count, 1, 5, 3), dtype=np.float64)
+    fingertips[..., 2] = 0.25
+    masks = np.ones((count, 100, 100), dtype=np.uint8)
+
+    def fake_infer_contact(
+        mesh_m, object_poses, points, timestamps, valid_hand, **contact_options,
+    ):
+        ratio = float(mesh_m.extents.max() / (mesh.extents.max() * 0.1))
+        contact = np.zeros((count, 1, 5), dtype=np.float32)
+        if ratio >= 0.28:
+            contact[1:4, 0, :3] = 1.0
+        else:
+            contact[:, 0, 4] = 1.0
+        return contact, np.zeros((1, 5, 3), dtype=np.float32), {
+            "contact_local_slip_p95_m_s": 0.1,
+        }
+
+    monkeypatch.setattr(sequence, "infer_contact", fake_infer_contact)
+    ratio, active_hint, metrics = _optimize_contact_similarity(
+        mesh, 0.1, K, poses, fingertips, masks,
+        np.ones(count, bool), np.ones((count, 1), bool), np.ones((count, 1)),
+    )
+
+    assert ratio >= 0.28
+    assert active_hint.tolist() == [True]
+    assert metrics["applied"] is True
+    assert metrics["surface_opposed_longest_run"] == 3
+    assert metrics["contact_local_slip_p95_m_s"] == 0.1
 
 
 def test_manipulation_contact_metrics_require_active_continuous_contact():

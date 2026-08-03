@@ -603,6 +603,7 @@ def _optimize_contact_similarity(
     poses_camera_object: np.ndarray, fingertips_camera: np.ndarray,
     masks: np.ndarray, object_valid: np.ndarray, hand_valid: np.ndarray,
     hand_confidence: np.ndarray, *, metric_hand_depth_valid: np.ndarray | None = None,
+    timestamps_s: np.ndarray | None = None,
     candidate_distance_px: float = CONTACT_CANDIDATE_DISTANCE_PX,
     enter_distance_m: float = 0.012,
 ) -> tuple[float, np.ndarray, dict[str, Any]]:
@@ -618,6 +619,12 @@ def _optimize_contact_similarity(
     valid_object = np.asarray(object_valid, dtype=bool)
     valid_hand_values = np.asarray(hand_valid, dtype=bool)
     confidence = np.asarray(hand_confidence, dtype=np.float64)
+    timestamps = (
+        np.arange(len(poses), dtype=np.float64) / 30.0
+        if timestamps_s is None else np.asarray(timestamps_s, dtype=np.float64)
+    )
+    if timestamps.shape != (len(poses),):
+        raise ValueError("timestamps_s does not match pose timeline")
     trusted_depth = (
         np.ones(fingertips.shape[1], dtype=bool)
         if metric_hand_depth_valid is None else np.asarray(metric_hand_depth_valid, dtype=bool)
@@ -717,9 +724,13 @@ def _optimize_contact_similarity(
         pose = poses[frame]
         base_vertices_camera[int(frame)] = canonical_vertices @ pose[:3, :3].T + pose[:3, 3]
 
-    best: tuple[int, int, int, int, float] | None = None
+    minimum_fit_samples = max(8, int(math.ceil(0.25 * len(selected_indices))))
+    inference_valid = valid_hand_values & qualifying_hands[None]
+    best: tuple[bool, int, int, int, float, int, int, float] | None = None
     best_ratio = 1.0
     best_distances = np.full(len(selected_indices), np.inf, dtype=np.float64)
+    best_contact = np.zeros_like(candidate, dtype=bool)
+    best_contact_metrics: dict[str, Any] = {}
     for ratio in ratios:
         distances = np.empty(len(selected_indices), dtype=np.float64)
         offset = 0
@@ -730,50 +741,71 @@ def _optimize_contact_similarity(
             count = len(indices)
             distances[offset : offset + count] = np.sqrt(np.sum(delta * delta, axis=-1)).min(axis=1)
             offset += count
-        fitted = np.zeros_like(selected)
-        fitted[tuple(selected_indices.T)] = distances <= enter_distance_m
-        opposed_fit = fitted[:, :, 0] & fitted[:, :, 1:].any(axis=2)
-        longest_fit_run = max(
-            (_longest_true_run(opposed_fit[:, hand]) for hand in range(fitted.shape[1])),
+        ratio_mesh = canonical_mesh.copy()
+        ratio_mesh.apply_scale(float(base_scale_m * ratio))
+        ratio_poses = poses.copy()
+        ratio_poses[:, :3, 3] *= ratio
+        inferred_contact, _, inferred_metrics = infer_contact(
+            ratio_mesh, ratio_poses, fingertips, timestamps, inference_valid,
+            enter_distance_m=enter_distance_m,
+        )
+        inferred = inferred_contact.astype(bool)
+        opposed_contact = inferred[:, :, 0] & inferred[:, :, 1:].any(axis=2)
+        longest_opposed_run = max(
+            (_longest_true_run(opposed_contact[:, hand]) for hand in range(inferred.shape[1])),
             default=0,
         )
+        opposed_frame_count = int(opposed_contact.sum())
+        contact_sample_count = int(inferred.sum())
+        slip = inferred_metrics.get("contact_local_slip_p95_m_s")
+        slip_value = float(slip) if slip is not None else math.inf
         enter_count = int(np.count_nonzero(distances <= enter_distance_m))
         exit_count = int(np.count_nonzero(distances <= 0.020))
         truncated_loss = float(np.mean(np.minimum(distances, 0.030)))
+        supported = bool(
+            contact_sample_count >= minimum_fit_samples
+            and opposed_frame_count >= MIN_CONTACT_OPPOSED_FRAMES
+            and longest_opposed_run >= MIN_CONTACT_OPPOSED_RUN
+            and slip_value <= MAX_CONTACT_SLIP_P95_M_S
+        )
         score = (
-            int(longest_fit_run), int(opposed_fit.sum()), enter_count, exit_count,
-            -truncated_loss,
+            supported, int(longest_opposed_run), opposed_frame_count,
+            contact_sample_count, -slip_value, enter_count, exit_count, -truncated_loss,
         )
         if best is None or score > best:
             best = score
             best_ratio = float(ratio)
             best_distances = distances
+            best_contact = inferred
+            best_contact_metrics = inferred_metrics
 
-    fitted_contact = best_distances <= enter_distance_m
-    fitted = np.zeros_like(selected)
-    fitted[tuple(selected_indices.T)] = fitted_contact
-    opposed_fit = fitted[:, :, 0] & fitted[:, :, 1:].any(axis=2)
+    candidate_enter_contact = best_distances <= enter_distance_m
+    opposed_fit = best_contact[:, :, 0] & best_contact[:, :, 1:].any(axis=2)
     fitted_opposed_frames = np.flatnonzero(opposed_fit.any(axis=1))
     longest_opposed_run = max(
-        (_longest_true_run(opposed_fit[:, hand]) for hand in range(fitted.shape[1])),
+        (_longest_true_run(opposed_fit[:, hand]) for hand in range(best_contact.shape[1])),
         default=0,
     )
-    fitted_frames = selected_indices[fitted_contact, 0]
-    fitted_hands = selected_indices[fitted_contact, 1]
-    minimum_fit_samples = max(8, int(math.ceil(0.25 * len(selected_indices))))
+    contact_frames = np.flatnonzero(best_contact.any(axis=(1, 2)))
+    contact_sample_count = int(best_contact.sum())
+    contact_slip = best_contact_metrics.get("contact_local_slip_p95_m_s")
     fit_supported = bool(
-        fitted_contact.sum() >= minimum_fit_samples and np.unique(fitted_frames).size >= 2
+        contact_sample_count >= minimum_fit_samples and len(contact_frames) >= 2
         and len(fitted_opposed_frames) >= MIN_CONTACT_OPPOSED_FRAMES
         and longest_opposed_run >= MIN_CONTACT_OPPOSED_RUN
+        and contact_slip is not None
+        and float(contact_slip) <= MAX_CONTACT_SLIP_P95_M_S
     )
     activity_hint = np.zeros(fingertips.shape[1], dtype=bool)
     if fit_supported:
-        for hand in np.unique(fitted_hands):
-            activity_hint[int(hand)] = np.count_nonzero(fitted_hands == hand) >= 2
+        for hand in range(best_contact.shape[1]):
+            activity_hint[hand] = (
+                _longest_true_run(opposed_fit[:, hand]) >= MIN_CONTACT_OPPOSED_RUN
+            )
     return (best_ratio if fit_supported else 1.0), activity_hint, {
         "applied": fit_supported,
         "reason": None if fit_supported else "surface_fit_has_insufficient_contact_support",
-        "method": "persistent_2d_candidates_plus_truncated_nearest_surface_grid_search",
+        "method": "persistent_2d_candidates_plus_hysteretic_contact_grid_search",
         "candidate_distance_px": candidate_distance_px,
         "ratio_bounds": [MIN_CONTACT_SIMILARITY_RATIO, MAX_CONTACT_SIMILARITY_RATIO],
         "search_interval": [lower, upper],
@@ -782,10 +814,12 @@ def _optimize_contact_similarity(
         "raw_depth_ratio_p90": float(p90),
         "optimized_similarity_ratio": best_ratio,
         "candidate_sample_count": int(len(selected_indices)),
-        "surface_contact_sample_count": int(fitted_contact.sum()),
-        "surface_contact_frame_count": int(np.unique(fitted_frames).size),
+        "surface_contact_sample_count": contact_sample_count,
+        "surface_contact_frame_count": int(len(contact_frames)),
         "surface_opposed_frame_count": int(len(fitted_opposed_frames)),
         "surface_opposed_longest_run": int(longest_opposed_run),
+        "surface_candidate_enter_sample_count": int(candidate_enter_contact.sum()),
+        "contact_local_slip_p95_m_s": contact_slip,
         "minimum_required_surface_samples": minimum_fit_samples,
         "minimum_required_opposed_frames": MIN_CONTACT_OPPOSED_FRAMES,
         "minimum_required_opposed_run": MIN_CONTACT_OPPOSED_RUN,
@@ -1167,6 +1201,7 @@ def optimize_run(
         fingertips_camera_aligned, masks_raw["masks"].astype(bool),
         object_valid & mask_valid, hand_valid, hand_confidence,
         metric_hand_depth_valid=metric_hand_depth_valid,
+        timestamps_s=timestamps,
     )
     scale_to_m = float(silhouette_scale_to_m * contact_similarity_ratio)
     T_camera_object_aligned[:, :3, 3] *= contact_similarity_ratio
