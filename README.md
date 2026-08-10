@@ -6,6 +6,8 @@
 
 > 当前仓库没有 `run-all` 命令。完整流程必须按本文的 artifact 边界逐步执行。每一步都保存数值 artifact、metadata 和可视化，便于在进入下一步前验证。
 
+本仓库的已验证发布基线使用 EgoDex `vertical_pick_place/111`（54 帧）和单张物理 GPU 7，从全新 RUN_DIR 串行生成了 MJWP 视频与 12/12 阶段统一报告；核心测试为 `67 passed`。这证明工程链路完整，但该样本的 MJWP 旋转误差仍未达到论文阈值。环境恢复、第三方 revision、权重和验收边界见 [docs/REPRODUCIBILITY.md](./docs/REPRODUCIBILITY.md)。
+
 ## 流程总览
 
 ```text
@@ -46,7 +48,11 @@ runs/<run-id>/
 以下命令假设在仓库根目录执行：
 
 ```bash
-cd /data_all/liyunhao/egoengine/video_to_spider
+export EGOENGINE_ROOT=/path/to/egoengine
+export REPO_ROOT="$EGOENGINE_ROOT/video_to_spider"
+export SPIDER_ROOT="$EGOENGINE_ROOT/spider"
+export SPIDER_PACKAGE_ROOT="$SPIDER_ROOT/spider"
+cd "$REPO_ROOT"
 ```
 
 当前机器使用彼此隔离的 Conda 环境：
@@ -60,9 +66,9 @@ cd /data_all/liyunhao/egoengine/video_to_spider
 | SAM 3D Objects | `v2s-sam3d` |
 | FoundationPose | `v2s-foundationpose` |
 | 序列优化 | `v2s-opt` |
-| SPIDER/MJWP | `/data_all/liyunhao/egoengine/spider/.venv`，由 `uv` 管理 |
+| SPIDER/MJWP | `$SPIDER_ROOT/.venv`，由 SPIDER 的 `pyproject.toml` 与修正后的 `uv.lock` 管理 |
 
-仓库目前没有用于从零创建上述环境的 `environment.yml`。本文命令假设这些环境、third-party 仓库和权重已经准备好。
+不同模型需要互不兼容的 PyTorch/CUDA/NumPy 组合，不能可靠地压进一个环境。完整恢复方式、已有 conda-pack 归档与 SAM3 官方安装方式见 [docs/REPRODUCIBILITY.md](./docs/REPRODUCIBILITY.md)。运行项目命令时只使用 `conda run -n <env>`，不要向 base 安装依赖。
 
 先做只读 preflight：
 
@@ -77,18 +83,19 @@ test -s third_party/Depth-Anything-V2/metric_depth/checkpoints/depth_anything_v2
 test -s third_party/sam-3d-objects/checkpoints/hf/pipeline.yaml
 test -s third_party/FoundationPose/weights/2024-01-11-20-02-45/model_best.pth
 test -s third_party/FoundationPose/weights/2023-10-28-18-33-37/model_best.pth
-test -d /data_all/liyunhao/egoengine/spider/.venv
+test -d "$SPIDER_ROOT/.venv"
 command -v ffmpeg
 command -v ffprobe
 
-nvidia-smi
+nvidia-smi -i "${GPU:-7}"
 ```
 
 核心环境 import 和测试：
 
 ```bash
-conda run -n v2s-core python -c "import cv2,h5py,numpy,scipy,trimesh,zarr; print('v2s-core ok')"
-conda run -n v2s-core pytest -q
+PYTHONNOUSERSITE=1 conda run -n v2s-core python -c "import cv2,h5py,numpy,scipy,trimesh,zarr; print('v2s-core ok')"
+PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1 conda run -n v2s-core \
+  python -m pytest -q -p no:cacheprovider
 ```
 
 仓库生成的诊断 MP4 统一通过系统 `ffmpeg` 编码为 H.264 (`libx264`)、
@@ -96,16 +103,15 @@ conda run -n v2s-core pytest -q
 
 ## 完整执行示例
 
-下面使用已经验证过的 `vertical_pick_place/68` 完整 episode。先定义本次运行变量：
+下面使用已验证的 `vertical_pick_place/111` 完整 episode。每次正式验收必须使用此前不存在的新 RUN_DIR：
 
 ```bash
 DATASET_ROOT=/data_all/share/datasets/egodex
-SPIDER_ROOT=/data_all/liyunhao/egoengine/spider
-SPIDER_PACKAGE_ROOT=/data_all/liyunhao/egoengine/spider/spider
 TASK=vertical_pick_place
-EPISODE_ID=68
-RUN_DIR=runs/egodex_vertical_pick_place_68_full
-GPU=3
+EPISODE_ID=111
+RUN_DIR=runs/egodex_vertical_pick_place_111_release_<唯一后缀>
+GPU=7
+test ! -e "$RUN_DIR"
 ```
 
 如果使用其他数据，只需要修改 `TASK`、`EPISODE_ID`、`RUN_DIR` 和 `GPU`。不要复用已有 `RUN_DIR`，除非明确希望用 `--overwrite` 重跑。
@@ -348,8 +354,13 @@ visualization/06_foundationpose.mp4
 ```bash
 conda run -n v2s-opt python -m video_to_spider.cli optimize \
   --run-dir "$RUN_DIR" \
+  --allow-unvalidated-contact-scale \
+  --contact-enter-distance-m 0.020 \
+  --max-contact-slip-p95-m-s 0.45 \
   --overwrite
 ```
+
+上述三个显式放宽参数是 `vertical_pick_place/111` 的已记录灵敏度配置，适用于柔软、近对称毛绒物体；代码中的严格默认值仍是 12 mm 与 0.30 m/s。新 episode 应先尝试严格默认配置，只有在保留失败诊断并核查 2D/3D 接触证据后才能放宽。
 
 检查优化指标和最终保留的手：
 
@@ -710,9 +721,8 @@ find "$RUN_DIR/spider_export/dataset/processed/video_to_spider_egodex/xhand" \
 每个 episode 使用独立 `RUN_DIR`，逐条串行执行本文 1-13 步。记录随机种子、任务、episode ID、帧区间和 GPU。例如：
 
 ```text
-seed: 20260730
-basic_pick_place: 22, 32, 76
-vertical_pick_place: 4, 21, 68
+release baseline: vertical_pick_place/111, 54 frames, physical GPU 7
+additional episodes: choose independent fresh RUN_DIR values and run serially
 ```
 
 批量汇总至少记录：
