@@ -17,8 +17,22 @@ def test_instruction_selection_and_keywords_do_not_use_gt_object_attr():
     assert instruction.startswith("Remove lids")
     words = keyword_candidates(instruction, "add_remove_lid")
     assert "lid" in words and "cup" in words
+    assert "blue cup" in words
     assert "four" not in words
     assert "forbidden_gt_name" not in words
+
+
+def test_keywords_prioritize_object_phrases_and_text_only_aliases():
+    words = keyword_candidates(
+        "Pick up a plush object from a wooden table and place it vertically.",
+        "vertical_pick_place",
+    )
+    assert words[:5] == [
+        "plush object", "plush toy", "white plush toy", "stuffed toy", "stuffed animal",
+    ]
+    assert "plush" in words and "object" in words
+    assert "pick" not in words
+    assert "vertical" not in words and "vertically" not in words
 
 
 def test_ground_truth_reader_is_explicit(tmp_path: Path):

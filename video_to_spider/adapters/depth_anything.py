@@ -30,11 +30,18 @@ def _load_optional_masks(run_dir: Path, rows: list[dict]) -> tuple[np.ndarray | 
             outputs.append(None)
             continue
         with np.load(path, allow_pickle=False) as artifact:
-            lookup = {int(frame): index for index, frame in enumerate(artifact["frame_indices"])}
+            # NpzFile.__getitem__ decompresses the complete member on every
+            # access.  Load masks once before selecting rows; indexing
+            # artifact["masks"] inside the comprehension made a 54-frame 1080p
+            # run decompress the same ~112 MiB array 54 times per artifact.
+            frame_indices = artifact["frame_indices"]
+            masks = artifact["masks"]
+            lookup = {int(frame): index for index, frame in enumerate(frame_indices)}
             if not all(int(frame) in lookup for frame in wanted):
                 outputs.append(None)
             else:
-                outputs.append(np.stack([artifact["masks"][lookup[int(frame)]] for frame in wanted]).astype(bool))
+                selected = np.asarray([lookup[int(frame)] for frame in wanted], dtype=np.int64)
+                outputs.append(masks[selected].astype(bool, copy=False))
     return outputs[0], outputs[1]
 
 
@@ -141,6 +148,9 @@ def run(args: argparse.Namespace) -> Path:
         depths.append(prediction)
         normalized = np.clip(prediction / args.max_depth, 0, 1)
         visual_frames.append(cv2.applyColorMap((normalized * 255).astype(np.uint8), cv2.COLORMAP_TURBO))
+    del model, state
+    if args.device == "cuda":
+        torch.cuda.empty_cache()
     depth = np.stack(depths)
     valid = np.isfinite(depth) & (depth > 0) & (depth <= args.max_depth)
     gy, gx = np.gradient(depth, axis=(1, 2))

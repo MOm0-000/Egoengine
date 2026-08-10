@@ -606,6 +606,7 @@ def _optimize_contact_similarity(
     timestamps_s: np.ndarray | None = None,
     candidate_distance_px: float = CONTACT_CANDIDATE_DISTANCE_PX,
     enter_distance_m: float = 0.012,
+    max_contact_slip_p95_m_s: float = MAX_CONTACT_SLIP_P95_M_S,
 ) -> tuple[float, np.ndarray, dict[str, Any]]:
     """Resolve monocular object scale from persistent 2D hand-object contact evidence.
 
@@ -726,6 +727,7 @@ def _optimize_contact_similarity(
 
     minimum_fit_samples = max(8, int(math.ceil(0.25 * len(selected_indices))))
     inference_valid = valid_hand_values & qualifying_hands[None]
+    exit_distance_m = max(0.020, float(enter_distance_m))
     best: tuple[bool, int, int, int, float, int, int, float] | None = None
     best_ratio = 1.0
     best_distances = np.full(len(selected_indices), np.inf, dtype=np.float64)
@@ -747,7 +749,7 @@ def _optimize_contact_similarity(
         ratio_poses[:, :3, 3] *= ratio
         inferred_contact, _, inferred_metrics = infer_contact(
             ratio_mesh, ratio_poses, fingertips, timestamps, inference_valid,
-            enter_distance_m=enter_distance_m,
+            enter_distance_m=enter_distance_m, exit_distance_m=exit_distance_m,
         )
         inferred = inferred_contact.astype(bool)
         opposed_contact = inferred[:, :, 0] & inferred[:, :, 1:].any(axis=2)
@@ -766,7 +768,7 @@ def _optimize_contact_similarity(
             contact_sample_count >= minimum_fit_samples
             and opposed_frame_count >= MIN_CONTACT_OPPOSED_FRAMES
             and longest_opposed_run >= MIN_CONTACT_OPPOSED_RUN
-            and slip_value <= MAX_CONTACT_SLIP_P95_M_S
+            and slip_value <= max_contact_slip_p95_m_s
         )
         score = (
             supported, int(longest_opposed_run), opposed_frame_count,
@@ -794,7 +796,7 @@ def _optimize_contact_similarity(
         and len(fitted_opposed_frames) >= MIN_CONTACT_OPPOSED_FRAMES
         and longest_opposed_run >= MIN_CONTACT_OPPOSED_RUN
         and contact_slip is not None
-        and float(contact_slip) <= MAX_CONTACT_SLIP_P95_M_S
+        and float(contact_slip) <= max_contact_slip_p95_m_s
     )
     activity_hint = np.zeros(fingertips.shape[1], dtype=bool)
     if fit_supported:
@@ -807,6 +809,9 @@ def _optimize_contact_similarity(
         "reason": None if fit_supported else "surface_fit_has_insufficient_contact_support",
         "method": "persistent_2d_candidates_plus_hysteretic_contact_grid_search",
         "candidate_distance_px": candidate_distance_px,
+        "enter_distance_m": enter_distance_m,
+        "exit_distance_m": exit_distance_m,
+        "maximum_contact_local_slip_p95_m_s": max_contact_slip_p95_m_s,
         "ratio_bounds": [MIN_CONTACT_SIMILARITY_RATIO, MAX_CONTACT_SIMILARITY_RATIO],
         "search_interval": [lower, upper],
         "raw_depth_ratio_median": float(np.median(depth_ratios)),
@@ -950,6 +955,7 @@ def _hand_reprojection_metrics(
 def _manipulation_contact_metrics(
     contact: np.ndarray, hand_roles: list[str], hand_order: list[str], *,
     require_contact: bool, contact_local_slip_p95_m_s: float | None = None,
+    max_contact_slip_p95_m_s: float = MAX_CONTACT_SLIP_P95_M_S,
 ) -> dict[str, Any]:
     values = np.asarray(contact) >= 0.5
     if values.ndim != 3 or values.shape[1] != len(hand_roles) or len(hand_roles) != len(hand_order):
@@ -992,7 +998,7 @@ def _manipulation_contact_metrics(
         and longest_active_opposed_run >= MIN_CONTACT_OPPOSED_RUN
         and (
             contact_local_slip_p95_m_s is None
-            or contact_local_slip_p95_m_s <= MAX_CONTACT_SLIP_P95_M_S
+            or contact_local_slip_p95_m_s <= max_contact_slip_p95_m_s
         )
     )
     return {
@@ -1009,7 +1015,7 @@ def _manipulation_contact_metrics(
         "minimum_active_contact_samples": 4,
         "minimum_active_opposed_frames": MIN_CONTACT_OPPOSED_FRAMES,
         "minimum_consecutive_active_contact_frames": MIN_CONTACT_OPPOSED_RUN,
-        "maximum_contact_local_slip_p95_m_s": MAX_CONTACT_SLIP_P95_M_S,
+        "maximum_contact_local_slip_p95_m_s": max_contact_slip_p95_m_s,
         "per_hand": per_hand,
     }
 
@@ -1090,6 +1096,8 @@ def optimize_run(
     run_dir: str | Path, *, smoothing_strength: float = 18.0,
     hand_smoothing_strength: float = 5.0, require_contact: bool = True,
     allow_unvalidated_contact_scale: bool = False,
+    contact_enter_distance_m: float = 0.012,
+    max_contact_slip_p95_m_s: float = MAX_CONTACT_SLIP_P95_M_S,
     overwrite: bool = False,
 ) -> tuple[Path, Path]:
     root = Path(run_dir).resolve()
@@ -1098,6 +1106,10 @@ def optimize_run(
     contact_path = output_dir / "contact.npz"
     if aligned_path.exists() and not overwrite:
         raise FileExistsError(f"output exists: {aligned_path}; pass --overwrite")
+    if not 0.0 < contact_enter_distance_m <= 0.05:
+        raise ValueError("contact_enter_distance_m must be in (0, 0.05]")
+    if not 0.0 < max_contact_slip_p95_m_s <= 2.0:
+        raise ValueError("max_contact_slip_p95_m_s must be in (0, 2.0]")
     with np.load(root / "object_tracking/foundationpose_raw.npz", allow_pickle=False) as artifact:
         object_raw = {key: np.asarray(artifact[key]) for key in artifact.files}
     with np.load(root / "hands/wilor_raw.npz", allow_pickle=False) as artifact:
@@ -1202,6 +1214,8 @@ def optimize_run(
         object_valid & mask_valid, hand_valid, hand_confidence,
         metric_hand_depth_valid=metric_hand_depth_valid,
         timestamps_s=timestamps,
+        enter_distance_m=contact_enter_distance_m,
+        max_contact_slip_p95_m_s=max_contact_slip_p95_m_s,
     )
     scale_to_m = float(silhouette_scale_to_m * contact_similarity_ratio)
     T_camera_object_aligned[:, :3, 3] *= contact_similarity_ratio
@@ -1293,11 +1307,14 @@ def optimize_run(
     contact, contact_positions, contact_metrics = infer_contact(
         mesh_m, T_sim_object, fingertips_sim[:, retained_hands], timestamps,
         hand_valid[:, retained_hands],
+        enter_distance_m=contact_enter_distance_m,
+        exit_distance_m=max(0.020, contact_enter_distance_m),
     )
     retained_roles = [hand_roles[index] for index in retained_hands]
     manipulation_metrics = _manipulation_contact_metrics(
         contact, retained_roles, artifact_hand_order, require_contact=require_contact,
         contact_local_slip_p95_m_s=contact_metrics.get("contact_local_slip_p95_m_s"),
+        max_contact_slip_p95_m_s=max_contact_slip_p95_m_s,
     )
     T_sim_object_raw = np.einsum("ij,tjk,tkl->til", T_sim_world, T_world_camera, T_camera_object_raw)
     raw_fingertip_homogeneous = np.concatenate([
@@ -1309,6 +1326,8 @@ def optimize_run(
     _, _, raw_contact_metrics = infer_contact(
         mesh_m, T_sim_object_raw, fingertips_sim_raw[:, retained_hands], timestamps,
         hand_valid[:, retained_hands],
+        enter_distance_m=contact_enter_distance_m,
+        exit_distance_m=max(0.020, contact_enter_distance_m),
     )
     contact_artifact = {
         "frame_indices": frame_indices, "timestamps_s": timestamps,
@@ -1403,7 +1422,9 @@ def optimize_run(
         "sequence_optimization", {"smoothing_strength": smoothing_strength,
         "hand_smoothing_strength": hand_smoothing_strength,
         "require_contact": require_contact,
-        "allow_unvalidated_contact_scale": allow_unvalidated_contact_scale},
+        "allow_unvalidated_contact_scale": allow_unvalidated_contact_scale,
+        "contact_enter_distance_m": contact_enter_distance_m,
+        "max_contact_slip_p95_m_s": max_contact_slip_p95_m_s},
         [root / "object_tracking/foundationpose_raw.npz", root / "object_tracking/selected_mesh.json",
          root / "hands/wilor_raw.npz", root / "segmentation/object_masks.npz"],
     )
@@ -1432,6 +1453,8 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--hand-smoothing-strength", type=float, default=5.0)
     parser.add_argument("--allow-no-contact", action="store_true")
     parser.add_argument("--allow-unvalidated-contact-scale", action="store_true")
+    parser.add_argument("--contact-enter-distance-m", type=float, default=0.012)
+    parser.add_argument("--max-contact-slip-p95-m-s", type=float, default=MAX_CONTACT_SLIP_P95_M_S)
     parser.add_argument("--overwrite", action="store_true")
     return parser
 
@@ -1443,6 +1466,8 @@ def main(argv: list[str] | None = None) -> int:
         hand_smoothing_strength=args.hand_smoothing_strength,
         require_contact=not args.allow_no_contact,
         allow_unvalidated_contact_scale=args.allow_unvalidated_contact_scale,
+        contact_enter_distance_m=args.contact_enter_distance_m,
+        max_contact_slip_p95_m_s=args.max_contact_slip_p95_m_s,
         overwrite=args.overwrite,
     )
     print(aligned)

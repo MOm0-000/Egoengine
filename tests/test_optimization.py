@@ -280,6 +280,19 @@ def test_manipulation_contact_metrics_reject_excessive_slip():
     assert metrics["passed"] is False
 
 
+def test_manipulation_contact_metrics_accept_explicit_soft_object_slip_limit():
+    contact = np.zeros((5, 1, 5), dtype=np.float32)
+    contact[1:4, 0, :2] = 1.0
+
+    metrics = _manipulation_contact_metrics(
+        contact, ["active"], ["right"], require_contact=True,
+        contact_local_slip_p95_m_s=0.40, max_contact_slip_p95_m_s=0.45,
+    )
+
+    assert metrics["passed"] is True
+    assert metrics["maximum_contact_local_slip_p95_m_s"] == 0.45
+
+
 def test_global_simulation_frame_clears_floor_without_changing_camera_pose():
     count = 3
     mesh = trimesh.creation.box(extents=[0.1, 0.1, 0.1])

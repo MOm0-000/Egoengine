@@ -7,6 +7,7 @@ from video_to_spider.export.spider_runner import (
     _configure_contact_reward,
     _inspect_hand_floor_contacts,
     _normalize_kinematic_contact,
+    _resolve_uv,
 )
 
 
@@ -67,3 +68,27 @@ def test_normalize_kinematic_contact_aligns_timeline_and_channels(tmp_path: Path
     with np.load(trajectory) as artifact:
         np.testing.assert_allclose(artifact["contact"], contact[1:5, -5:])
         np.testing.assert_allclose(artifact["contact_pos"], contact_pos[1:5, -5:])
+
+
+def test_resolve_uv_finds_project_local_tool(monkeypatch, tmp_path: Path):
+    spider = tmp_path / "spider"
+    uv = tmp_path / ".tools/uv/bin/uv"
+    spider.mkdir()
+    uv.parent.mkdir(parents=True)
+    uv.write_text("#!/bin/sh\n")
+    uv.chmod(0o755)
+    monkeypatch.delenv("UV_EXECUTABLE", raising=False)
+    monkeypatch.setattr("video_to_spider.export.spider_runner.shutil.which", lambda _: None)
+
+    assert _resolve_uv(spider) == uv.resolve()
+
+
+def test_resolve_uv_prefers_explicit_executable(monkeypatch, tmp_path: Path):
+    spider = tmp_path / "spider"
+    spider.mkdir()
+    uv = tmp_path / "custom-uv"
+    uv.write_text("#!/bin/sh\n")
+    uv.chmod(0o755)
+    monkeypatch.setenv("UV_EXECUTABLE", str(uv))
+
+    assert _resolve_uv(spider) == uv.resolve()

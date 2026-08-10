@@ -28,12 +28,22 @@ _NUMBER_WORDS = {"one", "two", "three", "four", "five", "six", "seven", "eight",
 _ACTION_WORDS = {
     "add", "arrange", "assemble", "boil", "build", "catch", "charge", "clean", "clip", "color", "crack",
     "crumple", "deal", "declutter", "disassemble", "disconnect", "dry", "empty", "flatten", "flip", "fry",
-    "gather", "place", "plug", "put", "remove", "return", "serve", "split", "stake", "take", "topple",
+    "gather", "pick", "place", "plug", "put", "remove", "return", "serve", "split", "stake", "take", "topple",
     "unbraid", "uncharge", "unclip", "unplug", "unstake", "use",
+}
+_DIRECTION_WORDS = {
+    "down", "downward", "downwards", "horizontal", "horizontally", "left", "right", "up", "upright",
+    "upward", "upwards", "vertical", "vertically",
 }
 _SINGULAR = {"lids": "lid", "cups": "cup", "dominoes": "domino", "legos": "lego", "tiles": "tile",
              "cards": "card", "papers": "paper", "paperclips": "paperclip", "pages": "page", "plates": "plate",
              "forks": "fork", "spoons": "spoon", "knives": "knife", "rings": "ring", "hands": "hand"}
+_PHRASE_EXPANSIONS = {
+    # EgoDex descriptions often use the generic annotation phrase "plush object".
+    # SAM-style open-vocabulary detectors respond more reliably to common visual
+    # category names, so add deterministic text-only aliases without consulting GT.
+    "plush object": ("plush toy", "white plush toy", "stuffed toy", "stuffed animal"),
+}
 
 
 @dataclass(frozen=True)
@@ -76,16 +86,55 @@ def keyword_candidates(instruction: str, task_name: str) -> list[str]:
     """Produce deterministic text-only candidates without reading GT object annotations."""
     words = re.findall(r"[A-Za-z]+", instruction.lower())
     candidates: list[str] = []
+
+    def append(candidate: str) -> None:
+        if candidate and candidate not in candidates:
+            candidates.append(candidate)
+
+    # Preserve adjacent descriptive noun phrases (for example, "red cup" or
+    # "plush object") before falling back to individual category words.  Color
+    # words are useful as part of a phrase but remain too ambiguous on their own.
+    phrase: list[str] = []
     for word in words:
         normalized = _SINGULAR.get(word, word)
-        if normalized in _STOP_WORDS or normalized in _COLOR_WORDS or normalized in _ACTION_WORDS or normalized in _NUMBER_WORDS or len(normalized) < 3:
+        is_boundary = (
+            normalized in _STOP_WORDS
+            or normalized in _ACTION_WORDS
+            or normalized in _DIRECTION_WORDS
+            or normalized in _NUMBER_WORDS
+            or len(normalized) < 3
+        )
+        if is_boundary:
+            if len(phrase) >= 2:
+                joined = " ".join(phrase)
+                append(joined)
+                for expansion in _PHRASE_EXPANSIONS.get(joined, ()):
+                    append(expansion)
+            phrase = []
+        else:
+            phrase.append(normalized)
+    if len(phrase) >= 2:
+        joined = " ".join(phrase)
+        append(joined)
+        for expansion in _PHRASE_EXPANSIONS.get(joined, ()):
+            append(expansion)
+
+    for word in words:
+        normalized = _SINGULAR.get(word, word)
+        if (
+            normalized in _STOP_WORDS
+            or normalized in _COLOR_WORDS
+            or normalized in _ACTION_WORDS
+            or normalized in _DIRECTION_WORDS
+            or normalized in _NUMBER_WORDS
+            or len(normalized) < 3
+        ):
             continue
-        if normalized not in candidates:
-            candidates.append(normalized)
+        append(normalized)
     for word in task_name.lower().split("_"):
         normalized = _SINGULAR.get(word, word)
-        if normalized not in _ACTION_WORDS and normalized not in candidates:
-            candidates.append(normalized)
+        if normalized not in _ACTION_WORDS and normalized not in _DIRECTION_WORDS:
+            append(normalized)
     return candidates[:12]
 
 

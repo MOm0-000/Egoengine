@@ -8,6 +8,7 @@ import os
 import re
 import shutil
 import subprocess
+import tempfile
 import time
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -18,6 +19,26 @@ import numpy as np
 from .spider import DATASET_NAME
 
 FINGER_ORDER = ("thumb", "index", "middle", "ring", "pinky")
+
+
+def _resolve_uv(spider_root: Path) -> Path:
+    """Find uv without requiring the calling Conda environment to own it."""
+    candidates: list[Path] = []
+    configured = os.environ.get("UV_EXECUTABLE")
+    if configured:
+        candidates.append(Path(configured).expanduser())
+    discovered = shutil.which("uv")
+    if discovered:
+        candidates.append(Path(discovered))
+    candidates.extend([
+        spider_root.parent / ".tools/uv/bin/uv",
+        spider_root / ".venv/bin/uv",
+    ])
+    for candidate in candidates:
+        if candidate.is_file() and os.access(candidate, os.X_OK):
+            return candidate.resolve()
+    searched = ", ".join(str(path) for path in candidates) or "PATH"
+    raise FileNotFoundError(f"uv executable not found; searched: {searched}")
 
 
 def _run(command: list[str], *, cwd: Path, env: dict[str, str], log_path: Path) -> dict[str, Any]:
@@ -204,16 +225,21 @@ def run_spider_chain(
     visual_contact = mano_dir / "trajectory_keypoints_visual_contact.npz"
     detected_contact = mano_dir / "trajectory_keypoints_spider_contact.npz"
     shutil.copy2(keypoints, visual_contact)
+    # A shared /tmp cache may belong to another Unix user on a multi-user node.
+    # Keep the frozen, no-sync run isolated and make the temporary cache
+    # self-cleaning when this function returns or unwinds with an exception.
+    uv_cache = tempfile.TemporaryDirectory(prefix=f"video-to-spider-uv-{os.getuid()}-")
     environment = os.environ.copy()
     environment.update({
-        "CUDA_VISIBLE_DEVICES": str(gpu), "UV_CACHE_DIR": "/tmp/video-to-spider-uv-cache",
+        "CUDA_VISIBLE_DEVICES": str(gpu), "UV_CACHE_DIR": uv_cache.name,
         "PYTHONPATH": str(spider),
         # MuJoCo otherwise falls back to GLFW/X11 even when SPIDER is invoked
         # with --no-show-viewer. EGL provides deterministic offscreen rendering
         # for the M4 simulation videos on headless GPU nodes.
         "MUJOCO_GL": "egl", "PYOPENGL_PLATFORM": "egl",
     })
-    base = ["uv", "run", "--frozen", "--no-sync", "python", "-m"]
+    uv = str(_resolve_uv(spider))
+    base = [uv, "run", "--frozen", "--no-sync", "python", "-m"]
     common = [
         "--dataset-dir", str(dataset), "--dataset-name", DATASET_NAME,
         "--embodiment-type", embodiment_type, "--task", task, "--data-id", str(data_id),
@@ -263,7 +289,7 @@ def run_spider_chain(
     mjwp_path = robot_dir / "trajectory_mjwp.npz"
     if run_mjwp:
         mjwp_command = [
-            "uv", "run", "--frozen", "--no-sync", "python", "examples/run_mjwp.py",
+            uv, "run", "--frozen", "--no-sync", "python", "examples/run_mjwp.py",
             "+override=gigahand_fast", f"dataset_dir={dataset}", f"dataset_name={DATASET_NAME}",
             f"robot_type={robot_type}", f"embodiment_type={embodiment_type}", f"task={task}",
             f"data_id={data_id}", f"model_path={scene}", f"data_path={trajectory_kinematic}",
@@ -278,6 +304,7 @@ def run_spider_chain(
         ))
         if not mjwp_path.exists():
             raise RuntimeError(f"MJWP completed without expected artifact: {mjwp_path}")
+    uv_cache.cleanup()
     ik_video = robot_dir / "visualization_ik.mp4"
     mjwp_video = robot_dir / "visualization_mjwp.mp4"
     if save_video and not ik_video.exists():
