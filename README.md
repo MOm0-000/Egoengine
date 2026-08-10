@@ -8,6 +8,12 @@
 
 本仓库的已验证发布基线使用 EgoDex `vertical_pick_place/111`（54 帧）和单张物理 GPU 7，从全新 RUN_DIR 串行生成了 MJWP 视频与 12/12 阶段统一报告；核心测试为 `67 passed`。这证明工程链路完整，但该样本的 MJWP 旋转误差仍未达到论文阈值。环境恢复、第三方 revision、权重和验收边界见 [docs/REPRODUCIBILITY.md](./docs/REPRODUCIBILITY.md)。
 
+首次使用建议按以下顺序阅读：
+
+1. [快速配置环境.md](./快速配置环境.md)：逐行配置源码、Conda 环境、SPIDER 和模型资产。
+2. [quick_start.md](./quick_start.md)：从原始 MP4/HDF5 串行生成最终 MJWP 视频的最短命令清单。
+3. 本 README：逐阶段质量检查、重跑和故障定位。
+
 ## 流程总览
 
 ```text

@@ -5,12 +5,13 @@ This document defines the source, environment, model, and validation boundary fo
 ## Verified baseline
 
 - Dataset: EgoDex `vertical_pick_place/111`, raw MP4 and HDF5, 54 frames at 30 FPS.
+- Verified code commit: `007c909af2bd80c66658f0e06696b9972a5fd569` (the subsequent documentation-only commit does not change runtime code).
 - Isolation: a fresh RUN_DIR; no previous episode result cache was resumed.
 - GPU: physical GPU 7 only, exposed to each model process as the single logical device `cuda:0`.
 - Pipeline: ingest → SAM3 → WiLoR → Depth Anything V2 → SAM 3D Objects → FoundationPose → sequence/contact optimization → SPIDER export → contact/XML/IK → MJWP → visualization and unified report.
 - Structural result: 12/12 stages available, all five SPIDER subprocesses returned 0, MJWP video generated.
 - Tests: 67 passed.
-- Quality boundary: MJWP mean position error was 0.0675 m and passed the 0.1 m threshold; mean rotation error was 1.438 rad and did not pass the 0.5 rad paper threshold. The release is therefore engineering-complete, not a claim that all paper metrics were reproduced.
+- Quality boundary: MJWP mean position error was 0.0701 m and passed the 0.1 m threshold; mean rotation error was 0.9262 rad and did not pass the 0.5 rad paper threshold. The release is therefore engineering-complete, not a claim that all paper metrics were reproduced.
 
 ## Repository layout
 
@@ -171,4 +172,4 @@ Then follow the stage-by-stage commands in the main README with a new RUN_DIR. A
 5. all five SPIDER commands return 0 and the MJWP video is decodable;
 6. metric quality is reported separately from structural completion.
 
-The original validation used a warm model cache and took approximately 13–20 minutes for a similar 54–90 frame episode. First-time downloads and environment restoration are not included.
+The final fresh validation took approximately 38 minutes for 54 frames with warm model/compile caches; FoundationPose alone took about 23 minutes. Budget 35–60 minutes for a similar 54–90 frame episode. First-time downloads and environment restoration are not included.
