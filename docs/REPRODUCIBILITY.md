@@ -126,13 +126,15 @@ Runtime commands use `uv run --frozen --no-sync`, so they neither re-resolve nor
 
 ## Required model assets
 
-Model weights are intentionally excluded from Git. At minimum, provide these files through the official upstream download procedures or an access-controlled model store:
+Model weights are intentionally excluded from Git. Official sources and download commands are recorded in [模型权重下载来源.md](../模型权重下载来源.md). At minimum, provide these files through the official upstream download procedures or an access-controlled model store:
 
 ```text
 third_party/sam3/checkpoints/sam3.1_multiplex.pt
 third_party/WiLoR/pretrained_models/wilor_final.ckpt
 third_party/WiLoR/pretrained_models/model_config.yaml
 third_party/WiLoR/pretrained_models/detector.pt
+third_party/WiLoR/mano_data/MANO_RIGHT.pkl
+third_party/WiLoR/mano_data/mano_mean_params.npz
 third_party/Depth-Anything-V2/metric_depth/checkpoints/depth_anything_v2_metric_hypersim_vitl.pth
 third_party/sam-3d-objects/checkpoints/hf/pipeline.yaml
 third_party/FoundationPose/weights/2024-01-11-20-02-45/model_best.pth
