@@ -75,12 +75,20 @@ git clone https://github.com/facebookresearch/spider.git "$EGOENGINE_ROOT/spider
 git -C "$EGOENGINE_ROOT/spider" checkout --detach 71238456bf97a7eeb3d0471aa31974e2d404d4ae
 git -C "$EGOENGINE_ROOT/spider" am \
   "$REPO_ROOT/patches/0001-Make-frozen-SPIDER-lock-reproducible-from-public-PyP.patch"
+git -C "$EGOENGINE_ROOT/spider" am \
+  "$REPO_ROOT/patches/0002-EgoEngine-SPIDER-retargeting-mods.patch"
 ```
 
 The SPIDER patch changes inaccessible internal CodeArtifact URLs to public PyPI files while preserving package names and versions. After applying it:
 
 ```text
 uv.lock SHA256: 23b98373fd8e0d0664871e4bcbaa9389009c06276f7aacb5d56afc946c9e5b85
+
+The second patch (`0002`) carries the EgoEngine retargeting additions on top of the
+patched SPIDER base: paper-style MINK IK (`spider/preprocess/mink_ik.py`), contact-aware
+grasp preshape (`spider/preprocess/grasp_preshape.py`), physics contact metrics
+(`spider/postprocess/physics_contact_metrics.py`), plus the MJWP/sampling/config edits that
+the `video_to_spider` pipeline relies on. Apply it after `0001`.
 ```
 
 ## Why the environments are separate
