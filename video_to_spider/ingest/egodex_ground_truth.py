@@ -15,6 +15,14 @@ from ..manifest import RunManifest, stage_cache_key
 from ..schemas import validate_transforms
 
 FINGERTIP_NAMES = ("ThumbTip", "IndexFingerTip", "MiddleFingerTip", "RingFingerTip", "LittleFingerTip")
+MANO21_SUFFIXES = (
+    "Hand",
+    "ThumbKnuckle", "ThumbIntermediateBase", "ThumbIntermediateTip", "ThumbTip",
+    "IndexFingerKnuckle", "IndexFingerIntermediateBase", "IndexFingerIntermediateTip", "IndexFingerTip",
+    "MiddleFingerKnuckle", "MiddleFingerIntermediateBase", "MiddleFingerIntermediateTip", "MiddleFingerTip",
+    "RingFingerKnuckle", "RingFingerIntermediateBase", "RingFingerIntermediateTip", "RingFingerTip",
+    "LittleFingerKnuckle", "LittleFingerIntermediateBase", "LittleFingerIntermediateTip", "LittleFingerTip",
+)
 
 
 def _load_confidence(
@@ -37,6 +45,29 @@ def load_hand_ground_truth(path: str | Path, side: str) -> dict[str, Any]:
         transforms = np.stack([np.asarray(handle[f"transforms/{name}"], dtype=np.float64) for name in names], axis=1)
         confidence, confidence_source = _load_confidence(handle, names, transforms.shape[0])
     validate_transforms(f"{side}_hand_ground_truth", transforms)
+    return {
+        "names": np.asarray(names), "T_world_joint": transforms,
+        "confidence": confidence, "confidence_source": confidence_source,
+    }
+
+
+def load_mano21_ground_truth(path: str | Path, side: str) -> dict[str, Any]:
+    """Load an explicit 21-landmark EgoDex oracle in this project's MANO order."""
+    if side not in {"left", "right"}:
+        raise ValueError("side must be 'left' or 'right'")
+    names = [f"{side}{suffix}" for suffix in MANO21_SUFFIXES]
+    with h5py.File(path, "r") as handle:
+        missing = [name for name in names if f"transforms/{name}" not in handle]
+        if missing:
+            raise KeyError(f"EgoDex episode lacks MANO21 oracle transforms: {missing}")
+        transforms = np.stack([
+            np.asarray(handle[f"transforms/{name}"], dtype=np.float64)
+            for name in names
+        ], axis=1)
+        confidence, confidence_source = _load_confidence(
+            handle, names, transforms.shape[0]
+        )
+    validate_transforms(f"{side}_mano21_ground_truth", transforms)
     return {
         "names": np.asarray(names), "T_world_joint": transforms,
         "confidence": confidence, "confidence_source": confidence_source,

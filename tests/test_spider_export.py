@@ -20,6 +20,9 @@ def _write_artifacts(tmp_path: Path):
     aligned = tmp_path / "aligned.npz"
     np.savez(aligned, frame_indices=np.arange(t), timestamps_s=timestamps,
              T_sim_object=obj[:, None], T_sim_wrist=wrist[:, None], fingertips_sim=fingertips,
+             fingertip_orientation_sim=np.broadcast_to(
+                 np.eye(3), (t, 1, 5, 3, 3),
+             ).copy(),
              mano_pose=np.repeat(np.eye(3)[None, None, None], t * 1 * 15, axis=0).reshape(t, 1, 15, 3, 3),
              mano_betas=np.zeros((1, 10)), object_scale_to_m=np.array([0.5]),
              valid_object=np.ones((t, 1), bool), valid_hand=np.ones((t, 1), bool),
@@ -49,9 +52,20 @@ def test_spider_export_shapes_and_inactive_identity(tmp_path: Path):
     assert set(data.files) == {
         "qpos_obj_right", "qpos_obj_left", "qpos_wrist_right", "qpos_finger_right",
         "contact_right", "contact_pos_right", "qpos_wrist_left", "qpos_finger_left",
-        "contact_left", "contact_pos_left",
-    }
+            "contact_left", "contact_pos_left", "mano_pose_right", "mano_pose_left",
+            "fingertip_orientation_right", "fingertip_orientation_left",
+            "fingertip_orientation_source",
+            "human_palm_orientation_right", "human_palm_orientation_left",
+        }
     assert data["qpos_finger_right"].shape[1:] == (5, 7)
+    assert data["mano_pose_right"].shape[1:] == (15, 3, 3)
+    assert data["fingertip_orientation_right"].shape[1:] == (5, 3, 3)
+    orthogonality = (
+        data["mano_pose_right"] @ data["mano_pose_right"].swapaxes(-1, -2)
+    )
+    np.testing.assert_allclose(
+        orthogonality, np.broadcast_to(np.eye(3), orthogonality.shape), atol=1e-5,
+    )
     np.testing.assert_allclose(data["qpos_obj_left"][:, 3], 1)
     np.testing.assert_allclose(data["qpos_wrist_left"][:, 3], 1)
     exported_mesh = __import__("trimesh").load_mesh(result["object_dir"] / "visual.obj", process=False)
@@ -61,6 +75,13 @@ def test_spider_export_shapes_and_inactive_identity(tmp_path: Path):
     assert task_info["simulation_preflight"]["passed"]
     assert task_info["simulation_preflight"]["hand_target_clearance_m"] == 0.002
     assert np.isclose(task_info["support_alignment"]["object_min_z_after_m"], 0.002)
+    assert task_info["support_alignment"]["hand_object_interaction_preserved"]
+    assert (
+        task_info["support_alignment"][
+            "hand_object_relative_displacement_max_error_m"
+        ]
+        <= 1e-9
+    )
 
 
 def test_spider_export_rejects_underground_object(tmp_path: Path):
@@ -113,3 +134,36 @@ def test_bimanual_export_requires_both_visible_hands(tmp_path: Path):
             source_run_id="run", hand_sides=["right"], spider_package_root=tmp_path,
             embodiment_type="bimanual",
         )
+
+
+def test_spider_export_crops_to_longest_contiguous_valid_window(tmp_path: Path):
+    aligned, contact, mesh = _write_artifacts(tmp_path)
+    with np.load(aligned) as artifact:
+        arrays = {key: np.asarray(artifact[key]) for key in artifact.files}
+    arrays["valid_object"][:, 0] = [False, True, True, False]
+    np.savez(aligned, **arrays)
+    spider_package = tmp_path / "spider_package"
+    for robot in ("mano", "xhand"):
+        robot_dir = spider_package / "assets/robots" / robot
+        robot_dir.mkdir(parents=True)
+        (robot_dir / "right.xml").write_text("<mujoco/>")
+
+    result = export_spider_dataset(
+        aligned_path=aligned, contact_path=contact, visual_mesh_path=mesh,
+        dataset_root=tmp_path / "dataset", task="synthetic", data_id=0,
+        source_run_id="run", hand_sides=["right"],
+        spider_package_root=spider_package, embodiment_type="right",
+    )
+
+    report = json.loads(result["export_manifest"].read_text())[
+        "source_valid_window"
+    ]
+    assert report == {
+        "source_frame_count": 4,
+        "selected_start_row": 1,
+        "selected_stop_row_exclusive": 3,
+        "selected_frame_count": 2,
+        "trimmed_frame_count": 2,
+        "selected_first_frame_index": 1,
+        "selected_last_frame_index": 2,
+    }

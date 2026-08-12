@@ -33,7 +33,12 @@ def test_m4_requires_real_mjwp_trajectory_and_simulation_video(tmp_path):
     spider_report = tmp_path / "spider_run_report.json"
     payload = {
         "commands": [{"returncode": 0}], "mjwp_metrics": {"record_count": 1},
-        "artifacts": {"trajectory_mjwp": str(trajectory), "mjwp_video": None},
+        "demonstration_success": False,
+        "artifacts": {
+            "trajectory_mjwp": str(trajectory),
+            "diagnostic_mjwp_video": None,
+            "final_simulation_video": None,
+        },
     }
     spider_report.write_text(json.dumps(payload))
     report = json.loads(build_run_report(tmp_path, spider_report=spider_report).read_text())
@@ -42,7 +47,15 @@ def test_m4_requires_real_mjwp_trajectory_and_simulation_video(tmp_path):
 
     video = tmp_path / "visualization_mjwp.mp4"
     video.write_bytes(b"simulation-video")
-    payload["artifacts"]["mjwp_video"] = str(video)
+    payload["artifacts"]["diagnostic_mjwp_video"] = str(video)
+    spider_report.write_text(json.dumps(payload))
+    report = json.loads(build_run_report(tmp_path, spider_report=spider_report).read_text())
+    assert report["completion"]["diagnostic_simulation_video_complete"] is True
+    assert report["completion"]["simulation_video_complete"] is False
+    assert report["completion"]["m4_complete"] is False
+
+    payload["demonstration_success"] = True
+    payload["artifacts"]["final_simulation_video"] = str(video)
     spider_report.write_text(json.dumps(payload))
     report = json.loads(build_run_report(tmp_path, spider_report=spider_report).read_text())
     assert report["completion"]["simulation_video_complete"] is True

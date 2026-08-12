@@ -4,7 +4,11 @@ import h5py
 import numpy as np
 
 from video_to_spider.ingest.egodex import EpisodeRef, keyword_candidates, select_instruction
-from video_to_spider.ingest.egodex_ground_truth import load_hand_ground_truth
+from video_to_spider.ingest.egodex_ground_truth import (
+    MANO21_SUFFIXES,
+    load_hand_ground_truth,
+    load_mano21_ground_truth,
+)
 
 
 def test_instruction_selection_and_keywords_do_not_use_gt_object_attr():
@@ -57,3 +61,21 @@ def test_ground_truth_reader_accepts_missing_optional_confidence(tmp_path: Path)
     result = load_hand_ground_truth(path, "left")
     np.testing.assert_array_equal(result["confidence"], np.ones((3, 6)))
     assert result["confidence_source"] == "missing_assumed_valid"
+
+
+def test_mano21_ground_truth_reader_uses_frozen_landmark_order(tmp_path: Path):
+    path = tmp_path / "episode_mano21.hdf5"
+    with h5py.File(path, "w") as handle:
+        for index, suffix in enumerate(MANO21_SUFFIXES):
+            transforms = np.repeat(np.eye(4)[None], 2, axis=0)
+            transforms[:, 0, 3] = index
+            handle.create_dataset(f"transforms/right{suffix}", data=transforms)
+
+    result = load_mano21_ground_truth(path, "right")
+
+    assert result["T_world_joint"].shape == (2, 21, 4, 4)
+    np.testing.assert_array_equal(result["T_world_joint"][0, :, 0, 3], np.arange(21))
+    assert result["names"][[0, 4, 8, 12, 16, 20]].tolist() == [
+        "rightHand", "rightThumbTip", "rightIndexFingerTip",
+        "rightMiddleFingerTip", "rightRingFingerTip", "rightLittleFingerTip",
+    ]

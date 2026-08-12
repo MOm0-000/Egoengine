@@ -39,6 +39,9 @@ def test_static_fit_returns_finite_traceable_metrics():
     assert np.isfinite(transform).all()
     assert 0.0 <= metrics["silhouette_iou"] <= 1.0
     assert metrics["point_count"] > 0
+    assert metrics["scale_fit_accepted"]
+    assert metrics["scale_source"] == "metric_depth_mask_pointcloud_and_canonical_mesh_projection"
+    assert metrics["layout_scale_role"] == "diagnostic_only_no_blending"
 
 
 def test_low_vram_sparse_coordinate_cap_is_configurable():

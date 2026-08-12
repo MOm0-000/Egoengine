@@ -6,21 +6,31 @@ from video_to_spider.manifest import RunManifest
 from video_to_spider.optimization.contact import infer_contact
 from video_to_spider.optimization.sequence import (
     _build_T_sim_world,
+    _causality_observation_consistency,
     _hand_reprojection_metrics,
     _manipulation_contact_metrics,
     _optimize_contact_similarity,
     _optimization_quality_control,
     _optimize_global_scale,
     calibrate_hand_depth_scale,
+    calibrate_hand_object_metric_similarity,
     classify_hand_roles,
     enforce_simulation_floor,
+    fingertip_frames_from_joints,
     hand_anchored_object_observation,
     object_minimum_z,
     optimize_run,
     reject_unphysical_passive_hands,
+    stabilize_supported_object_translation,
     xhand_wrist_frames_from_joints,
 )
 from video_to_spider.optimization.smoothing import smooth_rotations, smooth_second_difference
+from video_to_spider.optimization.mano_fk import (
+    MANO_DISTAL_JOINT_INDICES,
+    mano_global_joint_rotations,
+    mano_orientation_diagnostics,
+    mano_wrist_and_distal_frames,
+)
 from video_to_spider.schemas import validate_npz
 
 
@@ -30,6 +40,127 @@ def test_second_difference_smoothing_reduces_jitter():
     values[10, 0] += 0.5
     result = smooth_second_difference(values, np.ones(20), 20.0)
     assert np.linalg.norm(np.diff(result, n=2, axis=0)) < np.linalg.norm(np.diff(values, n=2, axis=0))
+
+
+def test_supported_object_stabilization_freezes_only_precontact_translation():
+    poses = np.repeat(np.eye(4)[None], 7, axis=0)
+    poses[:, 0, 3] = [0.0, 0.002, 0.004, 0.020, 0.030, 0.050, 0.080]
+    poses[:, 2, 3] = 0.10
+    poses[:, :3, :3] = np.asarray([
+        __import__("scipy").spatial.transform.Rotation.from_rotvec([0.0, 0.0, 0.1 * i]).as_matrix()
+        for i in range(7)
+    ])
+
+    corrected, metrics = stabilize_supported_object_translation(
+        poses, contact_onset_frame=4, lead_frames=1,
+        minimum_precontact_drift_m=0.005, anchor_frames=2,
+    )
+
+    anchor = np.array([0.001, 0.0, 0.10])
+    np.testing.assert_allclose(
+        corrected[:4, :3, 3], np.broadcast_to(anchor, (4, 3)),
+    )
+    np.testing.assert_allclose(
+        np.diff(corrected[3:, :3, 3], axis=0),
+        np.diff(poses[3:, :3, 3], axis=0),
+    )
+    np.testing.assert_allclose(corrected[:, :3, :3], poses[:, :3, :3])
+    assert metrics["applied"] is True
+    assert metrics["release_frame"] == 3
+    assert metrics["camera_or_hand_modified"] is False
+
+
+def test_supported_object_stabilization_requires_independent_contact_onset():
+    poses = np.repeat(np.eye(4)[None], 4, axis=0)
+    poses[:, 0, 3] = np.linspace(0.0, 0.05, 4)
+
+    corrected, metrics = stabilize_supported_object_translation(
+        poses, contact_onset_frame=None,
+    )
+
+    np.testing.assert_allclose(corrected, poses)
+    assert metrics["applied"] is False
+    assert metrics["reason"] == "no_persistent_2d_hand_object_proximity"
+
+
+def test_supported_object_stabilization_uses_only_contiguous_valid_run():
+    poses = np.repeat(np.eye(4)[None], 9, axis=0)
+    poses[:, 0, 3] = [9.0, 8.0, 0.10, 0.11, 0.12, 0.15, 0.18, 7.0, 6.0]
+    valid = np.array([False, False, True, True, True, True, True, False, False])
+
+    corrected, metrics = stabilize_supported_object_translation(
+        poses, contact_onset_frame=6, lead_frames=1,
+        minimum_precontact_drift_m=0.005, anchor_frames=2, valid=valid,
+    )
+
+    assert metrics["valid_run"] == [2, 6]
+    np.testing.assert_allclose(corrected[:2], poses[:2])
+    np.testing.assert_allclose(corrected[7:], poses[7:])
+    np.testing.assert_allclose(corrected[2:6, 0, 3], 0.105)
+    np.testing.assert_allclose(corrected[6, 0, 3], 0.135)
+
+
+def test_supported_object_stabilization_detects_peak_not_only_release_drift():
+    poses = np.repeat(np.eye(4)[None], 7, axis=0)
+    poses[:, 0, 3] = [0.0, 0.0, 0.04, 0.02, 0.005, 0.01, 0.02]
+
+    corrected, metrics = stabilize_supported_object_translation(
+        poses, contact_onset_frame=5, lead_frames=1,
+        minimum_precontact_drift_m=0.01, anchor_frames=2,
+    )
+
+    assert metrics["applied"] is True
+    assert metrics["precontact_translation_drift_m"] == 0.04
+    assert metrics["release_translation_offset_m"] == 0.005
+    np.testing.assert_allclose(corrected[:5, 0, 3], 0.0)
+
+
+def test_supported_object_stabilization_rejects_missing_valid_precontact_window():
+    poses = np.repeat(np.eye(4)[None], 6, axis=0)
+    valid = np.array([False, False, False, True, True, True])
+
+    corrected, metrics = stabilize_supported_object_translation(
+        poses, contact_onset_frame=3, lead_frames=2, valid=valid,
+    )
+
+    np.testing.assert_allclose(corrected, poses)
+    assert metrics["applied"] is False
+    assert metrics["reason"] == "insufficient_valid_precontact_window"
+
+
+def test_causality_correction_gate_rejects_replaced_visual_evidence():
+    result = _causality_observation_consistency(
+        {
+            "silhouette_iou_raw": 0.75,
+            "silhouette_iou_aligned": 0.67,
+            "relative_depth_residual_raw": 0.08,
+            "relative_depth_residual_aligned": 0.16,
+        },
+        raw_centroid_error_px=14.0, candidate_centroid_error_px=32.0,
+        floor_constraint_passed=True,
+    )
+
+    assert result["accepted"] is False
+    assert result["checks"]["silhouette_preserved"] is False
+    assert result["checks"]["mask_centroid_preserved"] is False
+    assert result["checks"]["metric_depth_preserved"] is False
+    assert result["per_video_tuning"] is False
+
+
+def test_causality_correction_gate_accepts_observation_preserving_candidate():
+    result = _causality_observation_consistency(
+        {
+            "silhouette_iou_raw": 0.58,
+            "silhouette_iou_aligned": 0.575,
+            "relative_depth_residual_raw": 0.08,
+            "relative_depth_residual_aligned": 0.09,
+        },
+        raw_centroid_error_px=30.0, candidate_centroid_error_px=29.0,
+        floor_constraint_passed=True,
+    )
+
+    assert result["accepted"] is True
+    assert all(result["checks"].values())
 
 
 def test_second_difference_smoothing_handles_noncontiguous_fingertips():
@@ -48,6 +179,86 @@ def test_rotation_smoothing_preserves_so3():
     np.testing.assert_allclose(
         np.swapaxes(result, 1, 2) @ result, np.repeat(np.eye(3)[None], 8, axis=0), atol=1e-7
     )
+
+
+def test_fingertip_frames_use_observable_distal_geometry_and_fill_invalid_frames():
+    joints = np.zeros((3, 21, 3), dtype=np.float64)
+    for tip in (4, 8, 12, 16, 20):
+        joints[:, tip, 2] = 1.0
+    joints[1] = 0.0
+    wrists = np.repeat(np.eye(3)[None], 3, axis=0)
+
+    result = fingertip_frames_from_joints(
+        joints, wrists, np.array([True, False, True]),
+    )
+
+    expected = np.broadcast_to(np.eye(3), result.shape)
+    np.testing.assert_allclose(result, expected, atol=1e-8)
+    np.testing.assert_allclose(np.linalg.det(result), 1.0, atol=1e-8)
+
+
+def test_fingertip_frames_use_wrist_placeholder_for_wholly_invalid_hand():
+    joints = np.zeros((2, 21, 3), dtype=np.float64)
+    wrist_rotation = np.array([
+        [0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0],
+    ])
+    wrists = np.repeat(wrist_rotation[None], 2, axis=0)
+
+    result = fingertip_frames_from_joints(joints, wrists, np.zeros(2, dtype=bool))
+
+    np.testing.assert_allclose(result, np.repeat(wrists[:, None], 5, axis=1))
+
+
+def test_mano_fk_composes_distal_chains_and_returns_proper_calibrated_frames():
+    root = np.repeat(np.eye(3)[None], 2, axis=0)
+    pose = np.broadcast_to(np.eye(3), (2, 15, 3, 3)).copy()
+    angle = np.deg2rad(20.0)
+    rotation_z = np.array([
+        [np.cos(angle), -np.sin(angle), 0.0],
+        [np.sin(angle), np.cos(angle), 0.0],
+        [0.0, 0.0, 1.0],
+    ])
+    pose[1, 0] = rotation_z
+    pose[1, 1] = rotation_z
+    pose[1, 2] = rotation_z
+
+    global_rotations = mano_global_joint_rotations(root, pose)
+    wrist, distal = mano_wrist_and_distal_frames(root, pose, "right")
+
+    np.testing.assert_allclose(
+        global_rotations[1, MANO_DISTAL_JOINT_INDICES[1]],
+        rotation_z @ rotation_z @ rotation_z,
+        atol=1e-12,
+    )
+    np.testing.assert_allclose(np.linalg.det(wrist), 1.0, atol=1e-8)
+    np.testing.assert_allclose(np.linalg.det(distal), 1.0, atol=1e-8)
+
+
+def test_mano_fk_left_frames_are_proper_and_not_episode_fitted():
+    root = np.repeat(np.eye(3)[None], 3, axis=0)
+    pose = np.broadcast_to(np.eye(3), (3, 15, 3, 3))
+    _, right = mano_wrist_and_distal_frames(root, pose, "right")
+    _, left = mano_wrist_and_distal_frames(root, pose, "left")
+
+    np.testing.assert_allclose(np.linalg.det(left), 1.0, atol=1e-8)
+    assert not np.allclose(left, right)
+
+
+def test_mano_orientation_diagnostics_accept_axis_consistent_fk():
+    root = np.repeat(np.eye(3)[None], 4, axis=0)
+    pose = np.broadcast_to(np.eye(3), (4, 15, 3, 3))
+    wrist, distal = mano_wrist_and_distal_frames(root, pose, "right")
+    joints = np.zeros((4, 21, 3), dtype=np.float64)
+    for finger, tip in enumerate((4, 8, 12, 16, 20)):
+        joints[:, tip] = distal[:, finger, :, 2] * 0.02
+
+    diagnostics = mano_orientation_diagnostics(
+        wrist, distal, joints, wrist, distal, np.ones(4, dtype=bool),
+    )
+
+    assert diagnostics["passed"] is True
+    assert diagnostics["episode_specific_axis_fit"] is False
+    assert diagnostics["distal_axis_vs_dip_to_tip"]["p95_rad"] < 1e-3
 
 
 def test_object_observation_rejects_inconsistent_hand_depth():
@@ -109,6 +320,49 @@ def test_hand_depth_calibration_accepts_projection_safe_adjustment():
     assert np.isclose(record["applied_scale_ratio"], 1.05)
     assert record["accepted"] is True
     np.testing.assert_allclose(calibrated[:, 0, 0, 2], 1.05)
+
+
+def test_hand_object_metric_similarity_preserves_all_joint_projections():
+    count = 6
+    K = np.array([[700.0, 0.0, 500.0], [0.0, 700.0, 300.0], [0.0, 0.0, 1.0]])
+    joints = np.zeros((count, 1, 21, 3), dtype=np.float64)
+    joints[..., 2] = 0.40
+    joints[:, 0, :, 0] = np.linspace(-0.05, 0.05, 21)
+    joints[:, 0, 12, 0] = 0.12
+    objects = np.repeat([[0.0, 0.0, 0.48]], count, axis=0)
+
+    calibrated, metrics = calibrate_hand_object_metric_similarity(
+        K, joints, np.ones((count, 1), bool), np.ones((count, 1)), objects,
+        np.repeat([[500.0, 300.0]], count, axis=0), np.ones(count, bool),
+        metric_mask_depth=np.full(count, 0.48),
+    )
+
+    record = metrics["per_hand"]["left"]
+    assert record["accepted"] is True
+    assert np.isclose(record["applied_similarity_ratio"], 1.2)
+    raw_pixels = sequence._project(K, joints)
+    calibrated_pixels = sequence._project(K, calibrated)
+    np.testing.assert_allclose(calibrated_pixels, raw_pixels, atol=1e-10)
+
+
+def test_hand_object_metric_similarity_rejects_implausible_hand_scale():
+    count = 6
+    K = np.array([[700.0, 0.0, 500.0], [0.0, 700.0, 300.0], [0.0, 0.0, 1.0]])
+    joints = np.zeros((count, 1, 21, 3), dtype=np.float64)
+    joints[..., 2] = 0.40
+    joints[:, 0, 12, 0] = 0.15
+    objects = np.repeat([[0.0, 0.0, 0.20]], count, axis=0)
+
+    calibrated, metrics = calibrate_hand_object_metric_similarity(
+        K, joints, np.ones((count, 1), bool), np.ones((count, 1)), objects,
+        np.repeat([[500.0, 300.0]], count, axis=0), np.ones(count, bool),
+        metric_mask_depth=np.full(count, 0.20),
+    )
+
+    record = metrics["per_hand"]["left"]
+    assert record["accepted"] is False
+    assert record["rejection_reason"] == "hand_similarity_outside_fixed_bounds"
+    np.testing.assert_allclose(calibrated, joints)
 
 
 def test_hand_reprojection_qc_detects_exported_fingertip_shift():
@@ -197,9 +451,120 @@ def test_contact_similarity_rejects_unvalidated_hand_depth():
     )
 
     assert ratio == 1.0
-    assert active_hint.tolist() == [False]
+    # Visible 2-D manipulation remains an activity/onset diagnostic even when
+    # metric depth is unavailable; only scale/contact fitting is rejected.
+    assert active_hint.tolist() == [True]
     assert metrics["applied"] is False
     assert metrics["reason"] == "unvalidated_metric_hand_depth"
+    assert metrics["first_active_persistent_2d_proximity_frame"] == 0
+    assert "independent of metric depth" in metrics["activity_hint_policy"]
+
+
+def test_contact_similarity_reports_2d_onset_when_3d_fit_fails(monkeypatch):
+    count = 8
+    mesh = trimesh.creation.icosphere(subdivisions=1, radius=1.0)
+    K = np.array([[100.0, 0.0, 50.0], [0.0, 100.0, 50.0], [0.0, 0.0, 1.0]])
+    poses = np.repeat(np.eye(4)[None], count, axis=0)
+    poses[:, 2, 3] = 1.0
+    fingertips = np.zeros((count, 1, 5, 3), dtype=np.float64)
+    fingertips[..., 2] = 1.0
+    masks = np.zeros((count, 100, 100), dtype=np.uint8)
+    masks[2:, 45:56, 45:56] = 1
+
+    def fake_infer_contact(*args, **kwargs):
+        return (
+            np.zeros((count, 1, 5), dtype=np.float32),
+            np.zeros((1, 5, 3), dtype=np.float32),
+            {"contact_local_slip_p95_m_s": None},
+        )
+
+    monkeypatch.setattr(sequence, "infer_contact", fake_infer_contact)
+    ratio, active_hint, metrics = _optimize_contact_similarity(
+        mesh, 0.1, K, poses, fingertips, masks,
+        np.ones(count, bool), np.ones((count, 1), bool), np.ones((count, 1)),
+        search_similarity=False,
+    )
+
+    assert ratio == 1.0
+    assert active_hint.tolist() == [True]
+    assert metrics["validated_at_unit_similarity"] is False
+    assert metrics["first_active_persistent_2d_proximity_frame"] == 2
+
+
+def test_contact_similarity_validate_only_does_not_rescale_object(monkeypatch):
+    count = 6
+    mesh = trimesh.creation.icosphere(subdivisions=1, radius=1.0)
+    K = np.array([[100.0, 0.0, 50.0], [0.0, 100.0, 50.0], [0.0, 0.0, 1.0]])
+    poses = np.repeat(np.eye(4)[None], count, axis=0)
+    poses[:, 2, 3] = 1.0
+    fingertips = np.zeros((count, 1, 5, 3), dtype=np.float64)
+    fingertips[..., 2] = 0.25
+    masks = np.ones((count, 100, 100), dtype=np.uint8)
+
+    def fake_infer_contact(
+        mesh_m, object_poses, points, timestamps, valid_hand, **contact_options,
+    ):
+        np.testing.assert_allclose(object_poses[:, 2, 3], 1.0)
+        contact = np.ones((count, 1, 5), dtype=np.float32)
+        return contact, np.zeros((1, 5, 3), dtype=np.float32), {
+            "contact_local_slip_p95_m_s": 0.1,
+        }
+
+    monkeypatch.setattr(sequence, "infer_contact", fake_infer_contact)
+    ratio, active_hint, metrics = _optimize_contact_similarity(
+        mesh, 0.1, K, poses, fingertips, masks,
+        np.ones(count, bool), np.ones((count, 1), bool), np.ones((count, 1)),
+        search_similarity=False,
+    )
+
+    assert ratio == 1.0
+    assert active_hint.tolist() == [True]
+    assert metrics["applied"] is False
+    assert metrics["similarity_mode"] == "validate_only"
+    assert metrics["validated_at_unit_similarity"] is True
+    assert metrics["search_interval"] == [1.0, 1.0]
+
+
+def test_quality_control_reports_failed_shared_metric_contact_without_rejecting():
+    raw = np.array([[0.0, 0.0, 1.0], [0.01, 0.0, 1.0]])
+    scale = {"scale_ratio": 1.0}
+    render = {
+        "relative_depth_residual_raw": 0.01,
+        "relative_depth_residual_aligned": 0.01,
+    }
+    contact = {
+        "applied": False,
+        "similarity_mode": "validate_only",
+        "validated_at_unit_similarity": False,
+    }
+
+    result = _optimization_quality_control(
+        raw, raw.copy(), scale, render, contact_similarity_metrics=contact,
+    )
+
+    assert result["export_ready"] is True
+    assert "shared_metric_contact_validated" not in result["checks"]
+    assert result["diagnostics"]["shared_metric_surface_contact_supported"] is False
+
+
+def test_floor_validate_only_reports_violation_without_moving_observations():
+    mesh = trimesh.creation.box(extents=(0.1, 0.1, 0.1))
+    objects = np.repeat(np.eye(4)[None], 2, axis=0)
+    objects[:, 2, 3] = 0.02
+    wrists = np.repeat(np.eye(4)[None, None], 4, axis=0).reshape(2, 2, 4, 4)
+    wrists[:, :, 2, 3] = 0.01
+    fingertips = np.zeros((2, 2, 5, 3), dtype=np.float64)
+
+    projected = sequence.enforce_simulation_floor(
+        mesh, objects, wrists, fingertips, ["active", "invalid"],
+        apply_correction=False,
+    )
+
+    np.testing.assert_allclose(projected[0], objects)
+    np.testing.assert_allclose(projected[1], wrists)
+    np.testing.assert_allclose(projected[2], fingertips)
+    assert projected[3]["correction_mode"] == "validate_only"
+    assert projected[3]["constraint_passed_without_correction"] is False
 
 
 def test_contact_similarity_prefers_qc_passing_opposed_contact(monkeypatch):
@@ -238,12 +603,12 @@ def test_contact_similarity_prefers_qc_passing_opposed_contact(monkeypatch):
     assert metrics["contact_local_slip_p95_m_s"] == 0.1
 
 
-def test_manipulation_contact_metrics_require_active_continuous_contact():
+def test_manipulation_contact_metrics_accept_active_continuous_one_sided_contact():
     contact = np.zeros((6, 1, 5), dtype=np.float32)
     missing = _manipulation_contact_metrics(
         contact, ["active"], ["right"], require_contact=True,
     )
-    contact[2:5, 0, :2] = 1.0
+    contact[1:5, 0, 1] = 1.0
     present = _manipulation_contact_metrics(
         contact, ["active"], ["right"], require_contact=True,
         contact_local_slip_p95_m_s=0.1,
@@ -251,7 +616,8 @@ def test_manipulation_contact_metrics_require_active_continuous_contact():
 
     assert missing["passed"] is False
     assert present["passed"] is True
-    assert present["longest_active_opposed_run"] == 3
+    assert present["longest_active_contact_run"] == 4
+    assert present["longest_active_opposed_run"] == 0
 
 
 def test_manipulation_contact_metrics_reject_disconnected_contact_frames():
@@ -361,6 +727,18 @@ def test_optimization_qc_rejects_depth_collapse():
     assert qc["checks"]["metric_depth_residual_preserved"] is False
 
 
+def test_upstream_contact_failure_is_diagnostic_not_export_gate():
+    raw = np.repeat([[0.0, 0.0, 1.2]], 5, axis=0)
+    qc = _optimization_quality_control(
+        raw, raw.copy(), {"scale_ratio": 1.0}, {},
+        manipulation_metrics={"passed": False},
+    )
+
+    assert qc["export_ready"] is True
+    assert "manipulation_contact_present" not in qc["checks"]
+    assert qc["diagnostics"]["surface_contact_present"] is False
+
+
 def test_contact_hysteresis_and_local_positions():
     mesh = trimesh.creation.icosphere(subdivisions=1, radius=0.04)
     count = 8
@@ -420,11 +798,27 @@ def test_roles_keep_visible_noninteracting_hand_passive():
     fingertips[:, 0, :, 0] = 0.03
     fingertips[:, 1, :, 0] = 0.30
     valid = np.ones((count, 2), dtype=bool)
-    roles, _ = classify_hand_roles(objects, fingertips, valid, 0.04)
+    roles, _ = classify_hand_roles(
+        objects, fingertips, valid, 0.04, active_hint=np.array([True, False]),
+    )
     assert roles == ["active", "passive"]
     valid[1:, 1] = False
-    roles, _ = classify_hand_roles(objects, fingertips, valid, 0.04)
+    roles, _ = classify_hand_roles(
+        objects, fingertips, valid, 0.04, active_hint=np.array([True, False]),
+    )
     assert roles == ["active", "invalid"]
+
+
+def test_roles_do_not_treat_mesh_scale_as_an_activity_radius():
+    objects = np.repeat(np.eye(4)[None], 3, axis=0)
+    fingertips = np.zeros((3, 2, 5, 3), dtype=np.float64)
+    fingertips[:, 0, :, 0] = 0.01
+    roles, diagnostics = classify_hand_roles(
+        objects, fingertips, np.ones((3, 2), dtype=bool), 0.50,
+    )
+
+    assert roles == ["passive", "passive"]
+    assert diagnostics[0]["activity_policy"] == "persistent_2d_contact_hint_only"
 
 
 def test_floor_constraint_preserves_active_group_and_passive_hand():
@@ -519,7 +913,10 @@ def test_sequence_optimizer_writes_valid_artifacts(tmp_path):
     (tmp_path / "object_tracking/selected_mesh.json").write_text(
         '{"canonical_visual_mesh":"mesh_proposals/p0/visual.obj","scale_to_m":0.08}'
     )
-    aligned, contact = optimize_run(tmp_path, require_contact=False)
+    aligned, contact = optimize_run(
+        tmp_path, require_contact=False,
+        fingertip_orientation_source="landmark_proxy",
+    )
     validate_npz(aligned, "aligned_trajectory")
     validate_npz(contact, "contact")
 
@@ -530,7 +927,10 @@ def test_sequence_optimizer_writes_valid_artifacts(tmp_path):
     hands["joints_camera_rootrel"][:, 0] = 0.0
     np.savez_compressed(tmp_path / "hands/wilor_raw.npz", **hands)
 
-    aligned, contact = optimize_run(tmp_path, require_contact=False, overwrite=True)
+    aligned, contact = optimize_run(
+        tmp_path, require_contact=False,
+        fingertip_orientation_source="landmark_proxy", overwrite=True,
+    )
 
     with np.load(aligned) as artifact:
         assert artifact["T_sim_wrist"].shape[1] == 1

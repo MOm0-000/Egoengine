@@ -13,10 +13,16 @@ import cv2
 import numpy as np
 import trimesh
 
+from ..coordinates import invert_transform
+from ..ingest.egodex_ground_truth import load_mano21_ground_truth
 from ..manifest import RunManifest, stage_cache_key
 from ..schemas import SCHEMA_VERSION, validate_aligned_trajectory, validate_contact
 from ..adapters.sam3d_objects import _projected_mesh_mask_depth
+from ..adapters.depth_gate import require_depth_gate
+from ..adapters.hand_stereo import require_stereo_hand_gate
+from ..adapters.tracking_gate import require_tracking_gate
 from .contact import infer_contact
+from .mano_fk import mano_orientation_diagnostics, mano_wrist_and_distal_frames
 from .smoothing import smooth_rotations, smooth_second_difference
 
 FINGERTIP_INDICES = np.array([4, 8, 12, 16, 20])
@@ -30,7 +36,11 @@ MAX_HAND_CALIBRATION_MEDIAN_REPROJECTION_PX = 12.0
 MAX_HAND_CALIBRATION_P95_REPROJECTION_PX = 25.0
 MAX_HAND_EXPORT_MEDIAN_REPROJECTION_PX = 20.0
 MAX_HAND_EXPORT_P95_REPROJECTION_PX = 40.0
+MAX_CAUSALITY_CENTROID_DEGRADATION_PX = 5.0
+MAX_CAUSALITY_SILHOUETTE_IOU_DROP = 0.02
+MAX_CAUSALITY_RELATIVE_DEPTH_RESIDUAL_INCREASE = 0.05
 CONTACT_CANDIDATE_DISTANCE_PX = 16.0
+EGODEX_GT_CONTACT_CANDIDATE_DISTANCE_PX = 32.0
 MIN_CONTACT_CANDIDATE_SAMPLES = 8
 MIN_CONTACT_CANDIDATE_FRAMES = 4
 MIN_CONTACT_CANDIDATE_RUN = 3
@@ -39,6 +49,70 @@ MAX_CONTACT_SIMILARITY_RATIO = 1.50
 MIN_CONTACT_OPPOSED_FRAMES = 3
 MIN_CONTACT_OPPOSED_RUN = 3
 MAX_CONTACT_SLIP_P95_M_S = 0.30
+MIN_HAND_METRIC_SIMILARITY = 0.75
+MAX_HAND_METRIC_SIMILARITY = 1.35
+MIN_WRIST_TO_MIDDLE_TIP_M = 0.10
+MAX_WRIST_TO_MIDDLE_TIP_M = 0.23
+
+
+def _resolve_contact_similarity_mode(
+    requested: str, depth_gate: dict[str, Any] | None,
+) -> str:
+    """Keep stereo metric geometry frozen; preserve legacy monocular behavior."""
+    if requested not in {"auto", "refine", "validate_only"}:
+        raise ValueError(
+            "contact_similarity_mode must be 'auto', 'refine', or 'validate_only'"
+        )
+    calibrated_stereo = bool(
+        depth_gate
+        and depth_gate.get("accepted", False)
+        and depth_gate.get("gate_kind") == "calibrated_stereo_native_metric"
+    )
+    if calibrated_stereo and requested == "refine":
+        raise ValueError(
+            "calibrated stereo forbids contact-similarity refinement; use auto or "
+            "validate_only so contact cannot rewrite measured hand/object geometry"
+        )
+    if requested == "auto":
+        return "validate_only" if calibrated_stereo else "refine"
+    return requested
+
+
+def _egodex_gt_hand_observations(
+    hdf5_path: str | Path, frame_indices: np.ndarray, T_world_camera: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, dict[str, Any]]:
+    """Convert the explicitly requested EgoDex hand oracle into camera landmarks."""
+    T_camera_world = invert_transform(T_world_camera)
+    joints_camera = np.empty((len(frame_indices), 2, 21, 3), dtype=np.float64)
+    valid = np.zeros((len(frame_indices), 2), dtype=bool)
+    score = np.zeros((len(frame_indices), 2), dtype=np.float64)
+    report: dict[str, Any] = {"uses_ground_truth": True, "per_hand": {}}
+    required_indices = np.asarray([0, *FINGERTIP_INDICES.tolist()], dtype=np.int64)
+    for hand, side in enumerate(HAND_ORDER):
+        ground_truth = load_mano21_ground_truth(hdf5_path, side)
+        available = ground_truth["T_world_joint"].shape[0]
+        if np.any(frame_indices < 0) or np.any(frame_indices >= available):
+            raise IndexError(
+                f"{side} EgoDex GT has {available} frames but requested {frame_indices.tolist()}"
+            )
+        T_world_joint = ground_truth["T_world_joint"][frame_indices]
+        T_camera_joint = np.einsum("tij,tkjl->tkil", T_camera_world, T_world_joint)
+        joints_camera[:, hand] = T_camera_joint[:, :, :3, 3]
+        confidence = np.asarray(ground_truth["confidence"])[frame_indices]
+        required_confidence = confidence[:, required_indices]
+        required_points = joints_camera[:, hand, required_indices]
+        valid[:, hand] = (
+            (required_confidence > 0.0).all(axis=1)
+            & np.isfinite(required_points).all(axis=(1, 2))
+            & (required_points[..., 2] > 0.05).all(axis=1)
+        )
+        score[:, hand] = np.clip(np.min(required_confidence, axis=1), 0.0, 1.0)
+        report["per_hand"][side] = {
+            "confidence_source": ground_truth["confidence_source"],
+            "valid_frame_rate": float(valid[:, hand].mean()),
+            "landmark_order": ground_truth["names"].tolist(),
+        }
+    return joints_camera, valid, score, report
 
 
 def _project(K: np.ndarray, points: np.ndarray) -> np.ndarray:
@@ -186,6 +260,163 @@ def calibrate_hand_depth_scale(
             "median": MAX_HAND_CALIBRATION_MEDIAN_REPROJECTION_PX,
             "p95": MAX_HAND_CALIBRATION_P95_REPROJECTION_PX,
         },
+    }
+
+
+def calibrate_hand_object_metric_similarity(
+    K: np.ndarray,
+    joints_camera: np.ndarray,
+    hand_valid: np.ndarray,
+    hand_confidence: np.ndarray,
+    object_translation: np.ndarray,
+    mask_centroid: np.ndarray,
+    object_valid: np.ndarray,
+    *,
+    metric_mask_depth: np.ndarray | None = None,
+    max_pixel_distance: float = 160.0,
+) -> tuple[np.ndarray, dict[str, Any]]:
+    """Calibrate monocular MANO and object depth without changing image evidence.
+
+    WiLoR predicts a metric MANO template but its crop-camera depth and absolute
+    hand scale remain coupled.  Moving only the root along the camera ray can
+    visibly collapse or expand the projected hand.  Instead, apply one
+    episode-level similarity to the complete hand.  This preserves every 2D
+    joint projection exactly while changing the physical hand size and depth
+    together.  Fixed similarity and anthropometric bounds prevent contact from
+    manufacturing an implausibly small or large hand.
+
+    The object is not moved here: its metric depth and scale have already been
+    established by DA3, static mesh fitting, FoundationPose, and their gates.
+    A later bounded object similarity stage may only refine supported contact.
+    """
+    joints = np.asarray(joints_camera, dtype=np.float64)
+    valid = np.asarray(hand_valid, dtype=bool)
+    confidence = np.asarray(hand_confidence, dtype=np.float64)
+    objects = np.asarray(object_translation, dtype=np.float64)
+    centroids = np.asarray(mask_centroid, dtype=np.float64)
+    object_valid_values = np.asarray(object_valid, dtype=bool)
+    metric_depth = (
+        np.full(len(joints), np.nan, dtype=np.float64)
+        if metric_mask_depth is None else np.asarray(metric_mask_depth, dtype=np.float64)
+    )
+    if joints.ndim != 4 or joints.shape[2:] != (21, 3):
+        raise ValueError("joints_camera must have shape (T, H, 21, 3)")
+    if valid.shape != joints.shape[:2] or confidence.shape != valid.shape:
+        raise ValueError("hand_valid/hand_confidence do not match joints_camera")
+    if objects.shape != (len(joints), 3) or centroids.shape != (len(joints), 2):
+        raise ValueError("object translations/mask centroids do not match timeline")
+    if metric_depth.shape != (len(joints),):
+        raise ValueError("metric_mask_depth does not match timeline")
+
+    ratios: list[list[float]] = [[] for _ in range(joints.shape[1])]
+    pixel_distances: list[list[float]] = [[] for _ in range(joints.shape[1])]
+    depth_sources: list[list[str]] = [[] for _ in range(joints.shape[1])]
+    for frame in range(len(joints)):
+        if not object_valid_values[frame] or objects[frame, 2] <= 0.05:
+            continue
+        target_depth = float(objects[frame, 2])
+        source = "foundationpose_center_depth"
+        if np.isfinite(metric_depth[frame]) and metric_depth[frame] > 0.05:
+            target_depth = float(metric_depth[frame])
+            source = "metric_object_mask_depth"
+        for hand in range(joints.shape[1]):
+            if not valid[frame, hand] or confidence[frame, hand] <= 0.2:
+                continue
+            projected = _project(K, joints[frame, hand])
+            distances = np.linalg.norm(projected - centroids[frame], axis=1)
+            closest = np.argsort(distances)[:4]
+            pixel_distance = float(np.median(distances[closest]))
+            hand_depth = float(np.median(joints[frame, hand, closest, 2]))
+            if pixel_distance <= max_pixel_distance and hand_depth > 0.05:
+                ratios[hand].append(target_depth / hand_depth)
+                pixel_distances[hand].append(pixel_distance)
+                depth_sources[hand].append(source)
+
+    calibrated = joints.copy()
+    records: dict[str, dict[str, Any]] = {}
+    for hand in range(joints.shape[1]):
+        side = HAND_ORDER[hand] if hand < len(HAND_ORDER) else str(hand)
+        raw_ratio = float(np.median(ratios[hand])) if ratios[hand] else 1.0
+        candidate_ratio = raw_ratio if len(ratios[hand]) >= 3 else 1.0
+        candidate = joints[:, hand] * candidate_ratio
+        raw_pixels = _project(K, joints[:, hand])
+        candidate_pixels = _project(K, candidate)
+        reprojection = np.linalg.norm(candidate_pixels - raw_pixels, axis=-1)
+        usable_reprojection = valid[:, hand, None] & np.isfinite(reprojection)
+        reprojection_values = reprojection[usable_reprojection]
+        median_reprojection = (
+            float(np.median(reprojection_values)) if reprojection_values.size else None
+        )
+        p95_reprojection = (
+            float(np.percentile(reprojection_values, 95)) if reprojection_values.size else None
+        )
+        raw_length = np.linalg.norm(
+            joints[:, hand, 12] - joints[:, hand, 0], axis=-1,
+        )
+        usable_length = valid[:, hand] & np.isfinite(raw_length)
+        candidate_length = (
+            float(np.median(raw_length[usable_length]) * candidate_ratio)
+            if usable_length.any() else None
+        )
+        enough_samples = len(ratios[hand]) >= 3
+        similarity_in_bounds = bool(
+            MIN_HAND_METRIC_SIMILARITY <= candidate_ratio <= MAX_HAND_METRIC_SIMILARITY
+        )
+        anthropometry_in_bounds = bool(
+            candidate_length is not None
+            and MIN_WRIST_TO_MIDDLE_TIP_M <= candidate_length <= MAX_WRIST_TO_MIDDLE_TIP_M
+        )
+        projection_preserved = bool(
+            median_reprojection is not None and p95_reprojection is not None
+            and median_reprojection <= 1e-6 and p95_reprojection <= 1e-5
+        )
+        accepted = bool(
+            enough_samples and similarity_in_bounds
+            and anthropometry_in_bounds and projection_preserved
+        )
+        if accepted:
+            calibrated[:, hand] = candidate
+        rejection_reason = None
+        if not accepted:
+            if not enough_samples:
+                rejection_reason = "insufficient_near_object_samples"
+            elif not similarity_in_bounds:
+                rejection_reason = "hand_similarity_outside_fixed_bounds"
+            elif not anthropometry_in_bounds:
+                rejection_reason = "scaled_hand_length_outside_fixed_bounds"
+            else:
+                rejection_reason = "full_hand_projection_not_preserved"
+        records[side] = {
+            "sample_count": len(ratios[hand]),
+            "raw_similarity_ratio": raw_ratio,
+            "candidate_similarity_ratio": candidate_ratio,
+            "applied_similarity_ratio": candidate_ratio if accepted else 1.0,
+            "scaled_wrist_to_middle_tip_m": candidate_length,
+            "candidate_reprojection_median_px": median_reprojection,
+            "candidate_reprojection_p95_px": p95_reprojection,
+            "accepted": accepted,
+            "rejection_reason": rejection_reason,
+            "median_pixel_distance": (
+                float(np.median(pixel_distances[hand]))
+                if pixel_distances[hand] else None
+            ),
+            "metric_mask_depth_sample_count": int(
+                sum(value == "metric_object_mask_depth" for value in depth_sources[hand])
+            ),
+        }
+    return calibrated, {
+        "method": "episode_level_full_hand_metric_similarity_to_gated_object_depth",
+        "projection_semantics": "all camera-space hand joints scaled uniformly; 2D rays unchanged",
+        "object_semantics": "object depth/scale frozen from DA3 static-fit FoundationPose stage",
+        "episode_specific_axis_fit": False,
+        "similarity_bounds": [
+            MIN_HAND_METRIC_SIMILARITY, MAX_HAND_METRIC_SIMILARITY,
+        ],
+        "wrist_to_middle_tip_bounds_m": [
+            MIN_WRIST_TO_MIDDLE_TIP_M, MAX_WRIST_TO_MIDDLE_TIP_M,
+        ],
+        "max_pixel_distance": max_pixel_distance,
+        "per_hand": records,
     }
 
 
@@ -375,11 +606,82 @@ def xhand_wrist_frames_from_joints(
     return result
 
 
+def fingertip_frames_from_joints(
+    joints_camera: np.ndarray, wrist_rotation_camera: np.ndarray,
+    valid: np.ndarray | None = None,
+) -> np.ndarray:
+    """Construct observable distal frames from DIP-to-tip and palm-normal axes.
+
+    Missing or geometrically degenerate samples are filled on SO(3) from the
+    nearest observable frames.  A wholly unobserved hand uses its wrist frame as
+    a harmless placeholder; hand-role filtering removes that hand downstream.
+    """
+    joints = np.asarray(joints_camera, dtype=np.float64)
+    wrists = np.asarray(wrist_rotation_camera, dtype=np.float64)
+    if joints.ndim != 3 or joints.shape[1:] != (21, 3):
+        raise ValueError("joints_camera must have shape (T, 21, 3)")
+    if wrists.shape != (len(joints), 3, 3):
+        raise ValueError("wrist_rotation_camera must have shape (T, 3, 3)")
+    measured = (
+        np.ones(len(joints), dtype=bool)
+        if valid is None else np.asarray(valid, dtype=bool)
+    )
+    if measured.shape != (len(joints),):
+        raise ValueError("valid must have shape (T,)")
+    tip_indices = np.array([4, 8, 12, 16, 20])
+    dip_indices = tip_indices - 1
+    distal = joints[:, tip_indices] - joints[:, dip_indices]
+    distal_norm = np.linalg.norm(distal, axis=-1, keepdims=True)
+    z_axis = distal / np.maximum(distal_norm, 1e-12)
+    palm_normal = wrists[:, None, :, 0]
+    x_axis = palm_normal - np.sum(palm_normal * z_axis, axis=-1, keepdims=True) * z_axis
+    x_norm = np.linalg.norm(x_axis, axis=-1, keepdims=True)
+    x_axis /= np.maximum(x_norm, 1e-12)
+    y_axis = np.cross(z_axis, x_axis)
+    y_axis /= np.maximum(np.linalg.norm(y_axis, axis=-1, keepdims=True), 1e-12)
+    x_axis = np.cross(y_axis, z_axis)
+    candidates = np.stack([x_axis, y_axis, z_axis], axis=-1)
+    finite = np.isfinite(candidates).all(axis=(-2, -1))
+    usable = (
+        measured[:, None]
+        & finite
+        & (distal_norm[..., 0] >= 1e-8)
+        & (x_norm[..., 0] >= 1e-8)
+        & (np.linalg.det(candidates) >= 0.999)
+    )
+
+    from scipy.spatial.transform import Rotation, Slerp
+
+    timeline = np.arange(len(joints))
+    rotations = np.empty_like(candidates)
+    for finger in range(5):
+        valid_indices = np.flatnonzero(usable[:, finger])
+        if valid_indices.size == 0:
+            rotations[:, finger] = wrists
+        elif valid_indices.size == 1:
+            rotations[:, finger] = candidates[valid_indices[0], finger]
+        else:
+            rotations[: valid_indices[0], finger] = candidates[valid_indices[0], finger]
+            rotations[valid_indices[-1] + 1 :, finger] = candidates[
+                valid_indices[-1], finger
+            ]
+            interpolation_indices = timeline[valid_indices[0] : valid_indices[-1] + 1]
+            rotations[interpolation_indices, finger] = Slerp(
+                valid_indices, Rotation.from_matrix(candidates[valid_indices, finger]),
+            )(interpolation_indices).as_matrix()
+    return rotations
+
+
 def classify_hand_roles(
     T_sim_object: np.ndarray, fingertips_sim: np.ndarray, valid_hand: np.ndarray,
     object_scale_m: float, active_hint: np.ndarray | None = None,
 ) -> tuple[list[str], list[dict[str, Any]]]:
-    """Separate hand visibility/quality from participation in manipulation."""
+    """Separate visibility from manipulation using persistent contact evidence.
+
+    ``object_scale_m`` is retained for API compatibility and diagnostics only.
+    It is a mesh scale factor, not an object radius, so it must never be used as
+    a fingertip-to-center activity threshold.
+    """
     object_centers = np.asarray(T_sim_object)[:, :3, 3]
     hinted = (
         np.zeros(fingertips_sim.shape[1], dtype=bool)
@@ -389,7 +691,6 @@ def classify_hand_roles(
         raise ValueError("active_hint does not match hand dimension")
     roles: list[str] = []
     diagnostics: list[dict[str, Any]] = []
-    active_distance_m = max(0.08, 2.0 * float(object_scale_m))
     for hand in range(fingertips_sim.shape[1]):
         valid = np.asarray(valid_hand[:, hand], dtype=bool)
         valid_rate = float(np.mean(valid))
@@ -401,7 +702,7 @@ def classify_hand_roles(
         minimum_distance = float(np.min(valid_nearest)) if valid_nearest.size else None
         if valid_rate < 0.5:
             role = "invalid"
-        elif hinted[hand] or (minimum_distance is not None and minimum_distance <= active_distance_m):
+        elif hinted[hand]:
             role = "active"
         else:
             role = "passive"
@@ -410,7 +711,8 @@ def classify_hand_roles(
             "side": HAND_ORDER[hand], "role": role, "valid_rate": valid_rate,
             "minimum_fingertip_object_center_distance_m": minimum_distance,
             "median_fingertip_object_center_distance_m": median_distance,
-            "active_distance_threshold_m": active_distance_m,
+            "mesh_scale_to_m_diagnostic_only": float(object_scale_m),
+            "activity_policy": "persistent_2d_contact_hint_only",
             "persistent_2d_contact_hint": bool(hinted[hand]),
         })
     return roles, diagnostics
@@ -454,7 +756,7 @@ def reject_unphysical_passive_hands(
 def enforce_simulation_floor(
     mesh_m: trimesh.Trimesh, T_sim_object: np.ndarray, T_sim_wrist: np.ndarray,
     fingertips_sim: np.ndarray, hand_roles: list[str], *, object_clearance_m: float = 0.002,
-    hand_clearance_m: float = 0.060,
+    hand_clearance_m: float = 0.060, apply_correction: bool = True,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, dict[str, Any]]:
     """Keep active interaction groups and passive visible hands above the simulator floor."""
     if any(role not in HAND_ROLES for role in hand_roles):
@@ -474,10 +776,11 @@ def enforce_simulation_floor(
             )
             required = max(required, hand_clearance_m - hand_min)
         interaction_shift[frame] = max(0.0, required)
-    objects[:, 2, 3] += interaction_shift
-    for hand in active:
-        wrists[:, hand, 2, 3] += interaction_shift
-        fingertips[:, hand, :, 2] += interaction_shift[:, None]
+    if apply_correction:
+        objects[:, 2, 3] += interaction_shift
+        for hand in active:
+            wrists[:, hand, 2, 3] += interaction_shift
+            fingertips[:, hand, :, 2] += interaction_shift[:, None]
 
     passive_shift: dict[str, float] = {}
     for hand, role in enumerate(hand_roles):
@@ -485,14 +788,20 @@ def enforce_simulation_floor(
             continue
         hand_min = min(float(wrists[:, hand, 2, 3].min()), float(fingertips[:, hand, :, 2].min()))
         shift = max(0.0, hand_clearance_m - hand_min)
-        wrists[:, hand, 2, 3] += shift
-        fingertips[:, hand, :, 2] += shift
+        if apply_correction:
+            wrists[:, hand, 2, 3] += shift
+            fingertips[:, hand, :, 2] += shift
         passive_shift[HAND_ORDER[hand]] = shift
 
     after_object_min = object_minimum_z(mesh_m, objects)
     return objects, wrists, fingertips, {
         "object_clearance_m": object_clearance_m,
         "hand_target_clearance_m": hand_clearance_m,
+        "correction_mode": "project" if apply_correction else "validate_only",
+        "constraint_passed_without_correction": bool(
+            float(interaction_shift.max()) <= 1e-9
+            and all(value <= 1e-9 for value in passive_shift.values())
+        ),
         "object_min_z_before_m": float(before_object_min.min()),
         "object_min_z_after_m": float(after_object_min.min()),
         "interaction_shift_max_m": float(interaction_shift.max()),
@@ -560,6 +869,205 @@ def _longest_true_run(values: np.ndarray) -> int:
     return longest
 
 
+def _first_true_run(values: np.ndarray, minimum_length: int) -> int | None:
+    """Return the first index of a persistent run, not an isolated hit."""
+    if minimum_length <= 0:
+        raise ValueError("minimum_length must be positive")
+    start: int | None = None
+    for index, value in enumerate(np.asarray(values, dtype=bool)):
+        if value and start is None:
+            start = index
+        elif not value:
+            if start is not None and index - start >= minimum_length:
+                return start
+            start = None
+    if start is not None and len(values) - start >= minimum_length:
+        return start
+    return None
+
+
+def stabilize_supported_object_translation(
+    T_sim_object: np.ndarray, *, contact_onset_frame: int | None,
+    lead_frames: int = 2, minimum_precontact_drift_m: float = 0.010,
+    anchor_frames: int = 5, valid: np.ndarray | None = None,
+) -> tuple[np.ndarray, dict[str, Any]]:
+    """Remove unsupported pre-contact object translation as a diagnostic ablation.
+
+    EgoEngine assumes the RGB-D FoundationPose trajectory is already physically
+    meaningful.  A monocular reconstruction can instead accumulate world-frame
+    drift while the object is visibly resting on its support.  This optional
+    correction freezes translation at a robust initial anchor until just before
+    independent 2-D hand/object proximity evidence, then preserves every tracked
+    translation increment after that release frame.  Camera and hand trajectories
+    are deliberately left untouched because their calibrated world motion is an
+    independent observation, not a gauge freedom.
+    """
+    poses = np.asarray(T_sim_object, dtype=np.float64)
+    if poses.ndim != 3 or poses.shape[1:] != (4, 4):
+        raise ValueError("T_sim_object must have shape (T, 4, 4)")
+    if lead_frames < 0:
+        raise ValueError("lead_frames must be non-negative")
+    if anchor_frames <= 0:
+        raise ValueError("anchor_frames must be positive")
+    if minimum_precontact_drift_m < 0:
+        raise ValueError("minimum_precontact_drift_m must be non-negative")
+    valid_values = (
+        np.ones(len(poses), dtype=bool)
+        if valid is None else np.asarray(valid, dtype=bool)
+    )
+    if valid_values.shape != (len(poses),):
+        raise ValueError("valid must match the trajectory timeline")
+    unchanged = poses.copy()
+    base_metrics: dict[str, Any] = {
+        "enabled": True,
+        "method": "static_support_translation_until_independent_2d_contact_proximity",
+        "paper_status": (
+            "not specified by EgoEngine; monocular FoundationPose causality safeguard"
+        ),
+        "contact_onset_frame": contact_onset_frame,
+        "lead_frames": int(lead_frames),
+        "minimum_precontact_drift_m": float(minimum_precontact_drift_m),
+        "camera_or_hand_modified": False,
+    }
+    if contact_onset_frame is None:
+        return unchanged, {
+            **base_metrics, "applied": False,
+            "reason": "no_persistent_2d_hand_object_proximity",
+        }
+    onset = int(contact_onset_frame)
+    if not 0 <= onset < len(poses):
+        raise ValueError("contact_onset_frame is outside the trajectory")
+    release = max(0, onset - int(lead_frames))
+    if not valid_values[onset]:
+        return unchanged, {
+            **base_metrics, "applied": False,
+            "reason": "contact_onset_has_no_valid_object_pose",
+        }
+    run_start = onset
+    while run_start > 0 and valid_values[run_start - 1]:
+        run_start -= 1
+    run_end = onset
+    while run_end + 1 < len(poses) and valid_values[run_end + 1]:
+        run_end += 1
+    base_metrics["valid_run"] = [int(run_start), int(run_end)]
+    if release < run_start:
+        return unchanged, {
+            **base_metrics, "applied": False,
+            "reason": "insufficient_valid_precontact_window",
+            "release_frame": int(release),
+        }
+    anchor_count = min(int(anchor_frames), release - run_start + 1)
+    anchor_indices = np.arange(run_start, run_start + anchor_count)
+    anchor = np.median(poses[anchor_indices, :3, 3], axis=0)
+    release_translation = poses[release, :3, 3]
+    precontact_offsets = poses[run_start : release + 1, :3, 3] - anchor[None]
+    drift = float(np.max(np.linalg.norm(precontact_offsets, axis=1)))
+    release_offset = float(np.linalg.norm(release_translation - anchor))
+    base_metrics.update({
+        "release_frame": int(release),
+        "anchor_frame_count": int(anchor_count),
+        "anchor_translation_m": anchor.tolist(),
+        "precontact_translation_drift_m": drift,
+        "release_translation_offset_m": release_offset,
+    })
+    if drift < minimum_precontact_drift_m:
+        return unchanged, {
+            **base_metrics, "applied": False,
+            "reason": "precontact_drift_below_threshold",
+        }
+    corrected = poses.copy()
+    corrected[run_start : release + 1, :3, 3] = anchor
+    correction = anchor - release_translation
+    corrected[release + 1 : run_end + 1, :3, 3] += correction
+    return corrected, {
+        **base_metrics,
+        "applied": True,
+        "reason": None,
+        "postrelease_constant_translation_correction_m": correction.tolist(),
+        "postrelease_constant_translation_correction_norm_m": float(
+            np.linalg.norm(correction)
+        ),
+        "precontact_translation_drift_after_m": float(
+            np.max(np.linalg.norm(
+                corrected[run_start : release + 1, :3, 3] - anchor[None], axis=1,
+            ))
+        ),
+    }
+
+
+def _causality_observation_consistency(
+    render_metrics: dict[str, Any], *, raw_centroid_error_px: float,
+    candidate_centroid_error_px: float, floor_constraint_passed: bool,
+) -> dict[str, Any]:
+    """Hard gate for any non-paper monocular trajectory correction.
+
+    EgoEngine consumes an observed, temporally consistent 6-D object track; it
+    does not authorize replacing visual evidence to manufacture causality.  A
+    project-specific correction is therefore accepted only if it preserves the
+    mask, centroid, metric-depth, and scene-floor observations within fixed,
+    video-independent tolerances.  Missing depth is not fabricated: that check
+    is reported as unavailable while the image and floor checks remain hard.
+    """
+    raw_iou = render_metrics.get("silhouette_iou_raw")
+    candidate_iou = render_metrics.get("silhouette_iou_aligned")
+    silhouette_preserved = bool(
+        isinstance(raw_iou, (int, float))
+        and isinstance(candidate_iou, (int, float))
+        and float(candidate_iou) >= float(raw_iou) - MAX_CAUSALITY_SILHOUETTE_IOU_DROP
+    )
+    centroid_change = float(candidate_centroid_error_px - raw_centroid_error_px)
+    centroid_preserved = bool(
+        np.isfinite(centroid_change)
+        and centroid_change <= MAX_CAUSALITY_CENTROID_DEGRADATION_PX
+    )
+    raw_depth = render_metrics.get("relative_depth_residual_raw")
+    candidate_depth = render_metrics.get("relative_depth_residual_aligned")
+    depth_available = bool(
+        isinstance(raw_depth, (int, float))
+        and isinstance(candidate_depth, (int, float))
+    )
+    depth_preserved = (
+        bool(
+            float(candidate_depth)
+            <= float(raw_depth) + MAX_CAUSALITY_RELATIVE_DEPTH_RESIDUAL_INCREASE
+        )
+        if depth_available else None
+    )
+    checks = {
+        "silhouette_preserved": silhouette_preserved,
+        "mask_centroid_preserved": centroid_preserved,
+        "metric_depth_preserved": depth_preserved,
+        "scene_floor_constraint_satisfied": bool(floor_constraint_passed),
+    }
+    required = [value for value in checks.values() if value is not None]
+    return {
+        "accepted": bool(required and all(required)),
+        "checks": checks,
+        "thresholds": {
+            "maximum_silhouette_iou_drop": MAX_CAUSALITY_SILHOUETTE_IOU_DROP,
+            "maximum_mask_centroid_degradation_px": (
+                MAX_CAUSALITY_CENTROID_DEGRADATION_PX
+            ),
+            "maximum_relative_depth_residual_increase": (
+                MAX_CAUSALITY_RELATIVE_DEPTH_RESIDUAL_INCREASE
+            ),
+        },
+        "measurements": {
+            **render_metrics,
+            "mask_centroid_reprojection_raw_px": float(raw_centroid_error_px),
+            "mask_centroid_reprojection_candidate_px": float(
+                candidate_centroid_error_px
+            ),
+            "mask_centroid_reprojection_change_px": centroid_change,
+        },
+        "paper_status": (
+            "not specified by EgoEngine; conservative safeguard preventing a "
+            "monocular correction from replacing the paper's visual observations"
+        ),
+        "per_video_tuning": False,
+    }
+
+
 def _fingertip_mask_distances(
     K: np.ndarray, fingertips_camera: np.ndarray, masks: np.ndarray, *, downsample: int = 4,
 ) -> np.ndarray:
@@ -605,8 +1113,10 @@ def _optimize_contact_similarity(
     hand_confidence: np.ndarray, *, metric_hand_depth_valid: np.ndarray | None = None,
     timestamps_s: np.ndarray | None = None,
     candidate_distance_px: float = CONTACT_CANDIDATE_DISTANCE_PX,
+    minimum_hand_confidence: float = 0.5,
     enter_distance_m: float = 0.012,
     max_contact_slip_p95_m_s: float = MAX_CONTACT_SLIP_P95_M_S,
+    search_similarity: bool = True,
 ) -> tuple[float, np.ndarray, dict[str, Any]]:
     """Resolve monocular object scale from persistent 2D hand-object contact evidence.
 
@@ -614,6 +1124,9 @@ def _optimize_contact_similarity(
     episode-level ratio leaves its image projection unchanged. Search that one
     degree of freedom for a scale that places persistent 2D fingertip candidates
     on the reconstructed object surface while preserving the metric MANO hand.
+    With ``search_similarity=False`` the same contact test is evaluated only at
+    ratio 1.0.  This is the strict shared-metric validation used for HaWoR: it
+    cannot hide a hand/object scale mismatch by moving the object in depth.
     """
     poses = np.asarray(poses_camera_object, dtype=np.float64)
     fingertips = np.asarray(fingertips_camera, dtype=np.float64)
@@ -626,6 +1139,8 @@ def _optimize_contact_similarity(
     )
     if timestamps.shape != (len(poses),):
         raise ValueError("timestamps_s does not match pose timeline")
+    if not 0.0 <= minimum_hand_confidence <= 1.0:
+        raise ValueError("minimum_hand_confidence must be in [0, 1]")
     trusted_depth = (
         np.ones(fingertips.shape[1], dtype=bool)
         if metric_hand_depth_valid is None else np.asarray(metric_hand_depth_valid, dtype=bool)
@@ -633,25 +1148,29 @@ def _optimize_contact_similarity(
     if trusted_depth.shape != (fingertips.shape[1],):
         raise ValueError("metric_hand_depth_valid does not match hand dimension")
     mask_distances = _fingertip_mask_distances(K, fingertips, masks)
-    candidate = (
+    # Keep image-space manipulation evidence independent from metric-depth and
+    # 3-D contact fitting.  The latter may score/validate a candidate, but must
+    # not veto a visible one-sided interaction (for example a supported push).
+    image_candidate = (
         (mask_distances <= candidate_distance_px)
         & valid_object[:, None, None]
         & valid_hand_values[:, :, None]
-        & (confidence[:, :, None] >= 0.5)
-        & trusted_depth[None, :, None]
+        & (confidence[:, :, None] >= minimum_hand_confidence)
         & np.isfinite(fingertips).all(axis=-1)
         & (fingertips[..., 2] > 0.05)
         & (poses[:, None, None, 2, 3] > 0.05)
     )
+    candidate = image_candidate & trusted_depth[None, :, None]
     hand_records: dict[str, dict[str, Any]] = {}
     qualifying_hands = np.zeros(fingertips.shape[1], dtype=bool)
     for hand in range(fingertips.shape[1]):
+        any_fingertip_candidate = image_candidate[:, hand].any(axis=1)
         opposed_frame_candidate = (
-            candidate[:, hand, 0] & candidate[:, hand, 1:].any(axis=1)
+            image_candidate[:, hand, 0]
+            & image_candidate[:, hand, 1:].any(axis=1)
         )
-        opposed_candidate = candidate[:, hand] & opposed_frame_candidate[:, None]
-        frame_candidate = opposed_frame_candidate
-        sample_count = int(opposed_candidate.sum())
+        frame_candidate = any_fingertip_candidate
+        sample_count = int(image_candidate[:, hand].sum())
         frame_count = int(frame_candidate.sum())
         longest_run = _longest_true_run(frame_candidate)
         qualifies = bool(
@@ -665,6 +1184,16 @@ def _optimize_contact_similarity(
             "sample_count": sample_count,
             "frame_count": frame_count,
             "longest_consecutive_frame_run": longest_run,
+            "opposed_frame_count": int(opposed_frame_candidate.sum()),
+            "opposed_longest_consecutive_frame_run": _longest_true_run(
+                opposed_frame_candidate
+            ),
+            "first_persistent_any_fingertip_frame": _first_true_run(
+                any_fingertip_candidate, MIN_CONTACT_CANDIDATE_RUN,
+            ),
+            "first_persistent_opposed_frame": _first_true_run(
+                opposed_frame_candidate, MIN_CONTACT_CANDIDATE_RUN,
+            ),
             "qualifies": qualifies,
             "minimum_mask_distance_px": (
                 float(np.min(mask_distances[:, hand][np.isfinite(mask_distances[:, hand])]))
@@ -672,21 +1201,48 @@ def _optimize_contact_similarity(
             ),
             "metric_hand_depth_valid": bool(trusted_depth[hand]),
         }
-    opposed_frames = candidate[:, :, 0] & candidate[:, :, 1:].any(axis=2)
-    selected = candidate & opposed_frames[:, :, None] & qualifying_hands[None, :, None]
+    # A persistent single-finger/one-sided interaction is valid upstream
+    # evidence (for example pushing an object that remains table-supported).
+    # Thumb opposition remains a reported candidate-quality signal, but does
+    # not decide whether a trajectory may proceed to paper-style MINK.
+    active_2d_onsets = [
+        hand_records[HAND_ORDER[hand]]["first_persistent_any_fingertip_frame"]
+        for hand in range(len(qualifying_hands))
+        if qualifying_hands[hand]
+        and hand_records[HAND_ORDER[hand]]["first_persistent_any_fingertip_frame"]
+        is not None
+    ]
+    independent_2d_metrics = {
+        "first_active_persistent_2d_proximity_frame": (
+            int(min(active_2d_onsets)) if active_2d_onsets else None
+        ),
+        "activity_hint": {
+            HAND_ORDER[hand]: bool(qualifying_hands[hand])
+            for hand in range(len(qualifying_hands))
+        },
+        "activity_hint_policy": (
+            "persistent_2d_hand_object_proximity_only; independent of metric "
+            "depth, 3D contact fit, slip, and opposition"
+        ),
+    }
+    selected = candidate & qualifying_hands[None, :, None]
     selected_indices = np.argwhere(selected)
     if not selected_indices.size:
-        return 1.0, np.zeros_like(qualifying_hands), {
+        return 1.0, qualifying_hands.copy(), {
             "applied": False,
+            "similarity_mode": "refine" if search_similarity else "validate_only",
+            "validated_at_unit_similarity": False,
             "reason": (
                 "unvalidated_metric_hand_depth"
                 if not trusted_depth.any() else
-                "insufficient_persistent_opposed_2d_contact_candidates"
+                "insufficient_persistent_2d_surface_contact_candidates"
             ),
             "candidate_distance_px": candidate_distance_px,
+            "minimum_hand_confidence": minimum_hand_confidence,
             "hands": hand_records,
             "candidate_sample_count": 0,
             "metric_hand_depth_valid": trusted_depth.tolist(),
+            **independent_2d_metrics,
         }
 
     center_depth = poses[selected_indices[:, 0], 2, 3]
@@ -702,21 +1258,36 @@ def _optimize_contact_similarity(
     selected_indices = selected_indices[usable_ratio]
     depth_ratios = depth_ratios[usable_ratio]
     if len(depth_ratios) < MIN_CONTACT_CANDIDATE_SAMPLES:
-        return 1.0, np.zeros_like(qualifying_hands), {
+        return 1.0, qualifying_hands.copy(), {
             "applied": False,
+            "similarity_mode": "refine" if search_similarity else "validate_only",
+            "validated_at_unit_similarity": False,
             "reason": "candidate_depth_ratios_outside_bounds",
             "candidate_distance_px": candidate_distance_px,
+            "minimum_hand_confidence": minimum_hand_confidence,
             "hands": hand_records,
             "candidate_sample_count": int(len(depth_ratios)),
+            "metric_hand_depth_valid": trusted_depth.tolist(),
+            **independent_2d_metrics,
         }
 
     p10, p90 = np.percentile(depth_ratios, [10, 90])
-    lower = max(MIN_CONTACT_SIMILARITY_RATIO, float(p10) - 0.05)
-    upper = min(MAX_CONTACT_SIMILARITY_RATIO, float(p90) + 0.05)
-    if upper <= lower:
-        lower = max(MIN_CONTACT_SIMILARITY_RATIO, float(np.median(depth_ratios)) - 0.05)
-        upper = min(MAX_CONTACT_SIMILARITY_RATIO, float(np.median(depth_ratios)) + 0.05)
-    ratios = np.linspace(lower, upper, 81)
+    if search_similarity:
+        lower = max(MIN_CONTACT_SIMILARITY_RATIO, float(p10) - 0.05)
+        upper = min(MAX_CONTACT_SIMILARITY_RATIO, float(p90) + 0.05)
+        if upper <= lower:
+            lower = max(
+                MIN_CONTACT_SIMILARITY_RATIO,
+                float(np.median(depth_ratios)) - 0.05,
+            )
+            upper = min(
+                MAX_CONTACT_SIMILARITY_RATIO,
+                float(np.median(depth_ratios)) + 0.05,
+            )
+        ratios = np.linspace(lower, upper, 81)
+    else:
+        lower = upper = 1.0
+        ratios = np.asarray([1.0], dtype=np.float64)
     canonical_vertices = np.asarray(canonical_mesh.vertices, dtype=np.float64) * float(base_scale_m)
     frame_groups: dict[int, np.ndarray] = {}
     base_vertices_camera: dict[int, np.ndarray] = {}
@@ -752,6 +1323,15 @@ def _optimize_contact_similarity(
             enter_distance_m=enter_distance_m, exit_distance_m=exit_distance_m,
         )
         inferred = inferred_contact.astype(bool)
+        contact_frames_by_hand = inferred.any(axis=2)
+        longest_contact_run = max(
+            (
+                _longest_true_run(contact_frames_by_hand[:, hand])
+                for hand in range(inferred.shape[1])
+            ),
+            default=0,
+        )
+        contact_frame_count = int(contact_frames_by_hand.sum())
         opposed_contact = inferred[:, :, 0] & inferred[:, :, 1:].any(axis=2)
         longest_opposed_run = max(
             (_longest_true_run(opposed_contact[:, hand]) for hand in range(inferred.shape[1])),
@@ -766,13 +1346,16 @@ def _optimize_contact_similarity(
         truncated_loss = float(np.mean(np.minimum(distances, 0.030)))
         supported = bool(
             contact_sample_count >= minimum_fit_samples
-            and opposed_frame_count >= MIN_CONTACT_OPPOSED_FRAMES
-            and longest_opposed_run >= MIN_CONTACT_OPPOSED_RUN
+            and contact_frame_count >= 2
+            and longest_contact_run >= MIN_CONTACT_OPPOSED_RUN
             and slip_value <= max_contact_slip_p95_m_s
         )
         score = (
-            supported, int(longest_opposed_run), opposed_frame_count,
-            contact_sample_count, -slip_value, enter_count, exit_count, -truncated_loss,
+            supported, int(longest_contact_run), contact_frame_count,
+            contact_sample_count, -slip_value,
+            # Opposition is a lower-priority tie-breaker, not a hard gate.
+            int(longest_opposed_run), opposed_frame_count,
+            enter_count, exit_count, -truncated_loss,
         )
         if best is None or score > best:
             best = score
@@ -789,26 +1372,37 @@ def _optimize_contact_similarity(
         default=0,
     )
     contact_frames = np.flatnonzero(best_contact.any(axis=(1, 2)))
+    longest_contact_run = max(
+        (
+            _longest_true_run(best_contact[:, hand].any(axis=1))
+            for hand in range(best_contact.shape[1])
+        ),
+        default=0,
+    )
     contact_sample_count = int(best_contact.sum())
     contact_slip = best_contact_metrics.get("contact_local_slip_p95_m_s")
     fit_supported = bool(
         contact_sample_count >= minimum_fit_samples and len(contact_frames) >= 2
-        and len(fitted_opposed_frames) >= MIN_CONTACT_OPPOSED_FRAMES
-        and longest_opposed_run >= MIN_CONTACT_OPPOSED_RUN
+        and longest_contact_run >= MIN_CONTACT_OPPOSED_RUN
         and contact_slip is not None
         and float(contact_slip) <= max_contact_slip_p95_m_s
     )
-    activity_hint = np.zeros(fingertips.shape[1], dtype=bool)
-    if fit_supported:
-        for hand in range(best_contact.shape[1]):
-            activity_hint[hand] = (
-                _longest_true_run(opposed_fit[:, hand]) >= MIN_CONTACT_OPPOSED_RUN
-            )
-    return (best_ratio if fit_supported else 1.0), activity_hint, {
-        "applied": fit_supported,
-        "reason": None if fit_supported else "surface_fit_has_insufficient_contact_support",
-        "method": "persistent_2d_candidates_plus_hysteretic_contact_grid_search",
+    activity_hint = qualifying_hands.copy()
+    return (best_ratio if fit_supported and search_similarity else 1.0), activity_hint, {
+        "applied": bool(fit_supported and search_similarity),
+        "similarity_mode": "refine" if search_similarity else "validate_only",
+        "validated_at_unit_similarity": bool(fit_supported and not search_similarity),
+        "reason": (
+            None if fit_supported
+            else "surface_fit_has_insufficient_persistent_contact_support"
+        ),
+        "method": (
+            "persistent_2d_candidates_plus_hysteretic_contact_grid_search"
+            if search_similarity else
+            "persistent_2d_candidates_plus_hysteretic_contact_at_unit_similarity"
+        ),
         "candidate_distance_px": candidate_distance_px,
+        "minimum_hand_confidence": minimum_hand_confidence,
         "enter_distance_m": enter_distance_m,
         "exit_distance_m": exit_distance_m,
         "maximum_contact_local_slip_p95_m_s": max_contact_slip_p95_m_s,
@@ -821,19 +1415,21 @@ def _optimize_contact_similarity(
         "candidate_sample_count": int(len(selected_indices)),
         "surface_contact_sample_count": contact_sample_count,
         "surface_contact_frame_count": int(len(contact_frames)),
+        "surface_contact_longest_run": int(longest_contact_run),
         "surface_opposed_frame_count": int(len(fitted_opposed_frames)),
         "surface_opposed_longest_run": int(longest_opposed_run),
         "surface_candidate_enter_sample_count": int(candidate_enter_contact.sum()),
         "contact_local_slip_p95_m_s": contact_slip,
         "minimum_required_surface_samples": minimum_fit_samples,
-        "minimum_required_opposed_frames": MIN_CONTACT_OPPOSED_FRAMES,
-        "minimum_required_opposed_run": MIN_CONTACT_OPPOSED_RUN,
+        "minimum_required_contact_frames": 2,
+        "minimum_required_contact_run": MIN_CONTACT_OPPOSED_RUN,
+        "opposed_contact_policy": "diagnostic_and_candidate_tiebreak_only",
+        "diagnostic_opposed_frames": MIN_CONTACT_OPPOSED_FRAMES,
+        "diagnostic_opposed_run": MIN_CONTACT_OPPOSED_RUN,
         "surface_distance_median_m": float(np.median(best_distances)),
         "surface_distance_p25_m": float(np.percentile(best_distances, 25)),
         "hands": hand_records,
-        "activity_hint": {
-            HAND_ORDER[hand]: bool(activity_hint[hand]) for hand in range(len(activity_hint))
-        },
+        **independent_2d_metrics,
         "absolute_metric_scale_status": "contact_calibrated_not_externally_validated",
         "metric_hand_depth_valid": trusted_depth.tolist(),
     }
@@ -994,8 +1590,6 @@ def _manipulation_contact_metrics(
         and active_contact_frames >= 2
         and active_contact_samples >= 4
         and longest_active_contact_run >= MIN_CONTACT_OPPOSED_RUN
-        and active_opposed_frames >= MIN_CONTACT_OPPOSED_FRAMES
-        and longest_active_opposed_run >= MIN_CONTACT_OPPOSED_RUN
         and (
             contact_local_slip_p95_m_s is None
             or contact_local_slip_p95_m_s <= max_contact_slip_p95_m_s
@@ -1013,8 +1607,10 @@ def _manipulation_contact_metrics(
         "contact_local_slip_p95_m_s": contact_local_slip_p95_m_s,
         "minimum_active_contact_frames": 2,
         "minimum_active_contact_samples": 4,
-        "minimum_active_opposed_frames": MIN_CONTACT_OPPOSED_FRAMES,
         "minimum_consecutive_active_contact_frames": MIN_CONTACT_OPPOSED_RUN,
+        "opposed_contact_policy": "diagnostic_only",
+        "diagnostic_minimum_active_opposed_frames": MIN_CONTACT_OPPOSED_FRAMES,
+        "diagnostic_minimum_active_opposed_run": MIN_CONTACT_OPPOSED_RUN,
         "maximum_contact_local_slip_p95_m_s": max_contact_slip_p95_m_s,
         "per_hand": per_hand,
     }
@@ -1048,17 +1644,37 @@ def _optimization_quality_control(
     if isinstance(raw_residual, (int, float)) and isinstance(aligned_residual, (int, float)):
         metric_depth_preserved = bool(aligned_residual <= max(float(raw_residual) * 3.0, float(raw_residual) + 0.10))
     contact_override = bool(contact_similarity_metrics and contact_similarity_metrics.get("applied"))
+    validate_only = bool(
+        contact_similarity_metrics
+        and contact_similarity_metrics.get("similarity_mode") == "validate_only"
+    )
     scale_ratio = float(scale_metrics["scale_ratio"])
     if contact_override:
         similarity_ratio = float(contact_similarity_metrics["optimized_similarity_ratio"])
+        # Backward-compatible reads keep older audit artifacts comparable;
+        # new artifacts expose one-sided surface-contact continuity directly.
+        surface_frame_count = int(contact_similarity_metrics.get(
+            "surface_contact_frame_count",
+            contact_similarity_metrics.get("surface_opposed_frame_count", 0),
+        ))
+        minimum_contact_frames = int(contact_similarity_metrics.get(
+            "minimum_required_contact_frames",
+            contact_similarity_metrics.get("minimum_required_opposed_frames", 2),
+        ))
+        surface_contact_run = int(contact_similarity_metrics.get(
+            "surface_contact_longest_run",
+            contact_similarity_metrics.get("surface_opposed_longest_run", 0),
+        ))
+        minimum_contact_run = int(contact_similarity_metrics.get(
+            "minimum_required_contact_run",
+            contact_similarity_metrics.get("minimum_required_opposed_run", 3),
+        ))
         scale_supported = bool(
             MIN_CONTACT_SIMILARITY_RATIO <= similarity_ratio <= MAX_CONTACT_SIMILARITY_RATIO
             and int(contact_similarity_metrics["surface_contact_sample_count"])
             >= int(contact_similarity_metrics["minimum_required_surface_samples"])
-            and int(contact_similarity_metrics["surface_opposed_frame_count"])
-            >= int(contact_similarity_metrics["minimum_required_opposed_frames"])
-            and int(contact_similarity_metrics["surface_opposed_longest_run"])
-            >= int(contact_similarity_metrics["minimum_required_opposed_run"])
+            and surface_frame_count >= minimum_contact_frames
+            and surface_contact_run >= minimum_contact_run
             and any(contact_similarity_metrics["metric_hand_depth_valid"])
         )
         checks = {
@@ -1073,11 +1689,30 @@ def _optimization_quality_control(
         }
     if hand_reprojection_metrics is not None:
         checks["hand_image_alignment_preserved"] = bool(hand_reprojection_metrics["passed"])
-    if manipulation_metrics is not None:
-        checks["manipulation_contact_present"] = bool(manipulation_metrics["passed"])
+    # Upstream contact is evidence for candidate ranking and diagnostics. It
+    # must not reject pushing, support, or other executable non-grasp actions;
+    # physical feasibility is owned by the final MuJoCo acceptance stage.
     return {
         "export_ready": bool(all(checks.values())),
         "checks": checks,
+        "diagnostics": {
+            "shared_metric_surface_contact_supported": bool(
+                contact_similarity_metrics.get("validated_at_unit_similarity")
+            ) if validate_only else None,
+            "surface_opposed_frame_count": (
+                contact_similarity_metrics.get("surface_opposed_frame_count")
+                if contact_similarity_metrics else None
+            ),
+            "surface_opposed_longest_run": (
+                contact_similarity_metrics.get("surface_opposed_longest_run")
+                if contact_similarity_metrics else None
+            ),
+            "opposed_contact_policy": "diagnostic_only",
+            "surface_contact_present": (
+                bool(manipulation_metrics.get("passed"))
+                if manipulation_metrics is not None else None
+            ),
+        },
         "median_aligned_to_raw_camera_depth_ratio": median_depth_ratio,
         "camera_depth_ratio_bounds": [MIN_OBJECT_DEPTH_RATIO, MAX_OBJECT_DEPTH_RATIO],
         "metric_depth_residual_policy": "aligned <= max(3 * raw, raw + 0.10)",
@@ -1085,7 +1720,7 @@ def _optimization_quality_control(
         "metric_depth_overridden_by_contact": contact_override,
         "scale_policy": (
             "persistent 2D contact plus 3D surface fit overrides monocular metric depth"
-            if contact_override else "preserve FoundationPose/Depth Anything metric scale"
+            if contact_override else "preserve upstream FoundationPose metric scale"
         ),
         "hand_reprojection": hand_reprojection_metrics,
         "manipulation": manipulation_metrics,
@@ -1096,11 +1731,43 @@ def optimize_run(
     run_dir: str | Path, *, smoothing_strength: float = 18.0,
     hand_smoothing_strength: float = 5.0, require_contact: bool = True,
     allow_unvalidated_contact_scale: bool = False,
+    hand_source: str = "wilor", uses_ground_truth: bool = False,
+    active_hands_only: bool = False,
     contact_enter_distance_m: float = 0.012,
     max_contact_slip_p95_m_s: float = MAX_CONTACT_SLIP_P95_M_S,
+    fingertip_orientation_source: str = "mano_fk",
+    stabilize_precontact_object_translation: bool = False,
+    precontact_stabilization_lead_frames: int = 2,
+    contact_similarity_mode: str = "auto",
+    hand_artifact_path: str | Path | None = None,
+    object_artifact_path: str | Path | None = None,
+    object_scale_to_m: float | None = None,
+    object_valid_key: str | None = None,
     overwrite: bool = False,
 ) -> tuple[Path, Path]:
+    if hand_source not in {"wilor", "hawor", "egodex_gt"}:
+        raise ValueError("hand_source must be 'wilor', 'hawor', or 'egodex_gt'")
+    if hand_source == "egodex_gt" and not uses_ground_truth:
+        raise ValueError(
+            "hand_source='egodex_gt' is an oracle ablation; pass uses_ground_truth=True explicitly"
+        )
+    if uses_ground_truth and hand_source != "egodex_gt":
+        raise ValueError("uses_ground_truth=True requires hand_source='egodex_gt'")
+    if fingertip_orientation_source not in {"mano_fk", "landmark_proxy"}:
+        raise ValueError(
+            "fingertip_orientation_source must be 'mano_fk' or 'landmark_proxy'"
+        )
+    if contact_similarity_mode not in {"auto", "refine", "validate_only"}:
+        raise ValueError(
+            "contact_similarity_mode must be 'auto', 'refine', or 'validate_only'"
+        )
     root = Path(run_dir).resolve()
+    contact_similarity_mode_requested = contact_similarity_mode
+    depth_gate = require_depth_gate(root)
+    contact_similarity_mode = _resolve_contact_similarity_mode(
+        contact_similarity_mode_requested, depth_gate,
+    )
+    require_tracking_gate(root)
     output_dir = root / "optimization"
     aligned_path = output_dir / "aligned_trajectory.npz"
     contact_path = output_dir / "contact.npz"
@@ -1110,9 +1777,23 @@ def optimize_run(
         raise ValueError("contact_enter_distance_m must be in (0, 0.05]")
     if not 0.0 < max_contact_slip_p95_m_s <= 2.0:
         raise ValueError("max_contact_slip_p95_m_s must be in (0, 2.0]")
-    with np.load(root / "object_tracking/foundationpose_raw.npz", allow_pickle=False) as artifact:
+    if precontact_stabilization_lead_frames < 0:
+        raise ValueError("precontact_stabilization_lead_frames must be non-negative")
+    resolved_object_artifact = (
+        Path(object_artifact_path).resolve()
+        if object_artifact_path is not None
+        else root / "object_tracking/foundationpose_raw.npz"
+    )
+    with np.load(resolved_object_artifact, allow_pickle=False) as artifact:
         object_raw = {key: np.asarray(artifact[key]) for key in artifact.files}
-    with np.load(root / "hands/wilor_raw.npz", allow_pickle=False) as artifact:
+    resolved_hand_artifact = (
+        Path(hand_artifact_path).resolve()
+        if hand_artifact_path is not None else root / "hands" / (
+            "hawor_raw.npz" if hand_source == "hawor" else "wilor_raw.npz"
+        )
+    )
+    hand_artifact_is_explicit = hand_artifact_path is not None
+    with np.load(resolved_hand_artifact, allow_pickle=False) as artifact:
         hands_raw = {key: np.asarray(artifact[key]) for key in artifact.files}
     with np.load(root / "segmentation/object_masks.npz", allow_pickle=False) as artifact:
         masks_raw = {key: np.asarray(artifact[key]) for key in artifact.files}
@@ -1132,18 +1813,49 @@ def optimize_run(
     K = np.load(root / "calibration/intrinsics.npy").astype(np.float64)
     selected = json.loads((root / "object_tracking/selected_mesh.json").read_text(encoding="utf-8"))
     canonical_mesh = trimesh.load_mesh(root / selected["canonical_visual_mesh"], process=False)
-    initial_scale_to_m = float(selected["scale_to_m"])
+    initial_scale_to_m = (
+        float(object_scale_to_m)
+        if object_scale_to_m is not None else float(selected["scale_to_m"])
+    )
 
     T_camera_object_raw = object_raw["T_camera_object"].astype(np.float64)
     object_translation_raw = T_camera_object_raw[:, :3, 3]
-    hand_valid = hands_raw["valid"].astype(bool)
+    mano_valid = hands_raw["valid"].astype(bool)
+    hand_valid = mano_valid.copy()
     hand_confidence = hands_raw["score"].astype(np.float64)
     object_valid = object_raw["valid"].astype(bool)
+    if object_valid_key is not None:
+        if object_valid_key not in object_raw:
+            raise ValueError(
+                f"object artifact has no validity key {object_valid_key!r}"
+            )
+        object_valid &= object_raw[object_valid_key].astype(bool)
     mask_valid = masks_raw["valid"].astype(bool)
-    joints_camera_raw = (
-        hands_raw["joints_camera_rootrel"].astype(np.float64)
-        + hands_raw["translation_camera"].astype(np.float64)[:, :, None, :]
-    )
+    if hand_source == "egodex_gt":
+        source = json.loads((root / "input/source.json").read_text(encoding="utf-8"))
+        joints_camera_raw, hand_valid, hand_confidence, hand_source_report = (
+            _egodex_gt_hand_observations(
+                source["hdf5_path"], frame_indices, T_world_camera,
+            )
+        )
+    else:
+        if "joints_camera_metric" in hands_raw:
+            joints_camera_raw = hands_raw["joints_camera_metric"].astype(np.float64)
+            if "joint_metric_valid" in hands_raw:
+                required_metric = hands_raw["joint_metric_valid"][:, :, [0, *FINGERTIP_INDICES]]
+                hand_valid &= np.asarray(required_metric, dtype=bool).all(axis=-1)
+            hand_source_report = {
+                "uses_ground_truth": False,
+                "metric_coordinate_source": (
+                    "independent calibrated stereo triangulation; no object/contact input"
+                ),
+            }
+        else:
+            joints_camera_raw = (
+                hands_raw["joints_camera_rootrel"].astype(np.float64)
+                + hands_raw["translation_camera"].astype(np.float64)[:, :, None, :]
+            )
+            hand_source_report = {"uses_ground_truth": False, "per_hand": {}}
     centroids = _mask_centroids(masks_raw["masks"].astype(bool))
     depth_group = None
     depth_path = root / "depth/metric_depth.zarr"
@@ -1153,60 +1865,239 @@ def optimize_run(
     metric_mask_depth = _metric_mask_depths(
         depth_group, frame_indices, masks_raw["masks"].astype(bool), mask_valid,
     )
-    joints_camera, hand_depth_calibration = calibrate_hand_depth_scale(
-        K, joints_camera_raw, hand_valid, hand_confidence, object_translation_raw,
-        centroids, object_valid & mask_valid,
-    )
-    observations, observation_weights, anchor_metrics = hand_anchored_object_observation(
-        K, object_translation_raw, centroids, joints_camera, hands_raw["valid"], hands_raw["score"],
-        object_valid=object_valid, object_confidence=object_raw["confidence"],
-        mask_valid=mask_valid, metric_mask_depth=metric_mask_depth,
-    )
-    aligned_translation_camera = smooth_second_difference(observations, observation_weights, smoothing_strength)
-    object_rotation_camera = smooth_rotations(
-        T_camera_object_raw[:, :3, :3], object_raw["confidence"], smoothing_strength * 0.25
-    )
+    strict_shared_metric = contact_similarity_mode == "validate_only"
+    stereo_hand_gate = None
+    if strict_shared_metric and "joints_camera_metric" in hands_raw:
+        stereo_hand_gate = require_stereo_hand_gate(resolved_hand_artifact)
+    if hand_source == "egodex_gt":
+        joints_camera = joints_camera_raw.copy()
+        hand_depth_calibration = {
+            "method": "egodex_gt_metric_world_transforms",
+            "per_hand": {
+                side: {
+                    "accepted": bool(hand_valid[:, hand].any()),
+                    "applied_ratio": 1.0,
+                    "reason": "oracle metric transform; no monocular depth calibration",
+                }
+                for hand, side in enumerate(HAND_ORDER)
+            },
+        }
+    elif hand_source == "wilor":
+        if strict_shared_metric:
+            joints_camera = joints_camera_raw.copy()
+            has_independent_stereo_joints = "joints_camera_metric" in hands_raw
+            hand_depth_calibration = {
+                "method": (
+                    "strict_calibrated_stereo_triangulated_hand_coordinates"
+                    if has_independent_stereo_joints else
+                    "strict_stereo_freeze_unverified_wilor_metric_coordinates"
+                ),
+                "projection_semantics": "no hand scale, root-depth, or contact target rewrite",
+                "object_semantics": "independent calibrated-stereo object coordinates",
+                "paper_alignment": (
+                    "EgoEngine consumes independently tracked 3D hand points in the shared "
+                    "calibrated frame; monocular WiLoR is not silently upgraded to that status"
+                ),
+                "requires_upstream_stereo_3d_hand_adapter": True,
+                "per_hand": {
+                    side: {
+                        "accepted": bool(has_independent_stereo_joints and hand_valid[:, hand].any()),
+                        "applied_similarity_ratio": 1.0,
+                        "reason": (
+                            "independent left/right hand rays triangulated in the calibrated "
+                            "stereo frame; no object/contact scale fit"
+                            if has_independent_stereo_joints else
+                            "raw monocular WiLoR depth is frozen but not independently verified "
+                            "in the calibrated stereo metric frame"
+                        ),
+                    }
+                    for hand, side in enumerate(HAND_ORDER)
+                },
+            }
+        else:
+            joints_camera, hand_depth_calibration = calibrate_hand_object_metric_similarity(
+                K, joints_camera_raw, hand_valid, hand_confidence, object_translation_raw,
+                centroids, object_valid & mask_valid,
+                metric_mask_depth=metric_mask_depth,
+            )
+    else:
+        joints_camera = joints_camera_raw.copy()
+        has_independent_stereo_joints = "joints_camera_metric" in hands_raw
+        hand_depth_calibration = {
+            "method": (
+                "strict_calibrated_stereo_triangulated_hand_coordinates"
+                if strict_shared_metric and has_independent_stereo_joints else
+                "strict_stereo_freeze_unverified_hawor_metric_coordinates"
+                if strict_shared_metric else
+                "explicit audited upstream HaWoR artifact"
+                if hand_artifact_is_explicit else
+                "HaWoR metric MANO trajectory with calibrated camera motion"
+            ),
+            "projection_semantics": "no post-hoc hand scaling or contact target rewrite",
+            "object_semantics": "independent metric object trajectory",
+            "episode_specific_axis_fit": False,
+            "requires_upstream_stereo_3d_hand_adapter": bool(strict_shared_metric),
+            "per_hand": {
+                side: {
+                    "accepted": bool(
+                        hand_valid[:, hand].any()
+                        and (not strict_shared_metric or has_independent_stereo_joints)
+                    ),
+                    "applied_similarity_ratio": 1.0,
+                    "reason": (
+                        "independent calibrated-stereo triangulation; no object/contact fit"
+                        if strict_shared_metric and has_independent_stereo_joints else
+                        "monocular HaWoR depth is not independently verified in the stereo frame"
+                        if strict_shared_metric else
+                        "upstream artifact is frozen; the sequence optimizer performs "
+                        "no contact calibration or target rewrite"
+                        if hand_artifact_is_explicit else
+                        "HaWoR output evaluated without contact calibration"
+                    ),
+                }
+                for hand, side in enumerate(HAND_ORDER)
+            },
+        }
+    if strict_shared_metric:
+        observations = object_translation_raw.copy()
+        observation_weights = np.maximum(
+            object_raw["confidence"].astype(np.float64), 1e-6,
+        )
+        anchor_metrics = {
+            "method": "strict_shared_metric_preserve_foundationpose_observation",
+            "hand_depth_accepted_frame_count": 0,
+            "metric_depth_accepted_frame_count": 0,
+            "object_or_hand_target_rewritten": False,
+        }
+        aligned_translation_camera = observations.copy()
+        object_rotation_camera = T_camera_object_raw[:, :3, :3].copy()
+    else:
+        observations, observation_weights, anchor_metrics = hand_anchored_object_observation(
+            K, object_translation_raw, centroids, joints_camera, hand_valid, hand_confidence,
+            object_valid=object_valid, object_confidence=object_raw["confidence"],
+            mask_valid=mask_valid, metric_mask_depth=metric_mask_depth,
+        )
+        aligned_translation_camera = smooth_second_difference(
+            observations, observation_weights, smoothing_strength,
+        )
+        object_rotation_camera = smooth_rotations(
+            T_camera_object_raw[:, :3, :3], object_raw["confidence"],
+            smoothing_strength * 0.25,
+        )
     T_camera_object_aligned = np.repeat(np.eye(4)[None], len(frame_indices), axis=0)
     T_camera_object_aligned[:, :3, :3] = object_rotation_camera
     T_camera_object_aligned[:, :3, 3] = aligned_translation_camera
     scale_valid = (
-        object_raw["valid"].astype(bool) & masks_raw["valid"].astype(bool)
+        object_valid & masks_raw["valid"].astype(bool)
         & (T_camera_object_aligned[:, 2, 3] > 0)
     )
-    silhouette_scale_to_m, silhouette_scale_metrics = _optimize_global_scale(
-        canonical_mesh, initial_scale_to_m, K, T_camera_object_aligned,
-        masks_raw["masks"].astype(bool), scale_valid,
-    )
+    if object_scale_to_m is not None:
+        silhouette_scale_to_m = initial_scale_to_m
+        silhouette_scale_metrics = {
+            "initial_scale_to_m": initial_scale_to_m,
+            "optimized_scale_to_m": initial_scale_to_m,
+            "raw_scale_ratio": 1.0,
+            "scale_ratio": 1.0,
+            "sample_count": int(scale_valid.sum()),
+            "ratio_clip": [1.0, 1.0],
+            "ratio_was_clipped": False,
+            "method": "explicit_upstream_calibrated_scale_no_refit",
+        }
+    else:
+        silhouette_scale_to_m, silhouette_scale_metrics = _optimize_global_scale(
+            canonical_mesh, initial_scale_to_m, K, T_camera_object_aligned,
+            masks_raw["masks"].astype(bool), scale_valid,
+        )
 
-    # Preserve the measured left-hand weakness as lower absolute confidence.
-    hand_confidence[:, 0] *= 0.45
+    # Preserve the measured WiLoR left-hand weakness as lower absolute confidence.
+    left_confidence_multiplier = 0.45 if hand_source == "wilor" else 1.0
+    hand_confidence[:, 0] *= left_confidence_multiplier
     # WiLoR translation locates the MANO model origin, not the anatomical wrist.
     # Use the same translated joint array as the fingertip targets so one hand
     # cannot contain mutually inconsistent wrist and finger positions.
-    wrists_camera = joints_camera[:, :, 0]
-    fingertips_camera = joints_camera[:, :, FINGERTIP_INDICES]
-    wrists_camera_aligned = np.empty_like(wrists_camera)
-    fingertips_camera_aligned = np.empty_like(fingertips_camera)
+    joints_camera_aligned = np.empty_like(joints_camera)
     wrist_rotation_camera = np.empty((len(frame_indices), 2, 3, 3), dtype=np.float64)
+    mano_global_orient_aligned = np.empty_like(
+        hands_raw["mano_global_orient"], dtype=np.float64,
+    )
+    mano_pose_aligned = np.empty_like(
+        hands_raw["mano_hand_pose"], dtype=np.float64,
+    )
     for hand in range(2):
         weights = np.where(hand_valid[:, hand], np.maximum(hand_confidence[:, hand], 0.05), 1e-6)
-        wrists_camera_aligned[:, hand] = smooth_second_difference(
-            wrists_camera[:, hand], weights, hand_smoothing_strength
-        )
-        fingertips_camera_aligned[:, hand] = smooth_second_difference(
-            fingertips_camera[:, hand], weights, hand_smoothing_strength
-        )
         xhand_rotation = xhand_wrist_frames_from_joints(
             joints_camera[:, hand], HAND_ORDER[hand], hand_valid[:, hand],
         )
-        wrist_rotation_camera[:, hand] = smooth_rotations(
-            xhand_rotation, weights, hand_smoothing_strength,
+        if strict_shared_metric:
+            joints_camera_aligned[:, hand] = joints_camera[:, hand]
+            wrist_rotation_camera[:, hand] = xhand_rotation
+            mano_global_orient_aligned[:, hand] = hands_raw[
+                "mano_global_orient"
+            ][:, hand]
+            mano_pose_aligned[:, hand] = hands_raw["mano_hand_pose"][:, hand]
+        else:
+            joints_camera_aligned[:, hand] = smooth_second_difference(
+                joints_camera[:, hand], weights, hand_smoothing_strength
+            )
+            wrist_rotation_camera[:, hand] = smooth_rotations(
+                xhand_rotation, weights, hand_smoothing_strength,
+            )
+            mano_global_orient_aligned[:, hand] = smooth_rotations(
+                hands_raw["mano_global_orient"][:, hand],
+                weights,
+                hand_smoothing_strength,
+            )
+            for joint in range(15):
+                mano_pose_aligned[:, hand, joint] = smooth_rotations(
+                    hands_raw["mano_hand_pose"][:, hand, joint],
+                    weights,
+                    hand_smoothing_strength,
+                )
+    wrists_camera_aligned = joints_camera_aligned[:, :, 0]
+    fingertips_camera_aligned = joints_camera_aligned[:, :, FINGERTIP_INDICES]
+    landmark_fingertip_rotation_camera = np.stack([
+        fingertip_frames_from_joints(
+            joints_camera_aligned[:, hand], wrist_rotation_camera[:, hand],
+            hand_valid[:, hand],
         )
+        for hand in range(2)
+    ], axis=1)
+    fk_wrist_rotation_camera = np.empty_like(wrist_rotation_camera)
+    fk_fingertip_rotation_camera = np.empty_like(
+        landmark_fingertip_rotation_camera,
+    )
+    orientation_diagnostics: dict[str, Any] = {}
+    for hand, side in enumerate(HAND_ORDER):
+        fk_wrist, fk_distal = mano_wrist_and_distal_frames(
+            mano_global_orient_aligned[:, hand], mano_pose_aligned[:, hand], side,
+        )
+        fk_wrist_rotation_camera[:, hand] = fk_wrist
+        fk_fingertip_rotation_camera[:, hand] = fk_distal
+        orientation_diagnostics[side] = mano_orientation_diagnostics(
+            fk_wrist, fk_distal, joints_camera_aligned[:, hand],
+            wrist_rotation_camera[:, hand], landmark_fingertip_rotation_camera[:, hand],
+            hand_valid[:, hand],
+        )
+    if fingertip_orientation_source == "mano_fk":
+        inconsistent = [
+            side for hand, side in enumerate(HAND_ORDER)
+            if hand_valid[:, hand].any()
+            and not orientation_diagnostics[side]["passed"]
+        ]
+        if inconsistent:
+            raise ValueError(
+                "MANO FK orientation rejected by distal-axis consistency gate: "
+                f"{inconsistent}"
+            )
+        wrist_rotation_camera = fk_wrist_rotation_camera
+        fingertip_rotation_camera = fk_fingertip_rotation_camera
+    else:
+        fingertip_rotation_camera = landmark_fingertip_rotation_camera
     metric_hand_depth_valid = np.asarray([
         bool(hand_depth_calibration["per_hand"][side]["accepted"])
         for side in HAND_ORDER
     ], dtype=bool)
-    if allow_unvalidated_contact_scale:
+    if allow_unvalidated_contact_scale and hand_source in {"wilor", "hawor"}:
         metric_hand_depth_valid = np.asarray(hand_valid.any(axis=0), dtype=bool)
     contact_similarity_ratio, active_hint, contact_similarity_metrics = _optimize_contact_similarity(
         canonical_mesh, silhouette_scale_to_m, K, T_camera_object_aligned,
@@ -1216,6 +2107,25 @@ def optimize_run(
         timestamps_s=timestamps,
         enter_distance_m=contact_enter_distance_m,
         max_contact_slip_p95_m_s=max_contact_slip_p95_m_s,
+        candidate_distance_px=(
+            EGODEX_GT_CONTACT_CANDIDATE_DISTANCE_PX
+            if hand_source == "egodex_gt" else CONTACT_CANDIDATE_DISTANCE_PX
+        ),
+        minimum_hand_confidence=(
+            0.0 if hand_source in {"egodex_gt", "hawor"} else 0.5
+        ),
+        search_similarity=(contact_similarity_mode == "refine"),
+    )
+    active_hint = np.asarray([
+        bool(contact_similarity_metrics.get("hands", {}).get(side, {}).get("qualifies"))
+        for side in HAND_ORDER
+    ], dtype=bool)
+    contact_similarity_metrics["activity_hint"] = {
+        side: bool(active_hint[hand]) for hand, side in enumerate(HAND_ORDER)
+    }
+    contact_similarity_metrics["activity_hint_policy"] = (
+        "persistent_2d_hand_object_proximity_only; independent of metric depth, "
+        "3D contact fit, slip, and opposition"
     )
     scale_to_m = float(silhouette_scale_to_m * contact_similarity_ratio)
     T_camera_object_aligned[:, :3, 3] *= contact_similarity_ratio
@@ -1246,6 +2156,7 @@ def optimize_run(
     T_world_object = np.einsum("tij,tjk->tik", T_world_camera, T_camera_object_aligned)
     wrist_world = np.repeat(np.eye(4)[None, None], len(frame_indices) * 2, axis=0).reshape(len(frame_indices), 2, 4, 4)
     fingertips_world = np.empty_like(fingertips_camera_aligned)
+    fingertip_rotation_world = np.empty_like(fingertip_rotation_camera)
     for hand in range(2):
         wrist_world[:, hand, :3, :3] = np.einsum(
             "tij,tjk->tik", T_world_camera[:, :3, :3], wrist_rotation_camera[:, hand]
@@ -1256,6 +2167,10 @@ def optimize_run(
         fingertips_world[:, hand] = np.einsum(
             "tij,tfj->tfi", T_world_camera[:, :3, :3], fingertips_camera_aligned[:, hand]
         ) + T_world_camera[:, None, :3, 3]
+        fingertip_rotation_world[:, hand] = np.einsum(
+            "tij,tfjk->tfik", T_world_camera[:, :3, :3],
+            fingertip_rotation_camera[:, hand],
+        )
     T_sim_world = _build_T_sim_world(
         T_world_object, mesh_m, wrist_world=wrist_world,
         fingertips_world=fingertips_world, active_hint=active_hint,
@@ -1266,6 +2181,9 @@ def optimize_run(
         "ij,thfj->thfi", T_sim_world,
         np.concatenate([fingertips_world, np.ones((*fingertips_world.shape[:-1], 1))], axis=-1),
     )[..., :3]
+    fingertip_orientation_sim = np.einsum(
+        "ij,thfjk->thfik", T_sim_world[:3, :3], fingertip_rotation_world,
+    )
     hand_roles, hand_role_metrics = classify_hand_roles(
         T_sim_object, fingertips_sim, hand_valid, scale_to_m, active_hint,
     )
@@ -1274,20 +2192,113 @@ def optimize_run(
     )
     T_sim_object, T_sim_wrist, fingertips_sim, floor_metrics = enforce_simulation_floor(
         mesh_m, T_sim_object, T_sim_wrist, fingertips_sim, hand_roles,
+        apply_correction=not strict_shared_metric,
     )
     T_sim_camera = np.einsum("ij,tjk->tik", T_sim_world, T_world_camera)
+    retained_hands = np.asarray([
+        index for index, role in enumerate(hand_roles)
+        if role == "active" or (role == "passive" and not active_hands_only)
+    ], dtype=np.int64)
+    if retained_hands.size == 0:
+        output_dir.mkdir(parents=True, exist_ok=True)
+        preflight_failure_path = output_dir / "preflight_failure.json"
+        preflight_failure_path.write_text(
+            json.dumps(_safe_json({
+                "schema_version": SCHEMA_VERSION,
+                "status": "failed_before_export",
+                "reason": "no_active_manipulating_hand_at_frozen_shared_metric_scale",
+                "hand_source": hand_source,
+                "contact_similarity_mode_requested": contact_similarity_mode_requested,
+                "contact_similarity_mode": contact_similarity_mode,
+                "strict_shared_metric": strict_shared_metric,
+                "hand_roles": dict(zip(HAND_ORDER, hand_roles)),
+                "hand_role_metrics": hand_role_metrics,
+                "passive_hand_qc": passive_hand_qc,
+                "contact_similarity": contact_similarity_metrics,
+                "orientation_diagnostics": orientation_diagnostics,
+                "simulation_floor": floor_metrics,
+                "target_rewriting_used": False if strict_shared_metric else None,
+            }), indent=2, allow_nan=False) + "\n",
+            encoding="utf-8",
+        )
+        raise ValueError(
+            "sequence optimization requires an active manipulating hand; "
+            f"diagnostic: {preflight_failure_path}"
+        )
+    artifact_hand_order = [HAND_ORDER[index] for index in retained_hands]
+    T_sim_object_before_causality = T_sim_object.copy()
+    if stabilize_precontact_object_translation:
+        T_sim_object, object_causality_metrics = stabilize_supported_object_translation(
+            T_sim_object,
+            contact_onset_frame=contact_similarity_metrics.get(
+                "first_active_persistent_2d_proximity_frame"
+            ),
+            lead_frames=precontact_stabilization_lead_frames,
+            valid=object_valid & mask_valid,
+        )
+    else:
+        object_causality_metrics = {
+            "enabled": False, "applied": False, "reason": "disabled",
+            "method": "static_support_translation_until_independent_2d_contact_proximity",
+            "paper_status": (
+                "not specified by EgoEngine; monocular FoundationPose causality safeguard"
+            ),
+            "camera_or_hand_modified": False,
+        }
+    object_min_z_after_causality = object_minimum_z(mesh_m, T_sim_object)
+    floor_passed = bool(
+        object_min_z_after_causality.min()
+        >= floor_metrics["object_clearance_m"] - 1e-6
+    )
+    object_causality_metrics["candidate_object_min_z_m"] = float(
+        object_min_z_after_causality.min()
+    )
+    object_causality_metrics["candidate_floor_constraint_passed"] = floor_passed
+    if object_causality_metrics.get("applied"):
+        T_camera_object_before_causality = np.einsum(
+            "tij,tjk->tik", np.linalg.inv(T_sim_camera),
+            T_sim_object_before_causality,
+        )
+        T_camera_object_candidate = np.einsum(
+            "tij,tjk->tik", np.linalg.inv(T_sim_camera), T_sim_object,
+        )
+        causality_render_metrics = _render_comparison(
+            canonical_mesh, K, masks_raw["masks"].astype(bool), scale_valid,
+            T_camera_object_before_causality, scale_to_m,
+            T_camera_object_candidate, scale_to_m, depth_group,
+        )
+        causality_gate = _causality_observation_consistency(
+            causality_render_metrics,
+            raw_centroid_error_px=_reprojection_residual(
+                K, T_camera_object_before_causality[:, :3, 3], centroids,
+            ),
+            candidate_centroid_error_px=_reprojection_residual(
+                K, T_camera_object_candidate[:, :3, 3], centroids,
+            ),
+            floor_constraint_passed=floor_passed,
+        )
+        object_causality_metrics["observation_consistency_gate"] = causality_gate
+        object_causality_metrics["candidate_applied"] = True
+        if not causality_gate["accepted"]:
+            T_sim_object = T_sim_object_before_causality
+            object_causality_metrics["applied"] = False
+            object_causality_metrics["reason"] = (
+                "candidate_rejected_observation_inconsistency"
+            )
+    object_min_z_after_causality = object_minimum_z(mesh_m, T_sim_object)
+    object_causality_metrics["object_min_z_after_m"] = float(
+        object_min_z_after_causality.min()
+    )
+    object_causality_metrics["object_floor_constraint_passed"] = bool(
+        object_min_z_after_causality.min()
+        >= floor_metrics["object_clearance_m"] - 1e-6
+    )
     T_camera_object_exported = np.einsum(
         "tij,tjk->tik", np.linalg.inv(T_sim_camera), T_sim_object,
     )
-    retained_hands = np.asarray([
-        index for index, role in enumerate(hand_roles) if role != "invalid"
-    ], dtype=np.int64)
-    if retained_hands.size == 0:
-        raise ValueError("sequence optimization requires at least one reconstructed hand")
-    artifact_hand_order = [HAND_ORDER[index] for index in retained_hands]
     shared_betas = np.stack([
-        np.median(hands_raw["mano_betas"][hand_valid[:, hand], hand], axis=0)
-        if hand_valid[:, hand].any() else np.zeros(10)
+        np.median(hands_raw["mano_betas"][mano_valid[:, hand], hand], axis=0)
+        if mano_valid[:, hand].any() else np.zeros(10)
         for hand in range(2)
     ])[retained_hands]
     aligned = {
@@ -1295,10 +2306,16 @@ def optimize_run(
         "T_sim_object": T_sim_object[:, None].astype(np.float32),
         "T_sim_wrist": T_sim_wrist[:, retained_hands].astype(np.float32),
         "fingertips_sim": fingertips_sim[:, retained_hands].astype(np.float32),
-        "mano_pose": hands_raw["mano_hand_pose"][:, retained_hands].astype(np.float32),
+        "fingertip_orientation_sim": (
+            fingertip_orientation_sim[:, retained_hands].astype(np.float32)
+        ),
+        "fingertip_orientation_source": np.asarray(
+            fingertip_orientation_source,
+        ),
+        "mano_pose": mano_pose_aligned[:, retained_hands].astype(np.float32),
         "mano_betas": shared_betas.astype(np.float32),
         "object_scale_to_m": np.array([scale_to_m], dtype=np.float32),
-        "valid_object": object_raw["valid"][:, None].astype(bool),
+        "valid_object": object_valid[:, None].astype(bool),
         "valid_hand": hand_valid[:, retained_hands],
         "confidence_object": object_raw["confidence"][:, None].astype(np.float32),
         "confidence_hand": hand_confidence[:, retained_hands].astype(np.float32),
@@ -1317,6 +2334,7 @@ def optimize_run(
         max_contact_slip_p95_m_s=max_contact_slip_p95_m_s,
     )
     T_sim_object_raw = np.einsum("ij,tjk,tkl->til", T_sim_world, T_world_camera, T_camera_object_raw)
+    fingertips_camera = joints_camera[:, :, FINGERTIP_INDICES]
     raw_fingertip_homogeneous = np.concatenate([
         fingertips_camera, np.ones((*fingertips_camera.shape[:-1], 1))
     ], axis=-1)
@@ -1356,27 +2374,77 @@ def optimize_run(
         K, joints_camera_raw[:, retained_hands][:, :, FINGERTIP_INDICES],
         exported_fingertips_camera, hand_valid[:, retained_hands], artifact_hand_order,
     )
+    if hand_source == "egodex_gt":
+        hand_reprojection_metrics["reference"] = "raw EgoDex GT fingertip projections"
     quality_control = _optimization_quality_control(
         object_translation_raw, exported_translation_camera, scale_metrics, render_metrics,
         hand_reprojection_metrics, contact_similarity_metrics, manipulation_metrics,
     )
+    if strict_shared_metric:
+        hand_metric_verified = bool(
+            all(
+                hand_depth_calibration["per_hand"][side]["accepted"]
+                for side in artifact_hand_order
+            )
+        )
+        quality_control["checks"]["shared_metric_hand_depth_verified"] = (
+            hand_metric_verified
+        )
+        quality_control["shared_metric_hand_depth_policy"] = (
+            "independently verified 3D hand targets required; object/contact-derived "
+            "hand calibration is forbidden"
+        )
+        quality_control["checks"]["scene_floor_constraint_satisfied"] = bool(
+            floor_metrics["constraint_passed_without_correction"]
+        )
+        quality_control["export_ready"] = bool(
+            all(quality_control["checks"].values())
+        )
     raw_slip = raw_contact_metrics.get("contact_local_slip_p95_m_s")
     aligned_slip = contact_metrics.get("contact_local_slip_p95_m_s")
     metrics = {
         "schema_version": SCHEMA_VERSION, "T_sim_world": T_sim_world.tolist(),
-        "hand_order": HAND_ORDER, "left_absolute_confidence_multiplier": 0.45,
+        "hand_order": HAND_ORDER,
+        "hand_source": hand_source, "uses_ground_truth": uses_ground_truth,
+        "hand_artifact": str(resolved_hand_artifact),
+        "object_source": {
+            "artifact": str(resolved_object_artifact),
+            "valid_key": object_valid_key,
+            "explicit_scale_to_m": object_scale_to_m,
+        },
+        "left_absolute_confidence_multiplier": left_confidence_multiplier,
         "hands": {
             "roles": dict(zip(HAND_ORDER, hand_roles)),
             "artifact_hand_order": artifact_hand_order,
-            "role_policy": "visible reliable hands are retained; activity only controls interaction constraints",
+            "role_policy": (
+                "only active manipulating hands are retained"
+                if active_hands_only else
+                "visible reliable hands are retained; activity only controls interaction constraints"
+            ),
+            "active_hands_only": active_hands_only,
             "role_metrics": hand_role_metrics,
             "passive_hand_qc": passive_hand_qc,
             "wrist_position_source": "translated MANO wrist joint 0",
-            "wrist_orientation_source": "landmark-derived xHand palm frame",
+            "wrist_orientation_source": (
+                "axis-calibrated MANO root FK"
+                if fingertip_orientation_source == "mano_fk" else
+                "landmark-derived xHand palm frame"
+            ),
+            "fingertip_orientation_source": fingertip_orientation_source,
+            "orientation_diagnostics": orientation_diagnostics,
+            "source": hand_source,
+            "source_report": hand_source_report,
+            "mano_pose_and_betas_source": (
+                "WiLoR metadata placeholder; SPIDER keypoint IK uses oracle wrist/fingertips"
+                if hand_source == "egodex_gt" else
+                "official HaWoR temporal MANO reconstruction"
+                if hand_source == "hawor" else "WiLoR"
+            ),
             "depth_calibration": hand_depth_calibration,
             "reprojection": hand_reprojection_metrics,
         },
         "simulation_floor": floor_metrics,
+        "object_motion_causality": object_causality_metrics,
         "anchor": anchor_metrics,
         "raw_vs_aligned": {
             "object_translation_acceleration_jitter_raw_m_s2": _acceleration_jitter(object_translation_raw, timestamps),
@@ -1395,9 +2463,19 @@ def optimize_run(
         },
         "contact": {"raw": raw_contact_metrics, "aligned": contact_metrics},
         "optimization": {
-            "translation_objective": "mask-ray smoothing followed by contact-aware global similarity calibration",
+            "translation_objective": (
+                "strictly preserve measured hand/object observations"
+                if strict_shared_metric else
+                "mask-ray smoothing followed by contact-aware global similarity calibration"
+            ),
             "smoothing_strength": smoothing_strength, "hand_smoothing_strength": hand_smoothing_strength,
-            "depth_policy": "monocular metric depth is a prior; persistent contact may override it with a documented global similarity",
+            "depth_policy": (
+                "shared metric hand/object coordinates are validated without target rewriting"
+                if strict_shared_metric else
+                "monocular metric depth is a prior; persistent contact may override it with a documented global similarity"
+            ),
+            "contact_similarity_mode": contact_similarity_mode,
+            "contact_similarity_mode_requested": contact_similarity_mode_requested,
             "global_object_scale": scale_metrics,
             "contact_similarity": contact_similarity_metrics,
         },
@@ -1418,17 +2496,34 @@ def optimize_run(
             f"{type(error).__name__}: {error}"
         )
     manifest = RunManifest.load(root / "manifest.json")
+    cache_inputs = [
+        root / "object_tracking/foundationpose_raw.npz", root / "object_tracking/selected_mesh.json",
+        resolved_hand_artifact, root / "segmentation/object_masks.npz",
+    ]
+    if hand_source == "egodex_gt":
+        source = json.loads((root / "input/source.json").read_text(encoding="utf-8"))
+        cache_inputs.append(Path(source["hdf5_path"]))
     cache_key = stage_cache_key(
         "sequence_optimization", {"smoothing_strength": smoothing_strength,
         "hand_smoothing_strength": hand_smoothing_strength,
         "require_contact": require_contact,
         "allow_unvalidated_contact_scale": allow_unvalidated_contact_scale,
+        "hand_source": hand_source, "uses_ground_truth": uses_ground_truth,
+        "active_hands_only": active_hands_only,
         "contact_enter_distance_m": contact_enter_distance_m,
-        "max_contact_slip_p95_m_s": max_contact_slip_p95_m_s},
-        [root / "object_tracking/foundationpose_raw.npz", root / "object_tracking/selected_mesh.json",
-         root / "hands/wilor_raw.npz", root / "segmentation/object_masks.npz"],
+        "max_contact_slip_p95_m_s": max_contact_slip_p95_m_s,
+        "fingertip_orientation_source": fingertip_orientation_source,
+        "stabilize_precontact_object_translation": stabilize_precontact_object_translation,
+        "precontact_stabilization_lead_frames": precontact_stabilization_lead_frames,
+        "contact_similarity_mode": contact_similarity_mode,
+        "contact_similarity_mode_requested": contact_similarity_mode_requested,
+        "hand_artifact_is_explicit": hand_artifact_is_explicit},
+        cache_inputs,
     )
     manifest.start_stage("sequence_optimization", cache_key=cache_key, command=sys.argv, environment="v2s-opt")
+    manifest.data["stages"]["sequence_optimization"]["uses_ground_truth"] = uses_ground_truth
+    manifest.data["stages"]["sequence_optimization"]["hand_source"] = hand_source
+    manifest.save()
     manifest.finish_stage(
         "sequence_optimization", success=bool(quality_control["export_ready"]),
         outputs=[
@@ -1436,7 +2531,16 @@ def optimize_run(
             str(metrics_path.relative_to(root)), *visualization_outputs,
         ],
         quality_metrics=metrics["raw_vs_aligned"],
-        warnings=["left absolute hand confidence is reduced from its measured GT diagnostic",
+        warnings=[*([
+                      "left absolute hand confidence is reduced from its measured GT diagnostic"
+                  ] if hand_source == "wilor" else [
+                      "oracle ablation: hand wrist/fingertip targets use EgoDex ground truth"
+                  ] if hand_source == "egodex_gt" else ([
+                      "explicit audited upstream HaWoR artifact is frozen; optimization "
+                      "does not rewrite it for contact"
+                  ] if hand_artifact_is_explicit else [
+                      "HaWoR is evaluated without post-hoc hand depth/contact scaling"
+                  ])),
                   "penetration is an unsigned nearest-surface proxy in the current V1 optimizer",
                   *([] if quality_control["export_ready"] else ["optimization failed object, hand, or manipulation export QC"]),
                   *visualization_warnings],
@@ -1453,8 +2557,29 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--hand-smoothing-strength", type=float, default=5.0)
     parser.add_argument("--allow-no-contact", action="store_true")
     parser.add_argument("--allow-unvalidated-contact-scale", action="store_true")
+    parser.add_argument(
+        "--hand-source", choices=["wilor", "hawor", "egodex_gt"], default="wilor",
+    )
+    parser.add_argument("--uses-ground-truth", action="store_true")
+    hand_export = parser.add_mutually_exclusive_group()
+    hand_export.add_argument(
+        "--active-hands-only", dest="active_hands_only", action="store_true",
+    )
+    hand_export.add_argument(
+        "--include-passive-hands", dest="active_hands_only", action="store_false",
+    )
+    parser.set_defaults(active_hands_only=True)
     parser.add_argument("--contact-enter-distance-m", type=float, default=0.012)
     parser.add_argument("--max-contact-slip-p95-m-s", type=float, default=MAX_CONTACT_SLIP_P95_M_S)
+    parser.add_argument(
+        "--stabilize-precontact-object-translation", action="store_true",
+    )
+    parser.add_argument("--precontact-stabilization-lead-frames", type=int, default=2)
+    parser.add_argument(
+        "--contact-similarity-mode", choices=("auto", "refine", "validate_only"),
+        default="auto",
+    )
+    parser.add_argument("--hand-artifact", type=Path)
     parser.add_argument("--overwrite", action="store_true")
     return parser
 
@@ -1466,8 +2591,18 @@ def main(argv: list[str] | None = None) -> int:
         hand_smoothing_strength=args.hand_smoothing_strength,
         require_contact=not args.allow_no_contact,
         allow_unvalidated_contact_scale=args.allow_unvalidated_contact_scale,
+        hand_source=args.hand_source, uses_ground_truth=args.uses_ground_truth,
+        active_hands_only=args.active_hands_only,
         contact_enter_distance_m=args.contact_enter_distance_m,
         max_contact_slip_p95_m_s=args.max_contact_slip_p95_m_s,
+        stabilize_precontact_object_translation=(
+            args.stabilize_precontact_object_translation
+        ),
+        precontact_stabilization_lead_frames=(
+            args.precontact_stabilization_lead_frames
+        ),
+        contact_similarity_mode=args.contact_similarity_mode,
+        hand_artifact_path=args.hand_artifact,
         overwrite=args.overwrite,
     )
     print(aligned)

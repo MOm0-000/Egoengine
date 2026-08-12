@@ -24,6 +24,7 @@ import trimesh
 
 from ..manifest import RunManifest, stage_cache_key
 from ..schemas import SCHEMA_VERSION
+from .depth_gate import require_depth_gate
 
 
 @dataclass(frozen=True)
@@ -261,42 +262,128 @@ def static_fit_metrics(
     layout_scale: Iterable[float],
 ) -> tuple[dict[str, Any], np.ndarray, float]:
     points, point_metrics = estimate_mask_pointcloud(mask, depth_m, valid_depth, K)
-    mesh_extent = max(float(np.max(mesh.extents)), 1e-8)
-    if points.shape[0] >= 8:
+    rotation = _quaternion_wxyz_matrix(rotation_wxyz)
+    rotated_vertices = np.asarray(mesh.vertices, dtype=np.float64) @ rotation.T
+    rotated_extents = np.ptp(rotated_vertices, axis=0)
+    minimum_points = 64
+    if points.shape[0] >= minimum_points:
         p05, p95 = np.percentile(points, [5, 95], axis=0)
-        point_extent = max(float(p95[0] - p05[0]), float(p95[1] - p05[1]), 0.005)
-        depth_scale_m = point_extent / mesh_extent
+        point_extents = p95 - p05
+        axis_scales = [
+            float(point_extents[axis] / rotated_extents[axis])
+            for axis in (0, 1)
+            if point_extents[axis] >= 0.002 and rotated_extents[axis] > 1e-6
+        ]
+        depth_scale_m = float(np.median(axis_scales)) if axis_scales else math.nan
         centroid = np.median(points, axis=0)
+        image_plane_center = 0.5 * (p05 + p95)
     else:
-        depth_scale_m = 0.05 / mesh_extent
-        centroid = np.asarray(translation, dtype=np.float64)
+        depth_scale_m = math.nan
+        centroid = np.asarray(translation, dtype=np.float64).reshape(3)
+        image_plane_center = centroid.copy()
     layout_scale_value = float(np.median(np.abs(np.asarray(layout_scale, dtype=np.float64))))
-    if not np.isfinite(layout_scale_value) or layout_scale_value <= 0:
-        layout_scale_value = depth_scale_m
-    scale_m = float(np.clip(0.75 * layout_scale_value + 0.25 * depth_scale_m, 0.003, 0.5))
-    T_camera_object = np.eye(4, dtype=np.float64)
-    T_camera_object[:3, :3] = _quaternion_wxyz_matrix(rotation_wxyz)
-    predicted_translation = np.asarray(translation, dtype=np.float64).reshape(3)
-    if not np.isfinite(predicted_translation).all() or predicted_translation[2] <= 0:
-        predicted_translation = centroid
-    T_camera_object[:3, 3] = predicted_translation
-    rendered_mask, rendered_depth = _projected_mesh_mask_depth(
-        mesh, K, T_camera_object, mask.shape, scale_m
-    )
-    union = np.logical_or(rendered_mask, mask).sum()
-    intersection = np.logical_and(rendered_mask, mask).sum()
-    iou = float(intersection / union) if union else 0.0
-    overlap = rendered_mask & mask & valid_depth & np.isfinite(rendered_depth) & np.isfinite(depth_m)
-    if overlap.any():
-        absolute_depth_residual = float(np.median(np.abs(rendered_depth[overlap] - depth_m[overlap])))
-        relative_depth_residual = absolute_depth_residual / max(float(np.median(depth_m[overlap])), 1e-3)
+    model_translation = np.asarray(translation, dtype=np.float64).reshape(3)
+    candidates: list[dict[str, Any]] = []
+    if np.isfinite(depth_scale_m) and depth_scale_m > 0:
+        candidate_scales = np.unique(
+            np.clip(
+                depth_scale_m * np.exp(np.linspace(-math.log(2.0), math.log(2.0), 25)),
+                0.003,
+                0.5,
+            )
+        )
+        for candidate_scale in candidate_scales:
+            candidate_transform = np.eye(4, dtype=np.float64)
+            candidate_transform[:3, :3] = rotation
+            candidate_transform[:3, 3] = [
+                image_plane_center[0],
+                image_plane_center[1],
+                float(centroid[2] - np.median(rotated_vertices[:, 2]) * candidate_scale),
+            ]
+            rendered_mask, rendered_depth = _projected_mesh_mask_depth(
+                mesh, K, candidate_transform, mask.shape, float(candidate_scale)
+            )
+            union = np.logical_or(rendered_mask, mask).sum()
+            intersection = np.logical_and(rendered_mask, mask).sum()
+            candidate_iou = float(intersection / union) if union else 0.0
+            overlap = (
+                rendered_mask & mask & valid_depth
+                & np.isfinite(rendered_depth) & np.isfinite(depth_m)
+            )
+            if overlap.any():
+                candidate_absolute = float(
+                    np.median(np.abs(rendered_depth[overlap] - depth_m[overlap]))
+                )
+                candidate_relative = candidate_absolute / max(
+                    float(np.median(depth_m[overlap])), 1e-3
+                )
+            else:
+                candidate_absolute = float("inf")
+                candidate_relative = float("inf")
+            candidate_depth_score = (
+                float(math.exp(-min(candidate_relative / 0.10, 20.0)))
+                if np.isfinite(candidate_relative) else 0.0
+            )
+            candidates.append({
+                "scale_m": float(candidate_scale),
+                "silhouette_iou": candidate_iou,
+                "depth_residual_m": candidate_absolute,
+                "relative_depth_residual": candidate_relative,
+                "depth_score": candidate_depth_score,
+                "score": float(0.75 * candidate_iou + 0.25 * candidate_depth_score),
+                "transform": candidate_transform,
+            })
+    if candidates:
+        selected = max(candidates, key=lambda item: (item["score"], item["silhouette_iou"]))
+        scale_m = float(selected["scale_m"])
+        T_camera_object = np.asarray(selected["transform"], dtype=np.float64)
+        iou = float(selected["silhouette_iou"])
+        absolute_depth_residual = float(selected["depth_residual_m"])
+        relative_depth_residual = float(selected["relative_depth_residual"])
+        depth_score = float(selected["depth_score"])
     else:
-        absolute_depth_residual = float("inf")
-        relative_depth_residual = float("inf")
-    depth_score = float(math.exp(-min(relative_depth_residual, 20.0))) if np.isfinite(relative_depth_residual) else 0.0
+        scale_m = float(np.clip(layout_scale_value if layout_scale_value > 0 else 0.05, 0.003, 0.5))
+        T_camera_object = np.eye(4, dtype=np.float64)
+        T_camera_object[:3, :3] = rotation
+        T_camera_object[:3, 3] = model_translation
+        iou, absolute_depth_residual, relative_depth_residual, depth_score = 0.0, math.inf, math.inf, 0.0
+    scale_fit_accepted = bool(
+        points.shape[0] >= minimum_points
+        and candidates
+        and iou >= 0.01
+        and np.isfinite(relative_depth_residual)
+        and relative_depth_residual <= 0.25
+    )
+    layout_to_depth_ratio = (
+        float(layout_scale_value / depth_scale_m)
+        if np.isfinite(layout_scale_value) and layout_scale_value > 0
+        and np.isfinite(depth_scale_m) and depth_scale_m > 0
+        else None
+    )
     metrics = {
         **point_metrics, "layout_scale_raw": layout_scale_value,
-        "depth_initialized_scale_m": float(depth_scale_m), "selected_scale_m": scale_m,
+        "layout_scale_role": "diagnostic_only_no_blending",
+        "layout_to_depth_scale_ratio": layout_to_depth_ratio,
+        "depth_initialized_scale_m": (
+            float(depth_scale_m) if np.isfinite(depth_scale_m) else None
+        ),
+        "selected_scale_m": scale_m,
+        "scale_source": "metric_depth_mask_pointcloud_and_canonical_mesh_projection",
+        "scale_fit_accepted": scale_fit_accepted,
+        "scale_fit_rejection_reasons": [
+            reason for reason, rejected in (
+                (f"point_count_below_{minimum_points}", points.shape[0] < minimum_points),
+                ("no_finite_scale_candidates", not candidates),
+                ("silhouette_iou_below_0.01", iou < 0.01),
+                ("relative_depth_residual_above_0.25", not np.isfinite(relative_depth_residual) or relative_depth_residual > 0.25),
+            ) if rejected
+        ],
+        "scale_search": {
+            "candidate_count": len(candidates),
+            "range_multiplier": [0.5, 2.0],
+            "score": "0.75 * silhouette_iou + 0.25 * exp(-relative_depth_residual / 0.10)",
+        },
+        "model_translation_raw": model_translation.tolist(),
         "silhouette_iou": iou, "silhouette_residual": float(1.0 - iou),
         "depth_residual_m": absolute_depth_residual,
         "relative_depth_residual": relative_depth_residual, "depth_score": depth_score,
@@ -515,6 +602,7 @@ def _run_impl(
     overwrite: bool = False, dry_run: bool = False,
 ) -> Path:
     root = Path(run_dir).resolve()
+    require_depth_gate(root)
     output_dir = root / "mesh_proposals"
     ranking_path = output_dir / "mesh_ranking.json"
     if ranking_path.exists() and not overwrite:
@@ -595,9 +683,10 @@ def _run_impl(
                 rotation_wxyz=rotation, translation=translation, layout_scale=layout_scale,
             )
             integrity = mesh_integrity(canonical)
-            static_score = 0.35 * integrity["score"] + 0.40 * fit["silhouette_iou"] + 0.25 * fit["depth_score"]
+            qualified = bool(integrity["qualified"] and fit["scale_fit_accepted"])
+            static_score = 0.30 * integrity["score"] + 0.45 * fit["silhouette_iou"] + 0.25 * fit["depth_score"]
             record.update({
-                "qualified": bool(integrity["qualified"]), "static_score": float(static_score),
+                "qualified": qualified, "static_score": float(static_score),
                 "visual_mesh": str(visual_path.relative_to(output_dir)),
                 "collision_source_mesh": str(collision_path.relative_to(output_dir)),
                 "raw_mesh": str(raw_path.relative_to(output_dir)), "integrity": integrity,
@@ -624,7 +713,7 @@ def _run_impl(
     qualified_count = sum(bool(item.get("qualified")) for item in ordered)
     payload = {
         "schema_version": SCHEMA_VERSION, "stage": "sam3d_objects_mesh_proposals",
-        "ranking_policy": "0.35 mesh_integrity + 0.40 silhouette_iou + 0.25 exp(-relative_depth_residual)",
+        "ranking_policy": "qualified = mesh_integrity and metric scale fit; score = 0.30 integrity + 0.45 silhouette_iou + 0.25 depth_score",
         "foundationpose_used": False, "keyframes": keyframe_payload,
         "proposals": [_finite_json(item) for item in ordered], "qualified_count": qualified_count,
         "success": bool(qualified_count > 0),
@@ -648,7 +737,7 @@ def _run_impl(
         outputs=[str(ranking_path.relative_to(root)), *visualization_outputs],
         quality_metrics={"proposal_count": len(ordered), "qualified_count": qualified_count},
         warnings=[
-            "metric depth is a low-weight scale prior due to the recorded scene-scale conflict",
+            "metric depth is the primary static-scale source; SAM3D layout scale is diagnostic only",
             *visualization_warnings,
         ],
     )

@@ -17,7 +17,9 @@ import trimesh
 
 from ..manifest import RunManifest, stage_cache_key
 from ..schemas import SCHEMA_VERSION, validate_foundationpose_raw
+from .depth_gate import require_depth_gate
 from .sam3d_objects import _projected_mesh_mask_depth
+from .tracking_gate import write_tracking_gate
 
 
 def tracking_score(metrics: dict[str, float]) -> float:
@@ -246,18 +248,20 @@ def _write_json(path: Path, value: Any) -> None:
 
 def _run_impl(
     run_dir: str | Path, *, foundationpose_root: str | Path,
+    ranking_path: str | Path | None = None,
     max_candidates: int = 3, screening_radius: int = 5, register_iter: int = 5,
     track_iter: int = 2, iou_reregister: float = 0.05,
     relative_depth_reregister: float = 0.75, max_input_side: int | None = 960,
     overwrite: bool = False,
 ) -> Path:
     root = Path(run_dir).resolve()
+    require_depth_gate(root)
     repository = Path(foundationpose_root).resolve()
     output_dir = root / "object_tracking"
     output_path = output_dir / "foundationpose_raw.npz"
     if output_path.exists() and not overwrite:
         raise FileExistsError(f"output exists: {output_path}; pass --overwrite")
-    ranking_path = root / "mesh_proposals/mesh_ranking.json"
+    ranking_path = Path(ranking_path).resolve() if ranking_path else root / "mesh_proposals/mesh_ranking.json"
     ranking = json.loads(ranking_path.read_text(encoding="utf-8"))
     candidates = [item for item in ranking["proposals"] if item.get("qualified")][:max_candidates]
     if not candidates:
@@ -335,7 +339,10 @@ def _run_impl(
     selected_path = output_dir / "selected_mesh.json"
     _write_json(selected_path, {
         "schema_version": SCHEMA_VERSION, "proposal_id": selected_proposal["proposal_id"],
-        "mesh_ranking": str(ranking_path.relative_to(root)),
+        "mesh_ranking": (
+            str(ranking_path.relative_to(root))
+            if ranking_path.is_relative_to(root) else str(ranking_path)
+        ),
         "canonical_visual_mesh": str(selected_mesh_path.relative_to(root)),
         "scale_to_m": float(selected_proposal["selected_scale_m"]),
         "canonical": selected_proposal["canonical"],
@@ -347,12 +354,15 @@ def _run_impl(
             for item in candidate_records
         ],
     })
-    _write_json(output_dir / "tracking_metrics.json", {
+    tracking_metrics_path = output_dir / "tracking_metrics.json"
+    _write_json(tracking_metrics_path, {
         "schema_version": SCHEMA_VERSION, "anchor_frame_index": int(frame_indices[anchor_at]),
         "metrics": final_metrics, "runtime_s": float(time.monotonic() - started),
         "iou_reregister": iou_reregister, "relative_depth_reregister": relative_depth_reregister,
         "max_input_side": max_input_side,
     })
+    tracking_gate_path = write_tracking_gate(root, metrics_path=tracking_metrics_path)
+    tracking_gate = json.loads(tracking_gate_path.read_text(encoding="utf-8"))
     from ..visualization import render_foundationpose, render_mesh_proposals
 
     visualization_outputs: list[str] = []
@@ -366,8 +376,19 @@ def _run_impl(
                 f"{renderer.__name__} failed without invalidating tracking artifacts: "
                 f"{type(error).__name__}: {error}"
             )
+    if not tracking_gate["accepted"]:
+        failed = [
+            name for name, passed in tracking_gate.get("checks", {}).items() if not passed
+        ]
+        raise RuntimeError(f"object_tracking_gate_rejected: {', '.join(failed)}")
     manifest = RunManifest.load(root / "manifest.json")
-    warnings = ["Depth Anything scale is retained as the raw FoundationPose observation and corrected only in WP7"]
+    depth_metadata = json.loads(
+        (root / "depth/metadata.json").read_text(encoding="utf-8")
+    )
+    warnings = [
+        f"{depth_metadata.get('model', 'metric depth')} scale is retained as the raw "
+        "FoundationPose observation; any later WP7 adjustment is explicitly audited"
+    ]
     if bool(selected_proposal.get("canonical", {}).get("debug_only")):
         warnings.append("Selected mesh is marked debug_only and must not be promoted as a real WP5 result")
     warnings.extend(visualization_warnings)
@@ -375,6 +396,8 @@ def _run_impl(
         "foundationpose", success=True,
         outputs=[
             str(output_path.relative_to(root)), str(selected_path.relative_to(root)),
+            str(tracking_metrics_path.relative_to(root)),
+            str(tracking_gate_path.relative_to(root)),
             *visualization_outputs,
         ],
         quality_metrics=final_metrics,
@@ -385,13 +408,14 @@ def _run_impl(
 
 def run(
     run_dir: str | Path, *, foundationpose_root: str | Path,
+    ranking_path: str | Path | None = None,
     max_candidates: int = 3, screening_radius: int = 5, register_iter: int = 5,
     track_iter: int = 2, iou_reregister: float = 0.05,
     relative_depth_reregister: float = 0.75, max_input_side: int | None = 960,
     overwrite: bool = False,
 ) -> Path:
     root = Path(run_dir).resolve()
-    ranking_path = root / "mesh_proposals/mesh_ranking.json"
+    ranking_path = Path(ranking_path).resolve() if ranking_path else root / "mesh_proposals/mesh_ranking.json"
     inputs = [
         ranking_path, root / "segmentation/object_masks.npz",
         root / "calibration/intrinsics.npy",
@@ -402,6 +426,7 @@ def run(
         "iou_reregister": iou_reregister,
         "relative_depth_reregister": relative_depth_reregister,
         "max_input_side": max_input_side,
+        "ranking_path": str(ranking_path),
     }
     manifest = RunManifest.load(root / "manifest.json")
     manifest.start_stage(
@@ -411,6 +436,7 @@ def run(
     try:
         return _run_impl(
             run_dir, foundationpose_root=foundationpose_root,
+            ranking_path=ranking_path,
             max_candidates=max_candidates, screening_radius=screening_radius,
             register_iter=register_iter, track_iter=track_iter,
             iou_reregister=iou_reregister,
@@ -422,9 +448,22 @@ def run(
             str(path.relative_to(root))
             for path in (root / "object_tracking/foundationpose_candidates").glob("*/tracking_metrics.json")
         )
+        diagnostic_outputs = [
+            str(path.relative_to(root))
+            for path in (
+                root / "object_tracking/foundationpose_raw.npz",
+                root / "object_tracking/selected_mesh.json",
+                root / "object_tracking/tracking_metrics.json",
+                root / "object_tracking/tracking_gate.json",
+                root / "visualization/05_mesh_proposals.mp4",
+                root / "visualization/06_foundationpose.mp4",
+            )
+            if path.exists()
+        ]
         manifest = RunManifest.load(root / "manifest.json")
         manifest.finish_stage(
-            "foundationpose", success=False, outputs=candidate_metrics,
+            "foundationpose", success=False,
+            outputs=[*candidate_metrics, *diagnostic_outputs],
             quality_metrics={"error_type": type(exc).__name__, "error": str(exc)},
             warnings=["FoundationPose did not produce a valid complete trajectory"],
         )
@@ -435,6 +474,10 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-dir", type=Path, required=True)
     parser.add_argument("--foundationpose-root", type=Path, required=True)
+    parser.add_argument(
+        "--ranking-path", type=Path,
+        help="Optional refitted mesh ranking; defaults to mesh_proposals/mesh_ranking.json",
+    )
     parser.add_argument("--max-candidates", type=int, default=3)
     parser.add_argument("--screening-radius", type=int, default=5)
     parser.add_argument("--register-iter", type=int, default=5)
@@ -453,6 +496,7 @@ def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     print(run(
         args.run_dir, foundationpose_root=args.foundationpose_root,
+        ranking_path=args.ranking_path,
         max_candidates=args.max_candidates, screening_radius=args.screening_radius,
         register_iter=args.register_iter, track_iter=args.track_iter,
         iou_reregister=args.iou_reregister,

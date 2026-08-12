@@ -61,13 +61,24 @@ def build_run_report(run_dir: str | Path, *, spider_report: str | Path | None = 
     spider_data = stages["spider"].get("data", {})
     spider_artifacts = spider_data.get("artifacts", {})
     trajectory_mjwp = spider_artifacts.get("trajectory_mjwp")
-    mjwp_video = spider_artifacts.get("mjwp_video")
+    diagnostic_mjwp_video = (
+        spider_artifacts.get("diagnostic_mjwp_video")
+        or spider_artifacts.get("mjwp_video")
+    )
+    final_simulation_video = spider_artifacts.get("final_simulation_video")
     trajectory_complete = bool(
         trajectory_mjwp and Path(trajectory_mjwp).is_file()
         and Path(trajectory_mjwp).stat().st_size > 0
     )
+    diagnostic_simulation_video_complete = bool(
+        diagnostic_mjwp_video and Path(diagnostic_mjwp_video).is_file()
+        and Path(diagnostic_mjwp_video).stat().st_size > 0
+    )
     simulation_video_complete = bool(
-        mjwp_video and Path(mjwp_video).is_file() and Path(mjwp_video).stat().st_size > 0
+        spider_data.get("demonstration_success", False)
+        and final_simulation_video
+        and Path(final_simulation_video).is_file()
+        and Path(final_simulation_video).stat().st_size > 0
     )
     spider_complete = bool(
         stages["spider"]["status"] == "available"
@@ -84,6 +95,9 @@ def build_run_report(run_dir: str | Path, *, spider_report: str | Path | None = 
             "available_stage_count": sum(record["status"] == "available" for record in stages.values()),
             "total_stage_count": len(stages), "missing_stages": missing, "invalid_stages": invalid,
             "spider_chain_complete": spider_complete,
+            "diagnostic_simulation_video_complete": (
+                diagnostic_simulation_video_complete
+            ),
             "simulation_video_complete": simulation_video_complete,
             "m4_complete": spider_complete and all(
                 stages[name]["status"] == "available"

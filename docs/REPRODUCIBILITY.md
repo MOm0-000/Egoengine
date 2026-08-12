@@ -2,13 +2,23 @@
 
 This document defines the source, environment, model, and validation boundary for the GitHub release. It is intentionally stricter than “the current working directory runs”: a release candidate must be reconstructable from tracked files plus separately distributed environment/model assets.
 
-## Verified baseline
+## Current automatic safety baseline
+
+- Pipeline: mono ingest → SAM3 → WiLoR → DA3METRIC-LARGE → UniDepthV2 reject-only gate, or calibrated rectified stereo ingest → unmodified FoundationStereo → native metric gate with global and automatic-object-mask coverage checks; then SAM 3D static metric scale fit → FoundationPose full-track gate → active-hand sequence optimization → MINK q_ref gate → Replay → SPIDER/MJWP.
+- Inference/gates use no hand or object ground truth and no per-video thresholds.
+- `vertical_pick_place/111`: tracking gate rejects the 2.112 rad rotation jump; later stages must not run.
+- `basic_pick_place/0`: depth, tracking and sequence gates pass. Exact discrete MINK projection satisfies joint limits and all four MuJoCo geometry groups. After removing contact-target rewriting, consuming full landmark-derived fingertip SO(3), and mapping Eq.(1) coefficients through square-root MINK residual scales, position/wrist P95 improve to 16.92 mm/0.00134 rad; full fingertip orientation remains 2.236 rad and the q_ref is rejected. The same residual tradeoff repeats on oracle111. Replay/MPC must not run.
+- Tests: `134 passed` in `video_to_spider`; eleven MINK unit tests pass in SPIDER's venv.
+- Stereo status: the integration and hard gates are implemented, but the pre-registered HOT3D/ZED promotion experiment is not yet complete. Until the numeric gate passes, DA3 remains the documented production default.
+- Evidence: `experiments/pipeline_phase1_regression_20260811/`, `experiments/pipeline_phase2_mink_landmark_smoke_20260811/`, `experiments/pipeline_phase3_discrete_projection_20260811/`, and `experiments/pipeline_phase4_fidelity_ablation_20260811/`.
+
+## Historical structural baseline
 
 - Dataset: EgoDex `vertical_pick_place/111`, raw MP4 and HDF5, 54 frames at 30 FPS.
 - Verified code commit: `007c909af2bd80c66658f0e06696b9972a5fd569` (the subsequent documentation-only commit does not change runtime code).
 - Isolation: a fresh RUN_DIR; no previous episode result cache was resumed.
 - GPU: physical GPU 7 only, exposed to each model process as the single logical device `cuda:0`.
-- Pipeline: ingest → SAM3 → WiLoR → Depth Anything V2 → SAM 3D Objects → FoundationPose → sequence/contact optimization → SPIDER export → contact/XML/IK → MJWP → visualization and unified report.
+- Pipeline: ingest → SAM3 → WiLoR → Depth Anything V2 → SAM 3D Objects → FoundationPose → sequence/contact optimization → SPIDER export → contact/XML/native IK → MJWP → visualization and unified report.
 - Structural result: 12/12 stages available, all five SPIDER subprocesses returned 0, MJWP video generated.
 - Tests: 67 passed.
 - Quality boundary: MJWP mean position error was 0.0701 m and passed the 0.1 m threshold; mean rotation error was 0.9262 rad and did not pass the 0.5 rad paper threshold. The release is therefore engineering-complete, not a claim that all paper metrics were reproduced.
@@ -23,7 +33,10 @@ The large upstream projects are intentionally not vendored into this Git reposit
 | SAM 3D Objects | `https://github.com/facebookresearch/sam-3d-objects.git` | `f91db411c50efee93d8db7aeb323885650f6f722` |
 | FoundationPose | `https://github.com/NVlabs/FoundationPose.git` | `a1b694b83e633c2cb6115b9063d940a687759392` |
 | WiLoR | `https://github.com/rolpotamias/WiLoR.git` | `fcb911312a38fa8badd30d9656a167485d61b8f9` |
-| Depth Anything V2 | `https://github.com/DepthAnything/Depth-Anything-V2.git` | `a561b849ebae10a6f5ef49e26c83cbbcd36c71bf` |
+| Depth Anything 3 | `https://github.com/ByteDance-Seed/Depth-Anything-3.git` | `3d835ec` (validated experiment revision) |
+| UniDepth | `https://github.com/lpiccinelli-eth/UniDepth.git` | `8d8cfe4` (validated experiment revision) |
+| FoundationStereo | `https://github.com/NVlabs/FoundationStereo.git` | `6e8806816b533e4d13ddbb95ffa907b797060a62` |
+| Depth Anything V2 | `https://github.com/DepthAnything/Depth-Anything-V2.git` | `a561b849ebae10a6f5ef49e26c83cbbcd36c71bf` (legacy ablation only) |
 | SPIDER base | `https://github.com/facebookresearch/spider.git` | `71238456bf97a7eeb3d0471aa31974e2d404d4ae` |
 
 Example source setup, assuming this repository is at `$EGOENGINE_ROOT/video_to_spider`:
@@ -45,6 +58,16 @@ git -C "$REPO_ROOT/third_party/FoundationPose" checkout --detach a1b694b83e633c2
 git clone https://github.com/rolpotamias/WiLoR.git "$REPO_ROOT/third_party/WiLoR"
 git -C "$REPO_ROOT/third_party/WiLoR" checkout --detach fcb911312a38fa8badd30d9656a167485d61b8f9
 
+git clone https://github.com/ByteDance-Seed/Depth-Anything-3.git "$REPO_ROOT/third_party/Depth-Anything-3"
+git -C "$REPO_ROOT/third_party/Depth-Anything-3" checkout --detach 3d835ec
+
+git clone https://github.com/lpiccinelli-eth/UniDepth.git "$REPO_ROOT/third_party/UniDepth"
+git -C "$REPO_ROOT/third_party/UniDepth" checkout --detach 8d8cfe4
+
+git clone https://github.com/NVlabs/FoundationStereo.git "$REPO_ROOT/third_party/FoundationStereo"
+git -C "$REPO_ROOT/third_party/FoundationStereo" checkout --detach 6e8806816b533e4d13ddbb95ffa907b797060a62
+
+# Legacy depth ablation only:
 git clone https://github.com/DepthAnything/Depth-Anything-V2.git "$REPO_ROOT/third_party/Depth-Anything-V2"
 git -C "$REPO_ROOT/third_party/Depth-Anything-V2" checkout --detach a561b849ebae10a6f5ef49e26c83cbbcd36c71bf
 
@@ -70,6 +93,9 @@ The upstream CUDA stacks have incompatible binary requirements. The verified mat
 | `v2s-sam3` | SAM 3.1 segmentation/tracking | Python 3.12.13; PyTorch 2.10.0+cu128; torchvision 0.25; NumPy 1.26.4 |
 | `v2s-wilor` | hand detection and MANO reconstruction | Python 3.10.20; PyTorch 2.0.0+cu117; torchvision 0.15.1; Ultralytics 8.1.34 |
 | `v2s-depth` | metric Depth Anything V2 | Python 3.10.20; PyTorch 2.5.1+cu124; NumPy 2.2.6 |
+| dedicated DA3 env | primary DA3 metric depth | official DA3 dependencies; package separately before release |
+| dedicated UniDepth env | reject-only depth cross-check | official UniDepth dependencies; package separately before release |
+| dedicated FoundationStereo env | calibrated stereo metric depth | official dependencies; pinned checkout is read-only and called through our adapter |
 | `v2s-sam3d` | SAM 3D mesh proposals | Python 3.11; PyTorch 2.5.1+cu121; xFormers 0.0.28.post3; FlashAttention 2.8.3; spconv-cu121 2.3.8 |
 | `v2s-foundationpose` | 6D registration and tracking | Python 3.11.15; PyTorch 2.5.1+cu124; Warp 1.15; nvdiffrast 0.4 |
 | `v2s-opt` | smoothing, scale, contact, QC | Python 3.11.15; PyTorch 2.5.1+cu121; NumPy 2.4.4 |
@@ -135,7 +161,10 @@ third_party/WiLoR/pretrained_models/model_config.yaml
 third_party/WiLoR/pretrained_models/detector.pt
 third_party/WiLoR/mano_data/MANO_RIGHT.pkl
 third_party/WiLoR/mano_data/mano_mean_params.npz
-third_party/Depth-Anything-V2/metric_depth/checkpoints/depth_anything_v2_metric_hypersim_vitl.pth
+third_party/depth-checkpoints/DA3METRIC-LARGE/config.json
+third_party/depth-checkpoints/DA3METRIC-LARGE/model.safetensors
+third_party/depth-checkpoints/unidepth-v2-vitl14/config.json
+third_party/depth-checkpoints/unidepth-v2-vitl14/model.safetensors
 third_party/sam-3d-objects/checkpoints/hf/pipeline.yaml
 third_party/FoundationPose/weights/2024-01-11-20-02-45/model_best.pth
 third_party/FoundationPose/weights/2023-10-28-18-33-37/model_best.pth
@@ -170,8 +199,8 @@ Then follow the stage-by-stage commands in the main README with a new RUN_DIR. A
 1. the repository and all dependency revisions match this document;
 2. preflight and core tests pass from a clean checkout;
 3. the run starts from a nonexistent RUN_DIR and uses one specified physical GPU;
-4. the unified report contains 12/12 available stages with no missing or invalid stage;
-5. all five SPIDER commands return 0 and the MJWP video is decodable;
-6. metric quality is reported separately from structural completion.
+4. every downstream stage has a valid accepted gate; a rejected gate is a valid terminal outcome and must not be bypassed;
+5. only an accepted MINK q_ref may reach Replay/MJWP, and any generated MJWP video must be decodable;
+6. metric quality and rejection reasons are reported separately from structural completion.
 
 The final fresh validation took approximately 38 minutes for 54 frames with warm model/compile caches; FoundationPose alone took about 23 minutes. Budget 35–60 minutes for a similar 54–90 frame episode. First-time downloads and environment restoration are not included.

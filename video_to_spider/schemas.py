@@ -94,6 +94,16 @@ def validate_wilor_raw(arrays: Mapping[str, np.ndarray]) -> None:
         require_finite(key, value)
     validate_rotation_matrices("mano_global_orient", _array(arrays, "mano_global_orient"))
     validate_rotation_matrices("mano_hand_pose", _array(arrays, "mano_hand_pose"))
+    if "joints_camera_metric" in arrays or "joint_metric_valid" in arrays:
+        metric = _array(arrays, "joints_camera_metric")
+        metric_valid = _array(arrays, "joint_metric_valid")
+        require_shape("joints_camera_metric", metric, (t, h, 21, 3))
+        require_shape("joint_metric_valid", metric_valid, (t, h, 21))
+        require_finite("joints_camera_metric", metric)
+        if np.any(metric_valid & (metric[..., 2] <= 0)):
+            raise ArtifactValidationError(
+                "valid stereo metric hand joints must have positive camera depth"
+            )
 
 
 def validate_foundationpose_raw(arrays: Mapping[str, np.ndarray]) -> None:
@@ -132,6 +142,18 @@ def validate_aligned_trajectory(arrays: Mapping[str, np.ndarray]) -> None:
     if np.any(_array(arrays, "object_scale_to_m") <= 0):
         raise ArtifactValidationError("object_scale_to_m must be positive")
     validate_rotation_matrices("mano_pose", _array(arrays, "mano_pose"))
+    if "fingertip_orientation_sim" in arrays:
+        orientations = _array(arrays, "fingertip_orientation_sim")
+        require_shape("fingertip_orientation_sim", orientations, (t, h, 5, 3, 3))
+        validate_rotation_matrices("fingertip_orientation_sim", orientations)
+    if "human_neutral_fingertip_vectors" in arrays:
+        neutral = _array(arrays, "human_neutral_fingertip_vectors")
+        require_shape("human_neutral_fingertip_vectors", neutral, (h, 5, 3))
+        require_finite("human_neutral_fingertip_vectors", neutral)
+        if np.any(np.linalg.norm(neutral, axis=-1) <= 1e-6):
+            raise ArtifactValidationError(
+                "human_neutral_fingertip_vectors must have nonzero radii"
+            )
 
 
 def validate_contact(arrays: Mapping[str, np.ndarray]) -> None:

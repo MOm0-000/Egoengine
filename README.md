@@ -1,12 +1,12 @@
 # Video-to-SPIDER
 
-将 EgoDex 单目 RGB episode 转换为 SPIDER/xHand 可执行轨迹的 artifact-oriented pipeline。
+将单目或已标定双目 ego RGB episode 转换为 SPIDER/xHand 可执行轨迹的 artifact-oriented pipeline。
 
-当前流程读取 EgoDex 的 RGB、相机内参、逐帧相机外参和任务文本，依次完成目标分割、手部重建、深度估计、物体网格重建、6D 位姿跟踪、手物联合优化、SPIDER 导出、IK 和 MJWP 仿真。手部 Ground Truth 只允许用于最后的显式诊断，不进入推理链路。
+当前流程读取 RGB、相机内参、逐帧相机外参和任务文本；双目输入还读取同步的右图和已标定基线。随后依次完成目标分割、手部重建、深度估计、物体网格重建、6D 位姿跟踪、手物联合优化、SPIDER 导出、IK 和 MJWP 仿真。手部 Ground Truth 只允许用于最后的显式诊断，不进入推理链路。
 
 > 当前仓库没有 `run-all` 命令。完整流程必须按本文的 artifact 边界逐步执行。每一步都保存数值 artifact、metadata 和可视化，便于在进入下一步前验证。
 
-本仓库的已验证发布基线使用 EgoDex `vertical_pick_place/111`（54 帧）和单张物理 GPU 7，从全新 RUN_DIR 串行生成了 MJWP 视频与 12/12 阶段统一报告；核心测试为 `67 passed`。这证明工程链路完整，但该样本的 MJWP 旋转误差仍未达到论文阈值。环境恢复、第三方 revision、权重和验收边界见 [docs/REPRODUCIBILITY.md](./docs/REPRODUCIBILITY.md)。
+当前安全基线不再把“命令跑完”视为复现成功。单目使用 DA3/UniDepth gate；双目使用标定、极线和 FoundationStereo 原生 metric gate。FoundationPose、sequence optimization 和 MINK 也有固定 reject gate；任一 gate 失败时不得继续 Replay/MPC。双目 promotion 的 HOT3D/ZED 对比仍在进行，尚未因“代码已接通”而宣布替换单目默认值。`vertical_pick_place/111` 的新 FoundationPose 轨迹因旋转跳变被拒绝；`basic_pick_place/0` 已通过无 GT 上游 gate，但 Eq.(1) 对齐修复后的 MINK q_ref 仍因指尖位置和完整 SO(3) 姿态保真度不足被拒绝。当前核心 video-to-SPIDER 测试为 `134 passed`，另有 11 项 MINK 单元测试通过；这表示 gate 和 artifact 接线可用，不表示抓取问题已经解决。
 
 首次使用建议按以下顺序阅读：
 
@@ -17,16 +17,17 @@
 ## 流程总览
 
 ```text
-EgoDex MP4 + HDF5
-  -> ingest
+Ego RGB + calibration + camera trajectory
+  -> monocular ingest OR synchronized rectified stereo ingest
   -> SAM 3 object/hand segmentation
   -> WiLoR hand reconstruction
-  -> Depth Anything V2 metric depth
-  -> SAM 3D Objects mesh proposals
-  -> FoundationPose proposal selection and tracking
+  -> mono: DA3METRIC-LARGE + UniDepthV2 reject-only gate
+     OR stereo: unmodified FoundationStereo + calibrated raw metric gate
+  -> SAM 3D Objects mesh proposals + static metric scale refit
+  -> FoundationPose proposal selection, tracking and full-track gate
   -> sequence optimization and contact inference
-  -> SPIDER export
-  -> decomposition -> contact cross-check -> XML -> IK -> MJWP
+  -> SPIDER export -> paper-style MINK q_ref gate
+  -> deterministic Replay -> failed Replay windows escalate to SPIDER/MJWP MPC
   -> visualization and unified evaluation
 ```
 
@@ -68,7 +69,9 @@ cd "$REPO_ROOT"
 | ingest、导出、评估、可视化 | `v2s-core` |
 | SAM 3 | `v2s-sam3` |
 | WiLoR | `v2s-wilor` |
-| Depth Anything V2 | `v2s-depth` |
+| DA3METRIC-LARGE 主深度 | 独立 DA3 环境 |
+| UniDepthV2 reject-only 复核 | 独立 UniDepth 环境 |
+| FoundationStereo 双目深度 | 官方 FoundationStereo 独立环境；仓库必须保持只读 |
 | SAM 3D Objects | `v2s-sam3d` |
 | FoundationPose | `v2s-foundationpose` |
 | 序列优化 | `v2s-opt` |
@@ -85,7 +88,9 @@ test -s third_party/sam3/checkpoints/sam3.1_multiplex.pt
 test -s third_party/WiLoR/pretrained_models/wilor_final.ckpt
 test -s third_party/WiLoR/pretrained_models/model_config.yaml
 test -s third_party/WiLoR/pretrained_models/detector.pt
-test -s third_party/Depth-Anything-V2/metric_depth/checkpoints/depth_anything_v2_metric_hypersim_vitl.pth
+test -d third_party/Depth-Anything-3
+test -d third_party/UniDepth
+test -d third_party/FoundationStereo
 test -s third_party/sam-3d-objects/checkpoints/hf/pipeline.yaml
 test -s third_party/FoundationPose/weights/2024-01-11-20-02-45/model_best.pth
 test -s third_party/FoundationPose/weights/2023-10-28-18-33-37/model_best.pth
@@ -175,6 +180,86 @@ calibration/T_world_camera.npy
 manifest.json
 ```
 
+#### 已标定双目输入（实验接入，promotion 尚未完成）
+
+双目路径要求上游官方相机工具已经完成去畸变、同步和极线校正；通用 pipeline 不修改设备模型，
+也不把原始 fisheye 图像伪装成 pinhole 双目。移动的 ego 相机必须提供逐帧
+`T_world_camera`，静态测试台才允许显式使用 `--static-camera`：
+
+```bash
+conda run -n v2s-core python -m video_to_spider.cli ingest-stereo \
+  --left-dir /path/to/rectified/left \
+  --right-dir /path/to/rectified/right \
+  --intrinsics /path/to/K_rect.npy \
+  --right-intrinsics /path/to/K_rect_right.npy \
+  --common-valid-mask /path/to/official_rectified_common_valid.npy \
+  --baseline-m 0.0636 \
+  --camera-poses /path/to/T_world_camera.npy \
+  --timestamps /path/to/timestamps_s.json \
+  --frame-indices /path/to/frame_indices.json \
+  --task "$TASK" --episode-id "$EPISODE_ID" \
+  --instruction "pick up the object" --fps 30 \
+  --output-dir "$RUN_DIR"
+```
+
+导入阶段会用左右各自 K 的归一化光线抽样审计分辨率、正视差比例和垂直视差；还要求官方相机
+工具导出的共同有效域 mask。只有能确认校正图没有黑边/裁剪无效区时，才可改用显式
+`--full-image-common-valid`；不通过时拒绝创建可用 run。
+`calibration/stereo.json` 记录标定与 gate，左图继续作为 SAM/手部/物体跟踪的参考相机。
+
+先按下文 SAM 3 阶段生成自动物体 mask；双目 gate 会把它作为必须的、带哈希的覆盖率证据。
+然后 FoundationStereo 通过自有薄适配层调用固定提交的官方仓库。适配层会拒绝修改过的官方 tracked
+源码、错误权重哈希、标定不一致以及启动时已有进程的目标 GPU；不会结束或抢占已有进程：
+
+```bash
+CUDA_VISIBLE_DEVICES="$GPU" /path/to/foundationstereo-env/python \
+  -m video_to_spider.adapters.depth_foundationstereo \
+  --run-dir "$RUN_DIR" \
+  --repository /path/to/official/FoundationStereo \
+  --checkpoint /path/to/23-51-11/model_best_bp2.pth \
+  --config /path/to/23-51-11/cfg.yaml \
+  --physical-gpu-index "$GPU" \
+  --gpu-uuid GPU-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+conda run -n v2s-core python -m video_to_spider.adapters.depth_gate \
+  --run-dir "$RUN_DIR"
+```
+
+FoundationStereo 要求官方相机工具把左右图重投影到同一个 rectified K；若两个校正 K 不同，
+适配器会拒绝，而不会把普通像素差误当成视差。深度直接使用
+`fx_rect × baseline / disparity`，禁止 GT scale/shift 和逐视频补偿。双目 gate
+同时检查全图和自动物体 mask 内的有效深度覆盖；这样操作物体落在左图无视差边界时，即使全图
+coverage 很高也会拒绝。gate 通过后，还需在同一组校正左右图分别运行未修改的 WiLoR，再用
+标定几何独立三角化手部：
+
+```bash
+# 左图：默认输出 hands/wilor_raw.npz
+CUDA_VISIBLE_DEVICES="$GPU" ./scripts/run_model_adapter.sh \
+  v2s-wilor video_to_spider.adapters.wilor \
+  --run-dir "$RUN_DIR" --camera-view left \
+  --checkpoint third_party/WiLoR/pretrained_models/wilor_final.ckpt \
+  --model-config third_party/WiLoR/pretrained_models/model_config.yaml \
+  --detector-checkpoint third_party/WiLoR/pretrained_models/detector.pt
+
+# 右图：默认输出 hands_right/wilor_raw.npz
+CUDA_VISIBLE_DEVICES="$GPU" ./scripts/run_model_adapter.sh \
+  v2s-wilor video_to_spider.adapters.wilor \
+  --run-dir "$RUN_DIR" --camera-view right \
+  --checkpoint third_party/WiLoR/pretrained_models/wilor_final.ckpt \
+  --model-config third_party/WiLoR/pretrained_models/model_config.yaml \
+  --detector-checkpoint third_party/WiLoR/pretrained_models/detector.pt
+
+conda run -n v2s-core python -m video_to_spider.adapters.hand_stereo \
+  --run-dir "$RUN_DIR"
+```
+
+该手部适配层只使用左右 2D joint rays、K 和 baseline，不读取物体、接触或 GT；固定检查正视差、
+垂直误差、重投影和覆盖率。优化时显式传入
+`--hand-artifact "$RUN_DIR/hands/wilor_stereo_raw.npz"`。双目
+`optimize --contact-similarity-mode auto` 自动解析为 `validate_only`：接触仅评分/验收，不得再用
+物体深度或接触相似变换重写人手/物体 metric 轨迹。没有通过双目手 gate 的 WiLoR 单目深度会被
+明确拒绝，不能悄悄进入 MINK。最终 MuJoCo 物理验收仍必须保留。
+
 ### 2. SAM 3 目标和手分割
 
 使用任务文本派生出的全部候选词。`keyword_candidates` 最多产生 12 个词，因此正式运行建议 `--max-candidates 12`；较小值只适合 smoke test，可能漏掉真正物体词。
@@ -242,24 +327,31 @@ hands/metadata.json
 hands/wilor_overlay.mp4
 ```
 
-### 4. Depth Anything V2 metric depth
+### 4. 单目 DA3 主深度、UniDepth 独立复核和 gate
 
-深度阶段在原始像素分辨率保存 Zarr。当前使用 Hypersim ViT-L metric checkpoint：
+主深度固定使用 `DA3METRIC-LARGE`；UniDepthV2 只做 reject-only 复核，不允许重标定或混合 DA3。两个模型分别在官方依赖环境中运行：
 
 ```bash
-CUDA_VISIBLE_DEVICES="$GPU" ./scripts/run_model_adapter.sh \
-  v2s-depth video_to_spider.adapters.depth_anything \
+CUDA_VISIBLE_DEVICES="$GPU" python -m video_to_spider.adapters.depth_da3 \
   --run-dir "$RUN_DIR" \
-  --checkpoint third_party/Depth-Anything-V2/metric_depth/checkpoints/depth_anything_v2_metric_hypersim_vitl.pth \
-  --encoder vitl \
+  --model-root third_party/Depth-Anything-3 \
+  --checkpoint third_party/depth-checkpoints/DA3METRIC-LARGE \
   --overwrite
+
+CUDA_VISIBLE_DEVICES="$GPU" python -m video_to_spider.adapters.depth_unidepth \
+  --run-dir "$RUN_DIR" \
+  --model-root third_party/UniDepth \
+  --checkpoint third_party/depth-checkpoints/unidepth-v2-vitl14 \
+  --overwrite
+
+conda run -n v2s-core python -m video_to_spider.adapters.depth_gate \
+  --run-dir "$RUN_DIR"
 ```
 
 检查 metadata：
 
 ```bash
-jq '{model,encoder,original_resolution,valid_ratio,median_depth_m,outputs}' \
-  "$RUN_DIR/depth/metadata.json"
+jq '{accepted,checks,metrics,limits}' "$RUN_DIR/depth/depth_gate.json"
 ```
 
 成功输出：
@@ -268,9 +360,11 @@ jq '{model,encoder,original_resolution,valid_ratio,median_depth_m,outputs}' \
 depth/metric_depth.zarr/
 depth/metadata.json
 depth/metric_depth.mp4
+depth_crosscheck/unidepth_depth.zarr/
+depth/depth_gate.json
 ```
 
-Depth Anything 的绝对尺度只作为低权重先验，不能覆盖 EgoDex 相机外参和 WiLoR 的米制证据。
+缺失或拒绝的 `depth_gate.json` 会阻止 SAM3D 尺度拟合和后续跟踪。DA3 是唯一主深度；UniDepth 不写回其尺度。
 
 ### 5. SAM 3D Objects 网格候选
 
@@ -355,18 +449,15 @@ visualization/06_foundationpose.mp4
 
 ### 7. 序列优化、接触和单/双手判定
 
-优化器完成物体尺度、轨迹平滑、手腕姿态缺口插值、手物接触和仿真地面约束：
+优化器完成物体尺度、轨迹平滑、可观测手腕/末节方向、手物接触和手角色判定：
 
 ```bash
 conda run -n v2s-opt python -m video_to_spider.cli optimize \
   --run-dir "$RUN_DIR" \
-  --allow-unvalidated-contact-scale \
-  --contact-enter-distance-m 0.020 \
-  --max-contact-slip-p95-m-s 0.45 \
   --overwrite
 ```
 
-上述三个显式放宽参数是 `vertical_pick_place/111` 的已记录灵敏度配置，适用于柔软、近对称毛绒物体；代码中的严格默认值仍是 12 mm 与 0.30 m/s。新 episode 应先尝试严格默认配置，只有在保留失败诊断并核查 2D/3D 接触证据后才能放宽。
+正式自动流程使用固定默认值，不允许按 data_id 放宽。CLI 默认只导出具有持续接触证据的 active 手；`--include-passive-hands` 只用于可视化/诊断。
 
 检查优化指标和最终保留的手：
 
@@ -375,7 +466,7 @@ jq '{hands,simulation_floor,anchor,optimization,raw_vs_aligned,contact,quality_c
   "$RUN_DIR/optimization/optimization_metrics.json"
 ```
 
-优化先以 FoundationPose/Depth Anything 作为物体深度先验，并以物体 mask 优化轮廓尺度；
+优化先以 FoundationPose/DA3 metric depth 作为物体深度证据，并以物体 mask 优化轮廓尺度；
 如果连续多帧存在可靠的二维指尖/物体接触候选，则同步缩放物体网格和相机平移，搜索与
 MANO 指尖最一致的三维表面尺度。同步缩放不会改变物体二维投影，但结果的绝对公制尺度会标记为
 `contact_calibrated_not_externally_validated`，需要真实物体尺寸才能进一步验证。
@@ -384,14 +475,26 @@ WiLoR 的弱透视平移只有在完整手部投影仍处于二维信任域内�
 手部二维对齐或 manipulation 接触退化的轨迹被导出。默认要求至少一只 active 手具有连续接触；
 仅处理非操作视频时可显式增加 `--allow-no-contact`。
 
+EgoDex 手部 GT 只允许作为显式 oracle 消融，不能静默混入普通 RGB 流程：
+
+```bash
+conda run -n v2s-opt python -m video_to_spider.cli optimize \
+  --run-dir "$RUN_DIR" \
+  --hand-source egodex_gt \
+  --uses-ground-truth \
+  --active-hands-only \
+  --overwrite
+```
+
+缺少 `--uses-ground-truth` 时程序会拒绝运行该分支；metrics 和 manifest 均记录
+`hand_source=egodex_gt` 与 `uses_ground_truth=true`。
+
 角色规则：
 
-- `active`：可靠可见并靠近物体，参与手物约束。
-- `passive`：可靠可见但不操作物体，仍保留其动作并渲染。
+- `active`：可靠可见，并具有持续二维接触证据，参与手物约束。
+- `passive`：可靠可见但没有持续接触证据；默认不进入动作导出。
 - `invalid`：重建有效率不足，不进入导出 artifact。
-- 画面中双手都可靠时，无论是否只有一只手实际操作，`artifact_hand_order` 都保留双手。
-- 某只手全程不可见或不可靠时，才自动降级为 `left` 或 `right` 单手 artifact。
-- passive 手如果需要超过 5 cm 的整体地面修正，会被视为绝对平移不可靠并降级为 invalid。
+- mesh 的归一化缩放系数不是物体半径，不能用于“靠近即 active”的判定。
 
 读取 SPIDER 应使用的手顺序：
 
@@ -490,20 +593,32 @@ spider_export/dataset/processed/video_to_spider_egodex/
 
 ### 10. 运行 SPIDER、IK 和 MJWP
 
-`run-spider` 内部会在 `$SPIDER_ROOT` 中使用现有 `uv` 环境，设置 EGL headless rendering，并依次运行 5 个阶段：
+`run-spider` 内部会在 `$SPIDER_ROOT` 中使用现有 `uv` 环境，设置 EGL headless rendering，并依次运行以下阶段：
 
 ```text
 01 decompose_fast
 02 detect_contact
 03 generate_xml
-04 ik (contact-aware)
-05 MJWP
+04 默认 MINK q_ref（五指位置、完整 SO(3) 姿态代理、腕向、限位和碰撞）+ 确定性 Replay
+05 可选的实验性 contact-aware preshape（默认关闭）
+06 Replay 失败时交给带真实 MuJoCo 接触/力闭合代价的 MJWP
+07 CPU MuJoCo 独立复算接触、法向力、法向对置和穿透
 ```
 
-IK 阶段会保留原生 `contact` 和 `contact_pos` 数组，供 MJWP 的接触目标使用。
+默认 `--ik-backend mink`。MINK 使用五指观测位置、由 DIP-to-tip 轴与掌面法向构造的完整 SO(3) 指尖姿态代理，以及完整腕向；每个 xHand tip site 的 XML 局部轴先在中性位姿中标定，再映射到统一的几何指尖帧。接触标签不会改写 Eq.(1) 的人手指尖位置；旧的物体表面点重写仅保留为显式 `--use-object-contact-position-targets` 非论文诊断开关。`--lambda-w` 直接表示论文中的二次损失系数，代码向 MINK 传入其平方根，以抵消 MINK 对 `Task.cost` 的再次平方。完整指尖旋转的默认二次系数为 `1e-4`（等价于 `0.01 m/rad` 的残差尺度），`lambda_w=1`；这是米制位置与弧度姿态的量纲归一，不是按抓取模式设置的特例。每个插值目标提交前都会复算精确 MuJoCo signed distance；速度阻尼无法推出已有穿透时，固定预算的 recovery task 做离散投影，仍不可行就写 `mink_projection_audit.json` 并拒绝。`mink_qref_gate.json` 要求位置/完整指尖姿态/腕向、关节限位、自碰、手地、非末节手物碰撞和末节穿透全部通过；拒绝时只保存 `trajectory_mink_rejected.npz`，不会回退到原生 IK 后继续 MPC。
+
+前一轮 fidelity 消融表明：非末节 `1 mm` clearance、接触末节 `2.5 mm` 穿透上限和每目标 4 次 IK 迭代都不是 basic0 位置失败的主因。随后完成的 Eq.(1) 对齐修复在 basic0/oracle111 上把位置 P95 从 21.87/20.74 mm 降到 16.92/15.38 mm，把腕向 P95 从 0.300/0.256 rad 降到 0.00134/0.00664 rad；但完整指尖姿态 P95 仍为 2.236/1.681 rad，严格 gate 因而继续拒绝。提高完整姿态系数会改善 DIP 方向却恶化位置，表明当前 landmark 姿态代理与 xHand 低维形态存在不可由单一权重消除的冲突。完整证据分别位于 `../experiments/pipeline_phase4_fidelity_ablation_20260811/` 和 `../experiments/pipeline_phase5_paper_objective_alignment_20260811/`。
+
+默认固定 IK seed、关闭 Replay 噪声，并按 20 帧块和两块前瞻检查 Replay；所有窗口通过则跳过 MJWP。当前控制器仍是“任一窗口失败则整段升级 MJWP”，失败 chunk 单独切换与轨迹拼接尚未实现，报告会明确记录这一差距。MJWP 会保留命令行显式传入的
+`data_path/model_path/output_dir`，不会再把预抓取轨迹静默改回 `trajectory_kinematic.npz`。
+MJWP 不再只依赖指尖到参考点的运动学距离：它直接读取每个采样世界的 MuJoCo
+`contact.geom/dist/frame`，并由 `contact.efc_address → efc.force` 还原法向接触力。在参考轨迹要求
+抓握时，拇指和至少一根指定其他手指必须同时承载最小法向力、手到物体法向必须相对；手掌及
+手指的过深物体穿透另行受罚。约束只惩罚违约且在阈值后饱和，不会通过无限增大握力刷奖励。
+这是采样 MPC 的软约束；若当前动作分布内没有可行的持续接触 rollout，它会在指标中明确记录
+违约，但不能凭空生成可行动作。因此最终仍必须以第 07 阶段的 CPU MuJoCo 复算为准。
 导出前会将 episode 初始物体的支撑面对齐到仿真地面，同时保持手物相对几何关系。
-优化器只有在手部公制深度校准通过后，才允许使用接触证据修正物体尺度；如需实验性
-放宽限制，可显式使用 `--allow-unvalidated-contact-scale`。
+优化器只有在手部公制深度校准通过后，才允许使用接触证据修正物体尺度。自动生产流程不得使用 `--allow-unvalidated-contact-scale`；该开关仅保留给有明确标注的消融实验。
 
 执行完整链路并保存 IK/MJWP 视频：
 
@@ -517,6 +632,14 @@ conda run -n v2s-core python -m video_to_spider.cli run-spider \
   --robot-type xhand \
   --gpu "$GPU"
 ```
+
+若要做原生 SPIDER IK 对照（不属于默认论文式流程），附加：
+
+```bash
+--ik-backend spider-native
+```
+
+实验性预抓取必须显式增加 `--contact-aware-preshape`；默认关闭，以避免复现 v120 的动作改写和按抓取模式过拟合。生产 MINK 当前只实现项目实际使用的 `xhand/right`，其他 robot/embodiment 会明确拒绝。
 
 只验证到 IK、不运行 MJWP：
 
@@ -532,12 +655,12 @@ conda run -n v2s-core python -m video_to_spider.cli run-spider \
   --no-mjwp
 ```
 
-检查五阶段返回码和 MJWP 指标：
+检查阶段返回码、Replay/MPC 选择、MJWP 指标和真实接触：
 
 ```bash
 SPIDER_REPORT="$RUN_DIR/spider_export/dataset/processed/video_to_spider_egodex/xhand/$EMBODIMENT_TYPE/$TASK/$EPISODE_ID/spider_run_report.json"
 
-jq '{embodiment_type,commands:[.commands[]|{returncode,runtime_s,log}],mjwp_metrics,artifacts}' \
+jq '{embodiment_type,commands:[.commands[]|{returncode,runtime_s,log}],mode_selection,mjwp_metrics,physical_interaction,demonstration_success,artifacts}' \
   "$SPIDER_REPORT"
 ```
 
@@ -546,7 +669,17 @@ jq '{embodiment_type,commands:[.commands[]|{returncode,runtime_s,log}],mjwp_metr
 ```text
 mean object position error < 0.1 m
 mean object rotation error < 0.5 rad
+至少 3 个真实物理力闭合帧满足：
+  拇指与至少一根其他手指法向力均 >= 0.2 N
+  两侧手到物体接触法向 cosine <= -0.2
+  最大手物穿透 <= 0.003 m
 ```
+
+论文式慢配置的默认值为 horizon 1.6 s、ctrl_dt 0.08 s、2048 samples、16 iterations；
+接触项包含逐指目标、运动学拇指对指、真实 MuJoCo 力闭合违约、穿透和单向抬升项。
+这里的“力闭合”是适配两指对置抓取的摩擦接触代理判据，并非完整 6D grasp-wrench-space 证明。
+RL fallback 尚未实现。所有阈值均可由 `run-spider --help` 中的
+`--force-closure-*` 参数显式调整，正式批量评估应固定同一配置，不能按单个视频调参。
 
 五个命令都返回 0 只代表链路完成，不代表目标语义正确，也不代表 MJWP 达到质量阈值。
 
@@ -654,7 +787,7 @@ completion.m4_complete == true
 1. SAM 3 选择的是被搬运物体。
 2. 三类自动可视化与原视频语义一致。
 3. FoundationPose 跟踪连续且 mask IoU 可接受。
-4. SPIDER 五阶段返回码都是 0。
+4. SPIDER 各阶段成功；预抓取返回码 2 只能在报告明确记录受控回退时接受。
 5. MJWP position/rotation 同时达到阈值。
 
 ## 阶段重跑和故障定位
@@ -720,7 +853,9 @@ find "$RUN_DIR/spider_export/dataset/processed/video_to_spider_egodex/xhand" \
   -path '*/pipeline_logs/*.log' -print
 ```
 
-按 `01_decompose_fast.log` 到 `05_mjwp.log` 的顺序定位第一个非零返回码。
+按 `01_decompose_fast.log` 到 `07_physics_contact_metrics.log` 的顺序定位第一个非零返回码。
+接触搜索完成但未通过验收时，`05_grasp_preshape.log` 的返回码 2 是受控回退，不是崩溃；
+详细原因以同目录的 `grasp_preshape_report.json` 为准。
 
 ## 批量测试建议
 
@@ -741,7 +876,7 @@ WiLoR left/right valid rate
 SAM 3D qualified proposal count
 FoundationPose IoU、tracking score、rotation jump
 hand roles 和 artifact_hand_order
-SPIDER 五阶段返回码
+SPIDER 各阶段返回码和预抓取 accepted/rejected 状态
 MJWP position/rotation error
 三类可视化路径
 失败原因和日志路径

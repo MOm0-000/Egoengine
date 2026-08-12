@@ -48,8 +48,16 @@ def run(args: argparse.Namespace) -> Path:
     if start < 0 or end <= start or end > len(frame_rows):
         raise ValueError(f"invalid adapter interval [{start}, {end})")
     rows = frame_rows[start:end]
-    K = np.load(run_dir / "calibration/intrinsics.npy").astype(np.float64)
-    output_dir = args.output_dir.resolve() if args.output_dir else run_dir / "hands"
+    camera_view = getattr(args, "camera_view", "left")
+    if camera_view not in {"left", "right"}:
+        raise ValueError("camera_view must be 'left' or 'right'")
+    image_key = "rgb_path" if camera_view == "left" else "right_rgb_path"
+    if any(image_key not in row for row in rows):
+        raise ValueError(f"run has no {camera_view} stereo image for every frame")
+    intrinsics_name = "intrinsics.npy" if camera_view == "left" else "intrinsics_right.npy"
+    K = np.load(run_dir / "calibration" / intrinsics_name).astype(np.float64)
+    default_output = run_dir / ("hands" if camera_view == "left" else "hands_right")
+    output_dir = args.output_dir.resolve() if args.output_dir else default_output
     metadata_path = output_dir / "metadata.json"
     if metadata_path.exists() and not args.overwrite:
         raise FileExistsError(f"WiLoR output exists: {output_dir}")
@@ -87,9 +95,9 @@ def run(args: argparse.Namespace) -> Path:
     boxes_by_frame: list[list[list[float]]] = []
     overlay_frames = []
     for frame_offset, row in enumerate(rows):
-        image = cv2.imread(str(run_dir / row["rgb_path"]))
+        image = cv2.imread(str(run_dir / row[image_key]))
         if image is None:
-            raise RuntimeError(f"cannot read {row['rgb_path']}")
+            raise RuntimeError(f"cannot read {row[image_key]}")
         detections = detector(image, conf=args.detection_threshold, verbose=False)[0]
         boxes, is_right, detection_scores = [], [], []
         for detection in detections:
@@ -170,7 +178,9 @@ def run(args: argparse.Namespace) -> Path:
         "schema_version": "1.0", "model": "WiLoR", "checkpoint": str(checkpoint),
         "detector_checkpoint": str(detector_checkpoint), "device": str(device),
         "cuda_device_name": torch.cuda.get_device_name(0) if device.type == "cuda" else None,
-        "camera_intrinsics_source": "calibration/intrinsics.npy",
+        "camera_view": camera_view,
+        "image_field": image_key,
+        "camera_intrinsics_source": f"calibration/{intrinsics_name}",
         "camera_translation_conversion": "crop weak-perspective to full OpenCV camera using EgoDex fx/fy/cx/cy",
         "video_encoding": VIDEO_ENCODING,
         "hand_order": ["left", "right"], "frame_count": t,
@@ -196,6 +206,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--start-frame", type=int, default=0)
     parser.add_argument("--end-frame", type=int)
     parser.add_argument("--device", choices=["cuda", "cpu"], default="cuda")
+    parser.add_argument("--camera-view", choices=["left", "right"], default="left")
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--detection-threshold", type=float, default=0.3)
     parser.add_argument("--rescale-factor", type=float, default=2.0)
