@@ -6,7 +6,7 @@
 
 > 当前仓库没有 `run-all` 命令。完整流程必须按本文的 artifact 边界逐步执行。每一步都保存数值 artifact、metadata 和可视化，便于在进入下一步前验证。
 
-当前安全基线不再把“命令跑完”视为复现成功。单目使用 DA3/UniDepth gate；双目使用标定、极线和 FoundationStereo 原生 metric gate。FoundationPose、sequence optimization 和 MINK 也有固定 reject gate；任一 gate 失败时不得继续 Replay/MPC。双目 promotion 的 HOT3D/ZED 对比仍在进行，尚未因“代码已接通”而宣布替换单目默认值。`vertical_pick_place/111` 的新 FoundationPose 轨迹因旋转跳变被拒绝；`basic_pick_place/0` 已通过无 GT 上游 gate，但 Eq.(1) 对齐修复后的 MINK q_ref 仍因指尖位置和完整 SO(3) 姿态保真度不足被拒绝。当前核心 video-to-SPIDER 测试为 `157 passed`，另有 MINK/RL 适配层测试在 SPIDER venv 中通过；这表示 gate 和 artifact 接线可用，不表示抓取问题已经解决。
+当前安全基线不再把“命令跑完”视为复现成功。单目使用 DA3/UniDepth gate；双目使用标定、极线和 FoundationStereo 原生 metric gate。FoundationPose、sequence optimization 和 MINK 也有固定 reject gate；任一 gate 失败时不得继续 Replay/MPC。双目 promotion 的 HOT3D/ZED 对比仍在进行，尚未因“代码已接通”而宣布替换单目默认值。`vertical_pick_place/111` 的新 FoundationPose 轨迹因旋转跳变被拒绝；`basic_pick_place/0` 已通过无 GT 上游 gate，但 Eq.(1) 对齐修复后的 MINK q_ref 仍因指尖位置和完整 SO(3) 姿态保真度不足被拒绝。当前核心 video-to-SPIDER 测试为 `160 passed`，另有 MINK/RL 适配层测试在 SPIDER venv 中通过；这表示 gate 和 artifact 接线可用，不表示抓取问题已经解决。
 
 首次使用建议按以下顺序阅读：
 
@@ -606,11 +606,11 @@ spider_export/dataset/processed/video_to_spider_egodex/
 07 CPU MuJoCo 独立复算接触、法向力、法向对置和穿透
 ```
 
-默认 `--ik-backend mink`。MINK 使用五指观测位置、由 DIP-to-tip 轴与掌面法向构造的完整 SO(3) 指尖姿态代理，以及完整腕向；每个 xHand tip site 的 XML 局部轴先在中性位姿中标定，再映射到统一的几何指尖帧。接触标签不会改写 Eq.(1) 的人手指尖位置；旧的物体表面点重写仅保留为显式 `--use-object-contact-position-targets` 非论文诊断开关。`--lambda-w` 直接表示论文中的二次损失系数，代码向 MINK 传入其平方根，以抵消 MINK 对 `Task.cost` 的再次平方。完整指尖旋转的默认二次系数为 `1e-4`（等价于 `0.01 m/rad` 的残差尺度），`lambda_w=1`；这是米制位置与弧度姿态的量纲归一，不是按抓取模式设置的特例。每个插值目标提交前都会复算精确 MuJoCo signed distance；速度阻尼无法推出已有穿透时，固定预算的 recovery task 做离散投影，仍不可行就写 `mink_projection_audit.json` 并拒绝。`mink_qref_gate.json` 要求位置/完整指尖姿态/腕向、关节限位、自碰、手地、非末节手物碰撞和末节穿透全部通过；拒绝时只保存 `trajectory_mink_rejected.npz`，不会回退到原生 IK 后继续 MPC。
+默认 `--ik-backend mink`。MINK 使用五指观测位置、由 DIP-to-tip 轴与掌面法向构造的完整 SO(3) 指尖姿态代理，以及完整腕向；每个 xHand tip site 的 XML 局部轴先在中性位姿中标定，再映射到统一的几何指尖帧。接触标签不会改写 Eq.(1) 的人手指尖位置；接触面/碰撞中心策略由 `--mink-controller-contact-target-policy` 控制，默认 `qref_fingertip_site`；`object_surface` 与 `fingertip_collision_center` 仅作为诊断 ablation，不把接触标签写成 Eq.(1) 的人手指尖目标。论文中的 `lambda_w` 是 MINK 内部二次损失系数，代码通过 `_mink_residual_scale` 取平方根后传给 MINK，以抵消 MINK 对 `Task.cost` 的再次平方；它不是 `run-spider` 的 CLI 参数。MINK 的默认系数为 `finger_position_cost=1.0`、`finger_orientation_cost=1e-3`、`lambda_w=7.5e-3`；它们按全局位置/角度 tolerance 做了米制与弧度量纲归一，不是按抓取模式设置的特例。每个插值目标提交前都会复算精确 MuJoCo signed distance；速度阻尼无法推出已有穿透时，固定预算的 recovery task 做离散投影，仍不可行就写 `mink_projection_audit.json` 并拒绝。`mink_qref_gate.json` 要求位置/完整指尖姿态/腕向、关节限位、自碰、手地、非末节手物碰撞和末节穿透全部通过；拒绝时只保存 `trajectory_mink_rejected.npz`，不会回退到原生 IK 后继续 MPC。
 
 前一轮 fidelity 消融表明：非末节 `1 mm` clearance、接触末节 `2.5 mm` 穿透上限和每目标 4 次 IK 迭代都不是 basic0 位置失败的主因。随后完成的 Eq.(1) 对齐修复在 basic0/oracle111 上把位置 P95 从 21.87/20.74 mm 降到 16.92/15.38 mm，把腕向 P95 从 0.300/0.256 rad 降到 0.00134/0.00664 rad；但完整指尖姿态 P95 仍为 2.236/1.681 rad，严格 gate 因而继续拒绝。提高完整姿态系数会改善 DIP 方向却恶化位置，表明当前 landmark 姿态代理与 xHand 低维形态存在不可由单一权重消除的冲突。完整证据分别位于 `../experiments/pipeline_phase4_fidelity_ablation_20260811/` 和 `../experiments/pipeline_phase5_paper_objective_alignment_20260811/`。
 
-默认固定 IK seed、关闭 Replay 噪声，并按 20 帧块和两块前瞻检查 Replay；所有窗口通过则跳过 MJWP。当前控制器仍是“任一窗口失败则整段升级 MJWP”，失败 chunk 单独切换与轨迹拼接尚未实现，报告会明确记录这一差距。MJWP 会保留命令行显式传入的
+默认固定 IK seed、关闭 Replay 噪声，并按 20 帧块和两块前瞻检查 Replay；所有窗口通过则跳过 MJWP。`run-spider` 当前仍是“任一窗口失败则整段升级 MJWP”，失败 chunk 单独切换与轨迹拼接尚未在自动链路中实现，报告会明确记录这一差距；`scripts/run_mjwp_modeswitch.py` 是独立的 tick-level Replay→MPC→RL 实验运行器，不等同于已接入 `run-spider`。MJWP 会保留命令行显式传入的
 `data_path/model_path/output_dir`，不会再把预抓取轨迹静默改回 `trajectory_kinematic.npz`。
 MJWP 不再只依赖指尖到参考点的运动学距离：它直接读取每个采样世界的 MuJoCo
 `contact.geom/dist/frame`，并由 `contact.efc_address → efc.force` 还原法向接触力。在参考轨迹要求
@@ -682,23 +682,27 @@ mean object rotation error < 0.5 rad
 所有阈值均可由 `run-spider --help` 中的
 `--force-closure-*` 参数显式调整，正式批量评估应固定同一配置，不能按单个视频调参。
 
-五个命令都返回 0 只代表链路完成，不代表目标语义正确，也不代表 MJWP 达到质量阈值。
+`spider_run_report.json` 中实际执行的 `commands` 都返回 0 只代表链路完成；它不代表目标语义正确，也不代表 MJWP 达到质量阈值。
 
 ### 10b. RL 残差策略训练入口（实验）
 
-RL 训练循环已从“完全未实现”推进到“可跑通的最小 smoke”，但尚未把训练产物注入
-`run_mjwp_modeswitch.py` 的 RL solver 槽位，因此还不能宣称 `Replay→MPC→RL` 完整闭环。
+当前已实现的是最小可用闭环，而不是默认自动链路：`run-spider` 仍只做
+`Replay→MPC`；`scripts/run_mjwp_modeswitch.py` 是独立的 Hydra 运行器，只有在
+`+use_rl_reward=true` 且注入训练好的 checkpoint 时，才会在 Replay 和 MPC 都不可行后尝试
+RL。没有 `MJWP_RL_CHECKPOINT` 时启用 RL 会明确报错，不会静默退回 MPC 并伪装成完整闭环。
 
 相关文件：
 
 ```text
-video_to_spider/rl/h2s2r.py         H2S2R 式物体锚点奖励、xHand 残差动作契约
-video_to_spider/rl/mjwp_env.py      Spider MJWP -> H2S2R PpoAgent 环境适配器
+video_to_spider/rl/h2s2r.py          H2S2R 式物体锚点奖励、xHand 残差动作契约与域随机化
+video_to_spider/rl/mjwp_env.py       Spider MJWP -> H2S2R PpoAgent 向量环境适配器
+video_to_spider/rl/reset_sampler.py  预抓取 reset 先验采样
+video_to_spider/rl/residual_policy.py 训练产物加载与 xHand δa 推理
 scripts/run_mjwp_ppo.py             官方 H2S2R PpoAgent 最小训练入口
 scripts/run_mjwp_modeswitch.py      Replay -> MPC -> RL 模式切换循环
 ```
 
-最小 GPU smoke（只占用一个逻辑 GPU，实际由 `CUDA_VISIBLE_DEVICES` 指定物理卡）：
+最小 GPU 训练 smoke（只占用一个逻辑 GPU，实际由 `CUDA_VISIBLE_DEVICES` 指定物理卡）：
 
 ```bash
 cd "$SPIDER_ROOT"
@@ -710,9 +714,32 @@ CUDA_VISIBLE_DEVICES="$GPU" "$UV_EXECUTABLE" run --frozen --no-sync python \
   --output_dir /tmp/ego_rl_smoke
 ```
 
-该入口复用 `../reference/human2sim2robot/human2sim2robot/ppo/ppo_agent.PpoAgent`，
+训练产物会写入 `train_metadata.json` 与 checkpoint。运行时用同样的 SPIDER/H2S2R 环境启动模式切换脚本：
+
+```bash
+cd "$SPIDER_ROOT"
+CUDA_VISIBLE_DEVICES="$GPU" \
+MJWP_RL_CHECKPOINT=/path/to/checkpoint \
+MJWP_RL_TRAIN_METADATA=/path/to/train_metadata.json \
+"$UV_EXECUTABLE" run --frozen --no-sync python \
+  "$REPO_ROOT/scripts/run_mjwp_modeswitch.py" \
+  +load_config_path="$EXPERIMENT_CONFIG_YAML" \
+  +use_rl_reward=true
+```
+
+可选的条件接触引导只对 free-joint 手部控制做很小的接触差量注入，不重新开启
+object-actuator guidance 场景；启用方式：
+
+```text
+MJWP_CONDITIONAL_CONTACT_GUIDANCE=1
+MJWP_CONDITIONAL_CONTACT_MIN_SUPPORT_FORCE_N=0.05
+MJWP_CONDITIONAL_CONTACT_MAX_DELTA_M=0.01
+```
+
+训练入口复用 `../reference/human2sim2robot/human2sim2robot/ppo/ppo_agent.PpoAgent`，
 不修改 H2S2R 或 SPIDER 仓库。动作空间是 EgoEngine 的 18 维 `δa` 残差，不是 H2S2R
-的 palm/PCA/fabric 动作。
+的 palm/PCA/fabric 动作；critic 使用 `MJWPVectorEnv` 提供的 privileged state，
+默认打开 H2S2R asymmetric critic。
 
 ### 11. 生成三类自动可视化
 

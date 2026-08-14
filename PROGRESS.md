@@ -1,6 +1,6 @@
 # Video-to-SPIDER V1 实施进度
 
-最后更新：2026-08-13
+最后更新：2026-08-14
 
 本文档是实现期间的滚动状态记录。每个工作包开始、状态变化、产生交付物、发现/解除阻塞或改变接口时，必须更新对应行和变更日志。状态只允许使用：`pending`、`in_progress`、`blocked`、`done`、`failed`。
 
@@ -10,11 +10,11 @@
 
 | 项目 | 状态 | 结果 |
 |---|---|---|
-| 核心测试 | done | `v2s-core` 下 `157 passed`（`python -m pytest -q -p no:cacheprovider`） |
+| 核心测试 | done | `v2s-core` 下 `160 passed`（`python -m pytest -q -p no:cacheprovider`） |
 | RL 训练核心 | done | 复用克隆的 H2S2R `PpoAgent`，未自行重写 PPO |
 | RL 环境适配器 | done | `video_to_spider/rl/mjwp_env.py` 已通过 GPU 冒烟 `reset/step/state roundtrip` |
 | RL 最小训练入口 | done | `scripts/run_mjwp_ppo.py` 已在单卡 GPU2 跑通最小训练循环并保存 checkpoint |
-| RL solver 注入 | in_progress | 训练出的策略尚未注入 `run_mjwp_modeswitch.py` 的 RL 槽位 |
+| RL solver 注入 | done | `run_mjwp_modeswitch.py` 已支持 `+use_rl_reward=true` 并通过 `MJWP_RL_CHECKPOINT` / `MJWP_RL_TRAIN_METADATA` 注入训练出的残差策略；该入口独立于 `run-spider`，自动主链路尚未默认接入 |
 | 冗余清理 | done | 已删除无引用的 `rl/networks.py`、旧实验局部 `.venv*` 和 Python cache；未动克隆上游仓库 |
 
 ## 当前基线
@@ -22,7 +22,7 @@
 | 项目 | 状态 | 结果 |
 |---|---|---|
 | 实现计划 | done | [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) 已固定 EgoDex 外参、自动文字关键词、mesh proposal 两阶段选择和最小必要诊断 |
-| Git 仓库 | done | `video_to_spider/.git` 已在 `main` 分支初始化；`third_party/`、权重和运行产物由 `.gitignore` 排除 |
+| Git 仓库 | done | `video_to_spider/.git` 当前备份分支为 `zxx`，`origin` 为 `https://github.com/MOm0-000/Egoengine.git`；`third_party/`、权重和运行产物由 `.gitignore` 排除 |
 | EgoDex 数据根目录 | done | `/data_all/share/datasets/egodex` |
 | EgoDex 结构 | done | 当前为 1 个 `part`、26 个任务目录；结构为 `part*/{task}/{id}.mp4` 与同名 `.hdf5` |
 | EgoDex 文件配对 | done | 已确认 46,234 组同目录同 stem 配对；缺失 HDF5 为 0，缺失 MP4 为 0 |

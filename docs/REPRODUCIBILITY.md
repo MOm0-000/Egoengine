@@ -4,11 +4,11 @@ This document defines the source, environment, model, and validation boundary fo
 
 ## Current automatic safety baseline
 
-- Pipeline: mono ingest → SAM3 → WiLoR → DA3METRIC-LARGE → UniDepthV2 reject-only gate, or calibrated rectified stereo ingest → unmodified FoundationStereo → native metric gate with global and automatic-object-mask coverage checks; then SAM 3D static metric scale fit → FoundationPose full-track gate → active-hand sequence optimization → MINK q_ref gate → Replay → SPIDER/MJWP. An experimental RL residual-policy adapter (`video_to_spider/rl/`) and a minimal H2S2R `PpoAgent` smoke trainer (`scripts/run_mjwp_ppo.py`) are present, but trained policies are not yet injected into the mode-switch RL slot.
+- Pipeline: mono ingest → SAM3 → WiLoR → DA3METRIC-LARGE → UniDepthV2 reject-only gate, or calibrated rectified stereo ingest → unmodified FoundationStereo → native metric gate with global and automatic-object-mask coverage checks; then SAM 3D static metric scale fit → FoundationPose full-track gate → active-hand sequence optimization → MINK q_ref gate → Replay → SPIDER/MJWP. An experimental RL residual-policy adapter (`video_to_spider/rl/`) and a minimal H2S2R `PpoAgent` smoke trainer (`scripts/run_mjwp_ppo.py`) are present, but the injection path exists in the separate Hydra runner `scripts/run_mjwp_modeswitch.py` via `+use_rl_reward=true` and the `MJWP_RL_CHECKPOINT` / `MJWP_RL_TRAIN_METADATA` environment variables; it is not wired into the default `run-spider` command.
 - Inference/gates use no hand or object ground truth and no per-video thresholds.
 - `vertical_pick_place/111`: tracking gate rejects the 2.112 rad rotation jump; later stages must not run.
 - `basic_pick_place/0`: depth, tracking and sequence gates pass. Exact discrete MINK projection satisfies joint limits and all four MuJoCo geometry groups. After removing contact-target rewriting, consuming full landmark-derived fingertip SO(3), and mapping Eq.(1) coefficients through square-root MINK residual scales, position/wrist P95 improve to 16.92 mm/0.00134 rad; full fingertip orientation remains 2.236 rad and the q_ref is rejected. The same residual tradeoff repeats on oracle111. Replay/MPC must not run.
-- Tests: `157 passed` in `video_to_spider`; MINK and RL adapter checks pass in SPIDER's venv.
+- Tests: `160 passed` in `video_to_spider`; MINK and RL adapter checks pass in SPIDER's venv.
 - Stereo status: the integration and hard gates are implemented, but the pre-registered HOT3D/ZED promotion experiment is not yet complete. Until the numeric gate passes, DA3 remains the documented production default.
 - Evidence: `experiments/pipeline_phase1_regression_20260811/`, `experiments/pipeline_phase2_mink_landmark_smoke_20260811/`, `experiments/pipeline_phase3_discrete_projection_20260811/`, and `experiments/pipeline_phase4_fidelity_ablation_20260811/`.
 
@@ -38,6 +38,7 @@ The large upstream projects are intentionally not vendored into this Git reposit
 | FoundationStereo | `https://github.com/NVlabs/FoundationStereo.git` | `6e8806816b533e4d13ddbb95ffa907b797060a62` |
 | Depth Anything V2 | `https://github.com/DepthAnything/Depth-Anything-V2.git` | `a561b849ebae10a6f5ef49e26c83cbbcd36c71bf` (legacy ablation only) |
 | SPIDER base | `https://github.com/facebookresearch/spider.git` | `71238456bf97a7eeb3d0471aa31974e2d404d4ae` |
+| H2S2R RL reference | `https://github.com/tylerlum/human2sim2robot.git` | `c468b751041c721ff48146b54a891b1ec99c2e2b` (not vendored; cloned under `$EGOENGINE_ROOT/reference`) |
 
 Example source setup, assuming this repository is at `$EGOENGINE_ROOT/video_to_spider`:
 
@@ -70,6 +71,10 @@ git -C "$REPO_ROOT/third_party/FoundationStereo" checkout --detach 6e8806816b533
 # Legacy depth ablation only:
 git clone https://github.com/DepthAnything/Depth-Anything-V2.git "$REPO_ROOT/third_party/Depth-Anything-V2"
 git -C "$REPO_ROOT/third_party/Depth-Anything-V2" checkout --detach a561b849ebae10a6f5ef49e26c83cbbcd36c71bf
+
+mkdir -p "$EGOENGINE_ROOT/reference"
+git clone https://github.com/tylerlum/human2sim2robot.git "$EGOENGINE_ROOT/reference/human2sim2robot"
+git -C "$EGOENGINE_ROOT/reference/human2sim2robot" checkout --detach c468b751041c721ff48146b54a891b1ec99c2e2b
 
 git clone https://github.com/facebookresearch/spider.git "$EGOENGINE_ROOT/spider"
 git -C "$EGOENGINE_ROOT/spider" checkout --detach 71238456bf97a7eeb3d0471aa31974e2d404d4ae
@@ -148,7 +153,7 @@ WiLoR uses PyTorch 2.0 and must not be launched with `PYTORCH_CUDA_ALLOC_CONF=ex
 
 ## Restoring SPIDER
 
-Use uv 0.12.3 or a compatible newer uv after applying the tracked patch:
+Use uv 0.12.3 or a compatible newer uv after applying both tracked patches:
 
 ```bash
 cd "$EGOENGINE_ROOT/spider"

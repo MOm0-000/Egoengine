@@ -1,6 +1,6 @@
 # Video-to-SPIDER V1 实现计划（EgoDex / 已标定双目 + 已知相机外参）
 
-> 2026-08-13 补充：本文下方仍保留早期 V1 的 EgoDex 计划与 WP 拆分；当前代码本体已扩展到
+> 2026-08-14 补充：本文下方仍保留早期 V1 的 EgoDex 计划与 WP 拆分；当前代码本体已扩展到
 > 已标定双目输入、`Replay→MPC→RL` 模式切换，以及复用 H2S2R `PpoAgent` 的 RL 残差策略适配层。
 > 最新状态以 `README.md`、`PROGRESS.md` 和 `docs/REPRODUCIBILITY.md` 为准。
 
@@ -731,7 +731,7 @@ V1 不进行 A/B/C/D 形式的正式消融，也不要求为同一 clip 重复�
 
 该对照复用同一次感知结果，只读取已保存的 raw/aligned artifacts，不重新运行 SAM 3、WiLoR、Depth Anything、SAM 3D Objects 或 FoundationPose。V1 报告必须包含优化前后指标及逐项变化；若某项因不可观测而无法计算，标记 `not_observable`，不得填零。
 
-EgoDex GT 手只用于离线指标。`--oracle-hand` 保留为可选排障命令，仅在定位手部观测是否为失败根因时运行，必须在 manifest 标记 `uses_ground_truth=true`；其结果不进入主结果、完成率或 V1 验收。SLAM 对照不属于 V1。
+EgoDex GT 手只用于离线指标。当前对应命令为 `optimize --hand-source egodex_gt --uses-ground-truth`，仅在定位手部观测是否为失败根因时运行；必须在 manifest 标记 `uses_ground_truth=true`，其结果不进入主结果、完成率或 V1 验收。旧的 `--oracle-hand` 名称已不再存在于 CLI。SLAM 对照不属于 V1。
 
 ### 9.3 指标
 
