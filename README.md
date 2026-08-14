@@ -12,7 +12,8 @@
 
 1. [快速配置环境.md](./快速配置环境.md)：逐行配置源码、Conda 环境、SPIDER 和模型资产。
 2. [quick_start.md](./quick_start.md)：从原始 MP4/HDF5 串行生成最终 MJWP 视频的最短命令清单。
-3. 本 README：逐阶段质量检查、重跑和故障定位。
+3. [docs/ADT_STEREO_P0.md](./docs/ADT_STEREO_P0.md)：Aria Digital Twin 左/右 SLAM 到已校正双目的 P0 准备入口（需要 ADT VRS 与 Project Aria Tools）。
+4. 本 README：逐阶段质量检查、重跑和故障定位。
 
 ## 流程总览
 

@@ -10,11 +10,12 @@
 
 | 项目 | 状态 | 结果 |
 |---|---|---|
-| 核心测试 | done | `v2s-core` 下 `160 passed`（`python -m pytest -q -p no:cacheprovider`） |
+| 核心测试 | done | `v2s-core` 下 `162 passed`（`python -m pytest -q -p no:cacheprovider`） |
 | RL 训练核心 | done | 复用克隆的 H2S2R `PpoAgent`，未自行重写 PPO |
 | RL 环境适配器 | done | `video_to_spider/rl/mjwp_env.py` 已通过 GPU 冒烟 `reset/step/state roundtrip` |
 | RL 最小训练入口 | done | `scripts/run_mjwp_ppo.py` 已在单卡 GPU2 跑通最小训练循环并保存 checkpoint |
 | RL solver 注入 | done | `run_mjwp_modeswitch.py` 已支持 `+use_rl_reward=true` 并通过 `MJWP_RL_CHECKPOINT` / `MJWP_RL_TRAIN_METADATA` 注入训练出的残差策略；该入口独立于 `run-spider`，自动主链路尚未默认接入 |
+| ADT Stereo P0 adapter | done | 新增 `video_to_spider/ingest/adt_stereo.py` 与 `scripts/prepare_adt_stereo.py`；将 ADT 左/右 SLAM VRS 用官方 factory calibration rectification 后输出 `ingest-stereo` 所需文件，包含 baseline/K/common-valid/timestamp/MPS pose 检查。当前机器尚无 ADT VRS，未执行真实 VRS smoke |
 | 冗余清理 | done | 已删除无引用的 `rl/networks.py`、旧实验局部 `.venv*` 和 Python cache；未动克隆上游仓库 |
 
 ## 当前基线
