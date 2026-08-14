@@ -4,11 +4,11 @@ This document defines the source, environment, model, and validation boundary fo
 
 ## Current automatic safety baseline
 
-- Pipeline: mono ingest → SAM3 → WiLoR → DA3METRIC-LARGE → UniDepthV2 reject-only gate, or calibrated rectified stereo ingest → unmodified FoundationStereo → native metric gate with global and automatic-object-mask coverage checks; then SAM 3D static metric scale fit → FoundationPose full-track gate → active-hand sequence optimization → MINK q_ref gate → Replay → SPIDER/MJWP.
+- Pipeline: mono ingest → SAM3 → WiLoR → DA3METRIC-LARGE → UniDepthV2 reject-only gate, or calibrated rectified stereo ingest → unmodified FoundationStereo → native metric gate with global and automatic-object-mask coverage checks; then SAM 3D static metric scale fit → FoundationPose full-track gate → active-hand sequence optimization → MINK q_ref gate → Replay → SPIDER/MJWP. An experimental RL residual-policy adapter (`video_to_spider/rl/`) and a minimal H2S2R `PpoAgent` smoke trainer (`scripts/run_mjwp_ppo.py`) are present, but trained policies are not yet injected into the mode-switch RL slot.
 - Inference/gates use no hand or object ground truth and no per-video thresholds.
 - `vertical_pick_place/111`: tracking gate rejects the 2.112 rad rotation jump; later stages must not run.
 - `basic_pick_place/0`: depth, tracking and sequence gates pass. Exact discrete MINK projection satisfies joint limits and all four MuJoCo geometry groups. After removing contact-target rewriting, consuming full landmark-derived fingertip SO(3), and mapping Eq.(1) coefficients through square-root MINK residual scales, position/wrist P95 improve to 16.92 mm/0.00134 rad; full fingertip orientation remains 2.236 rad and the q_ref is rejected. The same residual tradeoff repeats on oracle111. Replay/MPC must not run.
-- Tests: `134 passed` in `video_to_spider`; eleven MINK unit tests pass in SPIDER's venv.
+- Tests: `157 passed` in `video_to_spider`; MINK and RL adapter checks pass in SPIDER's venv.
 - Stereo status: the integration and hard gates are implemented, but the pre-registered HOT3D/ZED promotion experiment is not yet complete. Until the numeric gate passes, DA3 remains the documented production default.
 - Evidence: `experiments/pipeline_phase1_regression_20260811/`, `experiments/pipeline_phase2_mink_landmark_smoke_20260811/`, `experiments/pipeline_phase3_discrete_projection_20260811/`, and `experiments/pipeline_phase4_fidelity_ablation_20260811/`.
 

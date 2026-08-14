@@ -1,8 +1,21 @@
 # Video-to-SPIDER V1 实施进度
 
-最后更新：2026-07-30
+最后更新：2026-08-13
 
 本文档是实现期间的滚动状态记录。每个工作包开始、状态变化、产生交付物、发现/解除阻塞或改变接口时，必须更新对应行和变更日志。状态只允许使用：`pending`、`in_progress`、`blocked`、`done`、`failed`。
+
+## 2026-08-13 当前快照
+
+以下内容覆盖最新代码状态；下方较早的 WP/变更日志仍保留为历史记录。
+
+| 项目 | 状态 | 结果 |
+|---|---|---|
+| 核心测试 | done | `v2s-core` 下 `157 passed`（`python -m pytest -q -p no:cacheprovider`） |
+| RL 训练核心 | done | 复用克隆的 H2S2R `PpoAgent`，未自行重写 PPO |
+| RL 环境适配器 | done | `video_to_spider/rl/mjwp_env.py` 已通过 GPU 冒烟 `reset/step/state roundtrip` |
+| RL 最小训练入口 | done | `scripts/run_mjwp_ppo.py` 已在单卡 GPU2 跑通最小训练循环并保存 checkpoint |
+| RL solver 注入 | in_progress | 训练出的策略尚未注入 `run_mjwp_modeswitch.py` 的 RL 槽位 |
+| 冗余清理 | done | 已删除无引用的 `rl/networks.py`、旧实验局部 `.venv*` 和 Python cache；未动克隆上游仓库 |
 
 ## 当前基线
 
@@ -21,7 +34,7 @@
 | Depth Anything metric 权重 | done | Hypersim ViT-L metric checkpoint 已存在；0 字节 relative-depth 文件明确禁止使用 |
 | FoundationPose 权重 | done | scorer/refiner 两套权重已存在；`v2s-foundationpose` import preflight 通过 |
 | SPIDER uv 环境 | done | `../spider/.venv` 已存在；`uv run --frozen --no-sync` 可 import `spider/torch/mujoco/warp` |
-| 代码实现 | in_progress | WP0/WP1/WP2/WP5/WP6/WP7/WP8/WP9 已完成；WP10 artifact 边界已实现；29 个 CPU 单测通过，真实 EgoDex 90-frame perception/tracking/optimization/SPIDER/MJWP、三类诊断视频与 simulation video 已通过 |
+| 代码实现 | in_progress | 早期 WP0/WP1/WP2/WP5/WP6/WP7/WP8/WP9/WP10 记录见下文；当前核心代码快照见本文件顶部 `2026-08-13 当前快照` |
 
 ## 执行环境
 

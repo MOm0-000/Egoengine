@@ -1,4 +1,8 @@
-# Video-to-SPIDER V1 实现计划（EgoDex + 已知相机外参）
+# Video-to-SPIDER V1 实现计划（EgoDex / 已标定双目 + 已知相机外参）
+
+> 2026-08-13 补充：本文下方仍保留早期 V1 的 EgoDex 计划与 WP 拆分；当前代码本体已扩展到
+> 已标定双目输入、`Replay→MPC→RL` 模式切换，以及复用 H2S2R `PpoAgent` 的 RL 残差策略适配层。
+> 最新状态以 `README.md`、`PROGRESS.md` 和 `docs/REPRODUCIBILITY.md` 为准。
 
 ## 1. 文档目的
 

@@ -6,7 +6,7 @@
 
 > 当前仓库没有 `run-all` 命令。完整流程必须按本文的 artifact 边界逐步执行。每一步都保存数值 artifact、metadata 和可视化，便于在进入下一步前验证。
 
-当前安全基线不再把“命令跑完”视为复现成功。单目使用 DA3/UniDepth gate；双目使用标定、极线和 FoundationStereo 原生 metric gate。FoundationPose、sequence optimization 和 MINK 也有固定 reject gate；任一 gate 失败时不得继续 Replay/MPC。双目 promotion 的 HOT3D/ZED 对比仍在进行，尚未因“代码已接通”而宣布替换单目默认值。`vertical_pick_place/111` 的新 FoundationPose 轨迹因旋转跳变被拒绝；`basic_pick_place/0` 已通过无 GT 上游 gate，但 Eq.(1) 对齐修复后的 MINK q_ref 仍因指尖位置和完整 SO(3) 姿态保真度不足被拒绝。当前核心 video-to-SPIDER 测试为 `134 passed`，另有 11 项 MINK 单元测试通过；这表示 gate 和 artifact 接线可用，不表示抓取问题已经解决。
+当前安全基线不再把“命令跑完”视为复现成功。单目使用 DA3/UniDepth gate；双目使用标定、极线和 FoundationStereo 原生 metric gate。FoundationPose、sequence optimization 和 MINK 也有固定 reject gate；任一 gate 失败时不得继续 Replay/MPC。双目 promotion 的 HOT3D/ZED 对比仍在进行，尚未因“代码已接通”而宣布替换单目默认值。`vertical_pick_place/111` 的新 FoundationPose 轨迹因旋转跳变被拒绝；`basic_pick_place/0` 已通过无 GT 上游 gate，但 Eq.(1) 对齐修复后的 MINK q_ref 仍因指尖位置和完整 SO(3) 姿态保真度不足被拒绝。当前核心 video-to-SPIDER 测试为 `157 passed`，另有 MINK/RL 适配层测试在 SPIDER venv 中通过；这表示 gate 和 artifact 接线可用，不表示抓取问题已经解决。
 
 首次使用建议按以下顺序阅读：
 
@@ -28,6 +28,7 @@ Ego RGB + calibration + camera trajectory
   -> sequence optimization and contact inference
   -> SPIDER export -> paper-style MINK q_ref gate
   -> deterministic Replay -> failed Replay windows escalate to SPIDER/MJWP MPC
+  -> experimental RL residual policy adapter + H2S2R PpoAgent smoke loop
   -> visualization and unified evaluation
 ```
 
@@ -678,10 +679,40 @@ mean object rotation error < 0.5 rad
 论文式慢配置的默认值为 horizon 1.6 s、ctrl_dt 0.08 s、2048 samples、16 iterations；
 接触项包含逐指目标、运动学拇指对指、真实 MuJoCo 力闭合违约、穿透和单向抬升项。
 这里的“力闭合”是适配两指对置抓取的摩擦接触代理判据，并非完整 6D grasp-wrench-space 证明。
-RL fallback 尚未实现。所有阈值均可由 `run-spider --help` 中的
+所有阈值均可由 `run-spider --help` 中的
 `--force-closure-*` 参数显式调整，正式批量评估应固定同一配置，不能按单个视频调参。
 
 五个命令都返回 0 只代表链路完成，不代表目标语义正确，也不代表 MJWP 达到质量阈值。
+
+### 10b. RL 残差策略训练入口（实验）
+
+RL 训练循环已从“完全未实现”推进到“可跑通的最小 smoke”，但尚未把训练产物注入
+`run_mjwp_modeswitch.py` 的 RL solver 槽位，因此还不能宣称 `Replay→MPC→RL` 完整闭环。
+
+相关文件：
+
+```text
+video_to_spider/rl/h2s2r.py         H2S2R 式物体锚点奖励、xHand 残差动作契约
+video_to_spider/rl/mjwp_env.py      Spider MJWP -> H2S2R PpoAgent 环境适配器
+scripts/run_mjwp_ppo.py             官方 H2S2R PpoAgent 最小训练入口
+scripts/run_mjwp_modeswitch.py      Replay -> MPC -> RL 模式切换循环
+```
+
+最小 GPU smoke（只占用一个逻辑 GPU，实际由 `CUDA_VISIBLE_DEVICES` 指定物理卡）：
+
+```bash
+cd "$SPIDER_ROOT"
+CUDA_VISIBLE_DEVICES="$GPU" "$UV_EXECUTABLE" run --frozen --no-sync python \
+  "$REPO_ROOT/scripts/run_mjwp_ppo.py" \
+  --config_path "$EXPERIMENT_CONFIG_YAML" \
+  --num_envs 4 --horizon_length 4 --seq_length 4 \
+  --max_epochs 1 --max_episode_length 16 \
+  --output_dir /tmp/ego_rl_smoke
+```
+
+该入口复用 `../reference/human2sim2robot/human2sim2robot/ppo/ppo_agent.PpoAgent`，
+不修改 H2S2R 或 SPIDER 仓库。动作空间是 EgoEngine 的 18 维 `δa` 残差，不是 H2S2R
+的 palm/PCA/fabric 动作。
 
 ### 11. 生成三类自动可视化
 
