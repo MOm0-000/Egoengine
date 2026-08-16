@@ -19,7 +19,7 @@ from ..manifest import RunManifest, stage_cache_key
 from ..schemas import SCHEMA_VERSION, validate_foundationpose_raw
 from .depth_gate import require_depth_gate
 from .sam3d_objects import _projected_mesh_mask_depth
-from .tracking_gate import write_tracking_gate
+from .tracking_gate import DEFAULT_LIMITS, write_tracking_gate
 
 
 def tracking_score(metrics: dict[str, float]) -> float:
@@ -70,7 +70,16 @@ def summarize_tracking(
 
 def _read_frames(run_dir: Path) -> dict[int, Path]:
     payload = json.loads((run_dir / "frames/frame_index.json").read_text(encoding="utf-8"))
-    return {int(item["frame_index"]): run_dir / item["rgb_path"] for item in payload["frames"]}
+    lookup: dict[int, Path] = {}
+    for item in payload["frames"]:
+        path = run_dir / item["rgb_path"]
+        # EgoDex-style runs use local frame_index == source_frame_index. ADT and
+        # other sliced clips have arbitrary source frame numbers, while mask and
+        # depth artifacts carry source_frame_index. Accept both keys.
+        lookup[int(item["frame_index"])] = path
+        if "source_frame_index" in item:
+            lookup[int(item["source_frame_index"])] = path
+    return lookup
 
 
 def _load_masks(path: Path) -> dict[str, np.ndarray]:
@@ -241,6 +250,20 @@ def _safe_json(value: Any) -> Any:
     return value
 
 
+def _candidate_passes_fixed_tracking_gate(metrics: dict[str, float]) -> bool:
+    """Use the same fixed thresholds as the final full-trajectory gate during proposal screening."""
+    return bool(
+        metrics["valid_rate"] >= DEFAULT_LIMITS["min_valid_rate"]
+        and metrics["mean_mask_iou"] >= DEFAULT_LIMITS["min_mean_mask_iou"]
+        and metrics["median_relative_depth_residual"]
+        <= DEFAULT_LIMITS["max_median_relative_depth_residual"]
+        and metrics["translation_jump_p95_m"]
+        <= DEFAULT_LIMITS["max_translation_jump_p95_m"]
+        and metrics["rotation_jump_p95_rad"]
+        <= DEFAULT_LIMITS["max_rotation_jump_p95_rad"]
+    )
+
+
 def _write_json(path: Path, value: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(_safe_json(value), indent=2, allow_nan=False) + "\n", encoding="utf-8")
@@ -313,7 +336,7 @@ def _run_impl(
         candidate_records.append({"proposal": candidate, "metrics": metrics})
     safe_candidates = [
         item for item in candidate_records
-        if item["metrics"]["valid_rate"] >= 0.5 and item["metrics"]["mean_mask_iou"] >= 0.005
+        if _candidate_passes_fixed_tracking_gate(item["metrics"])
     ]
     pool = safe_candidates or candidate_records
     selected = max(pool, key=lambda item: float(item["metrics"]["tracking_score"]))

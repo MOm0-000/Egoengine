@@ -1,2 +1,2 @@
-"""Offline evaluators; GT access is explicit and never imported by pipeline stages."""
+"""Evaluation helpers for the EgoEngine reproduction pipeline."""
 

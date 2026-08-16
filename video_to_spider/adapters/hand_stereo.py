@@ -155,6 +155,46 @@ def _summary(values: np.ndarray) -> dict[str, float | int]:
     }
 
 
+def _failure_reason_counts(
+    left_uv: np.ndarray,
+    right_uv: np.ndarray,
+    observation_valid: np.ndarray,
+    diagnostics: dict[str, np.ndarray],
+    joints: np.ndarray,
+) -> dict[str, Any]:
+    """Summarize why stereo joints fail without changing fixed QC thresholds."""
+    left = np.asarray(left_uv, dtype=np.float64)
+    right = np.asarray(right_uv, dtype=np.float64)
+    observed = np.asarray(observation_valid, dtype=bool)
+    disparity = np.asarray(diagnostics["disparity_px"], dtype=np.float64)
+    vertical = np.asarray(diagnostics["vertical_disparity_abs_px"], dtype=np.float64)
+    reprojection = np.asarray(diagnostics["reprojection_error_px"], dtype=np.float64)
+    depth = np.asarray(joints[..., 2], dtype=np.float64)
+    finite = np.isfinite(left).all(axis=-1) & np.isfinite(right).all(axis=-1)
+    reasons = {
+        "input_invalid": ~observed,
+        "nonfinite_projection": ~finite,
+        "disparity_below_min_px": disparity < MIN_DISPARITY_PX,
+        "vertical_above_max_px": vertical > MAX_REPROJECTION_ERROR_PX,
+        "reprojection_above_max_px": reprojection > MAX_REPROJECTION_ERROR_PX,
+        "depth_out_of_range_m": (depth < MIN_JOINT_DEPTH_M) | (depth > MAX_JOINT_DEPTH_M),
+    }
+    per_hand: dict[str, Any] = {}
+    for hand, side in enumerate(HAND_ORDER):
+        per_hand[side] = {
+            name: np.asarray(mask[:, hand], dtype=bool).sum(axis=0).astype(int).tolist()
+            for name, mask in reasons.items()
+        }
+    return {
+        "per_hand": per_hand,
+        "limits": {
+            "min_disparity_px": MIN_DISPARITY_PX,
+            "max_vertical_or_reprojection_error_px": MAX_REPROJECTION_ERROR_PX,
+            "joint_depth_m": [MIN_JOINT_DEPTH_M, MAX_JOINT_DEPTH_M],
+        },
+    }
+
+
 def run(args: argparse.Namespace) -> Path:
     root = args.run_dir.resolve()
     left_path = (args.left_artifact or root / "hands/wilor_raw.npz").resolve()
@@ -197,6 +237,9 @@ def run(args: argparse.Namespace) -> Path:
         frame_rate >= MIN_REQUIRED_FRAME_RATE
     )
     valid = frame_valid & accepted_hand[None]
+    failure_analysis = _failure_reason_counts(
+        left_uv, right_uv, observation_valid, diagnostics, joints,
+    )
     # Use the independently triangulated wrist as translation and keep the
     # official left-view MANO-relative geometry/rotations only where stereo is
     # valid. Full triangulated joints are exported explicitly for optimization.
@@ -274,6 +317,46 @@ def run(args: argparse.Namespace) -> Path:
         },
         "outputs": [str(output_path), str(metrics_path)],
     }
+    metrics_path.write_text(json.dumps(metrics, indent=2) + "\n", encoding="utf-8")
+    failure_path = output_path.with_name("hand_stereo_failure_analysis.json")
+    failure_npz_path = output_path.with_name("hand_stereo_failure_analysis.npz")
+    failure_payload = {
+        "schema_version": "1.0",
+        "stage": "P7 stereo-hand fixed-gate failure analysis",
+        "ground_truth_used": False,
+        "object_or_contact_used": False,
+        "scale_or_shift_alignment_applied": False,
+        "per_hand": failure_analysis["per_hand"],
+        "limits": failure_analysis["limits"],
+    }
+    failure_path.write_text(json.dumps(failure_payload, indent=2) + "\n", encoding="utf-8")
+    reason_masks = {}
+    for hand, side in enumerate(HAND_ORDER):
+        for name, mask in {
+            "input_invalid": ~observation_valid[:, hand],
+            "nonfinite_projection": ~(
+                np.isfinite(left_uv[:, hand]).all(axis=-1)
+                & np.isfinite(right_uv[:, hand]).all(axis=-1)
+            ),
+            "disparity_below_min_px": diagnostics["disparity_px"][:, hand] < MIN_DISPARITY_PX,
+            "vertical_above_max_px": diagnostics["vertical_disparity_abs_px"][:, hand] > MAX_REPROJECTION_ERROR_PX,
+            "reprojection_above_max_px": diagnostics["reprojection_error_px"][:, hand] > MAX_REPROJECTION_ERROR_PX,
+            "depth_out_of_range_m": (
+                (joints[:, hand, :, 2] < MIN_JOINT_DEPTH_M)
+                | (joints[:, hand, :, 2] > MAX_JOINT_DEPTH_M)
+            ),
+        }.items():
+            reason_masks[f"{side}_{name}"] = np.asarray(mask, dtype=bool)
+    reason_masks["left_joint_metric_valid"] = np.asarray(joint_valid[:, 0], dtype=bool)
+    reason_masks["right_joint_metric_valid"] = np.asarray(joint_valid[:, 1], dtype=bool)
+    reason_masks["left_required_frame_valid"] = np.asarray(frame_valid[:, 0], dtype=bool)
+    reason_masks["right_required_frame_valid"] = np.asarray(frame_valid[:, 1], dtype=bool)
+    np.savez_compressed(failure_npz_path, **reason_masks)
+    metrics["failure_analysis"] = {
+        "json": str(failure_path),
+        "npz": str(failure_npz_path),
+    }
+    metrics["outputs"].extend([str(failure_path), str(failure_npz_path)])
     metrics_path.write_text(json.dumps(metrics, indent=2) + "\n", encoding="utf-8")
     if not accepted_hand.any():
         raise RuntimeError("stereo_hand_gate_rejected: no hand passes fixed triangulation QC")

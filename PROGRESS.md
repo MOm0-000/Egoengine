@@ -1,8 +1,20 @@
 # Video-to-SPIDER V1 实施进度
 
-最后更新：2026-08-14
+最后更新：2026-08-15
 
 本文档是实现期间的滚动状态记录。每个工作包开始、状态变化、产生交付物、发现/解除阻塞或改变接口时，必须更新对应行和变更日志。状态只允许使用：`pending`、`in_progress`、`blocked`、`done`、`failed`。
+
+## 2026-08-15 当前快照（ADT 上游消融）
+
+以下内容补充最新 ADT 上游改进与消融实验；较早的 2026-08-13 快照仍保留。
+
+| 项目 | 状态 | 结果 |
+|---|---|---|
+| Hand H1/H2 消融 | done | 新增 `video_to_spider/adapters/hamer.py` 与 `scripts/run_adt_hamer_hand_benchmark.py`、`scripts/run_adt_hamer_hand_ba_benchmark.py`；H1 单换 HaMeR 无整体改善，H2 HaMeR+calibrated stereo BA 仅在 `work_seq107` 右手 accepted。结论见 `docs/ADT_H1_H2_HAND_ABLATION.md` |
+| Object O1 masked multi-frame metric fusion | done | 新增 `video_to_spider/adapters/object_mvg.py`；用 SAM3 mask + metric depth + per-frame camera extrinsics 生成 alpha-shape mesh，`selected_scale_m=1.0`，不重写 metric scale。DinoToy 从 SAM3D 无 mesh 变为 FoundationPose gate 通过；未普遍优于 SAM3D |
+| Object-ROI depth D1/D2 | done（naive 版本不采纳） | 新增 `scripts/run_adt_object_depth_refine.py`；D1 mask 腐蚀+TELEA invalid fill+bilateral，D2 再加时域中值。invalid rate 下降，但 AbsRel/RMSE/delta1 全面变差，不作为默认模块 |
+| Phase B/C 指标聚合 | done | 新增 `scripts/summarize_adt_phase_bc_ablation.py` 与 `runs/adt_phase_bc_ablation_summary.json` |
+| ADT 上游总结 | done | 新增 `docs/ADT_上游改进与消融实验总结.md`，汇总 Hand/Object/Depth 三阶段 paired 消融结果 |
 
 ## 2026-08-13 当前快照
 

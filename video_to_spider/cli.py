@@ -159,8 +159,11 @@ def _parser() -> argparse.ArgumentParser:
     spider.add_argument("--mjwp-horizon", type=float, default=1.6)
     spider.add_argument("--mjwp-ctrl-dt", type=float, default=0.08)
     spider.add_argument("--mjwp-knot-dt", type=float, default=0.2)
-    spider.add_argument("--contact-reward-scale", type=float, default=0.025)
+    spider.add_argument("--contact-reward-scale", type=float, default=2.0)
     spider.add_argument("--contact-opposition-reward-scale", type=float, default=0.0)
+    spider.add_argument("--base-pos-rew-scale", type=float, default=0.2)
+    spider.add_argument("--base-rot-rew-scale", type=float, default=1.0)
+    spider.add_argument("--joint-rew-scale", type=float, default=0.0)
     spider.add_argument("--force-closure-reward-scale", type=float, default=0.010)
     spider.add_argument(
         "--force-closure-penetration-reward-scale", type=float, default=1.0
@@ -199,7 +202,7 @@ def _parser() -> argparse.ArgumentParser:
             "object_surface", "fingertip_collision_center",
             "qref_fingertip_site",
         ],
-        default="qref_fingertip_site",
+        default="fingertip_collision_center",
     )
     spider.add_argument("--mink-scene-collision-constraints", action="store_true")
     spider.add_argument("--mink-floor-clearance-m", type=float, default=0.0)
@@ -352,6 +355,9 @@ def main(argv: list[str] | None = None) -> int:
             mjwp_ctrl_dt=args.mjwp_ctrl_dt, mjwp_knot_dt=args.mjwp_knot_dt,
             contact_reward_scale=args.contact_reward_scale,
             contact_opposition_reward_scale=args.contact_opposition_reward_scale,
+            base_pos_rew_scale=args.base_pos_rew_scale,
+            base_rot_rew_scale=args.base_rot_rew_scale,
+            joint_rew_scale=args.joint_rew_scale,
             force_closure_reward_scale=args.force_closure_reward_scale,
             force_closure_penetration_reward_scale=(
                 args.force_closure_penetration_reward_scale

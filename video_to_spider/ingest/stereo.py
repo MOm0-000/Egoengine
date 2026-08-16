@@ -264,6 +264,7 @@ def ingest_rectified_stereo(
     timestamps_path: str | Path | None = None,
     frame_indices_path: str | Path | None = None,
     static_camera: bool = False,
+    geometric_audit: dict[str, Any] | None = None,
 ) -> Path:
     pairs = discover_stereo_pairs(left_dir, right_dir)
     if not np.isfinite(baseline_m) or not 0.01 <= baseline_m <= 0.30:
@@ -307,9 +308,21 @@ def ingest_rectified_stereo(
             f"common-valid mask must be non-empty and match {first_image.shape}, "
             f"got {common_valid.shape}"
         )
-    audit = audit_rectified_pairs(
+    feature_audit = audit_rectified_pairs(
         pairs, K_left=K, K_right=K_right, common_valid_mask=common_valid,
     )
+    if geometric_audit is not None:
+        required = {"accepted", "checks", "schema_version"}
+        missing = sorted(required.difference(geometric_audit.keys()))
+        if missing:
+            raise ValueError(f"geometric_audit is missing required fields: {', '.join(missing)}")
+        if not geometric_audit["accepted"]:
+            failed = [name for name, passed in geometric_audit["checks"].items() if not passed]
+            raise RuntimeError(f"stereo_geometry_rejected: {', '.join(failed)}")
+        audit = dict(geometric_audit)
+        audit["feature_audit"] = feature_audit
+    else:
+        audit = feature_audit
     if not audit["accepted"]:
         failed = [name for name, passed in audit["checks"].items() if not passed]
         raise RuntimeError(f"stereo_rectification_rejected: {', '.join(failed)}")
@@ -391,7 +404,7 @@ def ingest_rectified_stereo(
                 "source_relative_name": name,
             }
         )
-    height, width = audit["image_height"], audit["image_width"]
+    height, width = first_image.shape[:2]
     source = {
         "schema_version": SCHEMA_VERSION,
         "source_type": "calibrated_rectified_stereo",

@@ -41,7 +41,13 @@ class KeyframeCandidate:
 
 def _read_frame_index(run_dir: Path) -> dict[int, Path]:
     payload = json.loads((run_dir / "frames/frame_index.json").read_text(encoding="utf-8"))
-    return {int(item["frame_index"]): run_dir / item["rgb_path"] for item in payload["frames"]}
+    lookup: dict[int, Path] = {}
+    for item in payload["frames"]:
+        path = run_dir / item["rgb_path"]
+        lookup[int(item["frame_index"])] = path
+        if "source_frame_index" in item:
+            lookup[int(item["source_frame_index"])] = path
+    return lookup
 
 
 def _load_masks(path: Path) -> dict[str, np.ndarray]:

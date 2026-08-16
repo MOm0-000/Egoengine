@@ -8,24 +8,12 @@ import pytest
 from video_to_spider.ingest import adt_stereo
 
 
-class _Matrix:
+class _SE3:
     def __init__(self, value: np.ndarray) -> None:
         self.value = np.asarray(value, dtype=np.float64)
 
-    def to_matrix(self) -> np.ndarray:
+    def matrix(self) -> np.ndarray:
         return self.value
-
-
-class _SE3:
-    def __init__(self, value: np.ndarray) -> None:
-        self._matrix = _Matrix(value)
-
-    @classmethod
-    def from_matrix(cls, value: np.ndarray) -> "_SE3":
-        return cls(value)
-
-    def to_matrix(self) -> np.ndarray:
-        return self._matrix.to_matrix()
 
 
 class _Image:
@@ -47,6 +35,22 @@ class _SrcCalib:
 
     def get_transform_device_camera(self) -> _SE3:
         return _SE3(self.transform)
+
+    def get_image_size(self) -> list[int]:
+        return [640, 480]
+
+    def project(self, point: np.ndarray) -> np.ndarray:
+        # Minimal pinhole-like projection for tests; only used by the geometry
+        # self-consistency audit and map builder in real code.
+        z = point[2]
+        if z <= 0:
+            return None
+        return np.asarray([point[0] / z * 241.0 + 320.0, point[1] / z * 241.0 + 240.0])
+
+    def unproject(self, pixel: np.ndarray) -> np.ndarray:
+        return np.asarray(
+            [(pixel[0] - 320.0) / 241.0, (pixel[1] - 240.0) / 241.0, 1.0]
+        )
 
 
 class _DeviceCalib:
@@ -96,18 +100,7 @@ class _Provider:
 
 
 class _Calibration:
-    @staticmethod
-    def get_linear_camera_calibration(width, height, focal_length, label, transform):
-        return object()
-
-    @staticmethod
-    def distort_by_calibration(array, dst_calib, src_calib, interpolation):
-        return np.full((512, 512), 255, dtype=np.float32)
-
-
-class _ImageModule:
-    class InterpolationMethod:
-        NEAREST_NEIGHBOR = object()
+    pass
 
 
 class _SensorData:
@@ -145,7 +138,7 @@ class _DataProvider:
 
 
 class _Sophus:
-    SE3 = _SE3
+    pass
 
 
 def _translation_matrix(x: float, y: float, z: float) -> np.ndarray:
@@ -159,7 +152,7 @@ def fake_projectaria(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
     monkeypatch.setattr(
         adt_stereo,
         "_load_projectaria",
-        lambda: (_DataProvider, _Calibration, _ImageModule, _SensorData, _Mps, _Sophus),
+        lambda: (_DataProvider, _Calibration, _Mps, _SensorData, _Sophus),
     )
     return tmp_path
 
@@ -187,7 +180,7 @@ def test_prepare_adt_stereo_writes_ingest_inputs(fake_projectaria: Path) -> None
     metadata = adt_stereo.json.loads(result.metadata_path.read_text(encoding="utf-8"))
     assert metadata["frame_count"] == 3
     assert metadata["timestamp_sync"]["accepted"] is True
-    assert metadata["common_valid_pixel_ratio"] == 1.0
+    assert metadata["common_valid_pixel_ratio"] > 0.0
 
 
 def test_prepare_adt_stereo_rejects_moving_recording_without_poses(

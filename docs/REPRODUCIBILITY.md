@@ -105,6 +105,7 @@ The upstream CUDA stacks have incompatible binary requirements. The verified mat
 | `v2s-core` | ingest, orchestration, export, reports, tests | Python 3.11.15; NumPy 1.26.4; no PyTorch |
 | `v2s-sam3` | SAM 3.1 segmentation/tracking | Python 3.12.13; PyTorch 2.10.0+cu128; torchvision 0.25; NumPy 1.26.4 |
 | `v2s-wilor` | hand detection and MANO reconstruction | Python 3.10.20; PyTorch 2.0.0+cu117; torchvision 0.15.1; Ultralytics 8.1.34 |
+| `v2s-hamer` | ADT 上游 H1/H2 HaMeR 手部实验 | Python 3.10.20; PyTorch 2.0.0+cu117; NumPy 1.26.4 |
 | `v2s-depth` | metric Depth Anything V2 | Python 3.10.20; PyTorch 2.5.1+cu124; NumPy 2.2.6 |
 | dedicated DA3 env | primary DA3 metric depth | official DA3 dependencies; package separately before release |
 | dedicated UniDepth env | reject-only depth cross-check | official UniDepth dependencies; package separately before release |
@@ -118,7 +119,7 @@ Do not install these packages into base. Use `conda run -n <environment>` for ev
 
 ## Restoring Conda environments
 
-The validated internal deployment has six conda-pack archives in `$EGOENGINE_ROOT/env`:
+The validated internal deployment has six conda-pack archives in `$EGOENGINE_ROOT/env`（`v2s-hamer` 是 ADT 上游 H1/H2 实验环境，从克隆的 HaMeR 单独构建，不在这六个归档中）:
 
 ```text
 v2s-core.tar.gz

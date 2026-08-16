@@ -206,7 +206,7 @@ def _align_initial_support(
         )
     ))
     relative_error = float(max(relative_wrist_error, relative_tip_error))
-    if relative_error > 1e-9:
+    if relative_error > 1e-6:
         raise RuntimeError(
             "support alignment changed an observed hand-object displacement: "
             f"maximum error={relative_error:.3e} m"

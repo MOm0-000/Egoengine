@@ -13,6 +13,7 @@ from video_to_spider.export.spider_runner import (
     _replay_metrics,
     _resolve_uv,
     _run,
+    clip_auxiliary_scale_for_spider,
 )
 
 
@@ -34,6 +35,11 @@ def test_inspect_hand_floor_contacts_counts_floor_pairs(tmp_path: Path):
     assert pairs["collision_hand_right_thumb_0_floor"] == "0.02 1"
     assert pairs["collision_hand_right_thumb_0_right_object_0"] == "0.02 1"
     assert report["pair_count_by_scene"] == {"scene.xml": 1}
+
+
+def test_clip_auxiliary_scale_keeps_paper_request_visible():
+    assert clip_auxiliary_scale_for_spider(2.0, 0.2) == pytest.approx(0.19)
+    assert clip_auxiliary_scale_for_spider(0.01, 0.2) == pytest.approx(0.01)
 
 
 def test_configure_contact_reward_resolves_fingertip_sites(tmp_path: Path):

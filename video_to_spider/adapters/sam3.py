@@ -207,6 +207,7 @@ def _offload_session_frames(predictor: Any, session_id: str) -> None:
 def _run_prompt(
     predictor: Any, frame_dir: Path, prompt: str, anchor: int, frame_count: int,
     anchor_hand_mask: np.ndarray, max_instances: int = 4,
+    bounding_boxes: list[list[float]] | None = None,
 ) -> dict[str, Any]:
     # Preserve several detections for automatic hand-proximity ranking. The
     # multiplex implementation owns a coupled detector/tracker cache, so object
@@ -215,11 +216,17 @@ def _run_prompt(
     _set_max_objects(predictor, max_instances)
     session_id = _start_session_compat(predictor, frame_dir)
     try:
-        response = predictor.handle_request({
+        request: dict[str, Any] = {
             "type": "add_prompt", "session_id": session_id, "frame_index": anchor, "text": prompt,
-        })
+        }
+        if bounding_boxes:
+            request["bounding_boxes"] = bounding_boxes
+            request["bounding_box_labels"] = [1] * len(bounding_boxes)
+        response = predictor.handle_request(request)
         initial_ids, initial_masks, initial_probabilities = _output_arrays(response["outputs"])
-        per_frame = {anchor: response["outputs"]}
+        # Keep a snapshot of the anchor-prompt outputs before propagation; the
+        # stream may mutate/overwrite the response-owned output dict in-place.
+        per_frame = {anchor: dict(response["outputs"])}
         for item in predictor.handle_stream_request({
             "type": "propagate_in_video", "session_id": session_id,
             "propagation_direction": "both", "start_frame_index": anchor,
@@ -263,8 +270,14 @@ def _run_prompt(
                 valid[frame_index] = bool(masks[frame_index].any() and probabilities[selected] > 0.0)
                 confidence[frame_index] = probabilities[selected]
                 object_ids[frame_index] = target_id
+        if target_at >= 0 and 0 <= anchor < frame_count:
+            masks[anchor] = initial_masks[target_at]
+            valid[anchor] = bool(masks[anchor].any() and initial_probabilities[target_at] > 0.0)
+            confidence[anchor] = initial_probabilities[target_at]
+            object_ids[anchor] = target_id
         return {
             "prompt": prompt, "anchor_frame": anchor, "target_object_id": target_id,
+            "bounding_boxes": bounding_boxes,
             "target_anchor_confidence": target_anchor_confidence,
             "target_anchor_hand_distance_px": target_anchor_hand_distance_px,
             "target_instance_score": target_instance_score,
@@ -461,9 +474,20 @@ def run(args: argparse.Namespace) -> Path:
         raise ValueError(f"invalid adapter interval [{start}, {end})")
     selected_rows = index[start:end]
     frame_paths = [run_dir / row["rgb_path"] for row in selected_rows]
-    prompts = source["object_keyword_candidates"][: args.max_candidates]
+    if getattr(args, "prompt", None):
+        prompts = [prompt.strip() for prompt in args.prompt if prompt.strip()]
+    else:
+        prompts = source["object_keyword_candidates"][: args.max_candidates]
     if not prompts:
-        raise RuntimeError("no instruction-derived object keyword candidates")
+        raise RuntimeError("no object keyword candidates")
+    box_prompts: list[list[float]] = []
+    for raw_box in getattr(args, "box", None) or []:
+        if len(raw_box) != 4:
+            raise ValueError("--box expects four normalized values: xmin ymin width height")
+        box = [float(value) for value in raw_box]
+        if not all(0.0 <= value <= 1.0 for value in box) or box[2] <= 0.0 or box[3] <= 0.0:
+            raise ValueError(f"invalid normalized --box values: {box}")
+        box_prompts.append(box)
     output_dir = args.output_dir.resolve() if args.output_dir else run_dir / "segmentation"
     if args.resume_existing and not args.overwrite:
         raise ValueError("--resume-existing mutates the selected artifact and requires --overwrite")
@@ -476,6 +500,7 @@ def run(args: argparse.Namespace) -> Path:
     if args.dry_run:
         (output_dir / "dry_run.json").write_text(json.dumps({
             "checkpoint": str(args.checkpoint), "prompts": prompts, "frame_count": len(frame_paths),
+            "bounding_boxes": box_prompts,
         }, indent=2) + "\n")
         return output_dir / "dry_run.json"
     with tempfile.TemporaryDirectory(prefix="v2s-sam3-") as temporary:
@@ -483,6 +508,11 @@ def run(args: argparse.Namespace) -> Path:
         for relative_index, source_path in enumerate(frame_paths):
             (frame_dir / f"{relative_index:06d}.jpg").symlink_to(source_path)
         anchor = _choose_anchor(frame_paths)
+        if getattr(args, "anchor", None) is not None:
+            requested_anchor = int(args.anchor)
+            if requested_anchor < 0 or requested_anchor >= len(frame_paths):
+                raise ValueError(f"--anchor {requested_anchor} outside [0, {len(frame_paths)})")
+            anchor = requested_anchor
         predictor = build_sam3_multiplex_video_predictor(
             checkpoint_path=str(args.checkpoint), use_fa3=False, use_rope_real=False,
             max_num_objects=args.max_instances, compile=False, warm_up=False,
@@ -560,6 +590,7 @@ def run(args: argparse.Namespace) -> Path:
                     result = _run_prompt(
                         predictor, frame_dir, prompt, anchor, len(frame_paths), hand["masks"][anchor],
                         max_instances=args.max_instances,
+                        bounding_boxes=box_prompts or None,
                     )
                     metrics = _metrics(result)
                     result["metrics"] = metrics
@@ -567,7 +598,7 @@ def run(args: argparse.Namespace) -> Path:
                     _save_mask_artifact(artifact_path, frame_indices, timestamps, result)
                     candidates.append({"result": result, "artifact": str(artifact_path.relative_to(output_dir))})
                 selected = max(candidates, key=lambda item: item["result"]["metrics"]["selection_score"])
-            recoveries = _recover_invalid_spans(
+            recoveries = [] if getattr(args, "no_recovery", False) else _recover_invalid_spans(
                 predictor, frame_paths, frame_dir, selected["result"]["prompt"],
                 selected["result"], hand, max_instances=args.max_instances,
             )
@@ -584,7 +615,15 @@ def run(args: argparse.Namespace) -> Path:
     _write_overlay(frame_paths, selected["result"]["masks"], hand["masks"], overlay_path, float(source["video"]["fps"]))
     metadata = {
         "schema_version": "1.0", "model": "SAM 3.1 multiplex", "checkpoint": str(args.checkpoint.resolve()),
-        "device": str(torch.cuda.get_device_name(0)), "text_only": True, "anchor_frame_relative": anchor,
+        "device": str(torch.cuda.get_device_name(0)), "text_only": not box_prompts,
+        "anchor_frame_relative": anchor,
+        "prompt_source": (
+            "cli+box" if getattr(args, "prompt", None) and box_prompts
+            else "box" if box_prompts
+            else "cli" if getattr(args, "prompt", None)
+            else "instruction-derived"
+        ),
+        "bounding_boxes": box_prompts,
         "offload_video_to_cpu": True, "offload_input_batch_to_cpu": True,
         "offload_tracker_state_to_cpu": True,
         "resumed_existing_artifact": bool(args.resume_existing),
@@ -603,6 +642,7 @@ def run(args: argparse.Namespace) -> Path:
             "target_anchor_area_ratio_to_hand": item["result"]["target_anchor_area_ratio_to_hand"],
             "target_motion_span_px": item["result"]["target_motion_span_px"],
             "target_motion_score": item["result"]["target_motion_score"],
+            "bounding_boxes": item["result"].get("bounding_boxes"),
         } for item in candidates],
         "hand_metrics": _metrics(hand),
         "outputs": ["object_masks.npz", "hand_masks.npz", "perception_overlay.mp4"],
@@ -620,11 +660,21 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--end-frame", type=int)
     parser.add_argument("--device", choices=["cuda"], default="cuda")
     parser.add_argument("--output-dir", type=Path)
+    parser.add_argument("--anchor", type=int, help="override the automatic anchor frame index")
     parser.add_argument("--max-candidates", type=int, default=12)
+    parser.add_argument("--prompt", action="append", dest="prompt", help="explicit text prompt; repeat for a prompt ensemble")
+    parser.add_argument(
+        "--box", action="append", dest="box", nargs=4, type=float, metavar=("XMIN", "YMIN", "WIDTH", "HEIGHT"),
+        help="normalized positive box prompt [xmin, ymin, width, height]; repeat for multiple boxes",
+    )
     parser.add_argument("--max-instances", type=int, choices=range(1, 9), default=4)
     parser.add_argument(
         "--resume-existing", action="store_true",
         help="automatically rerun only invalid spans from an existing artifact",
+    )
+    parser.add_argument(
+        "--no-recovery", action="store_true",
+        help="do not rerun invalid spans with the selected prompt",
     )
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--dry-run", action="store_true")

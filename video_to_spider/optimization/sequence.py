@@ -1786,15 +1786,28 @@ def optimize_run(
     )
     with np.load(resolved_object_artifact, allow_pickle=False) as artifact:
         object_raw = {key: np.asarray(artifact[key]) for key in artifact.files}
+    default_hand_artifact = root / "hands" / (
+        "hawor_raw.npz" if hand_source == "hawor" else "wilor_raw.npz"
+    )
+    stereo_hand_artifact = root / "hands" / "wilor_stereo_raw.npz"
     resolved_hand_artifact = (
         Path(hand_artifact_path).resolve()
-        if hand_artifact_path is not None else root / "hands" / (
-            "hawor_raw.npz" if hand_source == "hawor" else "wilor_raw.npz"
-        )
+        if hand_artifact_path is not None else default_hand_artifact
     )
     hand_artifact_is_explicit = hand_artifact_path is not None
     with np.load(resolved_hand_artifact, allow_pickle=False) as artifact:
         hands_raw = {key: np.asarray(artifact[key]) for key in artifact.files}
+    stereo_hands_raw = None
+    stereo_hand_gate = None
+    stereo_hand_accepted = np.zeros((2,), dtype=bool)
+    if (
+        hand_source == "wilor"
+        and depth_gate
+        and depth_gate.get("gate_kind") == "calibrated_stereo_native_metric"
+        and stereo_hand_artifact.is_file()
+    ):
+        with np.load(stereo_hand_artifact, allow_pickle=False) as artifact:
+            stereo_hands_raw = {key: np.asarray(artifact[key]) for key in artifact.files}
     with np.load(root / "segmentation/object_masks.npz", allow_pickle=False) as artifact:
         masks_raw = {key: np.asarray(artifact[key]) for key in artifact.files}
     if not (
@@ -1831,6 +1844,9 @@ def optimize_run(
             )
         object_valid &= object_raw[object_valid_key].astype(bool)
     mask_valid = masks_raw["valid"].astype(bool)
+    has_independent_stereo_joints = False
+    stereo_metric_joints = None
+    stereo_metric_valid = None
     if hand_source == "egodex_gt":
         source = json.loads((root / "input/source.json").read_text(encoding="utf-8"))
         joints_camera_raw, hand_valid, hand_confidence, hand_source_report = (
@@ -1839,22 +1855,28 @@ def optimize_run(
             )
         )
     else:
-        if "joints_camera_metric" in hands_raw:
-            joints_camera_raw = hands_raw["joints_camera_metric"].astype(np.float64)
-            if "joint_metric_valid" in hands_raw:
-                required_metric = hands_raw["joint_metric_valid"][:, :, [0, *FINGERTIP_INDICES]]
-                hand_valid &= np.asarray(required_metric, dtype=bool).all(axis=-1)
+        mono_joints_camera = (
+            hands_raw["joints_camera_rootrel"].astype(np.float64)
+            + hands_raw["translation_camera"].astype(np.float64)[:, :, None, :]
+        )
+        stereo_source = stereo_hands_raw if stereo_hands_raw is not None else hands_raw
+        if stereo_source is not None and not np.array_equal(
+            hands_raw["frame_indices"], stereo_source["frame_indices"]
+        ):
+            raise ValueError("stereo hand and monocular hand timelines differ")
+        stereo_metric_joints = stereo_source.get("joints_camera_metric")
+        stereo_metric_valid = stereo_source.get("joint_metric_valid")
+        has_independent_stereo_joints = stereo_metric_joints is not None
+        joints_camera_raw = mono_joints_camera
+        if has_independent_stereo_joints:
             hand_source_report = {
                 "uses_ground_truth": False,
                 "metric_coordinate_source": (
-                    "independent calibrated stereo triangulation; no object/contact input"
+                    "hybrid calibrated stereo anchors with monocular WiLoR completion"
                 ),
             }
         else:
-            joints_camera_raw = (
-                hands_raw["joints_camera_rootrel"].astype(np.float64)
-                + hands_raw["translation_camera"].astype(np.float64)[:, :, None, :]
-            )
+            joints_camera_raw = mono_joints_camera
             hand_source_report = {"uses_ground_truth": False, "per_hand": {}}
     centroids = _mask_centroids(masks_raw["masks"].astype(bool))
     depth_group = None
@@ -1866,9 +1888,17 @@ def optimize_run(
         depth_group, frame_indices, masks_raw["masks"].astype(bool), mask_valid,
     )
     strict_shared_metric = contact_similarity_mode == "validate_only"
-    stereo_hand_gate = None
-    if strict_shared_metric and "joints_camera_metric" in hands_raw:
-        stereo_hand_gate = require_stereo_hand_gate(resolved_hand_artifact)
+    if (
+        strict_shared_metric
+        and hand_source == "wilor"
+        and stereo_hands_raw is not None
+        and stereo_hand_artifact.is_file()
+    ):
+        stereo_hand_gate = require_stereo_hand_gate(stereo_hand_artifact)
+        stereo_hand_accepted = np.asarray([
+            bool(stereo_hand_gate["per_hand"][side]["accepted"])
+            for side in HAND_ORDER
+        ], dtype=bool)
     if hand_source == "egodex_gt":
         joints_camera = joints_camera_raw.copy()
         hand_depth_calibration = {
@@ -1885,10 +1915,9 @@ def optimize_run(
     elif hand_source == "wilor":
         if strict_shared_metric:
             joints_camera = joints_camera_raw.copy()
-            has_independent_stereo_joints = "joints_camera_metric" in hands_raw
             hand_depth_calibration = {
                 "method": (
-                    "strict_calibrated_stereo_triangulated_hand_coordinates"
+                    "hybrid_calibrated_stereo_hand_anchors"
                     if has_independent_stereo_joints else
                     "strict_stereo_freeze_unverified_wilor_metric_coordinates"
                 ),
@@ -1896,19 +1925,26 @@ def optimize_run(
                 "object_semantics": "independent calibrated-stereo object coordinates",
                 "paper_alignment": (
                     "EgoEngine consumes independently tracked 3D hand points in the shared "
-                    "calibrated frame; monocular WiLoR is not silently upgraded to that status"
+                    "calibrated frame; monocular WiLoR completes joints not anchored by stereo "
+                    "and final contact QC remains physical"
                 ),
                 "requires_upstream_stereo_3d_hand_adapter": True,
                 "per_hand": {
                     side: {
-                        "accepted": bool(has_independent_stereo_joints and hand_valid[:, hand].any()),
+                        "accepted": bool(
+                            has_independent_stereo_joints
+                            and hand_valid[:, hand].any()
+                            and bool(stereo_hand_accepted[hand])
+                        ),
                         "applied_similarity_ratio": 1.0,
                         "reason": (
-                            "independent left/right hand rays triangulated in the calibrated "
-                            "stereo frame; no object/contact scale fit"
-                            if has_independent_stereo_joints else
-                            "raw monocular WiLoR depth is frozen but not independently verified "
-                            "in the calibrated stereo metric frame"
+                            "independent stereo hand triangulation passed the fixed stereo-hand QC gate"
+                            if (
+                                has_independent_stereo_joints
+                                and bool(stereo_hand_accepted[hand])
+                            ) else
+                            "stereo hand triangulation did not pass the fixed QC gate; "
+                            "monocular WiLoR depth remains frozen and is not independently verified"
                         ),
                     }
                     for hand, side in enumerate(HAND_ORDER)
@@ -1991,7 +2027,7 @@ def optimize_run(
         object_valid & masks_raw["valid"].astype(bool)
         & (T_camera_object_aligned[:, 2, 3] > 0)
     )
-    if object_scale_to_m is not None:
+    if object_scale_to_m is not None or strict_shared_metric:
         silhouette_scale_to_m = initial_scale_to_m
         silhouette_scale_metrics = {
             "initial_scale_to_m": initial_scale_to_m,
@@ -2001,7 +2037,11 @@ def optimize_run(
             "sample_count": int(scale_valid.sum()),
             "ratio_clip": [1.0, 1.0],
             "ratio_was_clipped": False,
-            "method": "explicit_upstream_calibrated_scale_no_refit",
+            "method": (
+                "explicit_upstream_calibrated_scale_no_refit"
+                if object_scale_to_m is not None else
+                "strict_shared_metric_scale_frozen_no_refit"
+            ),
         }
     else:
         silhouette_scale_to_m, silhouette_scale_metrics = _optimize_global_scale(
@@ -2093,6 +2133,41 @@ def optimize_run(
         fingertip_rotation_camera = fk_fingertip_rotation_camera
     else:
         fingertip_rotation_camera = landmark_fingertip_rotation_camera
+    if has_independent_stereo_joints and stereo_metric_valid is not None:
+        # Keep MANO-derived orientation and WiLoR landmark geometry for the FK
+        # consistency gate above, then use independently triangulated stereo
+        # anchors only for the contact-relevant wrist/fingertip positions that
+        # feed SPIDER/MINK. This avoids rejecting otherwise valid MANO rotations
+        # when stereo triangulation is sparse but still provides metric anchors.
+        metric_valid = np.asarray(stereo_metric_valid, dtype=bool)
+        metric_joints = np.asarray(stereo_metric_joints, dtype=np.float64)
+        contact_indices = np.asarray([0, *FINGERTIP_INDICES.tolist()], dtype=np.int64)
+        joint_mask = metric_valid[:, :, contact_indices]
+        joint_mask &= stereo_hand_accepted[None, :, None]
+        joints_camera_aligned[:, :, contact_indices] = np.where(
+            joint_mask[..., None],
+            metric_joints[:, :, contact_indices],
+            joints_camera_aligned[:, :, contact_indices],
+        )
+        wrists_camera_aligned = joints_camera_aligned[:, :, 0]
+        fingertips_camera_aligned = joints_camera_aligned[:, :, FINGERTIP_INDICES]
+        if strict_shared_metric:
+            # Do not smooth the metric object or wrist trajectory, but light
+            # temporal smoothing on the noisy stereo/monocular fingertip
+            # targets prevents MINK from requesting dozens of interpolation
+            # substeps for a single-frame tracking outlier.
+            for hand in range(2):
+                hand_weights = np.where(
+                    hand_valid[:, hand],
+                    np.maximum(hand_confidence[:, hand], 0.05),
+                    1e-6,
+                )
+                fingertips_camera_aligned[:, hand] = smooth_second_difference(
+                    fingertips_camera_aligned[:, hand],
+                    hand_weights,
+                    hand_smoothing_strength,
+                )
+            joints_camera_aligned[:, :, FINGERTIP_INDICES] = fingertips_camera_aligned
     metric_hand_depth_valid = np.asarray([
         bool(hand_depth_calibration["per_hand"][side]["accepted"])
         for side in HAND_ORDER

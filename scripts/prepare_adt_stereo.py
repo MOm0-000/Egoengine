@@ -79,6 +79,8 @@ def main(argv: list[str] | None = None) -> int:
         camera_poses_path = None
     else:
         camera_poses_path = prepared.camera_poses_path
+    prepared_metadata = json.loads(prepared.metadata_path.read_text(encoding="utf-8"))
+    geometric_audit = prepared_metadata.get("rectification_geometry_audit")
     result = ingest_rectified_stereo(
         left_dir=prepared.left_dir,
         right_dir=prepared.right_dir,
@@ -95,6 +97,7 @@ def main(argv: list[str] | None = None) -> int:
         timestamps_path=prepared.timestamps_path,
         frame_indices_path=prepared.frame_indices_path,
         static_camera=args.static_camera,
+        geometric_audit=geometric_audit,
     )
     print(f"ingest manifest: {result}")
     return 0

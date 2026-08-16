@@ -13,7 +13,8 @@
 1. [快速配置环境.md](./快速配置环境.md)：逐行配置源码、Conda 环境、SPIDER 和模型资产。
 2. [quick_start.md](./quick_start.md)：从原始 MP4/HDF5 串行生成最终 MJWP 视频的最短命令清单。
 3. [docs/ADT_STEREO_P0.md](./docs/ADT_STEREO_P0.md)：Aria Digital Twin 左/右 SLAM 到已校正双目的 P0 准备入口（需要 ADT VRS 与 Project Aria Tools）。
-4. 本 README：逐阶段质量检查、重跑和故障定位。
+4. [docs/ADT_上游改进与消融实验总结.md](./docs/ADT_上游改进与消融实验总结.md)：ADT 上游 Hand/Object/Depth 三个模块的 paired 消融结果。
+5. 本 README：逐阶段质量检查、重跑和故障定位。
 
 ## 流程总览
 
@@ -25,6 +26,7 @@ Ego RGB + calibration + camera trajectory
   -> mono: DA3METRIC-LARGE + UniDepthV2 reject-only gate
      OR stereo: unmodified FoundationStereo + calibrated raw metric gate
   -> SAM 3D Objects mesh proposals + static metric scale refit
+     (实验性 fallback: object_mvg masked multi-frame metric fusion)
   -> FoundationPose proposal selection, tracking and full-track gate
   -> sequence optimization and contact inference
   -> SPIDER export -> paper-style MINK q_ref gate
@@ -52,6 +54,15 @@ runs/<run-id>/
   manifest.json                  各阶段命令、状态、输出和质量指标
 ```
 
+实验性上游消融产物（不进入默认主流程）：
+
+```text
+runs/<run-id>/
+  mesh_proposals/omvg_*              O1 masked multi-frame metric fusion
+  depth_roi_refined/                 D1/D2 object-ROI depth refinement
+  hands_hamer_ba/                     H2 HaMeR+stereo BA（ADT）
+```
+
 ## 环境和路径
 
 以下命令假设在仓库根目录执行：
@@ -71,6 +82,7 @@ cd "$REPO_ROOT"
 | ingest、导出、评估、可视化 | `v2s-core` |
 | SAM 3 | `v2s-sam3` |
 | WiLoR | `v2s-wilor` |
+| HaMeR（ADT 上游 H1/H2） | `v2s-hamer` |
 | DA3METRIC-LARGE 主深度 | 独立 DA3 环境 |
 | UniDepthV2 reject-only 复核 | 独立 UniDepth 环境 |
 | FoundationStereo 双目深度 | 官方 FoundationStereo 独立环境；仓库必须保持只读 |
@@ -329,6 +341,17 @@ hands/metadata.json
 hands/wilor_overlay.mp4
 ```
 
+### 3b. 实验性：HaMeR stereo hand（上游 H1/H2）
+
+ADT 上游消融新增 HaMeR hand adapter 和两个 benchmark 脚本：
+
+- adapter：`video_to_spider.adapters.hamer`
+- H1：`scripts/run_adt_hamer_hand_benchmark.py`
+- H2：`scripts/run_adt_hamer_hand_ba_benchmark.py`
+- 报告：`docs/ADT_H1_H2_HAND_ABLATION.md`
+
+这些脚本只用于 ADT 上游诊断，不在默认 EgoDex 主链路中启用。
+
 ### 4. 单目 DA3 主深度、UniDepth 独立复核和 gate
 
 主深度固定使用 `DA3METRIC-LARGE`；UniDepthV2 只做 reject-only 复核，不允许重标定或混合 DA3。两个模型分别在官方依赖环境中运行：
@@ -368,6 +391,10 @@ depth/depth_gate.json
 
 缺失或拒绝的 `depth_gate.json` 会阻止 SAM3D 尺度拟合和后续跟踪。DA3 是唯一主深度；UniDepth 不写回其尺度。
 
+### 4b. 实验性：object-ROI depth refinement（D1/D2）
+
+ADT 上游 Phase C 新增 `scripts/run_adt_object_depth_refine.py`，仅在 object ROI 内做 D1（mask 腐蚀 + invalid fill + bilateral）和 D2（再加时域中值），输出 `depth_roi_refined/d1.zarr`、`d2.zarr` 与 `depth_metrics.json`。当前结论：naive fill 会牺牲 AbsRel/RMSE/delta1，不默认接入主流程。
+
 ### 5. SAM 3D Objects 网格候选
 
 下面是共享 40 GB A100 上验证过的 low-VRAM 配置。3 个 seed 会生成 3 个真实网格候选：
@@ -404,6 +431,10 @@ visualization/05_mesh_proposals.mp4
 ```
 
 如果报错 `mesh_failed: no valid SAM object keyframe`，先检查 SAM 3 选中候选的 `valid_rate`。所有候选都是 0 时应停止，不要通过降低 SAM 3D 阈值绕过无效输入。
+
+### 5b. 实验性：masked multi-frame metric fusion（O1）
+
+新增 `video_to_spider.adapters.object_mvg`，作为 SAM3D 失败时的几何 fallback。它读取 SAM3 mask、metric depth 和 `T_world_camera`，生成 alpha-shape mesh，并写 `mesh_proposals/omvg_mesh_ranking.json`。随后用 FoundationPose 的 `--ranking-path` 指定该排名即可评估。报告：`docs/ADT_上游改进与消融实验总结.md`。当前不替换 SAM3D 默认路线。
 
 ### 6. FoundationPose 候选筛选和 6D 跟踪
 

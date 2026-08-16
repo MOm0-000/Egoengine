@@ -21,6 +21,24 @@ from .spider import DATASET_NAME
 FINGER_ORDER = ("thumb", "index", "middle", "ring", "pinky")
 
 
+def clip_auxiliary_scale_for_spider(
+    requested_scale: float,
+    primary_position_scale: float,
+) -> float:
+    """Translate EgoEngine's paper reward scale into SPIDER's guard.
+
+    SPIDER currently requires every contact/lift/force-closure auxiliary scale
+    to be strictly below ``min(base_pos_rew_scale, pos_rew_scale)``.  EgoEngine
+    Appendix C.2 reports ``contact=2.0`` under its own reward normalization;
+    feeding that literal value into SPIDER violates the guard and is not the
+    same objective scale.  Keep the human-visible paper value unchanged in the
+    report, while passing SPIDER the largest compatible auxiliary scale.
+    """
+    if requested_scale < 0.0 or primary_position_scale <= 0.0:
+        raise ValueError("reward scales must be nonnegative; primary scale must be positive")
+    return min(requested_scale, primary_position_scale * 0.95)
+
+
 def _resolve_uv(spider_root: Path) -> Path:
     """Find uv without requiring the calling Conda environment to own it."""
     candidates: list[Path] = []
@@ -372,7 +390,9 @@ def run_spider_chain(
     mjwp_num_samples: int = 2048, mjwp_iterations: int = 16,
     mjwp_override: str = "gigahand_origin", mjwp_horizon: float = 1.6,
     mjwp_ctrl_dt: float = 0.08, mjwp_knot_dt: float = 0.2,
-    contact_reward_scale: float = 0.025, contact_opposition_reward_scale: float = 0.0,
+    contact_reward_scale: float = 2.0, contact_opposition_reward_scale: float = 0.0,
+    base_pos_rew_scale: float = 0.2, base_rot_rew_scale: float = 1.0,
+    joint_rew_scale: float = 0.0,
     force_closure_reward_scale: float = 0.010,
     force_closure_penetration_reward_scale: float = 1.0,
     force_closure_min_normal_force_n: float = 0.2,
@@ -384,7 +404,7 @@ def run_spider_chain(
     ik_backend: str = "mink", collision_aware_ik: bool = True,
     mink_allow_fidelity_rejected_qref_for_refinement: bool = False,
     mink_collision_projection_max_iterations: int = 80,
-    mink_controller_contact_target_policy: str = "qref_fingertip_site",
+    mink_controller_contact_target_policy: str = "fingertip_collision_center",
     mink_scene_collision_constraints: bool = False,
     mink_floor_clearance_m: float = 0.0,
     mink_non_distal_object_clearance_m: float = 0.0,
@@ -418,16 +438,20 @@ def run_spider_chain(
     }
     if any(value < 0.0 for value in contact_auxiliary_scales.values()):
         raise ValueError("MPC/RL reward scales must be nonnegative")
-    maximum_auxiliary_scale = max(contact_auxiliary_scales.values(), default=0.0)
-    # The SPIDER objective weights both object position and human wrist mimic
-    # at 1.0.  Keep every contact/grasp bonus strictly below those primaries;
-    # penetration remains a separate safety penalty and is not a bonus.
-    if maximum_auxiliary_scale >= 1.0:
-        raise ValueError(
-            "contact/opposition/force-closure/lift rewards must remain below "
-            "the 1.0 object-trajectory and human-mimic primary weights; got "
-            + json.dumps(contact_auxiliary_scales, sort_keys=True)
-        )
+    spider_physical_contact_scale = clip_auxiliary_scale_for_spider(
+        contact_reward_scale, base_pos_rew_scale,
+    )
+    spider_contact_scale_report = {
+        "paper_requested_scale": contact_reward_scale,
+        "spider_applied_scale": spider_physical_contact_scale,
+        "spider_primary_floor": float(base_pos_rew_scale),
+        "reason": (
+            "SPIDER auxiliary scales must be strictly below the lower of "
+            "base_pos_rew_scale and pos_rew_scale; the paper's 2.0 contact "
+            "scale is therefore passed as a compatible normalized auxiliary "
+            "scale while remaining visible as the requested paper value."
+        ),
+    }
     dataset = Path(dataset_root).resolve()
     spider = Path(spider_root).resolve()
     mano_dir = dataset / "processed" / DATASET_NAME / "mano" / embodiment_type / task / str(data_id)
@@ -619,9 +643,12 @@ def run_spider_chain(
             f"save_video={'true' if save_video else 'false'}", "save_rerun=false", "save_viser=false",
             f"num_samples={mjwp_num_samples}", f"max_num_iterations={mjwp_iterations}",
             f"horizon={mjwp_horizon}", f"ctrl_dt={mjwp_ctrl_dt}", f"knot_dt={mjwp_knot_dt}",
+            f"+base_pos_rew_scale={base_pos_rew_scale}",
+            f"+base_rot_rew_scale={base_rot_rew_scale}",
+            f"+joint_rew_scale={joint_rew_scale}",
             # EgoEngine Appendix C.7 uses live physical contact, not SPIDER's
             # upstream fingertip-target tracking reward.
-            f"+physical_contact_rew_scale={contact_reward_scale}",
+            f"+physical_contact_rew_scale={spider_physical_contact_scale}",
             "+contact_rew_scale=0.0",
             "+contact_opposition_rew_scale=0.0",
             f"+force_closure_rew_scale={force_closure_reward_scale}",
@@ -716,11 +743,17 @@ def run_spider_chain(
             "reward_configuration": contact_reward,
             "contact_reward_scale": contact_reward_scale,
             "contact_opposition_reward_scale": contact_opposition_reward_scale,
+            "human_mimic_reward_scales": {
+                "base_position": base_pos_rew_scale,
+                "base_rotation": base_rot_rew_scale,
+                "finger_joint": joint_rew_scale,
+            },
             "paper_contact_reward": {
                 "equation": "C.7",
                 "type": "live MuJoCo binary thumb + any non-thumb contact bonus",
                 "upstream_contact_targets_used": False,
                 "reward_scale": contact_reward_scale,
+                "spider_scale_translation": spider_contact_scale_report,
             },
             "legacy_spider_contact_point_tracking": {
                 "enabled": False,
@@ -866,8 +899,11 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--mjwp-horizon", type=float, default=1.6)
     parser.add_argument("--mjwp-ctrl-dt", type=float, default=0.08)
     parser.add_argument("--mjwp-knot-dt", type=float, default=0.2)
-    parser.add_argument("--contact-reward-scale", type=float, default=0.025)
+    parser.add_argument("--contact-reward-scale", type=float, default=2.0)
     parser.add_argument("--contact-opposition-reward-scale", type=float, default=0.0)
+    parser.add_argument("--base-pos-rew-scale", type=float, default=0.2)
+    parser.add_argument("--base-rot-rew-scale", type=float, default=1.0)
+    parser.add_argument("--joint-rew-scale", type=float, default=0.0)
     parser.add_argument("--force-closure-reward-scale", type=float, default=0.010)
     parser.add_argument(
         "--force-closure-penetration-reward-scale", type=float, default=1.0
@@ -917,7 +953,7 @@ def _parser() -> argparse.ArgumentParser:
             "object_surface", "fingertip_collision_center",
             "qref_fingertip_site",
         ],
-        default="qref_fingertip_site",
+        default="fingertip_collision_center",
     )
     parser.add_argument(
         "--mink-scene-collision-constraints", action="store_true",
@@ -972,6 +1008,9 @@ def main(argv: list[str] | None = None) -> int:
         mjwp_horizon=args.mjwp_horizon, mjwp_ctrl_dt=args.mjwp_ctrl_dt,
         mjwp_knot_dt=args.mjwp_knot_dt, contact_reward_scale=args.contact_reward_scale,
         contact_opposition_reward_scale=args.contact_opposition_reward_scale,
+        base_pos_rew_scale=args.base_pos_rew_scale,
+        base_rot_rew_scale=args.base_rot_rew_scale,
+        joint_rew_scale=args.joint_rew_scale,
         force_closure_reward_scale=args.force_closure_reward_scale,
         force_closure_penetration_reward_scale=(
             args.force_closure_penetration_reward_scale
