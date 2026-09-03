@@ -1,0 +1,422 @@
+{
+  "schema": "deximit_original_sapien_screen_v10_joint_force_metrics_diagnostic_only",
+  "diagnostic_only": true,
+  "formal_renderer_3_3_eligible": false,
+  "diagnostic_runner": "deximit/diagnostics/run_deximit_sapien_screen.py",
+  "diagnostic_runner_sha256": "04bf2e9ca5bddd8ab23e0f4cf8cb7f50493567df19a24d646250d3cb3b112e9f",
+  "deximit_root": "${DEXIMIT_ROOT}",
+  "deximit_commit": "c5749809fa425525a9bf7aa392dbb3f6268ae28f",
+  "curobo_version": "0.7.8",
+  "sapien_version": "3.0.1",
+  "torch_version": "2.4.1+cu118",
+  "torch_cuda_version": "11.8",
+  "cuda_device": "NVIDIA A100-SXM4-40GB",
+  "candidate_pools": [
+    {
+      "path": "deximit/fixture/smear071/input/candidate_pools/bodex_right_f4_d0_seed20260827_v2.npz",
+      "sha256": "181b932996b85297cdca5a4a922fa83f40e5cf405d0c2845c76de995f582132d",
+      "depth": 0
+    }
+  ],
+  "mesh": "deximit/fixture/smear071/input/tool_078_meters.ply",
+  "mesh_sha256": "d4e21ae7937e81cf35ea3528c5eb2c4306e470655714323ac66cd332dc5322a1",
+  "human_reference": "deximit/fixture/smear071/input/human_reference_v2.npz",
+  "human_reference_sha256": "a71d63ccdb01063033df23b2d28227077074a8e7fad238bdbc765d22059c487d",
+  "deximit_prompt": "deximit/fixture/smear071/input/mano_prompt_v1.npz",
+  "deximit_prompt_sha256": "b149803ae370c9a010354117d9eb4ce4f6fe585e80605d70cf87482cb8066522",
+  "prompt_source": "released TACO MANO global root rotation in exact DexImit canonical convention",
+  "contact_v3": "deximit/fixture/smear071/input/contact_geom_v3.npz",
+  "contact_v3_sha256": "c8c8b0debebe3e55316d27646855209fa1269ecde45600332e3abb42bcae1259",
+  "label_source": "human_reviewed_video_and_geometry",
+  "manual_label": "deximit/fixture/smear071/input/manual_pickup_subactions_v1.json",
+  "manual_label_sha256": "0123840504f85cd899db250dc86ff0b09dafaac9e3b9fa58ffbebff70746ad59",
+  "manual_pregrasp_row": 18,
+  "contact_anchor_row": 30,
+  "motion_end_row": 39,
+  "active_fingers": [
+    "thumb",
+    "index",
+    "middle",
+    "ring"
+  ],
+  "finger_count": 4,
+  "depth_policy": "v3 does not observe grasp depth; preserve original BODex definition and sweep 0,1,2,3",
+  "pool_depth": 0,
+  "selection_scope": "original DexImit per-depth top-120 ranking",
+  "time_alignment": "preserve grasp-row hand/object relative pose, then relocate both to the resting object",
+  "candidate_isolation": "restore robot qpos/qvel/drive targets and object pose/velocities before every rollout",
+  "prompt_type": "rotation",
+  "max_rollout": 120,
+  "error_threshold_m": 0.02,
+  "motion_mode": "source",
+  "vertical_lift_m": 0.05,
+  "dual_sim_gate_eligible": true,
+  "requested_source_candidate_indices": [
+    21
+  ],
+  "diagnostic_render_dir": null,
+  "render_camera": null,
+  "render_mode": null,
+  "camera_following_allowed": false,
+  "seed": 20260829,
+  "export_trajectory": true,
+  "trajectory_export_image_backend": "raster initialization only; no camera frames requested",
+  "object_initial_pose_sapien": [
+    [
+      -0.49481091987716513,
+      -0.868674406921611,
+      0.023810256817195993,
+      0.7118090391159058
+    ],
+    [
+      0.8689624083851444,
+      -0.4948604669966979,
+      0.004177441477666861,
+      0.054983727633953094
+    ],
+    [
+      0.008153918309806921,
+      0.022757261768436798,
+      0.9997077676266197,
+      0.7367448806762695
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "post_warmup_settled_position_offset_m": 0.0013206562937367566,
+  "post_warmup_settled_rotation_offset_rad": 0.03879096046778707,
+  "object_bottom_height_m": 0.7135634233119323,
+  "table_height_m": 0.714,
+  "anchor_reference_to_sapien": [
+    [
+      0.9971221894390363,
+      -0.07061935484069158,
+      -0.027572559732219875,
+      0.008602621520694353
+    ],
+    [
+      0.06938635360272696,
+      0.996646595339344,
+      -0.0433716258884885,
+      -0.04512581506862988
+    ],
+    [
+      0.03054297402054454,
+      0.04133365118614834,
+      0.9986784547679005,
+      0.6893840709825858
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "relative_object_motion_anchor_to_end": [
+    [
+      0.6889188938666013,
+      -0.25177711478947806,
+      0.6797051141060398,
+      -0.29487693679977567
+    ],
+    [
+      0.3276451524969202,
+      0.9446326864279386,
+      0.01782531282210954,
+      -0.40763073831244284
+    ],
+    [
+      -0.6465596737493674,
+      0.21042189097197603,
+      0.7332688566146045,
+      0.722778487873686
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "ik_success_by_depth": {
+    "0": 218
+  },
+  "ik_success_total": 218,
+  "ranked_after_ik": 1,
+  "attempted": 1,
+  "original_sapien_pass_count": 1,
+  "original_sapien_passes": [
+    {
+      "pool": "deximit/fixture/smear071/input/candidate_pools/bodex_right_f4_d0_seed20260827_v2.npz",
+      "depth": 0,
+      "source_candidate_index": 21,
+      "rotation_prompt_error_rad": 0.5483245632158866,
+      "original_rank": 54,
+      "original_sapien_pass": true,
+      "failure": null,
+      "right_curobo_stages": [
+        {
+          "stage": "pregrasp",
+          "success": true,
+          "status": "None",
+          "trajectory_control_steps": 31
+        },
+        {
+          "stage": "grasp",
+          "success": true,
+          "status": "None",
+          "trajectory_control_steps": 31
+        },
+        {
+          "stage": "squeeze",
+          "success": true,
+          "status": "None",
+          "trajectory_control_steps": 31
+        },
+        {
+          "stage": "demonstrated_object_motion",
+          "success": true,
+          "status": "None",
+          "trajectory_control_steps": 31
+        }
+      ],
+      "metrics": {
+        "physics_steps": 1728,
+        "contact_step_definition": "load-bearing object contact with point impulse greater than 1e-10 N*s",
+        "object_contact_steps": 1728,
+        "right_hand_contact_steps": 824,
+        "object_detected_contact_steps": 1728,
+        "right_hand_detected_contact_steps": 1196,
+        "minimum_object_contact_separation_m": -0.00018342827388551086,
+        "minimum_right_hand_contact_separation_m": -0.00018342827388551086,
+        "maximum_object_contact_impulse_ns": 0.10866552284642773,
+        "maximum_right_hand_contact_impulse_ns": 0.10866552284642773,
+        "object_mass_kg": 0.05885494127869606,
+        "object_inertia_kg_m2": [
+          9.055659575096797e-06,
+          4.3045380152761936e-05,
+          4.4058135244995356e-05
+        ],
+        "object_cmass_local_pose_wxyz": [
+          0.0005124661256559193,
+          -0.00025407676002942026,
+          -0.0002971706271637231,
+          0.998441219329834,
+          0.055372923612594604,
+          -0.007001698482781649,
+          0.00029182026628404856
+        ],
+        "object_linear_damping": 20.0,
+        "object_angular_damping": 20.0,
+        "object_collision_shapes": [
+          {
+            "contact_offset_m": 0.019999999552965164,
+            "rest_offset_m": 0.0,
+            "static_friction": 0.699999988079071,
+            "dynamic_friction": 0.5
+          }
+        ],
+        "object_initial_pose": [
+          [
+            -0.49481091987716513,
+            -0.868674406921611,
+            0.023810256817195993,
+            0.7118090391159058
+          ],
+          [
+            0.8689624083851444,
+            -0.4948604669966979,
+            0.004177441477666861,
+            0.054983727633953094
+          ],
+          [
+            0.008153918309806921,
+            0.022757261768436798,
+            0.9997077676266197,
+            0.7367448806762695
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "object_last_sampled_pose": [
+          [
+            -0.5859200841834376,
+            -0.3463694488217447,
+            0.7326157655097206,
+            0.6691080331802368
+          ],
+          [
+            0.6757327088012243,
+            -0.7078449623954994,
+            0.20576883988464703,
+            -0.10908360779285431
+          ],
+          [
+            0.4473063393320432,
+            0.6156165317259068,
+            0.6487937458538977,
+            0.8025636672973633
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "mean_target_vertex_error_m": 0.01812369113096256
+      },
+      "exported_trajectory": "deximit/fixture/smear071/sapien/candidate21_trace.npz",
+      "exported_trajectory_sha256": "f6b4c64a674c1fa994e5b298df15b40727e8b4edefd3dc387db784479e507c00",
+      "selected_target": "deximit/fixture/smear071/sapien/candidate21_target.npy",
+      "selected_target_sha256": "ab4d47c14a3d62255b25cbe4a44885899970807eb7f615eac9edef42f92f3a97"
+    }
+  ],
+  "all_attempts": [
+    {
+      "pool": "deximit/fixture/smear071/input/candidate_pools/bodex_right_f4_d0_seed20260827_v2.npz",
+      "depth": 0,
+      "source_candidate_index": 21,
+      "rotation_prompt_error_rad": 0.5483245632158866,
+      "original_rank": 54,
+      "original_sapien_pass": true,
+      "failure": null,
+      "right_curobo_stages": [
+        {
+          "stage": "pregrasp",
+          "success": true,
+          "status": "None",
+          "trajectory_control_steps": 31
+        },
+        {
+          "stage": "grasp",
+          "success": true,
+          "status": "None",
+          "trajectory_control_steps": 31
+        },
+        {
+          "stage": "squeeze",
+          "success": true,
+          "status": "None",
+          "trajectory_control_steps": 31
+        },
+        {
+          "stage": "demonstrated_object_motion",
+          "success": true,
+          "status": "None",
+          "trajectory_control_steps": 31
+        }
+      ],
+      "metrics": {
+        "physics_steps": 1728,
+        "contact_step_definition": "load-bearing object contact with point impulse greater than 1e-10 N*s",
+        "object_contact_steps": 1728,
+        "right_hand_contact_steps": 824,
+        "object_detected_contact_steps": 1728,
+        "right_hand_detected_contact_steps": 1196,
+        "minimum_object_contact_separation_m": -0.00018342827388551086,
+        "minimum_right_hand_contact_separation_m": -0.00018342827388551086,
+        "maximum_object_contact_impulse_ns": 0.10866552284642773,
+        "maximum_right_hand_contact_impulse_ns": 0.10866552284642773,
+        "object_mass_kg": 0.05885494127869606,
+        "object_inertia_kg_m2": [
+          9.055659575096797e-06,
+          4.3045380152761936e-05,
+          4.4058135244995356e-05
+        ],
+        "object_cmass_local_pose_wxyz": [
+          0.0005124661256559193,
+          -0.00025407676002942026,
+          -0.0002971706271637231,
+          0.998441219329834,
+          0.055372923612594604,
+          -0.007001698482781649,
+          0.00029182026628404856
+        ],
+        "object_linear_damping": 20.0,
+        "object_angular_damping": 20.0,
+        "object_collision_shapes": [
+          {
+            "contact_offset_m": 0.019999999552965164,
+            "rest_offset_m": 0.0,
+            "static_friction": 0.699999988079071,
+            "dynamic_friction": 0.5
+          }
+        ],
+        "object_initial_pose": [
+          [
+            -0.49481091987716513,
+            -0.868674406921611,
+            0.023810256817195993,
+            0.7118090391159058
+          ],
+          [
+            0.8689624083851444,
+            -0.4948604669966979,
+            0.004177441477666861,
+            0.054983727633953094
+          ],
+          [
+            0.008153918309806921,
+            0.022757261768436798,
+            0.9997077676266197,
+            0.7367448806762695
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "object_last_sampled_pose": [
+          [
+            -0.5859200841834376,
+            -0.3463694488217447,
+            0.7326157655097206,
+            0.6691080331802368
+          ],
+          [
+            0.6757327088012243,
+            -0.7078449623954994,
+            0.20576883988464703,
+            -0.10908360779285431
+          ],
+          [
+            0.4473063393320432,
+            0.6156165317259068,
+            0.6487937458538977,
+            0.8025636672973633
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "mean_target_vertex_error_m": 0.01812369113096256
+      },
+      "exported_trajectory": "deximit/fixture/smear071/sapien/candidate21_trace.npz",
+      "exported_trajectory_sha256": "f6b4c64a674c1fa994e5b298df15b40727e8b4edefd3dc387db784479e507c00",
+      "selected_target": "deximit/fixture/smear071/sapien/candidate21_target.npy",
+      "selected_target_sha256": "ab4d47c14a3d62255b25cbe4a44885899970807eb7f615eac9edef42f92f3a97"
+    }
+  ],
+  "elapsed_s_this_process": 4.453171683475375,
+  "success_definition": "unchanged DexImit rollout_and_select_grasp: cuRobo plans pregrasp, grasp, squeeze and then the v3-derived demonstrated relative object motion; pass when mean object-vertex motion error is at most 0.02 m",
+  "limitations": [
+    "SAPIEN contact separation and impulse are sampled for audit but do not replace the original pass rule.",
+    "Every SAPIEN pass still requires the independent current-MuJoCo 2 mm penetration gate.",
+    "No result from this directory is eligible for the formal renderer or 3.3."
+  ]
+}

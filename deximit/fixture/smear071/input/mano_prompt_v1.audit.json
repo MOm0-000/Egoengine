@@ -1,0 +1,74 @@
+{
+  "schema": "deximit_taco_mano_prompt_v1_diagnostic_only",
+  "diagnostic_only": true,
+  "formal_renderer_3_3_eligible": false,
+  "output": "deximit/fixture/smear071/input/mano_prompt_v1.npz",
+  "output_sha256": "b149803ae370c9a010354117d9eb4ce4f6fe585e80605d70cf87482cb8066522",
+  "finding": "the previous adapter used a joint-derived xHand palm frame where DexImit requires the released MANO global root rotation",
+  "source_identity": {
+    "contact_v3": "deximit/fixture/smear071/input/contact_geom_v3.npz",
+    "contact_v3_sha256": "c8c8b0debebe3e55316d27646855209fa1269ecde45600332e3abb42bcae1259",
+    "human_reference": "deximit/fixture/smear071/input/human_reference_v2.npz",
+    "human_reference_sha256": "a71d63ccdb01063033df23b2d28227077074a8e7fad238bdbc765d22059c487d",
+    "mano_pose": "deximit/fixture/smear071/input/mano/right_hand.pkl",
+    "mano_pose_sha256": "d2bfbeee5cb26422a90ee738b78f4fdfedbb7606e57b287f05a93075d41e0515",
+    "mano_shape": "deximit/fixture/smear071/input/mano/right_hand_shape.pkl",
+    "mano_shape_sha256": "ece14569a472c15737332b14bc6d92b992b42343e233f2ccd9995733f051b672"
+  },
+  "checks": {
+    "mano_root_position_error_m": {
+      "min": 0.0,
+      "p05": 0.0,
+      "median": 0.0,
+      "p95": 0.0,
+      "max": 0.0
+    },
+    "world_to_sim_translation_drift_m": {
+      "min": 0.0,
+      "p05": 1.163796151607972e-08,
+      "median": 3.227167077803926e-08,
+      "p95": 7.529893317590873e-08,
+      "max": 9.266323394179885e-08
+    },
+    "world_to_sim_rotation_drift_deg": {
+      "min": 3.3555795685110973e-15,
+      "p05": 5.354978070028438e-07,
+      "median": 2.829029409050149e-06,
+      "p95": 5.115853564727527e-06,
+      "max": 6.43020022259722e-06
+    },
+    "official_mesh_roundtrip_error_m": {
+      "min": 0.0,
+      "p05": 1.4304896245381992e-17,
+      "median": 8.092071311423672e-17,
+      "p95": 1.5515838457795457e-16,
+      "max": 2.790263751007313e-16
+    },
+    "mano_root_vs_xhand_palm_rotation_deg": {
+      "min": 121.4933619095814,
+      "p05": 121.49337551234416,
+      "median": 121.4934041882679,
+      "p95": 121.49342915423108,
+      "max": 121.49343586600595
+    },
+    "correct_vs_previous_deximit_prompt_rotation_deg": {
+      "min": 121.49336190958137,
+      "p05": 121.49337551234413,
+      "median": 121.49340418826787,
+      "p95": 121.49342915423105,
+      "max": 121.49343586600592
+    },
+    "mano_root_vs_xhand_wrist_position_error_m": {
+      "min": 8.888558839844916e-09,
+      "p05": 9.17214038506965e-09,
+      "median": 1.4068773223763518e-08,
+      "p95": 1.9005446861387727e-08,
+      "max": 1.9637835758067363e-08
+    }
+  },
+  "decision": {
+    "previous_sapien_ranking_valid": false,
+    "reason": "all prior top-120 sets were selected with the wrong hand orientation prompt",
+    "required_action": "rerun each BODex depth with T_sim_deximit_prompt from this artifact"
+  }
+}

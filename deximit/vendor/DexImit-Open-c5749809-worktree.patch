@@ -1,0 +1,180 @@
+diff --git a/third_party/any2dex/any2dex/env/base_env.py b/third_party/any2dex/any2dex/env/base_env.py
+index 86927ac..8614b6d 100644
+--- a/third_party/any2dex/any2dex/env/base_env.py
++++ b/third_party/any2dex/any2dex/env/base_env.py
+@@ -541,7 +541,8 @@ class BaseEnv:
+         object_mesh.apply_transform(object_pose_tmp)
+ 
+         # scale the object from its center with z=0
+-        c = object_mesh.centroid
++        # Newer trimesh versions expose ``centroid`` as a read-only array.
++        c = np.array(object_mesh.centroid, dtype=np.float64, copy=True)
+         z_min_ori = object_mesh.bounds[0][2]
+         c[-1] = z_min_ori
+         object_mesh.apply_translation(-c)
+@@ -590,7 +591,7 @@ class BaseEnv:
+         object_mesh.apply_transform(init_pose)
+ 
+         # scale the object from its center with z=0
+-        c = object_mesh.centroid
++        c = np.array(object_mesh.centroid, dtype=np.float64, copy=True)
+         c[-1] = object_mesh.bounds[0][2]
+         object_mesh.apply_translation(-c)
+         object_mesh.apply_scale(scale)
+diff --git a/third_party/any2dex/any2dex/env/base_env_for_render.py b/third_party/any2dex/any2dex/env/base_env_for_render.py
+index bf31197..3aaf5b0 100644
+--- a/third_party/any2dex/any2dex/env/base_env_for_render.py
++++ b/third_party/any2dex/any2dex/env/base_env_for_render.py
+@@ -372,7 +372,10 @@ class BaseEnv:
+         object_mesh.apply_transform(object_pose_tmp)
+ 
+         # scale the object from its center with z=0
+-        c = object_mesh.centroid
++        # Newer trimesh versions expose ``centroid`` as a read-only array.
++        # The original code mutates z below, so keep the same value in a
++        # writable copy instead of relying on the dependency's old behavior.
++        c = np.array(object_mesh.centroid, dtype=np.float64, copy=True)
+         z_min_ori = object_mesh.bounds[0][2]
+         c[-1] = z_min_ori
+         object_mesh.apply_translation(-c)
+@@ -420,7 +423,7 @@ class BaseEnv:
+         object_mesh.apply_transform(init_pose)
+ 
+         # scale the object from its center with z=0
+-        c = object_mesh.centroid
++        c = np.array(object_mesh.centroid, dtype=np.float64, copy=True)
+         c[-1] = object_mesh.bounds[0][2]
+         object_mesh.apply_translation(-c)
+         object_mesh.apply_scale(scale)
+diff --git a/third_party/any2dex/any2dex/util/util.py b/third_party/any2dex/any2dex/util/util.py
+index a97ede9..15d2c22 100644
+--- a/third_party/any2dex/any2dex/util/util.py
++++ b/third_party/any2dex/any2dex/util/util.py
+@@ -197,7 +197,35 @@ def composite_pose(base_pose, relative_pose):
+     return np.concatenate([final_pos, final_quat], axis=-1)
+ 
+ 
+-def simulate_best_grasp(env, data_all, motion_gen, skill1_to_motion2_transformation, hand_idx=0, object_idx=0):
++def _snapshot_robot_state(robot):
++    """Capture all articulation state that affects the next PhysX step."""
++    joints = robot.get_active_joints()
++    return {
++        "qpos": np.asarray(robot.get_qpos()).copy(),
++        "qvel": np.asarray(robot.get_qvel()).copy(),
++        "drive_targets": tuple(
++            np.asarray(joint.get_drive_target()).copy() for joint in joints
++        ),
++        "joint_count": len(joints),
++    }
++
++
++def _restore_robot_state(robot, state):
++    """Restore articulation state without replacing its drive targets."""
++    joints = robot.get_active_joints()
++    if len(joints) != state["joint_count"]:
++        raise RuntimeError("robot active-joint count changed while testing grasps")
++
++    robot.set_qpos(state["qpos"])
++    robot.set_qvel(state["qvel"])
++    for joint, target in zip(joints, state["drive_targets"]):
++        joint.set_drive_target(target)
++
++
++def simulate_best_grasp(
++    env, data_all, motion_gen, skill1_to_motion2_transformation,
++    hand_idx=0, object_idx=0, pregrasp_distance=0.1,
++):
+     import sapien
+ 
+     print(f'start simulate_best_grasp for hand {"right" if hand_idx == 1 else "left"}')
+@@ -206,7 +234,11 @@ def simulate_best_grasp(env, data_all, motion_gen, skill1_to_motion2_transformat
+         raise ValueError("data_all为空，无法进行抓取仿真")
+ 
+     # 备份初始机器人与物体状态，便于每个候选抓取都从同一起点开始
+-    init_robot_qpos = [env.robot_left.get_qpos().copy(), env.robot_right.get_qpos().copy()]
++    init_robot_state = [
++        _snapshot_robot_state(env.robot_left),
++        _snapshot_robot_state(env.robot_right),
++    ]
++    init_robot_qpos = [state["qpos"] for state in init_robot_state]
+     init_object_pose = [(obj.get_pose().p.copy(), obj.get_pose().q.copy()) for obj in env.object_list]
+     other_idx = 1 - hand_idx
+     other_robot_qpos = init_robot_qpos[other_idx]
+@@ -217,8 +249,10 @@ def simulate_best_grasp(env, data_all, motion_gen, skill1_to_motion2_transformat
+ 
+     def reset_env_state():
+         """将环境恢复到初始状态，确保不同抓取候选的仿真公平"""
+-        env.robot_left.set_qpos(init_robot_qpos[0])
+-        env.robot_right.set_qpos(init_robot_qpos[1])
++        for planner in motion_gen:
++            planner.clear_world_cache()
++        _restore_robot_state(env.robot_left, init_robot_state[0])
++        _restore_robot_state(env.robot_right, init_robot_state[1])
+         for obj, (pos, quat) in zip(env.object_list, init_object_pose):
+             obj.set_pose(sapien.Pose(pos, quat))
+             comp = obj.find_component_by_type(sapien.physx.PhysxRigidBodyComponent)
+@@ -382,8 +416,11 @@ def rollout_and_select_grasp(env, data_all, motion_gen, relative_transformation,
+         raise ValueError("data_all 为空")
+ 
+     # ================== 备份初始状态 ==================
+-    init_robot_qpos = [env.robot_left.get_qpos().copy(),
+-                       env.robot_right.get_qpos().copy()]
++    init_robot_state = [
++        _snapshot_robot_state(env.robot_left),
++        _snapshot_robot_state(env.robot_right),
++    ]
++    init_robot_qpos = [state["qpos"] for state in init_robot_state]
+     init_object_pose = [(obj.get_pose().p.copy(), obj.get_pose().q.copy())
+                         for obj in env.object_list]
+ 
+@@ -397,8 +434,8 @@ def rollout_and_select_grasp(env, data_all, motion_gen, relative_transformation,
+     def reset_env():
+         motion_gen[0].clear_world_cache()
+         motion_gen[1].clear_world_cache()
+-        env.robot_left.set_qpos(init_robot_qpos[0])
+-        env.robot_right.set_qpos(init_robot_qpos[1])
++        _restore_robot_state(env.robot_left, init_robot_state[0])
++        _restore_robot_state(env.robot_right, init_robot_state[1])
+         for obj, (p, q) in zip(env.object_list, init_object_pose):
+             obj.set_pose(sapien.Pose(p, q))
+             comp = obj.find_component_by_type(sapien.physx.PhysxRigidBodyComponent)
+@@ -555,7 +592,6 @@ def rollout_and_select_grasp(env, data_all, motion_gen, relative_transformation,
+         qposes = grasp_data[0, :3, 7:]    # (3, hand_q)
+ 
+         # ---------- 对 pregrasp 做偏移 ----------
+-        pregrasp_distance = 0.1
+         # grasp_offset = 0.005
+         grasp_offset = 0.0
+         if hand_idx == 0:
+@@ -643,8 +679,11 @@ def rollout_and_select_biarm_grasp(env, data_all, motion_gen, relative_transform
+         raise ValueError("data_all 为空")
+ 
+     # ================== 备份初始状态 ==================
+-    init_robot_qpos = [env.robot_left.get_qpos().copy(),
+-                       env.robot_right.get_qpos().copy()]
++    init_robot_state = [
++        _snapshot_robot_state(env.robot_left),
++        _snapshot_robot_state(env.robot_right),
++    ]
++    init_robot_qpos = [state["qpos"] for state in init_robot_state]
+     init_object_pose = [(obj.get_pose().p.copy(), obj.get_pose().q.copy())
+                         for obj in env.object_list]
+ 
+@@ -654,8 +693,8 @@ def rollout_and_select_biarm_grasp(env, data_all, motion_gen, relative_transform
+     def reset_env():
+         motion_gen[0].clear_world_cache()
+         motion_gen[1].clear_world_cache()
+-        env.robot_left.set_qpos(init_robot_qpos[0])
+-        env.robot_right.set_qpos(init_robot_qpos[1])
++        _restore_robot_state(env.robot_left, init_robot_state[0])
++        _restore_robot_state(env.robot_right, init_robot_state[1])
+         for obj, (p, q) in zip(env.object_list, init_object_pose):
+             obj.set_pose(sapien.Pose(p, q))
+             comp = obj.find_component_by_type(sapien.physx.PhysxRigidBodyComponent)
+@@ -866,4 +905,4 @@ def rollout_and_select_biarm_grasp(env, data_all, motion_gen, relative_transform
+ 
+         return np.concatenate((left_qpos, right_qpos), axis=0), np.concatenate(actions, axis=0)
+ 
+-    raise RuntimeError("所有抓取候选均失败")
+\ No newline at end of file
++    raise RuntimeError("所有抓取候选均失败")
