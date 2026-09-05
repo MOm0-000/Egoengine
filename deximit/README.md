@@ -25,6 +25,27 @@ The fixture contains only the inputs, candidate pools, exact scene, traces,
 calibration evidence, and the fixed-camera success video needed for this
 sample. The large original `runs/` tree is not required.
 
+## Backup scope
+
+This snapshot was synchronized from the active diagnostic tree on
+2026-09-05. It includes:
+
+- the DexImit/BODex diagnostic runners used for SAPIEN screening and exact
+  MuJoCo replay;
+- the small `egoengine_repro` modules imported by those runners;
+- the full patch against upstream commit
+  `c5749809fa425525a9bf7aa392dbb3f6268ae28f`;
+- Chinese handoff, kettle hold-audit, and upstream-difference reports under
+  `docs/`;
+- the self-contained successful `smear071` candidate 21 fixture.
+
+The upstream patch preserves the current compatibility and correctness fixes:
+writable trimesh centroid copies, complete articulation-state restoration
+between candidates, cuRobo cache clearing, BODex squeeze joint-limit clipping,
+and runtime hand-target limit checks. The diagnostics additionally enforce and
+record candidate-validity, joint-order, trace, contact-schema, and scene-schema
+contracts. These changes do not relax the SAPIEN or MuJoCo success gates.
+
 ## Reproduce
 
 The upstream DexImit checkout and its patched working tree are external
@@ -56,6 +77,22 @@ strict physical gate pass. It never overwrites the checked-in evidence.
 Required runtime components are the DexImit/BODex environment with CUDA,
 SAPIEN 3.0.1, cuRobo 0.7.8, and a MuJoCo Python installation compatible with
 the checked-in diagnostic scripts.
+
+For an offline integrity check that does not regenerate BODex candidates or
+rerun SAPIEN, use:
+
+```bash
+/path/to/mujoco-python deximit/verify_smear071_backup.py
+```
+
+This validates the frozen fixture and replays the recorded SAPIEN trace in
+MuJoCo. A fresh end-to-end reproduction is only established by
+`reproduce_smear071.sh` with the CUDA/SAPIEN and MuJoCo environments above.
+
+The full script was rerun successfully on 2026-09-05 against the recorded
+upstream commit plus this patch. Candidate 21 passed SAPIEN with a 0.01816 m
+object-motion error (0.02000 m threshold), and the newly exported trajectory
+passed the MuJoCo strict gate.
 
 ## Frozen evidence
 

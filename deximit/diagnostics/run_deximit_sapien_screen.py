@@ -27,6 +27,11 @@ from scipy.spatial.transform import Rotation
 SCHEMA = "deximit_original_sapien_screen_v10_joint_force_metrics_diagnostic_only"
 TRACE_SCHEMA = "deximit_sapien_hand_trace_v8_joint_force_metrics_diagnostic_only"
 CANDIDATE_SCHEMA = "xhand_bodex_grasp_candidates_v2_diagnostic_only"
+STRICT_CANDIDATE_VALID_CONTRACT = (
+    "finite_pose_and_qpos AND "
+    "all_three_raw_stages_within_BODex_URDF_position_limits; "
+    "BODex_result_success_is_recorded_but_not_used_as_a_hard_filter"
+)
 TABLE_HEIGHT_M = 0.714
 LOAD_BEARING_IMPULSE_EPS_NS = 1.0e-10
 CONTACT_CHANNELS = (
@@ -41,9 +46,21 @@ CONTACT_LINKS = (
     "right_hand_ring_link1", "right_hand_ring_link2",
     "right_hand_pinky_link1", "right_hand_pinky_link2", "other",
 )
+SAPIEN_JOINTS = (
+    "right_hand_thumb_bend_joint", "right_hand_index_bend_joint",
+    "right_hand_mid_joint1", "right_hand_ring_joint1",
+    "right_hand_pinky_joint1", "right_hand_thumb_rota_joint1",
+    "right_hand_index_joint1", "right_hand_mid_joint2",
+    "right_hand_ring_joint2", "right_hand_pinky_joint2",
+    "right_hand_thumb_rota_joint2", "right_hand_index_joint2",
+)
 CANDIDATE_POSE_POLICIES = ("strict", "legacy")
 CANDIDATE_POSE_POSITION_TOLERANCE_M = 2.0e-5
 CANDIDATE_POSE_ROTATION_TOLERANCE_RAD = 2.0e-5
+OFFICIAL_CONTACT_SCHEMA = "taco_mano_surface_contact_v3_conservative_geometric_evidence"
+XHAND_CONTACT_SCHEMA = "deximit_taco_xhand_ground_truth_contact_v1_diagnostic_only"
+OFFICIAL_PROMPT_SCHEMA = "deximit_taco_mano_prompt_v1_diagnostic_only"
+XHAND_PROMPT_SCHEMA = "deximit_taco_xhand_prompt_v1_diagnostic_only"
 
 
 def parse_args() -> argparse.Namespace:
@@ -174,15 +191,18 @@ def pose7(matrix: np.ndarray) -> np.ndarray:
     ))
 
 
-def contact_contract(path: Path) -> tuple[int, int, list[str], str]:
+def contact_contract(path: Path) -> tuple[int, int, list[str], str, str]:
     with np.load(path, allow_pickle=False) as data:
         schema = str(np.asarray(data["schema"]).item())
         episode_id = str(np.asarray(data["episode_id"]).item())
         states = np.asarray(data["state"], dtype=np.int8)
         hands = [str(value) for value in data["hand_order"]]
         regions = [str(value) for value in data["region_order"]]
-    if schema != "taco_mano_surface_contact_v3_conservative_geometric_evidence":
-        raise ValueError("SAPIEN screening requires conservative surface-contact v3")
+    if schema not in (OFFICIAL_CONTACT_SCHEMA, XHAND_CONTACT_SCHEMA):
+        raise ValueError(
+            "SAPIEN screening requires conservative surface-contact v3 or the "
+            "explicit non-MANO XHand diagnostic contact artifact"
+        )
     state = states[:, hands.index("right")]
     fingers = [name for name in regions if name != "palm"]
     opposed = (
@@ -201,7 +221,7 @@ def contact_contract(path: Path) -> tuple[int, int, list[str], str]:
         raise ValueError("v3 opposed-contact row does not contain two named fingers")
     if not episode_id:
         raise ValueError("v3 contact artifact lacks an episode identity")
-    return start, end, active, episode_id
+    return start, end, active, episode_id, schema
 
 
 def manual_contract(
@@ -247,31 +267,54 @@ def validate_active_fingers(active: list[str]) -> int:
 
 def deximit_prompt(
     prompt_path: Path, human_path: Path, contact_path: Path,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, str]:
     with np.load(prompt_path, allow_pickle=False) as data:
         schema = str(np.asarray(data["schema"]).item())
         diagnostic_only = bool(np.asarray(data["diagnostic_only"]).item())
         formal_eligible = bool(np.asarray(data["formal_renderer_3_3_eligible"]).item())
-        prompt = np.asarray(data["T_sim_deximit_prompt"], dtype=np.float64)
+        prompt_key = (
+            "T_sim_deximit_prompt" if schema == OFFICIAL_PROMPT_SCHEMA
+            else "T_sim_xhand_wrist_prompt"
+        )
+        contact_key = (
+            "source_contact_v3" if schema == OFFICIAL_PROMPT_SCHEMA
+            else "source_contact_artifact"
+        )
+        contact_hash_key = (
+            "source_contact_v3_sha256" if schema == OFFICIAL_PROMPT_SCHEMA
+            else "source_contact_artifact_sha256"
+        )
+        prompt = np.asarray(data[prompt_key], dtype=np.float64)
         prompt_objects = np.asarray(data["T_sim_object_reference"], dtype=np.float64)
         source_human_hash = str(np.asarray(data["source_human_reference_sha256"]).item())
-        source_contact = Path(str(np.asarray(data["source_contact_v3"]).item())).resolve()
-        source_contact_hash = str(np.asarray(data["source_contact_v3_sha256"]).item())
+        source_contact = Path(str(np.asarray(data[contact_key]).item())).resolve()
+        source_contact_hash = str(np.asarray(data[contact_hash_key]).item())
     if (
-        schema != "deximit_taco_mano_prompt_v1_diagnostic_only"
-        or not diagnostic_only or formal_eligible
+        not diagnostic_only or formal_eligible
         or source_human_hash != sha256(human_path)
-        or source_contact != contact_path
-        or source_contact_hash != sha256(contact_path)
+        or prompt.ndim != 3 or prompt.shape[1:] != (4, 4)
+        or prompt_objects.shape != prompt.shape
+        or not np.isfinite(prompt).all()
+        or not np.isfinite(prompt_objects).all()
     ):
         raise ValueError("DexImit prompt violates its isolated diagnostic contract")
+    if schema == OFFICIAL_PROMPT_SCHEMA:
+        if source_contact != contact_path or source_contact_hash != sha256(contact_path):
+            raise ValueError("MANO prompt and contact-v3 artifact do not align")
+        prompt_source = "released TACO MANO global root rotation in exact DexImit canonical convention"
+    elif schema == XHAND_PROMPT_SCHEMA:
+        if source_contact != contact_path or source_contact_hash != sha256(contact_path):
+            raise ValueError("XHand prompt and diagnostic contact artifact do not align")
+        prompt_source = "existing XHand wrist target; explicitly non-MANO diagnostic ranking prompt"
+    else:
+        raise ValueError("unknown DexImit diagnostic prompt schema")
     with np.load(human_path, allow_pickle=False) as data:
         objects = np.asarray(data["T_sim_object_reference"], dtype=np.float64)[:, 0]
     if prompt.shape != objects.shape or not np.allclose(
         prompt_objects, objects, atol=2.0e-7, rtol=0.0,
     ):
         raise ValueError("DexImit prompt and human-reference object frames do not align")
-    return prompt, objects
+    return prompt, objects, prompt_source
 
 
 def normalized_pose7(value: Any, *, label: str) -> np.ndarray:
@@ -389,6 +432,27 @@ def load_pool(
             np.asarray(data["generation_object_pose_wxyz"], dtype=np.float64)
             if "generation_object_pose_wxyz" in data.files else None
         )
+        strict_evidence_present = all(name in data.files for name in (
+            "candidate_finite", "optimizer_success",
+            "candidate_joint_limits_valid", "joint_position_limits_sapien",
+            "qpos_sapien_joint_order",
+        ))
+        if strict_evidence_present:
+            candidate_finite = np.asarray(data["candidate_finite"], dtype=bool)
+            optimizer_success = np.asarray(data["optimizer_success"], dtype=bool)
+            candidate_joint_limits_valid = np.asarray(
+                data["candidate_joint_limits_valid"], dtype=bool,
+            )
+            joint_position_limits = np.asarray(
+                data["joint_position_limits_sapien"], dtype=np.float64,
+            )
+            qpos_joint_order = tuple(
+                str(value) for value in data["qpos_sapien_joint_order"]
+            )
+        else:
+            candidate_finite = optimizer_success = candidate_joint_limits_valid = None
+            joint_position_limits = None
+            qpos_joint_order = None
     if candidate_pose_policy not in CANDIDATE_POSE_POLICIES:
         raise ValueError(f"unknown candidate pose policy: {candidate_pose_policy}")
     pool_deximit_state = provenance.get("deximit_worktree_state_sha256")
@@ -455,6 +519,35 @@ def load_pool(
             "strict candidate pose policy requires generation_object_pose_wxyz: "
             f"{path}"
         )
+    if candidate_pose_policy == "strict":
+        if not strict_evidence_present:
+            raise ValueError(
+                "strict candidate pose policy requires optimizer-success and "
+                f"joint-limit evidence: {path}"
+            )
+        expected_shape = (len(valid),)
+        if (
+            candidate_finite.shape != expected_shape
+            or optimizer_success.shape != expected_shape
+            or candidate_joint_limits_valid.shape != expected_shape
+            or joint_position_limits.shape != (2, 12)
+            or qpos_joint_order != tuple(SAPIEN_JOINTS)
+            or not np.isfinite(joint_position_limits).all()
+            or provenance.get("candidate_valid_contract")
+            != STRICT_CANDIDATE_VALID_CONTRACT
+        ):
+            raise ValueError(f"strict candidate evidence is malformed: {path}")
+        recomputed_joint_valid = np.all(
+            (raw_qpos >= joint_position_limits[0, None, :])
+            & (raw_qpos <= joint_position_limits[1, None, :]),
+            axis=(1, 2),
+        )
+        recomputed_valid = candidate_finite & recomputed_joint_valid
+        if (
+            not np.array_equal(candidate_joint_limits_valid, recomputed_joint_valid)
+            or not np.array_equal(valid, recomputed_valid)
+        ):
+            raise ValueError(f"strict candidate validity evidence disagrees: {path}")
     return {
         "path": path,
         "sha256": sha256(path),
@@ -465,6 +558,13 @@ def load_pool(
         "generation_pose": generation_pose,
         "generation_pose_protocol": provenance.get("generation_pose_protocol"),
         "deximit_worktree_state_sha256": pool_deximit_state,
+        "optimizer_success_count": (
+            int(optimizer_success.sum()) if optimizer_success is not None else None
+        ),
+        "joint_limit_valid_count": (
+            int(candidate_joint_limits_valid.sum())
+            if candidate_joint_limits_valid is not None else None
+        ),
     }
 
 
@@ -1082,7 +1182,7 @@ def main() -> int:
     prompt_path = args.deximit_prompt.resolve(strict=True)
     mesh_path = args.mesh.resolve(strict=True)
     manual_path = args.manual_label.resolve(strict=True) if args.manual_label else None
-    contact_anchor, contact_end, contact_active, episode_id = contact_contract(contact_path)
+    contact_anchor, contact_end, contact_active, episode_id, contact_schema = contact_contract(contact_path)
     if manual_path is None:
         pregrasp = None
         anchor, motion_end, active = contact_anchor, contact_end, contact_active
@@ -1119,7 +1219,9 @@ def main() -> int:
             )
         selection_scope = f"original DexImit per-depth top-{args.max_rollout} ranking"
 
-    prompt, object_reference = deximit_prompt(prompt_path, human_path, contact_path)
+    prompt, object_reference, prompt_source = deximit_prompt(
+        prompt_path, human_path, contact_path,
+    )
     shift = np.eye(4, dtype=np.float64)
     shift[2, 3] = TABLE_HEIGHT_M
     requested_object_world = shift[None] @ object_reference
@@ -1165,7 +1267,7 @@ def main() -> int:
         "human_reference_sha256": sha256(human_path),
         "deximit_prompt": str(prompt_path),
         "deximit_prompt_sha256": sha256(prompt_path),
-        "prompt_source": "released TACO MANO global root rotation in exact DexImit canonical convention",
+        "prompt_source": prompt_source,
         "contact_v3": str(contact_path),
         "contact_v3_sha256": sha256(contact_path),
         "label_source": label_source,
@@ -1176,7 +1278,10 @@ def main() -> int:
         "motion_end_row": motion_end,
         "active_fingers": active,
         "finger_count": expected_fingers,
-        "depth_policy": "v3 does not observe grasp depth; preserve original BODex definition and sweep 0,1,2,3",
+        "depth_policy": (
+            "contact labels do not observe grasp depth; preserve original BODex "
+            "definition and sweep 0,1,2,3"
+        ),
         "pool_depth": args.pool_depth,
         "candidate_pose_policy": args.candidate_pose_policy,
         "selection_scope": selection_scope,
@@ -1201,6 +1306,12 @@ def main() -> int:
             if args.export_trajectory and render_dir is None else None
         ),
     }
+    if contact_schema != OFFICIAL_CONTACT_SCHEMA:
+        declared.update({
+            "contact_protocol": "explicit non-MANO XHand GT diagnostic contact artifact",
+            "prompt_protocol": "explicit non-MANO XHand wrist diagnostic prompt",
+            "formal_deximit_equivalence": False,
+        })
     if config_path.exists():
         existing = json.loads(config_path.read_text(encoding="utf-8"))
         if existing != declared:

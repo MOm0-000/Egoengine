@@ -61,10 +61,14 @@ SAPIEN_JOINTS = (
 SAPIEN_TO_CANONICAL = np.asarray(
     [SAPIEN_JOINTS.index(name) for name in CANONICAL_JOINTS], dtype=np.int64
 )
+CANONICAL_TO_SAPIEN = np.asarray(
+    [CANONICAL_JOINTS.index(name) for name in SAPIEN_JOINTS], dtype=np.int64
+)
 
 
 def apply_deximit_rollout_contract(
     wrist_pose: np.ndarray, qpos_sapien: np.ndarray,
+    joint_position_limits_sapien: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Apply DexImit's right-hand preprocessing before physical rollout.
 
@@ -91,6 +95,15 @@ def apply_deximit_rollout_contract(
     poses[:, 0, :3] = poses[:, 1, :3] - 0.1 * direction_world
     poses[:, 0, 3:] = poses[:, 1, 3:]
     joints[:, 0:2, 2:7] -= 0.2
+    if joint_position_limits_sapien is not None:
+        limits = np.asarray(joint_position_limits_sapien, dtype=np.float64)
+        if limits.shape != (2, len(SAPIEN_JOINTS)) or not np.isfinite(limits).all():
+            raise ValueError("Sapien joint position limits must have shape (2, 12)")
+        joints[:, 0:2, 2:7] = np.clip(
+            joints[:, 0:2, 2:7],
+            limits[0, None, 2:7],
+            limits[1, None, 2:7],
+        )
     return poses.astype(np.float32), joints.astype(np.float32)
 
 
@@ -357,21 +370,51 @@ def main() -> None:
         raise RuntimeError(f"Unexpected BODex output shape: {raw.shape}")
     returned = raw[:, 0]
     wrist_pose_world = returned[:, :, :7]
-    wrist_pose = world_poses_to_object_frame(wrist_pose_world, object_pose_wxyz)
     qpos_sapien_raw = returned[:, :, 7:]
     qpos_canonical_raw = qpos_sapien_raw[:, :, SAPIEN_TO_CANONICAL]
-    wrist_pose_rollout, qpos_sapien_rollout = apply_deximit_rollout_contract(
-        wrist_pose, qpos_sapien_raw,
+    optimizer_success = np.asarray(
+        generator.last_result_success, dtype=bool,
+    )
+    joint_position_limits_canonical = np.asarray(
+        generator.last_joint_position_limits, dtype=np.float64,
+    )
+    squeeze_limited_joint_mask = np.asarray(
+        generator.last_squeeze_limited_joint_mask, dtype=bool,
+    )
+    if (
+        optimizer_success.shape != (len(returned),)
+        or joint_position_limits_canonical.shape != (2, len(CANONICAL_JOINTS))
+        or squeeze_limited_joint_mask.shape != (len(returned), len(CANONICAL_JOINTS))
+        or not np.isfinite(joint_position_limits_canonical).all()
+    ):
+        raise RuntimeError("BODex did not expose aligned optimizer and joint-limit evidence")
+    joint_position_limits_sapien = (
+        joint_position_limits_canonical[:, CANONICAL_TO_SAPIEN]
+    )
+    wrist_pose_world_rollout, qpos_sapien_rollout = apply_deximit_rollout_contract(
+        wrist_pose_world, qpos_sapien_raw, joint_position_limits_sapien,
+    )
+    wrist_pose = world_poses_to_object_frame(wrist_pose_world, object_pose_wxyz)
+    wrist_pose_rollout = world_poses_to_object_frame(
+        wrist_pose_world_rollout, object_pose_wxyz,
     )
     qpos_canonical_rollout = qpos_sapien_rollout[:, :, SAPIEN_TO_CANONICAL]
     quat_norm = np.linalg.norm(wrist_pose[:, :, 3:], axis=-1)
-    candidate_valid = (
+    candidate_finite = (
         np.isfinite(returned).all(axis=(1, 2))
         & np.isfinite(quat_norm).all(axis=1)
         & np.all((quat_norm > 0.5) & (quat_norm < 1.5), axis=1)
     )
+    candidate_joint_limits_valid = np.all(
+        (qpos_canonical_raw >= joint_position_limits_canonical[0, None, :])
+        & (qpos_canonical_raw <= joint_position_limits_canonical[1, None, :]),
+        axis=(1, 2),
+    )
+    candidate_valid = candidate_finite & candidate_joint_limits_valid
     if not np.any(candidate_valid):
-        raise RuntimeError("BODex returned no finite candidate pose.")
+        raise RuntimeError(
+            "BODex returned no finite, in-limit candidate pose."
+        )
 
     provenance = {
         "schema": SCHEMA,
@@ -399,7 +442,18 @@ def main() -> None:
         "grasp_depth": args.grasp_depth,
         "requested_candidates": args.num_grasps,
         "returned_candidates": int(len(returned)),
-        "finite_candidates": int(candidate_valid.sum()),
+        "finite_candidates": int(candidate_finite.sum()),
+        "optimizer_successful_candidates": int(optimizer_success.sum()),
+        "joint_limit_valid_candidates": int(candidate_joint_limits_valid.sum()),
+        "valid_candidates": int(candidate_valid.sum()),
+        "squeeze_limited_candidates": int(
+            np.any(squeeze_limited_joint_mask, axis=1).sum()
+        ),
+        "candidate_valid_contract": (
+            "finite_pose_and_qpos AND "
+            "all_three_raw_stages_within_BODex_URDF_position_limits; "
+            "BODex_result_success_is_recorded_but_not_used_as_a_hard_filter"
+        ),
         "stages": list(STAGES),
         "qpos_sapien_joint_order": list(SAPIEN_JOINTS),
         "qpos_canonical_joint_order": list(CANONICAL_JOINTS),
@@ -442,6 +496,16 @@ def main() -> None:
             raw_qpos_canonical_order=qpos_canonical_raw.astype(np.float32),
             generation_object_pose_wxyz=object_pose_wxyz.astype(np.float32),
             candidate_valid=candidate_valid,
+            candidate_finite=candidate_finite,
+            optimizer_success=optimizer_success,
+            candidate_joint_limits_valid=candidate_joint_limits_valid,
+            squeeze_limited_joint_mask=squeeze_limited_joint_mask,
+            joint_position_limits_sapien=(
+                joint_position_limits_sapien.astype(np.float32)
+            ),
+            joint_position_limits_canonical=(
+                joint_position_limits_canonical.astype(np.float32)
+            ),
             qpos_sapien_joint_order=np.asarray(SAPIEN_JOINTS),
             qpos_canonical_joint_order=np.asarray(CANONICAL_JOINTS),
             source_mesh_sha256=np.asarray(provenance["source_mesh_sha256"]),
@@ -457,7 +521,9 @@ def main() -> None:
         "output": str(output),
         "work_dir": str(work_dir),
         "returned_candidates": int(len(returned)),
-        "finite_candidates": int(candidate_valid.sum()),
+        "finite_candidates": int(candidate_finite.sum()),
+        "optimizer_successful_candidates": int(optimizer_success.sum()),
+        "valid_candidates": int(candidate_valid.sum()),
         "diagnostic_only": True,
     }, ensure_ascii=False))
     # BODex's bundled native collision extension can corrupt the heap while

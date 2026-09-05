@@ -49,9 +49,29 @@ TRACE_SCHEMAS = {
     "deximit_sapien_hand_trace_v7_link_contact_metrics_diagnostic_only",
     "deximit_sapien_hand_trace_v8_joint_force_metrics_diagnostic_only",
 }
+SCENE_SCHEMA_V9 = (
+    "deximit_exact_urdf_mujoco_scene_v9_bound_friction_drive_limits_"
+    "diagnostic_only"
+)
+SCENE_SCHEMA_V10 = (
+    "deximit_exact_urdf_mujoco_scene_v10_bound_strong_friction_"
+    "diagnostic_only"
+)
 PHYSICS_DT_S = 1.0 / 240.0
 TGS_SUBSTEPS = 25
 FINGERS = ("thumb", "index", "mid", "ring", "pinky")
+PHASE_ORDER = (
+    "pregrasp", "grasp", "squeeze", "demonstrated_object_motion", "hold",
+)
+
+
+def accepted_scene_schemas(hand_friction_mode: str) -> tuple[str, ...]:
+    """Accept the scene variant that matches the selected friction runtime."""
+    if hand_friction_mode == "strong-anchor":
+        return (SCENE_SCHEMA_V10,)
+    if hand_friction_mode == "speed-threshold":
+        return (SCENE_SCHEMA_V9, SCENE_SCHEMA_V10)
+    raise ValueError(f"unknown hand friction mode: {hand_friction_mode!r}")
 
 
 def friction_for_speed(
@@ -116,8 +136,19 @@ def load_source(path: Path) -> dict[str, object]:
             ),
         }
     count = len(result["phase"])
+    phase = np.asarray(result["phase"])
+    phase_numbers = np.asarray([
+        PHASE_ORDER.index(str(value)) for value in phase
+    ], dtype=np.int64) if phase.ndim == 1 and len(phase) else np.empty(0, dtype=np.int64)
+    object_pose = np.asarray(result["object_pose"])
     if (
-        result["dt"] != PHYSICS_DT_S or result["frame_skip"] != 12
+        count < 2
+        or phase.ndim != 1
+        or set(np.unique(phase).tolist()) != set(PHASE_ORDER)
+        or len(phase_numbers) != count
+        or (len(phase_numbers) > 1 and (np.diff(phase_numbers) < 0).any())
+        or not np.isclose(result["dt"], PHYSICS_DT_S, atol=1.0e-12, rtol=0.0)
+        or result["frame_skip"] != 12
         or result["object_pose"].shape != (count, 7)
         or result["robot_qpos"].shape != (count, 18)
         or result["robot_qvel"].shape != (count, 18)
@@ -126,6 +157,10 @@ def load_source(path: Path) -> dict[str, object]:
         or not all(np.isfinite(np.asarray(result[key])).all() for key in (
             "object_pose", "robot_qpos", "robot_qvel", "drive_target", "sample_time",
         ))
+        or not np.allclose(
+            np.linalg.norm(object_pose[:, 3:], axis=1), 1.0,
+            atol=1.0e-6, rtol=0.0,
+        )
         or not np.allclose(
             result["sample_time"], (np.arange(count) + 1.0) * PHYSICS_DT_S,
             atol=1.0e-10, rtol=0.0,
@@ -222,10 +257,8 @@ def main() -> int:
     provenance_path = scene.with_suffix(".provenance.json")
     provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
     if (
-        provenance.get("schema")
-        != (
-            "deximit_exact_urdf_mujoco_scene_"
-            "v10_bound_strong_friction_diagnostic_only"
+        provenance.get("schema") not in accepted_scene_schemas(
+            args.hand_friction_mode,
         )
         or provenance.get("diagnostic_only") is not True
         or provenance.get("formal_renderer_3_3_eligible") is not False

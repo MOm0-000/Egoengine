@@ -331,10 +331,14 @@ def main() -> int:
                     # distance is exceeded.
                     mujoco.mj_forward(model, data)
                     for pair, desired in strong_friction.apply(data).items():
-                        finger = FINGERS.index(pair_channel[pair])
-                        anchor_force_trace[frame, finger] += (
-                            desired * float(model.opt.timestep)
-                        )
+                        # The physical anchor also covers the palm pair, while
+                        # the audit trace has one column per named finger.
+                        channel = pair_channel[pair]
+                        if channel in FINGERS:
+                            finger = FINGERS.index(channel)
+                            anchor_force_trace[frame, finger] += (
+                                desired * float(model.opt.timestep)
+                            )
                 advance_physx_tgs_microstep(model, data, mujoco, drive)
                 for contact_index in range(data.ncon):
                     contact = data.contact[contact_index]
@@ -384,9 +388,13 @@ def main() -> int:
             warning_count += sum(int(warning.number) for warning in data.warning)
 
         lift = object_trace[:, 2] - pose[row, 2]
-        opposed = active_trace[:, FINGERS.index("thumb")] & (
-            active_trace[:, FINGERS.index("mid")]
-            | active_trace[:, FINGERS.index("ring")]
+        # Keep the loaded-hold gate aligned with the common grasp gate:
+        # thumb plus any named non-thumb finger is a valid opposed pair.
+        other_fingers = [
+            index for index, finger in enumerate(FINGERS) if finger != "thumb"
+        ]
+        opposed = active_trace[:, FINGERS.index("thumb")] & np.any(
+            active_trace[:, other_fingers], axis=1,
         )
         tail = slice(max(0, args.frames - 24), args.frames)
         passed = bool(

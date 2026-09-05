@@ -46,11 +46,76 @@ index bf31197..3aaf5b0 100644
          c[-1] = object_mesh.bounds[0][2]
          object_mesh.apply_translation(-c)
          object_mesh.apply_scale(scale)
+diff --git a/third_party/any2dex/any2dex/util/bodex_util.py b/third_party/any2dex/any2dex/util/bodex_util.py
+index c9858cc..554acaa 100644
+--- a/third_party/any2dex/any2dex/util/bodex_util.py
++++ b/third_party/any2dex/any2dex/util/bodex_util.py
+@@ -16,6 +16,17 @@ def pos_quat_to_mat(pos_quat):
+     mat[:3, :3] = R.from_quat(quat, scalar_first=True).as_matrix()
+     return mat
+ 
++
++def _bounded_squeeze_joints(solution, joint_position_limits, squeeze_scale):
++    """Extrapolate grasp closure without commanding joints past the URDF limits."""
++    pregrasp = solution[..., 0, 7:]
++    grasp = solution[..., 1, 7:]
++    unbounded = grasp + (grasp - pregrasp) * squeeze_scale
++    lower = joint_position_limits[0]
++    upper = joint_position_limits[1]
++    bounded = torch.maximum(torch.minimum(unbounded, upper), lower)
++    return bounded, torch.ne(bounded, unbounded)
++
+ class GraspSynthesizer:
+     def __init__(self, hand, hand_type='xhand', dof=12, num_grasp=500, fingers=5, grasp_depth=0):
+         self.hand = hand
+@@ -52,6 +63,9 @@ class GraspSynthesizer:
+         self.bodex_2_sim_q_idx = [np.where(np.array(bodex_joint_order) == item)[0][0] for item in sapien_joint_order]
+ 
+         self.grasp_solver = None
++        self.last_result_success = None
++        self.last_joint_position_limits = None
++        self.last_squeeze_limited_joint_mask = None
+ 
+     def synthesize_grasp(self, object_path, object_pose, object_scale):
+         if self.hand == 0 or self.hand == 1:
+@@ -118,7 +132,15 @@ class GraspSynthesizer:
+ 
+         if self.hand == 0 or self.hand == 1:
+             squeeze_scale = 1.0
+-            squeeze_pose_qpos = torch.cat([result.solution[..., 1, :7], result.solution[..., 1, 7:] + (result.solution[..., 1, 7:] - result.solution[..., 0, 7:]) * squeeze_scale], dim=-1)
++            joint_position_limits = (
++                self.grasp_solver.kinematics.get_joint_limits().position[..., -self.dof:]
++            )
++            squeeze_qpos, squeeze_limited = _bounded_squeeze_joints(
++                result.solution, joint_position_limits, squeeze_scale,
++            )
++            squeeze_pose_qpos = torch.cat(
++                [result.solution[..., 1, :7], squeeze_qpos], dim=-1,
++            )
+         elif self.hand == 2:
+             squeeze_scale = 0.4
+             squeeze_pose_qpos = torch.cat([result.solution[..., 1, :] + (result.solution[..., 1, :] - result.solution[..., 0, :]) * squeeze_scale], dim=-1)
+@@ -156,6 +178,14 @@ class GraspSynthesizer:
+         if np.sum(nan_mask) > 0:
+             print(f"[INFO] Dropping {np.sum(nan_mask)} nan grasps.")
+         grasp_pose = grasp_pose[~nan_mask]
++        self.last_result_success = result.success[0].detach().cpu().numpy()[~nan_mask]
++        if self.hand == 0 or self.hand == 1:
++            self.last_joint_position_limits = joint_position_limits.detach().cpu().numpy()
++            self.last_squeeze_limited_joint_mask = (
++                squeeze_limited[0].detach().cpu().numpy()[~nan_mask]
++            )
++        else:
++            self.last_joint_position_limits = None
++            self.last_squeeze_limited_joint_mask = None
+ 
+         return grasp_pose
+-
 diff --git a/third_party/any2dex/any2dex/util/util.py b/third_party/any2dex/any2dex/util/util.py
-index a97ede9..15d2c22 100644
+index a97ede9..6232d9c 100644
 --- a/third_party/any2dex/any2dex/util/util.py
 +++ b/third_party/any2dex/any2dex/util/util.py
-@@ -197,7 +197,35 @@ def composite_pose(base_pose, relative_pose):
+@@ -197,7 +197,49 @@ def composite_pose(base_pose, relative_pose):
      return np.concatenate([final_pos, final_quat], axis=-1)
  
  
@@ -80,6 +145,20 @@ index a97ede9..15d2c22 100644
 +        joint.set_drive_target(target)
 +
 +
++def _hand_joint_position_limits(robot, hand_dof):
++    """Return active hand-joint limits in the articulation's qpos order."""
++    joints = robot.get_active_joints()
++    if len(joints) < hand_dof:
++        raise RuntimeError("robot has fewer active joints than the grasp target")
++    limits = np.asarray([
++        np.asarray(joint.get_limits(), dtype=np.float64).reshape(-1, 2)[0]
++        for joint in joints[-hand_dof:]
++    ])
++    if limits.shape != (hand_dof, 2) or not np.isfinite(limits).all():
++        raise RuntimeError("robot hand joint limits are invalid")
++    return limits[:, 0], limits[:, 1]
++
++
 +def simulate_best_grasp(
 +    env, data_all, motion_gen, skill1_to_motion2_transformation,
 +    hand_idx=0, object_idx=0, pregrasp_distance=0.1,
@@ -87,7 +166,7 @@ index a97ede9..15d2c22 100644
      import sapien
  
      print(f'start simulate_best_grasp for hand {"right" if hand_idx == 1 else "left"}')
-@@ -206,7 +234,11 @@ def simulate_best_grasp(env, data_all, motion_gen, skill1_to_motion2_transformat
+@@ -206,7 +248,11 @@ def simulate_best_grasp(env, data_all, motion_gen, skill1_to_motion2_transformat
          raise ValueError("data_all为空，无法进行抓取仿真")
  
      # 备份初始机器人与物体状态，便于每个候选抓取都从同一起点开始
@@ -100,7 +179,7 @@ index a97ede9..15d2c22 100644
      init_object_pose = [(obj.get_pose().p.copy(), obj.get_pose().q.copy()) for obj in env.object_list]
      other_idx = 1 - hand_idx
      other_robot_qpos = init_robot_qpos[other_idx]
-@@ -217,8 +249,10 @@ def simulate_best_grasp(env, data_all, motion_gen, skill1_to_motion2_transformat
+@@ -217,8 +263,10 @@ def simulate_best_grasp(env, data_all, motion_gen, skill1_to_motion2_transformat
  
      def reset_env_state():
          """将环境恢复到初始状态，确保不同抓取候选的仿真公平"""
@@ -113,7 +192,7 @@ index a97ede9..15d2c22 100644
          for obj, (pos, quat) in zip(env.object_list, init_object_pose):
              obj.set_pose(sapien.Pose(pos, quat))
              comp = obj.find_component_by_type(sapien.physx.PhysxRigidBodyComponent)
-@@ -382,8 +416,11 @@ def rollout_and_select_grasp(env, data_all, motion_gen, relative_transformation,
+@@ -382,8 +430,11 @@ def rollout_and_select_grasp(env, data_all, motion_gen, relative_transformation,
          raise ValueError("data_all 为空")
  
      # ================== 备份初始状态 ==================
@@ -127,7 +206,7 @@ index a97ede9..15d2c22 100644
      init_object_pose = [(obj.get_pose().p.copy(), obj.get_pose().q.copy())
                          for obj in env.object_list]
  
-@@ -397,8 +434,8 @@ def rollout_and_select_grasp(env, data_all, motion_gen, relative_transformation,
+@@ -397,8 +448,8 @@ def rollout_and_select_grasp(env, data_all, motion_gen, relative_transformation,
      def reset_env():
          motion_gen[0].clear_world_cache()
          motion_gen[1].clear_world_cache()
@@ -138,15 +217,45 @@ index a97ede9..15d2c22 100644
          for obj, (p, q) in zip(env.object_list, init_object_pose):
              obj.set_pose(sapien.Pose(p, q))
              comp = obj.find_component_by_type(sapien.physx.PhysxRigidBodyComponent)
-@@ -555,7 +592,6 @@ def rollout_and_select_grasp(env, data_all, motion_gen, relative_transformation,
+@@ -553,9 +604,13 @@ def rollout_and_select_grasp(env, data_all, motion_gen, relative_transformation,
+         # 取出 3 个关键帧：pregrasp, grasp, squeeze
+         poses = grasp_data[0, :3, :7]     # (3, 7)
          qposes = grasp_data[0, :3, 7:]    # (3, hand_q)
++        robot = env.robot_left if hand_idx == 0 else env.robot_right
++        hand_lower, hand_upper = _hand_joint_position_limits(robot, qposes.shape[-1])
++        if np.any(qposes < hand_lower - 1e-6) or np.any(qposes > hand_upper + 1e-6):
++            print(f"[rollout] grasp {idx} has out-of-range BODex hand targets")
++            continue
  
          # ---------- 对 pregrasp 做偏移 ----------
 -        pregrasp_distance = 0.1
          # grasp_offset = 0.005
          grasp_offset = 0.0
          if hand_idx == 0:
-@@ -643,8 +679,11 @@ def rollout_and_select_biarm_grasp(env, data_all, motion_gen, relative_transform
+@@ -570,12 +625,20 @@ def rollout_and_select_grasp(env, data_all, motion_gen, relative_transformation,
+         poses[0, 3:7] = poses[1, 3:7]   # orientation same as grasp
+ 
+         # 让hand角度在pregrasp和grasp时舒张一点
+-        qposes[0:2, 2:7] -= 0.2  # 让手指放松
++        qposes[0:2, 2:7] = np.clip(
++            qposes[0:2, 2:7] - 0.2,
++            hand_lower[None, 2:7],
++            hand_upper[None, 2:7],
++        )  # 让手指放松，但不越过执行模型的硬限位
+ 
+         # 让grasp和squeeze深一点
+         poses[1:3, :3] = poses[1:3, :3] + grasp_offset * grasp_dir
+ 
+-        qposes[2, 2:7] += squeeze_angle_offset  # squeeze扩大挤压角度
++        qposes[2, 2:7] = np.clip(
++            qposes[2, 2:7] + squeeze_angle_offset,
++            hand_lower[2:7],
++            hand_upper[2:7],
++        )  # squeeze扩大挤压角度
+ 
+         squeeze_pose = poses[2, :]
+ 
+@@ -643,8 +706,11 @@ def rollout_and_select_biarm_grasp(env, data_all, motion_gen, relative_transform
          raise ValueError("data_all 为空")
  
      # ================== 备份初始状态 ==================
@@ -160,7 +269,7 @@ index a97ede9..15d2c22 100644
      init_object_pose = [(obj.get_pose().p.copy(), obj.get_pose().q.copy())
                          for obj in env.object_list]
  
-@@ -654,8 +693,8 @@ def rollout_and_select_biarm_grasp(env, data_all, motion_gen, relative_transform
+@@ -654,8 +720,8 @@ def rollout_and_select_biarm_grasp(env, data_all, motion_gen, relative_transform
      def reset_env():
          motion_gen[0].clear_world_cache()
          motion_gen[1].clear_world_cache()
@@ -171,7 +280,7 @@ index a97ede9..15d2c22 100644
          for obj, (p, q) in zip(env.object_list, init_object_pose):
              obj.set_pose(sapien.Pose(p, q))
              comp = obj.find_component_by_type(sapien.physx.PhysxRigidBodyComponent)
-@@ -866,4 +905,4 @@ def rollout_and_select_biarm_grasp(env, data_all, motion_gen, relative_transform
+@@ -866,4 +932,4 @@ def rollout_and_select_biarm_grasp(env, data_all, motion_gen, relative_transform
  
          return np.concatenate((left_qpos, right_qpos), axis=0), np.concatenate(actions, axis=0)
  
