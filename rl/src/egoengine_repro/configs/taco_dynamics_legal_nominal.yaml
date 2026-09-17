@@ -1,0 +1,111 @@
+schema_version: '1.0'
+profile:
+  name: taco_dynamics_legal_nominal
+  description: >-
+    GT-centered XHand nominal reference with real self/object collision
+    constraints, physical joint reserve, and bounded contact attraction.
+  uses_ground_truth: true
+inputs:
+  hand_source: taco_oracle_hand
+  camera_source: dataset_calibration
+  depth_source: depth_anything_v2_shared_ablation
+  segmentation_source: sam2_point_and_oracle_hand_prompts
+  object_mesh_source: known_dataset_mesh
+  object_pose_source: foundationpose_known_mesh
+  base_frame_source: taco_object_pair_center_fixed_offset
+perception:
+  contact_scale_calibration: false
+  silhouette_scale_optimization: false
+  per_frame_floor_shift: false
+  left_hand_confidence_multiplier: 1.0
+  automatic_hand_role_filtering: false
+  canonical_axes_source: dataset_mesh
+  workspace_offset_m: 0.6
+  table_height_m: 0.72
+retarget:
+  backend: mink
+  wrist_position_cost: 0.3
+  wrist_orientation_cost: 3.0
+  fingertip_position_cost: 10.0
+  fingertip_orientation_cost: 1.0
+  posture_cost: 0.01
+  joint_position_limits: true
+  joint_velocity_limits: true
+  frame_displacement_limits: true
+  # Adjacent fingers need a real reserve for between-row interpolation and
+  # finite-effort tracking.  Zero clearance put the 30 Hz endpoints directly
+  # on the contact boundary and produced millimetre-scale dynamic self-contact.
+  self_collision: true
+  self_collision_clearance_m: 0.005
+  strict_collision_resolution: true
+  strict_collision_resolution_iterations: 128
+  collision_depenetration_step_m: 0.00025
+  collision_validation_tolerance_m: 0.00005
+  # Avoid nominal states that require a saturated motor merely to remain at a
+  # hard stop.  Residual search retains room on both sides of every finger DoF.
+  finger_joint_limit_margin_rad: 0.005
+  confidence_weighting: true
+  sim_dt: 0.005
+  max_iterations_per_frame: 24
+  surface_projection: false
+  # The object is free in execution.  During IK its GT pose is geometry-only:
+  # touching is legal, penetration is not, and the object tangent is locked.
+  object_collision_avoidance: true
+  object_collision_clearance_m: 0.0
+  object_collision_detection_m: 0.03
+  object_clearance_correction: false
+  object_depenetration_max_shift_m: 0.020
+  floor_collision_avoidance: true
+  # The continuous finite-effort path loses up to about 4.8 mm relative to a
+  # 30 Hz endpoint.  Eight mm kept both the interpolated guide and execution
+  # clear of the table under the hard 0.05 mm audit.
+  floor_collision_clearance_m: 0.008
+  floor_collision_detection_m: 0.05
+  # Contact is only a small, local nominal preference.  Missing contact is the
+  # responsibility of the later GT-centered residual sampler.
+  contact_aware_retarget: true
+  contact_aware_requires_gt_mask: true
+  contact_reach_m: 0.020
+  contact_clearance_m: 0.0005
+  contact_clearance_thumb_m: 0.0005
+  # A non-contacting GT digit must not acquire an accidental XHand phalanx
+  # contact merely because fingertip IK brings another digit near the object.
+  # Five mm includes the measured finite-effort inter-frame tracking margin;
+  # one mm passed endpoint checks but still produced hidden 4.76 N impacts.
+  # Five mm at endpoints still allowed nine early ring-contact substeps after
+  # interpolation/tracking.  Ten mm removed them without changing contact or
+  # post-contact frames; the continuous audit remains the final authority.
+  precontact_finger_clearance_m: 0.010
+  contact_correction_rounds: 1
+  contact_attraction_max_shift_m: 0.005
+  contact_attraction_requires_reach: true
+  contact_wrap_synthesis: false
+  opposition_synthesis: false
+  velocity_limits:
+    base_translation: 1.5
+    base_rotation: 4.0
+    finger: 8.0
+reward:
+  position_boundary_m: 0.22551292851530524
+  rotation_boundary_rad: 1.2
+  lambda_translation: 156.25
+  lambda_rotation: 0.16
+  feasibility_threshold: 2.8594864302754717
+  human_base_position: 0.0
+  human_base_rotation: 0.0
+  human_joints: 0.0
+  action_smoothness: 0.0
+  opposition_contact_bonus: 2.0
+  lifting: 0.0
+  threshold_source: appendix_c_task_family_smear
+chunks:
+  length: 20
+  lookahead_chunks: 2
+  stop_on_failure: true
+evaluation:
+  gt_scope: evaluation_and_isolated_oracle_retarget_only
+  domain_randomization: false
+  mesh_sample_count: 5000
+  fscore_thresholds_m: [0.005, 0.01]
+  depth_warp_stride: 8
+  object_add_sample_count: 1000

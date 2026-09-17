@@ -1,0 +1,173 @@
+{
+  "status": "isolated_spider_style_kinematic_candidate",
+  "formal_replacement": false,
+  "rl_validation_completed": false,
+  "source_commit": "71238456bf97a7eeb3d0471aa31974e2d404d4ae",
+  "mink_source_commit": "ab45779fea46933832dee1c240f94103633347a1",
+  "source_repo": "/data_all/zzx/egoengine/spider",
+  "mink_module": "/data_all/zzx/3.2RL/external/mink/src/mink/__init__.py",
+  "mink_source": {
+    "path": "/data_all/zzx/3.2RL/external/mink/src/mink/__init__.py",
+    "sha256": "f216c998ab44e3560daeebcfbb9da588ea87df9b30427eae3906ad4867406776"
+  },
+  "inputs": [
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_v1/human_reference.npz",
+      "sha256": "852bda624bb22c9cf0797544294556752d490d11d443eb59a7f1e3e4aaab986a"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml",
+      "sha256": "86f7402b3130dfd459f72635c609448aa2d9c9c10a27a1125160d1c8fc354c24"
+    }
+  ],
+  "vendor_files": [
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_spider_mink_experiment_v2/vendor/spider/assets/robots/xhand/bimanual.xml",
+      "sha256": "f4728a2459e3a20bb8e954939f45441c201832f046edb50cc7378661a9a0aeda"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_spider_mink_experiment_v2/vendor/spider/assets/robots/xhand/left.xml",
+      "sha256": "2becd311bca9a7f535490e531f695664633d4d5a84628eff0bf5525a0b042c88"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_spider_mink_experiment_v2/vendor/spider/assets/robots/xhand/retarget_config.yaml",
+      "sha256": "e27e8f5f21ee7b4d41b92ce7d49368e1ec85b70ef2f3ad7f4f6f07b705d58ff4"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_spider_mink_experiment_v2/vendor/spider/assets/robots/xhand/right.xml",
+      "sha256": "95f4670d5d1d622e96ded64168bbe91e6751068b720c13ee06266a4b24a43bf2"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_spider_mink_experiment_v2/vendor/spider/assets/robots/xhand/xhand_left.urdf",
+      "sha256": "39be1ec748743867953ad6af09a2681133341bb92e488530febcfe554aff2a0e"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_spider_mink_experiment_v2/vendor/spider/assets/robots/xhand/xhand_left_6dof.urdf",
+      "sha256": "5f892c6d7fdac10ea0aefd3a7c7fc8c8a7079a4482cb4105b6087d2104402207"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_spider_mink_experiment_v2/vendor/spider/assets/robots/xhand/xhand_right.urdf",
+      "sha256": "bd596ccb96612f4ce933f1d6b0f40c3e9e354367cd7ca58a3ff4909f63f6c213"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_spider_mink_experiment_v2/vendor/spider/assets/robots/xhand/xhand_right_6dof.urdf",
+      "sha256": "2dd40519138afc0bddce0c84e2cb5311e19677bd15ea4f71d2a153b68cd2e14e"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_spider_mink_experiment_v2/vendor/spider/preprocess/ik_fast.py",
+      "sha256": "51d4b73ac96738d9979f671b05ffc596d18ee774c2549814572d57537f42bbda"
+    }
+  ],
+  "baseline_run": "/data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_v1",
+  "baseline_summary": null,
+  "settings": {
+    "backend": "mink",
+    "wrist_position_cost": 0.3,
+    "wrist_orientation_cost": 3.0,
+    "fingertip_position_cost": 10.0,
+    "fingertip_orientation_cost": 1.0,
+    "posture_cost": 0.01,
+    "joint_position_limits": true,
+    "joint_velocity_limits": true,
+    "self_collision": true,
+    "confidence_weighting": true,
+    "sim_dt": 0.005,
+    "max_iterations_per_frame": 8,
+    "surface_projection": false,
+    "surface_projection_margin": 0.002,
+    "velocity_limits": {
+      "base_translation": 1.5,
+      "base_rotation": 4.0,
+      "finger": 8.0
+    }
+  },
+  "effective_strategy": {
+    "wrist_position_cost": 0.3,
+    "wrist_orientation_cost": 3.0,
+    "fingertip_position_cost": 10.0,
+    "fingertip_orientation_cost": 0.0,
+    "posture_cost": 0.01,
+    "wrist_init_steps": 200,
+    "fingertip_init_steps": 300,
+    "sequential_hot_start": true,
+    "moving_average_filter": false,
+    "objects": "GT pose copied each frame and object DoFs locked"
+  },
+  "constraints": {
+    "explicit_self_collision_pairs": 174,
+    "joint_position_limits": true,
+    "frame_velocity_limits": true,
+    "collision_projection": "strict local separating QP, up to 128 steps/frame"
+  },
+  "phase_counts": {
+    "wrist": 200,
+    "fingertip": 300
+  },
+  "solver_failures": [],
+  "summary": {
+    "fingertip_mean_error_m_by_hand": [
+      0.004691578860120629,
+      0.004621315175033494
+    ],
+    "fingertip_max_error_m_by_hand": [
+      0.019407444582095246,
+      0.02141655514841271
+    ],
+    "fingertip_mean_error_mm_by_hand": [
+      4.69157886012063,
+      4.6213151750334935
+    ],
+    "fingertip_mean_error_mm_by_hand_finger": [
+      [
+        0.2960401859000124,
+        2.1657681064132124,
+        8.449332980011608,
+        2.426395859295571,
+        10.12035716898273
+      ],
+      [
+        0.49192407061384985,
+        4.209295291740925,
+        6.550911284114008,
+        2.2061805701086183,
+        9.64826465859008
+      ]
+    ],
+    "fingertip_orientation_mean_deg_by_hand": [
+      47.71761329685385,
+      39.14021961099751
+    ],
+    "wrist_position_mean_mm_by_hand": [
+      27.3966419855815,
+      22.268838651067785
+    ],
+    "wrist_orientation_mean_deg_by_hand": [
+      0.3784868537444023,
+      0.3169466311168497
+    ],
+    "self_collision_min_distance_m": -9.655550412997205e-07,
+    "joint_limit_min_margin": -1.1657341758564144e-15,
+    "frame_velocity_max_ratio": 0.9999962500000715,
+    "collision_family_min_distance_m": {
+      "self_explicit": -9.655550412997205e-07,
+      "self_nonadjacent_shells": -0.012711508150105204,
+      "hand_tool": -0.024309438032571157,
+      "hand_target": -0.026300312166867793,
+      "tool_target": 0.0,
+      "hand_floor": -0.024447158110962198,
+      "tool_floor": 0.001336515812750405,
+      "target_floor": -0.0012297948175221673
+    },
+    "self_collision_constraint_ok": true,
+    "joint_limit_ok": true,
+    "frame_velocity_ok": true,
+    "all_collision_families_clear": false,
+    "declared_kinematic_gate_passed": true,
+    "strict_gate_passed": false
+  },
+  "object_reference_max_abs_error": [
+    0.0,
+    0.0
+  ],
+  "interpretation": "Compare the summary against baseline_summary only on matched frames. A fingertip reduction is a diagnostic improvement only when wrist, orientation, collision, joint, and velocity gates remain acceptable."
+}

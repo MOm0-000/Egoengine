@@ -1,0 +1,22 @@
+schema_version: "1.0"
+name: taco_auto_segmentation_v2_dev4
+source_ablation: taco_perception_ablation_dev4
+profile: auto_segmentation_v2
+model_inputs:
+  sam3_checkpoint: third_party/sam3/checkpoints/sam3.1_multiplex.pt
+runtime:
+  max_instruction_candidates: 16
+  max_instances: 4
+  probe_anchor_count: 5
+  max_propagated_candidates: 3
+acceptance:
+  expected_episode_count: 4
+  required_minimum_valid_rate: 0.0
+  target_minimum_valid_rate: 0.95
+inference_policy:
+  object_prompt_source: instruction_text_only
+  manual_point_allowed: false
+  ground_truth_object_name_allowed: false
+  oracle_hand_allowed: false
+  hand_source: sam3_text_prompt
+  default_profile_replaced: false

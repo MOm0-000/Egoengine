@@ -1,0 +1,13 @@
+# Diagnostic-only v2 contact evidence.  This does not alter formal renderer/3.3.
+extends: taco_dynamics_legal_nominal.yaml
+profile:
+  name: taco_surface_contact_v2_diagnostic
+  description: >-
+    Independent official-MANO surface-contact diagnostic.  The 10 mm safety
+    clearance applies only to explicit FREE patches; UNKNOWN is unconstrained.
+retarget:
+  # The magnitude remains conservative.  The changed contract is in
+  # precontact_clearance_mask(state): UNKNOWN never becomes an entire-finger
+  # 10 mm separation demand.
+  precontact_finger_clearance_m: 0.010
+  contact_aware_requires_gt_mask: true

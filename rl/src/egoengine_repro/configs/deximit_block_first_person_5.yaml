@@ -1,0 +1,43 @@
+schema_version: "1.0"
+name: deximit_block_first_person_5
+dataset_root: /data_all/intern02/egoengine/video_to_spider/datasets/taco_v1
+benchmark_role: diagnostic_control_for_slender_handle_generalization
+exact_paper_test_set: false
+episode_count: 5
+selection_policy: same_smear_action_distinct_handle_free_solid_objects
+rgb_archive: Egocentric_RGB_Videos.zip
+depth_route:
+  shared_first_iteration: not_used_for_deximit_gt_diagnostic
+  foundation_stereo_eligible: false
+  reason: DexImit diagnostic uses released MANO and object geometry.
+base_frame:
+  method: object_pair_center_fixed_offset
+  workspace_offset_m: 0.6
+  table_height_m: 0.72
+  per_frame_floor_shift: false
+episodes:
+  - episode_id: taco_smear_eraser_bowl_20231104_026
+    sequence_id: "(smear, eraser, bowl)/20231104_026"
+    evaluation_object: tool
+    start_frame: 0
+    end_frame: 192
+  - episode_id: taco_smear_eraser_bowl_20231104_033
+    sequence_id: "(smear, eraser, bowl)/20231104_033"
+    evaluation_object: tool
+    start_frame: 0
+    end_frame: 147
+  - episode_id: taco_smear_eraser_bowl_20231104_041
+    sequence_id: "(smear, eraser, bowl)/20231104_041"
+    evaluation_object: tool
+    start_frame: 0
+    end_frame: 122
+  - episode_id: taco_smear_eraser_box_20231103_087
+    sequence_id: "(smear, eraser, box)/20231103_087"
+    evaluation_object: tool
+    start_frame: 0
+    end_frame: 92
+  - episode_id: taco_smear_soap_plate_20230927_055
+    sequence_id: "(smear, soap, plate)/20230927_055"
+    evaluation_object: tool
+    start_frame: 0
+    end_frame: 198

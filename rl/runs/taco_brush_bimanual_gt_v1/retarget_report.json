@@ -1,0 +1,126 @@
+{
+  "status": "MINK_kinematic_candidate_not_physics_validated",
+  "frames": 209,
+  "scene": "/data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_brush_brush_bowl_20230927_027/scene_act.xml",
+  "scene_sha256": "7a9bba83156801bac07c2b0fc50f79d30ac1db4fcce65c51b4794e213fcde09a",
+  "human_reference": "/data_all/zzx/3.2RL/runs/taco_brush_bimanual_gt_v1/human_reference.npz",
+  "human_reference_sha256": "d5dd98db462e01cc2bd906064526d72c05e254d5e14c95825372ba63179c11ec",
+  "mink_module": "/data_all/zzx/3.2RL/external/mink/src/mink/__init__.py",
+  "inherited_settings": {
+    "backend": "mink",
+    "wrist_position_cost": 0.3,
+    "wrist_orientation_cost": 3.0,
+    "fingertip_position_cost": 10.0,
+    "fingertip_orientation_cost": 1.0,
+    "posture_cost": 0.01,
+    "joint_position_limits": true,
+    "joint_velocity_limits": true,
+    "self_collision": true,
+    "confidence_weighting": true,
+    "sim_dt": 0.005,
+    "max_iterations_per_frame": 8,
+    "surface_projection": false,
+    "surface_projection_margin": 0.002,
+    "velocity_limits": {
+      "base_translation": 1.5,
+      "base_rotation": 4.0,
+      "finger": 8.0
+    }
+  },
+  "effective_settings": {
+    "source_dt_s": 0.03333333333333333,
+    "qp_integration_dt_s": 0.004166666666666667,
+    "iterations_per_frame": 8,
+    "first_frame_iterations": 80,
+    "wrist_orientation_cost": 3.0,
+    "fingertip_position_cost": 10.0,
+    "fingertip_orientation_cost": 1.0,
+    "posture_cost": 0.0,
+    "self_collision_clearance_m": 0.0
+  },
+  "wrist_position_cost": 0.0,
+  "object_dofs_locked_during_ik": true,
+  "object_dofs_actuated_in_physics": false,
+  "hand_order": [
+    "right",
+    "left"
+  ],
+  "fingertip_mean_error_m": [
+    0.04491121603049202,
+    0.02980124250694039
+  ],
+  "fingertip_max_error_m": [
+    0.07936701677925323,
+    0.10890895382511782
+  ],
+  "wrist_mean_error_rad": [
+    0.541540035275826,
+    0.3791405826650732
+  ],
+  "self_collision_min_distance_m": -0.00881233962229543,
+  "self_penetrating_frames": 209,
+  "worst_self_collision_pairs": [
+    {
+      "geom1": "collision_hand_left_palm_0",
+      "geom2": "collision_hand_left_thumb_1",
+      "distance_m": -0.00881233962229543
+    },
+    {
+      "geom1": "collision_hand_right_palm_0",
+      "geom2": "collision_hand_right_thumb_1",
+      "distance_m": -0.008766337781664305
+    },
+    {
+      "geom1": "collision_hand_left_palm_0",
+      "geom2": "collision_hand_left_index_1",
+      "distance_m": -0.004370283600577753
+    },
+    {
+      "geom1": "collision_hand_right_palm_0",
+      "geom2": "collision_hand_right_index_1",
+      "distance_m": -0.004300244105881829
+    },
+    {
+      "geom1": "collision_hand_left_index_1",
+      "geom2": "collision_hand_left_middle_1",
+      "distance_m": -0.004045455294990369
+    },
+    {
+      "geom1": "collision_hand_right_ring_1",
+      "geom2": "collision_hand_right_pinky_1",
+      "distance_m": -0.004000000000000021
+    },
+    {
+      "geom1": "collision_hand_left_ring_1",
+      "geom2": "collision_hand_left_pinky_1",
+      "distance_m": -0.004
+    },
+    {
+      "geom1": "collision_hand_left_middle_1",
+      "geom2": "collision_hand_left_ring_1",
+      "distance_m": -0.003999999999999986
+    },
+    {
+      "geom1": "collision_hand_right_middle_1",
+      "geom2": "collision_hand_right_ring_1",
+      "distance_m": -0.00377625158384335
+    },
+    {
+      "geom1": "collision_hand_left_palm_0",
+      "geom2": "collision_hand_left_thumb_0",
+      "distance_m": -0.00191828141678165
+    },
+    {
+      "geom1": "collision_hand_right_index_1",
+      "geom2": "collision_hand_right_middle_1",
+      "distance_m": -0.0014044095819265613
+    },
+    {
+      "geom1": "collision_hand_left_index_0",
+      "geom2": "collision_hand_left_middle_1",
+      "distance_m": -0.0008095206026416963
+    }
+  ],
+  "strict_gate_passed": false,
+  "rl_validation_completed": false
+}

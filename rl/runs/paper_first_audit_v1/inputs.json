@@ -1,0 +1,1080 @@
+{
+  "status": "paper_first_input_audit_not_physics_validation",
+  "paper_basis": [
+    "4.1 compatibility premise",
+    "A.1 fixed offset/table",
+    "A.3 approximate alignment"
+  ],
+  "checks_provenance": "local_diagnostics_not_unpublished_author_selection_rules",
+  "artifacts_modified": false,
+  "frames_trimmed": false,
+  "episodes_added": false,
+  "metadata": {
+    "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/taco_info.csv",
+    "sha256": "3d2f9ac34440aec5af32de44fa7d32b2a240eadf6f140061964beb38abbc165a"
+  },
+  "audit_code": [
+    {
+      "path": "/data_all/zzx/3.2RL/scripts/audit_taco_paper_inputs.py",
+      "sha256": "a0b368c32632951e380027bfb3438a3e17c99f062f3d807fedb3eea62b36fae3"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/src/egoengine_repro/retarget/paper_audit.py",
+      "sha256": "35ac02adc4e89fd171f9a7e0411fb843b3d790943cda68cf523948d2a00a689c"
+    }
+  ],
+  "episodes": [
+    {
+      "task": "brush",
+      "episode": "taco_brush_brush_bowl_20230927_027",
+      "sequence": "(brush, brush, bowl)/20230927_027",
+      "counts": {
+        "hands": 209,
+        "tool": 209,
+        "target": 209,
+        "camera": 209,
+        "rgb": 209,
+        "depth_original": 209,
+        "depth_resized": 209
+      },
+      "metadata": {
+        "action": "brush",
+        "tool": "brush",
+        "object": "bowl",
+        "n_frames": "209",
+        "fps": "30.0",
+        "calib_status": "good"
+      },
+      "hands": {
+        "left": {
+          "frames": 209,
+          "source_ids_contiguous_one_based": true,
+          "wrist_translation_error_m": 0.0
+        },
+        "right": {
+          "frames": 209,
+          "source_ids_contiguous_one_based": true,
+          "wrist_translation_error_m": 0.0
+        }
+      },
+      "objects": {
+        "tool": {
+          "object_id": "071",
+          "frames": 209,
+          "pose": {
+            "finite": true,
+            "orthogonality_max_error": 3.313823890849221e-07,
+            "determinant_max_error": 3.0524072025528426e-07,
+            "homogeneous_max_error": 0.0,
+            "rigid_within_float32_tolerance": true
+          },
+          "metric_extents_m": [
+            0.14159442,
+            0.08413658,
+            0.0635633
+          ],
+          "scale_applied": 0.01,
+          "watertight": true,
+          "volume_m3": 0.00017936513290406047,
+          "vertex_count": 49937,
+          "face_count": 100002,
+          "source_pose_translation_span_m": [
+            0.11698541417717934,
+            0.13198339194059372,
+            0.11959254741668701
+          ]
+        },
+        "target": {
+          "object_id": "146",
+          "frames": 209,
+          "pose": {
+            "finite": true,
+            "orthogonality_max_error": 1.5109540418833944e-07,
+            "determinant_max_error": 1.7668364282741322e-07,
+            "homogeneous_max_error": 0.0,
+            "rigid_within_float32_tolerance": true
+          },
+          "metric_extents_m": [
+            0.17007728,
+            0.13713018,
+            0.06649138
+          ],
+          "scale_applied": 0.01,
+          "watertight": true,
+          "volume_m3": 0.00011328417068338886,
+          "vertex_count": 49581,
+          "face_count": 99158,
+          "source_pose_translation_span_m": [
+            0.04280515015125275,
+            0.023322412744164467,
+            0.06462603807449341
+          ]
+        }
+      },
+      "videos": {
+        "rgb": {
+          "codec_name": "mpeg4",
+          "width": 1920,
+          "height": 1080,
+          "pix_fmt": "yuv420p",
+          "avg_frame_rate": "30/1",
+          "nb_frames": "209",
+          "nb_read_frames": "209",
+          "decoded_frames": 209,
+          "fps": 30.0
+        },
+        "depth_original": {
+          "codec_name": "ffv1",
+          "width": 1920,
+          "height": 1080,
+          "pix_fmt": "gray16le",
+          "avg_frame_rate": "15/1",
+          "nb_frames": "209",
+          "nb_read_frames": "209",
+          "decoded_frames": 209,
+          "fps": 15.0
+        },
+        "depth_resized": {
+          "codec_name": "h264",
+          "width": 512,
+          "height": 376,
+          "pix_fmt": "yuv420p",
+          "avg_frame_rate": "30/1",
+          "nb_frames": "209",
+          "nb_read_frames": "209",
+          "decoded_frames": 209,
+          "fps": 30.0
+        }
+      },
+      "camera": {
+        "transforms": {
+          "finite": true,
+          "orthogonality_max_error": 4.0039421267401565e-07,
+          "determinant_max_error": 3.5684105681443867e-07,
+          "homogeneous_max_error": 0.0,
+          "rigid_within_float32_tolerance": true
+        },
+        "hand_projection": {
+          "released_as_T_camera_world": {
+            "positive_depth_fraction": 1.0,
+            "front_and_in_image_fraction": 1.0,
+            "camera_z_range_m": [
+              0.5375225189313144,
+              0.7883699468224942
+            ]
+          },
+          "inverse_diagnostic_only": {
+            "positive_depth_fraction": 1.0,
+            "front_and_in_image_fraction": 1.0,
+            "camera_z_range_m": [
+              0.5496932483967732,
+              0.8519641950143959
+            ]
+          }
+        },
+        "camera_modified": false,
+        "inverse_selected": false
+      },
+      "alignment": {
+        "T_sim_world": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.5738668873906135
+          ],
+          [
+            0.0,
+            1.0,
+            0.0,
+            -0.013629313558340073
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.16985899136040228
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "table_height_m": 0.72,
+        "initial_pair_center_xy_m": [
+          0.6,
+          0.0
+        ],
+        "vertical_anchor": "first_frame_target_bottom_local_convention_not_published_recipe",
+        "invariants": {
+          "object_relative_transform_max_error": 2.220446049250313e-16,
+          "hand_in_object_frame_max_error_m": 3.885780586188048e-16,
+          "camera_object_transform_max_error": 2.220446049250313e-16
+        },
+        "object_support": {
+          "tool": {
+            "initial_clearance_m": -0.0013113107670463808,
+            "minimum_clearance_m": -0.002640060772927444,
+            "minimum_source_row_zero_based": 140,
+            "rows_below_plane_50um": 119
+          },
+          "target": {
+            "initial_clearance_m": 0.0,
+            "minimum_clearance_m": -0.00015150721668355516,
+            "minimum_source_row_zero_based": 49,
+            "rows_below_plane_50um": 37
+          }
+        }
+      },
+      "status": {
+        "gt_structurally_usable": true,
+        "media_frame_counts_match": true,
+        "released_camera_front_check_passed": true,
+        "frame_count_match_is_not_temporal_correspondence_proof": true,
+        "physical_compatibility": "unvalidated",
+        "task_success": "not_evaluated"
+      },
+      "inputs": [
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/hand_poses/Hand_Poses/(brush, brush, bowl)/20230927_027/hand_joints.npy",
+          "sha256": "9c44aef9529614a11a6eaf967fe4b59cfc93569b4a73c796c30634f09a6bbae0"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/hand_poses/Hand_Poses/(brush, brush, bowl)/20230927_027/left_hand.pkl",
+          "sha256": "25ca95b4406610ae52a5bbaa7d000404211da107f9f0535b1da3ba82e65859c2"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/hand_poses/Hand_Poses/(brush, brush, bowl)/20230927_027/right_hand.pkl",
+          "sha256": "98ad60497fb69f9052848af9bd88b2f6c7e43e09b46493c7ae7bca52c64bc313"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/object_poses/Object_Poses/(brush, brush, bowl)/20230927_027/tool_071.npy",
+          "sha256": "a81de0fb26606379d095ef6af6718d0f97b0655b2d8b6a8aca85c3f861a87504"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/object_models/object_models_released/071_cm.obj",
+          "sha256": "31a9c07102ea7fd6263fdf6f54f0103c463733be4d49a7244b018bbc257ca124"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/object_poses/Object_Poses/(brush, brush, bowl)/20230927_027/target_146.npy",
+          "sha256": "1a62b6a0ec520877f813d507b26d8ac864453803ec8dae5fe5aa928a843a36fb"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/object_models/object_models_released/146_cm.obj",
+          "sha256": "2bc69db147f598ae3260313dc02892f7e76764c0af6addfcb375cae569f699d9"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/camera/Egocentric_Camera_Parameters/(brush, brush, bowl)/20230927_027/egocentric_frame_extrinsic.npy",
+          "sha256": "979bce3ebf09a4e719cb539138bc129277f42cbb386cba401052383af4255ea2"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/camera/Egocentric_Camera_Parameters/(brush, brush, bowl)/20230927_027/egocentric_intrinsic.txt",
+          "sha256": "f791adc426a186c3a13849e83a18c6104fdafc9edef295c3f850ffd10cadd3ce"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/rgb/taco_brush_brush_bowl_20230927_027.mp4",
+          "sha256": "6dad055163a24af85c2eb3797a081717dd7668853c35434f6a40f27e00bf3212"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/depth_original/taco_brush_brush_bowl_20230927_027.avi",
+          "sha256": "3ade4d9a7597e88d7d962b9e9e3dbecc59443ed1404c7566066dae1975403a22"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/depth_resized/taco_brush_brush_bowl_20230927_027.avi",
+          "sha256": "d8eaff18cf95cb82cc26d9bde82f253a66c98b5329cd0a804d994528a645554d"
+        }
+      ]
+    },
+    {
+      "task": "cut",
+      "episode": "taco_cut_spatula_plate_20230917_020",
+      "sequence": "(cut, spatula, plate)/20230917_020",
+      "counts": {
+        "hands": 361,
+        "tool": 361,
+        "target": 361,
+        "camera": 361,
+        "rgb": 358,
+        "depth_original": 356,
+        "depth_resized": 356
+      },
+      "metadata": {
+        "action": "cut",
+        "tool": "spatula",
+        "object": "plate",
+        "n_frames": "361",
+        "fps": "30.0",
+        "calib_status": "good"
+      },
+      "hands": {
+        "left": {
+          "frames": 361,
+          "source_ids_contiguous_one_based": true,
+          "wrist_translation_error_m": 0.0
+        },
+        "right": {
+          "frames": 361,
+          "source_ids_contiguous_one_based": true,
+          "wrist_translation_error_m": 0.0
+        }
+      },
+      "objects": {
+        "tool": {
+          "object_id": "033",
+          "frames": 361,
+          "pose": {
+            "finite": true,
+            "orthogonality_max_error": 4.7063970209926254e-07,
+            "determinant_max_error": 4.562502697869064e-07,
+            "homogeneous_max_error": 0.0,
+            "rigid_within_float32_tolerance": true
+          },
+          "metric_extents_m": [
+            0.32736373999999996,
+            0.07973774,
+            0.0163417
+          ],
+          "scale_applied": 0.01,
+          "watertight": true,
+          "volume_m3": 6.159392268663229e-05,
+          "vertex_count": 50001,
+          "face_count": 100002,
+          "source_pose_translation_span_m": [
+            0.14385729655623436,
+            0.11004690267145634,
+            0.2186352014541626
+          ]
+        },
+        "target": {
+          "object_id": "005",
+          "frames": 361,
+          "pose": {
+            "finite": true,
+            "orthogonality_max_error": 3.5843366164023394e-07,
+            "determinant_max_error": 3.9998969758592295e-07,
+            "homogeneous_max_error": 0.0,
+            "rigid_within_float32_tolerance": true
+          },
+          "metric_extents_m": [
+            0.3000576,
+            0.19137414,
+            0.02721584
+          ],
+          "scale_applied": 0.01,
+          "watertight": true,
+          "volume_m3": 0.00022070698823843478,
+          "vertex_count": 50001,
+          "face_count": 99998,
+          "source_pose_translation_span_m": [
+            0.05739944241940975,
+            0.07849953696131706,
+            0.11671692132949829
+          ]
+        }
+      },
+      "videos": {
+        "rgb": {
+          "codec_name": "mpeg4",
+          "width": 1920,
+          "height": 1080,
+          "pix_fmt": "yuv420p",
+          "avg_frame_rate": "30/1",
+          "nb_frames": "358",
+          "nb_read_frames": "358",
+          "decoded_frames": 358,
+          "fps": 30.0
+        },
+        "depth_original": {
+          "codec_name": "ffv1",
+          "width": 1024,
+          "height": 768,
+          "pix_fmt": "gray16le",
+          "avg_frame_rate": "15/1",
+          "nb_frames": "356",
+          "nb_read_frames": "356",
+          "decoded_frames": 356,
+          "fps": 15.0
+        },
+        "depth_resized": {
+          "codec_name": "h264",
+          "width": 512,
+          "height": 376,
+          "pix_fmt": "yuv420p",
+          "avg_frame_rate": "30/1",
+          "nb_frames": "356",
+          "nb_read_frames": "356",
+          "decoded_frames": 356,
+          "fps": 30.0
+        }
+      },
+      "camera": {
+        "transforms": {
+          "finite": true,
+          "orthogonality_max_error": 2.476126983674831e-06,
+          "determinant_max_error": 2.0557098960871656e-06,
+          "homogeneous_max_error": 0.0,
+          "rigid_within_float32_tolerance": true
+        },
+        "hand_projection": {
+          "released_as_T_camera_world": {
+            "positive_depth_fraction": 1.0,
+            "front_and_in_image_fraction": 1.0,
+            "camera_z_range_m": [
+              0.42783609884208007,
+              0.8183977510737948
+            ]
+          },
+          "inverse_diagnostic_only": {
+            "positive_depth_fraction": 1.0,
+            "front_and_in_image_fraction": 1.0,
+            "camera_z_range_m": [
+              0.48158171613876233,
+              0.8874997188489651
+            ]
+          }
+        },
+        "camera_modified": false,
+        "inverse_selected": false
+      },
+      "alignment": {
+        "T_sim_world": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.5416897296905517
+          ],
+          [
+            0.0,
+            1.0,
+            0.0,
+            -0.0002704942598938942
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.17326121940651873
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "table_height_m": 0.72,
+        "initial_pair_center_xy_m": [
+          0.6,
+          0.0
+        ],
+        "vertical_anchor": "first_frame_target_bottom_local_convention_not_published_recipe",
+        "invariants": {
+          "object_relative_transform_max_error": 2.7755575615628914e-16,
+          "hand_in_object_frame_max_error_m": 4.440892098500626e-16,
+          "camera_object_transform_max_error": 2.220446049250313e-16
+        },
+        "object_support": {
+          "tool": {
+            "initial_clearance_m": 0.00015455075633630244,
+            "minimum_clearance_m": -0.0009221220088351245,
+            "minimum_source_row_zero_based": 46,
+            "rows_below_plane_50um": 3
+          },
+          "target": {
+            "initial_clearance_m": 0.0,
+            "minimum_clearance_m": -0.00023712268762654531,
+            "minimum_source_row_zero_based": 30,
+            "rows_below_plane_50um": 7
+          }
+        }
+      },
+      "status": {
+        "gt_structurally_usable": true,
+        "media_frame_counts_match": false,
+        "released_camera_front_check_passed": true,
+        "frame_count_match_is_not_temporal_correspondence_proof": true,
+        "physical_compatibility": "unvalidated",
+        "task_success": "not_evaluated"
+      },
+      "inputs": [
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/hand_poses/Hand_Poses/(cut, spatula, plate)/20230917_020/hand_joints.npy",
+          "sha256": "012acc3df3eef3e9c0bbf1dfc148a114c95d31a045bd606e7bdc297845e731b4"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/hand_poses/Hand_Poses/(cut, spatula, plate)/20230917_020/left_hand.pkl",
+          "sha256": "08b7e3b825638115fbdc7bae45cd95641bc137c7b324ebdb7e7f307f227c8413"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/hand_poses/Hand_Poses/(cut, spatula, plate)/20230917_020/right_hand.pkl",
+          "sha256": "207f1ac3bd1c855492854a906908ada811b98195629530c939178fd4f55caa8b"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/object_poses/Object_Poses/(cut, spatula, plate)/20230917_020/tool_033.npy",
+          "sha256": "b4ede7f81da09c2832b979cef009cacf3de12edf7e29d779adea4bf7aac5885f"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/object_models/object_models_released/033_cm.obj",
+          "sha256": "375478a209dc4c4c0a54212281759270845af92e40781e98dd3d76c308163aa1"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/object_poses/Object_Poses/(cut, spatula, plate)/20230917_020/target_005.npy",
+          "sha256": "8ec6d9875aafaedccef11e6ba8a48205c4d4090bba5358ac362a56d58704ca59"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/object_models/object_models_released/005_cm.obj",
+          "sha256": "b807e58e5ed593638c52928bf657baa7e908181ebd2c31c4610c161e714a5347"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/camera/Egocentric_Camera_Parameters/(cut, spatula, plate)/20230917_020/egocentric_frame_extrinsic.npy",
+          "sha256": "ec1fa61d5194336c2d2dd9475a8b058e64bda7b51df325bc3dcbe83e29a29a01"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/camera/Egocentric_Camera_Parameters/(cut, spatula, plate)/20230917_020/egocentric_intrinsic.txt",
+          "sha256": "f791adc426a186c3a13849e83a18c6104fdafc9edef295c3f850ffd10cadd3ce"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/rgb/taco_cut_spatula_plate_20230917_020.mp4",
+          "sha256": "b9cf4fbc66d43c16630dbe13720e35d4928f538b0668f201ba87ccb9a80a1f25"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/depth_original/taco_cut_spatula_plate_20230917_020.avi",
+          "sha256": "bec620d1fc55e531b18a56982126a4964ac3391d9cf30da99794ee8570ba88f2"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/depth_resized/taco_cut_spatula_plate_20230917_020.avi",
+          "sha256": "23b76cbb5e54e5d770f035a9248069162dbb517cceee1d5741143674a63ec522"
+        }
+      ]
+    },
+    {
+      "task": "skim",
+      "episode": "taco_skim_spatula_plate_20230926_004",
+      "sequence": "(skim off, spatula, plate)/20230926_004",
+      "counts": {
+        "hands": 400,
+        "tool": 400,
+        "target": 400,
+        "camera": 400,
+        "rgb": 400,
+        "depth_original": 400,
+        "depth_resized": 400
+      },
+      "metadata": {
+        "action": "skim off",
+        "tool": "spatula",
+        "object": "plate",
+        "n_frames": "400",
+        "fps": "30.0",
+        "calib_status": "good"
+      },
+      "hands": {
+        "left": {
+          "frames": 400,
+          "source_ids_contiguous_one_based": true,
+          "wrist_translation_error_m": 0.0
+        },
+        "right": {
+          "frames": 400,
+          "source_ids_contiguous_one_based": true,
+          "wrist_translation_error_m": 0.0
+        }
+      },
+      "objects": {
+        "tool": {
+          "object_id": "033",
+          "frames": 400,
+          "pose": {
+            "finite": true,
+            "orthogonality_max_error": 4.6465700198616844e-07,
+            "determinant_max_error": 3.7444351663751263e-07,
+            "homogeneous_max_error": 0.0,
+            "rigid_within_float32_tolerance": true
+          },
+          "metric_extents_m": [
+            0.32736373999999996,
+            0.07973774,
+            0.0163417
+          ],
+          "scale_applied": 0.01,
+          "watertight": true,
+          "volume_m3": 6.159392268663229e-05,
+          "vertex_count": 50001,
+          "face_count": 100002,
+          "source_pose_translation_span_m": [
+            0.1169205978512764,
+            0.1968279927968979,
+            0.14807790517807007
+          ]
+        },
+        "target": {
+          "object_id": "019",
+          "frames": 400,
+          "pose": {
+            "finite": true,
+            "orthogonality_max_error": 2.1212114775792656e-07,
+            "determinant_max_error": 2.3347376765237016e-07,
+            "homogeneous_max_error": 0.0,
+            "rigid_within_float32_tolerance": true
+          },
+          "metric_extents_m": [
+            0.20167284,
+            0.2303543,
+            0.06902638
+          ],
+          "scale_applied": 0.01,
+          "watertight": false,
+          "volume_m3": 0.0001451547655788568,
+          "vertex_count": 48259,
+          "face_count": 96765,
+          "source_pose_translation_span_m": [
+            0.03161249961704016,
+            0.01642116904258728,
+            0.00454336404800415
+          ]
+        }
+      },
+      "videos": {
+        "rgb": {
+          "codec_name": "mpeg4",
+          "width": 1920,
+          "height": 1080,
+          "pix_fmt": "yuv420p",
+          "avg_frame_rate": "30/1",
+          "nb_frames": "400",
+          "nb_read_frames": "400",
+          "decoded_frames": 400,
+          "fps": 30.0
+        },
+        "depth_original": {
+          "codec_name": "ffv1",
+          "width": 1920,
+          "height": 1080,
+          "pix_fmt": "gray16le",
+          "avg_frame_rate": "15/1",
+          "nb_frames": "400",
+          "nb_read_frames": "400",
+          "decoded_frames": 400,
+          "fps": 15.0
+        },
+        "depth_resized": {
+          "codec_name": "h264",
+          "width": 512,
+          "height": 376,
+          "pix_fmt": "yuv420p",
+          "avg_frame_rate": "30/1",
+          "nb_frames": "400",
+          "nb_read_frames": "400",
+          "decoded_frames": 400,
+          "fps": 30.0
+        }
+      },
+      "camera": {
+        "transforms": {
+          "finite": true,
+          "orthogonality_max_error": 5.053769744911563e-07,
+          "determinant_max_error": 5.199641337494398e-07,
+          "homogeneous_max_error": 0.0,
+          "rigid_within_float32_tolerance": true
+        },
+        "hand_projection": {
+          "released_as_T_camera_world": {
+            "positive_depth_fraction": 0.0,
+            "front_and_in_image_fraction": 0.0,
+            "camera_z_range_m": [
+              -0.7777146639724162,
+              -0.5284173748981001
+            ]
+          },
+          "inverse_diagnostic_only": {
+            "positive_depth_fraction": 1.0,
+            "front_and_in_image_fraction": 1.0,
+            "camera_z_range_m": [
+              1.8389156129833162,
+              2.0670221127359936
+            ]
+          }
+        },
+        "camera_modified": false,
+        "inverse_selected": false
+      },
+      "alignment": {
+        "T_sim_world": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.5586577247828245
+          ],
+          [
+            0.0,
+            1.0,
+            0.0,
+            0.03662116453051567
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.1727082019258629
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "table_height_m": 0.72,
+        "initial_pair_center_xy_m": [
+          0.6,
+          0.0
+        ],
+        "vertical_anchor": "first_frame_target_bottom_local_convention_not_published_recipe",
+        "invariants": {
+          "object_relative_transform_max_error": 2.914335439641036e-16,
+          "hand_in_object_frame_max_error_m": 3.885780586188048e-16,
+          "camera_object_transform_max_error": 2.220446049250313e-16
+        },
+        "object_support": {
+          "tool": {
+            "initial_clearance_m": 0.0017939796320474155,
+            "minimum_clearance_m": 0.001486886761127626,
+            "minimum_source_row_zero_based": 273,
+            "rows_below_plane_50um": 0
+          },
+          "target": {
+            "initial_clearance_m": 0.0,
+            "minimum_clearance_m": -0.00015970712271151655,
+            "minimum_source_row_zero_based": 203,
+            "rows_below_plane_50um": 12
+          }
+        }
+      },
+      "status": {
+        "gt_structurally_usable": true,
+        "media_frame_counts_match": true,
+        "released_camera_front_check_passed": false,
+        "frame_count_match_is_not_temporal_correspondence_proof": true,
+        "physical_compatibility": "unvalidated",
+        "task_success": "not_evaluated"
+      },
+      "inputs": [
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/hand_poses/Hand_Poses/(skim off, spatula, plate)/20230926_004/hand_joints.npy",
+          "sha256": "3b97abcef8dc6ddaa437ffae40a045266703a89ee1f84fafd44e8b1d87185a82"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/hand_poses/Hand_Poses/(skim off, spatula, plate)/20230926_004/left_hand.pkl",
+          "sha256": "23db37a32812c834335e675476dfea1e5fb20eb1d6fbdb33275b3e683b18c385"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/hand_poses/Hand_Poses/(skim off, spatula, plate)/20230926_004/right_hand.pkl",
+          "sha256": "887955c04f27b731ec27c2858a18f4325b5f507a1ca39de8e54a5bdf66799737"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/object_poses/Object_Poses/(skim off, spatula, plate)/20230926_004/tool_033.npy",
+          "sha256": "9faa4f74ec15c89c813044f6b62c791cddaebff248e6159d3eceebea6523960c"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/object_models/object_models_released/033_cm.obj",
+          "sha256": "375478a209dc4c4c0a54212281759270845af92e40781e98dd3d76c308163aa1"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/object_poses/Object_Poses/(skim off, spatula, plate)/20230926_004/target_019.npy",
+          "sha256": "baa739d25bb909e74778a8e9032a233f6870bfa66a3db267962cdee353b2f523"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/object_models/object_models_released/019_cm.obj",
+          "sha256": "ceddd66d3da1ebedb35f4c3d3bb7c76ceb16d208bd5b14200508342e437f4667"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/camera/Egocentric_Camera_Parameters/(skim off, spatula, plate)/20230926_004/egocentric_frame_extrinsic.npy",
+          "sha256": "873b493817229c329a4964c4285fea6c1d6720e5b56673716797ab4f037068e3"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/camera/Egocentric_Camera_Parameters/(skim off, spatula, plate)/20230926_004/egocentric_intrinsic.txt",
+          "sha256": "f791adc426a186c3a13849e83a18c6104fdafc9edef295c3f850ffd10cadd3ce"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/rgb/taco_skim_spatula_plate_20230926_004.mp4",
+          "sha256": "985fff890038a773e42a21faf946d7522c0d73464664459ca3b977f02f290d83"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/depth_original/taco_skim_spatula_plate_20230926_004.avi",
+          "sha256": "412d538034116308cfb1901c414b9308f46f9db9987c576c52554d9bfb6ddc7f"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/depth_resized/taco_skim_spatula_plate_20230926_004.avi",
+          "sha256": "623faeda61413ec1c26c24ebcb6cb3a95284824994645b3d4f15bd0ffd7be4ca"
+        }
+      ]
+    },
+    {
+      "task": "smear",
+      "episode": "taco_smear_eraser_box_20231103_071",
+      "sequence": "(smear, eraser, box)/20231103_071",
+      "counts": {
+        "hands": 90,
+        "tool": 90,
+        "target": 90,
+        "camera": 90,
+        "rgb": 90,
+        "depth_original": 90,
+        "depth_resized": 90
+      },
+      "metadata": {
+        "action": "smear",
+        "tool": "eraser",
+        "object": "box",
+        "n_frames": "90",
+        "fps": "30.0",
+        "calib_status": "good"
+      },
+      "hands": {
+        "left": {
+          "frames": 90,
+          "source_ids_contiguous_one_based": true,
+          "wrist_translation_error_m": 0.0
+        },
+        "right": {
+          "frames": 90,
+          "source_ids_contiguous_one_based": true,
+          "wrist_translation_error_m": 0.0
+        }
+      },
+      "objects": {
+        "tool": {
+          "object_id": "078",
+          "frames": 90,
+          "pose": {
+            "finite": true,
+            "orthogonality_max_error": 3.4813017668611224e-07,
+            "determinant_max_error": 3.3786612863018206e-07,
+            "homogeneous_max_error": 0.0,
+            "rigid_within_float32_tolerance": true
+          },
+          "metric_extents_m": [
+            0.13406584000000002,
+            0.049543840000000006,
+            0.046336300000000004
+          ],
+          "scale_applied": 0.01,
+          "watertight": true,
+          "volume_m3": 0.00019618314116696253,
+          "vertex_count": 50002,
+          "face_count": 100000,
+          "source_pose_translation_span_m": [
+            0.0736803412437439,
+            0.2048421949148178,
+            0.17895597219467163
+          ]
+        },
+        "target": {
+          "object_id": "087",
+          "frames": 90,
+          "pose": {
+            "finite": true,
+            "orthogonality_max_error": 1.9353626790064027e-07,
+            "determinant_max_error": 1.6702687100078606e-07,
+            "homogeneous_max_error": 0.0,
+            "rigid_within_float32_tolerance": true
+          },
+          "metric_extents_m": [
+            0.17917538,
+            0.12427632,
+            0.08166432
+          ],
+          "scale_applied": 0.01,
+          "watertight": true,
+          "volume_m3": 0.00021049870337493242,
+          "vertex_count": 49998,
+          "face_count": 99996,
+          "source_pose_translation_span_m": [
+            0.07568651821929961,
+            0.09612585976719856,
+            0.08477407693862915
+          ]
+        }
+      },
+      "videos": {
+        "rgb": {
+          "codec_name": "mpeg4",
+          "width": 1920,
+          "height": 1080,
+          "pix_fmt": "yuv420p",
+          "avg_frame_rate": "30/1",
+          "nb_frames": "90",
+          "nb_read_frames": "90",
+          "decoded_frames": 90,
+          "fps": 30.0
+        },
+        "depth_original": {
+          "codec_name": "ffv1",
+          "width": 1920,
+          "height": 1080,
+          "pix_fmt": "gray16le",
+          "avg_frame_rate": "15/1",
+          "nb_frames": "90",
+          "nb_read_frames": "90",
+          "decoded_frames": 90,
+          "fps": 15.0
+        },
+        "depth_resized": {
+          "codec_name": "h264",
+          "width": 512,
+          "height": 376,
+          "pix_fmt": "yuv420p",
+          "avg_frame_rate": "30/1",
+          "nb_frames": "90",
+          "nb_read_frames": "90",
+          "decoded_frames": 90,
+          "fps": 30.0
+        }
+      },
+      "camera": {
+        "transforms": {
+          "finite": true,
+          "orthogonality_max_error": 3.9347219593643956e-07,
+          "determinant_max_error": 4.0172741389010724e-07,
+          "homogeneous_max_error": 0.0,
+          "rigid_within_float32_tolerance": true
+        },
+        "hand_projection": {
+          "released_as_T_camera_world": {
+            "positive_depth_fraction": 1.0,
+            "front_and_in_image_fraction": 1.0,
+            "camera_z_range_m": [
+              0.4703486625384006,
+              0.7027274719824199
+            ]
+          },
+          "inverse_diagnostic_only": {
+            "positive_depth_fraction": 1.0,
+            "front_and_in_image_fraction": 1.0,
+            "camera_z_range_m": [
+              0.46705236611219036,
+              0.7748182725797044
+            ]
+          }
+        },
+        "camera_modified": false,
+        "inverse_selected": false
+      },
+      "alignment": {
+        "T_sim_world": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.5652168489992618
+          ],
+          [
+            0.0,
+            1.0,
+            0.0,
+            -0.01071571372449398
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.16948534269190352
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "table_height_m": 0.72,
+        "initial_pair_center_xy_m": [
+          0.6,
+          0.0
+        ],
+        "vertical_anchor": "first_frame_target_bottom_local_convention_not_published_recipe",
+        "invariants": {
+          "object_relative_transform_max_error": 2.220446049250313e-16,
+          "hand_in_object_frame_max_error_m": 4.440892098500626e-16,
+          "camera_object_transform_max_error": 2.220446049250313e-16
+        },
+        "object_support": {
+          "tool": {
+            "initial_clearance_m": 0.00012047607802823102,
+            "minimum_clearance_m": -0.0012789023999694171,
+            "minimum_source_row_zero_based": 67,
+            "rows_below_plane_50um": 10
+          },
+          "target": {
+            "initial_clearance_m": 0.0,
+            "minimum_clearance_m": -0.0003209121608869214,
+            "minimum_source_row_zero_based": 83,
+            "rows_below_plane_50um": 19
+          }
+        }
+      },
+      "status": {
+        "gt_structurally_usable": true,
+        "media_frame_counts_match": true,
+        "released_camera_front_check_passed": true,
+        "frame_count_match_is_not_temporal_correspondence_proof": true,
+        "physical_compatibility": "unvalidated",
+        "task_success": "not_evaluated"
+      },
+      "inputs": [
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/hand_poses/Hand_Poses/(smear, eraser, box)/20231103_071/hand_joints.npy",
+          "sha256": "7d7eaacbb8074ef81668e43351f02a2254a531c9dd1ae46bf36cd61816e5cdae"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/hand_poses/Hand_Poses/(smear, eraser, box)/20231103_071/left_hand.pkl",
+          "sha256": "aca9cd9d7348fd6ada56d5c0d313596ec5f490ba7f9b883aff5030232219b294"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/hand_poses/Hand_Poses/(smear, eraser, box)/20231103_071/right_hand.pkl",
+          "sha256": "d2bfbeee5cb26422a90ee738b78f4fdfedbb7606e57b287f05a93075d41e0515"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/object_poses/Object_Poses/(smear, eraser, box)/20231103_071/tool_078.npy",
+          "sha256": "bbceb69aa7e63e740b572f9779251e7ef648df836f47e9b6bcebb1261ace906d"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/object_models/object_models_released/078_cm.obj",
+          "sha256": "195601bde6a28252365d505c392e3c9d7b09f138a9aea22054690979d3dd0512"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/object_poses/Object_Poses/(smear, eraser, box)/20231103_071/target_087.npy",
+          "sha256": "bb8910410a0cc07ae06007edd00c97b1fd8f261580b902a9f33ffa8ac8f1c231"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/object_models/object_models_released/087_cm.obj",
+          "sha256": "bb361d623c7367fb57b4aaba160c4f03e41a16d9d9f72f706c4b2ef7ec34fd01"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/camera/Egocentric_Camera_Parameters/(smear, eraser, box)/20231103_071/egocentric_frame_extrinsic.npy",
+          "sha256": "e3c15432e73d64276182078c7035c87e765b8f4cfd102bf58068b6dec361b206"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/camera/Egocentric_Camera_Parameters/(smear, eraser, box)/20231103_071/egocentric_intrinsic.txt",
+          "sha256": "f791adc426a186c3a13849e83a18c6104fdafc9edef295c3f850ffd10cadd3ce"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/rgb/taco_smear_eraser_box_20231103_071.mp4",
+          "sha256": "9c0e55822d81f4aa95d49de8b683ad8af0a2fc13d3df999db277bde6ad7e18a0"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/depth_original/taco_smear_eraser_box_20231103_071.avi",
+          "sha256": "bba8f8eb652ba748187c46f1da1d21118974bcf48d157f81c69efb2723934357"
+        },
+        {
+          "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/depth_resized/taco_smear_eraser_box_20231103_071.avi",
+          "sha256": "08c8000a80325e760a0d0728b2493221acc0b32d42f10bb0b87cd1ccf42d6db6"
+        }
+      ]
+    }
+  ]
+}

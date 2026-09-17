@@ -1,0 +1,24 @@
+schema_version: "1.0"
+name: taco_depth_calibration_dev4
+profiles:
+  - auto_current_raw_depth
+  - auto_segmentation_v2_raw_depth
+  - auto_segmentation_v2_camera_motion_calibrated_depth
+  - auto_segmentation_v2_camera_mano_fused_depth
+  - auto_segmentation_v2_oracle_depth
+runtime:
+  segment_length_frames: 30
+  max_corners: 500
+  fb_threshold_px: 1.5
+  motion_mad_multiplier: 4.0
+acceptance:
+  expected_episode_count: 4
+  target_translation_mean_m: 0.10
+  stretch_translation_mean_m: 0.08
+  max_translation_p95_m: 0.50
+inference_policy:
+  object_gt_used: false
+  hand_gt_used: false
+  manual_point_used: false
+  oracle_depth_used: false
+  mano_fusion: blocked_until_independent_qc

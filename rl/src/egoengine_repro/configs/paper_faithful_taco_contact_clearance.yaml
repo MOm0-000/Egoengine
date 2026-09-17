@@ -1,0 +1,78 @@
+schema_version: '1.0'
+profile:
+  name: paper_faithful_taco_contact_clearance
+  description: >-
+    GT-input, free-object MINK retargeting with surface projection and a
+    collision-hull clearance constraint. The GT object pose is planning
+    geometry only; no object actuator or object pose control is permitted in
+    execution.
+inputs:
+  hand_source: taco_oracle_hand
+  camera_source: dataset_calibration
+  depth_source: depth_anything_v2_shared_ablation
+  segmentation_source: sam2_point_and_oracle_hand_prompts
+  object_mesh_source: known_dataset_mesh
+  object_pose_source: foundationpose_known_mesh
+  base_frame_source: taco_object_pair_center_fixed_offset
+perception:
+  contact_scale_calibration: false
+  silhouette_scale_optimization: false
+  per_frame_floor_shift: false
+  left_hand_confidence_multiplier: 1.0
+  automatic_hand_role_filtering: false
+  canonical_axes_source: dataset_mesh
+  workspace_offset_m: 0.6
+  table_height_m: 0.72
+retarget:
+  backend: mink
+  wrist_position_cost: 0.3
+  wrist_orientation_cost: 3.0
+  fingertip_position_cost: 10.0
+  fingertip_orientation_cost: 1.0
+  posture_cost: 0.01
+  joint_position_limits: true
+  joint_velocity_limits: true
+  self_collision: false
+  confidence_weighting: true
+  sim_dt: 0.005
+  # Collision constraints need enough differential-IK integration steps to
+  # recover from a nearby GT fingertip target; the baseline's eight steps are
+  # insufficient for this physical-feasibility ablation.
+  max_iterations_per_frame: 12
+  surface_projection: true
+  surface_projection_margin: 0.002
+  object_collision_avoidance: true
+  object_collision_clearance_m: 0.002
+  object_collision_detection_m: 0.03
+  # After the QP, perform local capsule--hull clearance correction only for
+  # fingers already within contact_reach; no GT contact mask is used here.
+  object_clearance_correction: true
+  contact_reach_m: 0.03
+  contact_correction_rounds: 1
+  velocity_limits:
+    base_translation: 1.5
+    base_rotation: 4.0
+    finger: 8.0
+reward:
+  position_boundary_m: 0.08
+  rotation_boundary_rad: 2.5
+  lambda_translation: 156.25
+  lambda_rotation: 0.16
+  feasibility_threshold: 1.0
+  human_base_position: 0.0
+  human_base_rotation: 0.0
+  human_joints: 0.0
+  action_smoothness: 0.0
+  opposition_contact_bonus: 2.0
+  lifting: 0.0
+chunks:
+  length: 20
+  lookahead_chunks: 2
+  stop_on_failure: true
+evaluation:
+  gt_scope: evaluation_and_isolated_oracle_retarget_only
+  domain_randomization: false
+  mesh_sample_count: 5000
+  fscore_thresholds_m: [0.005, 0.01]
+  depth_warp_stride: 8
+  object_add_sample_count: 1000

@@ -1,0 +1,2350 @@
+{
+  "status": "orientation_prerequisite_audit_not_a_mapping_change",
+  "inputs": [
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_v1/human_reference.npz",
+      "sha256": "852bda624bb22c9cf0797544294556752d490d11d443eb59a7f1e3e4aaab986a"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_v1/robot_reference.npz",
+      "sha256": "e21e4a5a02ffaeaf55b2c8e60af941628d7573d468afea5464d00c90a396fe19"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_spider_mink_experiment_v2/robot_reference.npz",
+      "sha256": "4fa6b60e7e78635bfc6fcacd2d687c0ffe1b5e9eb8dd799de6eed338ce68ce8e"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml",
+      "sha256": "86f7402b3130dfd459f72635c609448aa2d9c9c10a27a1125160d1c8fc354c24"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017/right_hand.pkl",
+      "sha256": "098d13bf5bc3cd0275f53a320c824653175d0394c2a1040f94542c9ab788d110"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017/left_hand.pkl",
+      "sha256": "a06ba74342df18ef69b559e57b903938ad640edb8ce3269fca00b4ec5652c6d0"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017/right_hand_shape.pkl",
+      "sha256": "ae8bd692a12c2b18bdae4e8f031f364930e9bad7c0a4d78afc2d8eb9d03d5d13"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017/left_hand_shape.pkl",
+      "sha256": "97956334eea23cc859c937102d9ba26b8dead9f64913d54ea6cb90a2cc50531c"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/hand_poses_v1/mano_v1_2/models/MANO_RIGHT.pkl",
+      "sha256": "45d60aa3b27ef9107a7afd4e00808f307fd91111e1cfa35afd5c4a62de264767"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/hand_poses_v1/mano_v1_2/models/MANO_LEFT.pkl",
+      "sha256": "c4022f7083f2ca7c78b2b3d595abbab52debd32b09d372b16923a801f0ea6a30"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_spider_mink_experiment_v2/vendor/spider/assets/robots/xhand/xhand_right.urdf",
+      "sha256": "bd596ccb96612f4ce933f1d6b0f40c3e9e354367cd7ca58a3ff4909f63f6c213"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_spider_mink_experiment_v2/vendor/spider/assets/robots/xhand/xhand_left.urdf",
+      "sha256": "39be1ec748743867953ad6af09a2681133341bb92e488530febcfe554aff2a0e"
+    }
+  ],
+  "code": [
+    {
+      "path": "/data_all/zzx/3.2RL/scripts/audit_taco_orientation_prerequisites.py",
+      "sha256": "9ea2da30e1758567b0e13f2cbdffe6ab04a9c2fb72e1857d08905dd1e46b98b1"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/src/egoengine_repro/retarget/taco_bimanual.py",
+      "sha256": "9152631d900b16401a8adaccb45216fe812bb198385d2f2978402a3eb5058103"
+    }
+  ],
+  "static_point_and_axis_geometry": {
+    "per_hand": {
+      "right": {
+        "thumb": {
+          "site_body": "right_hand_thumb_rota_link2",
+          "site_local_m": [
+            0.04,
+            0.0,
+            -0.012
+          ],
+          "urdf_endpoint_local_m": [
+            0.0504024546888781,
+            0.0,
+            0.0
+          ],
+          "site_to_urdf_endpoint_distance_m": 0.015881154352066537,
+          "site_z_vs_urdf_endpoint_axis_deg": 90.0,
+          "site_frame_in_palm_frame": [
+            [
+              0.03840360731072522,
+              0.9789777191105875,
+              -0.20031921632872676
+            ],
+            [
+              0.9984897970538225,
+              -0.0297138394373086,
+              0.046208364235392124
+            ],
+            [
+              0.03928470599279614,
+              -0.20179126153261803,
+              -0.9786403826963888
+            ]
+          ],
+          "site_frame_det_error": 0.0
+        },
+        "index": {
+          "site_body": "right_hand_index_rota_link2",
+          "site_local_m": [
+            0.0,
+            0.004,
+            -0.027
+          ],
+          "urdf_endpoint_local_m": [
+            0.0,
+            0.0,
+            -0.0424999999999993
+          ],
+          "site_to_urdf_endpoint_distance_m": 0.016007810593581445,
+          "site_z_vs_urdf_endpoint_axis_deg": 180.0,
+          "site_frame_in_palm_frame": [
+            [
+              -0.0022138312340360127,
+              0.9982028798500135,
+              0.05988413488067416
+            ],
+            [
+              0.9993173617971551,
+              -4.336808689942018e-19,
+              0.03694334054702977
+            ],
+            [
+              0.03687694892532488,
+              0.05992504200365293,
+              -0.9975214684300381
+            ]
+          ],
+          "site_frame_det_error": 0.0
+        },
+        "middle": {
+          "site_body": "right_hand_mid_link2",
+          "site_local_m": [
+            0.0,
+            0.004,
+            -0.027
+          ],
+          "urdf_endpoint_local_m": [
+            0.0,
+            0.0,
+            -0.042107
+          ],
+          "site_to_urdf_endpoint_distance_m": 0.015627586153977843,
+          "site_z_vs_urdf_endpoint_axis_deg": 180.0,
+          "site_frame_in_palm_frame": [
+            [
+              -0.0022138312340360127,
+              0.9982028798500135,
+              0.05988413488067416
+            ],
+            [
+              0.9993173617971551,
+              -4.336808689942018e-19,
+              0.03694334054702977
+            ],
+            [
+              0.03687694892532488,
+              0.05992504200365293,
+              -0.9975214684300381
+            ]
+          ],
+          "site_frame_det_error": 0.0
+        },
+        "ring": {
+          "site_body": "right_hand_ring_link2",
+          "site_local_m": [
+            0.0,
+            0.004,
+            -0.027
+          ],
+          "urdf_endpoint_local_m": [
+            0.0,
+            0.0,
+            -0.0424999999999994
+          ],
+          "site_to_urdf_endpoint_distance_m": 0.01600781059358154,
+          "site_z_vs_urdf_endpoint_axis_deg": 180.0,
+          "site_frame_in_palm_frame": [
+            [
+              -0.0022138312340360127,
+              0.9982028798500135,
+              0.05988413488067416
+            ],
+            [
+              0.9993173617971551,
+              -4.336808689942018e-19,
+              0.03694334054702977
+            ],
+            [
+              0.03687694892532488,
+              0.05992504200365293,
+              -0.9975214684300381
+            ]
+          ],
+          "site_frame_det_error": 0.0
+        },
+        "pinky": {
+          "site_body": "right_hand_pinky_link2",
+          "site_local_m": [
+            0.0,
+            0.004,
+            -0.027
+          ],
+          "urdf_endpoint_local_m": [
+            0.0,
+            0.0,
+            -0.0425
+          ],
+          "site_to_urdf_endpoint_distance_m": 0.016007810593582125,
+          "site_z_vs_urdf_endpoint_axis_deg": 180.0,
+          "site_frame_in_palm_frame": [
+            [
+              -0.0022138312340360127,
+              0.9982028798500135,
+              0.05988413488067416
+            ],
+            [
+              0.9993173617971551,
+              -4.336808689942018e-19,
+              0.03694334054702977
+            ],
+            [
+              0.03687694892532488,
+              0.05992504200365293,
+              -0.9975214684300381
+            ]
+          ],
+          "site_frame_det_error": 0.0
+        }
+      },
+      "left": {
+        "thumb": {
+          "site_body": "left_hand_thumb_rota_link2",
+          "site_local_m": [
+            0.04,
+            0.0,
+            -0.012
+          ],
+          "urdf_endpoint_local_m": [
+            0.0504017317642718,
+            0.0,
+            0.0
+          ],
+          "site_to_urdf_endpoint_distance_m": 0.01588068083225215,
+          "site_z_vs_urdf_endpoint_axis_deg": 90.0,
+          "site_frame_in_palm_frame": [
+            [
+              0.03840360731072522,
+              -0.9789777191105875,
+              -0.20031921632872676
+            ],
+            [
+              -0.9984897970538225,
+              -0.0297138394373086,
+              -0.046208364235392124
+            ],
+            [
+              0.03928470599279614,
+              0.20179126153261803,
+              -0.9786403826963888
+            ]
+          ],
+          "site_frame_det_error": 0.0
+        },
+        "index": {
+          "site_body": "left_hand_index_rota_link2",
+          "site_local_m": [
+            0.0,
+            -0.004,
+            -0.027
+          ],
+          "urdf_endpoint_local_m": [
+            0.0,
+            0.0,
+            -0.0424999999999991
+          ],
+          "site_to_urdf_endpoint_distance_m": 0.01600781059358125,
+          "site_z_vs_urdf_endpoint_axis_deg": 180.0,
+          "site_frame_in_palm_frame": [
+            [
+              -0.0022138312340360127,
+              -0.9982028798500135,
+              0.05988413488067416
+            ],
+            [
+              -0.9993173617971551,
+              -4.336808689942018e-19,
+              -0.03694334054702977
+            ],
+            [
+              0.03687694892532488,
+              -0.05992504200365293,
+              -0.9975214684300381
+            ]
+          ],
+          "site_frame_det_error": 0.0
+        },
+        "middle": {
+          "site_body": "left_hand_mid_link2",
+          "site_local_m": [
+            0.0,
+            -0.004,
+            -0.027
+          ],
+          "urdf_endpoint_local_m": [
+            0.0,
+            0.0,
+            -0.0424999999999995
+          ],
+          "site_to_urdf_endpoint_distance_m": 0.016007810593581643,
+          "site_z_vs_urdf_endpoint_axis_deg": 180.0,
+          "site_frame_in_palm_frame": [
+            [
+              -0.0022138312340360127,
+              -0.9982028798500135,
+              0.05988413488067416
+            ],
+            [
+              -0.9993173617971551,
+              -4.336808689942018e-19,
+              -0.03694334054702977
+            ],
+            [
+              0.03687694892532488,
+              -0.05992504200365293,
+              -0.9975214684300381
+            ]
+          ],
+          "site_frame_det_error": 0.0
+        },
+        "ring": {
+          "site_body": "left_hand_ring_link2",
+          "site_local_m": [
+            0.0,
+            -0.004,
+            -0.027
+          ],
+          "urdf_endpoint_local_m": [
+            0.0,
+            0.0,
+            -0.0425
+          ],
+          "site_to_urdf_endpoint_distance_m": 0.016007810593582125,
+          "site_z_vs_urdf_endpoint_axis_deg": 180.0,
+          "site_frame_in_palm_frame": [
+            [
+              -0.0022138312340360127,
+              -0.9982028798500135,
+              0.05988413488067416
+            ],
+            [
+              -0.9993173617971551,
+              -4.336808689942018e-19,
+              -0.03694334054702977
+            ],
+            [
+              0.03687694892532488,
+              -0.05992504200365293,
+              -0.9975214684300381
+            ]
+          ],
+          "site_frame_det_error": 0.0
+        },
+        "pinky": {
+          "site_body": "left_hand_pinky_link2",
+          "site_local_m": [
+            0.0,
+            -0.004,
+            -0.027
+          ],
+          "urdf_endpoint_local_m": [
+            0.0,
+            0.0,
+            -0.0424999999999995
+          ],
+          "site_to_urdf_endpoint_distance_m": 0.016007810593581643,
+          "site_z_vs_urdf_endpoint_axis_deg": 180.0,
+          "site_frame_in_palm_frame": [
+            [
+              -0.0022138312340360127,
+              -0.9982028798500135,
+              0.05988413488067416
+            ],
+            [
+              -0.9993173617971551,
+              -4.336808689942018e-19,
+              -0.03694334054702977
+            ],
+            [
+              0.03687694892532488,
+              -0.05992504200365293,
+              -0.9975214684300381
+            ]
+          ],
+          "site_frame_det_error": 0.0
+        }
+      }
+    },
+    "left_right_frame_check": {
+      "thumb": {
+        "direct_local_frame_difference_deg": 176.5945435689404,
+        "conjugate_reflection_difference_deg": 23.726869135574297,
+        "interpretation": "diagnostic only; canonical palm frames are a model convention"
+      },
+      "index": {
+        "direct_local_frame_difference_deg": 180.0,
+        "conjugate_reflection_difference_deg": 8.069648077274506,
+        "interpretation": "diagnostic only; canonical palm frames are a model convention"
+      },
+      "middle": {
+        "direct_local_frame_difference_deg": 180.0,
+        "conjugate_reflection_difference_deg": 8.069648077274506,
+        "interpretation": "diagnostic only; canonical palm frames are a model convention"
+      },
+      "ring": {
+        "direct_local_frame_difference_deg": 180.0,
+        "conjugate_reflection_difference_deg": 8.069648077274506,
+        "interpretation": "diagnostic only; canonical palm frames are a model convention"
+      },
+      "pinky": {
+        "direct_local_frame_difference_deg": 180.0,
+        "conjugate_reflection_difference_deg": 8.069648077274506,
+        "interpretation": "diagnostic only; canonical palm frames are a model convention"
+      }
+    }
+  },
+  "target_and_source_continuity": {
+    "right": {
+      "target_frame_step_by_finger": [
+        {
+          "mean_deg": 3.255556642644891,
+          "p95_deg": 9.940725020886028,
+          "max_deg": 19.165167794284077,
+          "count_over_45_deg": 0,
+          "count_over_90_deg": 0
+        },
+        {
+          "mean_deg": 2.8105091243759106,
+          "p95_deg": 8.490164685557858,
+          "max_deg": 14.643601565570087,
+          "count_over_45_deg": 0,
+          "count_over_90_deg": 0
+        },
+        {
+          "mean_deg": 2.801247418240084,
+          "p95_deg": 8.476583382499262,
+          "max_deg": 13.83463500638697,
+          "count_over_45_deg": 0,
+          "count_over_90_deg": 0
+        },
+        {
+          "mean_deg": 3.2337902010340973,
+          "p95_deg": 10.140032363191063,
+          "max_deg": 16.823090760445044,
+          "count_over_45_deg": 0,
+          "count_over_90_deg": 0
+        },
+        {
+          "mean_deg": 4.128371679343392,
+          "p95_deg": 9.834078366872932,
+          "max_deg": 15.293092419668932,
+          "count_over_45_deg": 0,
+          "count_over_90_deg": 0
+        }
+      ],
+      "mano_distal_frame_step_by_finger": [
+        {
+          "mean_deg": 3.255556642644891,
+          "p95_deg": 9.940725020886028,
+          "max_deg": 19.165167794284084,
+          "count_over_45_deg": 0,
+          "count_over_90_deg": 0
+        },
+        {
+          "mean_deg": 2.8105091243759106,
+          "p95_deg": 8.490164685557854,
+          "max_deg": 14.643601565570087,
+          "count_over_45_deg": 0,
+          "count_over_90_deg": 0
+        },
+        {
+          "mean_deg": 2.801247418240084,
+          "p95_deg": 8.47658338249926,
+          "max_deg": 13.834635006386973,
+          "count_over_45_deg": 0,
+          "count_over_90_deg": 0
+        },
+        {
+          "mean_deg": 3.2337902010340978,
+          "p95_deg": 10.140032363191063,
+          "max_deg": 16.823090760445044,
+          "count_over_45_deg": 0,
+          "count_over_90_deg": 0
+        },
+        {
+          "mean_deg": 4.128371679343392,
+          "p95_deg": 9.834078366872932,
+          "max_deg": 15.293092419668936,
+          "count_over_45_deg": 0,
+          "count_over_90_deg": 0
+        }
+      ],
+      "target_vs_mano_step_abs_max_deg_by_finger": [
+        7.105427357601002e-15,
+        7.549516567451064e-15,
+        5.329070518200751e-15,
+        7.105427357601002e-15,
+        6.8833827526759706e-15
+      ],
+      "old_projected_palm_normal_condition_ratio_by_finger": {
+        "min": [
+          0.7380726655046038,
+          0.11516974924002614,
+          0.04833994136967998,
+          0.12008894620172769,
+          0.02414879118082983
+        ],
+        "p01": [
+          0.746098808979554,
+          0.15506057051738423,
+          0.09753394609707093,
+          0.14830292468772407,
+          0.05478401203150237
+        ],
+        "count_below_0_1": [
+          0,
+          0,
+          3,
+          0,
+          11
+        ],
+        "count_below_0_2": [
+          0,
+          5,
+          16,
+          5,
+          28
+        ]
+      },
+      "target_rotation_det_max_error": 1.9984014443252818e-15,
+      "target_rotation_orthogonality_max_error": 1.7763568394002505e-15,
+      "mano_fk_report": {
+        "source": "released_MANO_local_rotations_via_smplx_rigid_FK",
+        "neutral_calibration": "MANO_v1.2_zero_betas_flat_mean_identity_pose; palm/distal_axes",
+        "calibration_fitted_to_episode": false,
+        "per_frame_palm_projection": false,
+        "distal_joint_indices": [
+          15,
+          3,
+          6,
+          12,
+          9
+        ],
+        "neutral_distal_frames": [
+          [
+            [
+              0.17808629086002872,
+              0.5832182409366611,
+              -0.792553945448803
+            ],
+            [
+              -0.9836495329610009,
+              0.12745697404728337,
+              -0.12723331353193282
+            ],
+            [
+              0.026811738349503567,
+              0.8022538271678467,
+              0.5963806900640067
+            ]
+          ],
+          [
+            [
+              -0.010674477760559872,
+              0.1737544458862418,
+              -0.9847311552191819
+            ],
+            [
+              -0.9933310389885872,
+              0.11121942429060303,
+              0.030392213514658845
+            ],
+            [
+              0.11480201438299376,
+              0.978488442545558,
+              0.17140847498993453
+            ]
+          ],
+          [
+            [
+              -0.03954876453623963,
+              -0.19894193509573385,
+              -0.979212950120668
+            ],
+            [
+              -0.996477740159215,
+              0.08037477491576776,
+              0.02391670805992517
+            ],
+            [
+              0.07394598427799239,
+              0.9767097839264254,
+              -0.20141993295489505
+            ]
+          ],
+          [
+            [
+              -0.19901764111041453,
+              -0.27778719883944175,
+              -0.9398011761472651
+            ],
+            [
+              -0.9798658709506491,
+              0.07202741920973676,
+              0.1862120453357153
+            ],
+            [
+              0.01596413082419121,
+              0.957938579995044,
+              -0.2865289225961436
+            ]
+          ],
+          [
+            [
+              -0.13380010446767526,
+              -0.5379925159844053,
+              -0.8322629300823198
+            ],
+            [
+              -0.9902222531044113,
+              0.03913566985390003,
+              0.1338965600824369
+            ],
+            [
+              -0.039464179977066166,
+              0.8420406475282862,
+              -0.5379685180462532
+            ]
+          ]
+        ],
+        "reconstructed_joint_max_error_m": 0.0,
+        "distal_axis_vs_observed_bone_p95_deg": [
+          1.9093583367832745,
+          1.8667508965899258,
+          0.7807414514943939,
+          0.4367775927582289,
+          2.98971798037032
+        ],
+        "distal_axis_vs_observed_bone_max_deg": [
+          2.34787153714921,
+          1.9008198672905772,
+          1.0782083892668797,
+          0.8960940976904581,
+          3.423997105238526
+        ],
+        "max_frame_rotation_step_deg": 19.16516779428408,
+        "source_frame_keys": [
+          "00001",
+          "00002",
+          "00003",
+          "00004",
+          "00005",
+          "00006",
+          "00007",
+          "00008",
+          "00009",
+          "00010",
+          "00011",
+          "00012",
+          "00013",
+          "00014",
+          "00015",
+          "00016",
+          "00017",
+          "00018",
+          "00019",
+          "00020",
+          "00021",
+          "00022",
+          "00023",
+          "00024",
+          "00025",
+          "00026",
+          "00027",
+          "00028",
+          "00029",
+          "00030",
+          "00031",
+          "00032",
+          "00033",
+          "00034",
+          "00035",
+          "00036",
+          "00037",
+          "00038",
+          "00039",
+          "00040",
+          "00041",
+          "00042",
+          "00043",
+          "00044",
+          "00045",
+          "00046",
+          "00047",
+          "00048",
+          "00049",
+          "00050",
+          "00051",
+          "00052",
+          "00053",
+          "00054",
+          "00055",
+          "00056",
+          "00057",
+          "00058",
+          "00059",
+          "00060",
+          "00061",
+          "00062",
+          "00063",
+          "00064",
+          "00065",
+          "00066",
+          "00067",
+          "00068",
+          "00069",
+          "00070",
+          "00071",
+          "00072",
+          "00073",
+          "00074",
+          "00075",
+          "00076",
+          "00077",
+          "00078",
+          "00079",
+          "00080",
+          "00081",
+          "00082",
+          "00083",
+          "00084",
+          "00085",
+          "00086",
+          "00087",
+          "00088",
+          "00089",
+          "00090",
+          "00091",
+          "00092",
+          "00093",
+          "00094",
+          "00095",
+          "00096",
+          "00097",
+          "00098",
+          "00099",
+          "00100",
+          "00101",
+          "00102",
+          "00103",
+          "00104",
+          "00105",
+          "00106",
+          "00107",
+          "00108",
+          "00109",
+          "00110",
+          "00111",
+          "00112",
+          "00113",
+          "00114",
+          "00115",
+          "00116",
+          "00117",
+          "00118",
+          "00119",
+          "00120",
+          "00121",
+          "00122",
+          "00123",
+          "00124",
+          "00125",
+          "00126",
+          "00127",
+          "00128",
+          "00129",
+          "00130",
+          "00131",
+          "00132",
+          "00133",
+          "00134",
+          "00135",
+          "00136",
+          "00137",
+          "00138",
+          "00139",
+          "00140",
+          "00141",
+          "00142",
+          "00143",
+          "00144",
+          "00145",
+          "00146",
+          "00147",
+          "00148",
+          "00149",
+          "00150",
+          "00151",
+          "00152",
+          "00153",
+          "00154",
+          "00155",
+          "00156",
+          "00157",
+          "00158",
+          "00159",
+          "00160",
+          "00161",
+          "00162",
+          "00163",
+          "00164",
+          "00165",
+          "00166",
+          "00167",
+          "00168",
+          "00169",
+          "00170",
+          "00171",
+          "00172",
+          "00173",
+          "00174",
+          "00175",
+          "00176",
+          "00177",
+          "00178",
+          "00179",
+          "00180",
+          "00181",
+          "00182",
+          "00183",
+          "00184",
+          "00185",
+          "00186",
+          "00187",
+          "00188",
+          "00189",
+          "00190",
+          "00191",
+          "00192",
+          "00193",
+          "00194",
+          "00195",
+          "00196",
+          "00197",
+          "00198"
+        ],
+        "inputs": [
+          {
+            "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017/right_hand.pkl",
+            "sha256": "098d13bf5bc3cd0275f53a320c824653175d0394c2a1040f94542c9ab788d110"
+          },
+          {
+            "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017/right_hand_shape.pkl",
+            "sha256": "ae8bd692a12c2b18bdae4e8f031f364930e9bad7c0a4d78afc2d8eb9d03d5d13"
+          },
+          {
+            "path": "/data_all/zzx/3.2RL/data/taco_v1/hand_poses_v1/mano_v1_2/models/MANO_RIGHT.pkl",
+            "sha256": "45d60aa3b27ef9107a7afd4e00808f307fd91111e1cfa35afd5c4a62de264767"
+          }
+        ]
+      },
+      "interpretation": "The projected-palm ratio diagnoses the historical proxy; current human_reference fingertip rotations are from MANO rotational FK."
+    },
+    "left": {
+      "target_frame_step_by_finger": [
+        {
+          "mean_deg": 2.2457673841301196,
+          "p95_deg": 7.089237695614049,
+          "max_deg": 13.608853605738645,
+          "count_over_45_deg": 0,
+          "count_over_90_deg": 0
+        },
+        {
+          "mean_deg": 2.45912493395326,
+          "p95_deg": 7.655182092623786,
+          "max_deg": 12.218020202571322,
+          "count_over_45_deg": 0,
+          "count_over_90_deg": 0
+        },
+        {
+          "mean_deg": 2.7813752740230777,
+          "p95_deg": 9.055765092994472,
+          "max_deg": 12.78759827831047,
+          "count_over_45_deg": 0,
+          "count_over_90_deg": 0
+        },
+        {
+          "mean_deg": 3.1545355816419214,
+          "p95_deg": 9.795011841806435,
+          "max_deg": 12.313812618532424,
+          "count_over_45_deg": 0,
+          "count_over_90_deg": 0
+        },
+        {
+          "mean_deg": 3.351605152712874,
+          "p95_deg": 9.422734786186245,
+          "max_deg": 11.32552611251223,
+          "count_over_45_deg": 0,
+          "count_over_90_deg": 0
+        }
+      ],
+      "mano_distal_frame_step_by_finger": [
+        {
+          "mean_deg": 2.2457673841301196,
+          "p95_deg": 7.089237695614049,
+          "max_deg": 13.608853605738643,
+          "count_over_45_deg": 0,
+          "count_over_90_deg": 0
+        },
+        {
+          "mean_deg": 2.4591249339532606,
+          "p95_deg": 7.655182092623783,
+          "max_deg": 12.218020202571324,
+          "count_over_45_deg": 0,
+          "count_over_90_deg": 0
+        },
+        {
+          "mean_deg": 2.7813752740230786,
+          "p95_deg": 9.055765092994475,
+          "max_deg": 12.787598278310465,
+          "count_over_45_deg": 0,
+          "count_over_90_deg": 0
+        },
+        {
+          "mean_deg": 3.1545355816419214,
+          "p95_deg": 9.795011841806435,
+          "max_deg": 12.313812618532426,
+          "count_over_45_deg": 0,
+          "count_over_90_deg": 0
+        },
+        {
+          "mean_deg": 3.351605152712874,
+          "p95_deg": 9.422734786186245,
+          "max_deg": 11.32552611251223,
+          "count_over_45_deg": 0,
+          "count_over_90_deg": 0
+        }
+      ],
+      "target_vs_mano_step_abs_max_deg_by_finger": [
+        6.661338147750939e-15,
+        7.105427357601002e-15,
+        5.773159728050814e-15,
+        7.105427357601002e-15,
+        5.773159728050814e-15
+      ],
+      "old_projected_palm_normal_condition_ratio_by_finger": {
+        "min": [
+          0.8144542851316918,
+          0.05659129021493609,
+          0.029402855137491083,
+          0.1837018711419626,
+          0.03494802229999861
+        ],
+        "p01": [
+          0.8169457875829111,
+          0.07113489493050625,
+          0.052575209589504165,
+          0.19337781137214216,
+          0.067016877263429
+        ],
+        "count_below_0_1": [
+          0,
+          5,
+          6,
+          0,
+          4
+        ],
+        "count_below_0_2": [
+          0,
+          13,
+          17,
+          3,
+          15
+        ]
+      },
+      "target_rotation_det_max_error": 2.1094237467877974e-15,
+      "target_rotation_orthogonality_max_error": 1.6653345369377348e-15,
+      "mano_fk_report": {
+        "source": "released_MANO_local_rotations_via_smplx_rigid_FK",
+        "neutral_calibration": "MANO_v1.2_zero_betas_flat_mean_identity_pose; palm/distal_axes",
+        "calibration_fitted_to_episode": false,
+        "per_frame_palm_projection": false,
+        "distal_joint_indices": [
+          15,
+          3,
+          6,
+          12,
+          9
+        ],
+        "neutral_distal_frames": [
+          [
+            [
+              -0.17808629086002872,
+              0.5832182409366611,
+              0.792553945448803
+            ],
+            [
+              -0.9836495329610009,
+              -0.12745697404728337,
+              -0.12723331353193282
+            ],
+            [
+              0.026811738349503567,
+              -0.8022538271678467,
+              0.5963806900640067
+            ]
+          ],
+          [
+            [
+              0.010674477760559872,
+              0.1737544458862418,
+              0.9847311552191819
+            ],
+            [
+              -0.9933310389885872,
+              -0.11121942429060303,
+              0.030392213514658845
+            ],
+            [
+              0.11480201438299376,
+              -0.978488442545558,
+              0.17140847498993453
+            ]
+          ],
+          [
+            [
+              0.2089487783683284,
+              -0.12321972644059649,
+              0.9701326234254201
+            ],
+            [
+              -0.9760458323781157,
+              -0.08777268594204589,
+              0.19907407842265717
+            ],
+            [
+              0.06062129259339878,
+              -0.9884901894396443,
+              -0.13860809596081314
+            ]
+          ],
+          [
+            [
+              0.19901764111041453,
+              -0.27778719883944175,
+              0.9398011761472651
+            ],
+            [
+              -0.9798658709506491,
+              -0.07202741920973676,
+              0.1862120453357153
+            ],
+            [
+              0.01596413082419121,
+              -0.957938579995044,
+              -0.2865289225961436
+            ]
+          ],
+          [
+            [
+              0.13380010446767526,
+              -0.5379925159844053,
+              0.8322629300823198
+            ],
+            [
+              -0.9902222531044113,
+              -0.03913566985390003,
+              0.1338965600824369
+            ],
+            [
+              -0.039464179977066166,
+              -0.8420406475282862,
+              -0.5379685180462532
+            ]
+          ]
+        ],
+        "reconstructed_joint_max_error_m": 0.0,
+        "distal_axis_vs_observed_bone_p95_deg": [
+          1.6633076825890902,
+          1.816828273792529,
+          2.109753510249644,
+          0.9356612690679488,
+          3.358872918143853
+        ],
+        "distal_axis_vs_observed_bone_max_deg": [
+          1.7570701730610632,
+          1.8805351821422565,
+          2.297340423110894,
+          0.9384729657847456,
+          3.489613347525269
+        ],
+        "max_frame_rotation_step_deg": 13.608853605738645,
+        "source_frame_keys": [
+          "00001",
+          "00002",
+          "00003",
+          "00004",
+          "00005",
+          "00006",
+          "00007",
+          "00008",
+          "00009",
+          "00010",
+          "00011",
+          "00012",
+          "00013",
+          "00014",
+          "00015",
+          "00016",
+          "00017",
+          "00018",
+          "00019",
+          "00020",
+          "00021",
+          "00022",
+          "00023",
+          "00024",
+          "00025",
+          "00026",
+          "00027",
+          "00028",
+          "00029",
+          "00030",
+          "00031",
+          "00032",
+          "00033",
+          "00034",
+          "00035",
+          "00036",
+          "00037",
+          "00038",
+          "00039",
+          "00040",
+          "00041",
+          "00042",
+          "00043",
+          "00044",
+          "00045",
+          "00046",
+          "00047",
+          "00048",
+          "00049",
+          "00050",
+          "00051",
+          "00052",
+          "00053",
+          "00054",
+          "00055",
+          "00056",
+          "00057",
+          "00058",
+          "00059",
+          "00060",
+          "00061",
+          "00062",
+          "00063",
+          "00064",
+          "00065",
+          "00066",
+          "00067",
+          "00068",
+          "00069",
+          "00070",
+          "00071",
+          "00072",
+          "00073",
+          "00074",
+          "00075",
+          "00076",
+          "00077",
+          "00078",
+          "00079",
+          "00080",
+          "00081",
+          "00082",
+          "00083",
+          "00084",
+          "00085",
+          "00086",
+          "00087",
+          "00088",
+          "00089",
+          "00090",
+          "00091",
+          "00092",
+          "00093",
+          "00094",
+          "00095",
+          "00096",
+          "00097",
+          "00098",
+          "00099",
+          "00100",
+          "00101",
+          "00102",
+          "00103",
+          "00104",
+          "00105",
+          "00106",
+          "00107",
+          "00108",
+          "00109",
+          "00110",
+          "00111",
+          "00112",
+          "00113",
+          "00114",
+          "00115",
+          "00116",
+          "00117",
+          "00118",
+          "00119",
+          "00120",
+          "00121",
+          "00122",
+          "00123",
+          "00124",
+          "00125",
+          "00126",
+          "00127",
+          "00128",
+          "00129",
+          "00130",
+          "00131",
+          "00132",
+          "00133",
+          "00134",
+          "00135",
+          "00136",
+          "00137",
+          "00138",
+          "00139",
+          "00140",
+          "00141",
+          "00142",
+          "00143",
+          "00144",
+          "00145",
+          "00146",
+          "00147",
+          "00148",
+          "00149",
+          "00150",
+          "00151",
+          "00152",
+          "00153",
+          "00154",
+          "00155",
+          "00156",
+          "00157",
+          "00158",
+          "00159",
+          "00160",
+          "00161",
+          "00162",
+          "00163",
+          "00164",
+          "00165",
+          "00166",
+          "00167",
+          "00168",
+          "00169",
+          "00170",
+          "00171",
+          "00172",
+          "00173",
+          "00174",
+          "00175",
+          "00176",
+          "00177",
+          "00178",
+          "00179",
+          "00180",
+          "00181",
+          "00182",
+          "00183",
+          "00184",
+          "00185",
+          "00186",
+          "00187",
+          "00188",
+          "00189",
+          "00190",
+          "00191",
+          "00192",
+          "00193",
+          "00194",
+          "00195",
+          "00196",
+          "00197",
+          "00198"
+        ],
+        "inputs": [
+          {
+            "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017/left_hand.pkl",
+            "sha256": "a06ba74342df18ef69b559e57b903938ad640edb8ce3269fca00b4ec5652c6d0"
+          },
+          {
+            "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017/left_hand_shape.pkl",
+            "sha256": "97956334eea23cc859c937102d9ba26b8dead9f64913d54ea6cb90a2cc50531c"
+          },
+          {
+            "path": "/data_all/zzx/3.2RL/data/taco_v1/hand_poses_v1/mano_v1_2/models/MANO_LEFT.pkl",
+            "sha256": "c4022f7083f2ca7c78b2b3d595abbab52debd32b09d372b16923a801f0ea6a30"
+          }
+        ]
+      },
+      "interpretation": "The projected-palm ratio diagnoses the historical proxy; current human_reference fingertip rotations are from MANO rotational FK."
+    }
+  },
+  "trajectory_residuals": {
+    "baseline_current_mink": {
+      "right": {
+        "thumb": {
+          "full_angle_deg": {
+            "mean": 14.228675282394416,
+            "median": 5.246794228454577,
+            "p95": 31.881922008139874,
+            "max": 35.5937224127052
+          },
+          "fixed_bias": {
+            "mean_rotation_vector_rad": [
+              0.08850851366247052,
+              -0.04404693243178308,
+              0.19090631530168192
+            ],
+            "bias_angle_deg": 12.317807813934312,
+            "after_right_multiplying_mean_inverse": {
+              "mean": 13.565079953147546,
+              "median": 12.753118935570058,
+              "p95": 20.22823326191318,
+              "max": 24.38652223358325
+            },
+            "residual_mean_reduction_deg": 0.6635953292468706
+          },
+          "axis_angle_deg": {
+            "x": {
+              "mean": 12.54401400209806,
+              "median": 4.071059995339844,
+              "p95": 28.457872077102266,
+              "max": 34.62378521666799
+            },
+            "y": {
+              "mean": 10.394593759418251,
+              "median": 4.098723558719349,
+              "p95": 25.93042772700354,
+              "max": 28.443278607475293
+            },
+            "z": {
+              "mean": 11.304498124493714,
+              "median": 4.934343158739767,
+              "p95": 29.899554322947896,
+              "max": 33.68235701072584
+            }
+          },
+          "twist_after_longitudinal_alignment_deg": {
+            "mean_abs": 11.054365495616766,
+            "median_abs": 2.3448761681666004,
+            "p95_abs": 28.71229434111547,
+            "max_abs": 30.534439894664217,
+            "undefined_frames": 0
+          }
+        },
+        "index": {
+          "full_angle_deg": {
+            "mean": 8.342470762578769,
+            "median": 6.786024464950179,
+            "p95": 18.61678126578956,
+            "max": 25.245925075505912
+          },
+          "fixed_bias": {
+            "mean_rotation_vector_rad": [
+              0.004390543883981606,
+              0.08957821101893819,
+              0.0777107688049829
+            ],
+            "bias_angle_deg": 6.799272641418483,
+            "after_right_multiplying_mean_inverse": {
+              "mean": 5.981157360376641,
+              "median": 4.309811833720661,
+              "p95": 13.94945761607816,
+              "max": 19.043008167772072
+            },
+            "residual_mean_reduction_deg": 2.3613134022021276
+          },
+          "axis_angle_deg": {
+            "x": {
+              "mean": 7.456017476978725,
+              "median": 5.703857803977867,
+              "p95": 17.689024041420943,
+              "max": 23.616757233219204
+            },
+            "y": {
+              "mean": 4.630232712394109,
+              "median": 4.353470053284431,
+              "p95": 9.288849259519761,
+              "max": 11.597433433637825
+            },
+            "z": {
+              "mean": 7.460348821322869,
+              "median": 5.82487796879407,
+              "p95": 18.49373953404302,
+              "max": 25.0994868835235
+            }
+          },
+          "twist_after_longitudinal_alignment_deg": {
+            "mean_abs": 5.822646521675476,
+            "median_abs": 4.376425110803119,
+            "p95_abs": 15.527315042122904,
+            "max_abs": 22.452368252892736,
+            "undefined_frames": 0
+          }
+        },
+        "middle": {
+          "full_angle_deg": {
+            "mean": 22.615028966712856,
+            "median": 22.24421569663792,
+            "p95": 31.114043581544834,
+            "max": 32.508620320804845
+          },
+          "fixed_bias": {
+            "mean_rotation_vector_rad": [
+              0.007834098473293052,
+              0.21247503091994632,
+              -0.32190693666893344
+            ],
+            "bias_angle_deg": 22.10392815561093,
+            "after_right_multiplying_mean_inverse": {
+              "mean": 6.860099132067698,
+              "median": 6.708777503871981,
+              "p95": 15.370216319837757,
+              "max": 16.318494234406177
+            },
+            "residual_mean_reduction_deg": 15.754929834645157
+          },
+          "axis_angle_deg": {
+            "x": {
+              "mean": 13.392650764377693,
+              "median": 13.922364971000812,
+              "p95": 19.1728114801148,
+              "max": 20.58366677227817
+            },
+            "y": {
+              "mean": 21.054122300610786,
+              "median": 20.11965345163138,
+              "p95": 30.351490073790234,
+              "max": 31.130158238260616
+            },
+            "z": {
+              "mean": 18.84446634447136,
+              "median": 19.423276510162147,
+              "p95": 30.238146190249612,
+              "max": 31.114305030558825
+            }
+          },
+          "twist_after_longitudinal_alignment_deg": {
+            "mean_abs": 18.50776031500107,
+            "median_abs": 19.243004985529584,
+            "p95_abs": 27.84354287261151,
+            "max_abs": 28.690525513533707,
+            "undefined_frames": 0
+          }
+        },
+        "ring": {
+          "full_angle_deg": {
+            "mean": 26.640053385642897,
+            "median": 26.305267978217252,
+            "p95": 37.431293901010726,
+            "max": 38.09486336718749
+          },
+          "fixed_bias": {
+            "mean_rotation_vector_rad": [
+              -0.00025167343788003285,
+              0.04307389716228171,
+              -0.43809006546278134
+            ],
+            "bias_angle_deg": 25.221751134549358,
+            "after_right_multiplying_mean_inverse": {
+              "mean": 10.183338380977276,
+              "median": 9.664475481319768,
+              "p95": 15.17615200016362,
+              "max": 26.967515687618675
+            },
+            "residual_mean_reduction_deg": 16.45671500466562
+          },
+          "axis_angle_deg": {
+            "x": {
+              "mean": 20.668537005841806,
+              "median": 21.68037607014088,
+              "p95": 28.220047690705474,
+              "max": 29.666426980512053
+            },
+            "y": {
+              "mean": 18.650105758880144,
+              "median": 17.67241038119117,
+              "p95": 34.01930220176446,
+              "max": 34.428063519650046
+            },
+            "z": {
+              "mean": 24.548536803315006,
+              "median": 22.445332812092133,
+              "p95": 37.19041231841801,
+              "max": 37.72938938049511
+            }
+          },
+          "twist_after_longitudinal_alignment_deg": {
+            "mean_abs": 25.08323264039102,
+            "median_abs": 24.65530068331225,
+            "p95_abs": 37.15011363385275,
+            "max_abs": 38.03503715483254,
+            "undefined_frames": 0
+          }
+        },
+        "pinky": {
+          "full_angle_deg": {
+            "mean": 29.46879713407192,
+            "median": 29.1845149307575,
+            "p95": 50.70631202249346,
+            "max": 55.75129296432918
+          },
+          "fixed_bias": {
+            "mean_rotation_vector_rad": [
+              -0.0413442451290116,
+              -0.0949716915958679,
+              0.17317680951709902
+            ],
+            "bias_angle_deg": 11.561711381958403,
+            "after_right_multiplying_mean_inverse": {
+              "mean": 26.94948453495091,
+              "median": 27.058909287218334,
+              "p95": 44.64701576609947,
+              "max": 46.55597648645105
+            },
+            "residual_mean_reduction_deg": 2.5193125991210117
+          },
+          "axis_angle_deg": {
+            "x": {
+              "mean": 19.193199153864054,
+              "median": 19.73610488401973,
+              "p95": 31.929853163130208,
+              "max": 35.5839673112521
+            },
+            "y": {
+              "mean": 23.115154733550803,
+              "median": 18.685809554937133,
+              "p95": 46.677383105279965,
+              "max": 52.081263856775216
+            },
+            "z": {
+              "mean": 26.56843401232141,
+              "median": 25.42589014895944,
+              "p95": 46.91489286089251,
+              "max": 50.11559250505515
+            }
+          },
+          "twist_after_longitudinal_alignment_deg": {
+            "mean_abs": 25.26003954833206,
+            "median_abs": 25.499155976293885,
+            "p95_abs": 49.48831783469947,
+            "max_abs": 55.66616411645962,
+            "undefined_frames": 0
+          }
+        }
+      },
+      "left": {
+        "thumb": {
+          "full_angle_deg": {
+            "mean": 8.733174771844128,
+            "median": 6.271193344656092,
+            "p95": 21.75261491250924,
+            "max": 28.166332015804585
+          },
+          "fixed_bias": {
+            "mean_rotation_vector_rad": [
+              -0.08244801741386186,
+              -0.03492969181759685,
+              -0.08573996507485387
+            ],
+            "bias_angle_deg": 7.103082493005584,
+            "after_right_multiplying_mean_inverse": {
+              "mean": 6.4739668224823195,
+              "median": 4.776501655750624,
+              "p95": 16.91701356624571,
+              "max": 22.238513445249794
+            },
+            "residual_mean_reduction_deg": 2.2592079493618087
+          },
+          "axis_angle_deg": {
+            "x": {
+              "mean": 7.24156310453712,
+              "median": 5.280414989062212,
+              "p95": 21.69212041864189,
+              "max": 27.72488512454202
+            },
+            "y": {
+              "mean": 5.654181380383742,
+              "median": 4.328719745098009,
+              "p95": 13.856657551026126,
+              "max": 24.40985114809677
+            },
+            "z": {
+              "mean": 7.632746029443664,
+              "median": 6.09143460046047,
+              "p95": 15.68130918740554,
+              "max": 18.664797516941434
+            }
+          },
+          "twist_after_longitudinal_alignment_deg": {
+            "mean_abs": 5.835680782030245,
+            "median_abs": 4.178132920702729,
+            "p95_abs": 16.250481871081348,
+            "max_abs": 26.975714818387985,
+            "undefined_frames": 0
+          }
+        },
+        "index": {
+          "full_angle_deg": {
+            "mean": 11.8199111532493,
+            "median": 12.174577611649216,
+            "p95": 19.016937481926774,
+            "max": 22.82381469124075
+          },
+          "fixed_bias": {
+            "mean_rotation_vector_rad": [
+              -0.007492195652206147,
+              0.04867680305654026,
+              0.07779079708292452
+            ],
+            "bias_angle_deg": 5.2752496027703275,
+            "after_right_multiplying_mean_inverse": {
+              "mean": 10.542523162556163,
+              "median": 11.187631437559338,
+              "p95": 20.994695445300867,
+              "max": 24.937066317332263
+            },
+            "residual_mean_reduction_deg": 1.2773879906931374
+          },
+          "axis_angle_deg": {
+            "x": {
+              "mean": 9.627836688152364,
+              "median": 8.432109464489162,
+              "p95": 17.647280670887525,
+              "max": 21.71317546246648
+            },
+            "y": {
+              "mean": 6.90950989718952,
+              "median": 5.671846532461872,
+              "p95": 12.86209451405935,
+              "max": 15.668815140704554
+            },
+            "z": {
+              "mean": 11.042746998633962,
+              "median": 11.556067891115696,
+              "p95": 16.876920218923686,
+              "max": 20.60067828131752
+            }
+          },
+          "twist_after_longitudinal_alignment_deg": {
+            "mean_abs": 9.255073260969278,
+            "median_abs": 9.514512763892155,
+            "p95_abs": 16.200884217949582,
+            "max_abs": 17.554353109788142,
+            "undefined_frames": 0
+          }
+        },
+        "middle": {
+          "full_angle_deg": {
+            "mean": 19.636853638031123,
+            "median": 18.78967850733598,
+            "p95": 25.06472231500724,
+            "max": 25.29728215487256
+          },
+          "fixed_bias": {
+            "mean_rotation_vector_rad": [
+              -0.011016660961995368,
+              0.09079340799571013,
+              0.3249510266274496
+            ],
+            "bias_angle_deg": 19.341716020232226,
+            "after_right_multiplying_mean_inverse": {
+              "mean": 4.53082680824404,
+              "median": 4.704377951180135,
+              "p95": 7.737616799671363,
+              "max": 8.867995921373913
+            },
+            "residual_mean_reduction_deg": 15.106026829787083
+          },
+          "axis_angle_deg": {
+            "x": {
+              "mean": 14.734533548248278,
+              "median": 14.377511286241045,
+              "p95": 22.387721981990346,
+              "max": 22.596007385020204
+            },
+            "y": {
+              "mean": 15.679040409343024,
+              "median": 15.951916378850404,
+              "p95": 20.180895186021676,
+              "max": 22.22724390548853
+            },
+            "z": {
+              "mean": 16.88010718241555,
+              "median": 17.74468507866363,
+              "p95": 19.6561341009717,
+              "max": 20.25201428248241
+            }
+          },
+          "twist_after_longitudinal_alignment_deg": {
+            "mean_abs": 18.633780207190256,
+            "median_abs": 17.918249910608953,
+            "p95_abs": 23.02026206021516,
+            "max_abs": 23.26770320386213,
+            "undefined_frames": 0
+          }
+        },
+        "ring": {
+          "full_angle_deg": {
+            "mean": 23.73309452885655,
+            "median": 22.518765514422377,
+            "p95": 34.44751763480648,
+            "max": 36.23852145858524
+          },
+          "fixed_bias": {
+            "mean_rotation_vector_rad": [
+              0.0024550986288642256,
+              -0.07786654614119308,
+              0.328361700570805
+            ],
+            "bias_angle_deg": 19.33599992121708,
+            "after_right_multiplying_mean_inverse": {
+              "mean": 13.685211409789439,
+              "median": 11.057582583564013,
+              "p95": 27.428451666327017,
+              "max": 29.11470010457986
+            },
+            "residual_mean_reduction_deg": 10.047883119067112
+          },
+          "axis_angle_deg": {
+            "x": {
+              "mean": 21.732828016960376,
+              "median": 20.347347887122872,
+              "p95": 31.833838149051257,
+              "max": 33.74373424085411
+            },
+            "y": {
+              "mean": 13.102501245071608,
+              "median": 13.80653706728041,
+              "p95": 18.933403049390318,
+              "max": 23.629535828178735
+            },
+            "z": {
+              "mean": 21.528474520199126,
+              "median": 19.060059335613722,
+              "p95": 33.81665710004101,
+              "max": 35.22191685791097
+            }
+          },
+          "twist_after_longitudinal_alignment_deg": {
+            "mean_abs": 20.430310360825203,
+            "median_abs": 21.814351238817764,
+            "p95_abs": 34.373744243859406,
+            "max_abs": 36.15420376030415,
+            "undefined_frames": 0
+          }
+        },
+        "pinky": {
+          "full_angle_deg": {
+            "mean": 40.44488252278069,
+            "median": 42.34479868228081,
+            "p95": 49.45013770364617,
+            "max": 56.89519259825956
+          },
+          "fixed_bias": {
+            "mean_rotation_vector_rad": [
+              0.03472035802708496,
+              -0.28776714779781354,
+              -0.5364325146124551
+            ],
+            "bias_angle_deg": 34.935171979696776,
+            "after_right_multiplying_mean_inverse": {
+              "mean": 19.520287528436334,
+              "median": 16.167037046594416,
+              "p95": 46.14779195958341,
+              "max": 53.176271144745435
+            },
+            "residual_mean_reduction_deg": 20.924594994344353
+          },
+          "axis_angle_deg": {
+            "x": {
+              "mean": 26.84135011729058,
+              "median": 27.13776702336829,
+              "p95": 43.64064673456971,
+              "max": 44.758301341296594
+            },
+            "y": {
+              "mean": 29.03986097060547,
+              "median": 28.977425085530363,
+              "p95": 45.0209529611806,
+              "max": 54.56847306409774
+            },
+            "z": {
+              "mean": 38.647977530217005,
+              "median": 39.890228293033985,
+              "p95": 48.56580382636228,
+              "max": 55.76260170463079
+            }
+          },
+          "twist_after_longitudinal_alignment_deg": {
+            "mean_abs": 33.892177125467306,
+            "median_abs": 37.864405042244705,
+            "p95_abs": 49.03602822299054,
+            "max_abs": 52.26955701372761,
+            "undefined_frames": 0
+          }
+        }
+      }
+    },
+    "candidate_spider_style": {
+      "right": {
+        "thumb": {
+          "full_angle_deg": {
+            "mean": 31.762942469370888,
+            "median": 24.085445030131638,
+            "p95": 69.82443094321833,
+            "max": 71.610985354385
+          },
+          "fixed_bias": {
+            "mean_rotation_vector_rad": [
+              0.3867311836205448,
+              -0.23312794537376094,
+              0.10947766979730748
+            ],
+            "bias_angle_deg": 26.622199411411945,
+            "after_right_multiplying_mean_inverse": {
+              "mean": 23.699170389928486,
+              "median": 21.446246651943653,
+              "p95": 44.63954533566119,
+              "max": 47.20778519485935
+            },
+            "residual_mean_reduction_deg": 8.063772079442401
+          },
+          "axis_angle_deg": {
+            "x": {
+              "mean": 30.18408251434924,
+              "median": 21.352895455033327,
+              "p95": 69.66458549170756,
+              "max": 71.60929753032178
+            },
+            "y": {
+              "mean": 11.771711254868846,
+              "median": 11.965871094169488,
+              "p95": 21.298896892225923,
+              "max": 28.4307121293545
+            },
+            "z": {
+              "mean": 28.772361397825208,
+              "median": 20.495583462437317,
+              "p95": 68.33826501551587,
+              "max": 71.26094337002964
+            }
+          },
+          "twist_after_longitudinal_alignment_deg": {
+            "mean_abs": 7.682430663352182,
+            "median_abs": 6.943985652961745,
+            "p95_abs": 23.644572194939627,
+            "max_abs": 29.72705166992832,
+            "undefined_frames": 0
+          }
+        },
+        "index": {
+          "full_angle_deg": {
+            "mean": 28.271456215457544,
+            "median": 28.22626255023183,
+            "p95": 62.049972879064356,
+            "max": 77.27575818688149
+          },
+          "fixed_bias": {
+            "mean_rotation_vector_rad": [
+              -0.16465069596492987,
+              0.09121895494554419,
+              0.012383201907150273
+            ],
+            "bias_angle_deg": 10.80813058902147,
+            "after_right_multiplying_mean_inverse": {
+              "mean": 27.081531073415924,
+              "median": 27.345760532093884,
+              "p95": 52.63070202384996,
+              "max": 67.86698038718639
+            },
+            "residual_mean_reduction_deg": 1.18992514204162
+          },
+          "axis_angle_deg": {
+            "x": {
+              "mean": 20.988506547561478,
+              "median": 21.231591616157132,
+              "p95": 36.38738161311531,
+              "max": 43.27917734108287
+            },
+            "y": {
+              "mean": 24.41146963690826,
+              "median": 22.07040385108524,
+              "p95": 58.4821749707939,
+              "max": 71.9547662569259
+            },
+            "z": {
+              "mean": 22.148277142423545,
+              "median": 20.066170456040446,
+              "p95": 54.202947262611936,
+              "max": 67.69252435478887
+            }
+          },
+          "twist_after_longitudinal_alignment_deg": {
+            "mean_abs": 8.958958604775834,
+            "median_abs": 7.164875685192268,
+            "p95_abs": 24.06369449637154,
+            "max_abs": 30.596151172703706,
+            "undefined_frames": 0
+          }
+        },
+        "middle": {
+          "full_angle_deg": {
+            "mean": 34.47280243926567,
+            "median": 32.650281947976424,
+            "p95": 62.121100017017795,
+            "max": 79.83860117959112
+          },
+          "fixed_bias": {
+            "mean_rotation_vector_rad": [
+              -0.027412866158212278,
+              0.2324775933913428,
+              -0.40282095432967463
+            ],
+            "bias_angle_deg": 26.694054969820872,
+            "after_right_multiplying_mean_inverse": {
+              "mean": 20.341449486327075,
+              "median": 18.258502310202264,
+              "p95": 54.90609064992414,
+              "max": 73.98079704766006
+            },
+            "residual_mean_reduction_deg": 14.131352952938595
+          },
+          "axis_angle_deg": {
+            "x": {
+              "mean": 26.521161222432067,
+              "median": 24.431030382201772,
+              "p95": 48.88932872173363,
+              "max": 55.37466014689747
+            },
+            "y": {
+              "mean": 29.820715886243963,
+              "median": 27.460473217861512,
+              "p95": 58.413264957464165,
+              "max": 76.8178616533502
+            },
+            "z": {
+              "mean": 25.437036020901846,
+              "median": 29.56709140304389,
+              "p95": 40.90687696146448,
+              "max": 56.17982575732929
+            }
+          },
+          "twist_after_longitudinal_alignment_deg": {
+            "mean_abs": 23.326365467151685,
+            "median_abs": 24.65044872251748,
+            "p95_abs": 31.641031504294375,
+            "max_abs": 35.36953562007683,
+            "undefined_frames": 0
+          }
+        },
+        "ring": {
+          "full_angle_deg": {
+            "mean": 51.118499102594726,
+            "median": 41.3873190469363,
+            "p95": 103.924209065395,
+            "max": 141.1585054326938
+          },
+          "fixed_bias": {
+            "mean_rotation_vector_rad": [
+              -0.5664645413538519,
+              -0.10195050453657258,
+              -0.549991993281584
+            ],
+            "bias_angle_deg": 45.61288091541654,
+            "after_right_multiplying_mean_inverse": {
+              "mean": 29.41522269159016,
+              "median": 24.923880411352485,
+              "p95": 64.20964301662036,
+              "max": 101.5488987951389
+            },
+            "residual_mean_reduction_deg": 21.703276411004566
+          },
+          "axis_angle_deg": {
+            "x": {
+              "mean": 35.09312810184243,
+              "median": 25.667178399174823,
+              "p95": 69.81558046338533,
+              "max": 79.59402747766867
+            },
+            "y": {
+              "mean": 46.352374240139234,
+              "median": 39.7515149558817,
+              "p95": 98.63851371162565,
+              "max": 136.1343276899381
+            },
+            "z": {
+              "mean": 38.23376592520984,
+              "median": 39.017759237388034,
+              "p95": 73.70067042207248,
+              "max": 93.49298913149102
+            }
+          },
+          "twist_after_longitudinal_alignment_deg": {
+            "mean_abs": 33.621433024954875,
+            "median_abs": 35.99560365610016,
+            "p95_abs": 51.10825691302679,
+            "max_abs": 78.53889033617918,
+            "undefined_frames": 0
+          }
+        },
+        "pinky": {
+          "full_angle_deg": {
+            "mean": 92.96236625758014,
+            "median": 76.71774745769699,
+            "p95": 152.4599604671379,
+            "max": 166.50163536436753
+          },
+          "fixed_bias": {
+            "mean_rotation_vector_rad": [
+              -1.4844164940169473,
+              -0.127208816105708,
+              0.20919255480369817
+            ],
+            "bias_angle_deg": 86.19989479227472,
+            "after_right_multiplying_mean_inverse": {
+              "mean": 42.81487880355003,
+              "median": 46.38987532945538,
+              "p95": 75.34506021523815,
+              "max": 88.55169766429344
+            },
+            "residual_mean_reduction_deg": 50.14748745403011
+          },
+          "axis_angle_deg": {
+            "x": {
+              "mean": 64.39665634223559,
+              "median": 66.04617803056493,
+              "p95": 83.79383677553696,
+              "max": 84.85979044131489
+            },
+            "y": {
+              "mean": 89.02671089609787,
+              "median": 73.42770146440482,
+              "p95": 142.83589461882204,
+              "max": 156.7231568473708
+            },
+            "z": {
+              "mean": 53.66879363869599,
+              "median": 36.54464105472148,
+              "p95": 109.99466062827427,
+              "max": 121.83387932132192
+            }
+          },
+          "twist_after_longitudinal_alignment_deg": {
+            "mean_abs": 37.704009645300175,
+            "median_abs": 37.59084013215882,
+            "p95_abs": 77.49813476649142,
+            "max_abs": 112.83681269934408,
+            "undefined_frames": 0
+          }
+        }
+      },
+      "left": {
+        "thumb": {
+          "full_angle_deg": {
+            "mean": 24.291259347821242,
+            "median": 21.72042638901999,
+            "p95": 39.28777739340988,
+            "max": 55.78214439759948
+          },
+          "fixed_bias": {
+            "mean_rotation_vector_rad": [
+              -0.3055026280285817,
+              -0.23831931230728703,
+              -0.0275840162441491
+            ],
+            "bias_angle_deg": 22.25620820578829,
+            "after_right_multiplying_mean_inverse": {
+              "mean": 10.807448035765185,
+              "median": 9.08847694737387,
+              "p95": 23.082526350190317,
+              "max": 39.58996547306992
+            },
+            "residual_mean_reduction_deg": 13.483811312056057
+          },
+          "axis_angle_deg": {
+            "x": {
+              "mean": 21.460393208291624,
+              "median": 18.391455617545994,
+              "p95": 37.766078034174654,
+              "max": 55.673371017684374
+            },
+            "y": {
+              "mean": 14.270801390875274,
+              "median": 14.899246181594588,
+              "p95": 20.706456186615984,
+              "max": 30.679259875656356
+            },
+            "z": {
+              "mean": 21.65224904427739,
+              "median": 19.68737900331436,
+              "p95": 36.677128657615874,
+              "max": 55.03991251501105
+            }
+          },
+          "twist_after_longitudinal_alignment_deg": {
+            "mean_abs": 4.5539754983792875,
+            "median_abs": 3.040997967356663,
+            "p95_abs": 13.66093781098649,
+            "max_abs": 14.576063833844506,
+            "undefined_frames": 0
+          }
+        },
+        "index": {
+          "full_angle_deg": {
+            "mean": 23.165851671678457,
+            "median": 23.312146399030325,
+            "p95": 36.0276045822256,
+            "max": 43.209101979979124
+          },
+          "fixed_bias": {
+            "mean_rotation_vector_rad": [
+              0.07471213513338962,
+              0.042518022561636455,
+              0.14437716545328524
+            ],
+            "bias_angle_deg": 9.627472978988283,
+            "after_right_multiplying_mean_inverse": {
+              "mean": 21.920673282299358,
+              "median": 24.011138530582414,
+              "p95": 36.32243067482025,
+              "max": 45.42023312261261
+            },
+            "residual_mean_reduction_deg": 1.2451783893790989
+          },
+          "axis_angle_deg": {
+            "x": {
+              "mean": 20.429205915101573,
+              "median": 21.117743646380326,
+              "p95": 31.532432769888302,
+              "max": 36.14906515450154
+            },
+            "y": {
+              "mean": 16.918299400463876,
+              "median": 17.559708499735383,
+              "p95": 27.156596174892165,
+              "max": 32.74307477959114
+            },
+            "z": {
+              "mean": 17.889409688177555,
+              "median": 19.821008496327067,
+              "p95": 32.72358463059371,
+              "max": 41.79025466206834
+            }
+          },
+          "twist_after_longitudinal_alignment_deg": {
+            "mean_abs": 12.837840646149541,
+            "median_abs": 12.811355211071366,
+            "p95_abs": 22.623777500338324,
+            "max_abs": 22.763092714448995,
+            "undefined_frames": 0
+          }
+        },
+        "middle": {
+          "full_angle_deg": {
+            "mean": 26.292254389266482,
+            "median": 26.45091995802226,
+            "p95": 38.95069997626351,
+            "max": 44.54486575260038
+          },
+          "fixed_bias": {
+            "mean_rotation_vector_rad": [
+              -0.07390243418642554,
+              0.07134023675570825,
+              0.36966155696061614
+            ],
+            "bias_angle_deg": 21.982522161710886,
+            "after_right_multiplying_mean_inverse": {
+              "mean": 13.151173404170324,
+              "median": 11.078462654510432,
+              "p95": 31.470688405692226,
+              "max": 38.04530113729608
+            },
+            "residual_mean_reduction_deg": 13.141080985096158
+          },
+          "axis_angle_deg": {
+            "x": {
+              "mean": 22.05738947807203,
+              "median": 22.491062102933242,
+              "p95": 30.960977642910915,
+              "max": 35.51946382978649
+            },
+            "y": {
+              "mean": 19.54743121103028,
+              "median": 20.81987274523656,
+              "p95": 28.770055496216884,
+              "max": 33.52020992991414
+            },
+            "z": {
+              "mean": 21.387980365180532,
+              "median": 19.58877476885041,
+              "p95": 38.18951129180343,
+              "max": 42.552746820245474
+            }
+          },
+          "twist_after_longitudinal_alignment_deg": {
+            "mean_abs": 21.162454529757802,
+            "median_abs": 19.955347980222896,
+            "p95_abs": 25.800313126712673,
+            "max_abs": 26.168107082757057,
+            "undefined_frames": 0
+          }
+        },
+        "ring": {
+          "full_angle_deg": {
+            "mean": 37.03678733636291,
+            "median": 39.20663097192933,
+            "p95": 48.93347624525436,
+            "max": 52.547298397459095
+          },
+          "fixed_bias": {
+            "mean_rotation_vector_rad": [
+              0.3437329420566247,
+              -0.1957260774397288,
+              0.3589559974962987
+            ],
+            "bias_angle_deg": 30.60423054718063,
+            "after_right_multiplying_mean_inverse": {
+              "mean": 20.91871832595975,
+              "median": 17.221628231793684,
+              "p95": 42.598615132249115,
+              "max": 51.04191923138693
+            },
+            "residual_mean_reduction_deg": 16.118069010403165
+          },
+          "axis_angle_deg": {
+            "x": {
+              "mean": 32.81758212999225,
+              "median": 34.76278607664006,
+              "p95": 40.613392178192164,
+              "max": 44.41901287990369
+            },
+            "y": {
+              "mean": 28.779832102424077,
+              "median": 32.86282347365241,
+              "p95": 43.25706044668841,
+              "max": 45.29005532641741
+            },
+            "z": {
+              "mean": 26.9574436363241,
+              "median": 27.235278149102765,
+              "p95": 35.661141424548305,
+              "max": 38.010552934680106
+            }
+          },
+          "twist_after_longitudinal_alignment_deg": {
+            "mean_abs": 22.873162660898707,
+            "median_abs": 24.670329524924686,
+            "p95_abs": 36.998491498940815,
+            "max_abs": 37.79649328322242,
+            "undefined_frames": 0
+          }
+        },
+        "pinky": {
+          "full_angle_deg": {
+            "mean": 84.91494530985862,
+            "median": 85.45883680283501,
+            "p95": 107.80657048239134,
+            "max": 110.29943285397248
+          },
+          "fixed_bias": {
+            "mean_rotation_vector_rad": [
+              1.2719063311617158,
+              0.03856256659803098,
+              -0.5999606952100945
+            ],
+            "bias_angle_deg": 80.60572640753674,
+            "after_right_multiplying_mean_inverse": {
+              "mean": 31.794609958551124,
+              "median": 30.130653947247218,
+              "p95": 55.31883340969276,
+              "max": 60.8319055773482
+            },
+            "residual_mean_reduction_deg": 53.1203353513075
+          },
+          "axis_angle_deg": {
+            "x": {
+              "mean": 48.040198514930566,
+              "median": 51.07767752541049,
+              "p95": 87.19770155952493,
+              "max": 87.83837544324807
+            },
+            "y": {
+              "mean": 82.34338451961332,
+              "median": 82.93543087226303,
+              "p95": 105.30221172702666,
+              "max": 106.96760721033542
+            },
+            "z": {
+              "mean": 60.82491321294523,
+              "median": 50.873520290871795,
+              "p95": 106.50607716381401,
+              "max": 109.00115745126946
+            }
+          },
+          "twist_after_longitudinal_alignment_deg": {
+            "mean_abs": 40.774468933580046,
+            "median_abs": 45.70875035965278,
+            "p95_abs": 60.47324844750329,
+            "max_abs": 72.42295829263071,
+            "undefined_frames": 0
+          }
+        }
+      }
+    }
+  },
+  "conclusions": {
+    "site_endpoint_mismatch_is_real": true,
+    "site_endpoint_mismatch_directly_explains_rotation_error": false,
+    "target_frame_is_orthonormal": true,
+    "target_step_matches_mano_fk": true,
+    "constant_bias_is_only_a_diagnostic": true,
+    "no_targets_or_models_modified": true
+  },
+  "limitations": [
+    "The fixed residual rotation is fitted to a trajectory only to test the bias hypothesis; it is not adopted as calibration.",
+    "A qpos residual includes IK/morphology effects as well as any frame-definition error.",
+    "Left/right reflection comparisons use canonical model palm frames and are diagnostic, not author evidence.",
+    "No fingertip cost sweep, filtering, target rewrite, or physics trajectory was run here."
+  ]
+}

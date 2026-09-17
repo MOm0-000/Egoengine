@@ -1,0 +1,99 @@
+schema_version: '1.0'
+name: taco_first_person_eval16
+dataset_root: /data_all/zzx/egoengine_new/datasets/taco_v1
+benchmark_role: frozen_16_episode_gt_evaluation_set
+exact_paper_test_set: false
+episode_count: 16
+selection_policy: taco_ground_truth_16_bundle
+rgb_archive: Egocentric_RGB_Videos.zip
+depth_route:
+  shared_first_iteration: depth_anything_v2
+  foundation_stereo_eligible: false
+  reason: TACO release contains one egocentric color stream rather than rectified
+    stereo pairs
+base_frame:
+  method: object_pair_center_fixed_offset
+  workspace_offset_m: 0.6
+  table_height_m: 0.72
+  per_frame_floor_shift: false
+episodes:
+- episode_id: taco_brush_brush_bowl_20230927_027
+  sequence_id: (brush, brush, bowl)/20230927_027
+  evaluation_object: tool
+  start_frame: 0
+  end_frame: 209
+- episode_id: taco_brush_roller_plate_20230928_043
+  sequence_id: (brush, roller, plate)/20230928_043
+  evaluation_object: tool
+  start_frame: 0
+  end_frame: 145
+- episode_id: taco_cut_spatula_plate_20230917_020
+  sequence_id: (cut, spatula, plate)/20230917_020
+  evaluation_object: tool
+  start_frame: 0
+  end_frame: 361
+- episode_id: taco_dust_brush_box_20230927_030
+  sequence_id: (dust, brush, box)/20230927_030
+  evaluation_object: tool
+  start_frame: 0
+  end_frame: 210
+- episode_id: taco_empty_kettle_bowl_20231019_002
+  sequence_id: (empty, kettle, bowl)/20231019_002
+  evaluation_object: tool
+  start_frame: 0
+  end_frame: 166
+- episode_id: taco_hit_hammer_toy_20231102_051
+  sequence_id: (hit, hammer, toy)/20231102_051
+  evaluation_object: tool
+  start_frame: 0
+  end_frame: 221
+- episode_id: taco_measure_ruler_cup_20231104_101
+  sequence_id: (measure, ruler, cup)/20231104_101
+  evaluation_object: tool
+  start_frame: 0
+  end_frame: 151
+- episode_id: taco_pour_kettle_cup_20230917_036
+  sequence_id: (pour in some, kettle, cup)/20230917_036
+  evaluation_object: tool
+  start_frame: 0
+  end_frame: 283
+- episode_id: taco_put_in_spoon_bowl_20231104_179
+  sequence_id: (put in, spoon, bowl)/20231104_179
+  evaluation_object: tool
+  start_frame: 0
+  end_frame: 108
+- episode_id: taco_put_out_spatula_plate_20231015_118
+  sequence_id: (put out, spatula, plate)/20231015_118
+  evaluation_object: tool
+  start_frame: 0
+  end_frame: 156
+- episode_id: taco_scrape_knife_pan_20231031_126
+  sequence_id: (scrape off, knife, pan)/20231031_126
+  evaluation_object: tool
+  start_frame: 0
+  end_frame: 183
+- episode_id: taco_screw_screwdriver_box_20231102_009
+  sequence_id: (screw, screwdriver, box)/20231102_009
+  evaluation_object: tool
+  start_frame: 0
+  end_frame: 201
+- episode_id: taco_skim_spatula_plate_20230926_004
+  sequence_id: (skim off, spatula, plate)/20230926_004
+  evaluation_object: tool
+  start_frame: 0
+  end_frame: 400
+- episode_id: taco_smear_eraser_box_20231103_071
+  sequence_id: (smear, eraser, box)/20231103_071
+  evaluation_object: tool
+  start_frame: 0
+  end_frame: 90
+- episode_id: taco_stir_fry_spatula_pan_20231013_006
+  sequence_id: (stir-fry, spatula, pan)/20231013_006
+  evaluation_object: tool
+  start_frame: 0
+  end_frame: 183
+- episode_id: taco_stir_spoon_bowl_20231104_184
+  sequence_id: (stir, spoon, bowl)/20231104_184
+  evaluation_object: tool
+  start_frame: 0
+  end_frame: 128

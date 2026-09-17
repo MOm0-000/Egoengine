@@ -1,0 +1,400 @@
+{
+  "status": "depth_registration_audited_no_scene_change",
+  "inputs": [
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/depth_original/taco_pour_bowl_plate_20230927_017.avi",
+      "sha256": "1e7fba848bea7528e3d1977caefd8167068066931b462b3f177e49ee0647a034"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/rgb/taco_pour_bowl_plate_20230927_017.mp4",
+      "sha256": "9c6bd70041be04f5237613632f508dff2b12cdb2e19941259ad1751c21d8add4"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/camera/Egocentric_Camera_Parameters/(pour in some, bowl, plate)/20230927_017/egocentric_intrinsic.txt",
+      "sha256": "f791adc426a186c3a13849e83a18c6104fdafc9edef295c3f850ffd10cadd3ce"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/camera/Egocentric_Camera_Parameters/(pour in some, bowl, plate)/20230927_017/egocentric_frame_extrinsic.npy",
+      "sha256": "3278afc066e5b47c695e292f6c5f6c1da9af42cf2912498f7f783825b0aaba14"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/object_models/object_models_released/022_cm.obj",
+      "sha256": "35c52d853b85aa521eeadda78abb2bd370975611c8c35cd9a9d4c96746d8418c"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/object_poses/Object_Poses/(pour in some, bowl, plate)/20230927_017/tool_022.npy",
+      "sha256": "706a4cc363d863bbd85f208714c00dcc3e0a54f8386e9d1440e6438a29a72453"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/object_models/object_models_released/135_cm.obj",
+      "sha256": "6316aea5b5c29a6231639d4ac8dad2c42ee013cfc55f1ce5a9dc5a38056f52a1"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/object_poses/Object_Poses/(pour in some, bowl, plate)/20230927_017/target_135.npy",
+      "sha256": "cffb56faaf249ddd2660436f614b08eb19a065a7d612d73fd23f30d2862c63a2"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017/right_hand.pkl",
+      "sha256": "098d13bf5bc3cd0275f53a320c824653175d0394c2a1040f94542c9ab788d110"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017/right_hand_shape.pkl",
+      "sha256": "ae8bd692a12c2b18bdae4e8f031f364930e9bad7c0a4d78afc2d8eb9d03d5d13"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/hand_poses_v1/mano_v1_2/models/MANO_RIGHT.pkl",
+      "sha256": "45d60aa3b27ef9107a7afd4e00808f307fd91111e1cfa35afd5c4a62de264767"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017/left_hand.pkl",
+      "sha256": "a06ba74342df18ef69b559e57b903938ad640edb8ce3269fca00b4ec5652c6d0"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017/left_hand_shape.pkl",
+      "sha256": "97956334eea23cc859c937102d9ba26b8dead9f64913d54ea6cb90a2cc50531c"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/hand_poses_v1/mano_v1_2/models/MANO_LEFT.pkl",
+      "sha256": "c4022f7083f2ca7c78b2b3d595abbab52debd32b09d372b16923a801f0ea6a30"
+    }
+  ],
+  "method": {
+    "rows": [
+      0,
+      150,
+      180,
+      197
+    ],
+    "depth_conversion": "raw_uint16 / 4000.0",
+    "rendered_depth": "Open3D ray casting of released metric meshes in the released RGB camera",
+    "residual": "raw depth minus rendered annotation depth along the RGB optical axis",
+    "correspondence_filter": "eroded rendered interior; abs residual < 50 mm",
+    "hand_filter": "additional broad YCrCb skin-color mask",
+    "rows_selected": "visually unobstructed initial/returned-object frames; disclosed Pour-only diagnostic"
+  },
+  "objects": {
+    "bowl": {
+      "role": "tool",
+      "object_id": "022",
+      "frames": [
+        {
+          "rendered_interior_pixels": 41668,
+          "valid_pixels": 41653,
+          "within_50mm_fraction": 0.9921254171368209,
+          "raw_minus_rendered_depth_mm_percentiles": [
+            -10.99029769897461,
+            -8.386791229248047,
+            -5.1291584968566895,
+            0.4006624221801758,
+            10.738062858581538
+          ],
+          "source_row_zero_based": 0,
+          "boundary_alignment": {
+            "raw_depth_edge_distance_px_percentiles": [
+              2.799999952316284,
+              7.0
+            ],
+            "rgb_edge_distance_px_percentiles": [
+              4.199999809265137,
+              11.589769744873047
+            ]
+          }
+        },
+        {
+          "rendered_interior_pixels": 41578,
+          "valid_pixels": 41556,
+          "within_50mm_fraction": 0.9855857156607951,
+          "raw_minus_rendered_depth_mm_percentiles": [
+            -12.301087379455566,
+            -8.483529090881348,
+            -5.555570125579834,
+            0.05638599395751953,
+            11.366164398193384
+          ],
+          "source_row_zero_based": 150,
+          "boundary_alignment": {
+            "raw_depth_edge_distance_px_percentiles": [
+              3.0,
+              9.1968994140625
+            ],
+            "rgb_edge_distance_px_percentiles": [
+              6.0,
+              12.787599563598633
+            ]
+          }
+        },
+        {
+          "rendered_interior_pixels": 40797,
+          "valid_pixels": 40783,
+          "within_50mm_fraction": 0.9909521123997744,
+          "raw_minus_rendered_depth_mm_percentiles": [
+            -11.329156303405762,
+            -8.210808038711548,
+            -5.356013774871826,
+            0.32235682010650635,
+            9.520411682128936
+          ],
+          "source_row_zero_based": 180,
+          "boundary_alignment": {
+            "raw_depth_edge_distance_px_percentiles": [
+              2.899999976158142,
+              7.058139848709097
+            ],
+            "rgb_edge_distance_px_percentiles": [
+              4.0,
+              11.451938819885244
+            ]
+          }
+        },
+        {
+          "rendered_interior_pixels": 40910,
+          "valid_pixels": 40891,
+          "within_50mm_fraction": 0.9930791616737179,
+          "raw_minus_rendered_depth_mm_percentiles": [
+            -9.55815315246582,
+            -7.161051034927368,
+            -4.426300525665283,
+            0.36522746086120605,
+            8.636731243133557
+          ],
+          "source_row_zero_based": 197,
+          "boundary_alignment": {
+            "raw_depth_edge_distance_px_percentiles": [
+              2.799999952316284,
+              6.396899700164795
+            ],
+            "rgb_edge_distance_px_percentiles": [
+              3.59689998626709,
+              13.195349311828615
+            ]
+          }
+        }
+      ]
+    },
+    "plate": {
+      "role": "target",
+      "object_id": "135",
+      "frames": [
+        {
+          "rendered_interior_pixels": 220688,
+          "valid_pixels": 30703,
+          "within_50mm_fraction": 0.9446633879425463,
+          "raw_minus_rendered_depth_mm_percentiles": [
+            -35.55571975708008,
+            -25.859177112579346,
+            -10.418623924255371,
+            4.91902232170105,
+            18.25656852722168
+          ],
+          "source_row_zero_based": 0,
+          "boundary_alignment": {
+            "raw_depth_edge_distance_px_percentiles": [
+              5.393799781799316,
+              14.193798065185547
+            ],
+            "rgb_edge_distance_px_percentiles": [
+              5.393799781799316,
+              16.390697479248047
+            ]
+          }
+        },
+        {
+          "rendered_interior_pixels": 211320,
+          "valid_pixels": 23541,
+          "within_50mm_fraction": 0.9385752516885434,
+          "raw_minus_rendered_depth_mm_percentiles": [
+            -29.558729553222655,
+            -17.42514991760254,
+            -5.819916725158691,
+            10.687470436096191,
+            19.26896591186524
+          ],
+          "source_row_zero_based": 150,
+          "boundary_alignment": {
+            "raw_depth_edge_distance_px_percentiles": [
+              7.796899795532227,
+              17.59689712524414
+            ],
+            "rgb_edge_distance_px_percentiles": [
+              8.393799781799316,
+              19.575197219848633
+            ]
+          }
+        },
+        {
+          "rendered_interior_pixels": 210737,
+          "valid_pixels": 29052,
+          "within_50mm_fraction": 0.9370439212446647,
+          "raw_minus_rendered_depth_mm_percentiles": [
+            -31.965517425537108,
+            -21.03084373474121,
+            -7.091939449310303,
+            7.909268140792847,
+            19.67664909362793
+          ],
+          "source_row_zero_based": 180,
+          "boundary_alignment": {
+            "raw_depth_edge_distance_px_percentiles": [
+              6.0,
+              13.5906982421875
+            ],
+            "rgb_edge_distance_px_percentiles": [
+              5.393799781799316,
+              17.181398391723633
+            ]
+          }
+        },
+        {
+          "rendered_interior_pixels": 213068,
+          "valid_pixels": 29717,
+          "within_50mm_fraction": 0.9280546488541912,
+          "raw_minus_rendered_depth_mm_percentiles": [
+            -34.45544281005859,
+            -22.89193820953369,
+            -8.367717742919922,
+            6.217777729034424,
+            18.87534866333008
+          ],
+          "source_row_zero_based": 197,
+          "boundary_alignment": {
+            "raw_depth_edge_distance_px_percentiles": [
+              5.196899890899658,
+              13.39689826965332
+            ],
+            "rgb_edge_distance_px_percentiles": [
+              6.0,
+              16.378297805786133
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "hands": {
+    "right": {
+      "frames": [
+        {
+          "rendered_interior_pixels": 53579,
+          "valid_pixels": 50703,
+          "within_50mm_fraction": 1.0,
+          "raw_minus_rendered_depth_mm_percentiles": [
+            -9.831130599975586,
+            -3.7624239921569824,
+            4.3984055519104,
+            11.87121868133545,
+            15.697133636474614
+          ],
+          "source_row_zero_based": 0
+        },
+        {
+          "rendered_interior_pixels": 48480,
+          "valid_pixels": 46702,
+          "within_50mm_fraction": 1.0,
+          "raw_minus_rendered_depth_mm_percentiles": [
+            -10.056983947753906,
+            -2.774938941001892,
+            4.186570644378662,
+            12.112796306610107,
+            15.944838905334473
+          ],
+          "source_row_zero_based": 150
+        },
+        {
+          "rendered_interior_pixels": 49016,
+          "valid_pixels": 47208,
+          "within_50mm_fraction": 1.0,
+          "raw_minus_rendered_depth_mm_percentiles": [
+            -10.511326789855957,
+            -4.3938010931015015,
+            3.5642385482788086,
+            11.315718412399292,
+            15.572625541687017
+          ],
+          "source_row_zero_based": 180
+        },
+        {
+          "rendered_interior_pixels": 49172,
+          "valid_pixels": 47066,
+          "within_50mm_fraction": 1.0,
+          "raw_minus_rendered_depth_mm_percentiles": [
+            -9.311497211456299,
+            -2.6892870664596558,
+            4.836142063140869,
+            11.90720534324646,
+            15.767365455627441
+          ],
+          "source_row_zero_based": 197
+        }
+      ]
+    },
+    "left": {
+      "frames": [
+        {
+          "rendered_interior_pixels": 58727,
+          "valid_pixels": 52884,
+          "within_50mm_fraction": 1.0,
+          "raw_minus_rendered_depth_mm_percentiles": [
+            -6.838947534561157,
+            -1.2404471635818481,
+            4.713624715805054,
+            9.967655181884766,
+            15.100413703918461
+          ],
+          "source_row_zero_based": 0
+        },
+        {
+          "rendered_interior_pixels": 55513,
+          "valid_pixels": 50600,
+          "within_50mm_fraction": 1.0,
+          "raw_minus_rendered_depth_mm_percentiles": [
+            -6.176042556762694,
+            0.845000147819519,
+            6.469219923019409,
+            11.041835308074951,
+            14.026600170135497
+          ],
+          "source_row_zero_based": 150
+        },
+        {
+          "rendered_interior_pixels": 56490,
+          "valid_pixels": 51861,
+          "within_50mm_fraction": 1.0,
+          "raw_minus_rendered_depth_mm_percentiles": [
+            -6.483614444732666,
+            0.019848346710205078,
+            5.733966827392578,
+            10.16545295715332,
+            14.818906784057617
+          ],
+          "source_row_zero_based": 180
+        },
+        {
+          "rendered_interior_pixels": 57066,
+          "valid_pixels": 52709,
+          "within_50mm_fraction": 1.0,
+          "raw_minus_rendered_depth_mm_percentiles": [
+            -4.572510719299316,
+            2.2347569465637207,
+            6.940960884094238,
+            11.05964183807373,
+            15.154182434082042
+          ],
+          "source_row_zero_based": 197
+        }
+      ]
+    }
+  },
+  "aggregate": {
+    "object_raw_minus_rendered_median_mm": -5.500972270965576,
+    "hand_raw_minus_rendered_median_mm": 5.326747894287109,
+    "opposite_signed_offsets": true
+  },
+  "interpretation": "Projected object boundaries are near both RGB and raw-depth edges, so a gross extrinsic direction or pixel-registration failure is not supported. Raw depth is closer than the object meshes but farther than MANO skin in these filtered samples. A common additive optical-depth offset cannot zero both medians. This does not rule out a rigid registration correction or establish annotation, surface or material effects as the cause; temporal and spatial calibration remain unresolved.",
+  "interpretation_revised_without_recomputing_measurements": true,
+  "scene_or_gt_modified": false,
+  "global_depth_correction_applied": false,
+  "code": {
+    "path": "/data_all/zzx/3.2RL/scripts/audit_taco_pour_depth_registration.py",
+    "sha256": "12f0ffa1f3b298ae05276ed3261a939f612cda3b7eb4298892747f38e0180bb3"
+  }
+}

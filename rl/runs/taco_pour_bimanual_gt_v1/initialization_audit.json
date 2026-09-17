@@ -1,0 +1,1601 @@
+{
+  "status": "initialization_unresolved_no_physics_rollout",
+  "frames": 198,
+  "sequence": "(pour in some, bowl, plate)/20230927_017",
+  "data_root": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate",
+  "scene": "/data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml",
+  "paper_basis": [
+    "3.2.1 Eq.1",
+    "A.1-A.3",
+    "3.2.2 contact refinement",
+    "6 limitations"
+  ],
+  "alignment": {
+    "object_relative_transform_max_error": 2.498001805406602e-16,
+    "hand_in_object_frame_max_error_m": 4.440892098500626e-16,
+    "camera_object_transform_max_error": 2.220446049250313e-16,
+    "exported_joints_max_error_m": 0.0,
+    "exported_object_transforms_max_error": 0.0,
+    "reference_object_qpos_max_errors": [
+      0.0,
+      0.0
+    ],
+    "table_z_m": 0.72,
+    "native_compiled_scale_check_max_error_m": 4.372974454769363e-09
+  },
+  "initial_distances": {
+    "self_explicit": {
+      "min_distance_m": 4.15878675285794e-06,
+      "geom1": "collision_hand_right_ring_0",
+      "geom2": "collision_hand_right_pinky_0",
+      "pairs_below_50um": 0
+    },
+    "self_nonadjacent_shells": {
+      "min_distance_m": -0.008601000000000015,
+      "geom1": "collision_hand_left_palm_0",
+      "geom2": "collision_hand_left_thumb_1",
+      "pairs_below_50um": 18
+    },
+    "hand_tool": {
+      "min_distance_m": 0.024777600234184072,
+      "geom1": "collision_hand_right_ring_0",
+      "geom2": "right_object_3",
+      "pairs_below_50um": 0
+    },
+    "hand_target": {
+      "min_distance_m": -0.014009195415494217,
+      "geom1": "collision_hand_left_pinky_0",
+      "geom2": "left_object_31",
+      "pairs_below_50um": 11
+    },
+    "tool_target": {
+      "min_distance_m": 0.01740710975919017,
+      "geom1": "right_object_5",
+      "geom2": "left_object_0",
+      "pairs_below_50um": 0
+    },
+    "hand_floor": {
+      "min_distance_m": -0.0149605704739759,
+      "geom1": "collision_hand_right_palm_0",
+      "geom2": "floor",
+      "pairs_below_50um": 13
+    },
+    "tool_floor": {
+      "min_distance_m": 0.0014888445115252003,
+      "geom1": "right_object_15",
+      "geom2": "floor",
+      "pairs_below_50um": 0
+    },
+    "target_floor": {
+      "min_distance_m": 9.229531510168698e-07,
+      "geom1": "left_object_27",
+      "geom2": "floor",
+      "pairs_below_50um": 0
+    }
+  },
+  "native_visual_support": [
+    {
+      "geom": "right_hand_link_visual",
+      "watertight": true,
+      "initial_table_clearance_m": -0.011098919848407052,
+      "native_compiled_world_bounds_max_error_m": 1.3040066249025983e-09
+    },
+    {
+      "geom": "right_thumb_bend_visual",
+      "watertight": true,
+      "initial_table_clearance_m": 0.010924641265328328,
+      "native_compiled_world_bounds_max_error_m": 6.442907318771063e-10
+    },
+    {
+      "geom": "right_thumb_rota1_visual",
+      "watertight": true,
+      "initial_table_clearance_m": -0.005482711789091432,
+      "native_compiled_world_bounds_max_error_m": 9.852659521580875e-10
+    },
+    {
+      "geom": "right_thumb_rota2_visual",
+      "watertight": true,
+      "initial_table_clearance_m": -0.0050540331317416864,
+      "native_compiled_world_bounds_max_error_m": 1.2842141239310934e-09
+    },
+    {
+      "geom": "right_index_bend_visual",
+      "watertight": true,
+      "initial_table_clearance_m": 0.013113899606831292,
+      "native_compiled_world_bounds_max_error_m": 1.5880163017900628e-09
+    },
+    {
+      "geom": "right_index_rota1_visual",
+      "watertight": false,
+      "initial_table_clearance_m": 0.006429625535276595,
+      "native_compiled_world_bounds_max_error_m": 6.032505606157201e-10
+    },
+    {
+      "geom": "right_index_rota2_visual",
+      "watertight": false,
+      "initial_table_clearance_m": -0.005277415232486926,
+      "native_compiled_world_bounds_max_error_m": 6.677036076818688e-10
+    },
+    {
+      "geom": "right_middle_link1_visual",
+      "watertight": false,
+      "initial_table_clearance_m": 0.004709494755418153,
+      "native_compiled_world_bounds_max_error_m": 1.4948847576468083e-09
+    },
+    {
+      "geom": "right_middle_link2_visual",
+      "watertight": false,
+      "initial_table_clearance_m": -0.003805818201349065,
+      "native_compiled_world_bounds_max_error_m": 8.376299792667297e-10
+    },
+    {
+      "geom": "right_ring_link1_visual",
+      "watertight": false,
+      "initial_table_clearance_m": 0.0019888574582086482,
+      "native_compiled_world_bounds_max_error_m": 1.795983861629935e-09
+    },
+    {
+      "geom": "right_ring_link2_visual",
+      "watertight": false,
+      "initial_table_clearance_m": -0.002799623453096145,
+      "native_compiled_world_bounds_max_error_m": 8.0511030481345e-10
+    },
+    {
+      "geom": "right_pinky_link1_visual",
+      "watertight": false,
+      "initial_table_clearance_m": -0.004130682153314913,
+      "native_compiled_world_bounds_max_error_m": 1.797207827003433e-09
+    },
+    {
+      "geom": "right_pinky_link2_visual",
+      "watertight": false,
+      "initial_table_clearance_m": -0.006017974056037656,
+      "native_compiled_world_bounds_max_error_m": 8.191491374098803e-10
+    },
+    {
+      "geom": "left_hand_link_visual",
+      "watertight": true,
+      "initial_table_clearance_m": -0.007745689078294871,
+      "native_compiled_world_bounds_max_error_m": 1.0718863574510351e-09
+    },
+    {
+      "geom": "left_thumb_bend_visual",
+      "watertight": false,
+      "initial_table_clearance_m": 0.013579660569230434,
+      "native_compiled_world_bounds_max_error_m": 5.770726119180836e-10
+    },
+    {
+      "geom": "left_thumb_rota1_visual",
+      "watertight": true,
+      "initial_table_clearance_m": -0.001454696775377462,
+      "native_compiled_world_bounds_max_error_m": 1.2081686762144273e-09
+    },
+    {
+      "geom": "left_thumb_rota2_visual",
+      "watertight": true,
+      "initial_table_clearance_m": -0.0007769005631352854,
+      "native_compiled_world_bounds_max_error_m": 1.6472026798108885e-09
+    },
+    {
+      "geom": "left_index_bend_visual",
+      "watertight": true,
+      "initial_table_clearance_m": 0.017461805611233894,
+      "native_compiled_world_bounds_max_error_m": 1.6557057946897658e-09
+    },
+    {
+      "geom": "left_index_rota1_visual",
+      "watertight": false,
+      "initial_table_clearance_m": 0.01245586398080667,
+      "native_compiled_world_bounds_max_error_m": 1.15488429930366e-09
+    },
+    {
+      "geom": "left_index_rota2_visual",
+      "watertight": false,
+      "initial_table_clearance_m": 0.001525441709291031,
+      "native_compiled_world_bounds_max_error_m": 7.067882112909984e-10
+    },
+    {
+      "geom": "left_middle_link1_visual",
+      "watertight": false,
+      "initial_table_clearance_m": 0.012120495159847366,
+      "native_compiled_world_bounds_max_error_m": 1.3442954527320694e-09
+    },
+    {
+      "geom": "left_middle_link2_visual",
+      "watertight": false,
+      "initial_table_clearance_m": -0.003370397472074904,
+      "native_compiled_world_bounds_max_error_m": 6.013790021519583e-10
+    },
+    {
+      "geom": "left_ring_link1_visual",
+      "watertight": false,
+      "initial_table_clearance_m": 0.009379485209104699,
+      "native_compiled_world_bounds_max_error_m": 8.398258199981967e-10
+    },
+    {
+      "geom": "left_ring_link2_visual",
+      "watertight": false,
+      "initial_table_clearance_m": 0.0006696668180680154,
+      "native_compiled_world_bounds_max_error_m": 7.060656226354212e-10
+    },
+    {
+      "geom": "left_pinky_link1_visual",
+      "watertight": false,
+      "initial_table_clearance_m": 0.003497250130095164,
+      "native_compiled_world_bounds_max_error_m": 8.390816652603661e-10
+    },
+    {
+      "geom": "left_pinky_link2_visual",
+      "watertight": false,
+      "initial_table_clearance_m": -0.001506764873179689,
+      "native_compiled_world_bounds_max_error_m": 3.16420251111893e-10
+    },
+    {
+      "geom": "right_object_visual",
+      "watertight": true,
+      "initial_table_clearance_m": 0.0014876676000616929,
+      "native_compiled_world_bounds_max_error_m": 2.9938287335329328e-09
+    },
+    {
+      "geom": "left_object_visual",
+      "watertight": true,
+      "initial_table_clearance_m": -8.900932213506962e-10,
+      "native_compiled_world_bounds_max_error_m": 4.372974454769363e-09
+    }
+  ],
+  "topology": {
+    "runtime_hand_pairs": 174,
+    "mink_hand_pairs": 174,
+    "ik_runtime_pairs_equal": true,
+    "physical_pairs": 2822,
+    "hand_shell_geometry_equal_pinned_source": true,
+    "complete_intrahand_geometry_coverage": false,
+    "omitted": {
+      "omitted_intrahand_pairs": 102,
+      "classifications": {
+        "assembly_adjacent_not_automatically_excluded": 20,
+        "nonadjacent_unclassified": 82
+      },
+      "omitted_nonadjacent_penetrating_pairs": 23,
+      "decisions_applied": false,
+      "pairs": [
+        {
+          "geom1": "collision_hand_right_palm_0",
+          "geom2": "collision_hand_right_thumb_2",
+          "classification": "assembly_adjacent_not_automatically_excluded",
+          "zero_configuration_shell_distance_m": -0.025500000000000002,
+          "minimum_shell_distance_m": -0.025500000000000085,
+          "worst_source_row_zero_based": 115,
+          "penetrating_rows_50um": 198
+        },
+        {
+          "geom1": "collision_hand_right_palm_0",
+          "geom2": "collision_hand_right_thumb_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": -0.008601000000000001,
+          "minimum_shell_distance_m": -0.011978524509752838,
+          "worst_source_row_zero_based": 45,
+          "penetrating_rows_50um": 198,
+          "native_surface_samples_forward_reverse": [
+            {
+              "status": "sampled_native_surface_not_global_bound",
+              "samples": 256,
+              "source_visual": "right_hand_link_visual",
+              "target_visual": "right_thumb_rota1_visual",
+              "inside_samples_50um": 0,
+              "sampled_penetration_max_m": 0.0
+            },
+            {
+              "status": "sampled_native_surface_not_global_bound",
+              "samples": 256,
+              "source_visual": "right_thumb_rota1_visual",
+              "target_visual": "right_hand_link_visual",
+              "inside_samples_50um": 3,
+              "sampled_penetration_max_m": 0.002084354719186999
+            }
+          ]
+        },
+        {
+          "geom1": "collision_hand_right_palm_0",
+          "geom2": "collision_hand_right_index_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": -0.004300000000000009,
+          "minimum_shell_distance_m": -0.004571867607492331,
+          "worst_source_row_zero_based": 40,
+          "penetrating_rows_50um": 198,
+          "native_surface_samples_forward_reverse": [
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            },
+            {
+              "status": "sampled_native_surface_not_global_bound",
+              "samples": 256,
+              "source_visual": "right_index_rota1_visual",
+              "target_visual": "right_hand_link_visual",
+              "inside_samples_50um": 2,
+              "sampled_penetration_max_m": 0.003937568726937343
+            }
+          ]
+        },
+        {
+          "geom1": "collision_hand_right_palm_0",
+          "geom2": "collision_hand_right_middle_1",
+          "classification": "assembly_adjacent_not_automatically_excluded",
+          "zero_configuration_shell_distance_m": -0.0037999999999999805,
+          "minimum_shell_distance_m": -0.0038000000000001193,
+          "worst_source_row_zero_based": 76,
+          "penetrating_rows_50um": 198
+        },
+        {
+          "geom1": "collision_hand_right_palm_0",
+          "geom2": "collision_hand_right_ring_1",
+          "classification": "assembly_adjacent_not_automatically_excluded",
+          "zero_configuration_shell_distance_m": -0.006799999999999983,
+          "minimum_shell_distance_m": -0.00680000000000015,
+          "worst_source_row_zero_based": 46,
+          "penetrating_rows_50um": 198
+        },
+        {
+          "geom1": "collision_hand_right_palm_0",
+          "geom2": "collision_hand_right_pinky_1",
+          "classification": "assembly_adjacent_not_automatically_excluded",
+          "zero_configuration_shell_distance_m": -0.009799999999999986,
+          "minimum_shell_distance_m": -0.012000000000000035,
+          "worst_source_row_zero_based": 46,
+          "penetrating_rows_50um": 198
+        },
+        {
+          "geom1": "collision_hand_right_thumb_2",
+          "geom2": "collision_hand_right_thumb_1",
+          "classification": "assembly_adjacent_not_automatically_excluded",
+          "zero_configuration_shell_distance_m": -0.022904739180571593,
+          "minimum_shell_distance_m": -0.022904739180571766,
+          "worst_source_row_zero_based": 77,
+          "penetrating_rows_50um": 198
+        },
+        {
+          "geom1": "collision_hand_right_thumb_2",
+          "geom2": "collision_hand_right_thumb_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.03474626036064503,
+          "minimum_shell_distance_m": 0.026946432973946506,
+          "worst_source_row_zero_based": 46,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_thumb_2",
+          "geom2": "collision_hand_right_index_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.04998660632473158,
+          "worst_source_row_zero_based": 49,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_thumb_2",
+          "geom2": "collision_hand_right_index_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.05,
+          "worst_source_row_zero_based": 0,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_thumb_2",
+          "geom2": "collision_hand_right_middle_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.05,
+          "worst_source_row_zero_based": 0,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_thumb_2",
+          "geom2": "collision_hand_right_middle_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.05,
+          "worst_source_row_zero_based": 0,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_thumb_2",
+          "geom2": "collision_hand_right_ring_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.05,
+          "worst_source_row_zero_based": 0,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_thumb_2",
+          "geom2": "collision_hand_right_ring_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.05,
+          "worst_source_row_zero_based": 0,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_thumb_2",
+          "geom2": "collision_hand_right_pinky_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.05,
+          "worst_source_row_zero_based": 0,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_thumb_2",
+          "geom2": "collision_hand_right_pinky_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.04741583318850701,
+          "worst_source_row_zero_based": 45,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_thumb_1",
+          "geom2": "collision_hand_right_thumb_0",
+          "classification": "assembly_adjacent_not_automatically_excluded",
+          "zero_configuration_shell_distance_m": -0.034699999999999995,
+          "minimum_shell_distance_m": -0.034700000000000085,
+          "worst_source_row_zero_based": 186,
+          "penetrating_rows_50um": 198
+        },
+        {
+          "geom1": "collision_hand_right_thumb_1",
+          "geom2": "collision_hand_right_index_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.013082539004099829,
+          "worst_source_row_zero_based": 134,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_thumb_1",
+          "geom2": "collision_hand_right_index_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.0474829517100667,
+          "worst_source_row_zero_based": 18,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_thumb_1",
+          "geom2": "collision_hand_right_middle_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.025522677667467807,
+          "worst_source_row_zero_based": 45,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_thumb_1",
+          "geom2": "collision_hand_right_middle_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.04766007310824096,
+          "worst_source_row_zero_based": 50,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_thumb_1",
+          "geom2": "collision_hand_right_ring_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.03938422967254035,
+          "worst_source_row_zero_based": 45,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_thumb_1",
+          "geom2": "collision_hand_right_ring_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.041937919851891485,
+          "worst_source_row_zero_based": 45,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_thumb_1",
+          "geom2": "collision_hand_right_pinky_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.047938298237595905,
+          "worst_source_row_zero_based": 45,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_thumb_1",
+          "geom2": "collision_hand_right_pinky_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.05,
+          "worst_source_row_zero_based": 0,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_thumb_0",
+          "geom2": "collision_hand_right_index_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.007908576357877808,
+          "worst_source_row_zero_based": 50,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_thumb_0",
+          "geom2": "collision_hand_right_middle_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.008798317339045594,
+          "worst_source_row_zero_based": 39,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_thumb_0",
+          "geom2": "collision_hand_right_ring_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.022879069956586614,
+          "worst_source_row_zero_based": 38,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_thumb_0",
+          "geom2": "collision_hand_right_pinky_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.03968481637214051,
+          "worst_source_row_zero_based": 40,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_index_1",
+          "geom2": "collision_hand_right_index_0",
+          "classification": "assembly_adjacent_not_automatically_excluded",
+          "zero_configuration_shell_distance_m": -0.021200000000000004,
+          "minimum_shell_distance_m": -0.021200000000000125,
+          "worst_source_row_zero_based": 121,
+          "penetrating_rows_50um": 198
+        },
+        {
+          "geom1": "collision_hand_right_index_1",
+          "geom2": "collision_hand_right_middle_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": -0.0015000000000000013,
+          "minimum_shell_distance_m": -0.007226524934733639,
+          "worst_source_row_zero_based": 37,
+          "penetrating_rows_50um": 198,
+          "native_surface_samples_forward_reverse": [
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            },
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            }
+          ]
+        },
+        {
+          "geom1": "collision_hand_right_index_1",
+          "geom2": "collision_hand_right_middle_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.0005375242651006352,
+          "minimum_shell_distance_m": -0.001956627718097603,
+          "worst_source_row_zero_based": 46,
+          "penetrating_rows_50um": 69,
+          "native_surface_samples_forward_reverse": [
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            },
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            }
+          ]
+        },
+        {
+          "geom1": "collision_hand_right_index_1",
+          "geom2": "collision_hand_right_ring_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.018499999999999996,
+          "minimum_shell_distance_m": 0.006001799425819347,
+          "worst_source_row_zero_based": 33,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_index_1",
+          "geom2": "collision_hand_right_ring_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.020499999999999997,
+          "minimum_shell_distance_m": 0.007976442701352284,
+          "worst_source_row_zero_based": 33,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_index_1",
+          "geom2": "collision_hand_right_pinky_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.038500000000000006,
+          "minimum_shell_distance_m": 0.026017784440671942,
+          "worst_source_row_zero_based": 90,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_index_1",
+          "geom2": "collision_hand_right_pinky_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.0405,
+          "minimum_shell_distance_m": 0.027897423566574826,
+          "worst_source_row_zero_based": 54,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_index_0",
+          "geom2": "collision_hand_right_middle_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.0005019999111190113,
+          "minimum_shell_distance_m": -0.002471264402711044,
+          "worst_source_row_zero_based": 46,
+          "penetrating_rows_50um": 111,
+          "native_surface_samples_forward_reverse": [
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            },
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            }
+          ]
+        },
+        {
+          "geom1": "collision_hand_right_index_0",
+          "geom2": "collision_hand_right_ring_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.020627925119573894,
+          "minimum_shell_distance_m": 0.007693666722553127,
+          "worst_source_row_zero_based": 53,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_index_0",
+          "geom2": "collision_hand_right_pinky_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.04081671752009969,
+          "minimum_shell_distance_m": 0.02788134366528457,
+          "worst_source_row_zero_based": 36,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_middle_1",
+          "geom2": "collision_hand_right_middle_0",
+          "classification": "assembly_adjacent_not_automatically_excluded",
+          "zero_configuration_shell_distance_m": -0.02120000000000003,
+          "minimum_shell_distance_m": -0.02120000000000009,
+          "worst_source_row_zero_based": 117,
+          "penetrating_rows_50um": 198
+        },
+        {
+          "geom1": "collision_hand_right_middle_1",
+          "geom2": "collision_hand_right_ring_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": -0.004,
+          "minimum_shell_distance_m": -0.004000000000000167,
+          "worst_source_row_zero_based": 177,
+          "penetrating_rows_50um": 198,
+          "native_surface_samples_forward_reverse": [
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            },
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            }
+          ]
+        },
+        {
+          "geom1": "collision_hand_right_middle_1",
+          "geom2": "collision_hand_right_ring_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": -0.002,
+          "minimum_shell_distance_m": -0.002000000000000104,
+          "worst_source_row_zero_based": 105,
+          "penetrating_rows_50um": 170,
+          "native_surface_samples_forward_reverse": [
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            },
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            }
+          ]
+        },
+        {
+          "geom1": "collision_hand_right_middle_1",
+          "geom2": "collision_hand_right_pinky_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.015999999999999993,
+          "minimum_shell_distance_m": 0.015999999999999834,
+          "worst_source_row_zero_based": 180,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_middle_1",
+          "geom2": "collision_hand_right_pinky_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.017999999999999995,
+          "minimum_shell_distance_m": 0.017999999999999863,
+          "worst_source_row_zero_based": 74,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_middle_0",
+          "geom2": "collision_hand_right_ring_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": -0.001642200511843139,
+          "minimum_shell_distance_m": -0.0017288294305267213,
+          "worst_source_row_zero_based": 39,
+          "penetrating_rows_50um": 143,
+          "native_surface_samples_forward_reverse": [
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            },
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            }
+          ]
+        },
+        {
+          "geom1": "collision_hand_right_middle_0",
+          "geom2": "collision_hand_right_pinky_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.01857388322554299,
+          "minimum_shell_distance_m": 0.018357329705123746,
+          "worst_source_row_zero_based": 50,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_right_ring_1",
+          "geom2": "collision_hand_right_ring_0",
+          "classification": "assembly_adjacent_not_automatically_excluded",
+          "zero_configuration_shell_distance_m": -0.02120000000000003,
+          "minimum_shell_distance_m": -0.021248283621051786,
+          "worst_source_row_zero_based": 45,
+          "penetrating_rows_50um": 198
+        },
+        {
+          "geom1": "collision_hand_right_ring_1",
+          "geom2": "collision_hand_right_pinky_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": -0.0040000000000000036,
+          "minimum_shell_distance_m": -0.00400000000000017,
+          "worst_source_row_zero_based": 115,
+          "penetrating_rows_50um": 198,
+          "native_surface_samples_forward_reverse": [
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            },
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            }
+          ]
+        },
+        {
+          "geom1": "collision_hand_right_ring_1",
+          "geom2": "collision_hand_right_pinky_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": -0.0020000000000000035,
+          "minimum_shell_distance_m": -0.0020000000000001805,
+          "worst_source_row_zero_based": 74,
+          "penetrating_rows_50um": 181,
+          "native_surface_samples_forward_reverse": [
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            },
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            }
+          ]
+        },
+        {
+          "geom1": "collision_hand_right_ring_0",
+          "geom2": "collision_hand_right_pinky_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": -0.0016422005118431424,
+          "minimum_shell_distance_m": -0.0020000000000000347,
+          "worst_source_row_zero_based": 39,
+          "penetrating_rows_50um": 165,
+          "native_surface_samples_forward_reverse": [
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            },
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            }
+          ]
+        },
+        {
+          "geom1": "collision_hand_right_pinky_1",
+          "geom2": "collision_hand_right_pinky_0",
+          "classification": "assembly_adjacent_not_automatically_excluded",
+          "zero_configuration_shell_distance_m": -0.02120000000000003,
+          "minimum_shell_distance_m": -0.0212482836210518,
+          "worst_source_row_zero_based": 45,
+          "penetrating_rows_50um": 198
+        },
+        {
+          "geom1": "collision_hand_left_palm_0",
+          "geom2": "collision_hand_left_thumb_2",
+          "classification": "assembly_adjacent_not_automatically_excluded",
+          "zero_configuration_shell_distance_m": -0.025500000000000002,
+          "minimum_shell_distance_m": -0.02550000000000008,
+          "worst_source_row_zero_based": 106,
+          "penetrating_rows_50um": 198
+        },
+        {
+          "geom1": "collision_hand_left_palm_0",
+          "geom2": "collision_hand_left_thumb_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": -0.008601000000000001,
+          "minimum_shell_distance_m": -0.009076308992762756,
+          "worst_source_row_zero_based": 30,
+          "penetrating_rows_50um": 198,
+          "native_surface_samples_forward_reverse": [
+            {
+              "status": "sampled_native_surface_not_global_bound",
+              "samples": 256,
+              "source_visual": "left_hand_link_visual",
+              "target_visual": "left_thumb_rota1_visual",
+              "inside_samples_50um": 0,
+              "sampled_penetration_max_m": 0.0
+            },
+            {
+              "status": "sampled_native_surface_not_global_bound",
+              "samples": 256,
+              "source_visual": "left_thumb_rota1_visual",
+              "target_visual": "left_hand_link_visual",
+              "inside_samples_50um": 0,
+              "sampled_penetration_max_m": 0.0
+            }
+          ]
+        },
+        {
+          "geom1": "collision_hand_left_palm_0",
+          "geom2": "collision_hand_left_index_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": -0.004300000000000009,
+          "minimum_shell_distance_m": -0.004571867607492324,
+          "worst_source_row_zero_based": 25,
+          "penetrating_rows_50um": 198,
+          "native_surface_samples_forward_reverse": [
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            },
+            {
+              "status": "sampled_native_surface_not_global_bound",
+              "samples": 256,
+              "source_visual": "left_index_rota1_visual",
+              "target_visual": "left_hand_link_visual",
+              "inside_samples_50um": 0,
+              "sampled_penetration_max_m": 0.0
+            }
+          ]
+        },
+        {
+          "geom1": "collision_hand_left_palm_0",
+          "geom2": "collision_hand_left_middle_1",
+          "classification": "assembly_adjacent_not_automatically_excluded",
+          "zero_configuration_shell_distance_m": -0.0037999999999999805,
+          "minimum_shell_distance_m": -0.0038000000000001054,
+          "worst_source_row_zero_based": 126,
+          "penetrating_rows_50um": 198
+        },
+        {
+          "geom1": "collision_hand_left_palm_0",
+          "geom2": "collision_hand_left_ring_1",
+          "classification": "assembly_adjacent_not_automatically_excluded",
+          "zero_configuration_shell_distance_m": -0.006799999999999983,
+          "minimum_shell_distance_m": -0.006800000000000129,
+          "worst_source_row_zero_based": 70,
+          "penetrating_rows_50um": 198
+        },
+        {
+          "geom1": "collision_hand_left_palm_0",
+          "geom2": "collision_hand_left_pinky_1",
+          "classification": "assembly_adjacent_not_automatically_excluded",
+          "zero_configuration_shell_distance_m": -0.009799999999999986,
+          "minimum_shell_distance_m": -0.010363383474782106,
+          "worst_source_row_zero_based": 43,
+          "penetrating_rows_50um": 198
+        },
+        {
+          "geom1": "collision_hand_left_thumb_2",
+          "geom2": "collision_hand_left_thumb_1",
+          "classification": "assembly_adjacent_not_automatically_excluded",
+          "zero_configuration_shell_distance_m": -0.022904739180571593,
+          "minimum_shell_distance_m": -0.022904739180571773,
+          "worst_source_row_zero_based": 62,
+          "penetrating_rows_50um": 198
+        },
+        {
+          "geom1": "collision_hand_left_thumb_2",
+          "geom2": "collision_hand_left_thumb_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.03474626036064503,
+          "minimum_shell_distance_m": 0.027213962325597044,
+          "worst_source_row_zero_based": 83,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_thumb_2",
+          "geom2": "collision_hand_left_index_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.049986606324731564,
+          "worst_source_row_zero_based": 128,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_thumb_2",
+          "geom2": "collision_hand_left_index_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.05,
+          "worst_source_row_zero_based": 0,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_thumb_2",
+          "geom2": "collision_hand_left_middle_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.05,
+          "worst_source_row_zero_based": 0,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_thumb_2",
+          "geom2": "collision_hand_left_middle_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.05,
+          "worst_source_row_zero_based": 0,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_thumb_2",
+          "geom2": "collision_hand_left_ring_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.05,
+          "worst_source_row_zero_based": 0,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_thumb_2",
+          "geom2": "collision_hand_left_ring_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.05,
+          "worst_source_row_zero_based": 0,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_thumb_2",
+          "geom2": "collision_hand_left_pinky_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.05,
+          "worst_source_row_zero_based": 0,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_thumb_2",
+          "geom2": "collision_hand_left_pinky_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.05,
+          "worst_source_row_zero_based": 0,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_thumb_1",
+          "geom2": "collision_hand_left_thumb_0",
+          "classification": "assembly_adjacent_not_automatically_excluded",
+          "zero_configuration_shell_distance_m": -0.034699999999999995,
+          "minimum_shell_distance_m": -0.034700000000000085,
+          "worst_source_row_zero_based": 141,
+          "penetrating_rows_50um": 198
+        },
+        {
+          "geom1": "collision_hand_left_thumb_1",
+          "geom2": "collision_hand_left_index_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.010553756301943489,
+          "worst_source_row_zero_based": 25,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_thumb_1",
+          "geom2": "collision_hand_left_index_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.031982248176135895,
+          "worst_source_row_zero_based": 32,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_thumb_1",
+          "geom2": "collision_hand_left_middle_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.02770547585780676,
+          "worst_source_row_zero_based": 25,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_thumb_1",
+          "geom2": "collision_hand_left_middle_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.04056776940924584,
+          "worst_source_row_zero_based": 31,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_thumb_1",
+          "geom2": "collision_hand_left_ring_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.043769896612428916,
+          "worst_source_row_zero_based": 25,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_thumb_1",
+          "geom2": "collision_hand_left_ring_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.05,
+          "worst_source_row_zero_based": 0,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_thumb_1",
+          "geom2": "collision_hand_left_pinky_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.05,
+          "worst_source_row_zero_based": 0,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_thumb_1",
+          "geom2": "collision_hand_left_pinky_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.05,
+          "worst_source_row_zero_based": 0,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_thumb_0",
+          "geom2": "collision_hand_left_index_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": -0.015907101867011122,
+          "worst_source_row_zero_based": 33,
+          "penetrating_rows_50um": 32,
+          "native_surface_samples_forward_reverse": [
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            },
+            {
+              "status": "sampled_native_surface_not_global_bound",
+              "samples": 256,
+              "source_visual": "left_index_rota1_visual",
+              "target_visual": "left_thumb_rota2_visual",
+              "inside_samples_50um": 8,
+              "sampled_penetration_max_m": 0.0032987672075110493
+            }
+          ]
+        },
+        {
+          "geom1": "collision_hand_left_thumb_0",
+          "geom2": "collision_hand_left_middle_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.00489519953338154,
+          "worst_source_row_zero_based": 31,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_thumb_0",
+          "geom2": "collision_hand_left_ring_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.025145439843741967,
+          "worst_source_row_zero_based": 31,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_thumb_0",
+          "geom2": "collision_hand_left_pinky_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.05,
+          "minimum_shell_distance_m": 0.04543700631829806,
+          "worst_source_row_zero_based": 30,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_index_1",
+          "geom2": "collision_hand_left_index_0",
+          "classification": "assembly_adjacent_not_automatically_excluded",
+          "zero_configuration_shell_distance_m": -0.021200000000000004,
+          "minimum_shell_distance_m": -0.021200000000000083,
+          "worst_source_row_zero_based": 41,
+          "penetrating_rows_50um": 198
+        },
+        {
+          "geom1": "collision_hand_left_index_1",
+          "geom2": "collision_hand_left_middle_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": -0.0015000000000000013,
+          "minimum_shell_distance_m": -0.006366291305693356,
+          "worst_source_row_zero_based": 131,
+          "penetrating_rows_50um": 161,
+          "native_surface_samples_forward_reverse": [
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            },
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            }
+          ]
+        },
+        {
+          "geom1": "collision_hand_left_index_1",
+          "geom2": "collision_hand_left_middle_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.0005375242651006352,
+          "minimum_shell_distance_m": -0.0018327431377934255,
+          "worst_source_row_zero_based": 133,
+          "penetrating_rows_50um": 7,
+          "native_surface_samples_forward_reverse": [
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            },
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            }
+          ]
+        },
+        {
+          "geom1": "collision_hand_left_index_1",
+          "geom2": "collision_hand_left_ring_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.018499999999999996,
+          "minimum_shell_distance_m": 0.006995622477552053,
+          "worst_source_row_zero_based": 112,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_index_1",
+          "geom2": "collision_hand_left_ring_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.020499999999999997,
+          "minimum_shell_distance_m": 0.008978006871392339,
+          "worst_source_row_zero_based": 112,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_index_1",
+          "geom2": "collision_hand_left_pinky_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.038500000000000006,
+          "minimum_shell_distance_m": 0.026017784440671526,
+          "worst_source_row_zero_based": 54,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_index_1",
+          "geom2": "collision_hand_left_pinky_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.0405,
+          "minimum_shell_distance_m": 0.027931029568802758,
+          "worst_source_row_zero_based": 81,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_index_0",
+          "geom2": "collision_hand_left_middle_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.0005019999111190113,
+          "minimum_shell_distance_m": -0.0019452271798130905,
+          "worst_source_row_zero_based": 10,
+          "penetrating_rows_50um": 90,
+          "native_surface_samples_forward_reverse": [
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            },
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            }
+          ]
+        },
+        {
+          "geom1": "collision_hand_left_index_0",
+          "geom2": "collision_hand_left_ring_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.020627925119573894,
+          "minimum_shell_distance_m": 0.007994395295118192,
+          "worst_source_row_zero_based": 49,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_index_0",
+          "geom2": "collision_hand_left_pinky_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.04081671752009969,
+          "minimum_shell_distance_m": 0.027893711675085833,
+          "worst_source_row_zero_based": 72,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_middle_1",
+          "geom2": "collision_hand_left_middle_0",
+          "classification": "assembly_adjacent_not_automatically_excluded",
+          "zero_configuration_shell_distance_m": -0.02120000000000003,
+          "minimum_shell_distance_m": -0.021200000000000087,
+          "worst_source_row_zero_based": 22,
+          "penetrating_rows_50um": 198
+        },
+        {
+          "geom1": "collision_hand_left_middle_1",
+          "geom2": "collision_hand_left_ring_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": -0.004,
+          "minimum_shell_distance_m": -0.004000000000000167,
+          "worst_source_row_zero_based": 148,
+          "penetrating_rows_50um": 198,
+          "native_surface_samples_forward_reverse": [
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            },
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            }
+          ]
+        },
+        {
+          "geom1": "collision_hand_left_middle_1",
+          "geom2": "collision_hand_left_ring_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": -0.002,
+          "minimum_shell_distance_m": -0.0019999890675988594,
+          "worst_source_row_zero_based": 118,
+          "penetrating_rows_50um": 181,
+          "native_surface_samples_forward_reverse": [
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            },
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            }
+          ]
+        },
+        {
+          "geom1": "collision_hand_left_middle_1",
+          "geom2": "collision_hand_left_pinky_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.015999999999999993,
+          "minimum_shell_distance_m": 0.015999999999999834,
+          "worst_source_row_zero_based": 73,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_middle_1",
+          "geom2": "collision_hand_left_pinky_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.017999999999999995,
+          "minimum_shell_distance_m": 0.018000000000000044,
+          "worst_source_row_zero_based": 47,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_middle_0",
+          "geom2": "collision_hand_left_ring_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": -0.001642200511843139,
+          "minimum_shell_distance_m": -0.0019243241499658278,
+          "worst_source_row_zero_based": 37,
+          "penetrating_rows_50um": 174,
+          "native_surface_samples_forward_reverse": [
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            },
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            }
+          ]
+        },
+        {
+          "geom1": "collision_hand_left_middle_0",
+          "geom2": "collision_hand_left_pinky_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": 0.01857388322554299,
+          "minimum_shell_distance_m": 0.018154284982888087,
+          "worst_source_row_zero_based": 15,
+          "penetrating_rows_50um": 0
+        },
+        {
+          "geom1": "collision_hand_left_ring_1",
+          "geom2": "collision_hand_left_ring_0",
+          "classification": "assembly_adjacent_not_automatically_excluded",
+          "zero_configuration_shell_distance_m": -0.02120000000000003,
+          "minimum_shell_distance_m": -0.021200000000000063,
+          "worst_source_row_zero_based": 117,
+          "penetrating_rows_50um": 198
+        },
+        {
+          "geom1": "collision_hand_left_ring_1",
+          "geom2": "collision_hand_left_pinky_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": -0.0040000000000000036,
+          "minimum_shell_distance_m": -0.004000000000000132,
+          "worst_source_row_zero_based": 77,
+          "penetrating_rows_50um": 198,
+          "native_surface_samples_forward_reverse": [
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            },
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            }
+          ]
+        },
+        {
+          "geom1": "collision_hand_left_ring_1",
+          "geom2": "collision_hand_left_pinky_0",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": -0.0020000000000000035,
+          "minimum_shell_distance_m": -0.002000000000000045,
+          "worst_source_row_zero_based": 137,
+          "penetrating_rows_50um": 172,
+          "native_surface_samples_forward_reverse": [
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            },
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            }
+          ]
+        },
+        {
+          "geom1": "collision_hand_left_ring_0",
+          "geom2": "collision_hand_left_pinky_1",
+          "classification": "nonadjacent_unclassified",
+          "zero_configuration_shell_distance_m": -0.0016422005118431424,
+          "minimum_shell_distance_m": -0.0019435493348790595,
+          "worst_source_row_zero_based": 29,
+          "penetrating_rows_50um": 112,
+          "native_surface_samples_forward_reverse": [
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            },
+            {
+              "status": "target_open_mesh_signed_containment_not_used"
+            }
+          ]
+        },
+        {
+          "geom1": "collision_hand_left_pinky_1",
+          "geom2": "collision_hand_left_pinky_0",
+          "classification": "assembly_adjacent_not_automatically_excluded",
+          "zero_configuration_shell_distance_m": -0.02120000000000003,
+          "minimum_shell_distance_m": -0.021209580275249405,
+          "worst_source_row_zero_based": 102,
+          "penetrating_rows_50um": 198
+        }
+      ]
+    }
+  },
+  "joint_limit_min_margin": -9.0993608277829e-16,
+  "joint_limit_violating_rows": 0,
+  "initial_qvel": {
+    "hand_max_abs": 0.6931607483386504,
+    "tool": [
+      -0.0006379187107086182,
+      0.0019551068544387817,
+      -0.00194549560546875,
+      0.06165202323069983,
+      -0.018752150468378234,
+      0.00018957609827013276
+    ],
+    "target": [
+      0.000116005539894104,
+      0.0002916064113378525,
+      -0.0007152557373046875,
+      0.001940894644160765,
+      0.01280766578825751,
+      -0.004270312215593293
+    ],
+    "provenance": "existing_reference_finite_difference_not_author_reset"
+  },
+  "minimal_alternatives": {
+    "status": "analytic_translation_lower_bounds_only_not_selected_or_applied",
+    "raise_hands_independently_m": {
+      "right": 0.0149605704739759,
+      "left": 0.01328732693604956
+    },
+    "raise_tool_for_shell_table_clearance_m": 0.0,
+    "raise_target_for_shell_table_clearance_m": 0.0,
+    "raise_all_dynamic_bodies_m": 0.0149605704739759,
+    "common_raise_consequence": "preserves relative poses but lifts the initially supported target off the table",
+    "independent_raise_consequence": "changes initial hand/object relations; does not establish all-pair feasibility or continuity",
+    "qvel_choice": "unpublished; neither zero nor reference derivative selected as validated reset"
+  },
+  "strict_gate_passed": false,
+  "rl_validation_completed": false,
+  "state_projection_applied": false,
+  "simulation_steps_executed": 0,
+  "preserved_artifacts": [
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml",
+      "sha256": "86f7402b3130dfd459f72635c609448aa2d9c9c10a27a1125160d1c8fc354c24"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/templates/xhand_bimanual_source.xml",
+      "sha256": "7ccdf608ef55bcca8749d40304c1d5317847b09b249001d66283d3a2b9ee8389"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_bimanual_gt_v1/human_reference.npz",
+      "sha256": "e5555a2f25be503bab4ed9b6edab4c8f851819250de1c6de7089722a4f866dbe"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_bimanual_gt_v1/robot_reference.npz",
+      "sha256": "77781c56a612b5e69445bc0fa8aa719ea4559cf4a3e98e726a53a482210b5625"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_bimanual_gt_v1/retarget_report.json",
+      "sha256": "3e4c7f0c055e0c112bbf1bfc76078e4aa71e6d19bce2ff29977378b0ee56e1a2"
+    }
+  ],
+  "source_assets": [
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/visual.obj",
+      "sha256": "35c52d853b85aa521eeadda78abb2bd370975611c8c35cd9a9d4c96746d8418c"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/visual.obj",
+      "sha256": "6316aea5b5c29a6231639d4ac8dad2c42ee013cfc55f1ce5a9dc5a38056f52a1"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_index_bend_link.STL",
+      "sha256": "dffd1bf191354b1e1445996b059ac3f7d5c85bff45767c28e4031c88b55594d5"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_index_rota_link1.STL",
+      "sha256": "d3043620eff3416a9d060f08cf890763db8db77bd72715c0b426fd5724a770c3"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_index_rota_link2.STL",
+      "sha256": "125636813d960f2ca14932bb74c03d4035a310e4bcbbb5fd5bf7ecdf69757bf4"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_link.STL",
+      "sha256": "4d2e6c0d9af6a2f116aa5fde55b280186e102705efb035fdbfda9a747ebf1a9b"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_mid_link1.STL",
+      "sha256": "a66d2574f4a433eef6a0f43b9d4ecd14b32557693953defa654cd10c7c305aa0"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_mid_link2.STL",
+      "sha256": "a695ec28c9c41cc4a18b0ffc421cec785221fa43cca94b1c8b8f3077987a357b"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_pinky_link1.STL",
+      "sha256": "1a7d786e133d34955e4358d72fed7ddabd798bff80207af9b932f01ec7fb15c2"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_pinky_link2.STL",
+      "sha256": "98148a77d8367fe6cfe9f44fa3e01f288ba56a9cd86c232232972ff3ca3366c7"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_ring_link1.STL",
+      "sha256": "96a858ed17c4193ee87a09b1544d2a34b8dcedd5bd10f89e56ee26451dbdd4b9"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_ring_link2.STL",
+      "sha256": "33a7411768db62e15b952cde84579d8a64207ebbfe599188888a138058bc7f90"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_thumb_bend_link.STL",
+      "sha256": "b13cf4e0e7bdcc534087a49c9edf36ba46ca526869fe6259ef4c22f82365483d"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_thumb_rota_link1.STL",
+      "sha256": "ba4d473f8913f60f31178c68ba2e196fffba6340ae85d9e5adfe64166f331ea2"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_thumb_rota_link2.STL",
+      "sha256": "e0252b238a0d06999ab39b94f53290d22c14e0ddb66015fbded0614e3906e393"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_index_bend_link.STL",
+      "sha256": "8969bc01d636eb86d64d8e5ae81fc9530392fbaf1e99d01ea700cad16739e809"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_index_rota_link1.STL",
+      "sha256": "aa81e5c7a89339893f8ce3c109ad44f5da9e81b067f655bf85a8c94a15170560"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_index_rota_link2.STL",
+      "sha256": "1978ac4ba6eb13bba2fb7a03e6b7ad16ad9c22fce6cac4b71c2620650bbe7110"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_link.STL",
+      "sha256": "990938909f1c2743425f425433f8d73352160072a82d81aa21fb8f73918cdc38"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_mid_link1.STL",
+      "sha256": "b9ece604072b09b00b14dca913f7adcfe86f81067eb511d08c4d995bf057aa1d"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_mid_link2.STL",
+      "sha256": "4a451a017695c88bac5028d04618b77efe3e0105839698126078aff18db33bad"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_pinky_link1.STL",
+      "sha256": "d8d95abf22c08b0cb19bf17f6dc70ef5ad10c2c0476d6155ddf545fd80b6f7b8"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_pinky_link2.STL",
+      "sha256": "e45d273473af9a3c6e7920cbea599c3fd28b796dbbd92104ba051633da96e4ce"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_ring_link1.STL",
+      "sha256": "cc6449f3311c0c6066921c088630611d0d96c786e3a0976b57cf74443ac459ae"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_ring_link2.STL",
+      "sha256": "93fc89a8ed9c9cbc4bd1ef0ee6e251ab6064ff61776be66e0cd69497015be09d"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_thumb_bend_link.STL",
+      "sha256": "128a534a22c58c34ba091365daf5cf3310d576386033623ff7c3ba0e4bcdfa75"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_thumb_rota_link1.STL",
+      "sha256": "1fe3c9615f90eccd012b5fed8b3aba1f1de68987f03d643367b53740530e1a63"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_thumb_rota_link2.STL",
+      "sha256": "25c5ae9613658b5a73a45e6ae96369cfb0dac83742285849dfb35d04c450db19"
+    }
+  ],
+  "raw_inputs": [
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017/hand_joints.npy",
+      "sha256": "251c6a6f114a5f2b13373e433bae6e9969844f165913afd3ea7c4d9487d39165"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/object_poses/Object_Poses/(pour in some, bowl, plate)/20230927_017/tool_022.npy",
+      "sha256": "706a4cc363d863bbd85f208714c00dcc3e0a54f8386e9d1440e6438a29a72453"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/object_poses/Object_Poses/(pour in some, bowl, plate)/20230927_017/target_135.npy",
+      "sha256": "cffb56faaf249ddd2660436f614b08eb19a065a7d612d73fd23f30d2862c63a2"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/camera/Egocentric_Camera_Parameters/(pour in some, bowl, plate)/20230927_017/egocentric_frame_extrinsic.npy",
+      "sha256": "3278afc066e5b47c695e292f6c5f6c1da9af42cf2912498f7f783825b0aaba14"
+    }
+  ],
+  "audit_code": [
+    {
+      "path": "/data_all/zzx/3.2RL/scripts/audit_taco_initialization.py",
+      "sha256": "74804b57094a8b3f28e625b03f416f040213543fbaab4f98a3b034463649f750"
+    }
+  ]
+}

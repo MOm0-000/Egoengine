@@ -1,0 +1,58 @@
+schema_version: "1.0"
+profile:
+  name: auto_current
+  description: Frozen current automatic pipeline baseline.
+  uses_ground_truth: false
+inputs:
+  hand_source: wilor_rgb
+  camera_source: dataset_calibration
+  depth_source: depth_anything_v2_metric
+  segmentation_source: sam3
+  object_mesh_source: sam3d_ranked
+  object_pose_source: foundationpose_selected_mesh
+perception:
+  contact_scale_calibration: true
+  silhouette_scale_optimization: true
+  per_frame_floor_shift: true
+  left_hand_confidence_multiplier: 0.45
+  automatic_hand_role_filtering: true
+  canonical_axes_source: sam3d_postprocessed
+retarget:
+  backend: mink
+  wrist_position_cost: 0.3
+  wrist_orientation_cost: 3.0
+  fingertip_position_cost: 10.0
+  fingertip_orientation_cost: 0.0
+  posture_cost: 0.01
+  joint_position_limits: true
+  joint_velocity_limits: true
+  self_collision: true
+  confidence_weighting: true
+  sim_dt: 0.005
+  max_iterations_per_frame: 8
+  velocity_limits:
+    base_translation: 1.5
+    base_rotation: 4.0
+    finger: 8.0
+reward:
+  position_boundary_m: 0.08
+  rotation_boundary_rad: 2.5
+  lambda_translation: 156.25
+  lambda_rotation: 0.16
+  feasibility_threshold: 1.0
+  human_base_position: 0.2
+  human_base_rotation: 1.0
+  human_joints: 0.0
+  action_smoothness: 0.8
+  opposition_contact_bonus: 2.0
+  lifting: 0.0
+chunks:
+  length: 20
+  lookahead_chunks: 2
+  stop_on_failure: true
+evaluation:
+  gt_scope: evaluation_only
+  mesh_sample_count: 5000
+  fscore_thresholds_m: [0.005, 0.01]
+  depth_warp_stride: 8
+  object_add_sample_count: 1000

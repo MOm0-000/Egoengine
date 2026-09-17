@@ -1,0 +1,269 @@
+{
+  "template": "/data_all/zzx/3.2RL/models/taco_xhand/templates/xhand_bimanual_source.xml",
+  "template_sha256": "7ccdf608ef55bcca8749d40304c1d5317847b09b249001d66283d3a2b9ee8389",
+  "upstream_template": "/data_all/zzx/egoengine/spider/example_datasets/processed/oakink/xhand/bimanual/wipe_board/scene_act.xml",
+  "table_height_m": 0.72,
+  "object_roles": {
+    "right_object": "tool_022",
+    "left_object": "target_135"
+  },
+  "passive_objects": true,
+  "hand_control_dof": 36,
+  "object_assets": {
+    "right": {
+      "object_id": "022",
+      "visual_scale": 0.01,
+      "collision_subdir": "convex_m",
+      "source": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/object_models/object_models_released/022_cm.obj"
+    },
+    "left": {
+      "object_id": "135",
+      "visual_scale": 0.01,
+      "collision_subdir": "convex_m",
+      "source": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/object_models/object_models_released/135_cm.obj"
+    }
+  },
+  "collision_units": "m",
+  "collision_provenance": "inherited local CoACD pipeline; approximation requires audit; not author geometry",
+  "contact_condim": 3,
+  "contact_friction": [
+    1,
+    0.1,
+    0
+  ],
+  "collision_policy": {
+    "policy": "pinned_source_intrahand_plus_full_interhand",
+    "pair_counts": {
+      "source_intrahand": 30,
+      "full_interhand": 144,
+      "hand_object": 1536,
+      "object_object": 1024,
+      "floor": 88
+    },
+    "geometry_unchanged": true,
+    "complete_intrahand_geometry_coverage": false,
+    "limitation": "source self model tests palm/distal and distal/distal only; omitted shell pairs audited separately"
+  },
+  "independent_robot_asset_snapshot": [
+    {
+      "source": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/assets/right_hand_link.STL",
+      "output": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_link.STL",
+      "sha256": "990938909f1c2743425f425433f8d73352160072a82d81aa21fb8f73918cdc38",
+      "bytes": 1033984
+    },
+    {
+      "source": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/assets/right_hand_thumb_bend_link.STL",
+      "output": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_thumb_bend_link.STL",
+      "sha256": "128a534a22c58c34ba091365daf5cf3310d576386033623ff7c3ba0e4bcdfa75",
+      "bytes": 296884
+    },
+    {
+      "source": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/assets/right_hand_thumb_rota_link1.STL",
+      "output": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_thumb_rota_link1.STL",
+      "sha256": "1fe3c9615f90eccd012b5fed8b3aba1f1de68987f03d643367b53740530e1a63",
+      "bytes": 697884
+    },
+    {
+      "source": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/assets/right_hand_thumb_rota_link2.STL",
+      "output": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_thumb_rota_link2.STL",
+      "sha256": "25c5ae9613658b5a73a45e6ae96369cfb0dac83742285849dfb35d04c450db19",
+      "bytes": 398584
+    },
+    {
+      "source": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/assets/right_hand_index_bend_link.STL",
+      "output": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_index_bend_link.STL",
+      "sha256": "8969bc01d636eb86d64d8e5ae81fc9530392fbaf1e99d01ea700cad16739e809",
+      "bytes": 164784
+    },
+    {
+      "source": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/assets/right_hand_index_rota_link1.STL",
+      "output": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_index_rota_link1.STL",
+      "sha256": "aa81e5c7a89339893f8ce3c109ad44f5da9e81b067f655bf85a8c94a15170560",
+      "bytes": 691384
+    },
+    {
+      "source": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/assets/right_hand_index_rota_link2.STL",
+      "output": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_index_rota_link2.STL",
+      "sha256": "1978ac4ba6eb13bba2fb7a03e6b7ad16ad9c22fce6cac4b71c2620650bbe7110",
+      "bytes": 395584
+    },
+    {
+      "source": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/assets/right_hand_mid_link1.STL",
+      "output": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_mid_link1.STL",
+      "sha256": "b9ece604072b09b00b14dca913f7adcfe86f81067eb511d08c4d995bf057aa1d",
+      "bytes": 691384
+    },
+    {
+      "source": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/assets/right_hand_mid_link2.STL",
+      "output": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_mid_link2.STL",
+      "sha256": "4a451a017695c88bac5028d04618b77efe3e0105839698126078aff18db33bad",
+      "bytes": 395584
+    },
+    {
+      "source": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/assets/right_hand_ring_link1.STL",
+      "output": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_ring_link1.STL",
+      "sha256": "cc6449f3311c0c6066921c088630611d0d96c786e3a0976b57cf74443ac459ae",
+      "bytes": 691384
+    },
+    {
+      "source": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/assets/right_hand_ring_link2.STL",
+      "output": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_ring_link2.STL",
+      "sha256": "93fc89a8ed9c9cbc4bd1ef0ee6e251ab6064ff61776be66e0cd69497015be09d",
+      "bytes": 395584
+    },
+    {
+      "source": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/assets/right_hand_pinky_link1.STL",
+      "output": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_pinky_link1.STL",
+      "sha256": "d8d95abf22c08b0cb19bf17f6dc70ef5ad10c2c0476d6155ddf545fd80b6f7b8",
+      "bytes": 691384
+    },
+    {
+      "source": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/assets/right_hand_pinky_link2.STL",
+      "output": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_pinky_link2.STL",
+      "sha256": "e45d273473af9a3c6e7920cbea599c3fd28b796dbbd92104ba051633da96e4ce",
+      "bytes": 395584
+    },
+    {
+      "source": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/assets/left_hand_link.STL",
+      "output": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_link.STL",
+      "sha256": "4d2e6c0d9af6a2f116aa5fde55b280186e102705efb035fdbfda9a747ebf1a9b",
+      "bytes": 1037784
+    },
+    {
+      "source": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/assets/left_hand_thumb_bend_link.STL",
+      "output": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_thumb_bend_link.STL",
+      "sha256": "b13cf4e0e7bdcc534087a49c9edf36ba46ca526869fe6259ef4c22f82365483d",
+      "bytes": 296684
+    },
+    {
+      "source": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/assets/left_hand_thumb_rota_link1.STL",
+      "output": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_thumb_rota_link1.STL",
+      "sha256": "ba4d473f8913f60f31178c68ba2e196fffba6340ae85d9e5adfe64166f331ea2",
+      "bytes": 698584
+    },
+    {
+      "source": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/assets/left_hand_thumb_rota_link2.STL",
+      "output": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_thumb_rota_link2.STL",
+      "sha256": "e0252b238a0d06999ab39b94f53290d22c14e0ddb66015fbded0614e3906e393",
+      "bytes": 395384
+    },
+    {
+      "source": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/assets/left_hand_index_bend_link.STL",
+      "output": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_index_bend_link.STL",
+      "sha256": "dffd1bf191354b1e1445996b059ac3f7d5c85bff45767c28e4031c88b55594d5",
+      "bytes": 164784
+    },
+    {
+      "source": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/assets/left_hand_index_rota_link1.STL",
+      "output": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_index_rota_link1.STL",
+      "sha256": "d3043620eff3416a9d060f08cf890763db8db77bd72715c0b426fd5724a770c3",
+      "bytes": 691384
+    },
+    {
+      "source": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/assets/left_hand_index_rota_link2.STL",
+      "output": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_index_rota_link2.STL",
+      "sha256": "125636813d960f2ca14932bb74c03d4035a310e4bcbbb5fd5bf7ecdf69757bf4",
+      "bytes": 395584
+    },
+    {
+      "source": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/assets/left_hand_mid_link1.STL",
+      "output": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_mid_link1.STL",
+      "sha256": "a66d2574f4a433eef6a0f43b9d4ecd14b32557693953defa654cd10c7c305aa0",
+      "bytes": 691384
+    },
+    {
+      "source": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/assets/left_hand_mid_link2.STL",
+      "output": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_mid_link2.STL",
+      "sha256": "a695ec28c9c41cc4a18b0ffc421cec785221fa43cca94b1c8b8f3077987a357b",
+      "bytes": 395584
+    },
+    {
+      "source": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/assets/left_hand_ring_link1.STL",
+      "output": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_ring_link1.STL",
+      "sha256": "96a858ed17c4193ee87a09b1544d2a34b8dcedd5bd10f89e56ee26451dbdd4b9",
+      "bytes": 691384
+    },
+    {
+      "source": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/assets/left_hand_ring_link2.STL",
+      "output": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_ring_link2.STL",
+      "sha256": "33a7411768db62e15b952cde84579d8a64207ebbfe599188888a138058bc7f90",
+      "bytes": 395584
+    },
+    {
+      "source": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/assets/left_hand_pinky_link1.STL",
+      "output": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_pinky_link1.STL",
+      "sha256": "1a7d786e133d34955e4358d72fed7ddabd798bff80207af9b932f01ec7fb15c2",
+      "bytes": 691384
+    },
+    {
+      "source": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/assets/left_hand_pinky_link2.STL",
+      "output": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_pinky_link2.STL",
+      "sha256": "98148a77d8367fe6cfe9f44fa3e01f288ba56a9cd86c232232972ff3ca3366c7",
+      "bytes": 395584
+    }
+  ],
+  "object_inertials": {
+    "right": {
+      "source": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/object_models/object_models_released/022_cm.obj",
+      "source_sha256": "35c52d853b85aa521eeadda78abb2bd370975611c8c35cd9a9d4c96746d8418c",
+      "mass_kg": 0.23512083812355627,
+      "com_m": [
+        9.604192764363927e-05,
+        6.507907988781042e-05,
+        -0.004065860223894116
+      ],
+      "inertia_kg_m2": [
+        [
+          0.00029668167937818926,
+          -1.0832377744159299e-06,
+          -3.8542645004276576e-07
+        ],
+        [
+          -1.0832377744159299e-06,
+          0.0003008024861461946,
+          1.8829859095385855e-06
+        ],
+        [
+          -3.8542645004276576e-07,
+          1.8829859095385855e-06,
+          0.0004747286310873298
+        ]
+      ],
+      "density_kg_m3": 1000.0,
+      "density_provenance": "inherited nominal value, not a measured TACO/paper mass",
+      "method": "closed visual-mesh volume integral; no sum of overlapping convex parts"
+    },
+    "left": {
+      "source": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/object_models/object_models_released/135_cm.obj",
+      "source_sha256": "6316aea5b5c29a6231639d4ac8dad2c42ee013cfc55f1ce5a9dc5a38056f52a1",
+      "mass_kg": 0.2533925791571645,
+      "com_m": [
+        0.00019913861848043526,
+        -0.0018657820314362456,
+        -0.008525492951981252
+      ],
+      "inertia_kg_m2": [
+        [
+          0.0009369575835464054,
+          3.257281682619148e-05,
+          -3.935586123886163e-06
+        ],
+        [
+          3.257281682619148e-05,
+          0.0024874079169407344,
+          1.197321318945955e-06
+        ],
+        [
+          -3.935586123886163e-06,
+          1.197321318945955e-06,
+          0.0033799571680007048
+        ]
+      ],
+      "density_kg_m3": 1000.0,
+      "density_provenance": "inherited nominal value, not a measured TACO/paper mass",
+      "method": "closed visual-mesh volume integral; no sum of overlapping convex parts"
+    }
+  },
+  "source_contact_sites_replaced_with_zero_placeholders": true,
+  "physics_validated": false
+}

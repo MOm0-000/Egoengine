@@ -1,0 +1,30 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+.env
+.env.*
+*.log
+*.tmp
+*.pth
+runs/**/nn/
+paper/*.pdf
+
+# TACO is downloaded separately. Keep only the provenance records committed in
+# this branch; raw RGB/depth, GT arrays and MANO files stay local.
+data/*
+!data/taco_v1/
+data/taco_v1/*
+!data/taco_v1/pour_bowl_plate/
+data/taco_v1/pour_bowl_plate/*
+!data/taco_v1/pour_bowl_plate/acquisition_manifest.json
+!data/taco_v1/pour_bowl_plate/input_audit.json
+!data/taco_v1/pour_bowl_plate/selection.json
+!data/taco_v1/pour_bowl_plate/taco_info.csv
+!data/taco_v1/pour_bowl_plate/depth_original/
+data/taco_v1/pour_bowl_plate/depth_original/*
+!data/taco_v1/pour_bowl_plate/depth_original/original_depth_manifest.json

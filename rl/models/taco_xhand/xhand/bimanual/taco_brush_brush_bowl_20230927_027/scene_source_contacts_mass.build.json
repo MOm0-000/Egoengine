@@ -1,0 +1,99 @@
+{
+  "template": "/data_all/zzx/3.2RL/models/taco_xhand/templates/xhand_bimanual_source.xml",
+  "template_sha256": "7ccdf608ef55bcca8749d40304c1d5317847b09b249001d66283d3a2b9ee8389",
+  "upstream_template": "/data_all/zzx/egoengine/spider/example_datasets/processed/oakink/xhand/bimanual/wipe_board/scene_act.xml",
+  "table_height_m": 0.72,
+  "object_roles": {
+    "right_object": "tool_071",
+    "left_object": "target_146"
+  },
+  "passive_objects": true,
+  "hand_control_dof": 36,
+  "target_visual_source_units": "cm",
+  "target_visual_scale": 0.01,
+  "target_collision_units": "m",
+  "target_collision": "CoACD, capped at 32 parts; approximation requires audit",
+  "contact_condim": 3,
+  "contact_friction": [
+    1,
+    0.1,
+    0
+  ],
+  "collision_policy": {
+    "policy": "pinned_source_intrahand_plus_full_interhand",
+    "pair_counts": {
+      "source_intrahand": 30,
+      "full_interhand": 144,
+      "hand_object": 1176,
+      "object_object": 544,
+      "floor": 73
+    },
+    "geometry_unchanged": true,
+    "complete_intrahand_geometry_coverage": false,
+    "limitation": "source self model tests palm/distal and distal/distal only; omitted shell pairs audited separately"
+  },
+  "object_inertials": {
+    "right": {
+      "source": "/data_all/zzx/3.2RL/data/taco_v1/dev4/object_models/object_models_released/071_cm.obj",
+      "source_sha256": "31a9c07102ea7fd6263fdf6f54f0103c463733be4d49a7244b018bbc257ca124",
+      "mass_kg": 0.17936513290406048,
+      "com_m": [
+        -0.001295466160984365,
+        -0.0006148479971723328,
+        -0.01001366611286019
+      ],
+      "inertia_kg_m2": [
+        [
+          0.0001246813518179081,
+          2.7359026387617714e-06,
+          -1.5036817776927831e-06
+        ],
+        [
+          2.7359026387617714e-06,
+          0.0002877744787924814,
+          -2.510303435725653e-06
+        ],
+        [
+          -1.5036817776927831e-06,
+          -2.510303435725653e-06,
+          0.0003436667272383697
+        ]
+      ],
+      "density_kg_m3": 1000.0,
+      "density_provenance": "inherited nominal value, not a measured TACO/paper mass",
+      "method": "closed visual-mesh volume integral; no sum of overlapping convex parts"
+    },
+    "left": {
+      "source": "/data_all/zzx/3.2RL/data/taco_v1/dev4/object_models/object_models_released/146_cm.obj",
+      "source_sha256": "2bc69db147f598ae3260313dc02892f7e76764c0af6addfcb375cae569f699d9",
+      "mass_kg": 0.11328417068338886,
+      "com_m": [
+        -0.001965284850457839,
+        -0.002332224934807366,
+        -0.003928132661148691
+      ],
+      "inertia_kg_m2": [
+        [
+          0.00020323074280963595,
+          -1.1220305756454042e-06,
+          7.94804733524968e-06
+        ],
+        [
+          -1.1220305756454042e-06,
+          0.00023696063529379964,
+          4.9232650687021444e-06
+        ],
+        [
+          7.94804733524968e-06,
+          4.9232650687021444e-06,
+          0.0003742245579284047
+        ]
+      ],
+      "density_kg_m3": 1000.0,
+      "density_provenance": "inherited nominal value, not a measured TACO/paper mass",
+      "method": "closed visual-mesh volume integral; no sum of overlapping convex parts"
+    }
+  },
+  "source_contact_sites_replaced_with_zero_placeholders": true,
+  "physics_validated": false
+}

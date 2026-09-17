@@ -1,0 +1,68 @@
+schema_version: "1.0"
+name: taco_perception_ablation_dev4
+dataset_set: taco_first_person_dev4
+profiles:
+  auto_current:
+    config: auto_current
+    object_segmentation: sam3
+    hand_source: wilor
+    depth: depth_anything_v2
+    mesh: sam3d
+    object_tracking: foundationpose
+    alignment: auto_current
+  known_mesh:
+    config: auto_current
+    object_segmentation: sam3
+    hand_source: wilor
+    depth: depth_anything_v2
+    mesh: taco_known_mesh
+    object_tracking: foundationpose
+    alignment: auto_current
+  oracle_hand_mesh:
+    config: auto_current
+    object_segmentation: sam3
+    hand_source: taco_oracle_hand
+    depth: depth_anything_v2
+    mesh: taco_known_mesh
+    object_tracking: foundationpose
+    alignment: auto_current
+  paper_faithful:
+    config: paper_faithful_taco
+    object_segmentation: sam2
+    hand_source: taco_oracle_hand
+    depth: depth_anything_v2
+    mesh: taco_known_mesh
+    object_tracking: foundationpose
+    alignment: taco_fixed_base
+model_inputs:
+  sam3_checkpoint: third_party/sam3/checkpoints/sam3.1_multiplex.pt
+  sam2_checkpoint: third_party/sam2/checkpoints/sam2.1_hiera_large.pt
+  sam2_model_config: configs/sam2.1/sam2.1_hiera_l.yaml
+  wilor_checkpoint: third_party/WiLoR/pretrained_models/wilor_final.ckpt
+  wilor_model_config: third_party/WiLoR/pretrained_models/model_config.yaml
+  wilor_detector_checkpoint: third_party/WiLoR/pretrained_models/detector.pt
+  depth_checkpoint: third_party/Depth-Anything-V2/metric_depth/checkpoints/depth_anything_v2_metric_hypersim_vitl.pth
+  sam3d_config: third_party/sam-3d-objects/checkpoints/hf/pipeline.yaml
+  foundationpose_root: third_party/FoundationPose
+runtime:
+  sam3_max_candidates: 1
+  sam3_max_instances: 2
+  sam3d_seeds: [45, 46, 47]
+  foundationpose_max_candidates: 3
+  foundationpose_screening_radius: 1
+  foundationpose_register_iter: 2
+  foundationpose_track_iter: 1
+  foundationpose_max_input_side: 640
+episodes:
+  taco_brush_brush_bowl_20230927_027:
+    object_prompt_frame: 0
+    object_point_xy: [1069, 456]
+  taco_cut_spatula_plate_20230917_020:
+    object_prompt_frame: 0
+    object_point_xy: [1150, 620]
+  taco_skim_spatula_plate_20230926_004:
+    object_prompt_frame: 0
+    object_point_xy: [1235, 390]
+  taco_smear_eraser_box_20231103_071:
+    object_prompt_frame: 0
+    object_point_xy: [1250, 270]

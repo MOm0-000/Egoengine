@@ -1,0 +1,138 @@
+{
+  "status": "MINK_kinematic_candidate_not_physics_validated",
+  "frames": 198,
+  "scene": "/data_all/zzx/3.2RL/runs/taco_pour_tip_contract_v1/diagnostic_scene.xml",
+  "scene_sha256": "66f52e6b746861bd25178104152512c1f1477aaa47717387fc503c1bd379f976",
+  "human_reference": "/data_all/zzx/3.2RL/runs/taco_pour_tip_contract_v1/human_reference.npz",
+  "human_reference_sha256": "28fcb9f4f4861262513994862245103c610c40b2f9ff17f40f8a61c80dd835a4",
+  "mink_module": "/data_all/zzx/3.2RL/external/mink/src/mink/__init__.py",
+  "inherited_settings": {
+    "backend": "mink",
+    "wrist_position_cost": 0.3,
+    "wrist_orientation_cost": 3.0,
+    "fingertip_position_cost": 10.0,
+    "fingertip_orientation_cost": 1.0,
+    "posture_cost": 0.01,
+    "joint_position_limits": true,
+    "joint_velocity_limits": true,
+    "self_collision": true,
+    "confidence_weighting": true,
+    "sim_dt": 0.005,
+    "max_iterations_per_frame": 8,
+    "surface_projection": false,
+    "surface_projection_margin": 0.002,
+    "velocity_limits": {
+      "base_translation": 1.5,
+      "base_rotation": 4.0,
+      "finger": 8.0
+    }
+  },
+  "effective_settings": {
+    "source_dt_s": 0.03333333333333333,
+    "qp_integration_dt_s": 0.004166666666666667,
+    "iterations_per_frame": 8,
+    "first_frame_iterations": 80,
+    "wrist_orientation_cost": 3.0,
+    "fingertip_position_cost": 10.0,
+    "fingertip_orientation_cost": 1.0,
+    "posture_cost": 0.0,
+    "self_collision_clearance_m": 0.0
+  },
+  "solver_primal_tolerance": 1e-09,
+  "solver_dual_tolerance": 1e-09,
+  "wrist_position_cost": 0.0,
+  "object_dofs_locked_during_ik": true,
+  "object_dofs_actuated_in_physics": false,
+  "hand_order": [
+    "right",
+    "left"
+  ],
+  "fingertip_mean_error_m": [
+    0.011498513385533253,
+    0.011190673830311956
+  ],
+  "fingertip_max_error_m": [
+    0.03355006071031286,
+    0.028584489631407414
+  ],
+  "wrist_mean_error_rad": [
+    0.09286475838088504,
+    0.06918217822364865
+  ],
+  "self_collision_min_distance_m": -6.624683691891509e-07,
+  "self_penetrating_frames": 0,
+  "self_collision_pair_count": 174,
+  "joint_limit_min_margin": -1.405318213024492e-16,
+  "joint_limit_violating_frames": 0,
+  "frame_velocity_max_ratio": 0.9999962500000005,
+  "frame_velocity_violating_intervals": 0,
+  "kinematic_model_feasible": true,
+  "collision_policy": "explicit_runtime_pairs; source_intrahand_and_full_interhand",
+  "self_collision_resolution": "strict separating QP, fixed per-frame velocity envelope",
+  "model_self_collision_passed": true,
+  "complete_intrahand_geometry_coverage": false,
+  "worst_self_collision_pairs": [
+    {
+      "geom1": "collision_hand_right_index_0",
+      "geom2": "collision_hand_right_middle_0",
+      "distance_m": -6.624683691891509e-07
+    },
+    {
+      "geom1": "collision_hand_left_middle_0",
+      "geom2": "collision_hand_left_ring_0",
+      "distance_m": 7.10019657651495e-10
+    },
+    {
+      "geom1": "collision_hand_right_middle_0",
+      "geom2": "collision_hand_right_ring_0",
+      "distance_m": 9.01863293491581e-06
+    },
+    {
+      "geom1": "collision_hand_left_index_0",
+      "geom2": "collision_hand_left_middle_0",
+      "distance_m": 7.331532624137507e-05
+    },
+    {
+      "geom1": "collision_hand_right_ring_0",
+      "geom2": "collision_hand_right_pinky_0",
+      "distance_m": 0.00012126279687298472
+    },
+    {
+      "geom1": "collision_hand_left_ring_0",
+      "geom2": "collision_hand_left_pinky_0",
+      "distance_m": 0.00030591174358196235
+    },
+    {
+      "geom1": "collision_hand_left_palm_0",
+      "geom2": "collision_hand_left_thumb_0",
+      "distance_m": 0.009501388060569091
+    },
+    {
+      "geom1": "collision_hand_right_palm_0",
+      "geom2": "collision_hand_right_thumb_0",
+      "distance_m": 0.011707608405766998
+    },
+    {
+      "geom1": "collision_hand_left_index_0",
+      "geom2": "collision_hand_left_ring_0",
+      "distance_m": 0.017475479962776992
+    },
+    {
+      "geom1": "collision_hand_right_index_0",
+      "geom2": "collision_hand_right_ring_0",
+      "distance_m": 0.018086821534463407
+    },
+    {
+      "geom1": "collision_hand_right_middle_0",
+      "geom2": "collision_hand_right_pinky_0",
+      "distance_m": 0.020038913748969316
+    },
+    {
+      "geom1": "collision_hand_left_middle_0",
+      "geom2": "collision_hand_left_pinky_0",
+      "distance_m": 0.020214387504159895
+    }
+  ],
+  "strict_gate_passed": false,
+  "rl_validation_completed": false
+}

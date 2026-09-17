@@ -1,0 +1,1802 @@
+{
+  "status": "native_thumb_assembly_audit_not_collision_exemption_or_reset",
+  "source_checks": {
+    "right": {
+      "joints": [
+        {
+          "joint": "right_hand_thumb_bend_joint",
+          "parent": "right_hand_link",
+          "child": "right_hand_thumb_bend_link",
+          "origin_translation_error_m": 0.0,
+          "origin_rotation_error_rad": 0.0,
+          "joint_axis_error": 0.0,
+          "limit_max_error_rad": 0.0
+        },
+        {
+          "joint": "right_hand_thumb_rota_joint1",
+          "parent": "right_hand_thumb_bend_link",
+          "child": "right_hand_thumb_rota_link1",
+          "origin_translation_error_m": 0.0,
+          "origin_rotation_error_rad": 1.0522922297996206e-06,
+          "joint_axis_error": 0.0,
+          "limit_max_error_rad": 0.0
+        }
+      ],
+      "source_has_pair_exemption": false,
+      "interpretation": "source URDF agrees up to MJCF export precision; omission from runtime pairs is not permission to intersect"
+    },
+    "left": {
+      "joints": [
+        {
+          "joint": "left_hand_thumb_bend_joint",
+          "parent": "left_hand_link",
+          "child": "left_hand_thumb_bend_link",
+          "origin_translation_error_m": 0.0,
+          "origin_rotation_error_rad": 0.0,
+          "joint_axis_error": 0.0,
+          "limit_max_error_rad": 0.0
+        },
+        {
+          "joint": "left_hand_thumb_rota_joint1",
+          "parent": "left_hand_thumb_bend_link",
+          "child": "left_hand_thumb_rota_link1",
+          "origin_translation_error_m": 0.0,
+          "origin_rotation_error_rad": 1.0522922297996206e-06,
+          "joint_axis_error": 0.0,
+          "limit_max_error_rad": 0.0
+        }
+      ],
+      "source_has_pair_exemption": false,
+      "interpretation": "source URDF agrees up to MJCF export precision; omission from runtime pairs is not permission to intersect"
+    }
+  },
+  "states": [
+    {
+      "state": "source_zero",
+      "side": "right",
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          0.9991718707642812,
+          -0.03930229313246308,
+          0.010531022169605095,
+          0.051399
+        ],
+        [
+          0.04068872907091441,
+          0.9651260287018737,
+          -0.25860428466818497,
+          0.0178177
+        ],
+        [
+          -2.2203382423445495e-08,
+          0.25881862080746787,
+          0.965925939978485,
+          -0.02872
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "state": "source_zero",
+      "side": "left",
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          0.9991718707642812,
+          0.03930229313246308,
+          0.010531022169605095,
+          0.051399
+        ],
+        [
+          -0.04068872907091441,
+          0.9651260287018737,
+          0.25860428466818497,
+          -0.0178177
+        ],
+        [
+          -2.2203382423445495e-08,
+          -0.25881862080746787,
+          0.965925939978485,
+          -0.02872
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "state": "original_first_frame",
+      "side": "right",
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          0.14014461342258855,
+          -0.039302293132463056,
+          0.9893507047974256,
+          0.051399
+        ],
+        [
+          0.26178267149463486,
+          0.9651260287018736,
+          0.0012576276404610046,
+          0.017817700000000013
+        ],
+        [
+          -0.9548975443647163,
+          0.258818620807468,
+          0.14554587348858358,
+          -0.028720000000000016
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "state": "original_first_frame",
+      "side": "left",
+      "intersection_nonempty": true,
+      "intersection_volume_m3": 2.0428896684788778e-07,
+      "intersection_faces": 336,
+      "intersection_bounds_in_palm_m": [
+        [
+          0.041128162294626236,
+          -0.018722405657172203,
+          -0.07325951755046844
+        ],
+        [
+          0.043304234743118286,
+          -0.004760313779115677,
+          -0.04372254014015198
+        ]
+      ],
+      "joint_axis_distances": {
+        "bend_joint": {
+          "intersection_vertex_radial_distance_min_m": 0.018754622731921675,
+          "intersection_vertex_radial_distance_max_m": 0.02104985010048699
+        },
+        "rota_joint1": {
+          "intersection_vertex_radial_distance_min_m": 0.015571462451271438,
+          "intersection_vertex_radial_distance_max_m": 0.04290433053692203
+        }
+      },
+      "T_palm_thumb": [
+        [
+          0.06322292649679105,
+          0.039302293132463036,
+          0.9972252460300586,
+          0.051399
+        ],
+        [
+          -0.2609016207195048,
+          0.9651260287018736,
+          -0.021496349180395623,
+          -0.017817700000000006
+        ],
+        [
+          -0.9632928972390051,
+          -0.2588186208074676,
+          0.07127212394901113,
+          -0.02872000000000002
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "state": "diagnostic_candidate",
+      "side": "right",
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          0.14014461342258847,
+          -0.03930229313246318,
+          0.989350704797426,
+          0.051399000000000084
+        ],
+        [
+          0.2617826714946347,
+          0.965126028701874,
+          0.0012576276404612243,
+          0.017817699999999992
+        ],
+        [
+          -0.9548975443647165,
+          0.25881862080746787,
+          0.1455458734885835,
+          -0.028720000000000002
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "state": "diagnostic_candidate",
+      "side": "left",
+      "intersection_nonempty": true,
+      "intersection_volume_m3": 2.0428896684788778e-07,
+      "intersection_faces": 336,
+      "intersection_bounds_in_palm_m": [
+        [
+          0.041128162294626236,
+          -0.018722405657172203,
+          -0.07325951755046844
+        ],
+        [
+          0.043304234743118286,
+          -0.004760313779115677,
+          -0.04372254014015198
+        ]
+      ],
+      "joint_axis_distances": {
+        "bend_joint": {
+          "intersection_vertex_radial_distance_min_m": 0.018754622731921675,
+          "intersection_vertex_radial_distance_max_m": 0.02104985010048701
+        },
+        "rota_joint1": {
+          "intersection_vertex_radial_distance_min_m": 0.015571462451271448,
+          "intersection_vertex_radial_distance_max_m": 0.04290433053692205
+        }
+      },
+      "T_palm_thumb": [
+        [
+          0.06322292649679105,
+          0.0393022931324632,
+          0.9972252460300589,
+          0.05139899999999999
+        ],
+        [
+          -0.2609016207195048,
+          0.9651260287018739,
+          -0.021496349180395745,
+          -0.017817699999999954
+        ],
+        [
+          -0.9632928972390055,
+          -0.25881862080746776,
+          0.07127212394901121,
+          -0.02872000000000002
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    }
+  ],
+  "left_joint_sweep": [
+    {
+      "bend_rad": 0.0,
+      "rotate_rad": -1.05,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          0.5062938479792816,
+          0.03930229313246311,
+          -0.8614649553248597,
+          0.05139899999999999
+        ],
+        [
+          0.20407382919811276,
+          0.9651260287018738,
+          0.16396835352765277,
+          -0.017817699999999954
+        ],
+        [
+          0.83786658349331,
+          -0.25881862080746776,
+          0.48061680140062585,
+          -0.02872000000000002
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 0.0,
+      "rotate_rad": -0.6133333333333333,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          0.8231183390193827,
+          0.039302293132463126,
+          -0.5665081903419431,
+          0.05139899999999999
+        ],
+        [
+          0.11557915018664301,
+          0.965126028701874,
+          0.2348897800337071,
+          -0.017817699999999954
+        ],
+        [
+          0.5559835069605094,
+          -0.25881862080746787,
+          0.7898704080488229,
+          -0.02872000000000002
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 0.0,
+      "rotate_rad": -0.17666666666666664,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          0.9854705694683792,
+          0.03930229313246309,
+          -0.16523645622621697,
+          0.05139899999999999
+        ],
+        [
+          0.005394063174059646,
+          0.9651260287018739,
+          0.2617301144397107,
+          -0.017817699999999954
+        ],
+        [
+          0.16976059847368244,
+          -0.25881862080746776,
+          0.950891298061549,
+          -0.02872000000000002
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 0.0,
+      "rotate_rad": 0.26,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          0.962882361349164,
+          0.03930229313246317,
+          0.26704473025541725,
+          0.05139899999999999
+        ],
+        [
+          -0.10580331222133503,
+          0.9651260287018741,
+          0.23945230808063753,
+          -0.017817699999999954
+        ],
+        [
+          -0.24832079519374384,
+          -0.25881862080746776,
+          0.9334611423073098,
+          -0.02872000000000002
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 0.0,
+      "rotate_rad": 0.6966666666666668,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          0.7595927789681326,
+          0.039302293132463126,
+          0.6492103972473023,
+          0.05139899999999999
+        ],
+        [
+          -0.19714488312046868,
+          0.965126028701874,
+          0.1722371730538055,
+          -0.017817699999999954
+        ],
+        [
+          -0.6198005366235873,
+          -0.2588186208074677,
+          0.7408510081820999,
+          -0.02872000000000002
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 0.0,
+      "rotate_rad": 1.1333333333333335,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          0.4137525958609966,
+          0.03930229313246311,
+          0.9095406088640665,
+          0.05139899999999999
+        ],
+        [
+          -0.2514888385906128,
+          0.9651260287018738,
+          0.07269878118988346,
+          -0.017817699999999954
+        ],
+        [
+          -0.8749640869673632,
+          -0.2588186208074678,
+          0.409207487762246,
+          -0.02872000000000002
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 0.0,
+      "rotate_rad": 1.57,
+      "intersection_nonempty": true,
+      "intersection_volume_m3": 9.38393206384516e-07,
+      "intersection_faces": 704,
+      "intersection_bounds_in_palm_m": [
+        [
+          0.03914586454629898,
+          -0.02058870904147625,
+          -0.07953355461359024
+        ],
+        [
+          0.04330330342054367,
+          -0.0035271926317363977,
+          -0.0412854366004467
+        ]
+      ],
+      "joint_axis_distances": {
+        "bend_joint": {
+          "intersection_vertex_radial_distance_min_m": 0.016824227872459806,
+          "intersection_vertex_radial_distance_max_m": 0.021083088876535223
+        },
+        "rota_joint1": {
+          "intersection_vertex_radial_distance_min_m": 0.01427558877681909,
+          "intersection_vertex_radial_distance_max_m": 0.049289113766376916
+        }
+      },
+      "T_palm_thumb": [
+        [
+          -0.009735351581250334,
+          0.03930229313246307,
+          0.9991799400929345,
+          0.05139899999999999
+        ],
+        [
+          -0.25863660419478374,
+          0.965126028701874,
+          -0.04048278267042241,
+          -0.017817699999999954
+        ],
+        [
+          -0.965925633731801,
+          -0.25881862080746776,
+          0.0007691704232195843,
+          -0.02872000000000002
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 0.4575,
+      "rotate_rad": -1.05,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          0.5443671245115396,
+          0.4615629560193323,
+          -0.7004456234296379,
+          0.04478388353198079
+        ],
+        [
+          -0.040546541360343635,
+          0.8485119675962245,
+          0.5276205254059944,
+          -0.029594670914008532
+        ],
+        [
+          0.8378665834933101,
+          -0.2588186208074673,
+          0.4806168014006256,
+          -0.028720000000000023
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 0.4575,
+      "rotate_rad": -0.6133333333333333,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          0.789520564578649,
+          0.4615629560193324,
+          -0.4044958785180726,
+          0.04478388353198079
+        ],
+        [
+          -0.2598838550108583,
+          0.8485119675962245,
+          0.4609640145940668,
+          -0.029594670914008532
+        ],
+        [
+          0.5559835069605094,
+          -0.25881862080746765,
+          0.7898704080488228,
+          -0.028720000000000023
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 0.4575,
+      "rotate_rad": -0.17666666666666664,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          0.8865069421320937,
+          0.4615629560193324,
+          -0.032635550896237354,
+          0.04478388353198079
+        ],
+        [
+          -0.4304495101140925,
+          0.8485119675962245,
+          0.3077997077459977,
+          -0.029594670914008532
+        ],
+        [
+          0.16976059847368236,
+          -0.25881862080746754,
+          0.950891298061549,
+          -0.028720000000000023
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 0.4575,
+      "rotate_rad": 0.26,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          0.8171251015457324,
+          0.4615629560193324,
+          0.34534939706704715,
+          0.04478388353198079
+        ],
+        [
+          -0.5202339388181281,
+          0.8485119675962246,
+          0.09687151153853278,
+          -0.029594670914008532
+        ],
+        [
+          -0.24832079519374395,
+          -0.2588186208074677,
+          0.9334611423073097,
+          -0.028720000000000023
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 0.4575,
+      "rotate_rad": 0.6966666666666668,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          0.5943957340753507,
+          0.4615629560193324,
+          0.6585236130494646,
+          0.04478388353198079
+        ],
+        [
+          -0.5123875546050455,
+          0.8485119675962244,
+          -0.13223628371912677,
+          -0.029594670914008532
+        ],
+        [
+          -0.6198005366235874,
+          -0.25881862080746765,
+          0.7408510081820999,
+          -0.028720000000000023
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 0.4575,
+      "rotate_rad": 1.1333333333333335,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          0.2601178220327334,
+          0.46156295601933234,
+          0.848114589127933,
+          0.04478388353198079
+        ],
+        [
+          -0.40838286592157064,
+          0.8485119675962242,
+          -0.33652767444545795,
+          -0.029594670914008532
+        ],
+        [
+          -0.874964086967363,
+          -0.25881862080746737,
+          0.4092074877622462,
+          -0.028720000000000023
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 0.4575,
+      "rotate_rad": 1.57,
+      "intersection_nonempty": true,
+      "intersection_volume_m3": 4.727215737731304e-07,
+      "intersection_faces": 534,
+      "intersection_bounds_in_palm_m": [
+        [
+          0.03520495072007179,
+          -0.021847017109394073,
+          -0.07797019183635712
+        ],
+        [
+          0.04216405004262924,
+          -0.01310662180185318,
+          -0.04223126918077469
+        ]
+      ],
+      "joint_axis_distances": {
+        "bend_joint": {
+          "intersection_vertex_radial_distance_min_m": 0.01677920279786877,
+          "intersection_vertex_radial_distance_max_m": 0.02092770205809523
+        },
+        "rota_joint1": {
+          "intersection_vertex_radial_distance_min_m": 0.01456118664240083,
+          "intersection_vertex_radial_distance_max_m": 0.04775247143415272
+        }
+      },
+      "T_palm_thumb": [
+        [
+          -0.12297565647788375,
+          0.46156295601933245,
+          0.8785423299673893,
+          0.04478388353198079
+        ],
+        [
+          -0.22773813473736262,
+          0.8485119675962244,
+          -0.4776638806025954,
+          -0.029594670914008532
+        ],
+        [
+          -0.9659256337318004,
+          -0.2588186208074676,
+          0.0007691704232196035,
+          -0.028720000000000023
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 0.915,
+      "rotate_rad": -1.05,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          0.47047449887990894,
+          0.7888889499132717,
+          -0.3953580283849489,
+          0.03364710283794364
+        ],
+        [
+          -0.27682726413586267,
+          0.5573752292917723,
+          0.7827512501446406,
+          -0.0372385524913084
+        ],
+        [
+          0.8378665834933102,
+          -0.2588186208074679,
+          0.4806168014006255,
+          -0.028719999999999992
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 0.915,
+      "rotate_rad": -0.6133333333333333,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          0.5935335158603551,
+          0.788888949913272,
+          -0.15928650368182892,
+          0.03364710283794364
+        ],
+        [
+          -0.5818937235770285,
+          0.5573752292917724,
+          0.5922267709531589,
+          -0.0372385524913084
+        ],
+        [
+          0.5559835069605095,
+          -0.25881862080746815,
+          0.7898704080488229,
+          -0.028719999999999992
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 0.915,
+      "rotate_rad": -0.17666666666666664,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          0.6052057982908665,
+          0.788888949913272,
+          0.10667786283878561,
+          0.03364710283794364
+        ],
+        [
+          -0.7777578549400659,
+          0.5573752292917724,
+          0.2905607902848767,
+          -0.0372385524913084
+        ],
+        [
+          0.16976059847368238,
+          -0.25881862080746826,
+          0.9508912980615493,
+          -0.028719999999999992
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 0.915,
+      "rotate_rad": 0.26,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          0.5033008423667936,
+          0.7888889499132721,
+          0.3526223004541993,
+          0.03364710283794364
+        ],
+        [
+          -0.827662397809169,
+          0.5573752292917723,
+          -0.06563390148941087,
+          -0.0372385524913084
+        ],
+        [
+          -0.24832079519374392,
+          -0.258818620807468,
+          0.9334611423073097,
+          -0.028719999999999992
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 0.915,
+      "rotate_rad": 0.6966666666666668,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          0.30694285922621195,
+          0.7888889499132721,
+          0.5323911211456983,
+          0.03364710283794364
+        ],
+        [
+          -0.7222419095920366,
+          0.5573752292917723,
+          -0.40951126700103513,
+          -0.0372385524913084
+        ],
+        [
+          -0.6198005366235875,
+          -0.258818620807468,
+          0.7408510081820999,
+          -0.028719999999999992
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 0.915,
+      "rotate_rad": 1.1333333333333335,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          0.05298178903321814,
+          0.7888889499132719,
+          0.6122476253409034,
+          0.03364710283794364
+        ],
+        [
+          -0.4812803513007864,
+          0.5573752292917723,
+          -0.676536826214018,
+          -0.0372385524913084
+        ],
+        [
+          -0.8749640869673633,
+          -0.2588186208074681,
+          0.40920748776224614,
+          -0.028719999999999992
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 0.915,
+      "rotate_rad": 1.57,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          -0.21092222172391353,
+          0.788888949913272,
+          0.5772053716726689,
+          0.03364710283794364
+        ],
+        [
+          -0.14999828826646014,
+          0.5573752292917722,
+          -0.8165986574132219,
+          -0.0372385524913084
+        ],
+        [
+          -0.9659256337318007,
+          -0.2588186208074678,
+          0.0007691704232197107,
+          -0.028719999999999992
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 1.3725,
+      "rotate_rad": -1.05,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          0.29981427039301833,
+          0.9539555805816682,
+          -0.00895285126625504,
+          0.020279280627200944
+        ],
+        [
+          -0.45616991520041167,
+          0.1515970705535356,
+          0.8768850190678574,
+          -0.03917714454144121
+        ],
+        [
+          0.8378665834933103,
+          -0.2588186208074679,
+          0.48061680140062596,
+          -0.02872000000000002
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 1.3725,
+      "rotate_rad": -0.6133333333333333,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          0.2754679789757521,
+          0.9539555805816682,
+          0.118685057341302,
+          0.020279280627200944
+        ],
+        [
+          -0.7842191865460248,
+          0.1515970705535356,
+          0.6016798115714691,
+          -0.03917714454144121
+        ],
+        [
+          0.5559835069605095,
+          -0.25881862080746787,
+          0.7898704080488231,
+          -0.02872000000000002
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 1.3725,
+      "rotate_rad": -0.17666666666666664,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          0.1994254011125523,
+          0.9539555805816681,
+          0.2240496812499209,
+          0.020279280627200944
+        ],
+        [
+          -0.9650962898058182,
+          0.15159707055353558,
+          0.21355907754677983,
+          -0.03917714454144121
+        ],
+        [
+          0.1697605984736823,
+          -0.25881862080746787,
+          0.9508912980615494,
+          -0.02872000000000002
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 1.3725,
+      "rotate_rad": 0.26,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          0.08595722954208088,
+          0.9539555805816681,
+          0.2873675433422214,
+          0.020279280627200944
+        ],
+        [
+          -0.9648565371928602,
+          0.15159707055353558,
+          -0.21463967675103723,
+          -0.03917714454144121
+        ],
+        [
+          -0.2483207951937442,
+          -0.2588186208074679,
+          0.9334611423073098,
+          -0.02872000000000002
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 1.3725,
+      "rotate_rad": 0.6966666666666668,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          -0.043642289043854005,
+          0.953955580581668,
+          0.29675596183414105,
+          0.020279280627200944
+        ],
+        [
+          -0.7835449223931747,
+          0.15159707055353563,
+          -0.6025576178187946,
+          -0.03917714454144121
+        ],
+        [
+          -0.6198005366235874,
+          -0.258818620807468,
+          0.7408510081821,
+          -0.02872000000000002
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 1.3725,
+      "rotate_rad": 1.1333333333333335,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          -0.16505158427259112,
+          0.953955580581668,
+          0.25045303912350786,
+          0.020279280627200944
+        ],
+        [
+          -0.4551876767295842,
+          0.15159707055353572,
+          -0.8773952969745794,
+          -0.03917714454144121
+        ],
+        [
+          -0.8749640869673634,
+          -0.25881862080746804,
+          0.40920748776224614,
+          -0.02872000000000002
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 1.3725,
+      "rotate_rad": 1.57,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          -0.25548612152533096,
+          0.9539555805816681,
+          0.1571483120655053,
+          0.020279280627200944
+        ],
+        [
+          -0.041406663808664326,
+          0.1515970705535356,
+          -0.9875747143339706,
+          -0.03917714454144121
+        ],
+        [
+          -0.9659256337318008,
+          -0.25881862080746804,
+          0.0007691704232195102,
+          -0.02872000000000002
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 1.83,
+      "rotate_rad": -1.05,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          0.06748798281726517,
+          0.922811800307368,
+          0.3792937560634661,
+          0.007429922162649264
+        ],
+        [
+          -0.5416871425837105,
+          -0.28536170509862685,
+          0.7906603169646875,
+          -0.035011715770676376
+        ],
+        [
+          0.8378665834933104,
+          -0.25881862080746804,
+          0.4806168014006258,
+          -0.028720000000000006
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 1.83,
+      "rotate_rad": -0.6133333333333333,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          -0.09925605066952041,
+          0.922811800307368,
+          0.3722453728644122,
+          0.007429922162649264
+        ],
+        [
+          -0.8252457672677781,
+          -0.2853617050986269,
+          0.48737882685835,
+          -0.035011715770676376
+        ],
+        [
+          0.5559835069605094,
+          -0.2588186208074681,
+          0.7898704080488231,
+          -0.028720000000000006
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 1.83,
+      "rotate_rad": -0.17666666666666664,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          -0.2473729854786941,
+          0.9228118003073681,
+          0.2953387669589509,
+          0.007429922162649264
+        ],
+        [
+          -0.9539328829960818,
+          -0.285361705098627,
+          0.09263234857213351,
+          -0.035011715770676376
+        ],
+        [
+          0.16976059847368233,
+          -0.2588186208074681,
+          0.9508912980615495,
+          -0.028720000000000006
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 1.83,
+      "rotate_rad": 0.26,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          -0.34906614078419623,
+          0.9228118003073681,
+          0.16300678075314357,
+          0.007429922162649264
+        ],
+        [
+          -0.9035981474263742,
+          -0.285361705098627,
+          -0.319498177194847,
+          -0.035011715770676376
+        ],
+        [
+          -0.24832079519374411,
+          -0.258818620807468,
+          0.9334611423073101,
+          -0.028720000000000006
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 1.83,
+      "rotate_rad": 0.6966666666666668,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          -0.3852510534632661,
+          0.9228118003073675,
+          8.377898982265328e-05,
+          0.007429922162649264
+        ],
+        [
+          -0.6836877361826502,
+          -0.2853617050986268,
+          -0.6716693953550716,
+          -0.035011715770676376
+        ],
+        [
+          -0.6198005366235875,
+          -0.2588186208074678,
+          0.7408510081820999,
+          -0.028720000000000006
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 1.83,
+      "rotate_rad": 1.1333333333333335,
+      "intersection_nonempty": false,
+      "intersection_volume_m3": 0.0,
+      "intersection_faces": 0,
+      "intersection_bounds_in_palm_m": null,
+      "joint_axis_distances": {},
+      "T_palm_thumb": [
+        [
+          -0.3491370046169833,
+          0.922811800307368,
+          -0.16285494533650557,
+          0.007429922162649264
+        ],
+        [
+          -0.3354716061374634,
+          -0.2853617050986269,
+          -0.8977903423064628,
+          -0.035011715770676376
+        ],
+        [
+          -0.8749640869673637,
+          -0.2588186208074681,
+          0.40920748776224614,
+          -0.028720000000000006
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    },
+    {
+      "bend_rad": 1.83,
+      "rotate_rad": 1.57,
+      "intersection_nonempty": true,
+      "intersection_volume_m3": 2.707732073419081e-06,
+      "intersection_faces": 2556,
+      "intersection_bounds_in_palm_m": [
+        [
+          -0.020691469311714172,
+          -0.023382555693387985,
+          -0.08731399476528168
+        ],
+        [
+          0.010837875306606293,
+          -0.016203776001930237,
+          -0.029855523258447647
+        ]
+      ],
+      "joint_axis_distances": {
+        "bend_joint": {
+          "intersection_vertex_radial_distance_min_m": 0.018314072484446945,
+          "intersection_vertex_radial_distance_max_m": 0.045448930608229236
+        },
+        "rota_joint1": {
+          "intersection_vertex_radial_distance_min_m": 0.009997745568100708,
+          "intersection_vertex_radial_distance_max_m": 0.06422117938954372
+        }
+      },
+      "T_palm_thumb": [
+        [
+          -0.24750141433178202,
+          0.922811800307368,
+          -0.2952311486229785,
+          0.007429922162649264
+        ],
+        [
+          0.0757015191630095,
+          -0.28536170509862685,
+          -0.9554255477323272,
+          -0.035011715770676376
+        ],
+        [
+          -0.9659256337318008,
+          -0.25881862080746804,
+          0.000769170423219491,
+          -0.028720000000000006
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "method": "full closed native meshes; Manifold boolean in palm coordinates, finite numerical precision"
+    }
+  ],
+  "sweep_is_not_all_configurations_certificate": true,
+  "geometry_or_pairs_modified": false,
+  "state_candidate_modified": false,
+  "simulation_steps_executed": 0,
+  "collision_exemption_applied": false,
+  "accepted_as_reset": false,
+  "source_copies": [
+    {
+      "source": {
+        "path": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/xhand_right.urdf",
+        "sha256": "bd596ccb96612f4ce933f1d6b0f40c3e9e354367cd7ca58a3ff4909f63f6c213"
+      },
+      "local_copy": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_thumb_assembly_v1/xhand_right.urdf",
+        "sha256": "bd596ccb96612f4ce933f1d6b0f40c3e9e354367cd7ca58a3ff4909f63f6c213"
+      }
+    },
+    {
+      "source": {
+        "path": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/xhand_left.urdf",
+        "sha256": "39be1ec748743867953ad6af09a2681133341bb92e488530febcfe554aff2a0e"
+      },
+      "local_copy": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_thumb_assembly_v1/xhand_left.urdf",
+        "sha256": "39be1ec748743867953ad6af09a2681133341bb92e488530febcfe554aff2a0e"
+      }
+    }
+  ],
+  "preserved_artifacts": [
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml",
+      "sha256": "86f7402b3130dfd459f72635c609448aa2d9c9c10a27a1125160d1c8fc354c24"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_bimanual_gt_v1/robot_reference.npz",
+      "sha256": "77781c56a612b5e69445bc0fa8aa719ea4559cf4a3e98e726a53a482210b5625"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_initial_hand_v3/initial_hand_candidate.npz",
+      "sha256": "6927539e69350d43bc1c90161d58f5fa5ee1c2ee406228cc7552d086f34eca31"
+    },
+    {
+      "path": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/xhand_right.urdf",
+      "sha256": "bd596ccb96612f4ce933f1d6b0f40c3e9e354367cd7ca58a3ff4909f63f6c213"
+    },
+    {
+      "path": "/data_all/zzx/egoengine/spider/spider/assets/robots/xhand/xhand_left.urdf",
+      "sha256": "39be1ec748743867953ad6af09a2681133341bb92e488530febcfe554aff2a0e"
+    }
+  ],
+  "source_meshes": [
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_link.STL",
+      "sha256": "990938909f1c2743425f425433f8d73352160072a82d81aa21fb8f73918cdc38"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_thumb_bend_link.STL",
+      "sha256": "128a534a22c58c34ba091365daf5cf3310d576386033623ff7c3ba0e4bcdfa75"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_thumb_rota_link1.STL",
+      "sha256": "1fe3c9615f90eccd012b5fed8b3aba1f1de68987f03d643367b53740530e1a63"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_thumb_rota_link2.STL",
+      "sha256": "25c5ae9613658b5a73a45e6ae96369cfb0dac83742285849dfb35d04c450db19"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_index_bend_link.STL",
+      "sha256": "8969bc01d636eb86d64d8e5ae81fc9530392fbaf1e99d01ea700cad16739e809"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_index_rota_link1.STL",
+      "sha256": "aa81e5c7a89339893f8ce3c109ad44f5da9e81b067f655bf85a8c94a15170560"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_index_rota_link2.STL",
+      "sha256": "1978ac4ba6eb13bba2fb7a03e6b7ad16ad9c22fce6cac4b71c2620650bbe7110"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_mid_link1.STL",
+      "sha256": "b9ece604072b09b00b14dca913f7adcfe86f81067eb511d08c4d995bf057aa1d"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_mid_link2.STL",
+      "sha256": "4a451a017695c88bac5028d04618b77efe3e0105839698126078aff18db33bad"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_ring_link1.STL",
+      "sha256": "cc6449f3311c0c6066921c088630611d0d96c786e3a0976b57cf74443ac459ae"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_ring_link2.STL",
+      "sha256": "93fc89a8ed9c9cbc4bd1ef0ee6e251ab6064ff61776be66e0cd69497015be09d"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_pinky_link1.STL",
+      "sha256": "d8d95abf22c08b0cb19bf17f6dc70ef5ad10c2c0476d6155ddf545fd80b6f7b8"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_pinky_link2.STL",
+      "sha256": "e45d273473af9a3c6e7920cbea599c3fd28b796dbbd92104ba051633da96e4ce"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_link.STL",
+      "sha256": "4d2e6c0d9af6a2f116aa5fde55b280186e102705efb035fdbfda9a747ebf1a9b"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_thumb_bend_link.STL",
+      "sha256": "b13cf4e0e7bdcc534087a49c9edf36ba46ca526869fe6259ef4c22f82365483d"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_thumb_rota_link1.STL",
+      "sha256": "ba4d473f8913f60f31178c68ba2e196fffba6340ae85d9e5adfe64166f331ea2"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_thumb_rota_link2.STL",
+      "sha256": "e0252b238a0d06999ab39b94f53290d22c14e0ddb66015fbded0614e3906e393"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_index_bend_link.STL",
+      "sha256": "dffd1bf191354b1e1445996b059ac3f7d5c85bff45767c28e4031c88b55594d5"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_index_rota_link1.STL",
+      "sha256": "d3043620eff3416a9d060f08cf890763db8db77bd72715c0b426fd5724a770c3"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_index_rota_link2.STL",
+      "sha256": "125636813d960f2ca14932bb74c03d4035a310e4bcbbb5fd5bf7ecdf69757bf4"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_mid_link1.STL",
+      "sha256": "a66d2574f4a433eef6a0f43b9d4ecd14b32557693953defa654cd10c7c305aa0"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_mid_link2.STL",
+      "sha256": "a695ec28c9c41cc4a18b0ffc421cec785221fa43cca94b1c8b8f3077987a357b"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_ring_link1.STL",
+      "sha256": "96a858ed17c4193ee87a09b1544d2a34b8dcedd5bd10f89e56ee26451dbdd4b9"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_ring_link2.STL",
+      "sha256": "33a7411768db62e15b952cde84579d8a64207ebbfe599188888a138058bc7f90"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_pinky_link1.STL",
+      "sha256": "1a7d786e133d34955e4358d72fed7ddabd798bff80207af9b932f01ec7fb15c2"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_pinky_link2.STL",
+      "sha256": "98148a77d8367fe6cfe9f44fa3e01f288ba56a9cd86c232232972ff3ca3366c7"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/visual.obj",
+      "sha256": "35c52d853b85aa521eeadda78abb2bd370975611c8c35cd9a9d4c96746d8418c"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/visual.obj",
+      "sha256": "6316aea5b5c29a6231639d4ac8dad2c42ee013cfc55f1ce5a9dc5a38056f52a1"
+    }
+  ],
+  "boolean_library_version": "3.4.1",
+  "audit_code": {
+    "path": "/data_all/zzx/3.2RL/scripts/audit_taco_thumb_assembly.py",
+    "sha256": "49867cd5e9ef510caf85c15e496946b377c8b9d04b27ea14f8d5f5770cd0a7b5"
+  }
+}

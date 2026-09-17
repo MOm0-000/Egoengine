@@ -1,0 +1,39 @@
+schema_version: "1.0"
+name: taco_first_person_dev4
+dataset_root: /data_all/zzx/egoengine_new/datasets/taco_v1
+benchmark_role: preregistered_development_subset_for_paper_pipeline_ablation
+exact_paper_test_set: false
+episode_count: 4
+selection_policy: frozen_subset_of_formal_3_1_taco_object_gt_16_matching_appendix_A.4_task_families
+rgb_archive: Egocentric_RGB_Videos.zip
+depth_route:
+  shared_first_iteration: depth_anything_v2
+  foundation_stereo_eligible: false
+  reason: TACO release contains one egocentric color stream rather than rectified stereo pairs
+base_frame:
+  method: object_pair_center_fixed_offset
+  workspace_offset_m: 0.6
+  table_height_m: 0.72
+  per_frame_floor_shift: false
+episodes:
+  - episode_id: taco_brush_brush_bowl_20230927_027
+    sequence_id: "(brush, brush, bowl)/20230927_027"
+    evaluation_object: tool
+    start_frame: 0
+    end_frame: 209
+  - episode_id: taco_cut_spatula_plate_20230917_020
+    sequence_id: "(cut, spatula, plate)/20230917_020"
+    evaluation_object: tool
+    start_frame: 0
+    end_frame: 356
+  - episode_id: taco_skim_spatula_plate_20230926_004
+    sequence_id: "(skim off, spatula, plate)/20230926_004"
+    evaluation_object: tool
+    start_frame: 0
+    end_frame: 400
+    camera_calibration_proxy: wilor_mano_pnp
+  - episode_id: taco_smear_eraser_box_20231103_071
+    sequence_id: "(smear, eraser, box)/20231103_071"
+    evaluation_object: tool
+    start_frame: 0
+    end_frame: 90

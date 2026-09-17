@@ -1,0 +1,21 @@
+schema_version: "1.0"
+name: taco_oracle_depth_ablation_dev4
+source_ablation: taco_perception_ablation_dev4
+dataset_set: taco_first_person_dev4
+profiles:
+  auto_current:
+    description: Frozen automatic baseline.
+  known_mesh_mono_depth:
+    description: Known TACO mesh with frozen Depth Anything V2 input.
+  known_mesh_oracle_depth:
+    description: Same known-mesh run with only FoundationPose depth replaced.
+  known_mesh_oracle_depth_sam2_oracle_hand:
+    description: Oracle metric depth with SAM2 object mask and oracle-hand prompts.
+thresholds:
+  oracle_translation_mean_m: 0.08
+  anomalous_translation_p95_m: 0.50
+  minimum_relative_rotation_improvement: 0.20
+  minimum_relative_add_s_improvement: 0.20
+proxy_labels:
+  rendered_depth: rendered_gt_proxy
+  skim_camera: derived_calibration_proxy

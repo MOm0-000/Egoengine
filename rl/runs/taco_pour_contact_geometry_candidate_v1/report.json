@@ -1,0 +1,403 @@
+{
+  "status": "read_only_contact_geometry_candidate",
+  "task": "pour",
+  "scene": "/data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml",
+  "baseline_run": "/data_all/zzx/3.2RL/runs/taco_pour_bimanual_gt_v1",
+  "formal_reference_modified": false,
+  "rl_validation_completed": false,
+  "candidate_contract": "object-local collision-surface patch centre plus inward approach-axis guidance; bounded robot-only correction",
+  "contact_evidence": {
+    "right": {
+      "threshold_m": 0.005,
+      "active_count": 129,
+      "frame_count": 198,
+      "definition": "human MANO fingertip target within threshold of held-object physical collision surface"
+    },
+    "left": {
+      "threshold_m": 0.005,
+      "active_count": 144,
+      "frame_count": 198,
+      "definition": "human MANO fingertip target within threshold of held-object physical collision surface"
+    }
+  },
+  "fixed_candidate_config": {
+    "iterations_per_frame": 4,
+    "lookahead_frames": 6,
+    "tip_target_weight": 0.04,
+    "normal_contact_weight": 0.2,
+    "geometry_contact_weight": 3.0,
+    "baseline_weight": 0.08,
+    "temporal_weight": 0.12
+  },
+  "side_results": {
+    "right": {
+      "active_contact_count": 129,
+      "mean_tip_error_before_m": 0.019205661433204024,
+      "mean_tip_error_after_m": 0.019205661433204024,
+      "mean_gap_before_m": 0.01522407019695087,
+      "mean_gap_after_m": 0.01522407019695087,
+      "correction_max_abs": 0.0
+    },
+    "left": {
+      "active_contact_count": 144,
+      "mean_tip_error_before_m": 0.01919696951810288,
+      "mean_tip_error_after_m": 0.01919696951810288,
+      "mean_gap_before_m": 0.013650164215774255,
+      "mean_gap_after_m": 0.013650164215774255,
+      "correction_max_abs": 0.0
+    }
+  },
+  "before": {
+    "fingertip_target_error_m": {
+      "right": {
+        "count": 990,
+        "mean": 0.01492386557447766,
+        "median": 0.012927948572470285,
+        "p95": 0.03272690426568052,
+        "max": 0.08458279929066716
+      },
+      "left": {
+        "count": 990,
+        "mean": 0.019411001723830274,
+        "median": 0.0143470865046361,
+        "p95": 0.04931876999754912,
+        "max": 0.07383307648478897
+      }
+    },
+    "contact_patch_position_error_m": {
+      "right": {
+        "count": 129,
+        "mean": 0.019547513889868626,
+        "median": 0.017186043951821037,
+        "p95": 0.05011221394444034,
+        "max": 0.058936020178938134
+      },
+      "left": {
+        "count": 144,
+        "mean": 0.01762631502044647,
+        "median": 0.013919140236592707,
+        "p95": 0.03839567537095627,
+        "max": 0.041555344423560486
+      }
+    },
+    "contact_approach_angle_rad": {
+      "right": {
+        "count": 129,
+        "mean": 1.325381631759416,
+        "median": 1.2079983764689333,
+        "p95": 2.1463947747708922,
+        "max": 2.8185446575743
+      },
+      "left": {
+        "count": 144,
+        "mean": 1.337599241421262,
+        "median": 1.4245286586063401,
+        "p95": 2.536360306334752,
+        "max": 2.824971389277351
+      }
+    },
+    "wrist_position_error_m": {
+      "right": {
+        "count": 198,
+        "mean": 0.04836165048589059,
+        "median": 0.05050916231996629,
+        "p95": 0.06814687131159881,
+        "max": 0.08618818137312124
+      },
+      "left": {
+        "count": 198,
+        "mean": 0.056942120771558816,
+        "median": 0.04610859301545122,
+        "p95": 0.10231932436465607,
+        "max": 0.11229098508186358
+      }
+    },
+    "wrist_orientation_error_rad": {
+      "right": {
+        "count": 198,
+        "mean": 0.10735691765445952,
+        "median": 0.06110854863138721,
+        "p95": 0.49450986574467193,
+        "max": 0.6913350629822614
+      },
+      "left": {
+        "count": 198,
+        "mean": 0.23720674991876603,
+        "median": 0.06668461532437142,
+        "p95": 0.7976503854279473,
+        "max": 0.8638562020957778
+      }
+    },
+    "finger_object_gap_m": {
+      "right": {
+        "count": 990,
+        "mean": 0.01522407019695087,
+        "median": 0.007429392849138964,
+        "p95": 0.10425280120954872,
+        "max": 0.10792605923968415
+      },
+      "left": {
+        "count": 990,
+        "mean": 0.013650164215774255,
+        "median": 0.005087648720623372,
+        "p95": 0.09810881905249316,
+        "max": 0.10312761403765107
+      }
+    },
+    "contact_proxy": {
+      "threshold_m": 0.001,
+      "true_positive": 239,
+      "predicted_count": 762,
+      "observed_count": 273,
+      "precision": 0.3136482939632546,
+      "recall": 0.8754578754578755,
+      "label_definition": "human projected patch active within contact-evidence threshold; robot physical hand-object gap <= 1 mm"
+    },
+    "collision_min_distance_m": {
+      "self_explicit": {
+        "count": 198,
+        "mean": 1.3939566880094185e-06,
+        "median": -2.64402511221222e-07,
+        "p95": 2.205302575549548e-06,
+        "max": 5.210059424077054e-05
+      },
+      "self_nonadjacent_shells": {
+        "count": 198,
+        "mean": -0.00905618207292636,
+        "median": -0.008601000000000063,
+        "p95": -0.008600999999999966,
+        "max": -0.00860099999999991
+      },
+      "hand_tool": {
+        "count": 198,
+        "mean": -0.0030940595827842164,
+        "median": -0.0069976497292626935,
+        "p95": 0.023148723924292756,
+        "max": 0.025359509067760147
+      },
+      "hand_target": {
+        "count": 198,
+        "mean": -0.013666360569900797,
+        "median": -0.013583501352397151,
+        "p95": -0.0028494094868755787,
+        "max": 0.007333569856084179
+      },
+      "tool_target": {
+        "count": 198,
+        "mean": 0.026322667682797042,
+        "median": 0.01760388919465903,
+        "p95": 0.05,
+        "max": 0.05
+      },
+      "hand_floor": {
+        "count": 198,
+        "mean": -0.021134910355864612,
+        "median": -0.02097778857025161,
+        "p95": -0.013216246440396363,
+        "max": -0.009836042795193435
+      },
+      "tool_floor": {
+        "count": 198,
+        "mean": 0.017037186603167824,
+        "median": 0.001670207407321489,
+        "p95": 0.05,
+        "max": 0.05
+      },
+      "target_floor": {
+        "count": 198,
+        "mean": -0.000196848728397756,
+        "median": -0.00024361909174225316,
+        "p95": 0.0008187429493829222,
+        "max": 0.0017694922486082287
+      }
+    },
+    "joint_limit_margin_mixed_units": {
+      "minimum": -9.0993608277829e-16,
+      "violating_samples": 0
+    },
+    "actuated_qpos_acceleration_norm": {
+      "count": 196,
+      "mean": 130.92536700383857,
+      "median": 54.43824713512437,
+      "p95": 472.26925521624776,
+      "max": 708.7557122208397
+    }
+  },
+  "after": {
+    "fingertip_target_error_m": {
+      "right": {
+        "count": 990,
+        "mean": 0.01492386557447766,
+        "median": 0.012927948572470285,
+        "p95": 0.03272690426568052,
+        "max": 0.08458279929066716
+      },
+      "left": {
+        "count": 990,
+        "mean": 0.019411001723830274,
+        "median": 0.0143470865046361,
+        "p95": 0.04931876999754912,
+        "max": 0.07383307648478897
+      }
+    },
+    "contact_patch_position_error_m": {
+      "right": {
+        "count": 129,
+        "mean": 0.019547513889868626,
+        "median": 0.017186043951821037,
+        "p95": 0.05011221394444034,
+        "max": 0.058936020178938134
+      },
+      "left": {
+        "count": 144,
+        "mean": 0.01762631502044647,
+        "median": 0.013919140236592707,
+        "p95": 0.03839567537095627,
+        "max": 0.041555344423560486
+      }
+    },
+    "contact_approach_angle_rad": {
+      "right": {
+        "count": 129,
+        "mean": 1.325381631759416,
+        "median": 1.2079983764689333,
+        "p95": 2.1463947747708922,
+        "max": 2.8185446575743
+      },
+      "left": {
+        "count": 144,
+        "mean": 1.337599241421262,
+        "median": 1.4245286586063401,
+        "p95": 2.536360306334752,
+        "max": 2.824971389277351
+      }
+    },
+    "wrist_position_error_m": {
+      "right": {
+        "count": 198,
+        "mean": 0.04836165048589059,
+        "median": 0.05050916231996629,
+        "p95": 0.06814687131159881,
+        "max": 0.08618818137312124
+      },
+      "left": {
+        "count": 198,
+        "mean": 0.056942120771558816,
+        "median": 0.04610859301545122,
+        "p95": 0.10231932436465607,
+        "max": 0.11229098508186358
+      }
+    },
+    "wrist_orientation_error_rad": {
+      "right": {
+        "count": 198,
+        "mean": 0.10735691765445952,
+        "median": 0.06110854863138721,
+        "p95": 0.49450986574467193,
+        "max": 0.6913350629822614
+      },
+      "left": {
+        "count": 198,
+        "mean": 0.23720674991876603,
+        "median": 0.06668461532437142,
+        "p95": 0.7976503854279473,
+        "max": 0.8638562020957778
+      }
+    },
+    "finger_object_gap_m": {
+      "right": {
+        "count": 990,
+        "mean": 0.01522407019695087,
+        "median": 0.007429392849138964,
+        "p95": 0.10425280120954872,
+        "max": 0.10792605923968415
+      },
+      "left": {
+        "count": 990,
+        "mean": 0.013650164215774255,
+        "median": 0.005087648720623372,
+        "p95": 0.09810881905249316,
+        "max": 0.10312761403765107
+      }
+    },
+    "contact_proxy": {
+      "threshold_m": 0.001,
+      "true_positive": 239,
+      "predicted_count": 762,
+      "observed_count": 273,
+      "precision": 0.3136482939632546,
+      "recall": 0.8754578754578755,
+      "label_definition": "human projected patch active within contact-evidence threshold; robot physical hand-object gap <= 1 mm"
+    },
+    "collision_min_distance_m": {
+      "self_explicit": {
+        "count": 198,
+        "mean": 1.3939566880094185e-06,
+        "median": -2.64402511221222e-07,
+        "p95": 2.205302575549548e-06,
+        "max": 5.210059424077054e-05
+      },
+      "self_nonadjacent_shells": {
+        "count": 198,
+        "mean": -0.00905618207292636,
+        "median": -0.008601000000000063,
+        "p95": -0.008600999999999966,
+        "max": -0.00860099999999991
+      },
+      "hand_tool": {
+        "count": 198,
+        "mean": -0.0030940595827842164,
+        "median": -0.0069976497292626935,
+        "p95": 0.023148723924292756,
+        "max": 0.025359509067760147
+      },
+      "hand_target": {
+        "count": 198,
+        "mean": -0.013666360569900797,
+        "median": -0.013583501352397151,
+        "p95": -0.0028494094868755787,
+        "max": 0.007333569856084179
+      },
+      "tool_target": {
+        "count": 198,
+        "mean": 0.026322667682797042,
+        "median": 0.01760388919465903,
+        "p95": 0.05,
+        "max": 0.05
+      },
+      "hand_floor": {
+        "count": 198,
+        "mean": -0.021134910355864612,
+        "median": -0.02097778857025161,
+        "p95": -0.013216246440396363,
+        "max": -0.009836042795193435
+      },
+      "tool_floor": {
+        "count": 198,
+        "mean": 0.017037186603167824,
+        "median": 0.001670207407321489,
+        "p95": 0.05,
+        "max": 0.05
+      },
+      "target_floor": {
+        "count": 198,
+        "mean": -0.000196848728397756,
+        "median": -0.00024361909174225316,
+        "p95": 0.0008187429493829222,
+        "max": 0.0017694922486082287
+      }
+    },
+    "joint_limit_margin_mixed_units": {
+      "minimum": -9.0993608277829e-16,
+      "violating_samples": 0
+    },
+    "actuated_qpos_acceleration_norm": {
+      "count": 196,
+      "mean": 130.92536700383857,
+      "median": 54.43824713512437,
+      "p95": 472.26925521624776,
+      "max": 708.7557122208397
+    }
+  },
+  "comparison_note": "contact precision/recall uses projected human proximity as an engineering label, not TACO tactile ground truth"
+}

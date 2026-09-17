@@ -1,0 +1,4607 @@
+{
+  "status": "geometry_contract_read_only_audit_not_formal_mapping",
+  "weights_modified": false,
+  "models_or_formal_reference_modified": false,
+  "rl_validation_completed": false,
+  "input_artifacts": [
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_v1/human_reference.npz",
+      "sha256": "852bda624bb22c9cf0797544294556752d490d11d443eb59a7f1e3e4aaab986a"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_v1/robot_reference.npz",
+      "sha256": "e21e4a5a02ffaeaf55b2c8e60af941628d7573d468afea5464d00c90a396fe19"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_v1/retarget_report.json",
+      "sha256": "969e43f2eb0b240318e2f58ef5d8cc8d734d5488a9dc3d30cdd5c214fbea4726"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml",
+      "sha256": "86f7402b3130dfd459f72635c609448aa2d9c9c10a27a1125160d1c8fc354c24"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_spider_mink_experiment_v2/vendor/spider/assets/robots/xhand/xhand_right.urdf",
+      "sha256": "bd596ccb96612f4ce933f1d6b0f40c3e9e354367cd7ca58a3ff4909f63f6c213"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_spider_mink_experiment_v2/vendor/spider/assets/robots/xhand/xhand_left.urdf",
+      "sha256": "39be1ec748743867953ad6af09a2681133341bb92e488530febcfe554aff2a0e"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017/right_hand.pkl",
+      "sha256": "098d13bf5bc3cd0275f53a320c824653175d0394c2a1040f94542c9ab788d110"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017/left_hand.pkl",
+      "sha256": "a06ba74342df18ef69b559e57b903938ad640edb8ce3269fca00b4ec5652c6d0"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017/right_hand_shape.pkl",
+      "sha256": "ae8bd692a12c2b18bdae4e8f031f364930e9bad7c0a4d78afc2d8eb9d03d5d13"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017/left_hand_shape.pkl",
+      "sha256": "97956334eea23cc859c937102d9ba26b8dead9f64913d54ea6cb90a2cc50531c"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/hand_poses_v1/mano_v1_2/models/MANO_RIGHT.pkl",
+      "sha256": "45d60aa3b27ef9107a7afd4e00808f307fd91111e1cfa35afd5c4a62de264767"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/hand_poses_v1/mano_v1_2/models/MANO_LEFT.pkl",
+      "sha256": "c4022f7083f2ca7c78b2b3d595abbab52debd32b09d372b16923a801f0ea6a30"
+    }
+  ],
+  "code_artifacts": [
+    {
+      "path": "/data_all/zzx/3.2RL/scripts/audit_taco_geometry_contract.py",
+      "sha256": "de997b02f63a0d36596fe0640c9ecc6303c345c65a8c4adf4ac7271e4a011653"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/src/egoengine_repro/retarget/taco_bimanual.py",
+      "sha256": "9152631d900b16401a8adaccb45216fe812bb198385d2f2978402a3eb5058103"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/scripts/audit_taco_orientation_prerequisites.py",
+      "sha256": "368fd79e401c14f436466f1fb7831a8b8405796018d46a782ff8f35a2f1c81f1"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/scripts/diagnose_taco_retarget_objectives.py",
+      "sha256": "991a2baa234a5f532fbc9e6ea955a87667755998034200dcd9ab63826751e222"
+    }
+  ],
+  "scene": {
+    "path": "/data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml",
+    "sha256": "86f7402b3130dfd459f72635c609448aa2d9c9c10a27a1125160d1c8fc354c24"
+  },
+  "settings": {
+    "backend": "mink",
+    "wrist_position_cost": 0.3,
+    "wrist_orientation_cost": 3.0,
+    "fingertip_position_cost": 10.0,
+    "fingertip_orientation_cost": 1.0,
+    "posture_cost": 0.01,
+    "joint_position_limits": true,
+    "joint_velocity_limits": true,
+    "self_collision": true,
+    "confidence_weighting": true,
+    "sim_dt": 0.005,
+    "max_iterations_per_frame": 8,
+    "surface_projection": false,
+    "surface_projection_margin": 0.002,
+    "velocity_limits": {
+      "base_translation": 1.5,
+      "base_rotation": 4.0,
+      "finger": 8.0
+    }
+  },
+  "contract_definitions": {
+    "inherited": "XML fingertip site position and neutral anatomical frame transported by the current site body",
+    "candidate": "URDF fixed tip endpoint position and fixed endpoint anatomical frame transported by the distal body",
+    "human": "released MANO tip vertex and MANO distal rotational-FK frame; target points unchanged",
+    "candidate_target_transport": "R_target_candidate = R_target_inherited C_inherited C_candidate^T",
+    "candidate_is_not_author_calibration": true,
+    "candidate_is_not_formal_initializer": true
+  },
+  "per_finger_point_and_axis_offsets": {
+    "right": {
+      "thumb": {
+        "body": "right_hand_thumb_rota_link2",
+        "site_local_m": [
+          0.04,
+          0.0,
+          -0.012
+        ],
+        "urdf_endpoint_local_m": [
+          0.0504024546888781,
+          0.0,
+          0.0
+        ],
+        "point_offset_endpoint_minus_site_local_m": [
+          0.010402454688878099,
+          0.0,
+          0.012
+        ],
+        "point_offset_norm_mm": 15.881154352066536,
+        "site_to_endpoint_frame_offset_deg": 16.735088134547258,
+        "site_axis_vs_endpoint_longitudinal_deg": 16.735088134547258,
+        "old_frame_local": [
+          [
+            -0.05219560586043493,
+            0.2825675601839526,
+            0.9578262852211514
+          ],
+          [
+            0.9833639792651645,
+            0.18164604120040959,
+            -3.795979560813895e-17
+          ],
+          [
+            -0.17398535286811662,
+            0.9418918672798421,
+            -0.28734788556634544
+          ]
+        ],
+        "candidate_frame_local": [
+          [
+            -8.921562087603281e-18,
+            -2.247176186769486e-17,
+            0.9999999999999999
+          ],
+          [
+            0.979700434932792,
+            0.20046709902749119,
+            2.454233497073434e-17
+          ],
+          [
+            -0.20046709902749127,
+            0.979700434932792,
+            1.6201026640471212e-17
+          ]
+        ],
+        "old_frame_orthogonality_error": 2.220446049250313e-16,
+        "candidate_frame_orthogonality_error": 2.220446049250313e-16,
+        "candidate_frame_det": 0.9999999999999998
+      },
+      "index": {
+        "body": "right_hand_index_rota_link2",
+        "site_local_m": [
+          0.0,
+          0.004,
+          -0.027
+        ],
+        "urdf_endpoint_local_m": [
+          0.0,
+          0.0,
+          -0.0424999999999993
+        ],
+        "point_offset_endpoint_minus_site_local_m": [
+          0.0,
+          -0.004,
+          -0.015499999999999303
+        ],
+        "point_offset_norm_mm": 16.007810593581446,
+        "site_to_endpoint_frame_offset_deg": 8.426969025339819,
+        "site_axis_vs_endpoint_longitudinal_deg": 8.426969025339819,
+        "old_frame_local": [
+          [
+            -0.0022222666370032475,
+            0.9999975307624485,
+            0.0
+          ],
+          [
+            0.9892010197755355,
+            0.002198273851597105,
+            0.14654866108946232
+          ],
+          [
+            0.14654829922600524,
+            0.00032567020023660813,
+            -0.9892034623538708
+          ]
+        ],
+        "candidate_frame_local": [
+          [
+            -0.002217811463126358,
+            0.9999975406531328,
+            0.0
+          ],
+          [
+            0.9999975406531328,
+            0.002217811463126358,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            -1.0
+          ]
+        ],
+        "old_frame_orthogonality_error": 2.220446049250313e-16,
+        "candidate_frame_orthogonality_error": 1.1887683121565796e-19,
+        "candidate_frame_det": 1.0
+      },
+      "middle": {
+        "body": "right_hand_mid_link2",
+        "site_local_m": [
+          0.0,
+          0.004,
+          -0.027
+        ],
+        "urdf_endpoint_local_m": [
+          0.0,
+          0.0,
+          -0.042107
+        ],
+        "point_offset_endpoint_minus_site_local_m": [
+          0.0,
+          -0.004,
+          -0.015106999999999999
+        ],
+        "point_offset_norm_mm": 15.627586153977843,
+        "site_to_endpoint_frame_offset_deg": 8.426969025339819,
+        "site_axis_vs_endpoint_longitudinal_deg": 8.426969025339819,
+        "old_frame_local": [
+          [
+            -0.0022222666370032475,
+            0.9999975307624485,
+            0.0
+          ],
+          [
+            0.9892010197755355,
+            0.002198273851597105,
+            0.14654866108946232
+          ],
+          [
+            0.14654829922600524,
+            0.00032567020023660813,
+            -0.9892034623538708
+          ]
+        ],
+        "candidate_frame_local": [
+          [
+            -0.002217811463126358,
+            0.9999975406531328,
+            0.0
+          ],
+          [
+            0.9999975406531328,
+            0.002217811463126358,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            -1.0
+          ]
+        ],
+        "old_frame_orthogonality_error": 2.220446049250313e-16,
+        "candidate_frame_orthogonality_error": 1.1887683121565796e-19,
+        "candidate_frame_det": 1.0
+      },
+      "ring": {
+        "body": "right_hand_ring_link2",
+        "site_local_m": [
+          0.0,
+          0.004,
+          -0.027
+        ],
+        "urdf_endpoint_local_m": [
+          0.0,
+          0.0,
+          -0.0424999999999994
+        ],
+        "point_offset_endpoint_minus_site_local_m": [
+          0.0,
+          -0.004,
+          -0.0154999999999994
+        ],
+        "point_offset_norm_mm": 16.00781059358154,
+        "site_to_endpoint_frame_offset_deg": 8.426969025339819,
+        "site_axis_vs_endpoint_longitudinal_deg": 8.426969025339819,
+        "old_frame_local": [
+          [
+            -0.0022222666370032475,
+            0.9999975307624485,
+            0.0
+          ],
+          [
+            0.9892010197755355,
+            0.002198273851597105,
+            0.14654866108946232
+          ],
+          [
+            0.14654829922600524,
+            0.00032567020023660813,
+            -0.9892034623538708
+          ]
+        ],
+        "candidate_frame_local": [
+          [
+            -0.002217811463126358,
+            0.9999975406531328,
+            0.0
+          ],
+          [
+            0.9999975406531328,
+            0.002217811463126358,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            -1.0
+          ]
+        ],
+        "old_frame_orthogonality_error": 2.220446049250313e-16,
+        "candidate_frame_orthogonality_error": 1.1887683121565796e-19,
+        "candidate_frame_det": 1.0
+      },
+      "pinky": {
+        "body": "right_hand_pinky_link2",
+        "site_local_m": [
+          0.0,
+          0.004,
+          -0.027
+        ],
+        "urdf_endpoint_local_m": [
+          0.0,
+          0.0,
+          -0.0425
+        ],
+        "point_offset_endpoint_minus_site_local_m": [
+          0.0,
+          -0.004,
+          -0.015500000000000003
+        ],
+        "point_offset_norm_mm": 16.007810593582125,
+        "site_to_endpoint_frame_offset_deg": 8.426969025339819,
+        "site_axis_vs_endpoint_longitudinal_deg": 8.426969025339819,
+        "old_frame_local": [
+          [
+            -0.0022222666370032475,
+            0.9999975307624485,
+            0.0
+          ],
+          [
+            0.9892010197755355,
+            0.002198273851597105,
+            0.14654866108946232
+          ],
+          [
+            0.14654829922600524,
+            0.00032567020023660813,
+            -0.9892034623538708
+          ]
+        ],
+        "candidate_frame_local": [
+          [
+            -0.002217811463126358,
+            0.9999975406531328,
+            0.0
+          ],
+          [
+            0.9999975406531328,
+            0.002217811463126358,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            -1.0
+          ]
+        ],
+        "old_frame_orthogonality_error": 2.220446049250313e-16,
+        "candidate_frame_orthogonality_error": 1.1887683121565796e-19,
+        "candidate_frame_det": 1.0
+      }
+    },
+    "left": {
+      "thumb": {
+        "body": "left_hand_thumb_rota_link2",
+        "site_local_m": [
+          0.04,
+          0.0,
+          -0.012
+        ],
+        "urdf_endpoint_local_m": [
+          0.0504017317642718,
+          0.0,
+          0.0
+        ],
+        "point_offset_endpoint_minus_site_local_m": [
+          0.010401731764271796,
+          0.0,
+          0.012
+        ],
+        "point_offset_norm_mm": 15.88068083225215,
+        "site_to_endpoint_frame_offset_deg": 16.735088134547258,
+        "site_axis_vs_endpoint_longitudinal_deg": 16.735088134547258,
+        "old_frame_local": [
+          [
+            -0.05219560586043493,
+            -0.2825675601839526,
+            0.9578262852211514
+          ],
+          [
+            -0.9833639792651645,
+            0.18164604120040959,
+            3.795979560813895e-17
+          ],
+          [
+            -0.17398535286811662,
+            -0.9418918672798421,
+            -0.28734788556634544
+          ]
+        ],
+        "candidate_frame_local": [
+          [
+            1.1895119624118404e-17,
+            -1.0487981710793836e-17,
+            1.0
+          ],
+          [
+            -0.979700434932792,
+            0.2004670990274912,
+            4.328815891605529e-18
+          ],
+          [
+            -0.20046709902749127,
+            -0.9797004349327921,
+            -9.450034316913367e-18
+          ]
+        ],
+        "old_frame_orthogonality_error": 2.220446049250313e-16,
+        "candidate_frame_orthogonality_error": 2.220446049250313e-16,
+        "candidate_frame_det": 0.9999999999999999
+      },
+      "index": {
+        "body": "left_hand_index_rota_link2",
+        "site_local_m": [
+          0.0,
+          -0.004,
+          -0.027
+        ],
+        "urdf_endpoint_local_m": [
+          0.0,
+          0.0,
+          -0.0424999999999991
+        ],
+        "point_offset_endpoint_minus_site_local_m": [
+          0.0,
+          0.004,
+          -0.015499999999999101
+        ],
+        "point_offset_norm_mm": 16.00781059358125,
+        "site_to_endpoint_frame_offset_deg": 8.426969025339819,
+        "site_axis_vs_endpoint_longitudinal_deg": 8.426969025339819,
+        "old_frame_local": [
+          [
+            -0.0022222666370032475,
+            -0.9999975307624485,
+            0.0
+          ],
+          [
+            -0.9892010197755355,
+            0.002198273851597105,
+            -0.14654866108946232
+          ],
+          [
+            0.14654829922600524,
+            -0.00032567020023660813,
+            -0.9892034623538708
+          ]
+        ],
+        "candidate_frame_local": [
+          [
+            -0.002217811463126358,
+            -0.9999975406531328,
+            0.0
+          ],
+          [
+            -0.9999975406531328,
+            0.002217811463126358,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            -1.0
+          ]
+        ],
+        "old_frame_orthogonality_error": 2.220446049250313e-16,
+        "candidate_frame_orthogonality_error": 1.1887683121565796e-19,
+        "candidate_frame_det": 1.0
+      },
+      "middle": {
+        "body": "left_hand_mid_link2",
+        "site_local_m": [
+          0.0,
+          -0.004,
+          -0.027
+        ],
+        "urdf_endpoint_local_m": [
+          0.0,
+          0.0,
+          -0.0424999999999995
+        ],
+        "point_offset_endpoint_minus_site_local_m": [
+          0.0,
+          0.004,
+          -0.015499999999999504
+        ],
+        "point_offset_norm_mm": 16.00781059358164,
+        "site_to_endpoint_frame_offset_deg": 8.426969025339819,
+        "site_axis_vs_endpoint_longitudinal_deg": 8.426969025339819,
+        "old_frame_local": [
+          [
+            -0.0022222666370032475,
+            -0.9999975307624485,
+            0.0
+          ],
+          [
+            -0.9892010197755355,
+            0.002198273851597105,
+            -0.14654866108946232
+          ],
+          [
+            0.14654829922600524,
+            -0.00032567020023660813,
+            -0.9892034623538708
+          ]
+        ],
+        "candidate_frame_local": [
+          [
+            -0.002217811463126358,
+            -0.9999975406531328,
+            0.0
+          ],
+          [
+            -0.9999975406531328,
+            0.002217811463126358,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            -1.0
+          ]
+        ],
+        "old_frame_orthogonality_error": 2.220446049250313e-16,
+        "candidate_frame_orthogonality_error": 1.1887683121565796e-19,
+        "candidate_frame_det": 1.0
+      },
+      "ring": {
+        "body": "left_hand_ring_link2",
+        "site_local_m": [
+          0.0,
+          -0.004,
+          -0.027
+        ],
+        "urdf_endpoint_local_m": [
+          0.0,
+          0.0,
+          -0.0425
+        ],
+        "point_offset_endpoint_minus_site_local_m": [
+          0.0,
+          0.004,
+          -0.015500000000000003
+        ],
+        "point_offset_norm_mm": 16.007810593582125,
+        "site_to_endpoint_frame_offset_deg": 8.426969025339819,
+        "site_axis_vs_endpoint_longitudinal_deg": 8.426969025339819,
+        "old_frame_local": [
+          [
+            -0.0022222666370032475,
+            -0.9999975307624485,
+            0.0
+          ],
+          [
+            -0.9892010197755355,
+            0.002198273851597105,
+            -0.14654866108946232
+          ],
+          [
+            0.14654829922600524,
+            -0.00032567020023660813,
+            -0.9892034623538708
+          ]
+        ],
+        "candidate_frame_local": [
+          [
+            -0.002217811463126358,
+            -0.9999975406531328,
+            0.0
+          ],
+          [
+            -0.9999975406531328,
+            0.002217811463126358,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            -1.0
+          ]
+        ],
+        "old_frame_orthogonality_error": 2.220446049250313e-16,
+        "candidate_frame_orthogonality_error": 1.1887683121565796e-19,
+        "candidate_frame_det": 1.0
+      },
+      "pinky": {
+        "body": "left_hand_pinky_link2",
+        "site_local_m": [
+          0.0,
+          -0.004,
+          -0.027
+        ],
+        "urdf_endpoint_local_m": [
+          0.0,
+          0.0,
+          -0.0424999999999995
+        ],
+        "point_offset_endpoint_minus_site_local_m": [
+          0.0,
+          0.004,
+          -0.015499999999999504
+        ],
+        "point_offset_norm_mm": 16.00781059358164,
+        "site_to_endpoint_frame_offset_deg": 8.426969025339819,
+        "site_axis_vs_endpoint_longitudinal_deg": 8.426969025339819,
+        "old_frame_local": [
+          [
+            -0.0022222666370032475,
+            -0.9999975307624485,
+            0.0
+          ],
+          [
+            -0.9892010197755355,
+            0.002198273851597105,
+            -0.14654866108946232
+          ],
+          [
+            0.14654829922600524,
+            -0.00032567020023660813,
+            -0.9892034623538708
+          ]
+        ],
+        "candidate_frame_local": [
+          [
+            -0.002217811463126358,
+            -0.9999975406531328,
+            0.0
+          ],
+          [
+            -0.9999975406531328,
+            0.002217811463126358,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            -1.0
+          ]
+        ],
+        "old_frame_orthogonality_error": 2.220446049250313e-16,
+        "candidate_frame_orthogonality_error": 1.1887683121565796e-19,
+        "candidate_frame_det": 1.0
+      }
+    }
+  },
+  "independent_urdf_mujoco_fk": {
+    "right": {
+      "rows": 198,
+      "sampled_rows": [
+        0,
+        20,
+        50,
+        100,
+        150,
+        197
+      ],
+      "max_body_position_difference_m": 5.8191759577382525e-08,
+      "max_body_rotation_difference_rad": 1.052292230344276e-06,
+      "max_endpoint_position_difference_m": 1.1047476264703286e-07,
+      "max_endpoint_longitudinal_axis_difference_deg": 5.9446193489877013e-05,
+      "pass": true,
+      "numerical_tolerances": {
+        "body_position_m": 1e-06,
+        "body_rotation_rad": 2e-05,
+        "endpoint_position_m": 1e-06,
+        "endpoint_axis_deg": 0.0002
+      }
+    },
+    "left": {
+      "rows": 198,
+      "sampled_rows": [
+        0,
+        20,
+        50,
+        100,
+        150,
+        197
+      ],
+      "max_body_position_difference_m": 5.818839326576785e-08,
+      "max_body_rotation_difference_rad": 1.0522922304084582e-06,
+      "max_endpoint_position_difference_m": 1.1072157762379162e-07,
+      "max_endpoint_longitudinal_axis_difference_deg": 5.980073434247995e-05,
+      "pass": true,
+      "numerical_tolerances": {
+        "body_position_m": 1e-06,
+        "body_rotation_rad": 2e-05,
+        "endpoint_position_m": 1e-06,
+        "endpoint_axis_deg": 0.0002
+      }
+    }
+  },
+  "MANO_anatomical_frame": {
+    "right": {
+      "source": {
+        "source": "released_MANO_local_rotations_via_smplx_rigid_FK",
+        "neutral_calibration": "MANO_v1.2_zero_betas_flat_mean_identity_pose; palm/distal_axes",
+        "calibration_fitted_to_episode": false,
+        "per_frame_palm_projection": false,
+        "distal_joint_indices": [
+          15,
+          3,
+          6,
+          12,
+          9
+        ],
+        "neutral_distal_frames": [
+          [
+            [
+              0.17808629086002872,
+              0.5832182409366611,
+              -0.792553945448803
+            ],
+            [
+              -0.9836495329610009,
+              0.12745697404728337,
+              -0.12723331353193282
+            ],
+            [
+              0.026811738349503567,
+              0.8022538271678467,
+              0.5963806900640067
+            ]
+          ],
+          [
+            [
+              -0.010674477760559872,
+              0.1737544458862418,
+              -0.9847311552191819
+            ],
+            [
+              -0.9933310389885872,
+              0.11121942429060303,
+              0.030392213514658845
+            ],
+            [
+              0.11480201438299376,
+              0.978488442545558,
+              0.17140847498993453
+            ]
+          ],
+          [
+            [
+              -0.03954876453623963,
+              -0.19894193509573385,
+              -0.979212950120668
+            ],
+            [
+              -0.996477740159215,
+              0.08037477491576776,
+              0.02391670805992517
+            ],
+            [
+              0.07394598427799239,
+              0.9767097839264254,
+              -0.20141993295489505
+            ]
+          ],
+          [
+            [
+              -0.19901764111041453,
+              -0.27778719883944175,
+              -0.9398011761472651
+            ],
+            [
+              -0.9798658709506491,
+              0.07202741920973676,
+              0.1862120453357153
+            ],
+            [
+              0.01596413082419121,
+              0.957938579995044,
+              -0.2865289225961436
+            ]
+          ],
+          [
+            [
+              -0.13380010446767526,
+              -0.5379925159844053,
+              -0.8322629300823198
+            ],
+            [
+              -0.9902222531044113,
+              0.03913566985390003,
+              0.1338965600824369
+            ],
+            [
+              -0.039464179977066166,
+              0.8420406475282862,
+              -0.5379685180462532
+            ]
+          ]
+        ],
+        "reconstructed_joint_max_error_m": 0.0,
+        "distal_axis_vs_observed_bone_p95_deg": [
+          1.9093583367832745,
+          1.8667508965899258,
+          0.7807414514943939,
+          0.4367775927582289,
+          2.98971798037032
+        ],
+        "distal_axis_vs_observed_bone_max_deg": [
+          2.34787153714921,
+          1.9008198672905772,
+          1.0782083892668797,
+          0.8960940976904581,
+          3.423997105238526
+        ],
+        "max_frame_rotation_step_deg": 19.16516779428408,
+        "source_frame_keys": [
+          "00001",
+          "00002",
+          "00003",
+          "00004",
+          "00005",
+          "00006",
+          "00007",
+          "00008",
+          "00009",
+          "00010",
+          "00011",
+          "00012",
+          "00013",
+          "00014",
+          "00015",
+          "00016",
+          "00017",
+          "00018",
+          "00019",
+          "00020",
+          "00021",
+          "00022",
+          "00023",
+          "00024",
+          "00025",
+          "00026",
+          "00027",
+          "00028",
+          "00029",
+          "00030",
+          "00031",
+          "00032",
+          "00033",
+          "00034",
+          "00035",
+          "00036",
+          "00037",
+          "00038",
+          "00039",
+          "00040",
+          "00041",
+          "00042",
+          "00043",
+          "00044",
+          "00045",
+          "00046",
+          "00047",
+          "00048",
+          "00049",
+          "00050",
+          "00051",
+          "00052",
+          "00053",
+          "00054",
+          "00055",
+          "00056",
+          "00057",
+          "00058",
+          "00059",
+          "00060",
+          "00061",
+          "00062",
+          "00063",
+          "00064",
+          "00065",
+          "00066",
+          "00067",
+          "00068",
+          "00069",
+          "00070",
+          "00071",
+          "00072",
+          "00073",
+          "00074",
+          "00075",
+          "00076",
+          "00077",
+          "00078",
+          "00079",
+          "00080",
+          "00081",
+          "00082",
+          "00083",
+          "00084",
+          "00085",
+          "00086",
+          "00087",
+          "00088",
+          "00089",
+          "00090",
+          "00091",
+          "00092",
+          "00093",
+          "00094",
+          "00095",
+          "00096",
+          "00097",
+          "00098",
+          "00099",
+          "00100",
+          "00101",
+          "00102",
+          "00103",
+          "00104",
+          "00105",
+          "00106",
+          "00107",
+          "00108",
+          "00109",
+          "00110",
+          "00111",
+          "00112",
+          "00113",
+          "00114",
+          "00115",
+          "00116",
+          "00117",
+          "00118",
+          "00119",
+          "00120",
+          "00121",
+          "00122",
+          "00123",
+          "00124",
+          "00125",
+          "00126",
+          "00127",
+          "00128",
+          "00129",
+          "00130",
+          "00131",
+          "00132",
+          "00133",
+          "00134",
+          "00135",
+          "00136",
+          "00137",
+          "00138",
+          "00139",
+          "00140",
+          "00141",
+          "00142",
+          "00143",
+          "00144",
+          "00145",
+          "00146",
+          "00147",
+          "00148",
+          "00149",
+          "00150",
+          "00151",
+          "00152",
+          "00153",
+          "00154",
+          "00155",
+          "00156",
+          "00157",
+          "00158",
+          "00159",
+          "00160",
+          "00161",
+          "00162",
+          "00163",
+          "00164",
+          "00165",
+          "00166",
+          "00167",
+          "00168",
+          "00169",
+          "00170",
+          "00171",
+          "00172",
+          "00173",
+          "00174",
+          "00175",
+          "00176",
+          "00177",
+          "00178",
+          "00179",
+          "00180",
+          "00181",
+          "00182",
+          "00183",
+          "00184",
+          "00185",
+          "00186",
+          "00187",
+          "00188",
+          "00189",
+          "00190",
+          "00191",
+          "00192",
+          "00193",
+          "00194",
+          "00195",
+          "00196",
+          "00197",
+          "00198"
+        ],
+        "inputs": [
+          {
+            "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017/right_hand.pkl",
+            "sha256": "098d13bf5bc3cd0275f53a320c824653175d0394c2a1040f94542c9ab788d110"
+          },
+          {
+            "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017/right_hand_shape.pkl",
+            "sha256": "ae8bd692a12c2b18bdae4e8f031f364930e9bad7c0a4d78afc2d8eb9d03d5d13"
+          },
+          {
+            "path": "/data_all/zzx/3.2RL/data/taco_v1/hand_poses_v1/mano_v1_2/models/MANO_RIGHT.pkl",
+            "sha256": "45d60aa3b27ef9107a7afd4e00808f307fd91111e1cfa35afd5c4a62de264767"
+          }
+        ]
+      },
+      "transport_error_deg": {
+        "mean": 3.1489431715897007e-15,
+        "median": 3.1051157712629784e-15,
+        "p95": 5.986596492386471e-15,
+        "max": 1.0034196364879527e-14
+      },
+      "transport_error_deg_by_finger": [
+        {
+          "mean": 3.3326103350396326e-15,
+          "median": 3.241873588998129e-15,
+          "p95": 6.281368719243016e-15,
+          "max": 8.26332345681878e-15
+        },
+        {
+          "mean": 3.1468148755125867e-15,
+          "median": 3.2084335842850002e-15,
+          "p95": 5.742057054706339e-15,
+          "max": 7.795806512402413e-15
+        },
+        {
+          "mean": 3.255735054116106e-15,
+          "median": 3.1428352263632476e-15,
+          "p95": 6.0118984195620205e-15,
+          "max": 9.867411402547655e-15
+        },
+        {
+          "mean": 3.3718818255924885e-15,
+          "median": 3.2784407249317016e-15,
+          "p95": 6.432553187689257e-15,
+          "max": 8.563905568892109e-15
+        },
+        {
+          "mean": 2.6376737676876896e-15,
+          "median": 2.248991783197473e-15,
+          "p95": 5.333952355430711e-15,
+          "max": 1.0034196364879527e-14
+        }
+      ]
+    },
+    "left": {
+      "source": {
+        "source": "released_MANO_local_rotations_via_smplx_rigid_FK",
+        "neutral_calibration": "MANO_v1.2_zero_betas_flat_mean_identity_pose; palm/distal_axes",
+        "calibration_fitted_to_episode": false,
+        "per_frame_palm_projection": false,
+        "distal_joint_indices": [
+          15,
+          3,
+          6,
+          12,
+          9
+        ],
+        "neutral_distal_frames": [
+          [
+            [
+              -0.17808629086002872,
+              0.5832182409366611,
+              0.792553945448803
+            ],
+            [
+              -0.9836495329610009,
+              -0.12745697404728337,
+              -0.12723331353193282
+            ],
+            [
+              0.026811738349503567,
+              -0.8022538271678467,
+              0.5963806900640067
+            ]
+          ],
+          [
+            [
+              0.010674477760559872,
+              0.1737544458862418,
+              0.9847311552191819
+            ],
+            [
+              -0.9933310389885872,
+              -0.11121942429060303,
+              0.030392213514658845
+            ],
+            [
+              0.11480201438299376,
+              -0.978488442545558,
+              0.17140847498993453
+            ]
+          ],
+          [
+            [
+              0.2089487783683284,
+              -0.12321972644059649,
+              0.9701326234254201
+            ],
+            [
+              -0.9760458323781157,
+              -0.08777268594204589,
+              0.19907407842265717
+            ],
+            [
+              0.06062129259339878,
+              -0.9884901894396443,
+              -0.13860809596081314
+            ]
+          ],
+          [
+            [
+              0.19901764111041453,
+              -0.27778719883944175,
+              0.9398011761472651
+            ],
+            [
+              -0.9798658709506491,
+              -0.07202741920973676,
+              0.1862120453357153
+            ],
+            [
+              0.01596413082419121,
+              -0.957938579995044,
+              -0.2865289225961436
+            ]
+          ],
+          [
+            [
+              0.13380010446767526,
+              -0.5379925159844053,
+              0.8322629300823198
+            ],
+            [
+              -0.9902222531044113,
+              -0.03913566985390003,
+              0.1338965600824369
+            ],
+            [
+              -0.039464179977066166,
+              -0.8420406475282862,
+              -0.5379685180462532
+            ]
+          ]
+        ],
+        "reconstructed_joint_max_error_m": 0.0,
+        "distal_axis_vs_observed_bone_p95_deg": [
+          1.6633076825890902,
+          1.816828273792529,
+          2.109753510249644,
+          0.9356612690679488,
+          3.358872918143853
+        ],
+        "distal_axis_vs_observed_bone_max_deg": [
+          1.7570701730610632,
+          1.8805351821422565,
+          2.297340423110894,
+          0.9384729657847456,
+          3.489613347525269
+        ],
+        "max_frame_rotation_step_deg": 13.608853605738645,
+        "source_frame_keys": [
+          "00001",
+          "00002",
+          "00003",
+          "00004",
+          "00005",
+          "00006",
+          "00007",
+          "00008",
+          "00009",
+          "00010",
+          "00011",
+          "00012",
+          "00013",
+          "00014",
+          "00015",
+          "00016",
+          "00017",
+          "00018",
+          "00019",
+          "00020",
+          "00021",
+          "00022",
+          "00023",
+          "00024",
+          "00025",
+          "00026",
+          "00027",
+          "00028",
+          "00029",
+          "00030",
+          "00031",
+          "00032",
+          "00033",
+          "00034",
+          "00035",
+          "00036",
+          "00037",
+          "00038",
+          "00039",
+          "00040",
+          "00041",
+          "00042",
+          "00043",
+          "00044",
+          "00045",
+          "00046",
+          "00047",
+          "00048",
+          "00049",
+          "00050",
+          "00051",
+          "00052",
+          "00053",
+          "00054",
+          "00055",
+          "00056",
+          "00057",
+          "00058",
+          "00059",
+          "00060",
+          "00061",
+          "00062",
+          "00063",
+          "00064",
+          "00065",
+          "00066",
+          "00067",
+          "00068",
+          "00069",
+          "00070",
+          "00071",
+          "00072",
+          "00073",
+          "00074",
+          "00075",
+          "00076",
+          "00077",
+          "00078",
+          "00079",
+          "00080",
+          "00081",
+          "00082",
+          "00083",
+          "00084",
+          "00085",
+          "00086",
+          "00087",
+          "00088",
+          "00089",
+          "00090",
+          "00091",
+          "00092",
+          "00093",
+          "00094",
+          "00095",
+          "00096",
+          "00097",
+          "00098",
+          "00099",
+          "00100",
+          "00101",
+          "00102",
+          "00103",
+          "00104",
+          "00105",
+          "00106",
+          "00107",
+          "00108",
+          "00109",
+          "00110",
+          "00111",
+          "00112",
+          "00113",
+          "00114",
+          "00115",
+          "00116",
+          "00117",
+          "00118",
+          "00119",
+          "00120",
+          "00121",
+          "00122",
+          "00123",
+          "00124",
+          "00125",
+          "00126",
+          "00127",
+          "00128",
+          "00129",
+          "00130",
+          "00131",
+          "00132",
+          "00133",
+          "00134",
+          "00135",
+          "00136",
+          "00137",
+          "00138",
+          "00139",
+          "00140",
+          "00141",
+          "00142",
+          "00143",
+          "00144",
+          "00145",
+          "00146",
+          "00147",
+          "00148",
+          "00149",
+          "00150",
+          "00151",
+          "00152",
+          "00153",
+          "00154",
+          "00155",
+          "00156",
+          "00157",
+          "00158",
+          "00159",
+          "00160",
+          "00161",
+          "00162",
+          "00163",
+          "00164",
+          "00165",
+          "00166",
+          "00167",
+          "00168",
+          "00169",
+          "00170",
+          "00171",
+          "00172",
+          "00173",
+          "00174",
+          "00175",
+          "00176",
+          "00177",
+          "00178",
+          "00179",
+          "00180",
+          "00181",
+          "00182",
+          "00183",
+          "00184",
+          "00185",
+          "00186",
+          "00187",
+          "00188",
+          "00189",
+          "00190",
+          "00191",
+          "00192",
+          "00193",
+          "00194",
+          "00195",
+          "00196",
+          "00197",
+          "00198"
+        ],
+        "inputs": [
+          {
+            "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017/left_hand.pkl",
+            "sha256": "a06ba74342df18ef69b559e57b903938ad640edb8ce3269fca00b4ec5652c6d0"
+          },
+          {
+            "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017/left_hand_shape.pkl",
+            "sha256": "97956334eea23cc859c937102d9ba26b8dead9f64913d54ea6cb90a2cc50531c"
+          },
+          {
+            "path": "/data_all/zzx/3.2RL/data/taco_v1/hand_poses_v1/mano_v1_2/models/MANO_LEFT.pkl",
+            "sha256": "c4022f7083f2ca7c78b2b3d595abbab52debd32b09d372b16923a801f0ea6a30"
+          }
+        ]
+      },
+      "transport_error_deg": {
+        "mean": 3.1557688342317937e-15,
+        "median": 2.866913247108438e-15,
+        "p95": 6.517061843360941e-15,
+        "max": 1.2215152033693539e-14
+      },
+      "transport_error_deg_by_finger": [
+        {
+          "mean": 2.8408495434266592e-15,
+          "median": 2.458830543698777e-15,
+          "p95": 6.0150943580116994e-15,
+          "max": 8.190563052205716e-15
+        },
+        {
+          "mean": 3.526159223164362e-15,
+          "median": 3.2784407249317023e-15,
+          "p95": 6.746975349592416e-15,
+          "max": 8.99596713278989e-15
+        },
+        {
+          "mean": 3.5235931507885465e-15,
+          "median": 3.278440724931703e-15,
+          "p95": 6.95886995847062e-15,
+          "max": 1.0034196364879527e-14
+        },
+        {
+          "mean": 3.220211676242738e-15,
+          "median": 3.0778455804738097e-15,
+          "p95": 6.557897904168935e-15,
+          "max": 1.2215152033693539e-14
+        },
+        {
+          "mean": 2.6680305775366627e-15,
+          "median": 2.3854160110976384e-15,
+          "p95": 5.142568135114118e-15,
+          "max": 7.501323213600279e-15
+        }
+      ]
+    }
+  },
+  "posture_strata": {
+    "right": {
+      "metric": "mean fingertip-to-wrist distance normalized by wrist-to-middle-MCP distance",
+      "openness_min": 1.2092962116132662,
+      "openness_median": 1.4555048658649687,
+      "openness_max": 1.5954845850206825,
+      "strata_rows": {
+        "grasp_like": [
+          40,
+          39,
+          41,
+          42,
+          43,
+          44,
+          38,
+          45,
+          37,
+          36,
+          46,
+          35,
+          34,
+          33,
+          47,
+          32,
+          31,
+          48,
+          30,
+          49,
+          29,
+          50,
+          109,
+          110,
+          108,
+          111,
+          107,
+          112,
+          106,
+          28,
+          113,
+          105,
+          51,
+          114,
+          92,
+          91,
+          115,
+          132,
+          93,
+          52,
+          90,
+          131,
+          104,
+          116,
+          119,
+          117,
+          89,
+          53,
+          66,
+          118,
+          67,
+          54,
+          94,
+          65,
+          88,
+          59,
+          120,
+          68,
+          58,
+          80,
+          79,
+          55,
+          87,
+          57,
+          64,
+          56
+        ],
+        "bent_like": [
+          81,
+          86,
+          60,
+          133,
+          85,
+          78,
+          130,
+          84,
+          82,
+          69,
+          83,
+          63,
+          61,
+          95,
+          62,
+          77,
+          121,
+          70,
+          76,
+          71,
+          103,
+          27,
+          75,
+          96,
+          72,
+          73,
+          74,
+          97,
+          122,
+          129,
+          98,
+          123,
+          102,
+          99,
+          128,
+          124,
+          134,
+          19,
+          18,
+          100,
+          101,
+          20,
+          125,
+          127,
+          126,
+          21,
+          26,
+          17,
+          22,
+          23,
+          25,
+          24,
+          16,
+          135,
+          15,
+          136,
+          14,
+          13,
+          137,
+          12,
+          138,
+          11,
+          139,
+          10,
+          9,
+          0
+        ],
+        "open_like": [
+          1,
+          140,
+          2,
+          193,
+          192,
+          159,
+          194,
+          191,
+          8,
+          195,
+          160,
+          190,
+          196,
+          3,
+          189,
+          197,
+          188,
+          179,
+          180,
+          178,
+          181,
+          177,
+          187,
+          182,
+          176,
+          175,
+          161,
+          4,
+          183,
+          174,
+          173,
+          186,
+          172,
+          171,
+          170,
+          169,
+          184,
+          158,
+          185,
+          168,
+          7,
+          167,
+          5,
+          166,
+          162,
+          6,
+          165,
+          157,
+          163,
+          164,
+          141,
+          156,
+          155,
+          154,
+          147,
+          148,
+          153,
+          149,
+          146,
+          150,
+          151,
+          152,
+          142,
+          145,
+          144,
+          143
+        ]
+      },
+      "representative_rows": {
+        "grasp_like": 114,
+        "bent_like": 102,
+        "open_like": 172
+      }
+    },
+    "left": {
+      "metric": "mean fingertip-to-wrist distance normalized by wrist-to-middle-MCP distance",
+      "openness_min": 1.1377315583056051,
+      "openness_median": 1.423013037702272,
+      "openness_max": 1.5849037370285914,
+      "strata_rows": {
+        "grasp_like": [
+          29,
+          28,
+          30,
+          27,
+          31,
+          26,
+          32,
+          127,
+          25,
+          126,
+          33,
+          125,
+          128,
+          34,
+          24,
+          15,
+          16,
+          35,
+          36,
+          114,
+          113,
+          17,
+          124,
+          115,
+          14,
+          23,
+          37,
+          112,
+          18,
+          116,
+          129,
+          22,
+          111,
+          38,
+          19,
+          117,
+          21,
+          123,
+          20,
+          13,
+          110,
+          39,
+          118,
+          122,
+          40,
+          119,
+          109,
+          121,
+          120,
+          41,
+          108,
+          130,
+          42,
+          12,
+          107,
+          102,
+          101,
+          103,
+          106,
+          104,
+          105,
+          43,
+          100,
+          44,
+          99,
+          98
+        ],
+        "bent_like": [
+          45,
+          11,
+          97,
+          46,
+          131,
+          47,
+          96,
+          48,
+          49,
+          50,
+          51,
+          95,
+          52,
+          58,
+          57,
+          59,
+          53,
+          56,
+          55,
+          54,
+          60,
+          61,
+          76,
+          94,
+          75,
+          77,
+          62,
+          10,
+          74,
+          78,
+          93,
+          63,
+          79,
+          80,
+          73,
+          92,
+          64,
+          81,
+          132,
+          91,
+          72,
+          82,
+          65,
+          71,
+          90,
+          83,
+          84,
+          70,
+          66,
+          89,
+          85,
+          88,
+          86,
+          69,
+          87,
+          67,
+          68,
+          9,
+          133,
+          8,
+          7,
+          134,
+          6,
+          5,
+          4,
+          135
+        ],
+        "open_like": [
+          0,
+          3,
+          1,
+          2,
+          181,
+          182,
+          183,
+          180,
+          184,
+          164,
+          179,
+          163,
+          165,
+          162,
+          185,
+          161,
+          160,
+          159,
+          166,
+          178,
+          197,
+          167,
+          158,
+          186,
+          177,
+          157,
+          168,
+          196,
+          176,
+          169,
+          187,
+          156,
+          175,
+          170,
+          171,
+          195,
+          174,
+          155,
+          172,
+          188,
+          173,
+          154,
+          189,
+          194,
+          192,
+          193,
+          191,
+          153,
+          190,
+          152,
+          136,
+          151,
+          150,
+          149,
+          148,
+          147,
+          146,
+          145,
+          144,
+          143,
+          137,
+          142,
+          141,
+          138,
+          140,
+          139
+        ]
+      },
+      "representative_rows": {
+        "grasp_like": 111,
+        "bent_like": 79,
+        "open_like": 175
+      }
+    }
+  },
+  "posture_stability": {
+    "right": {
+      "grasp_like": {
+        "rows": [
+          40,
+          39,
+          41,
+          42,
+          43,
+          44,
+          38,
+          45,
+          37,
+          36,
+          46,
+          35,
+          34,
+          33,
+          47,
+          32,
+          31,
+          48,
+          30,
+          49,
+          29,
+          50,
+          109,
+          110,
+          108,
+          111,
+          107,
+          112,
+          106,
+          28,
+          113,
+          105,
+          51,
+          114,
+          92,
+          91,
+          115,
+          132,
+          93,
+          52,
+          90,
+          131,
+          104,
+          116,
+          119,
+          117,
+          89,
+          53,
+          66,
+          118,
+          67,
+          54,
+          94,
+          65,
+          88,
+          59,
+          120,
+          68,
+          58,
+          80,
+          79,
+          55,
+          87,
+          57,
+          64,
+          56
+        ],
+        "representative_row": 114,
+        "point_offset_norm_mm": {
+          "mean": 15.906434457357896,
+          "median": 16.007810593581446,
+          "p95": 16.007810593582125,
+          "max": 16.007810593582125
+        },
+        "MANO_target_transport_error_deg": {
+          "mean": 3.1918690820531558e-15,
+          "median": 3.2053064530645584e-15,
+          "p95": 5.877563731298513e-15,
+          "max": 9.867411402547655e-15
+        },
+        "candidate_target_transport_error_deg": {
+          "mean": 4.039829136912126e-15,
+          "median": 3.713543074671115e-15,
+          "p95": 8.012748942847806e-15,
+          "max": 1.3113762899726806e-14
+        },
+        "candidate_fixed_endpoint_frame_transport_error_deg": {
+          "mean": 1.8832891741621584e-15,
+          "median": 1.7171291397136038e-15,
+          "p95": 3.531142485221046e-15,
+          "max": 5.475790985470528e-15
+        },
+        "dynamic_palm_projection_is_not_used": true
+      },
+      "bent_like": {
+        "rows": [
+          81,
+          86,
+          60,
+          133,
+          85,
+          78,
+          130,
+          84,
+          82,
+          69,
+          83,
+          63,
+          61,
+          95,
+          62,
+          77,
+          121,
+          70,
+          76,
+          71,
+          103,
+          27,
+          75,
+          96,
+          72,
+          73,
+          74,
+          97,
+          122,
+          129,
+          98,
+          123,
+          102,
+          99,
+          128,
+          124,
+          134,
+          19,
+          18,
+          100,
+          101,
+          20,
+          125,
+          127,
+          126,
+          21,
+          26,
+          17,
+          22,
+          23,
+          25,
+          24,
+          16,
+          135,
+          15,
+          136,
+          14,
+          13,
+          137,
+          12,
+          138,
+          11,
+          139,
+          10,
+          9,
+          0
+        ],
+        "representative_row": 102,
+        "point_offset_norm_mm": {
+          "mean": 15.906434457357896,
+          "median": 16.007810593581446,
+          "p95": 16.007810593582125,
+          "max": 16.007810593582125
+        },
+        "MANO_target_transport_error_deg": {
+          "mean": 3.1883617200571053e-15,
+          "median": 3.1051157712629776e-15,
+          "p95": 6.466532013073852e-15,
+          "max": 8.196101812329257e-15
+        },
+        "candidate_target_transport_error_deg": {
+          "mean": 3.87063839163297e-15,
+          "median": 3.6437831449381806e-15,
+          "p95": 7.52195392175803e-15,
+          "max": 1.2215152033693539e-14
+        },
+        "candidate_fixed_endpoint_frame_transport_error_deg": {
+          "mean": 1.7644628617982068e-15,
+          "median": 1.656792799053537e-15,
+          "p95": 3.3159756254938714e-15,
+          "max": 3.997773941509278e-15
+        },
+        "dynamic_palm_projection_is_not_used": true
+      },
+      "open_like": {
+        "rows": [
+          1,
+          140,
+          2,
+          193,
+          192,
+          159,
+          194,
+          191,
+          8,
+          195,
+          160,
+          190,
+          196,
+          3,
+          189,
+          197,
+          188,
+          179,
+          180,
+          178,
+          181,
+          177,
+          187,
+          182,
+          176,
+          175,
+          161,
+          4,
+          183,
+          174,
+          173,
+          186,
+          172,
+          171,
+          170,
+          169,
+          184,
+          158,
+          185,
+          168,
+          7,
+          167,
+          5,
+          166,
+          162,
+          6,
+          165,
+          157,
+          163,
+          164,
+          141,
+          156,
+          155,
+          154,
+          147,
+          148,
+          153,
+          149,
+          146,
+          150,
+          151,
+          152,
+          142,
+          145,
+          144,
+          143
+        ],
+        "representative_row": 172,
+        "point_offset_norm_mm": {
+          "mean": 15.906434457357896,
+          "median": 16.007810593581446,
+          "p95": 16.007810593582125,
+          "max": 16.007810593582125
+        },
+        "MANO_target_transport_error_deg": {
+          "mean": 3.0665987126588407e-15,
+          "median": 2.8106771996906828e-15,
+          "p95": 5.877563731298512e-15,
+          "max": 1.0034196364879527e-14
+        },
+        "candidate_target_transport_error_deg": {
+          "mean": 3.988369327011757e-15,
+          "median": 3.643783144938182e-15,
+          "p95": 7.405132597924522e-15,
+          "max": 1.1638668285937122e-14
+        },
+        "candidate_fixed_endpoint_frame_transport_error_deg": {
+          "mean": 1.6484226643977114e-15,
+          "median": 1.5627751414715135e-15,
+          "p95": 3.2210894426095504e-15,
+          "max": 5.219064971627888e-15
+        },
+        "dynamic_palm_projection_is_not_used": true
+      }
+    },
+    "left": {
+      "grasp_like": {
+        "rows": [
+          29,
+          28,
+          30,
+          27,
+          31,
+          26,
+          32,
+          127,
+          25,
+          126,
+          33,
+          125,
+          128,
+          34,
+          24,
+          15,
+          16,
+          35,
+          36,
+          114,
+          113,
+          17,
+          124,
+          115,
+          14,
+          23,
+          37,
+          112,
+          18,
+          116,
+          129,
+          22,
+          111,
+          38,
+          19,
+          117,
+          21,
+          123,
+          20,
+          13,
+          110,
+          39,
+          118,
+          122,
+          40,
+          119,
+          109,
+          121,
+          120,
+          41,
+          108,
+          130,
+          42,
+          12,
+          107,
+          102,
+          101,
+          103,
+          106,
+          104,
+          105,
+          43,
+          100,
+          44,
+          99,
+          98
+        ],
+        "representative_row": 111,
+        "point_offset_norm_mm": {
+          "mean": 15.982384641315763,
+          "median": 16.00781059358164,
+          "p95": 16.007810593582125,
+          "max": 16.007810593582125
+        },
+        "MANO_target_transport_error_deg": {
+          "mean": 2.978357489435176e-15,
+          "median": 2.545496512496521e-15,
+          "p95": 6.540564661257343e-15,
+          "max": 9.705904402041652e-15
+        },
+        "candidate_target_transport_error_deg": {
+          "mean": 3.5962228072156864e-15,
+          "median": 3.278440724931703e-15,
+          "p95": 7.228473074413812e-15,
+          "max": 1.1244958915987356e-14
+        },
+        "candidate_fixed_endpoint_frame_transport_error_deg": {
+          "mean": 1.7245223598018484e-15,
+          "median": 1.6439691092584663e-15,
+          "p95": 3.368441821729816e-15,
+          "max": 4.955566963565359e-15
+        },
+        "dynamic_palm_projection_is_not_used": true
+      },
+      "bent_like": {
+        "rows": [
+          45,
+          11,
+          97,
+          46,
+          131,
+          47,
+          96,
+          48,
+          49,
+          50,
+          51,
+          95,
+          52,
+          58,
+          57,
+          59,
+          53,
+          56,
+          55,
+          54,
+          60,
+          61,
+          76,
+          94,
+          75,
+          77,
+          62,
+          10,
+          74,
+          78,
+          93,
+          63,
+          79,
+          80,
+          73,
+          92,
+          64,
+          81,
+          132,
+          91,
+          72,
+          82,
+          65,
+          71,
+          90,
+          83,
+          84,
+          70,
+          66,
+          89,
+          85,
+          88,
+          86,
+          69,
+          87,
+          67,
+          68,
+          9,
+          133,
+          8,
+          7,
+          134,
+          6,
+          5,
+          4,
+          135
+        ],
+        "representative_row": 79,
+        "point_offset_norm_mm": {
+          "mean": 15.982384641315763,
+          "median": 16.00781059358164,
+          "p95": 16.007810593582125,
+          "max": 16.007810593582125
+        },
+        "MANO_target_transport_error_deg": {
+          "mean": 3.031168084706547e-15,
+          "median": 2.7687132492767536e-15,
+          "p95": 5.57136073894216e-15,
+          "max": 1.2215152033693539e-14
+        },
+        "candidate_target_transport_error_deg": {
+          "mean": 3.831761966238028e-15,
+          "median": 3.555968236953807e-15,
+          "p95": 7.7577820730345e-15,
+          "max": 1.424608041324704e-14
+        },
+        "candidate_fixed_endpoint_frame_transport_error_deg": {
+          "mean": 1.5124754103856135e-15,
+          "median": 1.385570865401049e-15,
+          "p95": 3.0114140900403568e-15,
+          "max": 5.1450506655991195e-15
+        },
+        "dynamic_palm_projection_is_not_used": true
+      },
+      "open_like": {
+        "rows": [
+          0,
+          3,
+          1,
+          2,
+          181,
+          182,
+          183,
+          180,
+          184,
+          164,
+          179,
+          163,
+          165,
+          162,
+          185,
+          161,
+          160,
+          159,
+          166,
+          178,
+          197,
+          167,
+          158,
+          186,
+          177,
+          157,
+          168,
+          196,
+          176,
+          169,
+          187,
+          156,
+          175,
+          170,
+          171,
+          195,
+          174,
+          155,
+          172,
+          188,
+          173,
+          154,
+          189,
+          194,
+          192,
+          193,
+          191,
+          153,
+          190,
+          152,
+          136,
+          151,
+          150,
+          149,
+          148,
+          147,
+          146,
+          145,
+          144,
+          143,
+          137,
+          142,
+          141,
+          138,
+          140,
+          139
+        ],
+        "representative_row": 175,
+        "point_offset_norm_mm": {
+          "mean": 15.982384641315763,
+          "median": 16.00781059358164,
+          "p95": 16.007810593582125,
+          "max": 16.007810593582125
+        },
+        "MANO_target_transport_error_deg": {
+          "mean": 3.4577809285536576e-15,
+          "median": 3.364536064067915e-15,
+          "p95": 6.746975349592419e-15,
+          "max": 8.99596713278989e-15
+        },
+        "candidate_target_transport_error_deg": {
+          "mean": 4.173712277407099e-15,
+          "median": 3.8953680343029495e-15,
+          "p95": 8.108855192415674e-15,
+          "max": 1.066790471086142e-14
+        },
+        "candidate_fixed_endpoint_frame_transport_error_deg": {
+          "mean": 1.560912195704084e-15,
+          "median": 1.537145401754635e-15,
+          "p95": 2.6706644725901537e-15,
+          "max": 3.784473868220336e-15
+        },
+        "dynamic_palm_projection_is_not_used": true
+      }
+    }
+  },
+  "target_frame_transport_preservation_deg": {
+    "mean": 2.4297839822727196e-15,
+    "median": 2.2489917831974725e-15,
+    "p95": 5.0288985080680185e-15,
+    "max": 8.71030772208113e-15
+  },
+  "reachability_lower_bounds": {
+    "inherited_site_contract": {
+      "right": {
+        "fingers": [
+          "middle",
+          "ring",
+          "pinky"
+        ],
+        "robot_common_x_m": [
+          0.004,
+          -0.016,
+          -0.036
+        ],
+        "fixed_wrist_position_lower_bound_mm": {
+          "mean": 22.998157753569604,
+          "median": 23.83045311851449,
+          "p95": 31.05914860166118,
+          "max": 36.72921082063999
+        },
+        "best_common_translation_position_lower_bound_mm": {
+          "mean": 7.866771145150493,
+          "median": 7.516855519034964,
+          "p95": 13.72038017026622,
+          "max": 15.343747951808142
+        },
+        "orientation_shared_axis_pair_mean_deg": [
+          15.727251658550076,
+          44.12265063396873,
+          39.48986625174249
+        ],
+        "orientation_shared_axis_rms_lower_bound_deg": {
+          "mean": 18.942163958253218,
+          "median": 18.223883875325434,
+          "p95": 31.815343176020026,
+          "max": 33.43747632276594
+        },
+        "interpretation": "analytic lower bounds for middle/ring/pinky shared-axis kinematics with wrist rotation fixed"
+      },
+      "left": {
+        "fingers": [
+          "middle",
+          "ring",
+          "pinky"
+        ],
+        "robot_common_x_m": [
+          0.004,
+          -0.016,
+          -0.036
+        ],
+        "fixed_wrist_position_lower_bound_mm": {
+          "mean": 16.311133858029283,
+          "median": 15.910205719845523,
+          "p95": 24.580366370154316,
+          "max": 26.97264406274633
+        },
+        "best_common_translation_position_lower_bound_mm": {
+          "mean": 6.7305386163593495,
+          "median": 6.325707311067749,
+          "p95": 11.077009374441525,
+          "max": 12.961102743251327
+        },
+        "orientation_shared_axis_pair_mean_deg": [
+          13.396110102518463,
+          56.610657381516525,
+          52.944638440075664
+        ],
+        "orientation_shared_axis_rms_lower_bound_deg": {
+          "mean": 24.278422109580927,
+          "median": 25.656100987681988,
+          "p95": 31.57245816386336,
+          "max": 33.45477086268213
+        },
+        "interpretation": "analytic lower bounds for middle/ring/pinky shared-axis kinematics with wrist rotation fixed"
+      }
+    },
+    "candidate_endpoint_contract": {
+      "right": {
+        "fingers": [
+          "middle",
+          "ring",
+          "pinky"
+        ],
+        "robot_common_x_m": [
+          0.004,
+          -0.016,
+          -0.036
+        ],
+        "fixed_wrist_position_lower_bound_mm": {
+          "mean": 22.998157753569604,
+          "median": 23.83045311851449,
+          "p95": 31.05914860166118,
+          "max": 36.72921082063999
+        },
+        "best_common_translation_position_lower_bound_mm": {
+          "mean": 7.866771145150493,
+          "median": 7.516855519034964,
+          "p95": 13.72038017026622,
+          "max": 15.343747951808142
+        },
+        "orientation_shared_axis_pair_mean_deg": [
+          15.727261238902596,
+          44.122637445787774,
+          39.48986225507856
+        ],
+        "orientation_shared_axis_rms_lower_bound_deg": {
+          "mean": 18.94215923907945,
+          "median": 18.2238762056489,
+          "p95": 31.815343840476185,
+          "max": 33.43748088701223
+        },
+        "interpretation": "analytic lower bounds for middle/ring/pinky shared-axis kinematics with wrist rotation fixed"
+      },
+      "left": {
+        "fingers": [
+          "middle",
+          "ring",
+          "pinky"
+        ],
+        "robot_common_x_m": [
+          0.004,
+          -0.016,
+          -0.036
+        ],
+        "fixed_wrist_position_lower_bound_mm": {
+          "mean": 16.311133858029283,
+          "median": 15.910205719845523,
+          "p95": 24.580366370154316,
+          "max": 26.97264406274633
+        },
+        "best_common_translation_position_lower_bound_mm": {
+          "mean": 6.7305386163593495,
+          "median": 6.325707311067749,
+          "p95": 11.077009374441525,
+          "max": 12.961102743251327
+        },
+        "orientation_shared_axis_pair_mean_deg": [
+          13.39613398319047,
+          56.610655920183525,
+          52.944628948175016
+        ],
+        "orientation_shared_axis_rms_lower_bound_deg": {
+          "mean": 24.278419202013747,
+          "median": 25.656098671871924,
+          "p95": 31.57245982667797,
+          "max": 33.454773252632386
+        },
+        "interpretation": "analytic lower bounds for middle/ring/pinky shared-axis kinematics with wrist rotation fixed"
+      }
+    }
+  },
+  "empirical_local_reachability_probes": {
+    "inherited_site_contract": {
+      "position_only": {
+        "rows": [
+          {
+            "row": 0,
+            "converged": false,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  5.2288940669522544e-11,
+                  4.9996106113840224e-11,
+                  0.0002939299268492009,
+                  0.0003898601156107151,
+                  9.593021782828046e-05
+                ],
+                [
+                  0.0,
+                  1.3877787807814457e-16,
+                  1.5700924586837752e-16,
+                  1.1102230246251565e-16,
+                  7.850462293418876e-17
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.8877848888032617,
+                  1.1920210264940747,
+                  0.7555327895391164,
+                  1.2371830930638836,
+                  1.6178338966349761
+                ],
+                [
+                  1.2619430189661218,
+                  0.5804831639541612,
+                  0.45802987357656727,
+                  0.49419255323609534,
+                  0.6867947448655346
+                ]
+              ],
+              "wrist_position_m": [
+                0.01391257771091257,
+                0.07137864451462897
+              ],
+              "wrist_orientation_rad": [
+                0.6353115752644471,
+                0.45403556562376757
+              ]
+            }
+          },
+          {
+            "row": 20,
+            "converged": false,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  0.003949540953248638,
+                  0.00727758267070067,
+                  0.011283126904609668,
+                  0.0028096468842230284,
+                  0.01985297800255427
+                ],
+                [
+                  0.011833579196900519,
+                  0.01580908520185987,
+                  0.010739326361329408,
+                  0.0031762076913998665,
+                  0.020639826312098795
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.09442425595375176,
+                  0.12748437583936348,
+                  0.30396363419924016,
+                  0.5193436519180894,
+                  0.3887675868514164
+                ],
+                [
+                  0.1763337126859548,
+                  0.15829305770938928,
+                  0.2575761110209703,
+                  0.2918790705930343,
+                  0.6426575919671589
+                ]
+              ],
+              "wrist_position_m": [
+                0.03111881597230029,
+                0.025150020884409107
+              ],
+              "wrist_orientation_rad": [
+                0.14000222369934853,
+                0.11867938266265642
+              ]
+            }
+          },
+          {
+            "row": 50,
+            "converged": false,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  4.5554047556969204e-05,
+                  5.6146066157424314e-05,
+                  0.0024543247909450464,
+                  0.002230302608340239,
+                  0.0002631095997939489
+                ],
+                [
+                  1.8974897079014386e-05,
+                  1.8833864058211114e-05,
+                  0.002504894050929048,
+                  0.00277949404202452,
+                  0.00025870590905188577
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  2.759583264030774,
+                  1.4587125462072732,
+                  1.1655630060305135,
+                  1.3592017325889256,
+                  1.8228071964526122
+                ],
+                [
+                  1.5177012087551995,
+                  0.9928170011529296,
+                  0.8038863259654883,
+                  1.1444337557722515,
+                  1.672114227623288
+                ]
+              ],
+              "wrist_position_m": [
+                0.2036067719696175,
+                0.15402039635497103
+              ],
+              "wrist_orientation_rad": [
+                1.4111458885212507,
+                0.9001569661974946
+              ]
+            }
+          },
+          {
+            "row": 100,
+            "converged": false,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  0.007121816962497635,
+                  0.004564206659485859,
+                  0.009435675775167381,
+                  0.0057556856062610335,
+                  0.003484026195141512
+                ],
+                [
+                  0.004695181722160947,
+                  0.0025170129776791,
+                  0.003040578441730826,
+                  0.004423539204167917,
+                  0.0033538434286847166
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  2.97759836028282,
+                  0.9846311502437671,
+                  0.8541027371227196,
+                  1.12359551323724,
+                  1.5253890774675583
+                ],
+                [
+                  1.6787490449476763,
+                  0.6426727823003635,
+                  0.4333950244714856,
+                  0.2967090585559342,
+                  1.5248624894303093
+                ]
+              ],
+              "wrist_position_m": [
+                0.1660005787783461,
+                0.11700846734962508
+              ],
+              "wrist_orientation_rad": [
+                1.0425743565641137,
+                0.7927279493242638
+              ]
+            }
+          },
+          {
+            "row": 150,
+            "converged": true,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  1.594436429147036e-16,
+                  1.6653345369377348e-16,
+                  2.2591401799415137e-16,
+                  5.551115123125783e-17,
+                  1.1443916996305594e-16
+                ],
+                [
+                  4.1360920710610736e-14,
+                  1.786323057383174e-14,
+                  1.10692261936343e-12,
+                  1.6011515822110706e-12,
+                  5.3765791411479e-13
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.6706871168215769,
+                  0.9675828409280073,
+                  0.3963972765296771,
+                  1.0032395881627554,
+                  1.7390983611624562
+                ],
+                [
+                  1.7849966211625736,
+                  0.9192503838726649,
+                  0.23075690795123008,
+                  0.2567172203207165,
+                  1.4163514216558735
+                ]
+              ],
+              "wrist_position_m": [
+                0.053972333045135316,
+                0.07502971871584395
+              ],
+              "wrist_orientation_rad": [
+                0.6097849412310714,
+                0.5609479424268927
+              ]
+            }
+          },
+          {
+            "row": 197,
+            "converged": true,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  1.594436429147036e-16,
+                  1.1443916996305594e-16,
+                  1.1857187100668868e-16,
+                  1.1443916996305594e-16,
+                  5.551115123125783e-17
+                ],
+                [
+                  5.785766743388457e-14,
+                  4.8246192684997914e-14,
+                  2.998098921861326e-12,
+                  4.127430479944444e-12,
+                  1.1774102371035635e-12
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.4585924797065442,
+                  0.7942167240958984,
+                  0.46845576133210093,
+                  1.016893588819004,
+                  1.883499875045804
+                ],
+                [
+                  1.418342620269229,
+                  0.7479573228441782,
+                  0.47877126017948407,
+                  0.4445654604245656,
+                  1.1140594082103497
+                ]
+              ],
+              "wrist_position_m": [
+                0.05372175861083461,
+                0.07463612817420168
+              ],
+              "wrist_orientation_rad": [
+                0.5246687175046514,
+                0.4807089119263114
+              ]
+            }
+          }
+        ],
+        "valid_rows": 6,
+        "converged_rows": 2,
+        "stalled_rows": 0,
+        "tip_position_mm_by_hand": {
+          "mean": 2.7862087900354497,
+          "median": 0.05085005685719676,
+          "p95": 12.032354497148475,
+          "max": 20.639826312098794
+        },
+        "tip_orientation_deg_by_hand": {
+          "mean": 54.50879805322394,
+          "median": 49.901404675810724,
+          "p95": 104.6130309393453,
+          "max": 170.6038191292799
+        },
+        "wrist_position_mm_by_hand": {
+          "mean": 86.62968434006886,
+          "median": 73.00738634441532,
+          "p95": 182.9233657144182,
+          "max": 203.60677196961748
+        },
+        "wrist_orientation_deg_by_hand": {
+          "mean": 36.62510675364531,
+          "median": 33.539026585390886,
+          "p95": 69.23802741310791,
+          "max": 80.85270368950623
+        },
+        "interpretation": "finite local constrained probes, not a global optimum or formal reference"
+      },
+      "position_wrist": {
+        "rows": [
+          {
+            "row": 0,
+            "converged": true,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  1.0517419722338332e-13,
+                  3.605695720311317e-13,
+                  0.0015684131497998956,
+                  0.0011661086800665073,
+                  0.00040230446967573535
+                ],
+                [
+                  1.2063302474774457e-15,
+                  2.6604844918946567e-15,
+                  0.0026749298749741087,
+                  0.0023084591168422834,
+                  0.004983388991816472
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.12319231792253256,
+                  0.5377615137926537,
+                  0.4742585897513847,
+                  1.1359577407490808,
+                  2.0613325697672784
+                ],
+                [
+                  0.23271990492962258,
+                  0.4406297194098356,
+                  0.4488206893228459,
+                  0.6543397470098147,
+                  1.5409835388312936
+                ]
+              ],
+              "wrist_position_m": [
+                0.026849305674418997,
+                0.021277773726997466
+              ],
+              "wrist_orientation_rad": [
+                0.0003467078234843735,
+                0.0018698723234494546
+              ]
+            }
+          },
+          {
+            "row": 20,
+            "converged": false,
+            "stalled": true,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  0.0001234598535295009,
+                  0.005615001603037019,
+                  0.0060641118756587275,
+                  0.0002981554086727028,
+                  0.010803750197025381
+                ],
+                [
+                  1.5031699791787505e-06,
+                  0.0023332733661900243,
+                  0.0073958316117279255,
+                  0.0008775588533305132,
+                  0.009712346069047657
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.30452644001024626,
+                  0.12082274940365999,
+                  0.45363849646302007,
+                  0.70656520680297,
+                  1.387126099514906
+                ],
+                [
+                  0.5169493335178263,
+                  0.3361147010650936,
+                  0.5074721088012807,
+                  0.39188321963304107,
+                  1.1142421841033123
+                ]
+              ],
+              "wrist_position_m": [
+                0.027763205865180534,
+                0.019036408019498113
+              ],
+              "wrist_orientation_rad": [
+                0.00404389425215893,
+                0.0024514184931380715
+              ]
+            }
+          },
+          {
+            "row": 50,
+            "converged": false,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  0.000686542089675118,
+                  0.002682413309317502,
+                  0.01007562049241252,
+                  0.0018635343978778657,
+                  0.010721029390157078
+                ],
+                [
+                  9.81753740839423e-05,
+                  0.001927221171392251,
+                  0.007448069355882928,
+                  0.002568018559687561,
+                  0.007279402420958503
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.7928242666955001,
+                  0.46277558328153356,
+                  0.3857242403452449,
+                  0.479708333477912,
+                  1.3190985642943172
+                ],
+                [
+                  0.5867165339310657,
+                  0.20262516176264958,
+                  0.37439668861159203,
+                  0.638545222239308,
+                  1.2060726654089613
+                ]
+              ],
+              "wrist_position_m": [
+                0.039844936494591976,
+                0.030197902212126242
+              ],
+              "wrist_orientation_rad": [
+                0.003960568525053779,
+                0.003176385790552875
+              ]
+            }
+          },
+          {
+            "row": 100,
+            "converged": false,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  1.1123893155135927e-16,
+                  1.1295700899707568e-16,
+                  0.019151409723124294,
+                  0.0017028435638564198,
+                  0.017448566159267785
+                ],
+                [
+                  0.0008819083841924931,
+                  0.005504196018545143,
+                  0.010168175813573889,
+                  0.00013587028999928957,
+                  0.015313682441547358
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  1.2294756500095838,
+                  0.21014225414386578,
+                  0.6042044442009395,
+                  0.5710611371849809,
+                  1.517158382059391
+                ],
+                [
+                  0.5402932048536979,
+                  0.1090145281758604,
+                  0.3972869865843012,
+                  0.752901948149003,
+                  1.3154300076754002
+                ]
+              ],
+              "wrist_position_m": [
+                0.022334129932118432,
+                0.025199501000697344
+              ],
+              "wrist_orientation_rad": [
+                0.007147054206346894,
+                0.008243855844700018
+              ]
+            }
+          },
+          {
+            "row": 150,
+            "converged": true,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  2.7755575615628914e-17,
+                  0.0,
+                  0.00017043247771093058,
+                  0.007013643578875081,
+                  0.006843211101164244
+                ],
+                [
+                  4.483025431745429e-12,
+                  2.1009896994835106e-11,
+                  0.004260531737019821,
+                  0.0020562543423295588,
+                  0.0063167860777102285
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.20574653823992264,
+                  0.6476927399048882,
+                  0.5119627230678362,
+                  1.2514735366850804,
+                  2.1890034555568922
+                ],
+                [
+                  0.3549971798331592,
+                  0.597193971210021,
+                  0.5231380778607696,
+                  0.8518498344160338,
+                  1.9632474333634653
+                ]
+              ],
+              "wrist_position_m": [
+                0.021351209341246468,
+                0.019006497596483957
+              ],
+              "wrist_orientation_rad": [
+                0.002277642718746863,
+                0.002559019486970397
+              ]
+            }
+          },
+          {
+            "row": 197,
+            "converged": true,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  2.5427803698504574e-15,
+                  4.3152779793758065e-15,
+                  0.0007415651288960059,
+                  0.004438283878912742,
+                  0.005179849007808083
+                ],
+                [
+                  1.8224996582740124e-14,
+                  4.145255958782632e-15,
+                  0.004169879499952589,
+                  0.0018913356129709894,
+                  0.006061215112919699
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.2647167424673638,
+                  0.6700135604563209,
+                  0.39535040901795987,
+                  1.1693719483234901,
+                  2.2124071039799458
+                ],
+                [
+                  0.6391020119544852,
+                  1.0459071541308853,
+                  1.094635398248622,
+                  1.4808044546284598,
+                  2.4050025025319615
+                ]
+              ],
+              "wrist_position_m": [
+                0.019865112880194748,
+                0.027913525799166145
+              ],
+              "wrist_orientation_rad": [
+                0.0017428104674141569,
+                0.0024414242764858236
+              ]
+            }
+          }
+        ],
+        "valid_rows": 6,
+        "converged_rows": 3,
+        "stalled_rows": 1,
+        "tip_position_mm_by_hand": {
+          "mean": 3.6854710471531265,
+          "median": 1.90927839218162,
+          "p95": 11.029246809251468,
+          "max": 19.151409723124296
+        },
+        "tip_orientation_deg_by_hand": {
+          "mean": 45.51042866296497,
+          "median": 33.91653763289281,
+          "p95": 118.47140656664342,
+          "max": 137.79649311348248
+        },
+        "wrist_position_mm_by_hand": {
+          "mean": 25.05329237856004,
+          "median": 23.76681546640789,
+          "p95": 34.53906763923582,
+          "max": 39.84493649459198
+        },
+        "wrist_orientation_deg_by_hand": {
+          "mean": 0.19223046388189668,
+          "median": 0.1435384748861342,
+          "p95": 0.4377749891531998,
+          "max": 0.47233814681556724
+        },
+        "interpretation": "finite local constrained probes, not a global optimum or formal reference"
+      },
+      "pose": {
+        "rows": [
+          {
+            "row": 0,
+            "converged": true,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  0.009896685081650952,
+                  0.0055261372489962225,
+                  0.012246837675573266,
+                  0.004063891827889966,
+                  0.021596824808522236
+                ],
+                [
+                  0.0061085203713435385,
+                  0.002943061990162233,
+                  0.009789836074347812,
+                  0.004658173564247749,
+                  0.020644481418707037
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.05798772129659644,
+                  0.04250045502679779,
+                  0.2734497408714642,
+                  0.48309944549220407,
+                  0.2965649410469411
+                ],
+                [
+                  0.07720682197038514,
+                  0.05774688834006143,
+                  0.3407345135970358,
+                  0.3302500992837436,
+                  0.2500214842156047
+                ]
+              ],
+              "wrist_position_m": [
+                0.03169739276803899,
+                0.03487809875059834
+              ],
+              "wrist_orientation_rad": [
+                0.08931743112901122,
+                0.10886601950301944
+              ]
+            }
+          },
+          {
+            "row": 20,
+            "converged": false,
+            "stalled": true,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  0.004236640767149924,
+                  0.007946743443135566,
+                  0.01200524990268831,
+                  0.0026899664053285184,
+                  0.02138284066438063
+                ],
+                [
+                  0.012968934005104469,
+                  0.01720429782057452,
+                  0.01133957788401876,
+                  0.003478831329311184,
+                  0.022018927392826244
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.047018778869455345,
+                  0.1029071502482538,
+                  0.3524842852280754,
+                  0.5592691977024681,
+                  0.3248145079021435
+                ],
+                [
+                  0.13245803349427365,
+                  0.1599692313785428,
+                  0.27548958553768427,
+                  0.28423829412128976,
+                  0.621484700692667
+                ]
+              ],
+              "wrist_position_m": [
+                0.027909324886837644,
+                0.02079917918988183
+              ],
+              "wrist_orientation_rad": [
+                0.08251245958093154,
+                0.10164398304064533
+              ]
+            }
+          },
+          {
+            "row": 50,
+            "converged": false,
+            "stalled": true,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  0.01250916456311842,
+                  0.014373775489132296,
+                  0.007798902363354753,
+                  0.005675687550494826,
+                  0.026731484085385577
+                ],
+                [
+                  0.013697188446964636,
+                  0.006136628678322519,
+                  0.008458945452211368,
+                  0.005678485404874484,
+                  0.022253655838966137
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.5155014859272192,
+                  0.1727111617348445,
+                  0.3059949426564743,
+                  0.4392858298421804,
+                  0.6779797846585898
+                ],
+                [
+                  0.37239213515363173,
+                  0.136106298298724,
+                  0.3229947359110458,
+                  0.5430441947625582,
+                  0.6670280677758884
+                ]
+              ],
+              "wrist_position_m": [
+                0.0545198542268392,
+                0.030399272809390743
+              ],
+              "wrist_orientation_rad": [
+                0.059741798486444536,
+                0.060548118571249754
+              ]
+            }
+          },
+          {
+            "row": 100,
+            "converged": false,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  0.013246005613587056,
+                  0.008301188884790896,
+                  0.01664022381385012,
+                  0.004410562092149783,
+                  0.029625770929645464
+                ],
+                [
+                  0.019490653867898944,
+                  0.006256348572029761,
+                  0.009030993883045785,
+                  0.003508837922201267,
+                  0.028100871899750187
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.5498758106155479,
+                  0.1340273973049414,
+                  0.5580479683302413,
+                  0.38591546387276204,
+                  0.6242955257849617
+                ],
+                [
+                  0.27866975610584355,
+                  0.09074712451397172,
+                  0.32186458212554847,
+                  0.5494054191613421,
+                  0.8104255511063869
+                ]
+              ],
+              "wrist_position_m": [
+                0.053346546458844325,
+                0.02649549654310941
+              ],
+              "wrist_orientation_rad": [
+                0.06791128861202665,
+                0.07333197777851447
+              ]
+            }
+          },
+          {
+            "row": 150,
+            "converged": true,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  0.01149173816335358,
+                  0.0027491677331299273,
+                  0.011612403323907599,
+                  0.007131068196910936,
+                  0.022796569008659815
+                ],
+                [
+                  0.0065498779387672046,
+                  0.007781407362514604,
+                  0.012413402872977033,
+                  0.005587731874428792,
+                  0.022267984798853776
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.06980107427263926,
+                  0.11186417477029247,
+                  0.3594856231745038,
+                  0.4626841721755695,
+                  0.5679682337328945
+                ],
+                [
+                  0.06487452756789752,
+                  0.257210926189709,
+                  0.43372696401332134,
+                  0.3953964611851953,
+                  0.8311094340547582
+                ]
+              ],
+              "wrist_position_m": [
+                0.03307814422981605,
+                0.03257867698491194
+              ],
+              "wrist_orientation_rad": [
+                0.14770123597629498,
+                0.04024559410956917
+              ]
+            }
+          },
+          {
+            "row": 197,
+            "converged": false,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  0.01044198585662517,
+                  0.0033104766132580374,
+                  0.01175824827863415,
+                  0.0056404345828978296,
+                  0.02200778558299057
+                ],
+                [
+                  0.006423449852322206,
+                  0.00841033619721017,
+                  0.011808425407349398,
+                  0.005113833354977546,
+                  0.021379976534334294
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.06133089150458928,
+                  0.0680808673607277,
+                  0.22000055623787823,
+                  0.4213335449500592,
+                  0.5901476931792998
+                ],
+                [
+                  0.07625393029133469,
+                  0.2805160587556473,
+                  0.4087636058391514,
+                  0.41791723733106906,
+                  0.6977720642342311
+                ]
+              ],
+              "wrist_position_m": [
+                0.03317111988602556,
+                0.034852907225284516
+              ],
+              "wrist_orientation_rad": [
+                0.13091700044165414,
+                0.05222443019250634
+              ]
+            }
+          }
+        ],
+        "valid_rows": 6,
+        "converged_rows": 2,
+        "stalled_rows": 2,
+        "tip_position_mm_by_hand": {
+          "mean": 11.522468976030606,
+          "median": 9.843260577999382,
+          "p95": 22.99331476249609,
+          "max": 29.625770929645466
+        },
+        "tip_orientation_deg_by_hand": {
+          "mean": 19.4063165346,
+          "median": 18.55836780002854,
+          "p95": 38.90208096045695,
+          "max": 47.61906288484406
+        },
+        "wrist_position_mm_by_hand": {
+          "mean": 34.47716782996488,
+          "median": 32.82841060736399,
+          "p95": 53.87453495444202,
+          "max": 54.5198542268392
+        },
+        "wrist_orientation_deg_by_hand": {
+          "mean": 4.84608341693554,
+          "median": 4.464614260643594,
+          "p95": 7.9337412281389055,
+          "max": 8.462657450307539
+        },
+        "interpretation": "finite local constrained probes, not a global optimum or formal reference"
+      }
+    },
+    "candidate_endpoint_contract": {
+      "position_only": {
+        "rows": [
+          {
+            "row": 0,
+            "converged": false,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  1.6769012837776763e-11,
+                  2.147170536784521e-11,
+                  0.0002939299041138875,
+                  0.0003898601283862053,
+                  9.593023503675759e-05
+                ],
+                [
+                  1.6653345369377348e-16,
+                  1.2412670766236366e-16,
+                  1.1443916996305594e-16,
+                  5.551115123125783e-17,
+                  1.2719202621569003e-16
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.498858815992929,
+                  0.8742209953424684,
+                  0.7259925433303153,
+                  1.142078915548699,
+                  1.2686332641161142
+                ],
+                [
+                  0.6755499537625459,
+                  0.6997131009811086,
+                  0.2423087015247159,
+                  0.5286604500472438,
+                  1.1131704167262555
+                ]
+              ],
+              "wrist_position_m": [
+                0.027654461226324464,
+                0.06832576759632486
+              ],
+              "wrist_orientation_rad": [
+                0.5922965243416147,
+                0.3998276023783864
+              ]
+            }
+          },
+          {
+            "row": 20,
+            "converged": false,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  8.343937888102842e-05,
+                  0.0006672272103684594,
+                  0.0003736741384629452,
+                  0.0001113116933326363,
+                  0.00032946959429006316
+                ],
+                [
+                  5.303766146778025e-08,
+                  5.4902805608146984e-08,
+                  0.0036793440259579925,
+                  0.0007912756160928998,
+                  0.00447060325736692
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  1.932933872354014,
+                  0.5761688980892178,
+                  1.07675036341952,
+                  1.0162273489698153,
+                  0.9114995446800637
+                ],
+                [
+                  1.0604378815966227,
+                  0.9585818261220372,
+                  1.2229003143061374,
+                  1.7371045462724748,
+                  1.7028011875434734
+                ]
+              ],
+              "wrist_position_m": [
+                0.13442398736759611,
+                0.11601604594374278
+              ],
+              "wrist_orientation_rad": [
+                0.9672361533680351,
+                0.7854708473045422
+              ]
+            }
+          },
+          {
+            "row": 50,
+            "converged": false,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  9.001720817337335e-12,
+                  1.3767130058657625e-06,
+                  0.0024538298735840938,
+                  0.002195079037944755,
+                  0.0002599028819684518
+                ],
+                [
+                  2.431951806547836e-10,
+                  2.2653763942491347e-10,
+                  0.0025078054936403327,
+                  0.002775675042540543,
+                  0.0002678696145487149
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  2.6860623119709097,
+                  1.278638387163826,
+                  1.1657637272546368,
+                  1.4657606016282254,
+                  1.782599989424353
+                ],
+                [
+                  1.289672145407008,
+                  0.9466154551353748,
+                  0.8247437517626157,
+                  1.1679495392019255,
+                  1.6048065763941817
+                ]
+              ],
+              "wrist_position_m": [
+                0.19067655318913368,
+                0.15130799395078162
+              ],
+              "wrist_orientation_rad": [
+                1.3340001988003825,
+                0.8630768443706827
+              ]
+            }
+          },
+          {
+            "row": 100,
+            "converged": false,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  0.014073242388103794,
+                  0.006754606324865892,
+                  0.012957829650633393,
+                  0.008486293669693284,
+                  0.00803498461335038
+                ],
+                [
+                  0.01145866082708656,
+                  0.004944381449103485,
+                  0.005745442065217703,
+                  0.007052797296235934,
+                  0.0061675020973029305
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  2.3056986665367205,
+                  0.8263814930047688,
+                  0.7988074995650691,
+                  1.1391679823636378,
+                  1.472314986898692
+                ],
+                [
+                  0.9008174486223272,
+                  1.0885593813569778,
+                  0.649858122588802,
+                  0.5784401536387299,
+                  1.4686884112124725
+                ]
+              ],
+              "wrist_position_m": [
+                0.16163724407659946,
+                0.11610861348643807
+              ],
+              "wrist_orientation_rad": [
+                0.9210439939699622,
+                1.0033403206213276
+              ]
+            }
+          },
+          {
+            "row": 150,
+            "converged": true,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  0.00027328055683825605,
+                  0.0007098093573806573,
+                  0.0006763120375874543,
+                  0.0005629318558820684,
+                  0.00030035506388393664
+                ],
+                [
+                  3.3681422459008333e-14,
+                  3.1286340916979003e-13,
+                  2.9039517694078073e-12,
+                  3.245348076112005e-12,
+                  3.8989923413432396e-13
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.7226820710320166,
+                  0.8728822168197516,
+                  0.5200517869188349,
+                  1.1074642916895376,
+                  1.5763255419609439
+                ],
+                [
+                  0.7884101218117348,
+                  0.6223945615565248,
+                  0.3707070839247173,
+                  0.5637270350774984,
+                  1.7498091363111352
+                ]
+              ],
+              "wrist_position_m": [
+                0.07212086903514377,
+                0.08516516751278705
+              ],
+              "wrist_orientation_rad": [
+                0.6073000623547381,
+                0.5453452071360506
+              ]
+            }
+          },
+          {
+            "row": 197,
+            "converged": false,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  1.576213700060856e-16,
+                  1.1188630228279524e-16,
+                  1.1295700899707568e-16,
+                  3.469446951953614e-17,
+                  1.1443916996305594e-16
+                ],
+                [
+                  1.0845175201140987e-12,
+                  1.1470647932233942e-12,
+                  3.4130219709153416e-11,
+                  4.139007986169737e-11,
+                  8.054197443400718e-12
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.6863534434255554,
+                  0.7569219817729211,
+                  0.6654917892963275,
+                  1.071622041098678,
+                  1.666422313592738
+                ],
+                [
+                  1.3291006259451426,
+                  1.621221926828995,
+                  1.2383843472899687,
+                  1.133645164848724,
+                  1.2603165575680118
+                ]
+              ],
+              "wrist_position_m": [
+                0.06577260508836533,
+                0.15225885214564538
+              ],
+              "wrist_orientation_rad": [
+                0.5176649765775401,
+                1.0406400873349
+              ]
+            }
+          }
+        ],
+        "valid_rows": 6,
+        "converged_rows": 1,
+        "stalled_rows": 0,
+        "tip_position_mm_by_hand": {
+          "mean": 1.8324356940470594,
+          "median": 0.10362096418469695,
+          "p95": 8.634912027562939,
+          "max": 14.073242388103793
+        },
+        "tip_orientation_deg_by_hand": {
+          "mean": 62.767405763620665,
+          "median": 61.54633580063259,
+          "p95": 102.56613080456475,
+          "max": 153.9000339850854
+        },
+        "wrist_position_mm_by_hand": {
+          "mean": 111.78901338490691,
+          "median": 116.06232971509043,
+          "p95": 174.70493317723984,
+          "max": 190.67655318913367
+        },
+        "wrist_orientation_deg_by_hand": {
+          "mean": 45.72796607294663,
+          "median": 47.22741252951225,
+          "p95": 67.18801831542194,
+          "max": 76.4325812608747
+        },
+        "interpretation": "finite local constrained probes, not a global optimum or formal reference"
+      },
+      "position_wrist": {
+        "rows": [
+          {
+            "row": 0,
+            "converged": false,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  0.0026101040873256166,
+                  0.00104637253019459,
+                  0.004076741672591759,
+                  0.0072581339737738965,
+                  0.00030114974822897657
+                ],
+                [
+                  0.001712636018398496,
+                  0.00043543402158411243,
+                  0.003918413703060153,
+                  0.005440667226036631,
+                  0.004927017938665051
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.2969592101053596,
+                  0.23600678068939956,
+                  0.3908947636171131,
+                  0.5808346764801016,
+                  1.3676691507065173
+                ],
+                [
+                  0.39444189844406224,
+                  0.183310323702058,
+                  0.4719563239647641,
+                  0.4381123082959792,
+                  1.043415100212933
+                ]
+              ],
+              "wrist_position_m": [
+                0.040028529935097375,
+                0.03632343770107225
+              ],
+              "wrist_orientation_rad": [
+                0.004370522748666627,
+                0.004124105348377963
+              ]
+            }
+          },
+          {
+            "row": 20,
+            "converged": false,
+            "stalled": true,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  7.457458318638438e-05,
+                  0.003971246024869622,
+                  0.0067661271589719,
+                  0.0005591865576325824,
+                  0.010179012747637432
+                ],
+                [
+                  1.2370511509524665e-06,
+                  0.0018358454478287298,
+                  0.007340940550401891,
+                  0.0008768020890373953,
+                  0.009540337590679645
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.09542848550542779,
+                  0.13080330935144296,
+                  0.588609288801183,
+                  0.6536140014329613,
+                  1.0041488548084985
+                ],
+                [
+                  0.45148891827542453,
+                  0.5843838182644799,
+                  0.7787782698673987,
+                  0.5540248334751036,
+                  0.8245453377824845
+                ]
+              ],
+              "wrist_position_m": [
+                0.033903275808392426,
+                0.03651829316097886
+              ],
+              "wrist_orientation_rad": [
+                0.00393132074829051,
+                0.0025817923919055153
+              ]
+            }
+          },
+          {
+            "row": 50,
+            "converged": false,
+            "stalled": true,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  2.623333374761987e-05,
+                  0.0012530109726315549,
+                  0.0104765894796913,
+                  0.003145498455734629,
+                  0.010357216366492247
+                ],
+                [
+                  0.0005303858139468289,
+                  0.001569653756141289,
+                  0.00765238786506703,
+                  0.0023759178048055776,
+                  0.0070715003963650915
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.8526679820831949,
+                  0.3568404417506447,
+                  0.4548145040432494,
+                  0.4750592236750369,
+                  1.060909295352868
+                ],
+                [
+                  0.5322826188094336,
+                  0.2155471725836216,
+                  0.3735235426660416,
+                  0.6043367601954382,
+                  0.8625874498421102
+                ]
+              ],
+              "wrist_position_m": [
+                0.03967380520933515,
+                0.03647332831940462
+              ],
+              "wrist_orientation_rad": [
+                0.004058832150533491,
+                0.003019696456468745
+              ]
+            }
+          },
+          {
+            "row": 100,
+            "converged": false,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  6.518099305898719e-06,
+                  1.9593970594714785e-05,
+                  0.019146426931420175,
+                  0.001707840382317705,
+                  0.01745348746842074
+                ],
+                [
+                  0.0011285106184610802,
+                  0.00501853318627962,
+                  0.010301339488757473,
+                  2.6229228490626555e-05,
+                  0.015153795679154291
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  1.230300140810341,
+                  0.16245997652227737,
+                  0.5974199045387626,
+                  0.47370106134068507,
+                  1.0730993051316893
+                ],
+                [
+                  0.6221232638170652,
+                  0.14993165794120705,
+                  0.44255964185014524,
+                  0.6609510686731439,
+                  0.9605471419671928
+                ]
+              ],
+              "wrist_position_m": [
+                0.034906032406149035,
+                0.033271013207238374
+              ],
+              "wrist_orientation_rad": [
+                0.007148775851243556,
+                0.008159883908650007
+              ]
+            }
+          },
+          {
+            "row": 150,
+            "converged": true,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  1.1188630228279524e-16,
+                  2.7755575615628914e-17,
+                  0.0001704324777110159,
+                  0.007013643578875032,
+                  0.006843211101164257
+                ],
+                [
+                  1.9572222944390677e-13,
+                  1.1501289514137971e-12,
+                  0.004260531751769976,
+                  0.0020562543462907144,
+                  0.006316786097982458
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.32526924970691584,
+                  0.5850323638510349,
+                  0.5771782563536733,
+                  1.3991297790935515,
+                  1.962425166198561
+                ],
+                [
+                  0.37008642170922945,
+                  0.4906301676927363,
+                  0.5281893459205519,
+                  0.7494690977854742,
+                  1.565418693513575
+                ]
+              ],
+              "wrist_position_m": [
+                0.0401940322004841,
+                0.03503495744438937
+              ],
+              "wrist_orientation_rad": [
+                0.002277642718747065,
+                0.002559018622731778
+              ]
+            }
+          },
+          {
+            "row": 197,
+            "converged": true,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  8.559337136863226e-12,
+                  8.978778858878534e-12,
+                  0.000741565126694313,
+                  0.004438283879090975,
+                  0.0051798490037940174
+                ],
+                [
+                  3.412613205722926e-14,
+                  1.98563193967704e-13,
+                  0.004169879499459194,
+                  0.0018913356128144115,
+                  0.006061215112286956
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.16997746952294307,
+                  0.5597254256772425,
+                  0.3672123967993021,
+                  1.0329497261607141,
+                  1.755094012742172
+                ],
+                [
+                  0.503535275686627,
+                  0.48082262675487375,
+                  0.4945998044159769,
+                  0.8383572782828007,
+                  1.4924525751038555
+                ]
+              ],
+              "wrist_position_m": [
+                0.03295891579808292,
+                0.033902826883978304
+              ],
+              "wrist_orientation_rad": [
+                0.001742810605340781,
+                0.002441424304651507
+              ]
+            }
+          }
+        ],
+        "valid_rows": 6,
+        "converged_rows": 2,
+        "stalled_rows": 2,
+        "tip_position_mm_by_hand": {
+          "mean": 3.940593960435524,
+          "median": 2.216086075548146,
+          "p95": 10.710449789664438,
+          "max": 19.146426931420176
+        },
+        "tip_orientation_deg_by_hand": {
+          "mean": 37.699327023098675,
+          "median": 31.906594640515557,
+          "p95": 85.72026620849887,
+          "max": 112.43867963343668
+        },
+        "wrist_position_mm_by_hand": {
+          "mean": 36.09903733955023,
+          "median": 35.679197572730814,
+          "p95": 40.1030059545214,
+          "max": 40.1940322004841
+        },
+        "wrist_orientation_deg_by_hand": {
+          "mean": 0.22161924367837627,
+          "median": 0.19913197457776405,
+          "p95": 0.4356641859057756,
+          "max": 0.4675269092823592
+        },
+        "interpretation": "finite local constrained probes, not a global optimum or formal reference"
+      },
+      "pose": {
+        "rows": [
+          {
+            "row": 0,
+            "converged": true,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  0.00798395632194001,
+                  0.004312957661992845,
+                  0.011146870996294652,
+                  0.0023004860387525875,
+                  0.022803427306310416
+                ],
+                [
+                  0.008162969286809943,
+                  0.0015878216350086623,
+                  0.009307931759049256,
+                  0.0037439746584743165,
+                  0.021247858315565835
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.03221896600349965,
+                  0.03772289187692516,
+                  0.2709520604132965,
+                  0.4825952930955762,
+                  0.2944790462638697
+                ],
+                [
+                  0.07828809267271239,
+                  0.059177794166091695,
+                  0.3401206892274587,
+                  0.32995728713737243,
+                  0.25263476221573855
+                ]
+              ],
+              "wrist_position_m": [
+                0.04327171889448006,
+                0.045162010616585195
+              ],
+              "wrist_orientation_rad": [
+                0.09189340414592329,
+                0.10921237873540944
+              ]
+            }
+          },
+          {
+            "row": 20,
+            "converged": false,
+            "stalled": true,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  0.017187593432314113,
+                  0.009996630628479409,
+                  0.006174747003721537,
+                  0.011924749233093557,
+                  0.03484612528026312
+                ],
+                [
+                  0.022274870725708534,
+                  0.020986374076406404,
+                  0.006965529293601676,
+                  0.012376471699966946,
+                  0.03500617223902347
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.23737335458458966,
+                  0.1708990717556659,
+                  0.38235558182729845,
+                  0.5754590025692414,
+                  0.3268061918877116
+                ],
+                [
+                  0.29393088700351677,
+                  0.21536801929948393,
+                  0.32356124515280615,
+                  0.3170947442620564,
+                  0.6285392162898309
+                ]
+              ],
+              "wrist_position_m": [
+                0.028860715311602576,
+                0.02174160753597744
+              ],
+              "wrist_orientation_rad": [
+                0.0825803465550144,
+                0.10192160143868265
+              ]
+            }
+          },
+          {
+            "row": 50,
+            "converged": false,
+            "stalled": true,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  0.025215305989675075,
+                  0.011629680829562195,
+                  0.010864148456224835,
+                  0.016069096137156225,
+                  0.04195459681434733
+                ],
+                [
+                  0.022076082580561946,
+                  0.008507887408723488,
+                  0.008146624406915635,
+                  0.013597017052557567,
+                  0.03527693222494664
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.5722189789097997,
+                  0.23055031193336117,
+                  0.3362399181231024,
+                  0.45722905550787035,
+                  0.6879002944293388
+                ],
+                [
+                  0.4301177701804127,
+                  0.19920128905984388,
+                  0.3505907689046799,
+                  0.5587859803901379,
+                  0.6735869283578951
+                ]
+              ],
+              "wrist_position_m": [
+                0.04265585759793493,
+                0.032094417943166254
+              ],
+              "wrist_orientation_rad": [
+                0.06070269760377927,
+                0.060723582086234185
+              ]
+            }
+          },
+          {
+            "row": 100,
+            "converged": false,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  0.01700718784072565,
+                  0.005808949483930704,
+                  0.01722613887607045,
+                  0.012152606487379761,
+                  0.0376194666077009
+                ],
+                [
+                  0.022970678239540486,
+                  0.00593699106528212,
+                  0.01014514861846401,
+                  0.013133887862970069,
+                  0.03530550997436716
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.5758164413220689,
+                  0.16867559682622627,
+                  0.5671084512625102,
+                  0.398139851502114,
+                  0.6250864103729815
+                ],
+                [
+                  0.31180655552765635,
+                  0.12445395581110621,
+                  0.33779042140567833,
+                  0.5537922605789424,
+                  0.8128475910912059
+                ]
+              ],
+              "wrist_position_m": [
+                0.05416546695410866,
+                0.03164307974665879
+              ],
+              "wrist_orientation_rad": [
+                0.0679233263552671,
+                0.07330367227779891
+              ]
+            }
+          },
+          {
+            "row": 150,
+            "converged": true,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  0.010136412461786941,
+                  0.0020572097306287146,
+                  0.011509082340893907,
+                  0.006556802402525947,
+                  0.02358716112406948
+                ],
+                [
+                  0.008723085256568648,
+                  0.006477635127321839,
+                  0.011149893195038087,
+                  0.005731867250626949,
+                  0.022134267720242518
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.03463371086686187,
+                  0.1093717781337812,
+                  0.35645205708770644,
+                  0.46116878379466025,
+                  0.5679544945575727
+                ],
+                [
+                  0.06558765961394376,
+                  0.2582121922275149,
+                  0.4318820481162727,
+                  0.3937609065393369,
+                  0.833351283652911
+                ]
+              ],
+              "wrist_position_m": [
+                0.04465287570609047,
+                0.04477005725518088
+              ],
+              "wrist_orientation_rad": [
+                0.14976259619834653,
+                0.04268028853459866
+              ]
+            }
+          },
+          {
+            "row": 197,
+            "converged": false,
+            "stalled": false,
+            "constraint_gate_passed": true,
+            "metrics": {
+              "tip_position_m": [
+                [
+                  0.00938647227339473,
+                  0.0020617704444262463,
+                  0.01131205923042028,
+                  0.004920762320075085,
+                  0.022866620806692085
+                ],
+                [
+                  0.008635171084938767,
+                  0.007675081137132908,
+                  0.011034815862999672,
+                  0.004902546096373805,
+                  0.02184266034319519
+                ]
+              ],
+              "tip_orientation_rad": [
+                [
+                  0.033442491149139,
+                  0.06484939517766032,
+                  0.2159441949869313,
+                  0.4200657639704603,
+                  0.5897748442665934
+                ],
+                [
+                  0.07549056683729255,
+                  0.28357754580389605,
+                  0.4069068762884879,
+                  0.416736078256834,
+                  0.6991500432980956
+                ]
+              ],
+              "wrist_position_m": [
+                0.04484965174916085,
+                0.04566660839140625
+              ],
+              "wrist_orientation_rad": [
+                0.1327911731506044,
+                0.05433874609198623
+              ]
+            }
+          }
+        ],
+        "valid_rows": 6,
+        "converged_rows": 2,
+        "stalled_rows": 2,
+        "tip_position_mm_by_hand": {
+          "mean": 14.228047179320525,
+          "median": 11.14838209566637,
+          "p95": 35.27836111241767,
+          "max": 41.954596814347326
+        },
+        "tip_orientation_deg_by_hand": {
+          "mean": 20.377994313912755,
+          "median": 19.30954685938452,
+          "p95": 39.446011753145896,
+          "max": 47.747511405121315
+        },
+        "wrist_position_mm_by_hand": {
+          "mean": 39.96117230852936,
+          "median": 43.962297300285265,
+          "p95": 49.49109474462233,
+          "max": 54.16546695410866
+        },
+        "wrist_orientation_deg_by_hand": {
+          "mean": 4.907544961307319,
+          "median": 4.465748186329021,
+          "p95": 8.045949688955572,
+          "max": 8.580764691087245
+        },
+        "interpretation": "finite local constrained probes, not a global optimum or formal reference"
+      }
+    }
+  },
+  "diagnostic_outputs": {
+    "candidate_scene": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_geometry_contract_audit_v7/diagnostic_endpoint_scene.xml",
+      "sha256": "c64f761ca997416006156a8696c9bd6e10aab57f6c5e5cf8de029a0716c92a8f"
+    },
+    "candidate_human_reference": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_geometry_contract_audit_v7/diagnostic_endpoint_human_reference.npz",
+      "sha256": "e6ffc1599173446a78fdd8c06524e65320e9fef656435cf6e5371c8a2fbb8291"
+    }
+  },
+  "conclusions": {
+    "independent_fk_passed": true,
+    "MANO_transport_is_consistent": true,
+    "candidate_fixed_point_offsets_are_pose_invariant": true,
+    "candidate_frame_transport_is_pose_invariant": true,
+    "geometry_contract_resolved": false,
+    "grid_search_allowed": false,
+    "reason_grid_blocked": "candidate endpoint/anatomical frame is an auditable hypothesis; multi-task feasibility and author correspondence are not established"
+  },
+  "limitations": [
+    "The endpoint contract is a reproducible engineering hypothesis, not a recovered EgoEngine author calibration.",
+    "The finite QP probes are local constrained optima on six representative rows, not global reachable-set proofs.",
+    "The posture labels are geometric strata, not TACO-provided action labels.",
+    "Wrist relaxed kinematic lower bounds are zero because the wrist is floating; nonzero coupled residuals are reported by the probes.",
+    "No weights, target points, production sites, collision pairs, qpos, or formal references were overwritten."
+  ]
+}

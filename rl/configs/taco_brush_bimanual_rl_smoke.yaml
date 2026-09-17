@@ -1,0 +1,23 @@
+robot_type: xhand
+embodiment_type: bimanual
+task: taco_brush_brush_bowl_20230927_027
+dataset_dir: /data_all/zzx/3.2RL/models
+dataset_name: taco_xhand
+data_id: 0
+model_path: /data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_brush_brush_bowl_20230927_027/scene_act.xml
+# This MINK candidate fails the self-collision audit; smoke input only.
+data_path: /data_all/zzx/3.2RL/runs/taco_brush_bimanual_gt_v1/robot_reference.npz
+simulator: mjwp
+device: cuda:0
+sim_dt: 0.0033333333333333335
+ctrl_dt: 0.03333333333333333
+ref_dt: 0.03333333333333333
+render_dt: 0.03333333333333333
+num_samples: 2
+num_dyn: 1
+num_dr: 1
+show_viewer: false
+wait_on_finish: false
+contact_guidance: false
+use_rl_reward: false
+paper_objective: true

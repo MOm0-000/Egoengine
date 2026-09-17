@@ -1,0 +1,136 @@
+{
+  "overfill": {
+    "right": {
+      "samples": 84258,
+      "sampled_outside_native_over_50um": 3001,
+      "sampled_outside_native_over_1mm": 0,
+      "sampled_overfill_distance_m_percentiles": [
+        0,
+        0.00001804272760637097,
+        0.00023842312031774698,
+        0.0007851535337977111
+      ],
+      "worst_sample_object_coordinates_m": [
+        -0.01483229976376091,
+        0.014631820174980409,
+        -0.028996739522986825
+      ],
+      "distance_backend": "Open3D signed distance, 11 rays, positive inside",
+      "extreme_probe_winding_crosscheck": {
+        "indices": [
+          6538,
+          63602,
+          46870,
+          73307,
+          60984
+        ],
+        "values": [
+          8.393130409417613e-17,
+          1.3252311172764654e-16,
+          -1.0601848938211722e-16,
+          -4.417437057588218e-17,
+          -8.834874115176436e-17
+        ]
+      },
+      "maximum_error_certified": false,
+      "underfill_checked": false,
+      "sampling": "all compiled convex hull vertices and triangle centroids, no random sampling"
+    },
+    "left": {
+      "samples": 127009,
+      "sampled_outside_native_over_50um": 12479,
+      "sampled_outside_native_over_1mm": 14,
+      "sampled_overfill_distance_m_percentiles": [
+        0,
+        0.0001215756899910047,
+        0.00039345298660919064,
+        0.0014811927685514092
+      ],
+      "worst_sample_object_coordinates_m": [
+        -0.14451617499234506,
+        0.0808135817957415,
+        -0.013563050274004692
+      ],
+      "distance_backend": "Open3D signed distance, 11 rays, positive inside",
+      "extreme_probe_winding_crosscheck": {
+        "indices": [
+          46311,
+          93135,
+          19839,
+          99341,
+          19841
+        ],
+        "values": [
+          8.834874115176436e-17,
+          -1.5461029701558764e-17,
+          -1.766974823035287e-17,
+          -5.0800526162264503e-17,
+          -5.742668174864683e-17
+        ]
+      },
+      "maximum_error_certified": false,
+      "underfill_checked": false,
+      "sampling": "all compiled convex hull vertices and triangle centroids, no random sampling"
+    }
+  },
+  "sources": {
+    "right": {
+      "source": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/object_models/object_models_released/022_cm.obj",
+      "source_sha256": "35c52d853b85aa521eeadda78abb2bd370975611c8c35cd9a9d4c96746d8418c",
+      "unit_scale": 0.01,
+      "parameters": {
+        "threshold": 0.01,
+        "max_convex_hull": -1,
+        "seed": 0,
+        "preprocess_mode": "auto",
+        "mcts_iterations": 100,
+        "mcts_max_depth": 3,
+        "max_ch_vertex": 64
+      },
+      "parts": 288,
+      "metric_extents": [
+        0.11775506000000001,
+        0.11711804,
+        0.06964827999999999
+      ],
+      "coacd_version": "1.0.12",
+      "parameter_provenance": "local settings; disclosed threshold/part-cap/preprocess/unit choices; not published EgoEngine parameters",
+      "source_is_watertight": true,
+      "source_is_positive_volume": true,
+      "exact_stl_vertex_welding": false,
+      "requested_threshold_certified": false,
+      "status": "collision_approximation_requires_contact_audit"
+    },
+    "left": {
+      "source": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/object_models/object_models_released/135_cm.obj",
+      "source_sha256": "6316aea5b5c29a6231639d4ac8dad2c42ee013cfc55f1ce5a9dc5a38056f52a1",
+      "unit_scale": 0.01,
+      "parameters": {
+        "threshold": 0.0005,
+        "max_convex_hull": -1,
+        "seed": 0,
+        "preprocess_mode": "off",
+        "mcts_iterations": 100,
+        "mcts_max_depth": 3,
+        "max_ch_vertex": 64,
+        "real_metric": true
+      },
+      "parts": 1121,
+      "metric_extents": [
+        0.31773472,
+        0.18407343999999998,
+        0.03683792
+      ],
+      "coacd_version": "1.0.12",
+      "parameter_provenance": "local settings; disclosed threshold/part-cap/preprocess/unit choices; not published EgoEngine parameters",
+      "source_is_watertight": true,
+      "source_is_positive_volume": true,
+      "exact_stl_vertex_welding": false,
+      "requested_threshold_certified": false,
+      "status": "collision_approximation_requires_contact_audit"
+    }
+  },
+  "status": "rejected_costly_geometry_only_candidate_generated_parts_removed",
+  "cleanup": {"generated_files_removed": 1122, "source_modified": false, "regenerate": "scripts/prepare_taco_bowl_collision.py with sources.left source/unit_scale/parameters", "reason": "1121 plate parts improve sampled max only 0.133 mm over the 256-part candidate"},
+  "model_geometry_count": 1411
+}

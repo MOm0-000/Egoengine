@@ -1,0 +1,1641 @@
+{
+  "status": "surface_normal_semantics_audit_not_a_mapping_change",
+  "inputs": [
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_v1/human_reference.npz",
+      "sha256": "852bda624bb22c9cf0797544294556752d490d11d443eb59a7f1e3e4aaab986a"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_v1/robot_reference.npz",
+      "sha256": "e21e4a5a02ffaeaf55b2c8e60af941628d7573d468afea5464d00c90a396fe19"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_spider_mink_experiment_v2/robot_reference.npz",
+      "sha256": "4fa6b60e7e78635bfc6fcacd2d687c0ffe1b5e9eb8dd799de6eed338ce68ce8e"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml",
+      "sha256": "86f7402b3130dfd459f72635c609448aa2d9c9c10a27a1125160d1c8fc354c24"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017/right_hand.pkl",
+      "sha256": "098d13bf5bc3cd0275f53a320c824653175d0394c2a1040f94542c9ab788d110"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017/left_hand.pkl",
+      "sha256": "a06ba74342df18ef69b559e57b903938ad640edb8ce3269fca00b4ec5652c6d0"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017/right_hand_shape.pkl",
+      "sha256": "ae8bd692a12c2b18bdae4e8f031f364930e9bad7c0a4d78afc2d8eb9d03d5d13"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017/left_hand_shape.pkl",
+      "sha256": "97956334eea23cc859c937102d9ba26b8dead9f64913d54ea6cb90a2cc50531c"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/hand_poses_v1/mano_v1_2/models/MANO_RIGHT.pkl",
+      "sha256": "45d60aa3b27ef9107a7afd4e00808f307fd91111e1cfa35afd5c4a62de264767"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/hand_poses_v1/mano_v1_2/models/MANO_LEFT.pkl",
+      "sha256": "c4022f7083f2ca7c78b2b3d595abbab52debd32b09d372b16923a801f0ea6a30"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_spider_mink_experiment_v2/vendor/spider/assets/robots/xhand/xhand_right.urdf",
+      "sha256": "bd596ccb96612f4ce933f1d6b0f40c3e9e354367cd7ca58a3ff4909f63f6c213"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_spider_mink_experiment_v2/vendor/spider/assets/robots/xhand/xhand_left.urdf",
+      "sha256": "39be1ec748743867953ad6af09a2681133341bb92e488530febcfe554aff2a0e"
+    }
+  ],
+  "code": [
+    {
+      "path": "/data_all/zzx/3.2RL/scripts/audit_taco_surface_normal_semantics.py",
+      "sha256": "a1645740099ee51d24f77425143c4ed0c06f50570e0197ef733b714cd149e286"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/src/egoengine_repro/retarget/taco_bimanual.py",
+      "sha256": "9152631d900b16401a8adaccb45216fe812bb198385d2f2978402a3eb5058103"
+    }
+  ],
+  "human_surface_source": {
+    "right": {
+      "tip_vertex_indices": [
+        745,
+        317,
+        444,
+        556,
+        673
+      ],
+      "vertex_normals_are_mesh_vertex_normals": true,
+      "reconstructed_joint_rows": 198,
+      "faces": 1538
+    },
+    "left": {
+      "tip_vertex_indices": [
+        745,
+        317,
+        445,
+        556,
+        673
+      ],
+      "vertex_normals_are_mesh_vertex_normals": true,
+      "reconstructed_joint_rows": 198,
+      "faces": 1538
+    }
+  },
+  "robot_surface_source": {
+    "right_thumb": {
+      "body_id": 9,
+      "endpoint_local_m": [
+        0.0504024546888781,
+        0.0,
+        0.0
+      ],
+      "nearest_surface_distance_m": 0.0014575983440672025,
+      "normal_local": [
+        0.9370618586519524,
+        4.984713667198099e-06,
+        0.3491633901698475
+      ],
+      "mesh_watertight": true
+    },
+    "right_index": {
+      "body_id": 12,
+      "endpoint_local_m": [
+        0.0,
+        0.0,
+        -0.0424999999999993
+      ],
+      "nearest_surface_distance_m": 0.0014569098590590038,
+      "normal_local": [
+        0.0,
+        0.35612380393314436,
+        -0.9344387814470178
+      ],
+      "mesh_watertight": false
+    },
+    "right_middle": {
+      "body_id": 14,
+      "endpoint_local_m": [
+        0.0,
+        0.0,
+        -0.042107
+      ],
+      "nearest_surface_distance_m": 0.0010665737700910046,
+      "normal_local": [
+        0.0,
+        -0.11614812269093397,
+        -0.993231903230747
+      ],
+      "mesh_watertight": false
+    },
+    "right_ring": {
+      "body_id": 16,
+      "endpoint_local_m": [
+        0.0,
+        0.0,
+        -0.0424999999999994
+      ],
+      "nearest_surface_distance_m": 0.0014569098590590948,
+      "normal_local": [
+        0.0,
+        0.35612380393314436,
+        -0.9344387814470178
+      ],
+      "mesh_watertight": false
+    },
+    "right_pinky": {
+      "body_id": 18,
+      "endpoint_local_m": [
+        0.0,
+        0.0,
+        -0.0425
+      ],
+      "nearest_surface_distance_m": 0.001456909859059654,
+      "normal_local": [
+        0.0,
+        0.35612380393314436,
+        -0.9344387814470178
+      ],
+      "mesh_watertight": false
+    },
+    "left_thumb": {
+      "body_id": 27,
+      "endpoint_local_m": [
+        0.0504017317642718,
+        0.0,
+        0.0
+      ],
+      "nearest_surface_distance_m": 0.001261188165785578,
+      "normal_local": [
+        0.6747074516662311,
+        -4.081716802906083e-06,
+        0.7380852624523809
+      ],
+      "mesh_watertight": true
+    },
+    "left_index": {
+      "body_id": 30,
+      "endpoint_local_m": [
+        0.0,
+        0.0,
+        -0.0424999999999991
+      ],
+      "nearest_surface_distance_m": 0.0014569098590588153,
+      "normal_local": [
+        0.0,
+        -0.35612380393314436,
+        -0.9344387814470178
+      ],
+      "mesh_watertight": false
+    },
+    "left_middle": {
+      "body_id": 32,
+      "endpoint_local_m": [
+        0.0,
+        0.0,
+        -0.0424999999999995
+      ],
+      "nearest_surface_distance_m": 0.0014569098590591924,
+      "normal_local": [
+        0.0,
+        -0.35612380393314436,
+        -0.9344387814470178
+      ],
+      "mesh_watertight": false
+    },
+    "left_ring": {
+      "body_id": 34,
+      "endpoint_local_m": [
+        0.0,
+        0.0,
+        -0.0425
+      ],
+      "nearest_surface_distance_m": 0.001456909859059654,
+      "normal_local": [
+        0.0,
+        -0.35612380393314436,
+        -0.9344387814470178
+      ],
+      "mesh_watertight": false
+    },
+    "left_pinky": {
+      "body_id": 36,
+      "endpoint_local_m": [
+        0.0,
+        0.0,
+        -0.0424999999999995
+      ],
+      "nearest_surface_distance_m": 0.0014569098590591924,
+      "normal_local": [
+        0.0,
+        -0.35612380393314436,
+        -0.9344387814470178
+      ],
+      "mesh_watertight": false
+    }
+  },
+  "metrics": {
+    "baseline_current_mink": {
+      "right": {
+        "thumb": {
+          "human_tip_surface_normal_vs_target_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 90.99867878285379,
+              "median_deg": 114.04891741078484,
+              "p95_deg": 141.33588012717883,
+              "max_deg": 149.98816577114135
+            },
+            "y": {
+              "mean_deg": 113.13796753964951,
+              "median_deg": 120.59198694094796,
+              "p95_deg": 131.53251183614879,
+              "max_deg": 133.01357533961135
+            },
+            "z": {
+              "mean_deg": 75.45442468730381,
+              "median_deg": 74.10561349564477,
+              "p95_deg": 113.29892065983043,
+              "max_deg": 119.13510704092769
+            }
+          },
+          "robot_native_surface_normal_vs_actual_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 112.14127662383878,
+              "median_deg": 118.41619161844648,
+              "p95_deg": 135.57288955751358,
+              "max_deg": 148.08876261745237
+            },
+            "y": {
+              "mean_deg": 79.70018132399271,
+              "median_deg": 65.14224006227259,
+              "p95_deg": 113.51541781486976,
+              "max_deg": 115.50113991954034
+            },
+            "z": {
+              "mean_deg": 40.768243609471,
+              "median_deg": 41.666110226237365,
+              "p95_deg": 53.960006111923256,
+              "max_deg": 58.42468598822907
+            }
+          },
+          "human_surface_normal_stability_in_target_frame": {
+            "mean_local_direction": [
+              0.08739143178455631,
+              -0.38939941535540973,
+              0.9169137543801545
+            ],
+            "mean_deviation_deg": 1.441986373619142,
+            "p95_deviation_deg": 5.153231656676731,
+            "max_deviation_deg": 7.292580013377023
+          },
+          "robot_surface_normal_stability_in_actual_frame": {
+            "mean_local_direction": [
+              -0.10965492530050505,
+              0.5936583461470646,
+              0.7972111172125442
+            ],
+            "mean_deviation_deg": 1.8660528292483598e-07,
+            "p95_deviation_deg": 1.5130945273259064e-06,
+            "max_deviation_deg": 2.699869328381916e-06
+          },
+          "human_vs_robot_surface_normal_error_deg": {
+            "mean_deg": 60.31123858048412,
+            "median_deg": 59.311953122397384,
+            "p95_deg": 65.93026032614884,
+            "max_deg": 66.64648458151271
+          },
+          "normal_convention_is_diagnostic_only": true
+        },
+        "index": {
+          "human_tip_surface_normal_vs_target_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 90.19108726835418,
+              "median_deg": 97.9771580324517,
+              "p95_deg": 107.65305235114428,
+              "max_deg": 115.89263336106922
+            },
+            "y": {
+              "mean_deg": 48.93048901950709,
+              "median_deg": 39.76434695423804,
+              "p95_deg": 81.23446472790621,
+              "max_deg": 83.0244033145886
+            },
+            "z": {
+              "mean_deg": 46.18587860854056,
+              "median_deg": 58.99627567982785,
+              "p95_deg": 77.73242960130567,
+              "max_deg": 87.96341382725528
+            }
+          },
+          "robot_native_surface_normal_vs_actual_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 75.96456394230036,
+              "median_deg": 75.26505308682806,
+              "p95_deg": 124.44381487400837,
+              "max_deg": 140.51478338341605
+            },
+            "y": {
+              "mean_deg": 66.92366638924597,
+              "median_deg": 62.40937976173312,
+              "p95_deg": 110.08573506158234,
+              "max_deg": 115.96907362699487
+            },
+            "z": {
+              "mean_deg": 58.95686804741769,
+              "median_deg": 77.19321473492363,
+              "p95_deg": 95.04253891442308,
+              "max_deg": 110.10640011604531
+            }
+          },
+          "human_surface_normal_stability_in_target_frame": {
+            "mean_local_direction": [
+              0.03812439636360062,
+              0.5766796436595715,
+              0.8160803385639068
+            ],
+            "mean_deviation_deg": 1.8841492383706677,
+            "p95_deviation_deg": 5.296590073011825,
+            "max_deviation_deg": 5.485533078604465
+          },
+          "robot_surface_normal_stability_in_actual_frame": {
+            "mean_local_direction": [
+              0.215337615865128,
+              0.00047853878105482453,
+              0.9765395446136106
+            ],
+            "mean_deviation_deg": 3.763747730521658e-07,
+            "p95_deviation_deg": 1.9090959104164224e-06,
+            "max_deviation_deg": 2.699869328381916e-06
+          },
+          "human_vs_robot_surface_normal_error_deg": {
+            "mean_deg": 30.080241501657223,
+            "median_deg": 31.15499242279906,
+            "p95_deg": 37.381460804602085,
+            "max_deg": 42.91554783367766
+          },
+          "normal_convention_is_diagnostic_only": true
+        },
+        "middle": {
+          "human_tip_surface_normal_vs_target_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 81.52526740529646,
+              "median_deg": 81.31175431587076,
+              "p95_deg": 118.19881740930215,
+              "max_deg": 134.61279044329817
+            },
+            "y": {
+              "mean_deg": 71.86680641027631,
+              "median_deg": 61.31485370002493,
+              "p95_deg": 113.9306207010682,
+              "max_deg": 114.52960671435372
+            },
+            "z": {
+              "mean_deg": 83.43037831262092,
+              "median_deg": 100.49631372836255,
+              "p95_deg": 133.04932853332062,
+              "max_deg": 139.03065333525362
+            }
+          },
+          "robot_native_surface_normal_vs_actual_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 82.34724608492768,
+              "median_deg": 64.06673525665494,
+              "p95_deg": 132.99472190076895,
+              "max_deg": 145.66879287989903
+            },
+            "y": {
+              "mean_deg": 67.28995340212016,
+              "median_deg": 64.96842424542375,
+              "p95_deg": 100.71080377857473,
+              "max_deg": 101.0490018635473
+            },
+            "z": {
+              "mean_deg": 59.514312775460866,
+              "median_deg": 59.64609708036775,
+              "p95_deg": 85.4499530545283,
+              "max_deg": 87.76193304357562
+            }
+          },
+          "human_surface_normal_stability_in_target_frame": {
+            "mean_local_direction": [
+              0.10393203450489591,
+              -0.07347970652862688,
+              0.9918663543704566
+            ],
+            "mean_deviation_deg": 0.5617830633281854,
+            "p95_deviation_deg": 1.128043687186271,
+            "max_deviation_deg": 1.9398507584507179
+          },
+          "robot_surface_normal_stability_in_actual_frame": {
+            "mean_local_direction": [
+              -0.26045028756635863,
+              -0.0005787914138301175,
+              0.9654870857277691
+            ],
+            "mean_deviation_deg": 4.677999741220539e-07,
+            "p95_deviation_deg": 1.9090959104164224e-06,
+            "max_deviation_deg": 2.561320938754782e-06
+          },
+          "human_vs_robot_surface_normal_error_deg": {
+            "mean_deg": 26.62706006152409,
+            "median_deg": 26.726900592427604,
+            "p95_deg": 29.32688431566779,
+            "max_deg": 31.820598290614974
+          },
+          "normal_convention_is_diagnostic_only": true
+        },
+        "ring": {
+          "human_tip_surface_normal_vs_target_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 86.50411456389106,
+              "median_deg": 50.73136705950567,
+              "p95_deg": 165.59550950907553,
+              "max_deg": 168.0905333870949
+            },
+            "y": {
+              "mean_deg": 79.08745609841058,
+              "median_deg": 82.91504961930005,
+              "p95_deg": 109.23956500498468,
+              "max_deg": 123.35519883680496
+            },
+            "z": {
+              "mean_deg": 81.42068175549716,
+              "median_deg": 76.54150892294597,
+              "p95_deg": 122.22876408493865,
+              "max_deg": 133.29979692342351
+            }
+          },
+          "robot_native_surface_normal_vs_actual_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 88.78230004046027,
+              "median_deg": 92.83775394917362,
+              "p95_deg": 123.36081007874084,
+              "max_deg": 169.38327939661895
+            },
+            "y": {
+              "mean_deg": 64.19085559853899,
+              "median_deg": 56.405396297129926,
+              "p95_deg": 114.803093948089,
+              "max_deg": 117.21133888166949
+            },
+            "z": {
+              "mean_deg": 69.41302845694685,
+              "median_deg": 80.49324062527319,
+              "p95_deg": 108.75768119270562,
+              "max_deg": 110.60265444862661
+            }
+          },
+          "human_surface_normal_stability_in_target_frame": {
+            "mean_local_direction": [
+              -0.8204625194450832,
+              -0.0554388156478464,
+              0.5690059682511165
+            ],
+            "mean_deviation_deg": 0.7442559248788967,
+            "p95_deviation_deg": 1.4009523045290666,
+            "max_deviation_deg": 3.4109388092262583
+          },
+          "robot_surface_normal_stability_in_actual_frame": {
+            "mean_local_direction": [
+              0.215337615865128,
+              0.0004785387810548197,
+              0.9765395446136106
+            ],
+            "mean_deviation_deg": 3.028969226391399e-07,
+            "p95_deviation_deg": 1.7075472925031877e-06,
+            "max_deviation_deg": 2.091309789151873e-06
+          },
+          "human_vs_robot_surface_normal_error_deg": {
+            "mean_deg": 66.38354671668928,
+            "median_deg": 66.63298965915286,
+            "p95_deg": 69.92734298365453,
+            "max_deg": 70.75318446679678
+          },
+          "normal_convention_is_diagnostic_only": true
+        },
+        "pinky": {
+          "human_tip_surface_normal_vs_target_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 108.91601561107687,
+              "median_deg": 99.24326769673897,
+              "p95_deg": 165.41269318837556,
+              "max_deg": 171.90613685894462
+            },
+            "y": {
+              "mean_deg": 92.4689372341235,
+              "median_deg": 90.95715836863906,
+              "p95_deg": 109.90774553455526,
+              "max_deg": 117.19185709081698
+            },
+            "z": {
+              "mean_deg": 47.64062687758484,
+              "median_deg": 46.57383794811459,
+              "p95_deg": 102.6276786370172,
+              "max_deg": 107.33477279330806
+            }
+          },
+          "robot_native_surface_normal_vs_actual_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 92.00469091106376,
+              "median_deg": 107.69590689214337,
+              "p95_deg": 126.00870843654302,
+              "max_deg": 153.60481837594176
+            },
+            "y": {
+              "mean_deg": 67.81217428022977,
+              "median_deg": 53.09006771975832,
+              "p95_deg": 114.74111922445762,
+              "max_deg": 117.01576075817273
+            },
+            "z": {
+              "mean_deg": 71.0059204565744,
+              "median_deg": 84.0508450422739,
+              "p95_deg": 121.90810905573252,
+              "max_deg": 128.48002309915967
+            }
+          },
+          "human_surface_normal_stability_in_target_frame": {
+            "mean_local_direction": [
+              -0.7598974318931492,
+              -0.17562424835515592,
+              0.6258690089722315
+            ],
+            "mean_deviation_deg": 2.5545789020070773,
+            "p95_deviation_deg": 6.876018442881336,
+            "max_deviation_deg": 7.726889598662476
+          },
+          "robot_surface_normal_stability_in_actual_frame": {
+            "mean_local_direction": [
+              0.215337615865128,
+              0.0004785387810548084,
+              0.9765395446136106
+            ],
+            "mean_deviation_deg": 2.938227289024176e-07,
+            "p95_deviation_deg": 1.4787793334710982e-06,
+            "max_deviation_deg": 2.091309789151873e-06
+          },
+          "human_vs_robot_surface_normal_error_deg": {
+            "mean_deg": 65.47362771082261,
+            "median_deg": 64.99084813262563,
+            "p95_deg": 70.78057050905369,
+            "max_deg": 72.36463987158768
+          },
+          "normal_convention_is_diagnostic_only": true
+        }
+      },
+      "left": {
+        "thumb": {
+          "human_tip_surface_normal_vs_target_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 131.3208178613802,
+              "median_deg": 124.9660112419364,
+              "p95_deg": 158.26886699141573,
+              "max_deg": 159.3690827205021
+            },
+            "y": {
+              "mean_deg": 111.37670528657269,
+              "median_deg": 106.18644921774828,
+              "p95_deg": 152.84891836341558,
+              "max_deg": 175.22386709647404
+            },
+            "z": {
+              "mean_deg": 68.14161134054692,
+              "median_deg": 67.9682855963247,
+              "p95_deg": 108.38577444106139,
+              "max_deg": 112.47935258852876
+            }
+          },
+          "robot_native_surface_normal_vs_actual_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 118.82170511967512,
+              "median_deg": 116.70097430733463,
+              "p95_deg": 133.99461349411445,
+              "max_deg": 142.18427424050344
+            },
+            "y": {
+              "mean_deg": 102.97462037369765,
+              "median_deg": 102.00832262941987,
+              "p95_deg": 140.90952339479762,
+              "max_deg": 151.04883770801007
+            },
+            "z": {
+              "mean_deg": 141.428231849956,
+              "median_deg": 150.0875716166616,
+              "p95_deg": 156.39060297441966,
+              "max_deg": 159.58708651377248
+            }
+          },
+          "human_surface_normal_stability_in_target_frame": {
+            "mean_local_direction": [
+              0.08985759786497614,
+              0.39072609511627554,
+              0.9161106541794629
+            ],
+            "mean_deviation_deg": 1.4411028569129816,
+            "p95_deviation_deg": 2.2435223182453834,
+            "max_deviation_deg": 2.904523385450717
+          },
+          "robot_surface_normal_stability_in_actual_frame": {
+            "mean_local_direction": [
+              -0.1636287752395257,
+              -0.8858476859459637,
+              0.4341652925071213
+            ],
+            "mean_deviation_deg": 4.0102460086247757e-07,
+            "p95_deviation_deg": 2.091309789151873e-06,
+            "max_deviation_deg": 2.9575586669421963e-06
+          },
+          "human_vs_robot_surface_normal_error_deg": {
+            "mean_deg": 85.91760262888842,
+            "median_deg": 86.98189189147163,
+            "p95_deg": 89.17328045276741,
+            "max_deg": 89.79599054426366
+          },
+          "normal_convention_is_diagnostic_only": true
+        },
+        "index": {
+          "human_tip_surface_normal_vs_target_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 80.01726981922837,
+              "median_deg": 87.24771461132326,
+              "p95_deg": 99.10651465831651,
+              "max_deg": 110.15259901218383
+            },
+            "y": {
+              "mean_deg": 133.1261370501789,
+              "median_deg": 129.60303224376045,
+              "p95_deg": 173.7984224330979,
+              "max_deg": 178.4097878601296
+            },
+            "z": {
+              "mean_deg": 122.0718489310339,
+              "median_deg": 137.34331857859644,
+              "p95_deg": 145.05567086789884,
+              "max_deg": 146.54649466206084
+            }
+          },
+          "robot_native_surface_normal_vs_actual_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 91.39719651247655,
+              "median_deg": 84.08635245809305,
+              "p95_deg": 138.9139134502411,
+              "max_deg": 140.73759121554525
+            },
+            "y": {
+              "mean_deg": 136.31135226238516,
+              "median_deg": 133.7084264666538,
+              "p95_deg": 166.44838839932177,
+              "max_deg": 172.75898885492893
+            },
+            "z": {
+              "mean_deg": 89.91962359199786,
+              "median_deg": 95.73421784404269,
+              "p95_deg": 114.61789523479995,
+              "max_deg": 117.02874378847413
+            }
+          },
+          "human_surface_normal_stability_in_target_frame": {
+            "mean_local_direction": [
+              0.021979506946347697,
+              -0.5805572597698186,
+              0.8139227048086045
+            ],
+            "mean_deviation_deg": 2.0135303491932683,
+            "p95_deviation_deg": 4.34130528956881,
+            "max_deviation_deg": 4.543151850826187
+          },
+          "robot_surface_normal_stability_in_actual_frame": {
+            "mean_local_direction": [
+              0.21533761586512795,
+              -0.00047853878105482274,
+              0.9765395446136105
+            ],
+            "mean_deviation_deg": 5.006198949339762e-07,
+            "p95_deviation_deg": 2.116444232367471e-06,
+            "max_deviation_deg": 3.078324659199975e-06
+          },
+          "human_vs_robot_surface_normal_error_deg": {
+            "mean_deg": 35.77121165340235,
+            "median_deg": 37.3630844761194,
+            "p95_deg": 45.621650478648284,
+            "max_deg": 46.72884189669981
+          },
+          "normal_convention_is_diagnostic_only": true
+        },
+        "middle": {
+          "human_tip_surface_normal_vs_target_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 120.66553340028972,
+              "median_deg": 133.76675988771592,
+              "p95_deg": 141.16206655568953,
+              "max_deg": 145.6859146523037
+            },
+            "y": {
+              "mean_deg": 113.97958816988853,
+              "median_deg": 125.7499961724054,
+              "p95_deg": 143.8681383971828,
+              "max_deg": 154.56787879196142
+            },
+            "z": {
+              "mean_deg": 119.86699256034392,
+              "median_deg": 134.10535973629487,
+              "p95_deg": 143.63741967826428,
+              "max_deg": 149.51502167084234
+            }
+          },
+          "robot_native_surface_normal_vs_actual_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 94.30417220150795,
+              "median_deg": 89.43040080116384,
+              "p95_deg": 140.6890520621365,
+              "max_deg": 142.3285827088827
+            },
+            "y": {
+              "mean_deg": 128.14144664969746,
+              "median_deg": 126.92483274057184,
+              "p95_deg": 149.75358601376192,
+              "max_deg": 168.58301453892636
+            },
+            "z": {
+              "mean_deg": 88.49810434884623,
+              "median_deg": 105.01827475083458,
+              "p95_deg": 119.89756703680273,
+              "max_deg": 123.20298278650517
+            }
+          },
+          "human_surface_normal_stability_in_target_frame": {
+            "mean_local_direction": [
+              -0.7458104290106891,
+              -0.21001062486250366,
+              0.6321885331321287
+            ],
+            "mean_deviation_deg": 1.6757664217466999,
+            "p95_deviation_deg": 3.331765208920841,
+            "max_deviation_deg": 3.9002299406517866
+          },
+          "robot_surface_normal_stability_in_actual_frame": {
+            "mean_local_direction": [
+              0.215337615865128,
+              -0.0004785387810548141,
+              0.9765395446136106
+            ],
+            "mean_deviation_deg": 3.489384875245897e-07,
+            "p95_deviation_deg": 1.7075472925031877e-06,
+            "max_deviation_deg": 2.699869328381916e-06
+          },
+          "human_vs_robot_surface_normal_error_deg": {
+            "mean_deg": 62.41922329215899,
+            "median_deg": 61.345296567563075,
+            "p95_deg": 65.88506254702547,
+            "max_deg": 66.77991967113459
+          },
+          "normal_convention_is_diagnostic_only": true
+        },
+        "ring": {
+          "human_tip_surface_normal_vs_target_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 121.39521559627322,
+              "median_deg": 136.33657113357904,
+              "p95_deg": 150.01493042372684,
+              "max_deg": 154.8854935439872
+            },
+            "y": {
+              "mean_deg": 117.44532368102239,
+              "median_deg": 128.59605826930542,
+              "p95_deg": 156.32890121711515,
+              "max_deg": 158.68777683099097
+            },
+            "z": {
+              "mean_deg": 116.04853206277194,
+              "median_deg": 122.36377776811334,
+              "p95_deg": 131.79950211071773,
+              "max_deg": 136.22693214149012
+            }
+          },
+          "robot_native_surface_normal_vs_actual_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 93.85274414091168,
+              "median_deg": 89.4758455416953,
+              "p95_deg": 138.50449635958097,
+              "max_deg": 141.22871408646915
+            },
+            "y": {
+              "mean_deg": 127.89425596815569,
+              "median_deg": 129.3199731581799,
+              "p95_deg": 147.02148214401586,
+              "max_deg": 171.05337558330817
+            },
+            "z": {
+              "mean_deg": 80.93781041936853,
+              "median_deg": 95.49604336779848,
+              "p95_deg": 120.09911862265535,
+              "max_deg": 123.69032653374087
+            }
+          },
+          "human_surface_normal_stability_in_target_frame": {
+            "mean_local_direction": [
+              -0.829616454799229,
+              0.053287468090033666,
+              0.5557850156948391
+            ],
+            "mean_deviation_deg": 1.416374271903722,
+            "p95_deviation_deg": 2.87505174819089,
+            "max_deviation_deg": 3.156226337931245
+          },
+          "robot_surface_normal_stability_in_actual_frame": {
+            "mean_local_direction": [
+              0.21533761586512803,
+              -0.000478538781054822,
+              0.9765395446136106
+            ],
+            "mean_deviation_deg": 3.316973792442861e-07,
+            "p95_deviation_deg": 1.7075472925031877e-06,
+            "max_deviation_deg": 2.9575586669421963e-06
+          },
+          "human_vs_robot_surface_normal_error_deg": {
+            "mean_deg": 67.3566261646246,
+            "median_deg": 66.41065483081329,
+            "p95_deg": 72.39832557936889,
+            "max_deg": 73.04237939170547
+          },
+          "normal_convention_is_diagnostic_only": true
+        },
+        "pinky": {
+          "human_tip_surface_normal_vs_target_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 114.39089988499805,
+              "median_deg": 113.50416166180794,
+              "p95_deg": 140.27114897743414,
+              "max_deg": 148.41451277109547
+            },
+            "y": {
+              "mean_deg": 72.54573496616894,
+              "median_deg": 62.54735581597677,
+              "p95_deg": 125.95729265929191,
+              "max_deg": 132.00591823284435
+            },
+            "z": {
+              "mean_deg": 133.03460918605907,
+              "median_deg": 132.26867397040917,
+              "p95_deg": 164.7564507738598,
+              "max_deg": 173.91305285740464
+            }
+          },
+          "robot_native_surface_normal_vs_actual_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 95.01137230124607,
+              "median_deg": 89.0531696122827,
+              "p95_deg": 139.89616267985028,
+              "max_deg": 140.67485577458882
+            },
+            "y": {
+              "mean_deg": 133.30057553042224,
+              "median_deg": 128.68591397017127,
+              "p95_deg": 156.842259379488,
+              "max_deg": 174.66225832353751
+            },
+            "z": {
+              "mean_deg": 86.36885289550708,
+              "median_deg": 99.76535227156143,
+              "p95_deg": 111.08488683474646,
+              "max_deg": 114.23288050233992
+            }
+          },
+          "human_surface_normal_stability_in_target_frame": {
+            "mean_local_direction": [
+              -0.790086218623783,
+              0.1958077609800043,
+              0.5808813027467566
+            ],
+            "mean_deviation_deg": 2.934706673309661,
+            "p95_deviation_deg": 5.238876211708421,
+            "max_deviation_deg": 6.194569697137899
+          },
+          "robot_surface_normal_stability_in_actual_frame": {
+            "mean_local_direction": [
+              0.215337615865128,
+              -0.0004785387810548185,
+              0.9765395446136106
+            ],
+            "mean_deviation_deg": 3.685902420299994e-07,
+            "p95_deviation_deg": 1.9090959104164224e-06,
+            "max_deviation_deg": 2.4148365394514667e-06
+          },
+          "human_vs_robot_surface_normal_error_deg": {
+            "mean_deg": 67.9860101049051,
+            "median_deg": 67.61820762481992,
+            "p95_deg": 76.0656871844104,
+            "max_deg": 78.23030406959354
+          },
+          "normal_convention_is_diagnostic_only": true
+        }
+      }
+    },
+    "candidate_spider_style": {
+      "right": {
+        "thumb": {
+          "human_tip_surface_normal_vs_target_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 90.99867878285379,
+              "median_deg": 114.04891741078484,
+              "p95_deg": 141.33588012717883,
+              "max_deg": 149.98816577114135
+            },
+            "y": {
+              "mean_deg": 113.13796753964951,
+              "median_deg": 120.59198694094796,
+              "p95_deg": 131.53251183614879,
+              "max_deg": 133.01357533961135
+            },
+            "z": {
+              "mean_deg": 75.45442468730381,
+              "median_deg": 74.10561349564477,
+              "p95_deg": 113.29892065983043,
+              "max_deg": 119.13510704092769
+            }
+          },
+          "robot_native_surface_normal_vs_actual_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 125.14433430866009,
+              "median_deg": 123.22939711921259,
+              "p95_deg": 145.93190151581967,
+              "max_deg": 168.49947154291965
+            },
+            "y": {
+              "mean_deg": 83.54839583361367,
+              "median_deg": 65.23390152314451,
+              "p95_deg": 125.27073899769881,
+              "max_deg": 133.55331902964835
+            },
+            "z": {
+              "mean_deg": 51.857366556532504,
+              "median_deg": 45.4263399691084,
+              "p95_deg": 79.09696836125636,
+              "max_deg": 83.7600242562228
+            }
+          },
+          "human_surface_normal_stability_in_target_frame": {
+            "mean_local_direction": [
+              0.08739143178455631,
+              -0.38939941535540973,
+              0.9169137543801545
+            ],
+            "mean_deviation_deg": 1.441986373619142,
+            "p95_deviation_deg": 5.153231656676731,
+            "max_deviation_deg": 7.292580013377023
+          },
+          "robot_surface_normal_stability_in_actual_frame": {
+            "mean_local_direction": [
+              -0.109654925300505,
+              0.5936583461470646,
+              0.7972111172125442
+            ],
+            "mean_deviation_deg": 3.4953249978474235e-07,
+            "p95_deviation_deg": 1.7075472925031877e-06,
+            "max_deviation_deg": 2.699869328381916e-06
+          },
+          "human_vs_robot_surface_normal_error_deg": {
+            "mean_deg": 46.885459166497945,
+            "median_deg": 47.23159662101084,
+            "p95_deg": 60.40912211074618,
+            "max_deg": 69.73300215971311
+          },
+          "normal_convention_is_diagnostic_only": true
+        },
+        "index": {
+          "human_tip_surface_normal_vs_target_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 90.19108726835418,
+              "median_deg": 97.9771580324517,
+              "p95_deg": 107.65305235114428,
+              "max_deg": 115.89263336106922
+            },
+            "y": {
+              "mean_deg": 48.93048901950709,
+              "median_deg": 39.76434695423804,
+              "p95_deg": 81.23446472790621,
+              "max_deg": 83.0244033145886
+            },
+            "z": {
+              "mean_deg": 46.18587860854056,
+              "median_deg": 58.99627567982785,
+              "p95_deg": 77.73242960130567,
+              "max_deg": 87.96341382725528
+            }
+          },
+          "robot_native_surface_normal_vs_actual_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 60.96574819958234,
+              "median_deg": 61.46352180451426,
+              "p95_deg": 87.94377222621421,
+              "max_deg": 103.58281791165791
+            },
+            "y": {
+              "mean_deg": 58.2516295541397,
+              "median_deg": 61.59862081251576,
+              "p95_deg": 92.21602362132222,
+              "max_deg": 100.19444765534932
+            },
+            "z": {
+              "mean_deg": 59.18592832104929,
+              "median_deg": 70.14591441073529,
+              "p95_deg": 99.46764796144058,
+              "max_deg": 109.18131915540307
+            }
+          },
+          "human_surface_normal_stability_in_target_frame": {
+            "mean_local_direction": [
+              0.03812439636360062,
+              0.5766796436595715,
+              0.8160803385639068
+            ],
+            "mean_deviation_deg": 1.8841492383706677,
+            "p95_deviation_deg": 5.296590073011825,
+            "max_deviation_deg": 5.485533078604465
+          },
+          "robot_surface_normal_stability_in_actual_frame": {
+            "mean_local_direction": [
+              0.215337615865128,
+              0.00047853878105482035,
+              0.9765395446136105
+            ],
+            "mean_deviation_deg": 5.855862669168364e-07,
+            "p95_deviation_deg": 2.2822673132518844e-06,
+            "max_deviation_deg": 3.1945284701301985e-06
+          },
+          "human_vs_robot_surface_normal_error_deg": {
+            "mean_deg": 40.95965294224509,
+            "median_deg": 35.06414534936272,
+            "p95_deg": 74.3376307419726,
+            "max_deg": 88.19247647175523
+          },
+          "normal_convention_is_diagnostic_only": true
+        },
+        "middle": {
+          "human_tip_surface_normal_vs_target_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 81.52526740529646,
+              "median_deg": 81.31175431587076,
+              "p95_deg": 118.19881740930215,
+              "max_deg": 134.61279044329817
+            },
+            "y": {
+              "mean_deg": 71.86680641027631,
+              "median_deg": 61.31485370002493,
+              "p95_deg": 113.9306207010682,
+              "max_deg": 114.52960671435372
+            },
+            "z": {
+              "mean_deg": 83.43037831262092,
+              "median_deg": 100.49631372836255,
+              "p95_deg": 133.04932853332062,
+              "max_deg": 139.03065333525362
+            }
+          },
+          "robot_native_surface_normal_vs_actual_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 74.37142361607269,
+              "median_deg": 62.308780669935345,
+              "p95_deg": 119.13573688801799,
+              "max_deg": 129.77424942154445
+            },
+            "y": {
+              "mean_deg": 73.6903310406046,
+              "median_deg": 76.07999598108631,
+              "p95_deg": 100.99077230531412,
+              "max_deg": 103.82873213633708
+            },
+            "z": {
+              "mean_deg": 45.500923282940015,
+              "median_deg": 41.72705196065675,
+              "p95_deg": 80.26159643467241,
+              "max_deg": 85.22495289038767
+            }
+          },
+          "human_surface_normal_stability_in_target_frame": {
+            "mean_local_direction": [
+              0.10393203450489591,
+              -0.07347970652862688,
+              0.9918663543704566
+            ],
+            "mean_deviation_deg": 0.5617830633281854,
+            "p95_deviation_deg": 1.128043687186271,
+            "max_deviation_deg": 1.9398507584507179
+          },
+          "robot_surface_normal_stability_in_actual_frame": {
+            "mean_local_direction": [
+              -0.26045028756635863,
+              -0.0005787914138301144,
+              0.9654870857277691
+            ],
+            "mean_deviation_deg": 4.6943684567722655e-07,
+            "p95_deviation_deg": 1.9090959104164224e-06,
+            "max_deviation_deg": 2.4148365394514667e-06
+          },
+          "human_vs_robot_surface_normal_error_deg": {
+            "mean_deg": 31.61737519168466,
+            "median_deg": 32.84137304839667,
+            "p95_deg": 49.27228234910892,
+            "max_deg": 56.85973553289323
+          },
+          "normal_convention_is_diagnostic_only": true
+        },
+        "ring": {
+          "human_tip_surface_normal_vs_target_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 86.50411456389106,
+              "median_deg": 50.73136705950567,
+              "p95_deg": 165.59550950907553,
+              "max_deg": 168.0905333870949
+            },
+            "y": {
+              "mean_deg": 79.08745609841058,
+              "median_deg": 82.91504961930005,
+              "p95_deg": 109.23956500498468,
+              "max_deg": 123.35519883680496
+            },
+            "z": {
+              "mean_deg": 81.42068175549716,
+              "median_deg": 76.54150892294597,
+              "p95_deg": 122.22876408493865,
+              "max_deg": 133.29979692342351
+            }
+          },
+          "robot_native_surface_normal_vs_actual_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 77.0187886160623,
+              "median_deg": 66.38725086318203,
+              "p95_deg": 121.59352901566218,
+              "max_deg": 177.3913945398012
+            },
+            "y": {
+              "mean_deg": 43.90543730890429,
+              "median_deg": 42.19509212535543,
+              "p95_deg": 74.61235710634328,
+              "max_deg": 91.34088256187285
+            },
+            "z": {
+              "mean_deg": 75.76620207543553,
+              "median_deg": 89.56004280005297,
+              "p95_deg": 115.50934163644632,
+              "max_deg": 117.47974288616317
+            }
+          },
+          "human_surface_normal_stability_in_target_frame": {
+            "mean_local_direction": [
+              -0.8204625194450832,
+              -0.0554388156478464,
+              0.5690059682511165
+            ],
+            "mean_deviation_deg": 0.7442559248788967,
+            "p95_deviation_deg": 1.4009523045290666,
+            "max_deviation_deg": 3.4109388092262583
+          },
+          "robot_surface_normal_stability_in_actual_frame": {
+            "mean_local_direction": [
+              0.21533761586512795,
+              0.00047853878105483044,
+              0.9765395446136106
+            ],
+            "mean_deviation_deg": 3.760553802034578e-07,
+            "p95_deviation_deg": 1.9090959104164224e-06,
+            "max_deviation_deg": 2.699869328381916e-06
+          },
+          "human_vs_robot_surface_normal_error_deg": {
+            "mean_deg": 93.94629349734181,
+            "median_deg": 82.62522218057813,
+            "p95_deg": 137.84187218038403,
+            "max_deg": 145.8054005628998
+          },
+          "normal_convention_is_diagnostic_only": true
+        },
+        "pinky": {
+          "human_tip_surface_normal_vs_target_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 108.91601561107687,
+              "median_deg": 99.24326769673897,
+              "p95_deg": 165.41269318837556,
+              "max_deg": 171.90613685894462
+            },
+            "y": {
+              "mean_deg": 92.4689372341235,
+              "median_deg": 90.95715836863906,
+              "p95_deg": 109.90774553455526,
+              "max_deg": 117.19185709081698
+            },
+            "z": {
+              "mean_deg": 47.64062687758484,
+              "median_deg": 46.57383794811459,
+              "p95_deg": 102.6276786370172,
+              "max_deg": 107.33477279330806
+            }
+          },
+          "robot_native_surface_normal_vs_actual_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 100.28144784579068,
+              "median_deg": 123.69575112023784,
+              "p95_deg": 166.41377660697123,
+              "max_deg": 173.346638668732
+            },
+            "y": {
+              "mean_deg": 69.97918851269596,
+              "median_deg": 64.81981759401141,
+              "p95_deg": 109.28935602003652,
+              "max_deg": 126.34765443662793
+            },
+            "z": {
+              "mean_deg": 100.93519417021191,
+              "median_deg": 94.87461296016616,
+              "p95_deg": 142.01332564810426,
+              "max_deg": 152.0278453652189
+            }
+          },
+          "human_surface_normal_stability_in_target_frame": {
+            "mean_local_direction": [
+              -0.7598974318931492,
+              -0.17562424835515592,
+              0.6258690089722315
+            ],
+            "mean_deviation_deg": 2.5545789020070773,
+            "p95_deviation_deg": 6.876018442881336,
+            "max_deviation_deg": 7.726889598662476
+          },
+          "robot_surface_normal_stability_in_actual_frame": {
+            "mean_local_direction": [
+              0.215337615865128,
+              0.0004785387810548204,
+              0.9765395446136106
+            ],
+            "mean_deviation_deg": 3.6588369732578095e-07,
+            "p95_deviation_deg": 1.7075472925031877e-06,
+            "max_deviation_deg": 2.2588727439225506e-06
+          },
+          "human_vs_robot_surface_normal_error_deg": {
+            "mean_deg": 130.78398719798278,
+            "median_deg": 131.74434005645153,
+            "p95_deg": 168.2580389013434,
+            "max_deg": 173.01626790099345
+          },
+          "normal_convention_is_diagnostic_only": true
+        }
+      },
+      "left": {
+        "thumb": {
+          "human_tip_surface_normal_vs_target_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 131.3208178613802,
+              "median_deg": 124.9660112419364,
+              "p95_deg": 158.26886699141573,
+              "max_deg": 159.3690827205021
+            },
+            "y": {
+              "mean_deg": 111.37670528657269,
+              "median_deg": 106.18644921774828,
+              "p95_deg": 152.84891836341558,
+              "max_deg": 175.22386709647404
+            },
+            "z": {
+              "mean_deg": 68.14161134054692,
+              "median_deg": 67.9682855963247,
+              "p95_deg": 108.38577444106139,
+              "max_deg": 112.47935258852876
+            }
+          },
+          "robot_native_surface_normal_vs_actual_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 125.37820604368264,
+              "median_deg": 123.70516050260949,
+              "p95_deg": 139.7621540875698,
+              "max_deg": 143.38237750422377
+            },
+            "y": {
+              "mean_deg": 119.31187657228975,
+              "median_deg": 110.75971618122547,
+              "p95_deg": 154.9646001627235,
+              "max_deg": 156.2819575662346
+            },
+            "z": {
+              "mean_deg": 121.21170212988194,
+              "median_deg": 126.82728259422998,
+              "p95_deg": 151.67093961222614,
+              "max_deg": 154.17742878193843
+            }
+          },
+          "human_surface_normal_stability_in_target_frame": {
+            "mean_local_direction": [
+              0.08985759786497614,
+              0.39072609511627554,
+              0.9161106541794629
+            ],
+            "mean_deviation_deg": 1.4411028569129816,
+            "p95_deviation_deg": 2.2435223182453834,
+            "max_deviation_deg": 2.904523385450717
+          },
+          "robot_surface_normal_stability_in_actual_frame": {
+            "mean_local_direction": [
+              -0.1636287752395257,
+              -0.8858476859459637,
+              0.4341652925071213
+            ],
+            "mean_deviation_deg": 2.954585294665394e-07,
+            "p95_deviation_deg": 1.7075472925031877e-06,
+            "max_deviation_deg": 2.831646840510158e-06
+          },
+          "human_vs_robot_surface_normal_error_deg": {
+            "mean_deg": 72.81004410237814,
+            "median_deg": 72.57063376388956,
+            "p95_deg": 81.45149648522843,
+            "max_deg": 88.94100877714506
+          },
+          "normal_convention_is_diagnostic_only": true
+        },
+        "index": {
+          "human_tip_surface_normal_vs_target_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 80.01726981922837,
+              "median_deg": 87.24771461132326,
+              "p95_deg": 99.10651465831651,
+              "max_deg": 110.15259901218383
+            },
+            "y": {
+              "mean_deg": 133.1261370501789,
+              "median_deg": 129.60303224376045,
+              "p95_deg": 173.7984224330979,
+              "max_deg": 178.4097878601296
+            },
+            "z": {
+              "mean_deg": 122.0718489310339,
+              "median_deg": 137.34331857859644,
+              "p95_deg": 145.05567086789884,
+              "max_deg": 146.54649466206084
+            }
+          },
+          "robot_native_surface_normal_vs_actual_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 90.68622878992356,
+              "median_deg": 88.70814601274515,
+              "p95_deg": 130.26330765779355,
+              "max_deg": 130.8442134150866
+            },
+            "y": {
+              "mean_deg": 137.56940366844194,
+              "median_deg": 130.69193567872065,
+              "p95_deg": 167.31689821170886,
+              "max_deg": 174.4952268741116
+            },
+            "z": {
+              "mean_deg": 79.35865698177874,
+              "median_deg": 68.18266162264005,
+              "p95_deg": 114.3246583536803,
+              "max_deg": 117.62369362093591
+            }
+          },
+          "human_surface_normal_stability_in_target_frame": {
+            "mean_local_direction": [
+              0.021979506946347697,
+              -0.5805572597698186,
+              0.8139227048086045
+            ],
+            "mean_deviation_deg": 2.0135303491932683,
+            "p95_deviation_deg": 4.34130528956881,
+            "max_deviation_deg": 4.543151850826187
+          },
+          "robot_surface_normal_stability_in_actual_frame": {
+            "mean_local_direction": [
+              0.21533761586512803,
+              -0.00047853878105481444,
+              0.9765395446136106
+            ],
+            "mean_deviation_deg": 4.103368366526131e-07,
+            "p95_deviation_deg": 2.091309789151873e-06,
+            "max_deviation_deg": 2.699869328381916e-06
+          },
+          "human_vs_robot_surface_normal_error_deg": {
+            "mean_deg": 41.454477036548134,
+            "median_deg": 39.57783201256531,
+            "p95_deg": 57.20477670758569,
+            "max_deg": 59.23162070975585
+          },
+          "normal_convention_is_diagnostic_only": true
+        },
+        "middle": {
+          "human_tip_surface_normal_vs_target_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 120.66553340028972,
+              "median_deg": 133.76675988771592,
+              "p95_deg": 141.16206655568953,
+              "max_deg": 145.6859146523037
+            },
+            "y": {
+              "mean_deg": 113.97958816988853,
+              "median_deg": 125.7499961724054,
+              "p95_deg": 143.8681383971828,
+              "max_deg": 154.56787879196142
+            },
+            "z": {
+              "mean_deg": 119.86699256034392,
+              "median_deg": 134.10535973629487,
+              "p95_deg": 143.63741967826428,
+              "max_deg": 149.51502167084234
+            }
+          },
+          "robot_native_surface_normal_vs_actual_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 96.0995223452097,
+              "median_deg": 90.06038466098403,
+              "p95_deg": 139.9762099160805,
+              "max_deg": 140.73704205369032
+            },
+            "y": {
+              "mean_deg": 131.94587063231768,
+              "median_deg": 130.06442531672448,
+              "p95_deg": 158.53903390139197,
+              "max_deg": 172.0485407800319
+            },
+            "z": {
+              "mean_deg": 88.57018123688319,
+              "median_deg": 95.47934936103668,
+              "p95_deg": 122.19358806317763,
+              "max_deg": 128.55311255256746
+            }
+          },
+          "human_surface_normal_stability_in_target_frame": {
+            "mean_local_direction": [
+              -0.7458104290106891,
+              -0.21001062486250366,
+              0.6321885331321287
+            ],
+            "mean_deviation_deg": 1.6757664217466999,
+            "p95_deviation_deg": 3.331765208920841,
+            "max_deviation_deg": 3.9002299406517866
+          },
+          "robot_surface_normal_stability_in_actual_frame": {
+            "mean_local_direction": [
+              0.215337615865128,
+              -0.0004785387810548094,
+              0.9765395446136106
+            ],
+            "mean_deviation_deg": 3.001225934624192e-07,
+            "p95_deviation_deg": 1.7075472925031877e-06,
+            "max_deviation_deg": 2.831646840510158e-06
+          },
+          "human_vs_robot_surface_normal_error_deg": {
+            "mean_deg": 58.990713518360096,
+            "median_deg": 62.0756600178691,
+            "p95_deg": 75.83204009825906,
+            "max_deg": 91.12841242595461
+          },
+          "normal_convention_is_diagnostic_only": true
+        },
+        "ring": {
+          "human_tip_surface_normal_vs_target_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 121.39521559627322,
+              "median_deg": 136.33657113357904,
+              "p95_deg": 150.01493042372684,
+              "max_deg": 154.8854935439872
+            },
+            "y": {
+              "mean_deg": 117.44532368102239,
+              "median_deg": 128.59605826930542,
+              "p95_deg": 156.32890121711515,
+              "max_deg": 158.68777683099097
+            },
+            "z": {
+              "mean_deg": 116.04853206277194,
+              "median_deg": 122.36377776811334,
+              "p95_deg": 131.79950211071773,
+              "max_deg": 136.22693214149012
+            }
+          },
+          "robot_native_surface_normal_vs_actual_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 87.93379501936604,
+              "median_deg": 88.8549215334875,
+              "p95_deg": 122.02785190844077,
+              "max_deg": 124.24088686645152
+            },
+            "y": {
+              "mean_deg": 126.58074029053225,
+              "median_deg": 124.3480515107789,
+              "p95_deg": 152.33550903256557,
+              "max_deg": 163.58551524375542
+            },
+            "z": {
+              "mean_deg": 52.84558382414912,
+              "median_deg": 44.24078304127274,
+              "p95_deg": 102.27071756996864,
+              "max_deg": 106.99442298652035
+            }
+          },
+          "human_surface_normal_stability_in_target_frame": {
+            "mean_local_direction": [
+              -0.829616454799229,
+              0.053287468090033666,
+              0.5557850156948391
+            ],
+            "mean_deviation_deg": 1.416374271903722,
+            "p95_deviation_deg": 2.87505174819089,
+            "max_deviation_deg": 3.156226337931245
+          },
+          "robot_surface_normal_stability_in_actual_frame": {
+            "mean_local_direction": [
+              0.215337615865128,
+              -0.00047853878105482404,
+              0.9765395446136106
+            ],
+            "mean_deviation_deg": 4.6204940911224527e-07,
+            "p95_deviation_deg": 1.9090959104164224e-06,
+            "max_deviation_deg": 2.831646840510158e-06
+          },
+          "human_vs_robot_surface_normal_error_deg": {
+            "mean_deg": 85.01195171602852,
+            "median_deg": 88.01072048516903,
+            "p95_deg": 104.60266140721666,
+            "max_deg": 107.40529592155917
+          },
+          "normal_convention_is_diagnostic_only": true
+        },
+        "pinky": {
+          "human_tip_surface_normal_vs_target_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 114.39089988499805,
+              "median_deg": 113.50416166180794,
+              "p95_deg": 140.27114897743414,
+              "max_deg": 148.41451277109547
+            },
+            "y": {
+              "mean_deg": 72.54573496616894,
+              "median_deg": 62.54735581597677,
+              "p95_deg": 125.95729265929191,
+              "max_deg": 132.00591823284435
+            },
+            "z": {
+              "mean_deg": 133.03460918605907,
+              "median_deg": 132.26867397040917,
+              "p95_deg": 164.7564507738598,
+              "max_deg": 173.91305285740464
+            }
+          },
+          "robot_native_surface_normal_vs_actual_anatomical_axes_deg": {
+            "x": {
+              "mean_deg": 74.35886407350326,
+              "median_deg": 78.44442456245321,
+              "p95_deg": 102.82395678764858,
+              "max_deg": 106.31283741276928
+            },
+            "y": {
+              "mean_deg": 99.73267543515637,
+              "median_deg": 90.75977593881814,
+              "p95_deg": 145.10196469673724,
+              "max_deg": 147.66032494217484
+            },
+            "z": {
+              "mean_deg": 31.92660919036884,
+              "median_deg": 34.881856450413665,
+              "p95_deg": 57.63559787345785,
+              "max_deg": 58.94436178093969
+            }
+          },
+          "human_surface_normal_stability_in_target_frame": {
+            "mean_local_direction": [
+              -0.790086218623783,
+              0.1958077609800043,
+              0.5808813027467566
+            ],
+            "mean_deviation_deg": 2.934706673309661,
+            "p95_deviation_deg": 5.238876211708421,
+            "max_deviation_deg": 6.194569697137899
+          },
+          "robot_surface_normal_stability_in_actual_frame": {
+            "mean_local_direction": [
+              0.2153376158651279,
+              -0.0004785387810548189,
+              0.9765395446136105
+            ],
+            "mean_deviation_deg": 5.373559457835754e-07,
+            "p95_deviation_deg": 2.091309789151873e-06,
+            "max_deviation_deg": 2.699869328381916e-06
+          },
+          "human_vs_robot_surface_normal_error_deg": {
+            "mean_deg": 132.23835383635682,
+            "median_deg": 130.09359972185106,
+            "p95_deg": 155.91042071757866,
+            "max_deg": 168.15924099739075
+          },
+          "normal_convention_is_diagnostic_only": true
+        }
+      }
+    }
+  },
+  "limitations": [
+    "MANO vertex normals and nearest XHand mesh face normals are deterministic surface conventions, not proof of the author's pad/nail frame.",
+    "The human tip is a skinned surface vertex, so its normal need not be rigidly attached to a distal joint.",
+    "Open native meshes can have local normal-orientation ambiguity; nearest-face normals are not a contact certificate.",
+    "No target, qpos, site, scene, cost, or physical state was modified."
+  ]
+}
