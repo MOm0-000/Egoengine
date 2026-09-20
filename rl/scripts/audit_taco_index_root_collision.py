@@ -112,7 +112,7 @@ def run(scene, reference, output, *, root_parts=None, palm_parts=None, sides=("r
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--scene", type=Path, default=ROOT / "runs/taco_pour_collision_repair/scene_refined.xml")
-    parser.add_argument("--reference", type=Path, default=ROOT / "runs/taco_pour_bimanual_mano_fk_right_guard_v1/robot_reference.npz")
+    parser.add_argument("--reference", type=Path, default=ROOT / "runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/robot_reference.npz")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--root-parts", type=Path)
     parser.add_argument("--palm-parts", type=Path)

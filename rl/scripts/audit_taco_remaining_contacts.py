@@ -22,8 +22,8 @@ from build_taco_collision_repair import SCENE, OUTPUT, check_unchanged_dynamics
 from egoengine_repro.retarget.mesh_distance import closed_mesh_signed_distance, solid_angle_winding
 from egoengine_repro.retarget.paper_audit import artifact, scene_mesh_artifacts, verify_artifacts
 
-REFERENCE = ROOT / "runs/taco_pour_bimanual_mano_fk_right_guard_v1/robot_reference.npz"
-PREFLIGHT = ROOT / "runs/taco_pour_initialization_preflight_right_guard_v1/report.json"
+REFERENCE = ROOT / "runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/robot_reference.npz"
+PREFLIGHT = ROOT / "runs/taco_pour_initialization_preflight_bilateral_guard_v1/report.json"
 URDFS = ROOT / "runs/taco_pour_thumb_assembly_v1"
 
 

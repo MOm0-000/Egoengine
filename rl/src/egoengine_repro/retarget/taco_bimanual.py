@@ -259,12 +259,17 @@ def retarget(scene: Path, human_path: Path, settings: dict, output: Path) -> dic
     n = len(human["frame_indices"])
     primal_tolerance = float(settings.get("solver_primal_tolerance", 1e-9))
     dual_tolerance = float(settings.get("solver_dual_tolerance", 1e-9))
-    collision_clearance = float(settings.get("self_collision_clearance_m", 0.0))
+    planning_buffer = float(settings.get("planning_collision_buffer_m", 0.0))
+    accepted_min_distance = float(
+        settings.get("accepted_min_self_collision_distance_m", -1e-6)
+    )
     if (not np.isfinite(primal_tolerance) or primal_tolerance <= 0.0
             or not np.isfinite(dual_tolerance) or dual_tolerance <= 0.0):
         raise ValueError("solver tolerances must be positive and finite")
-    if not np.isfinite(collision_clearance) or collision_clearance < 0.0:
-        raise ValueError("self-collision clearance must be finite and nonnegative")
+    if not np.isfinite(planning_buffer) or planning_buffer < 0.0:
+        raise ValueError("planning collision buffer must be finite and nonnegative")
+    if not np.isfinite(accepted_min_distance) or accepted_min_distance > 0.0:
+        raise ValueError("accepted minimum self-collision distance must be finite and nonpositive")
     config = mink.Configuration(model)
     tasks = []
     for side in SIDES:
@@ -281,11 +286,11 @@ def retarget(scene: Path, human_path: Path, settings: dict, output: Path) -> dic
     _enable_planning_collision_masks(model, hand_geoms, [])
     groups = _explicit_collision_groups(model, mujoco, hand_geom_ids=set(hand_geoms))
     inner = mink.CollisionAvoidanceLimit(model, groups,
-                  minimum_distance_from_collisions=collision_clearance, collision_detection_distance=0.02,
+                  minimum_distance_from_collisions=planning_buffer, collision_detection_distance=0.02,
                   include_explicit_pairs=True)
     if set(inner.geom_id_pairs) != set(pairs):
         raise ValueError("MINK filtered out runtime self pairs; IK/physics contract differs")
-    collision = _StrictCollisionLimit(inner, mujoco, minimum_distance=collision_clearance,
+    collision = _StrictCollisionLimit(inner, mujoco, minimum_distance=planning_buffer,
                                       depenetration_step=0.002)
     collision.enabled = True
     velocity_map = _joint_velocity_limits(model, mujoco, settings["velocity_limits"])
@@ -341,7 +346,7 @@ def retarget(scene: Path, human_path: Path, settings: dict, output: Path) -> dic
             velocity = solve(tasks)
             config.integrate_inplace(velocity, dt / substeps)
         for _ in range(128):
-            if distances(model, config.data, pairs).min() >= -1e-6:
+            if distances(model, config.data, pairs).min() >= accepted_min_distance:
                 break
             velocity = solve(())
             config.integrate_inplace(velocity, dt / substeps)
@@ -398,7 +403,8 @@ def retarget(scene: Path, human_path: Path, settings: dict, output: Path) -> dic
                                           fingertip_position_cost=settings["fingertip_position_cost"],
                                           fingertip_orientation_cost=settings["fingertip_orientation_cost"],
                                           posture_cost=0.0,
-                                          self_collision_clearance_m=collision_clearance),
+                                          planning_collision_buffer_m=planning_buffer,
+                                          accepted_min_self_collision_distance_m=accepted_min_distance),
                   solver_primal_tolerance=primal_tolerance,
                   solver_dual_tolerance=dual_tolerance,
                   wrist_position_cost=0.0, object_dofs_locked_during_ik=True,
@@ -413,7 +419,7 @@ def retarget(scene: Path, human_path: Path, settings: dict, output: Path) -> dic
                   joint_limit_violating_frames=int((joint_margin < -1e-6).sum()),
                   frame_velocity_max_ratio=float(velocity_ratio.max()),
                   frame_velocity_violating_intervals=int((velocity_ratio.max(axis=1) > 1 + 1e-6).sum()),
-                  kinematic_model_feasible=bool((self_distances >= -1e-6).all()
+                  kinematic_model_feasible=bool((self_distances >= accepted_min_distance).all()
                                                 and (joint_margin >= -1e-6).all()
                                                 and (velocity_ratio <= 1 + 1e-6).all()),
                   collision_policy="explicit_runtime_pairs; source_intrahand_and_full_interhand",

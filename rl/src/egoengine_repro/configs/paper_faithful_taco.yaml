@@ -37,9 +37,10 @@ retarget:
   # tolerance matches the independent 1 um collision acceptance tolerance.
   solver_primal_tolerance: 1.0e-6
   solver_dual_tolerance: 1.0e-6
-  # A 2 um planning buffer covers the 1 um feasibility tolerance without
-  # making the tightly coupled finger-contact QP infeasible.
-  self_collision_clearance_m: 2.0e-6
+  # Local planning target, not a guaranteed physical clearance.  The final
+  # trajectory is accepted separately against the numerical distance bound.
+  planning_collision_buffer_m: 2.0e-6
+  accepted_min_self_collision_distance_m: -1.0e-6
   surface_projection: false
   surface_projection_margin: 0.002
   velocity_limits:

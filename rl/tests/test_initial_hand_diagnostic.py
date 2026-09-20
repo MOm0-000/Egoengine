@@ -22,7 +22,7 @@ from egoengine_repro.retarget.paper_audit import artifact, verify_artifacts
 BASELINE = ROOT / "runs/taco_pour_bimanual_gt_v1"
 SCENE = ROOT / "models/taco_xhand/xhand/bimanual/taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml"
 LATEST = ROOT / "runs/taco_pour_initial_hand_v3"
-ACTIVE = ROOT / "runs/taco_pour_bimanual_mano_fk_right_guard_v1"
+ACTIVE = ROOT / "runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1"
 VELOCITY = dict(base_translation=1.5, base_rotation=4.0, finger=8.0)
 
 
@@ -147,6 +147,6 @@ def test_solver_retains_a_feasible_candidate_without_claiming_an_optimum():
     assert not candidate["accepted_as_reset"] and not candidate["qvel_selected"]
     assert Path(protocol["inputs"]["historical_orientation_bug_baseline"]) == BASELINE
     assert Path(protocol["inputs"]["active_robot_reference"]) == (
-        ROOT / "runs/taco_pour_bimanual_mano_fk_right_guard_v1/robot_reference.npz")
+        ROOT / "runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/robot_reference.npz")
     assert candidate["baseline"] == "historical_orientation_bug_reference_not_current_mano_fk"
     assert not protocol["audit_results"]["new_reset_applied"] and not protocol["training_ready"]

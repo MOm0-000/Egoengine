@@ -1,0 +1,175 @@
+{
+  "status": "MINK_kinematic_candidate_not_physics_validated",
+  "frames": 198,
+  "scene": "/data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_right_guard_control_v2/scene_right_guard_absolute_meshdir.xml",
+  "scene_sha256": "20ce3cc469d583b90735dfeaad22be7ccc7cebf9f9e5c6793e57ed470a048438",
+  "human_reference": "/data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/human_reference.npz",
+  "human_reference_sha256": "852bda624bb22c9cf0797544294556752d490d11d443eb59a7f1e3e4aaab986a",
+  "mink_module": "/data_all/zzx/3.2RL/external/mink/src/mink/__init__.py",
+  "inherited_settings": {
+    "backend": "mink",
+    "wrist_position_cost": 0.3,
+    "wrist_orientation_cost": 3.0,
+    "fingertip_position_cost": 10.0,
+    "fingertip_orientation_cost": 1.0,
+    "posture_cost": 0.01,
+    "joint_position_limits": true,
+    "joint_velocity_limits": true,
+    "self_collision": true,
+    "confidence_weighting": true,
+    "sim_dt": 0.005,
+    "max_iterations_per_frame": 8,
+    "solver_primal_tolerance": 1e-06,
+    "solver_dual_tolerance": 1e-06,
+    "planning_collision_buffer_m": 2e-06,
+    "accepted_min_self_collision_distance_m": -1e-06,
+    "surface_projection": false,
+    "surface_projection_margin": 0.002,
+    "velocity_limits": {
+      "base_translation": 1.5,
+      "base_rotation": 4.0,
+      "finger": 8.0
+    }
+  },
+  "effective_settings": {
+    "source_dt_s": 0.03333333333333333,
+    "qp_integration_dt_s": 0.004166666666666667,
+    "iterations_per_frame": 8,
+    "first_frame_iterations": 80,
+    "wrist_orientation_cost": 3.0,
+    "fingertip_position_cost": 10.0,
+    "fingertip_orientation_cost": 1.0,
+    "posture_cost": 0.0,
+    "planning_collision_buffer_m": 2e-06,
+    "accepted_min_self_collision_distance_m": -1e-06
+  },
+  "solver_primal_tolerance": 1e-06,
+  "solver_dual_tolerance": 1e-06,
+  "wrist_position_cost": 0.0,
+  "object_dofs_locked_during_ik": true,
+  "object_dofs_actuated_in_physics": false,
+  "hand_order": [
+    "right",
+    "left"
+  ],
+  "fingertip_mean_error_m": [
+    0.011743892658721911,
+    0.012279923707000597
+  ],
+  "fingertip_max_error_m": [
+    0.03338452749794047,
+    0.030309950366443586
+  ],
+  "wrist_mean_error_rad": [
+    0.09099652835355153,
+    0.0658269030395698
+  ],
+  "self_collision_min_distance_m": -8.645691572696512e-07,
+  "self_penetrating_frames": 0,
+  "self_collision_pair_count": 176,
+  "joint_limit_min_margin": -1.942890293094024e-16,
+  "joint_limit_violating_frames": 0,
+  "frame_velocity_max_ratio": 0.9999962500000005,
+  "frame_velocity_violating_intervals": 0,
+  "kinematic_model_feasible": true,
+  "collision_policy": "explicit_runtime_pairs; source_intrahand_and_full_interhand",
+  "self_collision_resolution": "strict separating QP, fixed per-frame velocity envelope",
+  "model_self_collision_passed": true,
+  "intrahand_collision_audit_path": "/data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_right_guard_control_v2/intrahand_collision_audit.json",
+  "intrahand_collision_summary": {
+    "pair_count": 186,
+    "counts": {
+      "declared": 32,
+      "omitted_assembly_adjacent": 38,
+      "omitted_nonadjacent": 116
+    },
+    "by_classification": {
+      "declared": {
+        "pair_count": 32,
+        "min_distance_m": -8.645691572696512e-07,
+        "penetrating_pair_count": 0,
+        "penetrating_frames": 0
+      },
+      "omitted_assembly_adjacent": {
+        "pair_count": 38,
+        "min_distance_m": -0.034700000000000085,
+        "penetrating_pair_count": 24,
+        "penetrating_frames": 198
+      },
+      "omitted_nonadjacent": {
+        "pair_count": 116,
+        "min_distance_m": -0.012712359950127941,
+        "penetrating_pair_count": 23,
+        "penetrating_frames": 198
+      }
+    },
+    "min_distance_m": -0.034700000000000085,
+    "penetrating_frames": 198,
+    "tolerance_m": 5e-05
+  },
+  "complete_intrahand_geometry_coverage": false,
+  "worst_self_collision_pairs": [
+    {
+      "geom1": "collision_hand_left_index_0",
+      "geom2": "collision_hand_left_middle_0",
+      "distance_m": -8.645691572696512e-07
+    },
+    {
+      "geom1": "collision_hand_left_ring_0",
+      "geom2": "collision_hand_left_pinky_0",
+      "distance_m": -8.673617379884035e-17
+    },
+    {
+      "geom1": "collision_hand_right_index_0",
+      "geom2": "collision_hand_right_middle_0",
+      "distance_m": 2.1155140813439166e-07
+    },
+    {
+      "geom1": "collision_hand_right_ring_0",
+      "geom2": "collision_hand_right_pinky_0",
+      "distance_m": 2.000000014702047e-06
+    },
+    {
+      "geom1": "collision_hand_right_palm_index_root_positive_guard",
+      "geom2": "collision_hand_right_index_root_positive_guard",
+      "distance_m": 0.0006296544230113901
+    },
+    {
+      "geom1": "collision_hand_right_middle_0",
+      "geom2": "collision_hand_right_ring_0",
+      "distance_m": 0.0030875756294598787
+    },
+    {
+      "geom1": "collision_hand_left_middle_0",
+      "geom2": "collision_hand_left_ring_0",
+      "distance_m": 0.003099411719197656
+    },
+    {
+      "geom1": "collision_hand_right_palm_index_root_negative_guard",
+      "geom2": "collision_hand_right_index_root_negative_guard",
+      "distance_m": 0.006514725744515575
+    },
+    {
+      "geom1": "collision_hand_left_thumb_0",
+      "geom2": "collision_hand_left_index_0",
+      "distance_m": 0.01704239420317863
+    },
+    {
+      "geom1": "collision_hand_left_index_0",
+      "geom2": "collision_hand_left_ring_0",
+      "distance_m": 0.01885657129849872
+    },
+    {
+      "geom1": "collision_hand_right_middle_0",
+      "geom2": "collision_hand_right_pinky_0",
+      "distance_m": 0.02121779404128115
+    },
+    {
+      "geom1": "collision_hand_right_index_0",
+      "geom2": "collision_hand_right_ring_0",
+      "distance_m": 0.022848950787367574
+    }
+  ],
+  "strict_gate_passed": false,
+  "rl_validation_completed": false
+}

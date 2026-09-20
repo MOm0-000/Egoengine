@@ -115,7 +115,7 @@ def test_all_diagnostics_preserve_inputs_and_remain_unaccepted():
     assert not protocol["training_ready"]
     assert Path(protocol["inputs"]["historical_orientation_bug_baseline"]) == BASELINE
     assert Path(protocol["inputs"]["active_robot_reference"]) == (
-        ROOT / "runs/taco_pour_bimanual_mano_fk_right_guard_v1/robot_reference.npz")
+        ROOT / "runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/robot_reference.npz")
     assert protocol["initialization"]["diagnostic_candidate"]["baseline"] == (
         "historical_orientation_bug_reference_not_current_mano_fk")
 

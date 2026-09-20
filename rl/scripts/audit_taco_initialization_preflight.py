@@ -32,7 +32,7 @@ from egoengine_repro.retarget.paper_audit import (
 from egoengine_repro.retarget.taco_bimanual import pose7
 
 SCENE = ROOT / "models/taco_xhand/xhand/bimanual/taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml"
-BASELINE = ROOT / "runs/taco_pour_bimanual_mano_fk_right_guard_v1"
+BASELINE = ROOT / "runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1"
 DATA = ROOT / "data/taco_v1/pour_bowl_plate"
 SEQUENCE = "(pour in some, bowl, plate)/20230927_017"
 
@@ -261,7 +261,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output",
         type=Path,
-        default=ROOT / "runs/taco_pour_initialization_preflight_right_guard_v1",
+        default=ROOT / "runs/taco_pour_initialization_preflight_bilateral_guard_v1",
     )
     args = parser.parse_args()
     run(args.scene, args.baseline, args.output)

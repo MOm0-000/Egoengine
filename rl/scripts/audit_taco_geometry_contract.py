@@ -46,7 +46,7 @@ from egoengine_repro.retarget.taco_bimanual import (  # noqa: E402
 )
 
 
-DEFAULT_RUN = ROOT / "runs/taco_pour_bimanual_mano_fk_right_guard_v1"
+DEFAULT_RUN = ROOT / "runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1"
 DEFAULT_SCENE = ROOT / (
     "models/taco_xhand/xhand/bimanual/"
     "taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml"

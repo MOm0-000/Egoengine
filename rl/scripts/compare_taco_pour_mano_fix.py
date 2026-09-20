@@ -46,11 +46,11 @@ def inspect():
             raise ValueError(f"comparison changes more than fingertip orientations: {key}")
     historical_scene = dict(path=reports[0]["scene"], sha256=reports[0]["scene_sha256"])
     verify_artifacts([historical_scene])
-    guard_audit = json.loads((ROOT / "runs/taco_pour_right_index_guard_v1/right_index_guard_audit.json").read_text())
+    guard_audit = json.loads((ROOT / "runs/taco_pour_bilateral_index_guard_v1/right_index_guard_audit.json").read_text())
     if (not guard_audit["external_collision_geometries_unchanged"]
             or not guard_audit["joint_range_unchanged"]):
         raise ValueError("active scene cannot be used for historical kinematic measurements")
-    inputs += [historical_scene, artifact(ROOT / "runs/taco_pour_right_index_guard_v1/right_index_guard_audit.json")]
+    inputs += [historical_scene, artifact(ROOT / "runs/taco_pour_bilateral_index_guard_v1/right_index_guard_audit.json")]
     np.testing.assert_array_equal(robot[0]["qpos"][:, 36:], robot[1]["qpos"][:, 36:])
     model = mujoco.MjModel.from_xml_path(str(SCENE))
     meshes, _ = visual_meshes(SCENE, model)

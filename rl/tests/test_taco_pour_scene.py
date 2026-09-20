@@ -22,7 +22,7 @@ from egoengine_repro.retarget.taco_bimanual import differentiate, pose7
 from render_exact_deximit_triptych import load_reference_model, map_sim_to_reference_style
 
 SCENE = ROOT / "models/taco_xhand/xhand/bimanual/taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml"
-RUN = ROOT / "runs/taco_pour_bimanual_mano_fk_right_guard_v1"
+RUN = ROOT / "runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1"
 BUNDLE = ROOT / "data/taco_v1/pour_bowl_plate"
 
 
@@ -80,7 +80,7 @@ def test_pour_scene_has_passive_objects_and_complete_cross_object_pairs(model):
     guards = [geom for geom in hand_ids(model) if "guard" in model.geom(geom).name]
     assert all(frozenset(pair) in pairs for pair in product(external_hands, sum(objects, [])))
     assert not any(frozenset(pair) in pairs for pair in product(guards, sum(objects, [])))
-    assert model.npair == 2824
+    assert model.npair == 2826
 
 
 def test_pour_assets_resolve_inside_project_with_native_metric_inertias(model):
@@ -108,7 +108,7 @@ def test_pour_assets_resolve_inside_project_with_native_metric_inertias(model):
 def test_pour_ik_runtime_pair_equality():
     model = mujoco.MjModel.from_xml_path(str(SCENE))
     pairs = explicit_hand_pairs(model)
-    assert len(pairs) == 176
+    assert len(pairs) == 178
     hands = set(hand_ids(model))
     _enable_planning_collision_masks(model, list(hands), [])
     limit = mink.CollisionAvoidanceLimit(model,

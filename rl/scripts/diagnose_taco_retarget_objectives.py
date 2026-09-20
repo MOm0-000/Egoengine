@@ -22,7 +22,7 @@ from egoengine_repro.retarget.mink import (
 from egoengine_repro.retarget.paper_audit import artifact, scene_mesh_artifacts, verify_artifacts
 from egoengine_repro.retarget.taco_bimanual import FINGERS, SIDES, geometric_frame
 
-RUN = ROOT / "runs/taco_pour_bimanual_mano_fk_right_guard_v1"
+RUN = ROOT / "runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1"
 UPSTREAM = Path("/data_all/zzx/egoengine/spider/spider/assets/robots/xhand")
 TEMPLATE = ROOT / "models/taco_xhand/templates/xhand_bimanual_source.xml"
 SAMPLED_ROWS = (0, 20, 50, 100, 150, 197)
@@ -221,7 +221,7 @@ class Experiment:
         geoms = [i for i in range(self.model.ngeom) if (self.model.geom(i).name or "").startswith("collision_hand_")]
         _enable_planning_collision_masks(self.model, geoms, [])
         groups = _explicit_collision_groups(self.model, mujoco, hand_geom_ids=set(geoms))
-        clearance = float(settings.get("self_collision_clearance_m", 0.0))
+        clearance = float(settings.get("planning_collision_buffer_m", 0.0))
         inner = mink.CollisionAvoidanceLimit(self.model, groups,
             minimum_distance_from_collisions=clearance, collision_detection_distance=.02,
             include_explicit_pairs=True)

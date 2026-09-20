@@ -396,18 +396,56 @@ SciPy 弃用警告）。隔离 CPU 环境没有 mujoco-warp 导致一处模块�
 SciPy 弃用警告，138.27 s。另核验 987 个现存候选凸块文件及源输入哈希。
 测试通过不是场景物理可行性通过。
 
+## Bilateral palm/index-root semantic guards
+
+The formal scene now contains independently calibrated pair-specific guards for
+both palm/index-root assemblies.  Each side was fitted from its own CAD meshes;
+the left parameters were not copied from the right.  The two sides happen to
+share the same measured clear interval at the current numerical precision,
+`[-0.165575193708, 0.075077959229] rad`, but their local guard centres and radii
+are not identical.
+
+Validation directly calls the native FCL CAD predicate and the compiled MuJoCo
+guard distances at 141 uniformly spaced angles and a separate 140-angle midpoint
+holdout grid.  Both sides have zero false positives and zero false negatives on
+both grids.  The onset equality remains a construction property; it is not used
+as a substitute for these direct sample checks.  Reports are in
+`runs/taco_pour_bilateral_index_guard_v1/`.
+
+The retarget numerical contract now distinguishes the `2e-6 m` planning buffer
+from the accepted trajectory bound `distance >= -1e-6 m`.  The resulting guard
+distances can be smaller than 2 micrometres without contradicting that contract.
+Controlled pre-guard and right-only retargets using the same `1e-6` QP tolerances
+and planning buffer are stored in `runs/taco_pour_bimanual_mano_fk_control_new_solver_v1`
+and `runs/taco_pour_bimanual_mano_fk_right_guard_control_v2`.  Together with the
+bilateral reference they form a same-solver `no guard -> right guard -> bilateral`
+comparison.  Tracking deltas are reported only as evidence that the added
+constraints did not make the motion prior unusable, not as a general tracking
+improvement.
+
+The bilateral reference has 0/198 native palm/index-root interference frames on
+both sides.  Four-world MuJoCo-Warp validation at the formal 128-contact/512-
+constraint capacity covered all 198 states and 50 held-control stress records;
+the observed maxima were 49 contacts/world and 238 constraints/world, with no
+overflow or nonfinite state.  This does not certify unseen PPO states.
+
+This repair does not close the collision or initialization blockers.  The first
+state still has about 21.91 mm hand-shell/table penetration, about 15.22 mm
+left-hand/target shell penetration, and incomplete coverage of other hand-part
+pairs.  Replay-to-RL remains fail-closed.
+
 ## Previous checkpoint: corrected MANO reference, before the collision candidates
 
 The rest of this document is the historical orientation-bug baseline/v4 review.
 Its 204.29 mm³ thumb intersection is **not** the current first-frame value.
-The current input is `runs/taco_pour_bimanual_mano_fk_right_guard_v1`; both the protocol and
+The current input is `runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1`; both the protocol and
 PPO config now point to it. The old reference is retained solely for the
 orientation-fix comparison and regression tests, not as an active training input.
 
-New script: `scripts/audit_taco_initialization_preflight.py`.
-Current results: `runs/taco_pour_initialization_preflight_right_guard_v1/report.json` and
-`native_checks.npz`. No new renderer, scene or reference was created. No
-simulation stepping, initialization-candidate comparison or PPO was performed.
+Audit script: `scripts/audit_taco_initialization_preflight.py`.
+Current results: `runs/taco_pour_initialization_preflight_bilateral_guard_v1/report.json` and
+`native_checks.npz`. No new renderer, initialization-candidate comparison or PPO
+was performed.
 
 ### 坐标与碰撞检查实测结果
 

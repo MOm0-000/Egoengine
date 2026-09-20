@@ -36,8 +36,8 @@ from egoengine_repro.retarget.taco_bimanual import (  # noqa: E402
 )
 
 
-DEFAULT_HUMAN = ROOT / "runs/taco_pour_bimanual_mano_fk_right_guard_v1/human_reference.npz"
-DEFAULT_BASELINE = ROOT / "runs/taco_pour_bimanual_mano_fk_right_guard_v1/robot_reference.npz"
+DEFAULT_HUMAN = ROOT / "runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/human_reference.npz"
+DEFAULT_BASELINE = ROOT / "runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/robot_reference.npz"
 DEFAULT_CANDIDATE = ROOT / "runs/taco_pour_spider_mink_experiment_v2/robot_reference.npz"
 DEFAULT_SCENE = ROOT / (
     "models/taco_xhand/xhand/bimanual/"

@@ -46,7 +46,7 @@ SIDES = ("right", "left")
 FINGERS = ("thumb", "index", "middle", "ring", "pinky")
 SOURCE_COMMIT = "71238456bf97a7eeb3d0471aa31974e2d404d4ae"
 MINK_COMMIT = "ab45779fea46933832dee1c240f94103633347a1"
-DEFAULT_RUN = ROOT / "runs/taco_pour_bimanual_mano_fk_right_guard_v1"
+DEFAULT_RUN = ROOT / "runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1"
 DEFAULT_OUTPUT = ROOT / "runs/taco_pour_spider_mink_experiment_v1"
 DEFAULT_SCENE = ROOT / (
     "models/taco_xhand/xhand/bimanual/"
@@ -455,7 +455,7 @@ def main() -> None:
     if args.wrist_init_steps < 1 or args.fingertip_init_steps < 1:
         raise ValueError("initialization step counts must be positive")
     settings = json.loads(
-        (ROOT / "runs/taco_pour_bimanual_mano_fk_right_guard_v1/retarget_report.json").read_text()
+        (ROOT / "runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/retarget_report.json").read_text()
     )["inherited_settings"]
     report = run(
         args.output, args.human, args.scene, args.baseline, settings,

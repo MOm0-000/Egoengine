@@ -21,7 +21,7 @@ from egoengine_repro.retarget.mink import (
 )
 from egoengine_repro.retarget.paper_audit import artifact, scene_mesh_artifacts, verify_artifacts
 
-RUN = ROOT / "runs/taco_pour_bimanual_mano_fk_right_guard_v1"
+RUN = ROOT / "runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1"
 SIDES = ("right", "left")
 FINGERS = ("thumb", "index", "middle", "ring", "pinky")
 
