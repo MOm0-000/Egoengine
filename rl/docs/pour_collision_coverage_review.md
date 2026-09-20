@@ -405,6 +405,11 @@ share the same measured clear interval at the current numerical precision,
 `[-0.165575193708, 0.075077959229] rad`, but their local guard centres and radii
 are not identical.
 
+The full-precision onset values are retained as reproducible bisection results,
+not as claims about FCL physical accuracy or CAD/manufacturing precision.  Each
+formal audit also records the final `last_clear` / `first_collision` bracket,
+its width, and the midpoint numerical half-width.
+
 Validation directly calls the native FCL CAD predicate and the compiled MuJoCo
 guard distances at 141 uniformly spaced angles and a separate 140-angle midpoint
 holdout grid.  Both sides have zero false positives and zero false negatives on
@@ -428,6 +433,11 @@ both sides.  Four-world MuJoCo-Warp validation at the formal 128-contact/512-
 constraint capacity covered all 198 states and 50 held-control stress records;
 the observed maxima were 49 contacts/world and 238 constraints/world, with no
 overflow or nonfinite state.  This does not certify unseen PPO states.
+
+The active bilateral report now points to the byte-identical human-reference
+copy in its own run directory.  It separately records the original right-guard
+generation path and the shared SHA-256 as an immutable-reuse provenance record;
+the human reference was not regenerated for this audit-only correction.
 
 This repair does not close the collision or initialization blockers.  The first
 state still has about 21.91 mm hand-shell/table penetration, about 15.22 mm

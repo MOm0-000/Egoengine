@@ -53,7 +53,7 @@ def _transition(predicate, lo, hi, lo_value, iterations=34):
             lo = mid
         else:
             hi = mid
-    return (lo + hi) / 2.0
+    return (lo + hi) / 2.0, lo, hi
 
 
 def _rotation_y(angle):
@@ -229,8 +229,34 @@ def run(scene, reference, output_scene, report_path, baseline_scene=None,
     )
     if not predicate(RANGE[0]) or predicate(0.0) or not predicate(RANGE[1]):
         raise ValueError("unexpected native CAD collision topology")
-    negative_onset = _transition(predicate, RANGE[0], 0.0, True)
-    positive_onset = _transition(predicate, 0.0, RANGE[1], False)
+    negative_onset, negative_collision, negative_clear = _transition(
+        predicate, RANGE[0], 0.0, True
+    )
+    positive_onset, positive_clear, positive_collision = _transition(
+        predicate, 0.0, RANGE[1], False
+    )
+    transition_brackets = {
+        "negative": {
+            "sweep_direction": "neutral_toward_joint_min",
+            "last_clear_rad": float(negative_clear),
+            "first_collision_rad": float(negative_collision),
+            "midpoint_rad": float(negative_onset),
+            "bracket_width_rad": float(negative_clear - negative_collision),
+            "midpoint_numerical_half_width_rad": float(
+                (negative_clear - negative_collision) / 2.0
+            ),
+        },
+        "positive": {
+            "sweep_direction": "neutral_toward_joint_max",
+            "last_clear_rad": float(positive_clear),
+            "first_collision_rad": float(positive_collision),
+            "midpoint_rad": float(positive_onset),
+            "bracket_width_rad": float(positive_collision - positive_clear),
+            "midpoint_numerical_half_width_rad": float(
+                (positive_collision - positive_clear) / 2.0
+            ),
+        },
+    }
 
     endpoint_evidence = {}
     for label, angle in (("negative", RANGE[0]), ("neutral", 0.0), ("positive", RANGE[1])):
@@ -431,6 +457,13 @@ def run(scene, reference, output_scene, report_path, baseline_scene=None,
                  else f"{side}_index_root_guard_candidate_failed")),
         side=side,
         native_clear_interval_rad=[float(negative_onset), float(positive_onset)],
+        native_transition_brackets=transition_brackets,
+        native_transition_precision_note=(
+            "Bracket width is only the numerical resolution of the FCL predicate "
+            "bisection; it is not FCL physical accuracy, source-mesh accuracy, or "
+            "CAD/manufacturing tolerance. Full-precision midpoints are retained only "
+            "for reproducibility."
+        ),
         native_endpoint_evidence=endpoint_evidence,
         guards=specs,
         guard_transition_rad=transitions,

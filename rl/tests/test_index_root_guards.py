@@ -37,10 +37,36 @@ def test_guard_audit_and_active_reference_are_consistent():
         assert report["classification_method"] == (
             "direct_native_FCL_predicate_and_actual_MuJoCo_guard_distance"
         )
+        for label in ("negative", "positive"):
+            bracket = report["native_transition_brackets"][label]
+            assert bracket["bracket_width_rad"] > 0
+            assert bracket["bracket_width_rad"] <= 1.1e-11
+            assert bracket["midpoint_numerical_half_width_rad"] == (
+                bracket["bracket_width_rad"] / 2.0
+            )
+            lo, hi = sorted((bracket["last_clear_rad"], bracket["first_collision_rad"]))
+            assert lo < bracket["midpoint_rad"] < hi
+        assert "not FCL physical accuracy" in report["native_transition_precision_note"]
+        assert "manufacturing tolerance" in report["native_transition_precision_note"]
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
     ppo = yaml.safe_load((ROOT / "configs/taco_pour_bimanual_ppo.yaml").read_text())
     assert Path(protocol["inputs"]["active_robot_reference"]) == RUN / "robot_reference.npz"
     assert Path(ppo["data_path"]) == RUN / "robot_reference.npz"
+
+
+def test_active_human_reference_path_and_immutable_reuse_are_explicit():
+    report = json.loads((RUN / "retarget_report.json").read_text())
+    active = (RUN / "human_reference.npz").resolve()
+    reuse = report["reused_immutable_human_reference"]
+    assert Path(report["human_reference"]) == active
+    assert Path(reuse["active_copy_path"]) == active
+    assert reuse["byte_identical"]
+    assert report["human_reference_sha256"] == reuse["sha256"]
+    original = resolve_artifact_path({
+        "path": reuse["original_generation_path"],
+        "sha256": reuse["sha256"],
+    })
+    assert original.is_file() and "TRASH" in original.parts
 
 
 def test_each_side_guard_geometries_are_isolated_to_two_explicit_pairs():
