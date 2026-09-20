@@ -60,6 +60,8 @@ def _runtime_object(model, geom):
         shape = fcl.Capsule(float(size[0]), float(2 * size[1]))
     elif kind == int(mujoco.mjtGeom.mjGEOM_BOX):
         shape = fcl.Box(*(2 * size).tolist())
+    elif kind == int(mujoco.mjtGeom.mjGEOM_ELLIPSOID):
+        shape = fcl.Ellipsoid(*size.tolist())
     elif kind == int(mujoco.mjtGeom.mjGEOM_MESH):
         mesh = int(model.geom_dataid[geom])
         va, vn = int(model.mesh_vertadr[mesh]), int(model.mesh_vertnum[mesh])

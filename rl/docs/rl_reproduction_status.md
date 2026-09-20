@@ -42,6 +42,20 @@ thumb capsule 会在 22/41 个 native-clear endpoint 上误报。first-40 自动
 再明确允许接触但禁止穿透的双物体 retarget contract。见
 [归因报告](/data_all/zzx/3.2RL/docs/taco_pour_first40_collision_attribution_v1.md)。
 
+随后执行的 `collision_semantics_repair_v2` **没有把 hand-object avoidance
+加入 MINK**。候选仅修改 runtime collision representation：9 个只服务于指定
+手指—指定物体的局部椭球，使 first-40 hand-object 的 `>50 µm` 漏检和
+CAD-clear 误报都变为 0；另用 26 个只与平面配对的原 CAD mesh support geom，
+把 1066 个 hand-floor 检查中的旧 16 个漏检、10 个误报都降为 0。所有外部
+geom 都进入正确的 finger/contact channel，且不进入 MINK self groups。
+
+左掌—左拇指近节仍未解决。sphere、局部 convex decomposition 和 hybrid 三个
+pair-specific 候选都能在 first-40 达到 0/0，但都至少在一张未参与拟合的二维
+错位网格上留下 1–3 个边界错分，故全部被拒绝并移入 `TRASH`。正式 scene、
+正式 reference 和 joint ranges 均未修改，capacity、重新 retarget 和
+`initialization_protocol_v2` 均未启动。见
+[v2 报告](/data_all/zzx/3.2RL/docs/taco_pour_collision_semantics_repair_v2.md)。
+
 未执行 release 时，报告现在明确区分 requested 与 executed：本轮两候选均为
 `requested_control_intervals=5`、`executed_control_intervals=0` 和
 `executed_physics_steps=0`；依赖运动样本的阈值结果写为 `null/not evaluated`，

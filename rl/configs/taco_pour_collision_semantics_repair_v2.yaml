@@ -1,0 +1,107 @@
+protocol_name: taco_pour_collision_semantics_repair_v2
+scope: local_collision_representation_repair
+paper_source: not_published_local_collision_engineering
+training_ready: false
+formal_promotion_requires_all_gates: true
+
+inputs:
+  scene:
+    path: /data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml
+    sha256: add44e3de084c1dca7bf0f094cff271e3ebea7c63e2375cb175a9dfc9d8fa98d
+  robot_reference:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/robot_reference.npz
+    sha256: 493a1e0196123b1223a8a485eb3657ff5673e339f56ad94587b15b34b88d29d3
+  candidate_a:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v1/candidate_a/initial_state.npz
+    sha256: 8aa04a95342949ce5d2261dc1c5546ed86698d18b7872050f06fa5092faeedc4
+  attribution_v1:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_first40_collision_attribution_v1/report.json
+    sha256: afdcab126bb7375ff8534b4e39153e3f03900aa6e89a91fa56bc7196f7d97033
+
+contracts:
+  add_hand_object_avoidance_to_mink: false
+  external_repairs_are_runtime_physics_only: true
+  self_repairs_must_share_mink_runtime_pair_set: true
+  object_gt_trajectory_unchanged: true
+  joint_ranges_unchanged: true
+  original_external_geoms_unchanged: true
+  external_semantic_geoms_must_map_to_real_finger_role: true
+  self_semantic_geoms_must_not_pair_with_object_or_floor: true
+  floor_semantic_geoms_must_pair_only_with_floor: true
+
+hand_floor_repair:
+  representation: native_cad_mesh_convex_support
+  rationale: a convex hull and its source mesh have the same support point against a plane
+  replace_all_legacy_hand_floor_pairs: true
+  expected_native_hand_visuals: 26
+
+external_semantic_geoms:
+  - name: collision_hand_right_thumb_external_semantic_rota1
+    source_visual: right_thumb_rota1_visual
+    body: right_hand_thumb_rota_link1
+    replaces_geom_for_object: collision_hand_right_thumb_1
+    object_prefix: right_object_
+    pos: [0.030770938360365103, 0.0036196823991627262, 0.003817681605384293]
+    size: [0.04468495968269671, 0.022992302206077776, 0.01741996397248379]
+  - name: collision_hand_right_thumb_external_semantic_rota2
+    source_visual: right_thumb_rota2_visual
+    body: right_hand_thumb_rota_link2
+    replaces_geom_for_object: collision_hand_right_thumb_0
+    object_prefix: right_object_
+    native_aabb_scale: 1.05
+  - name: collision_hand_right_index_external_semantic_rota2
+    source_visual: right_index_rota2_visual
+    body: right_hand_index_rota_link2
+    adds_to_geom_for_object: collision_hand_right_index_0
+    object_prefix: right_object_
+    native_aabb_scale: 1.05
+  - name: collision_hand_left_index_external_semantic_rota1
+    source_visual: left_index_rota1_visual
+    body: left_hand_index_rota_link1
+    replaces_geom_for_object: collision_hand_left_index_1
+    object_prefix: left_object_
+    pos: [-0.0006201930287369735, 0.005497393672924955, -0.028239075310389793]
+    size: [0.007925846773409602, 0.0165608812058717, 0.04625250449777853]
+  - name: collision_hand_left_middle_external_semantic_link1
+    source_visual: left_middle_link1_visual
+    body: left_hand_mid_link1
+    replaces_geom_for_object: collision_hand_left_middle_1
+    object_prefix: left_object_
+    native_aabb_scale: 0.95
+  - name: collision_hand_left_index_external_semantic_rota2
+    source_visual: left_index_rota2_visual
+    body: left_hand_index_rota_link2
+    adds_to_geom_for_object: collision_hand_left_index_0
+    object_prefix: left_object_
+    native_aabb_scale: 1.0
+  - name: collision_hand_left_middle_external_semantic_link2
+    source_visual: left_middle_link2_visual
+    body: left_hand_mid_link2
+    adds_to_geom_for_object: collision_hand_left_middle_0
+    object_prefix: left_object_
+    native_aabb_scale: 1.1
+  - name: collision_hand_left_ring_external_semantic_link2
+    source_visual: left_ring_link2_visual
+    body: left_hand_ring_link2
+    adds_to_geom_for_object: collision_hand_left_ring_0
+    object_prefix: left_object_
+    pos: [-0.0015998499006466835, 0.00410904544850463, -0.01849872052923122]
+    size: [0.008061311861980579, 0.008265129397067713, 0.029296592043415767]
+  - name: collision_hand_left_pinky_external_semantic_link2
+    source_visual: left_pinky_link2_visual
+    body: left_hand_pinky_link2
+    adds_to_geom_for_object: collision_hand_left_pinky_0
+    object_prefix: left_object_
+    native_aabb_scale: 1.1
+
+acceptance:
+  selected_first40_material_false_negatives: 0
+  selected_first40_cad_clear_runtime_false_positives: 0
+  candidate_a_seed_material_false_negatives: 0
+  surface_only_rows_kept_separate:
+    pair: [left_index_rota2_visual, left_middle_link2_visual]
+    rows: [6, 7]
+  hand_floor_regression_required: true
+  contact_role_mapping_required: true
+  capacity_revalidation_required: true
+  physics_contract_rebuild_required: true

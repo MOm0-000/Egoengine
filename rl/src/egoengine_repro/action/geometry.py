@@ -101,6 +101,14 @@ def explicit_collision_pairs(
             "runtime self/floor/object collision graph is incomplete: "
             f"{ {name: len(pairs) for name, pairs in families.items()} }",
         )
+    names = {
+        geom: (mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_GEOM, geom) or "")
+        for geom in hand_geoms
+    }
+    self_only = {geom for geom, name in names.items() if "guard" in name}
+    object_only = {geom for geom, name in names.items() if "_external_semantic_" in name}
+    floor_only = {geom for geom, name in names.items() if "_floor_semantic_" in name}
+    base = hand_geoms - self_only - object_only - floor_only
     floor_covered = {
         first if first in hand_geoms else second
         for first, second in families["floor"]
@@ -109,11 +117,18 @@ def explicit_collision_pairs(
         first if first in hand_geoms else second
         for first, second in families["object"]
     }
-    if floor_covered != hand_geoms or object_covered != hand_geoms:
+    # A scene may replace every legacy primitive--floor pair with a dedicated
+    # native-mesh support geom.  In that case the old primitives deliberately
+    # remain object/self-only and must not be required in the floor family.
+    expected_floor = floor_only if floor_only else base
+    expected_object = base | object_only
+    if floor_covered != expected_floor or object_covered != expected_object:
         raise ValueError(
             "runtime collision graph does not cover every selected hand geom: "
-            f"floor_missing={sorted(hand_geoms - floor_covered)}, "
-            f"object_missing={sorted(hand_geoms - object_covered)}"
+            f"floor_missing={sorted(expected_floor - floor_covered)}, "
+            f"floor_unexpected={sorted(floor_covered - expected_floor)}, "
+            f"object_missing={sorted(expected_object - object_covered)}, "
+            f"object_unexpected={sorted(object_covered - expected_object)}"
         )
     return {name: tuple(pairs) for name, pairs in families.items()}
 

@@ -8,7 +8,7 @@ evidence_policy:
   paper_page_numbers: one_based_pdf_pages
   copied_defaults_are_author_settings: false
   new_model_or_reset_procedure_requires_confirmation: true
-  current_revision: first40_collision_attribution_complete_semantic_external_guards_and_object_nonpenetrating_retarget_pending
+  current_revision: collision_semantics_repair_v2_external_and_floor_candidate_passed_left_palm_thumb_self_guard_blocked
 inputs:
   setting: user_approved_gt_oracle_validation_not_full_perception_reproduction
   approved_episodes: ['20230927_027', '20230917_020', '20230926_004', '20231103_071', '20230927_017']
@@ -68,7 +68,28 @@ retargeting:
     scene_modified: false
     simulation_steps_executed: 0
     finding: candidate_a_middle_and_pinky_plate_misses_are_hand_proxy_underfill_palm_thumb_is_missing_pair_but_existing_shapes_false_positive
-    bilateral_object_nonpenetration_during_retarget: not_yet_frozen
+    bilateral_object_nonpenetration_during_retarget: not_added_paper_only_publishes_joint_limits_and_self_collision_for_mink
+  collision_semantics_repair_v2:
+    protocol: /data_all/zzx/3.2RL/configs/taco_pour_collision_semantics_repair_v2.yaml
+    candidate_scene: /data_all/zzx/3.2RL/runs/taco_pour_collision_semantics_repair_v2/candidate_runtime_semantics_scene.xml
+    build_report: /data_all/zzx/3.2RL/runs/taco_pour_collision_semantics_repair_v2/build_report.json
+    audit_report: /data_all/zzx/3.2RL/runs/taco_pour_collision_semantics_repair_v2/audit_report.json
+    hand_object_material_false_negatives_first40: 0
+    hand_object_cad_clear_runtime_false_positives_first40: 0
+    candidate_a_external_seed_detections: 2
+    hand_floor_checks_first40: 1066
+    hand_floor_material_false_negatives: 0
+    hand_floor_cad_clear_runtime_false_positives: 0
+    external_contact_role_mapping: passed
+    external_geoms_in_mink_self_groups: 0
+    hand_object_mink_limit_enabled: false
+    rejected_self_guard_candidates: [sphere, convex, hybrid]
+    rejected_candidate_location: /data_all/zzx/3.2RL/TRASH/rejected_candidates/2026-09-20_collision_semantics_repair_v2_self_guard
+    remaining_intrahand_material_false_negatives_first40: 19
+    formal_scene_modified: false
+    formal_promotion_passed: false
+    capacity_revalidation_run: false
+    initialization_protocol_v2_run: false
 initialization:
   source: TACO physical reset procedure not published
   status: taco_pour_initialization_protocol_v1_executed_both_candidates_rejected_no_reset_adopted
@@ -101,6 +122,9 @@ initialization:
     release_physics_steps_executed: 0
     formal_release_environments_created: 0
     blocked_by: both_candidates_failed_t0_legality_gate
+  next_initialization_protocol:
+    version: taco_pour_initialization_protocol_v2
+    status: blocked_until_left_palm_thumb_self_collision_contract_passes
   historical_brush_initial_hand_table_penetration_m: 0.01340
   initial_qpos_qvel_and_reference_index: require_explicit_specification
   environment_constrained_hand_projection: authorized_and_executed_as_separate_first_frame_diagnostic_only
