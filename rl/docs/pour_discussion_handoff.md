@@ -110,6 +110,26 @@ Pour/Bowl/Plate 的位置 0.12 m、旋转 1.5 rad 是附录 C.2 给出的任务�
 物理初始化细节并未完全公开。当前适配器的临时系数/组合办法必须标为本地
 设置，不能反称作者配置。用户已同意分别报告碗单物体、碗+盘双物体扩展结果。
 
+现已从架构上隔离这两类 objective：正式入口不指定 profile 时请求论文配置，
+由于 `lambda_p/lambda_R/C/contact coefficient` 未公开而直接拒绝；工程调试只能
+显式选择 `taco_pour_local_unpublished_v1`。该 profile 固定记录全部数值、来源和
+文件 hash，但 protocol 仍将其 `run_ready` 设为 false，不能借此绕过初始化、
+碰撞模型和 observation gate。PPO YAML 中原先会静默生效的阈值和系数已删除。
+
+双物体扩展继续采用“两个 tracking reward 取平均、任一物体越界即终止”，但
+已从隐式代码行为提升为 profile 协议。每一步会分别保存 bowl/plate 的位置、
+旋转、组合误差、reward、终止标志，以及左右手对每个物体的 contact bonus，
+并指出第一个失败的 endpoint 和物体，不再只留一个平均误差。
+
+初始化 gate 也不再只看 `qpos/qvel/ctrl` 的形状。正式 artifact 必须声明手和
+物体的 qpos/qvel 来源、ctrl 来源、第一条命令、临时固定方法、释放时刻和释放后
+被动物理验证；报告必须与 artifact 元数据逐项一致，正式 XML 不能残留 hold
+约束。当前尚无 Pour artifact 满足此 schema，因此仍没有运行正式 40 步窗口。
+
+另一个独立 blocker 是 236 维 actor observation 的具体编码属于本地实现。
+物体 goal 在 transition 前用 `t` 还是 `t+1` 尚未批准修改；当前代码保持 `t`，
+本次没有改 PPO 或 observation indexing。
+
 ## 5. 请网页版帮助讨论的具体问题
 
 请优先依据 EgoEngine 原文、MuJoCo/XHand 官方模型和相关论文/开源实现，
@@ -142,5 +162,6 @@ EgoEngine 已公开的 XHand/TACO reset 配方，也没有提供本项目应照�
 
 上述路径均相对于项目 `/data_all/zzx/3.2RL`。原始数据、参考和正式场景没有因
 这次误报分类清理而改动；原始测量报告保留，避免把删除记录误当成解决问题。
-此次全项目测试为 522 passed、1 skipped、57 subtests passed；以前独立跑过的
-9 项真实 GPU 接口测试仍只说明接口正确，不是 Pour 成功率。本次没有重新训练。
+此次 contract 修改后全项目测试为 529 passed、1 skipped、57 subtests passed；
+9 项真实 GPU 接口测试也已重新通过，仍只说明接口正确，不是 Pour 成功率。
+本次没有重新训练。

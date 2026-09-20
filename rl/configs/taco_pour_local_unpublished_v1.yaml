@@ -1,0 +1,23 @@
+schema_version: 1
+objective_id: taco_pour_local_unpublished_v1
+status: resolved_local_unpublished
+paper_faithful: false
+provenance: local engineering profile; coefficients and aggregation are not published EgoEngine parameters
+tracking:
+  lambda_p: 1.0
+  lambda_R: 1.0
+  C: 1.5047923441623355
+  position_threshold_m_record_only: 0.12
+  rotation_threshold_rad_record_only: 1.5
+  boundary_source: local diagonal of the two published example thresholds; not a published mapping
+contact:
+  coefficient: 0.25
+  reduction: mean_over_hands_and_tracked_objects
+lift:
+  coefficient: 0.1
+  object_role: tool
+aggregation:
+  tool_only: single_object
+  tool_and_target: mean_reward_any_termination
+evaluation:
+  auxiliary_rewards: false

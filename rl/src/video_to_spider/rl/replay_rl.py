@@ -11,6 +11,42 @@ class MJWPChunkBackend:
             raise ValueError("chunk validation requires one world and source row 0")
         self.env = env
         self.last_info = None
+        self.validation_traces = []
+        self._active_trace = None
+
+    def begin_trial(self, mode, start, end):
+        if self._active_trace is not None:
+            raise RuntimeError("a validation trace is already active")
+        self._active_trace = {
+            "mode": mode,
+            "start": int(start),
+            "lookahead_end": int(end),
+            "steps": [],
+        }
+
+    def end_trial(self, feasible, validated_steps, *, error=None):
+        if self._active_trace is None:
+            raise RuntimeError("no validation trace is active")
+        trace = self._active_trace
+        trace.update(feasible=bool(feasible), validated_steps=int(validated_steps))
+        if error is not None:
+            trace["error"] = error
+        first = next((step for step in trace["steps"] if step["terminated"]), None)
+        if first is not None:
+            failed = [
+                role for role, terminated in zip(
+                    first["tracked_object_roles"], first["object_terminated"], strict=True
+                ) if terminated
+            ]
+            trace["first_failure"] = {
+                "control_interval": first["control_interval"],
+                "endpoint": first["endpoint"],
+                "object_roles": failed,
+            }
+        else:
+            trace["first_failure"] = None
+        self.validation_traces.append(trace)
+        self._active_trace = None
 
     def snapshot(self):
         return self.env.get_env_state()
@@ -31,6 +67,27 @@ class MJWPChunkBackend:
         finite = bool(qpos.isfinite().all() and qvel.isfinite().all()
                       and np.isfinite(reward).all()
                       and np.isfinite(self.last_info["object_tracking_error"]).all())
+        if self._active_trace is not None:
+            def row(name):
+                return np.asarray(self.last_info[name][0]).tolist()
+
+            self._active_trace["steps"].append({
+                "control_interval": int(reference_step),
+                "endpoint": int(self.env.time_indices[0]),
+                "tracked_object_indices": list(self.last_info["tracked_object_indices"]),
+                "tracked_object_roles": list(self.last_info["tracked_object_roles"]),
+                "position_error_m": row("object_position_error"),
+                "rotation_error_rad": row("object_rotation_error"),
+                "tracking_error": row("object_tracking_error_per_object"),
+                "tracking_reward": row("object_tracking_reward_per_object"),
+                "object_terminated": row("object_terminated"),
+                "contact_bonus_per_hand_object": row("contact_bonus_per_hand_object"),
+                "aggregate_tracking_error": float(self.last_info["object_tracking_error"][0]),
+                "aggregate_contact_bonus": float(self.last_info["contact_score"][0]),
+                "total_reward": float(reward[0]),
+                "terminated": bool(self.last_info["terminated"][0]),
+                "finite": finite,
+            })
         # A window timeout is not object-tracking failure. No autoreset may hide
         # the physical state at either the commit point or a failed endpoint.
         return finite and not bool(self.last_info["terminated"][0])

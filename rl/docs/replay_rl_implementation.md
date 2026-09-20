@@ -12,7 +12,7 @@ reproduce the vision-based pose reconstruction described in Appendix A.3.
 
 ## Scope And Status
 
-### Current checkpoint: real switching is connected and tested; Pour reset still blocked
+### Current checkpoint: contracts are fail-closed; Pour reset and observation remain blocked
 
 The active Pour input remains the corrected full 198-frame MANO/MINK reference
 in `runs/taco_pour_bimanual_mano_fk_v1`. Collision-shape experiments, including
@@ -28,9 +28,12 @@ The former standalone components now have an explicit connection:
   official H2S2R PPO trainer to that scheduler. Every rollout reset during chunk
   training restores the incoming physical boundary, not an ideal reference pose.
 - `scripts/run_taco_replay_rl.py` is the guarded entry point. It refuses old
-  qpos-only diagnostics and requires a hash-matched, accepted initialization
-  report containing qpos, qvel, ctrl and source index 0. No Pour report currently
-  passes that gate. Full source length is 198 endpoints / 197 transitions.
+  qpos-only diagnostics and requires a hash-matched, accepted initialization.
+  The artifact/report pair must state and agree on hand/object qpos/qvel
+  provenance, ctrl provenance, first command, any temporary hold, release time,
+  and passive post-release validation. The formal XML may not retain a hold
+  equality. No Pour report currently passes that gate. Full source length is
+  198 endpoints / 197 transitions.
 - `scripts/run_mjwp_ppo.py` runs standalone PPO smoke training. It does not call
   `solve_chunk`; its trainer helpers are reused by the new connection.
 
@@ -41,6 +44,30 @@ the saved state after transition 20. Neither test is a Pour success experiment.
 The first uses an injected Replay rejection to guarantee fallback coverage;
 the second keeps the hands away from resting objects. Files/GT are unchanged.
 Both task tracking variants remain explicit runner options.
+
+The objective is no longer read from the simulator/PPO YAML. The environment
+cannot be constructed without a resolved `RuntimeObjective`. With no profile,
+the formal runner requests the paper objective and rejects it because
+`lambda_p`, `lambda_R`, `C`, the TACO contact reduction/coefficient, and the
+active lift coefficient are unpublished.
+For engineering smoke tests, `configs/taco_pour_local_unpublished_v1.yaml`
+records the former 1/1/1.504792, contact 0.25, and lift 0.1 choices together
+with non-paper provenance and file hashes. Selecting that profile does not
+bypass `training_ready`, profile-specific `run_ready`, or the separate
+observation gate in `configs/replay_rl_protocol.yaml`.
+
+For two objects, the local extension explicitly uses mean tracking reward and
+termination when either tracked object exceeds `C`. Every validation step now
+records tool/target position error, rotation error, combined error, tracking
+reward, termination, and each hand-object contact bonus. The report identifies
+the first failing endpoint and object role instead of retaining only a mean.
+`tool_only` remains the primary single manipulated-object variant.
+
+The existing 236-D actor observation is now recorded as a local unresolved
+encoding. It currently sees object goal endpoint `t` before executing the
+`t→t+1` transition, while controls use endpoints `t+1` and `t+2`. The proposed
+goal change to `t+1` has not been applied; PPO and observation indexing were not
+changed during this contract hardening.
 
 This initial correctness path uses one GPU world, no noise, deterministic mean
 actions for validation, and a fresh PPO policy per failed chunk. These are local
@@ -61,8 +88,10 @@ The required entry checks are a consistent collision/retarget model, a declared
 and reproducible legal initial state, explicit objective parameters, and the
 real switching/state-restore connection. Collision approximation need not be
 mathematically zero-error; unexplained false task contacts must not be silently
-treated as true ones. Published Pour thresholds do not uniquely determine the
-current adapter's threshold-to-C formula, which remains a local configuration.
+treated as true ones. Published Pour thresholds do not uniquely determine a
+threshold-to-C formula. The former diagonal construction exists only in the
+named local unpublished profile and can no longer be activated silently by the
+simulator config.
 
 ### Historical implementation checkpoints (not the current readiness state)
 
@@ -268,12 +297,14 @@ Snapshot/restore must not reset the cumulative simulation-work counter.
    has zero reset and domain-randomization noise. Keep the initial state and
    model fixed across solver comparisons; record failures rather than requiring
    Replay success in advance.
-7. Configure unpublished coefficients explicitly. Pour's published 0.12 m and
+7. Select an objective contract explicitly. Pour's published 0.12 m and
    1.5 rad example is recorded, but does not uniquely specify lambda_p/lambda_R/C.
    Aria's 0.08 m / 2.5 rad / contact bonus 2.0 are not TACO paper parameters.
    The PPO entry point exposes separate `tool_only` and `tool_and_target`
-   tracking variants. Run and report them separately after reset validation; do
-   not use old smoke checkpoints as scientific baselines.
+   tracking variants. The named local profile is for disclosed engineering
+   experiments only; a paper-faithful request fails closed. Run and report the
+   variants separately after reset and observation validation; do not use old
+   smoke checkpoints as scientific baselines.
 
 ## Proposals On Hold
 

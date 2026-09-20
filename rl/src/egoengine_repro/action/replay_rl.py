@@ -66,16 +66,27 @@ def solve_chunk(backend: ChunkBackend, replay: Policy, train_rl: RLTrainer,
                 continue
             accepted = initial
             valid_steps = 0
-            for index in range(start, lookahead_end):
-                valid = backend.step(policy(backend, index), index)
-                if not isinstance(valid, bool):
-                    raise ValueError("backend.step must return an explicit boolean feasibility result")
-                if not valid:
-                    break
-                valid_steps += 1
-                if index + 1 == committed_end:
-                    accepted = backend.snapshot()
+            begin_trial = getattr(backend, "begin_trial", None)
+            end_trial = getattr(backend, "end_trial", None)
+            if begin_trial is not None:
+                begin_trial(mode, start, lookahead_end)
+            try:
+                for index in range(start, lookahead_end):
+                    valid = backend.step(policy(backend, index), index)
+                    if not isinstance(valid, bool):
+                        raise ValueError("backend.step must return an explicit boolean feasibility result")
+                    if not valid:
+                        break
+                    valid_steps += 1
+                    if index + 1 == committed_end:
+                        accepted = backend.snapshot()
+            except Exception as error:
+                if end_trial is not None:
+                    end_trial(False, valid_steps, error=f"{type(error).__name__}: {error}")
+                raise
             feasible = valid_steps == lookahead_end - start
+            if end_trial is not None:
+                end_trial(feasible, valid_steps)
             trials.append(ModeTrial(mode, feasible, valid_steps))
             if feasible:
                 # Reuse the first-chunk state captured during validation. This

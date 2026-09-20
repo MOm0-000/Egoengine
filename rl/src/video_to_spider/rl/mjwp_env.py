@@ -30,8 +30,8 @@ from video_to_spider.rl.h2s2r import (
     make_anchor_points,
 )
 from video_to_spider.rl.reset_sampler import PreGraspResetSampler, PreGraspSamplerConfig
+from video_to_spider.rl.objective_contract import RuntimeObjective
 from egoengine_repro.action.paper_rewards import (
-    TrackingObjective,
     lifting,
     object_tracking,
     opposition_contact,
@@ -164,6 +164,8 @@ class MJWPVectorEnvConfig:
     fingertip_reset_distance_max_m: float = 0.5
     max_episode_length: int = 240
     tracked_object_indices: tuple[int, ...] | None = None
+    object_roles: tuple[str, ...] | None = None
+    objective: RuntimeObjective | None = None
 
 
 class MJWPVectorEnv:
@@ -184,6 +186,9 @@ class MJWPVectorEnv:
         self.ego_cfg = replace(config, num_samples=int(num_envs or config.num_samples))
         self.num_envs = int(self.ego_cfg.num_samples)
         self.env_cfg = env_config or MJWPVectorEnvConfig()
+        if self.env_cfg.objective is None:
+            raise ValueError("an explicit resolved runtime objective is required")
+        self.objective = self.env_cfg.objective
         if self.env_cfg.hand_qpos_dof is None:
             object_ctrl_dims = int(getattr(self.ego_cfg, "object_action_dims", 0))
             inferred = int(self.ego_cfg.nu) - (object_ctrl_dims if object_ctrl_dims > 0 else 0)
@@ -231,6 +236,16 @@ class MJWPVectorEnv:
                 index < 0 or index >= n_objects for index in self.tracked_object_indices
             ):
                 raise ValueError("tracked_object_indices must select existing objects")
+        roles = self.env_cfg.object_roles or (("tool", "target") if n_objects == 2 else ("tool",))
+        if len(roles) != n_objects or any(not isinstance(role, str) or not role for role in roles):
+            raise ValueError("object_roles must name every object")
+        self.object_roles = tuple(roles)
+        self.tracked_object_roles = tuple(self.object_roles[index] for index in self.tracked_object_indices)
+        expected_aggregation = "single_object" if len(self.tracked_object_indices) == 1 else "mean_reward_any_termination"
+        if self.objective.aggregation != expected_aggregation:
+            raise ValueError(f"runtime objective must declare {expected_aggregation} aggregation")
+        if self.objective.contact_reduction != "mean_over_hands_and_tracked_objects":
+            raise ValueError("unsupported contact reduction")
         object_linear_velocity = self.qvel_ref[:, -6 * n_objects:].reshape(-1, n_objects, 6)[..., :3].mean(1).cpu().numpy()
         self.pre_grasp_sampler = PreGraspResetSampler(self.env_cfg.pre_grasp, seed=seed)
         self.start_indices = self.pre_grasp_sampler.sample_indices(
@@ -266,20 +281,28 @@ class MJWPVectorEnv:
         )
         self._last_terminated = torch.zeros(self.num_envs, dtype=torch.bool, device=str(self.ego_cfg.device))
         self._last_contact_score = torch.zeros(self.num_envs, dtype=torch.float32, device=str(self.ego_cfg.device))
+        n_tracked = len(self.tracked_object_indices)
+        n_hands = 2 if self.ego_cfg.embodiment_type == "bimanual" else 1
+        self._last_tracking_position_error = torch.zeros(
+            self.num_envs, n_tracked, dtype=torch.float32, device=str(self.ego_cfg.device)
+        )
+        self._last_tracking_rotation_error = torch.zeros_like(self._last_tracking_position_error)
+        self._last_tracking_errors = torch.zeros_like(self._last_tracking_position_error)
+        self._last_tracking_rewards = torch.zeros_like(self._last_tracking_position_error)
+        self._last_object_terminated = torch.zeros(
+            self.num_envs, n_tracked, dtype=torch.bool, device=str(self.ego_cfg.device)
+        )
+        self._last_contact_bonus = torch.zeros(
+            self.num_envs, n_hands, n_tracked,
+            dtype=torch.float32, device=str(self.ego_cfg.device),
+        )
 
         self.env = self._mjwp.setup_env(self.ego_cfg, env_ref_data)
         self._resolve_sites()
         self._resolve_contact_maps()
         self.obs_dim = self._compute_obs_dim()
         self.priv_dim = self._compute_privileged_dim()
-        self.tracking_boundary = float(
-            (
-                float(getattr(self.ego_cfg, "pos_rew_scale", 1.0))
-                * float(getattr(self.ego_cfg, "object_pos_threshold", 0.12)) ** 2
-                + float(getattr(self.ego_cfg, "rot_rew_scale", 1.0))
-                * float(getattr(self.ego_cfg, "object_rot_threshold", 1.5)) ** 2
-            ) ** 0.5
-        )
+        self.tracking_boundary = self.objective.tracking.boundary
         self._last_tracking_error = torch.zeros(
             self.num_envs, dtype=torch.float32, device=str(self.ego_cfg.device)
         )
@@ -318,8 +341,8 @@ class MJWPVectorEnv:
                 self.env_cfg.domain.action_noise_std,
                 size=actions.shape,
             ).astype(np.float32)
-        # A saved ctrl row is the command that produced the matching next state.
-        # Use row t+1 to advance from reference state t to t+1.
+        # ctrl[k] is the saved endpoint-k position target. Use row t+1 to
+        # advance from reference endpoint t to endpoint t+1.
         reference_ctrls = self._reference_ctrls(self.time_indices, offset=1)
         delta = torch.as_tensor(actions, dtype=torch.float32, device=str(self.ego_cfg.device))
         full_ctrl = self._apply_residual(reference_ctrls, delta)
@@ -343,6 +366,12 @@ class MJWPVectorEnv:
         terminal_contact_score = self._last_contact_score.cpu().numpy().copy()
         terminal_tracking_error = self._last_tracking_error.cpu().numpy().copy()
         terminal_terminated = self._last_terminated.cpu().numpy().copy()
+        terminal_position_error = self._last_tracking_position_error.cpu().numpy().copy()
+        terminal_rotation_error = self._last_tracking_rotation_error.cpu().numpy().copy()
+        terminal_tracking_errors = self._last_tracking_errors.cpu().numpy().copy()
+        terminal_tracking_rewards = self._last_tracking_rewards.cpu().numpy().copy()
+        terminal_object_terminated = self._last_object_terminated.cpu().numpy().copy()
+        terminal_contact_bonus = self._last_contact_bonus.cpu().numpy().copy()
         reset_mask = done_np
         if auto_reset and reset_mask.any():
             self._reset_worlds(reset_mask)
@@ -355,6 +384,14 @@ class MJWPVectorEnv:
             "contact_score": terminal_contact_score,
             "contact_flags": privileged["contact_flags"].cpu().numpy(),
             "object_tracking_error": terminal_tracking_error,
+            "object_position_error": terminal_position_error,
+            "object_rotation_error": terminal_rotation_error,
+            "object_tracking_error_per_object": terminal_tracking_errors,
+            "object_tracking_reward_per_object": terminal_tracking_rewards,
+            "object_terminated": terminal_object_terminated,
+            "contact_bonus_per_hand_object": terminal_contact_bonus,
+            "tracked_object_indices": self.tracked_object_indices,
+            "tracked_object_roles": self.tracked_object_roles,
             "time_outs": time_outs,
             "terminated": terminal_terminated,
         }
@@ -391,6 +428,12 @@ class MJWPVectorEnv:
             "last_ctrl": self._last_ctrl.cpu().clone(),
             "initial_object_heights": self._initial_object_heights.cpu().clone(),
             "last_tracking_error": self._last_tracking_error.cpu().clone(),
+            "last_tracking_position_error": self._last_tracking_position_error.cpu().clone(),
+            "last_tracking_rotation_error": self._last_tracking_rotation_error.cpu().clone(),
+            "last_tracking_errors": self._last_tracking_errors.cpu().clone(),
+            "last_tracking_rewards": self._last_tracking_rewards.cpu().clone(),
+            "last_object_terminated": self._last_object_terminated.cpu().clone(),
+            "last_contact_bonus": self._last_contact_bonus.cpu().clone(),
             "last_terminated": self._last_terminated.cpu().clone(),
             "last_contact_score": self._last_contact_score.cpu().clone(),
         }
@@ -417,6 +460,12 @@ class MJWPVectorEnv:
         self._last_ctrl = state["last_ctrl"].to(str(self.ego_cfg.device)).clone()
         self._initial_object_heights = state["initial_object_heights"].to(str(self.ego_cfg.device)).clone()
         self._last_tracking_error = state["last_tracking_error"].to(str(self.ego_cfg.device)).clone()
+        self._last_tracking_position_error = state["last_tracking_position_error"].to(str(self.ego_cfg.device)).clone()
+        self._last_tracking_rotation_error = state["last_tracking_rotation_error"].to(str(self.ego_cfg.device)).clone()
+        self._last_tracking_errors = state["last_tracking_errors"].to(str(self.ego_cfg.device)).clone()
+        self._last_tracking_rewards = state["last_tracking_rewards"].to(str(self.ego_cfg.device)).clone()
+        self._last_object_terminated = state["last_object_terminated"].to(str(self.ego_cfg.device)).clone()
+        self._last_contact_bonus = state["last_contact_bonus"].to(str(self.ego_cfg.device)).clone()
         self._last_terminated = state["last_terminated"].to(str(self.ego_cfg.device)).clone()
         self._last_contact_score = state["last_contact_score"].to(str(self.ego_cfg.device)).clone()
         with wp.ScopedDevice(self.env.device):
@@ -424,7 +473,10 @@ class MJWPVectorEnv:
                 if key in {
                     "time_indices", "start_indices", "episode_lengths", "rng_state",
                     "last_action", "last_ctrl", "initial_object_heights",
-                    "last_tracking_error", "last_terminated", "last_contact_score",
+                    "last_tracking_error", "last_tracking_position_error",
+                    "last_tracking_rotation_error", "last_tracking_errors",
+                    "last_tracking_rewards", "last_object_terminated",
+                    "last_contact_bonus", "last_terminated", "last_contact_score",
                 }:
                     continue
                 data = self.env.data_wp_prev if key.startswith("prev.") else self.env.data_wp
@@ -566,7 +618,7 @@ class MJWPVectorEnv:
         efc = self.env.data_wp.efc
         required = ("geom", "dist", "worldid", "efc_address")
         if not all(hasattr(contact, name) for name in required) or not hasattr(efc, "force"):
-            if float(getattr(self.ego_cfg, "physical_contact_rew_scale", 0.0)) > 0.0:
+            if self.objective.contact_coefficient > 0.0:
                 raise RuntimeError("MJWarp contact fields are unavailable; cannot train with physical contact reward")
             return zeros.bool(), force_zeros
         geom = wp.to_torch(contact.geom).long()
@@ -681,6 +733,13 @@ class MJWPVectorEnv:
                 qpos[mask, start + 2], dtype=torch.float32, device=str(self.ego_cfg.device)
             )
         self._last_action[mask] = 0.0
+        self._last_tracking_error[mask] = 0.0
+        self._last_tracking_position_error[mask] = 0.0
+        self._last_tracking_rotation_error[mask] = 0.0
+        self._last_tracking_errors[mask] = 0.0
+        self._last_tracking_rewards[mask] = 0.0
+        self._last_object_terminated[mask] = False
+        self._last_contact_bonus[mask] = 0.0
         self._last_terminated[mask] = False
         self._last_contact_score[mask] = 0.0
         reset_ctrl = self._last_ctrl.clone()
@@ -804,24 +863,25 @@ class MJWPVectorEnv:
         return torch.stack(distances, dim=1)
 
     def _compute_reward(self, current_objects, goal_objects, contact_flags) -> torch.Tensor:
-        objective = TrackingObjective(
-            lambda_p=float(getattr(self.ego_cfg, "pos_rew_scale", 1.0)),
-            lambda_r=float(getattr(self.ego_cfg, "rot_rew_scale", 1.0)),
-            boundary=float(getattr(self, "tracking_boundary", 1.0)),
-        )
         scores = [
             object_tracking(current_objects[index][0], current_objects[index][1],
-                            goal_objects[index][0], goal_objects[index][1], objective)
+                            goal_objects[index][0], goal_objects[index][1], self.objective.tracking)
             for index in self.tracked_object_indices
         ]
-        self._last_tracking_error = torch.stack([score.error for score in scores], dim=1).mean(dim=1)
-        self._last_terminated = torch.stack([score.terminated for score in scores], dim=1).any(dim=1)
-        self._last_contact_score = opposition_contact(
-            contact_flags[:, :, self.tracked_object_indices],
-            coefficient=float(getattr(self.ego_cfg, "physical_contact_rew_scale", 0.0)),
-        ).mean(dim=(1, 2))
-        reward = torch.stack([score.reward for score in scores], dim=1).mean(dim=1) + self._last_contact_score
-        lift_scale = float(getattr(self.ego_cfg, "lift_rew_scale", 0.0))
+        self._last_tracking_position_error = torch.stack([score.position_error for score in scores], dim=1)
+        self._last_tracking_rotation_error = torch.stack([score.rotation_error for score in scores], dim=1)
+        self._last_tracking_errors = torch.stack([score.error for score in scores], dim=1)
+        self._last_tracking_rewards = torch.stack([score.reward for score in scores], dim=1)
+        self._last_object_terminated = torch.stack([score.terminated for score in scores], dim=1)
+        self._last_tracking_error = self._last_tracking_errors.mean(dim=1)
+        self._last_terminated = self._last_object_terminated.any(dim=1)
+        self._last_contact_bonus = opposition_contact(
+            contact_flags[:, :, list(self.tracked_object_indices)],
+            coefficient=self.objective.contact_coefficient,
+        )
+        self._last_contact_score = self._last_contact_bonus.mean(dim=(1, 2))
+        reward = self._last_tracking_rewards.mean(dim=1) + self._last_contact_score
+        lift_scale = self.objective.lift_coefficient
         if lift_scale > 0.0:
             heights = torch.stack([pose[0][:, 2] for pose in current_objects], dim=1)
             reward = reward + lifting(heights[:, 0], self._initial_object_heights[:, 0], lambda_z=lift_scale)

@@ -126,13 +126,33 @@ tracking:
 contact:
   formula: simultaneous_thumb_and_other_finger_same_hand_same_object
   coefficient: null
+  reduction: null
   null_reason: TACO coefficient not published; Aria 2.0 is not a TACO paper value
+lift:
+  formula: lambda_z_times_current_minus_initial_height
+  coefficient: null
+  null_reason: active Pour coefficient is not published
 evaluation:
   auxiliary_rewards: false
   equations: [C.9, C.10, C.11, C.12, C.13]
   variants: [tool_only, tool_and_target_extension]
   training_switch: scripts/run_mjwp_ppo.py --tracking_variant
   results_available: false
+runtime_contract:
+  fail_closed: true
+  paper_faithful_run_ready: false
+  local_objective_profiles:
+    taco_pour_local_unpublished_v1:
+      objective_ready: true
+      run_ready: false
+      blocked_by:
+        - collision_model_and_initialization_contract
+        - observation_contract
+  observation:
+    status: unresolved_local_236d
+    current_object_goal_before_transition: t
+    proposed_object_goal_before_transition: t_plus_1_not_approved
+    formal_run_ready: false
 training_ready: false
 audit_results:
   active_input: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/input_audit.json
@@ -202,7 +222,7 @@ audit_results:
   historical_dev4_inputs: /data_all/zzx/3.2RL/runs/paper_first_audit_v1/inputs.json
   historical_brush_initialization: /data_all/zzx/3.2RL/runs/paper_first_audit_v1/initialization.json
   historical_execution_report: /data_all/zzx/3.2RL/docs/paper_first_audit_results.md
-  local_tests_passed: 522
+  local_tests_passed: 529
   local_tests_skipped: 1
   local_subtests_passed: 57
   separate_real_gpu_adapter_tests_passed: 9
@@ -227,7 +247,8 @@ blocking_checks:
   - demonstrated_palm_index_interference_and_explicit_joint_assembly_exemption_boundaries
   - same_selected_collision_rules_in_mink_reference_and_runtime
   - explicit_initial_state_specification_and_known_initial_penetration
-  - explicit_unpublished_parameter_configuration
+  - paper_objective_unresolved_or_explicit_local_profile_selection
+  - explicit_actor_observation_contract
 task_outcomes_not_entry_requirements:
   - successful_full_reference_replay
   - stable_grasp_and_contact_acquisition

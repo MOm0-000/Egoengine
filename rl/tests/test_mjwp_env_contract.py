@@ -16,9 +16,16 @@ if not torch.cuda.is_available():
 
 from run_mjwp_ppo import _load_ego_config, _load_reference
 from video_to_spider.rl.mjwp_env import MJWPVectorEnv, MJWPVectorEnvConfig
+from video_to_spider.rl.objective_contract import load_runtime_objective
 
 
 CONFIG = ROOT / "configs/taco_pour_bimanual_ppo.yaml"
+OBJECTIVE = load_runtime_objective(
+    ROOT / "configs/replay_rl_protocol.yaml",
+    ROOT / "configs/taco_pour_local_unpublished_v1.yaml",
+    tracking_variant="tool_and_target",
+    require_run_ready=False,
+)
 
 
 @pytest.fixture(scope="module")
@@ -32,6 +39,7 @@ def env():
         env_config=MJWPVectorEnvConfig(
             max_episode_length=2,
             asymmetric_critic=True,
+            objective=OBJECTIVE,
         ),
         seed=11,
     )
@@ -68,6 +76,16 @@ def test_bimanual_observation_and_contact_contract(env):
     assert env.tracked_object_indices == (0, 1)
     _, _, _, info = env.step(np.zeros((2, 36), dtype=np.float32))
     assert info["contact_flags"].shape == (2, 2, 2, 5)
+    assert info["object_position_error"].shape == (2, 2)
+    assert info["object_rotation_error"].shape == (2, 2)
+    assert info["object_tracking_error_per_object"].shape == (2, 2)
+    assert info["object_tracking_reward_per_object"].shape == (2, 2)
+    assert info["object_terminated"].shape == (2, 2)
+    assert info["contact_bonus_per_hand_object"].shape == (2, 2, 2)
+    np.testing.assert_allclose(
+        info["object_tracking_error"], info["object_tracking_error_per_object"].mean(axis=1)
+    )
+    np.testing.assert_array_equal(info["terminated"], info["object_terminated"].any(axis=1))
 
 
 def test_autoreset_returns_new_observation_and_keeps_terminal_info(env):
@@ -131,7 +149,7 @@ def single_env():
     reference = _load_reference(config.data_path, "cuda:0", expected_frequency=30.0)
     return MJWPVectorEnv(config, reference, num_envs=1,
                         env_config=MJWPVectorEnvConfig(max_episode_length=197, asymmetric_critic=True,
-                                                       reference_start_index=0), seed=11)
+                                                       reference_start_index=0, objective=OBJECTIVE), seed=11)
 
 
 def test_chunk_reset_restores_actual_incoming_state_not_reference(single_env):
@@ -213,7 +231,7 @@ def test_real_two_chunk_rollout_commits_only_first_chunk():
                  torch.zeros((61, 10), device="cuda:0"), torch.zeros((61, 10, 3), device="cuda:0"))
     env = MJWPVectorEnv(config, reference, num_envs=1,
         env_config=MJWPVectorEnvConfig(max_episode_length=60, asymmetric_critic=True,
-                                      reference_start_index=0))
+                                      reference_start_index=0, objective=OBJECTIVE))
     backend = MJWPChunkBackend(env)
     snapshots = {}
     actual_snapshot = backend.snapshot
@@ -232,6 +250,13 @@ def test_real_two_chunk_rollout_commits_only_first_chunk():
     assert env.time_indices.tolist() == [20]
     assert env.simulation_control_intervals == before_work + 40
     assert env.simulation_physics_steps == 400
+    assert len(backend.validation_traces) == 1
+    trace = backend.validation_traces[0]
+    assert trace["mode"] == "replay" and trace["feasible"]
+    assert len(trace["steps"]) == 40 and trace["first_failure"] is None
+    assert trace["steps"][0]["tracked_object_roles"] == ["tool", "target"]
+    assert len(trace["steps"][0]["position_error_m"]) == 2
+    assert np.asarray(trace["steps"][0]["contact_bonus_per_hand_object"]).shape == (2, 2)
     restored = actual_snapshot()
     # Compare with the SAME rollout's captured boundary. Re-running GPU physics
     # is not bitwise deterministic and is precisely why the scheduler saves it.

@@ -41,6 +41,7 @@ from human2sim2robot.ppo.utils.network import MlpConfig, NetworkConfig, RnnConfi
 from human2sim2robot.ppo.utils.rewards_shaper import RewardsShaperParams
 from spider.config import Config, load_config_yaml, process_config
 from video_to_spider.rl.mjwp_env import MJWPVectorEnv, MJWPVectorEnvConfig
+from video_to_spider.rl.objective_contract import load_runtime_objective
 
 
 def _load_ego_config(config_path: str, device: str) -> Config:
@@ -73,6 +74,11 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--output_dir", default="")
     parser.add_argument(
+        "--objective-profile",
+        default=str(_PROJECT_ROOT / "configs" / "taco_pour_local_unpublished_v1.yaml"),
+        help="Explicit local objective for smoke tests; this is not a paper-faithful profile.",
+    )
+    parser.add_argument(
         "--asymmetric-critic",
         action=argparse.BooleanOptionalAction,
         default=True,
@@ -81,7 +87,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--tracking_variant",
         choices=("tool_only", "tool_and_target"),
-        default="tool_and_target",
+        default="tool_only",
         help="Object set used by the local tracking/reward evaluation contract.",
     )
     return parser.parse_args()
@@ -226,6 +232,12 @@ def main() -> None:
         torch.cuda.set_device(args.device)
 
     ego_config = _load_ego_config(args.config_path, args.device)
+    objective = load_runtime_objective(
+        _PROJECT_ROOT / "configs" / "replay_rl_protocol.yaml",
+        args.objective_profile,
+        tracking_variant=args.tracking_variant,
+        require_run_ready=False,
+    )
     ref_data = _load_reference(
         ego_config.data_path,
         args.device,
@@ -238,6 +250,8 @@ def main() -> None:
         reset_object_pos_noise_std=0.0,
         reset_object_rot_noise_std=0.0,
         tracked_object_indices=(0,) if args.tracking_variant == "tool_only" else None,
+        object_roles=("tool", "target"),
+        objective=objective,
     )
     env = MJWPVectorEnv(
         ego_config,
@@ -286,10 +300,7 @@ def main() -> None:
         "reset_noise": {"hand": 0.0, "object_position": 0.0, "object_rotation": 0.0},
         "domain_randomization": False,
         "tracking_variant": args.tracking_variant,
-        "paper_parameter_status": {
-            "tracking_weights": "local fixed configuration; paper does not publish TACO values",
-            "contact_coefficient": "local fixed configuration; paper does not publish TACO value",
-        },
+        "objective": objective.as_report(),
         "network": {
             "mlp": {"units": [512, 512]},
             "rnn": {
