@@ -158,43 +158,55 @@ def validate_candidate(protocol_path: Path, root: Path, key: str):
         for state in endpoints]
     native_failures = [_native_forbidden(row) for row in endpoint_native]
     all_motion = [row for interval in motions for row in interval]
-    max_interval_translation = max((row["interval_translation_m"] for row in all_motion), default=0.0)
-    max_interval_rotation = max((row["interval_rotation_rad"] for row in all_motion), default=0.0)
-    max_cumulative_translation = max((row["cumulative_translation_m"] for row in all_motion), default=0.0)
-    max_cumulative_rotation = max((row["cumulative_rotation_rad"] for row in all_motion), default=0.0)
+    release_executed = len(endpoints) == int(release_cfg["control_intervals"])
+    max_interval_translation = max((row["interval_translation_m"] for row in all_motion), default=None)
+    max_interval_rotation = max((row["interval_rotation_rad"] for row in all_motion), default=None)
+    max_cumulative_translation = max((row["cumulative_translation_m"] for row in all_motion), default=None)
+    max_cumulative_rotation = max((row["cumulative_rotation_rad"] for row in all_motion), default=None)
     checks = {
         "t0_legality_gate": t0_passed,
         "all_physics_steps_executed": len(trace) == int(release_cfg["physics_steps"]),
         "all_states_finite": bool(trace and all(row["finite"] for row in trace)),
         "no_capacity_overflow": bool(trace and not any(row["capacity_overflow"] for row in trace)),
         "object_hold_absent": not holds,
-        "joint_limits": bool(trace and min(row["joint_limit_min_margin"] for row in trace) >= -1e-6),
-        "no_forbidden_native_penetration_at_endpoints": len(endpoint_native) == release_cfg["control_intervals"]
-                                                        and not any(native_failures),
-        "object_translation_per_interval": max_interval_translation <= release_cfg["max_object_translation_per_interval_m"],
-        "object_rotation_per_interval": max_interval_rotation <= release_cfg["max_object_rotation_per_interval_rad"],
-        "object_translation_cumulative": max_cumulative_translation <= release_cfg["max_object_translation_cumulative_m"],
-        "object_rotation_cumulative": max_cumulative_rotation <= release_cfg["max_object_rotation_cumulative_rad"],
+        "joint_limits": (min(row["joint_limit_min_margin"] for row in trace) >= -1e-6
+                         if trace else None),
+        "no_forbidden_native_penetration_at_endpoints": (
+            not any(native_failures) if release_executed else None),
+        "object_translation_per_interval": (
+            max_interval_translation <= release_cfg["max_object_translation_per_interval_m"]
+            if release_executed else None),
+        "object_rotation_per_interval": (
+            max_interval_rotation <= release_cfg["max_object_rotation_per_interval_rad"]
+            if release_executed else None),
+        "object_translation_cumulative": (
+            max_cumulative_translation <= release_cfg["max_object_translation_cumulative_m"]
+            if release_executed else None),
+        "object_rotation_cumulative": (
+            max_cumulative_rotation <= release_cfg["max_object_rotation_cumulative_rad"]
+            if release_executed else None),
     }
-    passed = bool(all(checks.values()))
+    passed = bool(all(value is True for value in checks.values()))
     release = {
         "passed": passed,
         "checks": checks,
         "failure_reason": failed_reason,
-        "steps": int(release_cfg["control_intervals"]),
-        "physics_steps": len(trace),
+        "requested_control_intervals": int(release_cfg["control_intervals"]),
+        "executed_control_intervals": len(endpoints),
+        "requested_physics_steps": int(release_cfg["physics_steps"]),
+        "executed_physics_steps": len(trace),
         "formal_environment_created": formal_environment_created,
         "backend_setup_state_discarded_before_release": formal_environment_created,
         "control": "constant_initial_ctrl",
         "reference_cursor_advanced": False,
         "reward_or_objective_computed": False,
         "terminal_state_used_as_initial_state": False,
-        "object_constraints_active_after_release": False if not holds else True,
+        "object_constraints_active_after_release": (bool(holds) if release_executed else None),
         "physics_contract_sha256": physics["physics_contract_sha256"],
         "fresh_state_write_max_abs_error": state_write_max_error,
-        "max_contacts": max((row["contacts"] for row in trace), default=0),
-        "max_broadphase": max((row["broadphase"] for row in trace), default=0),
-        "max_constraints": max((row["constraints"] for row in trace), default=0),
+        "max_contacts": max((row["contacts"] for row in trace), default=None),
+        "max_broadphase": max((row["broadphase"] for row in trace), default=None),
+        "max_constraints": max((row["constraints"] for row in trace), default=None),
         "max_object_translation_per_interval_m": max_interval_translation,
         "max_object_rotation_per_interval_rad": max_interval_rotation,
         "max_object_translation_cumulative_m": max_cumulative_translation,

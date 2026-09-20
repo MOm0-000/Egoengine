@@ -2,8 +2,9 @@
 
 ## Current initialization and raw-depth audit
 
-Latest implementation check (2026-09-20): **534 passed, 1 skipped, 57 subtests**
-in 89.15 s. The current checks include the bilateral index-root semantic-guard contract,
+Latest implementation check (2026-09-20): **553 passed, 57 subtests**
+in 105.64 s. The current checks include the frozen first-40 four-way collision
+attribution, the skipped-release `not evaluated` schema, the bilateral index-root semantic-guard contract,
 TRASH relocation integrity, pose-specific false-alarm classification,
 contained/open CAD limitations, invalid volumes/distances, and separating a
 50-micrometre reporting cut from actual runtime contact generation. Historical

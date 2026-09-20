@@ -94,7 +94,19 @@ def test_release_validation_and_runner_remain_fail_closed():
         assert report["physics_contract"]["schema"] == "egoengine_replay_rl_physics_v1"
         assert not report["release_validation"]["passed"]
         assert report["release_validation"]["failure_reason"] == "t0_legality_gate_failed"
-        assert report["release_validation"]["physics_steps"] == 0
+        release = report["release_validation"]
+        assert release["requested_control_intervals"] == 5
+        assert release["executed_control_intervals"] == 0
+        assert release["requested_physics_steps"] == 50
+        assert release["executed_physics_steps"] == 0
+        for name in (
+            "object_translation_per_interval", "object_rotation_per_interval",
+            "object_translation_cumulative", "object_rotation_cumulative",
+            "no_forbidden_native_penetration_at_endpoints",
+        ):
+            assert release["checks"][name] is None
+        assert release["max_object_translation_per_interval_m"] is None
+        assert release["object_constraints_active_after_release"] is None
         assert not report["release_validation"]["formal_environment_created"]
         assert not report["release_validation"]["backend_setup_state_discarded_before_release"]
         assert not report["release_validation"]["reference_cursor_advanced"]

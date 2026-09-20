@@ -66,7 +66,8 @@ def _accepted_fixture(tmp_path, *, object_qvel_provenance="reference_finite_diff
         "release_validation": {
             "passed": True,
             "object_constraints_active_after_release": False,
-            "steps": 10,
+            "requested_control_intervals": 10,
+            "executed_control_intervals": 10,
             "physics_contract_sha256": physics["physics_contract_sha256"],
         },
     }

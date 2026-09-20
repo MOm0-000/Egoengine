@@ -152,7 +152,8 @@ def load_accepted_initialization(report_path, config_path):
     release = report.get("release_validation", {})
     if (not release.get("passed", False)
             or release.get("object_constraints_active_after_release") is not False
-            or release.get("steps") != contract["post_release_validation_steps"]
+            or release.get("requested_control_intervals") != contract["post_release_validation_steps"]
+            or release.get("executed_control_intervals") != contract["post_release_validation_steps"]
             or release.get("physics_contract_sha256") != physics_contract["physics_contract_sha256"]):
         raise ValueError("passive post-release validation is missing or inconsistent")
     scene = ET.parse(config["model_path"]).getroot()

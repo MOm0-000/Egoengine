@@ -171,6 +171,6 @@ EgoEngine 已公开的 XHand/TACO reset 配方，也没有提供本项目应照�
 上述路径均相对于项目 `/data_all/zzx/3.2RL`。原始数据未改动；正式场景和
 参考已更新为独立标定的双侧 palm/index-root guard 版本。被替代版本放在
 `TRASH`并通过 SHA-256 迁移清单可追溯，原始测量报告仍保留。
-此次 contract 修改后全项目测试为 534 passed、1 skipped、57 subtests passed；
+此次 contract 修改后全项目测试为 553 passed、57 subtests passed；
 9 项真实 GPU 接口测试也已重新通过，仍只说明接口正确，不是 Pour 成功率。
 本次没有重新训练。

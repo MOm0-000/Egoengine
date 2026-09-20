@@ -31,6 +31,21 @@ is not run. Consequently both passive release validations are correctly skipped
 with zero physics steps, neither report sets `accepted_for_replay_rl=true`, and
 `training_ready` remains false. See
 `runs/taco_pour_initialization_protocol_v1/comparison.json`.
+
+随后完成了只读的 `taco_pour_first40_collision_attribution_v1`。Candidate A 的
+左中指/小指—盘漏检都被定位为**手指 collision proxy underfill**，不是盘 proxy
+缺材料；左掌—拇指近节则是 runtime pair 缺失，但直接启用现有 palm box 与
+thumb capsule 会在 22/41 个 native-clear endpoint 上误报。first-40 自动检查的
+157 个 native crossing 中，当前 runtime 已检测到 132 个、漏掉 25 个；因此
+剩余问题不只是壳覆盖，当前 bilateral MINK reference 本身也没有把手—物体
+非穿透作为硬约束。正式 scene 尚未修改，下一步是先拟合局部 semantic guards，
+再明确允许接触但禁止穿透的双物体 retarget contract。见
+[归因报告](/data_all/zzx/3.2RL/docs/taco_pour_first40_collision_attribution_v1.md)。
+
+未执行 release 时，报告现在明确区分 requested 与 executed：本轮两候选均为
+`requested_control_intervals=5`、`executed_control_intervals=0` 和
+`executed_physics_steps=0`；依赖运动样本的阈值结果写为 `null/not evaluated`，
+不再因空数组默认值 0 而显示成通过。
 The subsequently authorized initial-hand diagnostic has produced a separate
 declared-feasible candidate, with unchanged object coordinates and source GT.
 The follow-up v4 diagnostic removes the demonstrated native palm/thumb

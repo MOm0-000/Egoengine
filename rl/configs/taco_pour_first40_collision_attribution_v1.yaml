@@ -1,0 +1,45 @@
+protocol_name: taco_pour_first40_collision_attribution_v1
+scope: read_only_collision_diagnostic
+paper_source: not_published_local_audit
+training_ready: false
+formal_scene:
+  path: /data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml
+  sha256: add44e3de084c1dca7bf0f094cff271e3ebea7c63e2375cb175a9dfc9d8fa98d
+robot_reference:
+  path: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/robot_reference.npz
+  sha256: 493a1e0196123b1223a8a485eb3657ff5673e339f56ad94587b15b34b88d29d3
+native_preflight:
+  report: /data_all/zzx/3.2RL/runs/taco_pour_initialization_preflight_bilateral_guard_v1/report.json
+  report_sha256: 8b296c0e1bf2d53c9a3ca3d58d11978510a80884172aab391ff1764566b9ba11
+  checks: /data_all/zzx/3.2RL/runs/taco_pour_initialization_preflight_bilateral_guard_v1/native_checks.npz
+  checks_sha256: d918cb08fc08ea5f50f9a1f0349d06dd381f9dfa00b32b36fe973dd1d7714d06
+diagnostic_probes:
+  - label: initialization_protocol_v1_candidate_a_t0
+    state: /data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v1/candidate_a/initial_state.npz
+    state_sha256: 8aa04a95342949ce5d2261dc1c5546ed86698d18b7872050f06fa5092faeedc4
+    pairs: known_material_seed_pairs
+endpoints:
+  first: 0
+  last_inclusive: 40
+pair_selection:
+  include_families: [hand_object, intrahand]
+  include_intrahand_only_when_nonadjacent: true
+  exclude_confirmed_fixed_assembly_seams: true
+  require_native_crossing_in_window: true
+known_material_seed_pairs:
+  - [left_middle_link2_visual, left_object_visual]
+  - [left_pinky_link2_visual, left_object_visual]
+  - [left_hand_link_visual, left_thumb_rota1_visual]
+comparisons:
+  - native_first_x_native_second
+  - runtime_first_x_runtime_second
+  - native_first_x_runtime_second
+  - runtime_first_x_native_second
+runtime_semantics:
+  actual_detection_uses_declared_geom_pairs: true
+  counterfactual_shape_test_excludes_pair_specific_guards: true
+  runtime_interference_threshold_m: 0.0
+native_material_reporting_threshold_m: 5.0e-5
+simulation_steps: 0
+scene_or_reference_modification_allowed: false
+repair_allowed: false
