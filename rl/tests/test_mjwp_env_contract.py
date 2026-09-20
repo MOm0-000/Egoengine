@@ -213,6 +213,7 @@ def test_real_replay_to_official_ppo_fallback_contract(single_env, tmp_path):
     result = solve_chunk(backend, replay_action, train, start=start, total_steps=start + 4)
     assert calls == [(start, start + 4)]
     assert [trial.mode for trial in result.trials] == ["replay", "rl"]
+    assert backend.validation_traces[0]["first_failure"]["reason"] == "backend_rejected"
     assert env.simulation_control_intervals >= work + 5  # includes rejected Replay + actual PPO rollout
     assert int(env.time_indices[0]) == result.committed_end
     if result.mode is None:

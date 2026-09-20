@@ -42,6 +42,15 @@ class MJWPChunkBackend:
                 "control_interval": first["control_interval"],
                 "endpoint": first["endpoint"],
                 "object_roles": failed,
+                "reason": "tracking_boundary",
+            }
+        elif not feasible and trace["steps"]:
+            first = trace["steps"][-1]
+            trace["first_failure"] = {
+                "control_interval": first["control_interval"],
+                "endpoint": first["endpoint"],
+                "object_roles": [],
+                "reason": "nonfinite_state" if not first["finite"] else "backend_rejected",
             }
         else:
             trace["first_failure"] = None
