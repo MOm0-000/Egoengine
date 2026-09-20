@@ -20,10 +20,37 @@ def artifact(path: Path) -> dict:
     return dict(path=str(path.resolve()), sha256=digest.hexdigest())
 
 
+def resolve_artifact_path(record) -> Path:
+    """Resolve an immutable audited input after an explicit TRASH relocation."""
+    original = Path(record["path"])
+    candidates = [original]
+    manifest = Path(__file__).resolve().parents[3] / "TRASH/relocations.json"
+    if manifest.is_file():
+        relocations = json.loads(manifest.read_text())
+        if relocations.get("schema") != "egoengine_trash_relocations_v1":
+            raise ValueError("unsupported TRASH relocation manifest")
+        for entry in relocations["entries"]:
+            source = Path(entry["original"])
+            destination = Path(entry["quarantine"])
+            if entry["kind"] == "file" and original == source:
+                candidates.append(destination)
+            elif entry["kind"] == "directory":
+                try:
+                    candidates.append(destination / original.relative_to(source))
+                except ValueError:
+                    pass
+    for candidate in candidates:
+        if not candidate.is_file() or candidate.is_symlink():
+            continue
+        current = artifact(candidate)
+        if current["sha256"] == record["sha256"]:
+            return candidate.resolve()
+    raise ValueError(f"an audited source artifact changed or is missing: {record['path']}")
+
+
 def verify_artifacts(records):
     for record in records:
-        if artifact(Path(record["path"])) != record:
-            raise ValueError(f"an audited source artifact changed: {record['path']}")
+        resolve_artifact_path(record)
 
 
 def scene_mesh_artifacts(scene: Path) -> list[dict]:

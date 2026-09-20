@@ -2,7 +2,7 @@
 
 Historical diagnosis of `runs/taco_pour_bimanual_gt_v1/`. The orientation
 defect described below has since been repaired in the generator and tested
-in a separate `runs/taco_pour_bimanual_mano_fk_v1/` reference. See
+in the preserved `TRASH/superseded_runs/2026-09-20_right_index_guard/taco_pour_bimanual_mano_fk_v1/` reference. See
 [the correction and remaining-error report](pour_mano_fk_correction.md).
 This document's measurements and statements that production was untouched
 describe the earlier audit, not the current code. The old artifacts are kept.

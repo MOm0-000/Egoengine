@@ -14,7 +14,7 @@ corresponds to bowl/tool `022`; the left hand to plate/target `135`.
 
 The time-varying fingertip-orientation construction defect is repaired in
 `src/egoengine_repro/retarget/taco_bimanual.py`. A separately named, complete
-reference is saved in `runs/taco_pour_bimanual_mano_fk_v1/`. The original
+reference is preserved in `TRASH/superseded_runs/2026-09-20_right_index_guard/taco_pour_bimanual_mano_fk_v1/`. The original
 `runs/taco_pour_bimanual_gt_v1/` and previous diagnostic candidates are preserved.
 
 **The remaining 11.81/12.27 mm right/left mean fingertip errors are unresolved,
@@ -178,13 +178,13 @@ not change their Euclidean separation.
 
 ## Evidence And Verification
 
-- `runs/taco_pour_bimanual_mano_fk_v1/input_audit.json`: source reconstruction
+- `TRASH/superseded_runs/2026-09-20_right_index_guard/taco_pour_bimanual_mano_fk_v1/input_audit.json`: source reconstruction
   and orientation provenance.
-- `runs/taco_pour_bimanual_mano_fk_v1/final_comparison.json`: controlled
+- `TRASH/superseded_runs/2026-09-20_right_index_guard/taco_pour_bimanual_mano_fk_v1/final_comparison.json`: controlled
   before/after results; use this instead of preliminary `comparison.json`.
-- `runs/taco_pour_bimanual_mano_fk_v1/residual_audit_final.json`: per-finger
+- `TRASH/superseded_runs/2026-09-20_right_index_guard/taco_pour_bimanual_mano_fk_v1/residual_audit_final.json`: per-finger
   errors, native site offsets, weighted losses and unapplied QP queries.
-- `runs/taco_pour_bimanual_mano_fk_v1/initialization_audit.json`: omitted pairs.
+- `TRASH/superseded_runs/2026-09-20_right_index_guard/taco_pour_bimanual_mano_fk_v1/initialization_audit.json`: omitted pairs.
 - `runs/taco_pour_table_calibration_v1/report.json`: unresolved table evidence.
 
 The 109 historical data/model/reference input hashes remain unchanged. All

@@ -1,0 +1,6611 @@
+{
+  "status": "capacity_audit_not_reset_or_training_validation",
+  "unchanged_source_dynamics": {
+    "unchanged_fields": [
+      "body_parentid",
+      "body_pos",
+      "body_quat",
+      "body_mass",
+      "body_inertia",
+      "body_ipos",
+      "body_iquat",
+      "jnt_type",
+      "jnt_pos",
+      "jnt_axis",
+      "jnt_range",
+      "jnt_qposadr",
+      "jnt_dofadr",
+      "qpos0",
+      "dof_armature",
+      "dof_damping",
+      "actuator_trnid",
+      "actuator_gear",
+      "actuator_gainprm",
+      "actuator_biasprm",
+      "actuator_ctrlrange",
+      "actuator_forcerange"
+    ],
+    "state_dimensions": [
+      50,
+      48,
+      36
+    ],
+    "object_actuators_added": false,
+    "original_joint_order_preserved": true
+  },
+  "mujoco_version": "3.7.0",
+  "inputs": [
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml",
+      "sha256": "9be515da35922967a2c6bd5950de591908968c36928e8f0041a779f1ba4bf33f"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_right_guard_v1/robot_reference.npz",
+      "sha256": "b6a6997d01cbd02a8c23c765f23cf9dcb30e8283cbda0c45a6ecc655e3df2740"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/0.obj",
+      "sha256": "fcf97235bbb9da09d49ab49e5a3838b2bc0c9d60ec2eda9cd409f560a3a560e6"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/1.obj",
+      "sha256": "1155aa7b5e136e43741b17e685f7bef8484fcef41924dd4bacd662c6872e1fdc"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/10.obj",
+      "sha256": "0de136915809b530c0abf2e5dbd63706bb83f569d1461869737555bd69062000"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/11.obj",
+      "sha256": "5baf6f421fcf8784b5f86702a3493c39e78c89fb9e3ead115ec91a9e65c8cce2"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/12.obj",
+      "sha256": "53b86c21c9f15064db960a1bd3cb4b57867c1d3018a13108f9040c3edcbeddcb"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/13.obj",
+      "sha256": "132ee1a47e4ead8244a8d66fe08071f1d700bf25d3a7e3546c6a4cf17904ea65"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/14.obj",
+      "sha256": "802c7e2ed715f0c57e73ef492020c8fd04abcadd3f35437dafb70a7470222875"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/15.obj",
+      "sha256": "5fac2dda0bbe4faf1389134f5b3c87a14000cf977954f7eeb9046693e6010c57"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/16.obj",
+      "sha256": "520f1f007f14484273d7312de73e1b7159e41b4e5377f3d57f566f1093a95f83"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/17.obj",
+      "sha256": "24b4c51308cba8c29d0e606e422080e4c88b47a357d0295f2592b6a9d8caeef1"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/18.obj",
+      "sha256": "5fc81fa9987e30ab0bcaeb9a6ffa25d10a6907e2e4e18e446dd6d4729731bc15"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/19.obj",
+      "sha256": "8479d5f1b1f1e5ff8cffb02b74ac659eca6771a59f9f3f5deb16620eca48bf3b"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/2.obj",
+      "sha256": "d43556d137ab80a7d41612c917bee4fcfa61f2ab6b6ff5fd7a12a8993a633684"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/20.obj",
+      "sha256": "b409d8994e5db605ce59c7f6975d4c3c31eb4f11a1f906dd60652b554f1ef264"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/21.obj",
+      "sha256": "ffc08b75056ee7b9807c749a4bbbee083b603646f7aea919a0ec0eda292a2185"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/22.obj",
+      "sha256": "6d9b45b65ba42c7ad371b760333455d72fecc60119a47678e8bb99823292ccb1"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/23.obj",
+      "sha256": "5ef40a494d85a2f557e653c481e14f72452422154872969c7c08e8656e98414f"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/24.obj",
+      "sha256": "99389c452d85c9d2dd2be96ac6959003079a978e49e1f2d9a4639141880d57d7"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/25.obj",
+      "sha256": "6cf299a59be9b509fe036a694b0198bb6972388e3a9661d0709bf51c81cda4fd"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/26.obj",
+      "sha256": "5db354a35eaa6584a735a86a6d0e6aa2bea368797915d3e4ab2e89124e53e958"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/27.obj",
+      "sha256": "c64a45a52045632af64b8506da799905d7e6ffec1b64a6f0f2ed2d9338e48154"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/28.obj",
+      "sha256": "df087dc1a008401e3e4494a126fd82f0ee98b378e2070949571e5ea68047ff9a"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/29.obj",
+      "sha256": "ba1d4255b38dea65cd51eabc9311d0d2d664a43bdc4bbcb7069eb1e582711449"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/3.obj",
+      "sha256": "3a6454c44f4d26d5491f9729fd33c5da89cb3c38cbaf538d5e5faf4929a1629a"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/30.obj",
+      "sha256": "b6567b325af8c6b511ab1c14e08f2dfa20621f81ce8812b97df422640ebc2992"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/31.obj",
+      "sha256": "43eb9076e5ce59a089a1d8be4dc9086747e15ffe91d403eb0929c1c5263be190"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/4.obj",
+      "sha256": "d0632d0ec73fa299c0a5ca466daea12ae8a75f89f741b72ae35bb2e60d7d4c26"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/5.obj",
+      "sha256": "0a6c8d5774f4e77c6c511ec397f26b5eaaa5cb1a52a92c53480f69b44422f247"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/6.obj",
+      "sha256": "8f4843c0f87a809029402ffe55e1e32cee098978e7879fe31a58f51e420a3343"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/7.obj",
+      "sha256": "fe1d609b98244cc0169d1d9859e477f965b8c5d3b81160e7b7d5b219b05c3629"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/8.obj",
+      "sha256": "a40eaab77272e4340888b0a78c448b4734dbcf0665272ee829d755da2626334a"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/9.obj",
+      "sha256": "235f81ddd87b43a680f94008230358c1b05050a6c4cda63c2e4a0bac57af75c3"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/visual.obj",
+      "sha256": "35c52d853b85aa521eeadda78abb2bd370975611c8c35cd9a9d4c96746d8418c"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/0.obj",
+      "sha256": "bc5314284bfb55eeb99489832338ef53e58941e5dd7a12d5b3cfd3d94c221ba2"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/1.obj",
+      "sha256": "1a76507a4b8baad9306c8091fa6de4c0a8f7bf1e03b514f1f8c82c2bc4e3f07c"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/10.obj",
+      "sha256": "4ecaaea1546233f97c29d23206302c44d3a893d1252b671e674159e3d7c228ab"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/11.obj",
+      "sha256": "a1bb8ae09cdf4738dec9f24e450397124c04e597f51226fa62a686fb83a22e1b"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/12.obj",
+      "sha256": "2c5bc20adefadd314225e878a27b0a4423a1c316293a72540ebabe8df3f747b5"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/13.obj",
+      "sha256": "cc9f86a8636eee2ea3fdfbf745552a4c5e016c8ee7a73a1fb41e2d6497a1da4b"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/14.obj",
+      "sha256": "1d39352c84e1df88d9524a6bb4a478617ece1b081e33617a5e15543a27c67bc0"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/15.obj",
+      "sha256": "8eb2b02b3601fc023da2524a930875fcffc90e5815161cd1eb6e37798315f8a6"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/16.obj",
+      "sha256": "bf490378ddc0cb18580159e1a481407b6210c1e8b71fe6db808163a70fef51b2"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/17.obj",
+      "sha256": "c272332ce1b4afcdcd2789e30006548c2282590e409265a6a1b4e9608f7dacf4"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/18.obj",
+      "sha256": "ba8cfe63861f14300aba854d28feaae64fdc5d965bef58740da0379050aeda1a"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/19.obj",
+      "sha256": "74619c7604c89b68c083f90a962cd081599e9ea161290dc7d11b4bbfd031d985"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/2.obj",
+      "sha256": "6b151bdb7c2a3069d6fd633a68cfa22b4534622a6f5676c2dc728519da16dc8c"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/20.obj",
+      "sha256": "a5be22fbbb71dbdd6585de7fb15eb84728bd98dd44c832487ba951053681c924"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/21.obj",
+      "sha256": "016c83f4766071011cbffc6071188c6da903f295f8495c044d864e37e3c91e7a"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/22.obj",
+      "sha256": "df29e1520bcec72d0ba719b8a9d803ac29733feb1088617236294248d8b6cdfe"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/23.obj",
+      "sha256": "687401b42de775c3fcacc9b3bf5baba84d24c51ebb5bf703b71c74c3c404535d"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/24.obj",
+      "sha256": "3164dbf0bc8fe8935500ae31d7a5c9e3ab1d9e100b3099c94ab74496483cc4d4"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/25.obj",
+      "sha256": "6cbe40ed5fee3a49a71c42c9c2e28167651c9be44423b860c72f7e999b0fff8e"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/26.obj",
+      "sha256": "841479b512be9919972e119559ba542ea55b11d598ccd592779d0e1a80596091"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/27.obj",
+      "sha256": "fab73e671a862191f20d5e2f15695366985754f0aab93cc8d7c934e518558a7c"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/28.obj",
+      "sha256": "5bc1dd68ac6ab8bb23f022d44047bcdf138ba9b678cd4f6df7ff0939754a426e"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/29.obj",
+      "sha256": "efe36b38281767b2dc88836518014ac99bbe105fc43c62906b00d523bb359aab"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/3.obj",
+      "sha256": "2d526e6094c679478c3b91c6adecd6d2ef305ec2be2bae009d9bd71e6c46a588"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/30.obj",
+      "sha256": "fb708385402d1df5f9b52c38b9a9c44db9c943f0c4efbd2c08c26b8412d56709"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/31.obj",
+      "sha256": "16004ca16f30119396c49df61afb367c38ac62af9f074df2b06e57b39ada644c"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/4.obj",
+      "sha256": "e88a32115a9642bd4a1751221de68f37caef5df6d4a1a1e6ce00b1e86dc8e081"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/5.obj",
+      "sha256": "36d086648104eaff92614398f0db1098f1971c4163b7687d3f35ebda98b44c1d"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/6.obj",
+      "sha256": "252d0c61b6fdb03dfad451a8973ea135960f111dcd5e6ed499995f25225c85b4"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/7.obj",
+      "sha256": "005c68e2ae5909e6df6f8806a964f640f38d373d3557eefb87195af4ad7553a2"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/8.obj",
+      "sha256": "8950574115f72f04560b7ed5338cf529f01f47776bc24b9e4c937f2ce89bf431"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/convex_m/9.obj",
+      "sha256": "55b16b3ce0ec9f8f3278b2b66e28b1388c74e412a6ff4d65aa009761d463cccf"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/objects/135/visual.obj",
+      "sha256": "6316aea5b5c29a6231639d4ac8dad2c42ee013cfc55f1ce5a9dc5a38056f52a1"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_index_bend_link.STL",
+      "sha256": "dffd1bf191354b1e1445996b059ac3f7d5c85bff45767c28e4031c88b55594d5"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_index_rota_link1.STL",
+      "sha256": "d3043620eff3416a9d060f08cf890763db8db77bd72715c0b426fd5724a770c3"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_index_rota_link2.STL",
+      "sha256": "125636813d960f2ca14932bb74c03d4035a310e4bcbbb5fd5bf7ecdf69757bf4"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_link.STL",
+      "sha256": "4d2e6c0d9af6a2f116aa5fde55b280186e102705efb035fdbfda9a747ebf1a9b"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_mid_link1.STL",
+      "sha256": "a66d2574f4a433eef6a0f43b9d4ecd14b32557693953defa654cd10c7c305aa0"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_mid_link2.STL",
+      "sha256": "a695ec28c9c41cc4a18b0ffc421cec785221fa43cca94b1c8b8f3077987a357b"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_pinky_link1.STL",
+      "sha256": "1a7d786e133d34955e4358d72fed7ddabd798bff80207af9b932f01ec7fb15c2"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_pinky_link2.STL",
+      "sha256": "98148a77d8367fe6cfe9f44fa3e01f288ba56a9cd86c232232972ff3ca3366c7"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_ring_link1.STL",
+      "sha256": "96a858ed17c4193ee87a09b1544d2a34b8dcedd5bd10f89e56ee26451dbdd4b9"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_ring_link2.STL",
+      "sha256": "33a7411768db62e15b952cde84579d8a64207ebbfe599188888a138058bc7f90"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_thumb_bend_link.STL",
+      "sha256": "b13cf4e0e7bdcc534087a49c9edf36ba46ca526869fe6259ef4c22f82365483d"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_thumb_rota_link1.STL",
+      "sha256": "ba4d473f8913f60f31178c68ba2e196fffba6340ae85d9e5adfe64166f331ea2"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/left_hand_thumb_rota_link2.STL",
+      "sha256": "e0252b238a0d06999ab39b94f53290d22c14e0ddb66015fbded0614e3906e393"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_index_bend_link.STL",
+      "sha256": "8969bc01d636eb86d64d8e5ae81fc9530392fbaf1e99d01ea700cad16739e809"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_index_rota_link1.STL",
+      "sha256": "aa81e5c7a89339893f8ce3c109ad44f5da9e81b067f655bf85a8c94a15170560"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_index_rota_link2.STL",
+      "sha256": "1978ac4ba6eb13bba2fb7a03e6b7ad16ad9c22fce6cac4b71c2620650bbe7110"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_link.STL",
+      "sha256": "990938909f1c2743425f425433f8d73352160072a82d81aa21fb8f73918cdc38"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_mid_link1.STL",
+      "sha256": "b9ece604072b09b00b14dca913f7adcfe86f81067eb511d08c4d995bf057aa1d"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_mid_link2.STL",
+      "sha256": "4a451a017695c88bac5028d04618b77efe3e0105839698126078aff18db33bad"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_pinky_link1.STL",
+      "sha256": "d8d95abf22c08b0cb19bf17f6dc70ef5ad10c2c0476d6155ddf545fd80b6f7b8"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_pinky_link2.STL",
+      "sha256": "e45d273473af9a3c6e7920cbea599c3fd28b796dbbd92104ba051633da96e4ce"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_ring_link1.STL",
+      "sha256": "cc6449f3311c0c6066921c088630611d0d96c786e3a0976b57cf74443ac459ae"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_ring_link2.STL",
+      "sha256": "93fc89a8ed9c9cbc4bd1ef0ee6e251ab6064ff61776be66e0cd69497015be09d"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_thumb_bend_link.STL",
+      "sha256": "128a534a22c58c34ba091365daf5cf3310d576386033623ff7c3ba0e4bcdfa75"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_thumb_rota_link1.STL",
+      "sha256": "1fe3c9615f90eccd012b5fed8b3aba1f1de68987f03d643367b53740530e1a63"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/assets/robots/xhand_pour_20230927_017/assets/right_hand_thumb_rota_link2.STL",
+      "sha256": "25c5ae9613658b5a73a45e6ae96369cfb0dac83742285849dfb35d04c450db19"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/configs/taco_pour_bimanual_ppo.yaml",
+      "sha256": "cbd50cb33c300d4f9c6ce0c967371a6d4f5971813621bd0b9ac33eb17251bf61"
+    },
+    {
+      "path": "/data_all/zzx/egoengine/spider/spider/simulators/mjwp.py",
+      "sha256": "72f892d4b38de85dd23bbb47993e593b3dd57a068902631285e3b8c503389d7e"
+    },
+    {
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml",
+      "sha256": "9be515da35922967a2c6bd5950de591908968c36928e8f0041a779f1ba4bf33f"
+    }
+  ],
+  "cpu": [
+    {
+      "row": 0,
+      "contacts": 23,
+      "constraints": 95,
+      "warnings": 0
+    },
+    {
+      "row": 1,
+      "contacts": 24,
+      "constraints": 97,
+      "warnings": 0
+    },
+    {
+      "row": 2,
+      "contacts": 24,
+      "constraints": 96,
+      "warnings": 0
+    },
+    {
+      "row": 3,
+      "contacts": 20,
+      "constraints": 82,
+      "warnings": 0
+    },
+    {
+      "row": 4,
+      "contacts": 19,
+      "constraints": 78,
+      "warnings": 0
+    },
+    {
+      "row": 5,
+      "contacts": 18,
+      "constraints": 73,
+      "warnings": 0
+    },
+    {
+      "row": 6,
+      "contacts": 18,
+      "constraints": 74,
+      "warnings": 0
+    },
+    {
+      "row": 7,
+      "contacts": 17,
+      "constraints": 68,
+      "warnings": 0
+    },
+    {
+      "row": 8,
+      "contacts": 16,
+      "constraints": 65,
+      "warnings": 0
+    },
+    {
+      "row": 9,
+      "contacts": 15,
+      "constraints": 61,
+      "warnings": 0
+    },
+    {
+      "row": 10,
+      "contacts": 12,
+      "constraints": 49,
+      "warnings": 0
+    },
+    {
+      "row": 11,
+      "contacts": 11,
+      "constraints": 45,
+      "warnings": 0
+    },
+    {
+      "row": 12,
+      "contacts": 9,
+      "constraints": 36,
+      "warnings": 0
+    },
+    {
+      "row": 13,
+      "contacts": 10,
+      "constraints": 40,
+      "warnings": 0
+    },
+    {
+      "row": 14,
+      "contacts": 9,
+      "constraints": 36,
+      "warnings": 0
+    },
+    {
+      "row": 15,
+      "contacts": 5,
+      "constraints": 21,
+      "warnings": 0
+    },
+    {
+      "row": 16,
+      "contacts": 5,
+      "constraints": 20,
+      "warnings": 0
+    },
+    {
+      "row": 17,
+      "contacts": 5,
+      "constraints": 22,
+      "warnings": 0
+    },
+    {
+      "row": 18,
+      "contacts": 10,
+      "constraints": 40,
+      "warnings": 0
+    },
+    {
+      "row": 19,
+      "contacts": 8,
+      "constraints": 33,
+      "warnings": 0
+    },
+    {
+      "row": 20,
+      "contacts": 7,
+      "constraints": 26,
+      "warnings": 0
+    },
+    {
+      "row": 21,
+      "contacts": 11,
+      "constraints": 44,
+      "warnings": 0
+    },
+    {
+      "row": 22,
+      "contacts": 9,
+      "constraints": 37,
+      "warnings": 0
+    },
+    {
+      "row": 23,
+      "contacts": 12,
+      "constraints": 50,
+      "warnings": 0
+    },
+    {
+      "row": 24,
+      "contacts": 11,
+      "constraints": 44,
+      "warnings": 0
+    },
+    {
+      "row": 25,
+      "contacts": 11,
+      "constraints": 44,
+      "warnings": 0
+    },
+    {
+      "row": 26,
+      "contacts": 12,
+      "constraints": 49,
+      "warnings": 0
+    },
+    {
+      "row": 27,
+      "contacts": 15,
+      "constraints": 62,
+      "warnings": 0
+    },
+    {
+      "row": 28,
+      "contacts": 21,
+      "constraints": 85,
+      "warnings": 0
+    },
+    {
+      "row": 29,
+      "contacts": 16,
+      "constraints": 65,
+      "warnings": 0
+    },
+    {
+      "row": 30,
+      "contacts": 21,
+      "constraints": 84,
+      "warnings": 0
+    },
+    {
+      "row": 31,
+      "contacts": 24,
+      "constraints": 93,
+      "warnings": 0
+    },
+    {
+      "row": 32,
+      "contacts": 24,
+      "constraints": 96,
+      "warnings": 0
+    },
+    {
+      "row": 33,
+      "contacts": 24,
+      "constraints": 96,
+      "warnings": 0
+    },
+    {
+      "row": 34,
+      "contacts": 22,
+      "constraints": 88,
+      "warnings": 0
+    },
+    {
+      "row": 35,
+      "contacts": 21,
+      "constraints": 84,
+      "warnings": 0
+    },
+    {
+      "row": 36,
+      "contacts": 22,
+      "constraints": 88,
+      "warnings": 0
+    },
+    {
+      "row": 37,
+      "contacts": 21,
+      "constraints": 84,
+      "warnings": 0
+    },
+    {
+      "row": 38,
+      "contacts": 24,
+      "constraints": 97,
+      "warnings": 0
+    },
+    {
+      "row": 39,
+      "contacts": 28,
+      "constraints": 113,
+      "warnings": 0
+    },
+    {
+      "row": 40,
+      "contacts": 28,
+      "constraints": 113,
+      "warnings": 0
+    },
+    {
+      "row": 41,
+      "contacts": 25,
+      "constraints": 102,
+      "warnings": 0
+    },
+    {
+      "row": 42,
+      "contacts": 25,
+      "constraints": 101,
+      "warnings": 0
+    },
+    {
+      "row": 43,
+      "contacts": 28,
+      "constraints": 113,
+      "warnings": 0
+    },
+    {
+      "row": 44,
+      "contacts": 29,
+      "constraints": 117,
+      "warnings": 0
+    },
+    {
+      "row": 45,
+      "contacts": 31,
+      "constraints": 125,
+      "warnings": 0
+    },
+    {
+      "row": 46,
+      "contacts": 39,
+      "constraints": 156,
+      "warnings": 0
+    },
+    {
+      "row": 47,
+      "contacts": 34,
+      "constraints": 137,
+      "warnings": 0
+    },
+    {
+      "row": 48,
+      "contacts": 23,
+      "constraints": 94,
+      "warnings": 0
+    },
+    {
+      "row": 49,
+      "contacts": 24,
+      "constraints": 98,
+      "warnings": 0
+    },
+    {
+      "row": 50,
+      "contacts": 26,
+      "constraints": 105,
+      "warnings": 0
+    },
+    {
+      "row": 51,
+      "contacts": 27,
+      "constraints": 108,
+      "warnings": 0
+    },
+    {
+      "row": 52,
+      "contacts": 27,
+      "constraints": 111,
+      "warnings": 0
+    },
+    {
+      "row": 53,
+      "contacts": 25,
+      "constraints": 102,
+      "warnings": 0
+    },
+    {
+      "row": 54,
+      "contacts": 25,
+      "constraints": 101,
+      "warnings": 0
+    },
+    {
+      "row": 55,
+      "contacts": 24,
+      "constraints": 100,
+      "warnings": 0
+    },
+    {
+      "row": 56,
+      "contacts": 25,
+      "constraints": 100,
+      "warnings": 0
+    },
+    {
+      "row": 57,
+      "contacts": 25,
+      "constraints": 104,
+      "warnings": 0
+    },
+    {
+      "row": 58,
+      "contacts": 24,
+      "constraints": 99,
+      "warnings": 0
+    },
+    {
+      "row": 59,
+      "contacts": 24,
+      "constraints": 98,
+      "warnings": 0
+    },
+    {
+      "row": 60,
+      "contacts": 23,
+      "constraints": 95,
+      "warnings": 0
+    },
+    {
+      "row": 61,
+      "contacts": 24,
+      "constraints": 97,
+      "warnings": 0
+    },
+    {
+      "row": 62,
+      "contacts": 20,
+      "constraints": 82,
+      "warnings": 0
+    },
+    {
+      "row": 63,
+      "contacts": 24,
+      "constraints": 99,
+      "warnings": 0
+    },
+    {
+      "row": 64,
+      "contacts": 24,
+      "constraints": 98,
+      "warnings": 0
+    },
+    {
+      "row": 65,
+      "contacts": 23,
+      "constraints": 95,
+      "warnings": 0
+    },
+    {
+      "row": 66,
+      "contacts": 22,
+      "constraints": 90,
+      "warnings": 0
+    },
+    {
+      "row": 67,
+      "contacts": 22,
+      "constraints": 90,
+      "warnings": 0
+    },
+    {
+      "row": 68,
+      "contacts": 22,
+      "constraints": 90,
+      "warnings": 0
+    },
+    {
+      "row": 69,
+      "contacts": 21,
+      "constraints": 86,
+      "warnings": 0
+    },
+    {
+      "row": 70,
+      "contacts": 20,
+      "constraints": 80,
+      "warnings": 0
+    },
+    {
+      "row": 71,
+      "contacts": 21,
+      "constraints": 85,
+      "warnings": 0
+    },
+    {
+      "row": 72,
+      "contacts": 22,
+      "constraints": 89,
+      "warnings": 0
+    },
+    {
+      "row": 73,
+      "contacts": 25,
+      "constraints": 101,
+      "warnings": 0
+    },
+    {
+      "row": 74,
+      "contacts": 25,
+      "constraints": 102,
+      "warnings": 0
+    },
+    {
+      "row": 75,
+      "contacts": 23,
+      "constraints": 94,
+      "warnings": 0
+    },
+    {
+      "row": 76,
+      "contacts": 23,
+      "constraints": 94,
+      "warnings": 0
+    },
+    {
+      "row": 77,
+      "contacts": 24,
+      "constraints": 98,
+      "warnings": 0
+    },
+    {
+      "row": 78,
+      "contacts": 25,
+      "constraints": 101,
+      "warnings": 0
+    },
+    {
+      "row": 79,
+      "contacts": 25,
+      "constraints": 102,
+      "warnings": 0
+    },
+    {
+      "row": 80,
+      "contacts": 21,
+      "constraints": 85,
+      "warnings": 0
+    },
+    {
+      "row": 81,
+      "contacts": 28,
+      "constraints": 114,
+      "warnings": 0
+    },
+    {
+      "row": 82,
+      "contacts": 25,
+      "constraints": 101,
+      "warnings": 0
+    },
+    {
+      "row": 83,
+      "contacts": 25,
+      "constraints": 101,
+      "warnings": 0
+    },
+    {
+      "row": 84,
+      "contacts": 28,
+      "constraints": 115,
+      "warnings": 0
+    },
+    {
+      "row": 85,
+      "contacts": 28,
+      "constraints": 114,
+      "warnings": 0
+    },
+    {
+      "row": 86,
+      "contacts": 28,
+      "constraints": 116,
+      "warnings": 0
+    },
+    {
+      "row": 87,
+      "contacts": 26,
+      "constraints": 105,
+      "warnings": 0
+    },
+    {
+      "row": 88,
+      "contacts": 26,
+      "constraints": 105,
+      "warnings": 0
+    },
+    {
+      "row": 89,
+      "contacts": 25,
+      "constraints": 100,
+      "warnings": 0
+    },
+    {
+      "row": 90,
+      "contacts": 25,
+      "constraints": 101,
+      "warnings": 0
+    },
+    {
+      "row": 91,
+      "contacts": 24,
+      "constraints": 98,
+      "warnings": 0
+    },
+    {
+      "row": 92,
+      "contacts": 25,
+      "constraints": 102,
+      "warnings": 0
+    },
+    {
+      "row": 93,
+      "contacts": 27,
+      "constraints": 111,
+      "warnings": 0
+    },
+    {
+      "row": 94,
+      "contacts": 20,
+      "constraints": 82,
+      "warnings": 0
+    },
+    {
+      "row": 95,
+      "contacts": 16,
+      "constraints": 66,
+      "warnings": 0
+    },
+    {
+      "row": 96,
+      "contacts": 16,
+      "constraints": 64,
+      "warnings": 0
+    },
+    {
+      "row": 97,
+      "contacts": 17,
+      "constraints": 70,
+      "warnings": 0
+    },
+    {
+      "row": 98,
+      "contacts": 20,
+      "constraints": 83,
+      "warnings": 0
+    },
+    {
+      "row": 99,
+      "contacts": 15,
+      "constraints": 62,
+      "warnings": 0
+    },
+    {
+      "row": 100,
+      "contacts": 17,
+      "constraints": 72,
+      "warnings": 0
+    },
+    {
+      "row": 101,
+      "contacts": 18,
+      "constraints": 74,
+      "warnings": 0
+    },
+    {
+      "row": 102,
+      "contacts": 25,
+      "constraints": 101,
+      "warnings": 0
+    },
+    {
+      "row": 103,
+      "contacts": 18,
+      "constraints": 74,
+      "warnings": 0
+    },
+    {
+      "row": 104,
+      "contacts": 19,
+      "constraints": 79,
+      "warnings": 0
+    },
+    {
+      "row": 105,
+      "contacts": 19,
+      "constraints": 78,
+      "warnings": 0
+    },
+    {
+      "row": 106,
+      "contacts": 22,
+      "constraints": 91,
+      "warnings": 0
+    },
+    {
+      "row": 107,
+      "contacts": 22,
+      "constraints": 88,
+      "warnings": 0
+    },
+    {
+      "row": 108,
+      "contacts": 20,
+      "constraints": 81,
+      "warnings": 0
+    },
+    {
+      "row": 109,
+      "contacts": 22,
+      "constraints": 91,
+      "warnings": 0
+    },
+    {
+      "row": 110,
+      "contacts": 24,
+      "constraints": 96,
+      "warnings": 0
+    },
+    {
+      "row": 111,
+      "contacts": 23,
+      "constraints": 93,
+      "warnings": 0
+    },
+    {
+      "row": 112,
+      "contacts": 17,
+      "constraints": 69,
+      "warnings": 0
+    },
+    {
+      "row": 113,
+      "contacts": 16,
+      "constraints": 66,
+      "warnings": 0
+    },
+    {
+      "row": 114,
+      "contacts": 16,
+      "constraints": 65,
+      "warnings": 0
+    },
+    {
+      "row": 115,
+      "contacts": 15,
+      "constraints": 62,
+      "warnings": 0
+    },
+    {
+      "row": 116,
+      "contacts": 17,
+      "constraints": 69,
+      "warnings": 0
+    },
+    {
+      "row": 117,
+      "contacts": 20,
+      "constraints": 82,
+      "warnings": 0
+    },
+    {
+      "row": 118,
+      "contacts": 17,
+      "constraints": 64,
+      "warnings": 0
+    },
+    {
+      "row": 119,
+      "contacts": 21,
+      "constraints": 82,
+      "warnings": 0
+    },
+    {
+      "row": 120,
+      "contacts": 18,
+      "constraints": 73,
+      "warnings": 0
+    },
+    {
+      "row": 121,
+      "contacts": 20,
+      "constraints": 81,
+      "warnings": 0
+    },
+    {
+      "row": 122,
+      "contacts": 19,
+      "constraints": 78,
+      "warnings": 0
+    },
+    {
+      "row": 123,
+      "contacts": 17,
+      "constraints": 69,
+      "warnings": 0
+    },
+    {
+      "row": 124,
+      "contacts": 16,
+      "constraints": 65,
+      "warnings": 0
+    },
+    {
+      "row": 125,
+      "contacts": 17,
+      "constraints": 69,
+      "warnings": 0
+    },
+    {
+      "row": 126,
+      "contacts": 12,
+      "constraints": 52,
+      "warnings": 0
+    },
+    {
+      "row": 127,
+      "contacts": 10,
+      "constraints": 40,
+      "warnings": 0
+    },
+    {
+      "row": 128,
+      "contacts": 9,
+      "constraints": 36,
+      "warnings": 0
+    },
+    {
+      "row": 129,
+      "contacts": 9,
+      "constraints": 37,
+      "warnings": 0
+    },
+    {
+      "row": 130,
+      "contacts": 12,
+      "constraints": 49,
+      "warnings": 0
+    },
+    {
+      "row": 131,
+      "contacts": 19,
+      "constraints": 76,
+      "warnings": 0
+    },
+    {
+      "row": 132,
+      "contacts": 14,
+      "constraints": 56,
+      "warnings": 0
+    },
+    {
+      "row": 133,
+      "contacts": 12,
+      "constraints": 48,
+      "warnings": 0
+    },
+    {
+      "row": 134,
+      "contacts": 13,
+      "constraints": 52,
+      "warnings": 0
+    },
+    {
+      "row": 135,
+      "contacts": 15,
+      "constraints": 61,
+      "warnings": 0
+    },
+    {
+      "row": 136,
+      "contacts": 12,
+      "constraints": 49,
+      "warnings": 0
+    },
+    {
+      "row": 137,
+      "contacts": 15,
+      "constraints": 60,
+      "warnings": 0
+    },
+    {
+      "row": 138,
+      "contacts": 19,
+      "constraints": 77,
+      "warnings": 0
+    },
+    {
+      "row": 139,
+      "contacts": 25,
+      "constraints": 101,
+      "warnings": 0
+    },
+    {
+      "row": 140,
+      "contacts": 26,
+      "constraints": 105,
+      "warnings": 0
+    },
+    {
+      "row": 141,
+      "contacts": 27,
+      "constraints": 110,
+      "warnings": 0
+    },
+    {
+      "row": 142,
+      "contacts": 27,
+      "constraints": 111,
+      "warnings": 0
+    },
+    {
+      "row": 143,
+      "contacts": 24,
+      "constraints": 98,
+      "warnings": 0
+    },
+    {
+      "row": 144,
+      "contacts": 28,
+      "constraints": 115,
+      "warnings": 0
+    },
+    {
+      "row": 145,
+      "contacts": 32,
+      "constraints": 130,
+      "warnings": 0
+    },
+    {
+      "row": 146,
+      "contacts": 28,
+      "constraints": 113,
+      "warnings": 0
+    },
+    {
+      "row": 147,
+      "contacts": 32,
+      "constraints": 130,
+      "warnings": 0
+    },
+    {
+      "row": 148,
+      "contacts": 34,
+      "constraints": 139,
+      "warnings": 0
+    },
+    {
+      "row": 149,
+      "contacts": 34,
+      "constraints": 139,
+      "warnings": 0
+    },
+    {
+      "row": 150,
+      "contacts": 31,
+      "constraints": 128,
+      "warnings": 0
+    },
+    {
+      "row": 151,
+      "contacts": 35,
+      "constraints": 142,
+      "warnings": 0
+    },
+    {
+      "row": 152,
+      "contacts": 34,
+      "constraints": 137,
+      "warnings": 0
+    },
+    {
+      "row": 153,
+      "contacts": 35,
+      "constraints": 141,
+      "warnings": 0
+    },
+    {
+      "row": 154,
+      "contacts": 33,
+      "constraints": 135,
+      "warnings": 0
+    },
+    {
+      "row": 155,
+      "contacts": 33,
+      "constraints": 134,
+      "warnings": 0
+    },
+    {
+      "row": 156,
+      "contacts": 33,
+      "constraints": 136,
+      "warnings": 0
+    },
+    {
+      "row": 157,
+      "contacts": 32,
+      "constraints": 130,
+      "warnings": 0
+    },
+    {
+      "row": 158,
+      "contacts": 28,
+      "constraints": 114,
+      "warnings": 0
+    },
+    {
+      "row": 159,
+      "contacts": 31,
+      "constraints": 127,
+      "warnings": 0
+    },
+    {
+      "row": 160,
+      "contacts": 31,
+      "constraints": 127,
+      "warnings": 0
+    },
+    {
+      "row": 161,
+      "contacts": 32,
+      "constraints": 131,
+      "warnings": 0
+    },
+    {
+      "row": 162,
+      "contacts": 33,
+      "constraints": 134,
+      "warnings": 0
+    },
+    {
+      "row": 163,
+      "contacts": 31,
+      "constraints": 125,
+      "warnings": 0
+    },
+    {
+      "row": 164,
+      "contacts": 31,
+      "constraints": 125,
+      "warnings": 0
+    },
+    {
+      "row": 165,
+      "contacts": 31,
+      "constraints": 126,
+      "warnings": 0
+    },
+    {
+      "row": 166,
+      "contacts": 32,
+      "constraints": 130,
+      "warnings": 0
+    },
+    {
+      "row": 167,
+      "contacts": 30,
+      "constraints": 122,
+      "warnings": 0
+    },
+    {
+      "row": 168,
+      "contacts": 29,
+      "constraints": 118,
+      "warnings": 0
+    },
+    {
+      "row": 169,
+      "contacts": 30,
+      "constraints": 122,
+      "warnings": 0
+    },
+    {
+      "row": 170,
+      "contacts": 32,
+      "constraints": 130,
+      "warnings": 0
+    },
+    {
+      "row": 171,
+      "contacts": 33,
+      "constraints": 134,
+      "warnings": 0
+    },
+    {
+      "row": 172,
+      "contacts": 32,
+      "constraints": 131,
+      "warnings": 0
+    },
+    {
+      "row": 173,
+      "contacts": 31,
+      "constraints": 127,
+      "warnings": 0
+    },
+    {
+      "row": 174,
+      "contacts": 33,
+      "constraints": 134,
+      "warnings": 0
+    },
+    {
+      "row": 175,
+      "contacts": 32,
+      "constraints": 130,
+      "warnings": 0
+    },
+    {
+      "row": 176,
+      "contacts": 33,
+      "constraints": 134,
+      "warnings": 0
+    },
+    {
+      "row": 177,
+      "contacts": 36,
+      "constraints": 147,
+      "warnings": 0
+    },
+    {
+      "row": 178,
+      "contacts": 31,
+      "constraints": 126,
+      "warnings": 0
+    },
+    {
+      "row": 179,
+      "contacts": 32,
+      "constraints": 130,
+      "warnings": 0
+    },
+    {
+      "row": 180,
+      "contacts": 32,
+      "constraints": 130,
+      "warnings": 0
+    },
+    {
+      "row": 181,
+      "contacts": 34,
+      "constraints": 137,
+      "warnings": 0
+    },
+    {
+      "row": 182,
+      "contacts": 32,
+      "constraints": 132,
+      "warnings": 0
+    },
+    {
+      "row": 183,
+      "contacts": 28,
+      "constraints": 115,
+      "warnings": 0
+    },
+    {
+      "row": 184,
+      "contacts": 32,
+      "constraints": 131,
+      "warnings": 0
+    },
+    {
+      "row": 185,
+      "contacts": 32,
+      "constraints": 130,
+      "warnings": 0
+    },
+    {
+      "row": 186,
+      "contacts": 34,
+      "constraints": 138,
+      "warnings": 0
+    },
+    {
+      "row": 187,
+      "contacts": 31,
+      "constraints": 127,
+      "warnings": 0
+    },
+    {
+      "row": 188,
+      "contacts": 32,
+      "constraints": 130,
+      "warnings": 0
+    },
+    {
+      "row": 189,
+      "contacts": 34,
+      "constraints": 137,
+      "warnings": 0
+    },
+    {
+      "row": 190,
+      "contacts": 32,
+      "constraints": 130,
+      "warnings": 0
+    },
+    {
+      "row": 191,
+      "contacts": 32,
+      "constraints": 130,
+      "warnings": 0
+    },
+    {
+      "row": 192,
+      "contacts": 38,
+      "constraints": 155,
+      "warnings": 0
+    },
+    {
+      "row": 193,
+      "contacts": 36,
+      "constraints": 147,
+      "warnings": 0
+    },
+    {
+      "row": 194,
+      "contacts": 34,
+      "constraints": 137,
+      "warnings": 0
+    },
+    {
+      "row": 195,
+      "contacts": 36,
+      "constraints": 146,
+      "warnings": 0
+    },
+    {
+      "row": 196,
+      "contacts": 35,
+      "constraints": 143,
+      "warnings": 0
+    },
+    {
+      "row": 197,
+      "contacts": 34,
+      "constraints": 138,
+      "warnings": 0
+    }
+  ],
+  "cpu_max_contacts": 39,
+  "cpu_max_constraints": 156,
+  "requested": {
+    "nworld": 4,
+    "nconmax": 128,
+    "njmax": 512
+  },
+  "solver_setup": "SPIDER setup_mj_model with selected scene",
+  "solver_options": {
+    "timestep": 0.0033333333333333335,
+    "iterations": 20,
+    "ls_iterations": 50,
+    "integrator": 3
+  },
+  "gpu": {
+    "device": "cuda:0",
+    "warp_version": "1.12.1",
+    "mujoco_warp_version": "3.7.0.1",
+    "snapshots": [
+      {
+        "contacts_total": 172,
+        "broadphase_pairs_total": 328,
+        "constraints_per_world": [
+          172,
+          172,
+          172,
+          172
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 46,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          43,
+          43,
+          43,
+          43
+        ]
+      },
+      {
+        "contacts_total": 92,
+        "broadphase_pairs_total": 324,
+        "constraints_per_world": [
+          95,
+          95,
+          95,
+          95
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 0,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          23,
+          23,
+          23,
+          23
+        ]
+      },
+      {
+        "contacts_total": 108,
+        "broadphase_pairs_total": 324,
+        "constraints_per_world": [
+          109,
+          109,
+          109,
+          109
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 1,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          27,
+          27,
+          27,
+          27
+        ]
+      },
+      {
+        "contacts_total": 96,
+        "broadphase_pairs_total": 340,
+        "constraints_per_world": [
+          96,
+          96,
+          96,
+          96
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 2,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          24,
+          24,
+          24,
+          24
+        ]
+      },
+      {
+        "contacts_total": 80,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          81,
+          81,
+          81,
+          81
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 3,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          20,
+          20,
+          20,
+          20
+        ]
+      },
+      {
+        "contacts_total": 76,
+        "broadphase_pairs_total": 328,
+        "constraints_per_world": [
+          78,
+          78,
+          78,
+          78
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 4,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          19,
+          19,
+          19,
+          19
+        ]
+      },
+      {
+        "contacts_total": 72,
+        "broadphase_pairs_total": 324,
+        "constraints_per_world": [
+          73,
+          73,
+          73,
+          73
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 5,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          18,
+          18,
+          18,
+          18
+        ]
+      },
+      {
+        "contacts_total": 72,
+        "broadphase_pairs_total": 324,
+        "constraints_per_world": [
+          74,
+          74,
+          74,
+          74
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 6,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          18,
+          18,
+          18,
+          18
+        ]
+      },
+      {
+        "contacts_total": 80,
+        "broadphase_pairs_total": 320,
+        "constraints_per_world": [
+          80,
+          80,
+          80,
+          80
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 7,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          20,
+          20,
+          20,
+          20
+        ]
+      },
+      {
+        "contacts_total": 76,
+        "broadphase_pairs_total": 304,
+        "constraints_per_world": [
+          77,
+          77,
+          77,
+          77
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 8,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          19,
+          19,
+          19,
+          19
+        ]
+      },
+      {
+        "contacts_total": 68,
+        "broadphase_pairs_total": 292,
+        "constraints_per_world": [
+          69,
+          69,
+          69,
+          69
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 9,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          17,
+          17,
+          17,
+          17
+        ]
+      },
+      {
+        "contacts_total": 60,
+        "broadphase_pairs_total": 280,
+        "constraints_per_world": [
+          61,
+          61,
+          61,
+          61
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 10,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          15,
+          15,
+          15,
+          15
+        ]
+      },
+      {
+        "contacts_total": 56,
+        "broadphase_pairs_total": 276,
+        "constraints_per_world": [
+          56,
+          56,
+          56,
+          56
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 11,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          14,
+          14,
+          14,
+          14
+        ]
+      },
+      {
+        "contacts_total": 48,
+        "broadphase_pairs_total": 276,
+        "constraints_per_world": [
+          48,
+          48,
+          48,
+          48
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 12,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          12,
+          12,
+          12,
+          12
+        ]
+      },
+      {
+        "contacts_total": 52,
+        "broadphase_pairs_total": 276,
+        "constraints_per_world": [
+          52,
+          52,
+          52,
+          52
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 13,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          13,
+          13,
+          13,
+          13
+        ]
+      },
+      {
+        "contacts_total": 56,
+        "broadphase_pairs_total": 248,
+        "constraints_per_world": [
+          56,
+          56,
+          56,
+          56
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 14,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          14,
+          14,
+          14,
+          14
+        ]
+      },
+      {
+        "contacts_total": 48,
+        "broadphase_pairs_total": 240,
+        "constraints_per_world": [
+          48,
+          48,
+          48,
+          48
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 15,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          12,
+          12,
+          12,
+          12
+        ]
+      },
+      {
+        "contacts_total": 44,
+        "broadphase_pairs_total": 228,
+        "constraints_per_world": [
+          44,
+          44,
+          44,
+          44
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 16,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          11,
+          11,
+          11,
+          11
+        ]
+      },
+      {
+        "contacts_total": 28,
+        "broadphase_pairs_total": 232,
+        "constraints_per_world": [
+          28,
+          28,
+          28,
+          28
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 17,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          7,
+          7,
+          7,
+          7
+        ]
+      },
+      {
+        "contacts_total": 72,
+        "broadphase_pairs_total": 240,
+        "constraints_per_world": [
+          72,
+          72,
+          72,
+          72
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 18,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          18,
+          18,
+          18,
+          18
+        ]
+      },
+      {
+        "contacts_total": 40,
+        "broadphase_pairs_total": 244,
+        "constraints_per_world": [
+          40,
+          40,
+          40,
+          40
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 19,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          10,
+          10,
+          10,
+          10
+        ]
+      },
+      {
+        "contacts_total": 40,
+        "broadphase_pairs_total": 260,
+        "constraints_per_world": [
+          40,
+          40,
+          40,
+          40
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 20,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          10,
+          10,
+          10,
+          10
+        ]
+      },
+      {
+        "contacts_total": 64,
+        "broadphase_pairs_total": 256,
+        "constraints_per_world": [
+          64,
+          64,
+          64,
+          64
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 21,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          16,
+          16,
+          16,
+          16
+        ]
+      },
+      {
+        "contacts_total": 48,
+        "broadphase_pairs_total": 248,
+        "constraints_per_world": [
+          48,
+          48,
+          48,
+          48
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 22,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          12,
+          12,
+          12,
+          12
+        ]
+      },
+      {
+        "contacts_total": 72,
+        "broadphase_pairs_total": 272,
+        "constraints_per_world": [
+          73,
+          73,
+          73,
+          73
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 23,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          18,
+          18,
+          18,
+          18
+        ]
+      },
+      {
+        "contacts_total": 44,
+        "broadphase_pairs_total": 268,
+        "constraints_per_world": [
+          44,
+          44,
+          44,
+          44
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 24,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          11,
+          11,
+          11,
+          11
+        ]
+      },
+      {
+        "contacts_total": 56,
+        "broadphase_pairs_total": 288,
+        "constraints_per_world": [
+          56,
+          56,
+          56,
+          56
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 25,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          14,
+          14,
+          14,
+          14
+        ]
+      },
+      {
+        "contacts_total": 60,
+        "broadphase_pairs_total": 308,
+        "constraints_per_world": [
+          61,
+          61,
+          61,
+          61
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 26,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          15,
+          15,
+          15,
+          15
+        ]
+      },
+      {
+        "contacts_total": 72,
+        "broadphase_pairs_total": 324,
+        "constraints_per_world": [
+          72,
+          72,
+          72,
+          72
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 27,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          18,
+          18,
+          18,
+          18
+        ]
+      },
+      {
+        "contacts_total": 128,
+        "broadphase_pairs_total": 344,
+        "constraints_per_world": [
+          128,
+          128,
+          128,
+          128
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 28,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          32,
+          32,
+          32,
+          32
+        ]
+      },
+      {
+        "contacts_total": 64,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          65,
+          65,
+          65,
+          65
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 29,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          16,
+          16,
+          16,
+          16
+        ]
+      },
+      {
+        "contacts_total": 80,
+        "broadphase_pairs_total": 360,
+        "constraints_per_world": [
+          80,
+          80,
+          80,
+          80
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 30,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          20,
+          20,
+          20,
+          20
+        ]
+      },
+      {
+        "contacts_total": 112,
+        "broadphase_pairs_total": 352,
+        "constraints_per_world": [
+          112,
+          112,
+          112,
+          112
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 31,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          28,
+          28,
+          28,
+          28
+        ]
+      },
+      {
+        "contacts_total": 96,
+        "broadphase_pairs_total": 360,
+        "constraints_per_world": [
+          96,
+          96,
+          96,
+          96
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 32,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          24,
+          24,
+          24,
+          24
+        ]
+      },
+      {
+        "contacts_total": 108,
+        "broadphase_pairs_total": 364,
+        "constraints_per_world": [
+          108,
+          108,
+          108,
+          108
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 33,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          27,
+          27,
+          27,
+          27
+        ]
+      },
+      {
+        "contacts_total": 88,
+        "broadphase_pairs_total": 384,
+        "constraints_per_world": [
+          88,
+          88,
+          88,
+          88
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 34,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          22,
+          22,
+          22,
+          22
+        ]
+      },
+      {
+        "contacts_total": 96,
+        "broadphase_pairs_total": 384,
+        "constraints_per_world": [
+          96,
+          96,
+          96,
+          96
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 35,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          24,
+          24,
+          24,
+          24
+        ]
+      },
+      {
+        "contacts_total": 112,
+        "broadphase_pairs_total": 388,
+        "constraints_per_world": [
+          112,
+          112,
+          112,
+          112
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 36,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          28,
+          28,
+          28,
+          28
+        ]
+      },
+      {
+        "contacts_total": 84,
+        "broadphase_pairs_total": 384,
+        "constraints_per_world": [
+          84,
+          84,
+          84,
+          84
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 37,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          21,
+          21,
+          21,
+          21
+        ]
+      },
+      {
+        "contacts_total": 96,
+        "broadphase_pairs_total": 400,
+        "constraints_per_world": [
+          96,
+          96,
+          96,
+          96
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 38,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          24,
+          24,
+          24,
+          24
+        ]
+      },
+      {
+        "contacts_total": 112,
+        "broadphase_pairs_total": 400,
+        "constraints_per_world": [
+          112,
+          112,
+          112,
+          112
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 39,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          28,
+          28,
+          28,
+          28
+        ]
+      },
+      {
+        "contacts_total": 112,
+        "broadphase_pairs_total": 380,
+        "constraints_per_world": [
+          112,
+          112,
+          112,
+          112
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 40,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          28,
+          28,
+          28,
+          28
+        ]
+      },
+      {
+        "contacts_total": 100,
+        "broadphase_pairs_total": 376,
+        "constraints_per_world": [
+          101,
+          101,
+          101,
+          101
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 41,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          25,
+          25,
+          25,
+          25
+        ]
+      },
+      {
+        "contacts_total": 100,
+        "broadphase_pairs_total": 356,
+        "constraints_per_world": [
+          100,
+          100,
+          100,
+          100
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 42,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          25,
+          25,
+          25,
+          25
+        ]
+      },
+      {
+        "contacts_total": 112,
+        "broadphase_pairs_total": 356,
+        "constraints_per_world": [
+          112,
+          112,
+          112,
+          112
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 43,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          28,
+          28,
+          28,
+          28
+        ]
+      },
+      {
+        "contacts_total": 116,
+        "broadphase_pairs_total": 364,
+        "constraints_per_world": [
+          116,
+          116,
+          116,
+          116
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 44,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          29,
+          29,
+          29,
+          29
+        ]
+      },
+      {
+        "contacts_total": 124,
+        "broadphase_pairs_total": 352,
+        "constraints_per_world": [
+          124,
+          124,
+          124,
+          124
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 45,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          31,
+          31,
+          31,
+          31
+        ]
+      },
+      {
+        "contacts_total": 132,
+        "broadphase_pairs_total": 328,
+        "constraints_per_world": [
+          132,
+          132,
+          132,
+          132
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 47,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          33,
+          33,
+          33,
+          33
+        ]
+      },
+      {
+        "contacts_total": 96,
+        "broadphase_pairs_total": 324,
+        "constraints_per_world": [
+          96,
+          96,
+          96,
+          96
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 48,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          24,
+          24,
+          24,
+          24
+        ]
+      },
+      {
+        "contacts_total": 96,
+        "broadphase_pairs_total": 300,
+        "constraints_per_world": [
+          96,
+          96,
+          96,
+          96
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 49,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          24,
+          24,
+          24,
+          24
+        ]
+      },
+      {
+        "contacts_total": 104,
+        "broadphase_pairs_total": 304,
+        "constraints_per_world": [
+          104,
+          104,
+          104,
+          104
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 50,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          26,
+          26,
+          26,
+          26
+        ]
+      },
+      {
+        "contacts_total": 108,
+        "broadphase_pairs_total": 300,
+        "constraints_per_world": [
+          108,
+          108,
+          108,
+          108
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 51,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          27,
+          27,
+          27,
+          27
+        ]
+      },
+      {
+        "contacts_total": 108,
+        "broadphase_pairs_total": 296,
+        "constraints_per_world": [
+          109,
+          109,
+          109,
+          109
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 52,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          27,
+          27,
+          27,
+          27
+        ]
+      },
+      {
+        "contacts_total": 100,
+        "broadphase_pairs_total": 300,
+        "constraints_per_world": [
+          100,
+          100,
+          100,
+          100
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 53,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          25,
+          25,
+          25,
+          25
+        ]
+      },
+      {
+        "contacts_total": 100,
+        "broadphase_pairs_total": 288,
+        "constraints_per_world": [
+          100,
+          100,
+          100,
+          100
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 54,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          25,
+          25,
+          25,
+          25
+        ]
+      },
+      {
+        "contacts_total": 96,
+        "broadphase_pairs_total": 276,
+        "constraints_per_world": [
+          98,
+          98,
+          98,
+          98
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 55,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          24,
+          24,
+          24,
+          24
+        ]
+      },
+      {
+        "contacts_total": 100,
+        "broadphase_pairs_total": 284,
+        "constraints_per_world": [
+          100,
+          100,
+          100,
+          100
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 56,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          25,
+          25,
+          25,
+          25
+        ]
+      },
+      {
+        "contacts_total": 96,
+        "broadphase_pairs_total": 280,
+        "constraints_per_world": [
+          99,
+          99,
+          99,
+          99
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 57,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          24,
+          24,
+          24,
+          24
+        ]
+      },
+      {
+        "contacts_total": 96,
+        "broadphase_pairs_total": 272,
+        "constraints_per_world": [
+          98,
+          98,
+          98,
+          98
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 58,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          24,
+          24,
+          24,
+          24
+        ]
+      },
+      {
+        "contacts_total": 92,
+        "broadphase_pairs_total": 288,
+        "constraints_per_world": [
+          94,
+          94,
+          94,
+          94
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 59,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          23,
+          23,
+          23,
+          23
+        ]
+      },
+      {
+        "contacts_total": 92,
+        "broadphase_pairs_total": 272,
+        "constraints_per_world": [
+          95,
+          95,
+          95,
+          95
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 60,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          23,
+          23,
+          23,
+          23
+        ]
+      },
+      {
+        "contacts_total": 92,
+        "broadphase_pairs_total": 272,
+        "constraints_per_world": [
+          93,
+          93,
+          93,
+          93
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 61,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          23,
+          23,
+          23,
+          23
+        ]
+      },
+      {
+        "contacts_total": 80,
+        "broadphase_pairs_total": 244,
+        "constraints_per_world": [
+          82,
+          82,
+          82,
+          82
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 62,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          20,
+          20,
+          20,
+          20
+        ]
+      },
+      {
+        "contacts_total": 92,
+        "broadphase_pairs_total": 264,
+        "constraints_per_world": [
+          95,
+          95,
+          95,
+          95
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 63,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          23,
+          23,
+          23,
+          23
+        ]
+      },
+      {
+        "contacts_total": 96,
+        "broadphase_pairs_total": 276,
+        "constraints_per_world": [
+          96,
+          96,
+          96,
+          96
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 64,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          24,
+          24,
+          24,
+          24
+        ]
+      },
+      {
+        "contacts_total": 120,
+        "broadphase_pairs_total": 272,
+        "constraints_per_world": [
+          122,
+          122,
+          122,
+          122
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 65,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          30,
+          30,
+          30,
+          30
+        ]
+      },
+      {
+        "contacts_total": 108,
+        "broadphase_pairs_total": 260,
+        "constraints_per_world": [
+          110,
+          110,
+          110,
+          110
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 66,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          27,
+          27,
+          27,
+          27
+        ]
+      },
+      {
+        "contacts_total": 108,
+        "broadphase_pairs_total": 264,
+        "constraints_per_world": [
+          109,
+          109,
+          109,
+          109
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 67,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          27,
+          27,
+          27,
+          27
+        ]
+      },
+      {
+        "contacts_total": 108,
+        "broadphase_pairs_total": 260,
+        "constraints_per_world": [
+          110,
+          110,
+          110,
+          110
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 68,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          27,
+          27,
+          27,
+          27
+        ]
+      },
+      {
+        "contacts_total": 104,
+        "broadphase_pairs_total": 260,
+        "constraints_per_world": [
+          104,
+          104,
+          104,
+          104
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 69,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          26,
+          26,
+          26,
+          26
+        ]
+      },
+      {
+        "contacts_total": 100,
+        "broadphase_pairs_total": 260,
+        "constraints_per_world": [
+          100,
+          100,
+          100,
+          100
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 70,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          25,
+          25,
+          25,
+          25
+        ]
+      },
+      {
+        "contacts_total": 104,
+        "broadphase_pairs_total": 248,
+        "constraints_per_world": [
+          105,
+          105,
+          105,
+          105
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 71,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          26,
+          26,
+          26,
+          26
+        ]
+      },
+      {
+        "contacts_total": 108,
+        "broadphase_pairs_total": 260,
+        "constraints_per_world": [
+          108,
+          108,
+          108,
+          108
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 72,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          27,
+          27,
+          27,
+          27
+        ]
+      },
+      {
+        "contacts_total": 120,
+        "broadphase_pairs_total": 244,
+        "constraints_per_world": [
+          121,
+          121,
+          121,
+          121
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 73,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          30,
+          30,
+          30,
+          30
+        ]
+      },
+      {
+        "contacts_total": 120,
+        "broadphase_pairs_total": 236,
+        "constraints_per_world": [
+          122,
+          122,
+          122,
+          122
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 74,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          30,
+          30,
+          30,
+          30
+        ]
+      },
+      {
+        "contacts_total": 112,
+        "broadphase_pairs_total": 240,
+        "constraints_per_world": [
+          114,
+          114,
+          114,
+          114
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 75,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          28,
+          28,
+          28,
+          28
+        ]
+      },
+      {
+        "contacts_total": 112,
+        "broadphase_pairs_total": 244,
+        "constraints_per_world": [
+          113,
+          113,
+          113,
+          113
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 76,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          28,
+          28,
+          28,
+          28
+        ]
+      },
+      {
+        "contacts_total": 116,
+        "broadphase_pairs_total": 240,
+        "constraints_per_world": [
+          118,
+          118,
+          118,
+          118
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 77,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          29,
+          29,
+          29,
+          29
+        ]
+      },
+      {
+        "contacts_total": 120,
+        "broadphase_pairs_total": 236,
+        "constraints_per_world": [
+          121,
+          121,
+          121,
+          121
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 78,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          30,
+          30,
+          30,
+          30
+        ]
+      },
+      {
+        "contacts_total": 136,
+        "broadphase_pairs_total": 248,
+        "constraints_per_world": [
+          138,
+          138,
+          138,
+          138
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 79,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          34,
+          34,
+          34,
+          34
+        ]
+      },
+      {
+        "contacts_total": 104,
+        "broadphase_pairs_total": 248,
+        "constraints_per_world": [
+          105,
+          105,
+          105,
+          105
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 80,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          26,
+          26,
+          26,
+          26
+        ]
+      },
+      {
+        "contacts_total": 148,
+        "broadphase_pairs_total": 236,
+        "constraints_per_world": [
+          150,
+          150,
+          150,
+          150
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 81,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          37,
+          37,
+          37,
+          37
+        ]
+      },
+      {
+        "contacts_total": 136,
+        "broadphase_pairs_total": 244,
+        "constraints_per_world": [
+          137,
+          137,
+          137,
+          137
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 82,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          34,
+          34,
+          34,
+          34
+        ]
+      },
+      {
+        "contacts_total": 120,
+        "broadphase_pairs_total": 236,
+        "constraints_per_world": [
+          121,
+          121,
+          121,
+          121
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 83,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          30,
+          30,
+          30,
+          30
+        ]
+      },
+      {
+        "contacts_total": 148,
+        "broadphase_pairs_total": 252,
+        "constraints_per_world": [
+          151,
+          151,
+          151,
+          151
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 84,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          37,
+          37,
+          37,
+          37
+        ]
+      },
+      {
+        "contacts_total": 148,
+        "broadphase_pairs_total": 244,
+        "constraints_per_world": [
+          150,
+          150,
+          150,
+          150
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 85,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          37,
+          37,
+          37,
+          37
+        ]
+      },
+      {
+        "contacts_total": 148,
+        "broadphase_pairs_total": 244,
+        "constraints_per_world": [
+          151,
+          151,
+          151,
+          151
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 86,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          37,
+          37,
+          37,
+          37
+        ]
+      },
+      {
+        "contacts_total": 140,
+        "broadphase_pairs_total": 240,
+        "constraints_per_world": [
+          141,
+          141,
+          141,
+          141
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 87,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          35,
+          35,
+          35,
+          35
+        ]
+      },
+      {
+        "contacts_total": 140,
+        "broadphase_pairs_total": 244,
+        "constraints_per_world": [
+          141,
+          141,
+          141,
+          141
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 88,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          35,
+          35,
+          35,
+          35
+        ]
+      },
+      {
+        "contacts_total": 136,
+        "broadphase_pairs_total": 236,
+        "constraints_per_world": [
+          136,
+          136,
+          136,
+          136
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 89,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          34,
+          34,
+          34,
+          34
+        ]
+      },
+      {
+        "contacts_total": 136,
+        "broadphase_pairs_total": 240,
+        "constraints_per_world": [
+          136,
+          136,
+          136,
+          136
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 90,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          34,
+          34,
+          34,
+          34
+        ]
+      },
+      {
+        "contacts_total": 132,
+        "broadphase_pairs_total": 232,
+        "constraints_per_world": [
+          134,
+          134,
+          134,
+          134
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 91,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          33,
+          33,
+          33,
+          33
+        ]
+      },
+      {
+        "contacts_total": 132,
+        "broadphase_pairs_total": 212,
+        "constraints_per_world": [
+          133,
+          133,
+          133,
+          133
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 92,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          33,
+          33,
+          33,
+          33
+        ]
+      },
+      {
+        "contacts_total": 136,
+        "broadphase_pairs_total": 220,
+        "constraints_per_world": [
+          137,
+          137,
+          137,
+          137
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 93,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          34,
+          34,
+          34,
+          34
+        ]
+      },
+      {
+        "contacts_total": 104,
+        "broadphase_pairs_total": 228,
+        "constraints_per_world": [
+          106,
+          106,
+          106,
+          106
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 94,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          26,
+          26,
+          26,
+          26
+        ]
+      },
+      {
+        "contacts_total": 64,
+        "broadphase_pairs_total": 232,
+        "constraints_per_world": [
+          66,
+          66,
+          66,
+          66
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 95,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          16,
+          16,
+          16,
+          16
+        ]
+      },
+      {
+        "contacts_total": 64,
+        "broadphase_pairs_total": 244,
+        "constraints_per_world": [
+          64,
+          64,
+          64,
+          64
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 96,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          16,
+          16,
+          16,
+          16
+        ]
+      },
+      {
+        "contacts_total": 88,
+        "broadphase_pairs_total": 244,
+        "constraints_per_world": [
+          90,
+          90,
+          90,
+          90
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 97,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          22,
+          22,
+          22,
+          22
+        ]
+      },
+      {
+        "contacts_total": 116,
+        "broadphase_pairs_total": 252,
+        "constraints_per_world": [
+          118,
+          118,
+          118,
+          118
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 98,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          29,
+          29,
+          29,
+          29
+        ]
+      },
+      {
+        "contacts_total": 80,
+        "broadphase_pairs_total": 232,
+        "constraints_per_world": [
+          82,
+          82,
+          82,
+          82
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 99,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          20,
+          20,
+          20,
+          20
+        ]
+      },
+      {
+        "contacts_total": 104,
+        "broadphase_pairs_total": 228,
+        "constraints_per_world": [
+          107,
+          107,
+          107,
+          107
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 100,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          26,
+          26,
+          26,
+          26
+        ]
+      },
+      {
+        "contacts_total": 108,
+        "broadphase_pairs_total": 232,
+        "constraints_per_world": [
+          110,
+          110,
+          110,
+          110
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 101,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          27,
+          27,
+          27,
+          27
+        ]
+      },
+      {
+        "contacts_total": 120,
+        "broadphase_pairs_total": 284,
+        "constraints_per_world": [
+          121,
+          121,
+          121,
+          121
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 102,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          30,
+          30,
+          30,
+          30
+        ]
+      },
+      {
+        "contacts_total": 108,
+        "broadphase_pairs_total": 244,
+        "constraints_per_world": [
+          109,
+          109,
+          109,
+          109
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 103,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          27,
+          27,
+          27,
+          27
+        ]
+      },
+      {
+        "contacts_total": 112,
+        "broadphase_pairs_total": 260,
+        "constraints_per_world": [
+          113,
+          113,
+          113,
+          113
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 104,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          28,
+          28,
+          28,
+          28
+        ]
+      },
+      {
+        "contacts_total": 116,
+        "broadphase_pairs_total": 268,
+        "constraints_per_world": [
+          117,
+          117,
+          117,
+          117
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 105,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          29,
+          29,
+          29,
+          29
+        ]
+      },
+      {
+        "contacts_total": 124,
+        "broadphase_pairs_total": 268,
+        "constraints_per_world": [
+          126,
+          126,
+          126,
+          126
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 106,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          31,
+          31,
+          31,
+          31
+        ]
+      },
+      {
+        "contacts_total": 124,
+        "broadphase_pairs_total": 284,
+        "constraints_per_world": [
+          124,
+          124,
+          124,
+          124
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 107,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          31,
+          31,
+          31,
+          31
+        ]
+      },
+      {
+        "contacts_total": 116,
+        "broadphase_pairs_total": 312,
+        "constraints_per_world": [
+          117,
+          117,
+          117,
+          117
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 108,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          29,
+          29,
+          29,
+          29
+        ]
+      },
+      {
+        "contacts_total": 140,
+        "broadphase_pairs_total": 304,
+        "constraints_per_world": [
+          143,
+          143,
+          143,
+          143
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 109,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          35,
+          35,
+          35,
+          35
+        ]
+      },
+      {
+        "contacts_total": 152,
+        "broadphase_pairs_total": 332,
+        "constraints_per_world": [
+          152,
+          152,
+          152,
+          152
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 110,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          38,
+          38,
+          38,
+          38
+        ]
+      },
+      {
+        "contacts_total": 136,
+        "broadphase_pairs_total": 340,
+        "constraints_per_world": [
+          136,
+          136,
+          136,
+          136
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 111,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          34,
+          34,
+          34,
+          34
+        ]
+      },
+      {
+        "contacts_total": 76,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          77,
+          77,
+          77,
+          77
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 112,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          19,
+          19,
+          19,
+          19
+        ]
+      },
+      {
+        "contacts_total": 72,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          73,
+          73,
+          73,
+          73
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 113,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          18,
+          18,
+          18,
+          18
+        ]
+      },
+      {
+        "contacts_total": 92,
+        "broadphase_pairs_total": 340,
+        "constraints_per_world": [
+          93,
+          93,
+          93,
+          93
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 114,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          23,
+          23,
+          23,
+          23
+        ]
+      },
+      {
+        "contacts_total": 64,
+        "broadphase_pairs_total": 348,
+        "constraints_per_world": [
+          65,
+          65,
+          65,
+          65
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 115,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          16,
+          16,
+          16,
+          16
+        ]
+      },
+      {
+        "contacts_total": 84,
+        "broadphase_pairs_total": 356,
+        "constraints_per_world": [
+          84,
+          84,
+          84,
+          84
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 116,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          21,
+          21,
+          21,
+          21
+        ]
+      },
+      {
+        "contacts_total": 88,
+        "broadphase_pairs_total": 348,
+        "constraints_per_world": [
+          88,
+          88,
+          88,
+          88
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 117,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          22,
+          22,
+          22,
+          22
+        ]
+      },
+      {
+        "contacts_total": 68,
+        "broadphase_pairs_total": 340,
+        "constraints_per_world": [
+          68,
+          68,
+          68,
+          68
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 118,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          17,
+          17,
+          17,
+          17
+        ]
+      },
+      {
+        "contacts_total": 100,
+        "broadphase_pairs_total": 356,
+        "constraints_per_world": [
+          101,
+          101,
+          101,
+          101
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 119,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          25,
+          25,
+          25,
+          25
+        ]
+      },
+      {
+        "contacts_total": 96,
+        "broadphase_pairs_total": 344,
+        "constraints_per_world": [
+          97,
+          97,
+          97,
+          97
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 120,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          24,
+          24,
+          24,
+          24
+        ]
+      },
+      {
+        "contacts_total": 104,
+        "broadphase_pairs_total": 328,
+        "constraints_per_world": [
+          105,
+          105,
+          105,
+          105
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 121,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          26,
+          26,
+          26,
+          26
+        ]
+      },
+      {
+        "contacts_total": 108,
+        "broadphase_pairs_total": 324,
+        "constraints_per_world": [
+          109,
+          109,
+          109,
+          109
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 122,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          27,
+          27,
+          27,
+          27
+        ]
+      },
+      {
+        "contacts_total": 108,
+        "broadphase_pairs_total": 304,
+        "constraints_per_world": [
+          108,
+          108,
+          108,
+          108
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 123,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          27,
+          27,
+          27,
+          27
+        ]
+      },
+      {
+        "contacts_total": 116,
+        "broadphase_pairs_total": 292,
+        "constraints_per_world": [
+          117,
+          117,
+          117,
+          117
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 124,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          29,
+          29,
+          29,
+          29
+        ]
+      },
+      {
+        "contacts_total": 120,
+        "broadphase_pairs_total": 288,
+        "constraints_per_world": [
+          121,
+          121,
+          121,
+          121
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 125,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          30,
+          30,
+          30,
+          30
+        ]
+      },
+      {
+        "contacts_total": 80,
+        "broadphase_pairs_total": 272,
+        "constraints_per_world": [
+          82,
+          82,
+          82,
+          82
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 126,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          20,
+          20,
+          20,
+          20
+        ]
+      },
+      {
+        "contacts_total": 64,
+        "broadphase_pairs_total": 264,
+        "constraints_per_world": [
+          64,
+          64,
+          64,
+          64
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 127,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          16,
+          16,
+          16,
+          16
+        ]
+      },
+      {
+        "contacts_total": 68,
+        "broadphase_pairs_total": 256,
+        "constraints_per_world": [
+          68,
+          68,
+          68,
+          68
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 128,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          17,
+          17,
+          17,
+          17
+        ]
+      },
+      {
+        "contacts_total": 68,
+        "broadphase_pairs_total": 244,
+        "constraints_per_world": [
+          68,
+          68,
+          68,
+          68
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 129,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          17,
+          17,
+          17,
+          17
+        ]
+      },
+      {
+        "contacts_total": 104,
+        "broadphase_pairs_total": 256,
+        "constraints_per_world": [
+          104,
+          104,
+          104,
+          104
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 130,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          26,
+          26,
+          26,
+          26
+        ]
+      },
+      {
+        "contacts_total": 128,
+        "broadphase_pairs_total": 268,
+        "constraints_per_world": [
+          128,
+          128,
+          128,
+          128
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 131,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          32,
+          32,
+          32,
+          32
+        ]
+      },
+      {
+        "contacts_total": 96,
+        "broadphase_pairs_total": 252,
+        "constraints_per_world": [
+          96,
+          96,
+          96,
+          96
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 132,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          24,
+          24,
+          24,
+          24
+        ]
+      },
+      {
+        "contacts_total": 80,
+        "broadphase_pairs_total": 260,
+        "constraints_per_world": [
+          80,
+          80,
+          80,
+          80
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 133,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          20,
+          20,
+          20,
+          20
+        ]
+      },
+      {
+        "contacts_total": 84,
+        "broadphase_pairs_total": 288,
+        "constraints_per_world": [
+          84,
+          84,
+          84,
+          84
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 134,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          21,
+          21,
+          21,
+          21
+        ]
+      },
+      {
+        "contacts_total": 112,
+        "broadphase_pairs_total": 316,
+        "constraints_per_world": [
+          113,
+          113,
+          113,
+          113
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 135,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          28,
+          28,
+          28,
+          28
+        ]
+      },
+      {
+        "contacts_total": 88,
+        "broadphase_pairs_total": 324,
+        "constraints_per_world": [
+          88,
+          88,
+          88,
+          88
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 136,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          22,
+          22,
+          22,
+          22
+        ]
+      },
+      {
+        "contacts_total": 100,
+        "broadphase_pairs_total": 328,
+        "constraints_per_world": [
+          100,
+          100,
+          100,
+          100
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 137,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          25,
+          25,
+          25,
+          25
+        ]
+      },
+      {
+        "contacts_total": 100,
+        "broadphase_pairs_total": 332,
+        "constraints_per_world": [
+          100,
+          100,
+          100,
+          100
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 138,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          25,
+          25,
+          25,
+          25
+        ]
+      },
+      {
+        "contacts_total": 108,
+        "broadphase_pairs_total": 320,
+        "constraints_per_world": [
+          109,
+          109,
+          109,
+          109
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 139,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          27,
+          27,
+          27,
+          27
+        ]
+      },
+      {
+        "contacts_total": 116,
+        "broadphase_pairs_total": 328,
+        "constraints_per_world": [
+          116,
+          116,
+          116,
+          116
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 140,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          29,
+          29,
+          29,
+          29
+        ]
+      },
+      {
+        "contacts_total": 132,
+        "broadphase_pairs_total": 332,
+        "constraints_per_world": [
+          133,
+          133,
+          133,
+          133
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 141,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          33,
+          33,
+          33,
+          33
+        ]
+      },
+      {
+        "contacts_total": 140,
+        "broadphase_pairs_total": 332,
+        "constraints_per_world": [
+          143,
+          143,
+          143,
+          143
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 142,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          35,
+          35,
+          35,
+          35
+        ]
+      },
+      {
+        "contacts_total": 120,
+        "broadphase_pairs_total": 328,
+        "constraints_per_world": [
+          121,
+          121,
+          121,
+          121
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 143,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          30,
+          30,
+          30,
+          30
+        ]
+      },
+      {
+        "contacts_total": 156,
+        "broadphase_pairs_total": 328,
+        "constraints_per_world": [
+          157,
+          157,
+          157,
+          157
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 144,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          39,
+          39,
+          39,
+          39
+        ]
+      },
+      {
+        "contacts_total": 172,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          173,
+          173,
+          173,
+          173
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 145,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          43,
+          43,
+          43,
+          43
+        ]
+      },
+      {
+        "contacts_total": 144,
+        "broadphase_pairs_total": 332,
+        "constraints_per_world": [
+          145,
+          145,
+          145,
+          145
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 146,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          36,
+          36,
+          36,
+          36
+        ]
+      },
+      {
+        "contacts_total": 180,
+        "broadphase_pairs_total": 332,
+        "constraints_per_world": [
+          181,
+          181,
+          181,
+          181
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 147,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          45,
+          45,
+          45,
+          45
+        ]
+      },
+      {
+        "contacts_total": 180,
+        "broadphase_pairs_total": 340,
+        "constraints_per_world": [
+          182,
+          182,
+          182,
+          182
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 148,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          45,
+          45,
+          45,
+          45
+        ]
+      },
+      {
+        "contacts_total": 184,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          186,
+          186,
+          186,
+          186
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 149,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          46,
+          46,
+          46,
+          46
+        ]
+      },
+      {
+        "contacts_total": 180,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          183,
+          183,
+          183,
+          183
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 150,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          45,
+          45,
+          45,
+          45
+        ]
+      },
+      {
+        "contacts_total": 184,
+        "broadphase_pairs_total": 340,
+        "constraints_per_world": [
+          186,
+          186,
+          186,
+          186
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 151,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          46,
+          46,
+          46,
+          46
+        ]
+      },
+      {
+        "contacts_total": 180,
+        "broadphase_pairs_total": 332,
+        "constraints_per_world": [
+          181,
+          181,
+          181,
+          181
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 152,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          45,
+          45,
+          45,
+          45
+        ]
+      },
+      {
+        "contacts_total": 196,
+        "broadphase_pairs_total": 340,
+        "constraints_per_world": [
+          197,
+          197,
+          197,
+          197
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 153,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          49,
+          49,
+          49,
+          49
+        ]
+      },
+      {
+        "contacts_total": 184,
+        "broadphase_pairs_total": 340,
+        "constraints_per_world": [
+          187,
+          187,
+          187,
+          187
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 154,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          46,
+          46,
+          46,
+          46
+        ]
+      },
+      {
+        "contacts_total": 180,
+        "broadphase_pairs_total": 340,
+        "constraints_per_world": [
+          182,
+          182,
+          182,
+          182
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 155,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          45,
+          45,
+          45,
+          45
+        ]
+      },
+      {
+        "contacts_total": 176,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          179,
+          179,
+          179,
+          179
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 156,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          44,
+          44,
+          44,
+          44
+        ]
+      },
+      {
+        "contacts_total": 176,
+        "broadphase_pairs_total": 332,
+        "constraints_per_world": [
+          178,
+          178,
+          178,
+          178
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 157,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          44,
+          44,
+          44,
+          44
+        ]
+      },
+      {
+        "contacts_total": 148,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          150,
+          150,
+          150,
+          150
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 158,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          37,
+          37,
+          37,
+          37
+        ]
+      },
+      {
+        "contacts_total": 176,
+        "broadphase_pairs_total": 328,
+        "constraints_per_world": [
+          178,
+          178,
+          178,
+          178
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 159,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          44,
+          44,
+          44,
+          44
+        ]
+      },
+      {
+        "contacts_total": 176,
+        "broadphase_pairs_total": 328,
+        "constraints_per_world": [
+          179,
+          179,
+          179,
+          179
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 160,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          44,
+          44,
+          44,
+          44
+        ]
+      },
+      {
+        "contacts_total": 184,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          187,
+          187,
+          187,
+          187
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 161,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          46,
+          46,
+          46,
+          46
+        ]
+      },
+      {
+        "contacts_total": 184,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          186,
+          186,
+          186,
+          186
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 162,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          46,
+          46,
+          46,
+          46
+        ]
+      },
+      {
+        "contacts_total": 176,
+        "broadphase_pairs_total": 332,
+        "constraints_per_world": [
+          177,
+          177,
+          177,
+          177
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 163,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          44,
+          44,
+          44,
+          44
+        ]
+      },
+      {
+        "contacts_total": 176,
+        "broadphase_pairs_total": 332,
+        "constraints_per_world": [
+          177,
+          177,
+          177,
+          177
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 164,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          44,
+          44,
+          44,
+          44
+        ]
+      },
+      {
+        "contacts_total": 176,
+        "broadphase_pairs_total": 324,
+        "constraints_per_world": [
+          178,
+          178,
+          178,
+          178
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 165,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          44,
+          44,
+          44,
+          44
+        ]
+      },
+      {
+        "contacts_total": 176,
+        "broadphase_pairs_total": 332,
+        "constraints_per_world": [
+          178,
+          178,
+          178,
+          178
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 166,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          44,
+          44,
+          44,
+          44
+        ]
+      },
+      {
+        "contacts_total": 160,
+        "broadphase_pairs_total": 332,
+        "constraints_per_world": [
+          162,
+          162,
+          162,
+          162
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 167,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          40,
+          40,
+          40,
+          40
+        ]
+      },
+      {
+        "contacts_total": 168,
+        "broadphase_pairs_total": 348,
+        "constraints_per_world": [
+          169,
+          169,
+          169,
+          169
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 168,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          42,
+          42,
+          42,
+          42
+        ]
+      },
+      {
+        "contacts_total": 172,
+        "broadphase_pairs_total": 340,
+        "constraints_per_world": [
+          174,
+          174,
+          174,
+          174
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 169,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          43,
+          43,
+          43,
+          43
+        ]
+      },
+      {
+        "contacts_total": 172,
+        "broadphase_pairs_total": 340,
+        "constraints_per_world": [
+          174,
+          174,
+          174,
+          174
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 170,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          43,
+          43,
+          43,
+          43
+        ]
+      },
+      {
+        "contacts_total": 184,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          186,
+          186,
+          186,
+          186
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 171,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          46,
+          46,
+          46,
+          46
+        ]
+      },
+      {
+        "contacts_total": 180,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          182,
+          182,
+          182,
+          182
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 172,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          45,
+          45,
+          45,
+          45
+        ]
+      },
+      {
+        "contacts_total": 176,
+        "broadphase_pairs_total": 344,
+        "constraints_per_world": [
+          178,
+          178,
+          178,
+          178
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 173,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          44,
+          44,
+          44,
+          44
+        ]
+      },
+      {
+        "contacts_total": 180,
+        "broadphase_pairs_total": 344,
+        "constraints_per_world": [
+          181,
+          181,
+          181,
+          181
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 174,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          45,
+          45,
+          45,
+          45
+        ]
+      },
+      {
+        "contacts_total": 180,
+        "broadphase_pairs_total": 344,
+        "constraints_per_world": [
+          182,
+          182,
+          182,
+          182
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 175,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          45,
+          45,
+          45,
+          45
+        ]
+      },
+      {
+        "contacts_total": 176,
+        "broadphase_pairs_total": 344,
+        "constraints_per_world": [
+          178,
+          178,
+          178,
+          178
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 176,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          44,
+          44,
+          44,
+          44
+        ]
+      },
+      {
+        "contacts_total": 196,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          198,
+          198,
+          198,
+          198
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 177,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          49,
+          49,
+          49,
+          49
+        ]
+      },
+      {
+        "contacts_total": 176,
+        "broadphase_pairs_total": 340,
+        "constraints_per_world": [
+          177,
+          177,
+          177,
+          177
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 178,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          44,
+          44,
+          44,
+          44
+        ]
+      },
+      {
+        "contacts_total": 180,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          182,
+          182,
+          182,
+          182
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 179,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          45,
+          45,
+          45,
+          45
+        ]
+      },
+      {
+        "contacts_total": 180,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          182,
+          182,
+          182,
+          182
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 180,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          45,
+          45,
+          45,
+          45
+        ]
+      },
+      {
+        "contacts_total": 180,
+        "broadphase_pairs_total": 332,
+        "constraints_per_world": [
+          181,
+          181,
+          181,
+          181
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 181,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          45,
+          45,
+          45,
+          45
+        ]
+      },
+      {
+        "contacts_total": 184,
+        "broadphase_pairs_total": 340,
+        "constraints_per_world": [
+          187,
+          187,
+          187,
+          187
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 182,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          46,
+          46,
+          46,
+          46
+        ]
+      },
+      {
+        "contacts_total": 148,
+        "broadphase_pairs_total": 332,
+        "constraints_per_world": [
+          151,
+          151,
+          151,
+          151
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 183,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          37,
+          37,
+          37,
+          37
+        ]
+      },
+      {
+        "contacts_total": 180,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          182,
+          182,
+          182,
+          182
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 184,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          45,
+          45,
+          45,
+          45
+        ]
+      },
+      {
+        "contacts_total": 180,
+        "broadphase_pairs_total": 340,
+        "constraints_per_world": [
+          182,
+          182,
+          182,
+          182
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 185,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          45,
+          45,
+          45,
+          45
+        ]
+      },
+      {
+        "contacts_total": 180,
+        "broadphase_pairs_total": 344,
+        "constraints_per_world": [
+          182,
+          182,
+          182,
+          182
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 186,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          45,
+          45,
+          45,
+          45
+        ]
+      },
+      {
+        "contacts_total": 168,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          170,
+          170,
+          170,
+          170
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 187,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          42,
+          42,
+          42,
+          42
+        ]
+      },
+      {
+        "contacts_total": 180,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          182,
+          182,
+          182,
+          182
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 188,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          45,
+          45,
+          45,
+          45
+        ]
+      },
+      {
+        "contacts_total": 180,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          181,
+          181,
+          181,
+          181
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 189,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          45,
+          45,
+          45,
+          45
+        ]
+      },
+      {
+        "contacts_total": 180,
+        "broadphase_pairs_total": 340,
+        "constraints_per_world": [
+          182,
+          182,
+          182,
+          182
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 190,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          45,
+          45,
+          45,
+          45
+        ]
+      },
+      {
+        "contacts_total": 180,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          182,
+          182,
+          182,
+          182
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 191,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          45,
+          45,
+          45,
+          45
+        ]
+      },
+      {
+        "contacts_total": 196,
+        "broadphase_pairs_total": 340,
+        "constraints_per_world": [
+          199,
+          199,
+          199,
+          199
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 192,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          49,
+          49,
+          49,
+          49
+        ]
+      },
+      {
+        "contacts_total": 196,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          199,
+          199,
+          199,
+          199
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 193,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          49,
+          49,
+          49,
+          49
+        ]
+      },
+      {
+        "contacts_total": 188,
+        "broadphase_pairs_total": 344,
+        "constraints_per_world": [
+          189,
+          189,
+          189,
+          189
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 194,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          47,
+          47,
+          47,
+          47
+        ]
+      },
+      {
+        "contacts_total": 188,
+        "broadphase_pairs_total": 340,
+        "constraints_per_world": [
+          190,
+          190,
+          190,
+          190
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 195,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          47,
+          47,
+          47,
+          47
+        ]
+      },
+      {
+        "contacts_total": 192,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          195,
+          195,
+          195,
+          195
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 196,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          48,
+          48,
+          48,
+          48
+        ]
+      },
+      {
+        "contacts_total": 188,
+        "broadphase_pairs_total": 332,
+        "constraints_per_world": [
+          190,
+          190,
+          190,
+          190
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "row": 197,
+        "finite_qacc": true,
+        "contacts_per_world": [
+          47,
+          47,
+          47,
+          47
+        ]
+      }
+    ],
+    "stress": [
+      {
+        "contacts_total": 92,
+        "broadphase_pairs_total": 324,
+        "constraints_per_world": [
+          95,
+          95,
+          95,
+          95
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 0,
+        "step": 1,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 88,
+        "broadphase_pairs_total": 324,
+        "constraints_per_world": [
+          89,
+          89,
+          89,
+          89
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 0,
+        "step": 2,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 76,
+        "broadphase_pairs_total": 320,
+        "constraints_per_world": [
+          77,
+          77,
+          77,
+          77
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 0,
+        "step": 3,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 120,
+        "broadphase_pairs_total": 324,
+        "constraints_per_world": [
+          121,
+          121,
+          121,
+          121
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 0,
+        "step": 4,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 132,
+        "broadphase_pairs_total": 324,
+        "constraints_per_world": [
+          133,
+          133,
+          133,
+          133
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 0,
+        "step": 5,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 176,
+        "broadphase_pairs_total": 324,
+        "constraints_per_world": [
+          177,
+          177,
+          177,
+          177
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 0,
+        "step": 6,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 209,
+        "broadphase_pairs_total": 321,
+        "constraints_per_world": [
+          209,
+          213,
+          209,
+          209
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 0,
+        "step": 7,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 233,
+        "broadphase_pairs_total": 320,
+        "constraints_per_world": [
+          233,
+          237,
+          233,
+          233
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 0,
+        "step": 8,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 233,
+        "broadphase_pairs_total": 324,
+        "constraints_per_world": [
+          233,
+          237,
+          233,
+          233
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 0,
+        "step": 9,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 224,
+        "broadphase_pairs_total": 315,
+        "constraints_per_world": [
+          225,
+          225,
+          225,
+          225
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 0,
+        "step": 10,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 96,
+        "broadphase_pairs_total": 400,
+        "constraints_per_world": [
+          96,
+          96,
+          96,
+          96
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 38,
+        "step": 1,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 160,
+        "broadphase_pairs_total": 392,
+        "constraints_per_world": [
+          160,
+          160,
+          160,
+          160
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 38,
+        "step": 2,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 164,
+        "broadphase_pairs_total": 376,
+        "constraints_per_world": [
+          165,
+          165,
+          165,
+          165
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 38,
+        "step": 3,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 164,
+        "broadphase_pairs_total": 373,
+        "constraints_per_world": [
+          165,
+          165,
+          165,
+          165
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 38,
+        "step": 4,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 160,
+        "broadphase_pairs_total": 356,
+        "constraints_per_world": [
+          161,
+          161,
+          161,
+          161
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 38,
+        "step": 5,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 148,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          149,
+          149,
+          149,
+          149
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 38,
+        "step": 6,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 148,
+        "broadphase_pairs_total": 312,
+        "constraints_per_world": [
+          149,
+          149,
+          149,
+          149
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 38,
+        "step": 7,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 144,
+        "broadphase_pairs_total": 299,
+        "constraints_per_world": [
+          145,
+          145,
+          145,
+          145
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 38,
+        "step": 8,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 134,
+        "broadphase_pairs_total": 272,
+        "constraints_per_world": [
+          137,
+          133,
+          133,
+          137
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 38,
+        "step": 9,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 128,
+        "broadphase_pairs_total": 268,
+        "constraints_per_world": [
+          129,
+          129,
+          129,
+          129
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 38,
+        "step": 10,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 172,
+        "broadphase_pairs_total": 328,
+        "constraints_per_world": [
+          172,
+          172,
+          172,
+          172
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 46,
+        "step": 1,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 160,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          160,
+          160,
+          160,
+          160
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 46,
+        "step": 2,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 144,
+        "broadphase_pairs_total": 332,
+        "constraints_per_world": [
+          144,
+          144,
+          144,
+          144
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 46,
+        "step": 3,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 132,
+        "broadphase_pairs_total": 324,
+        "constraints_per_world": [
+          133,
+          133,
+          133,
+          133
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 46,
+        "step": 4,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 144,
+        "broadphase_pairs_total": 332,
+        "constraints_per_world": [
+          145,
+          145,
+          145,
+          145
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 46,
+        "step": 5,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 136,
+        "broadphase_pairs_total": 324,
+        "constraints_per_world": [
+          137,
+          137,
+          137,
+          137
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 46,
+        "step": 6,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 126,
+        "broadphase_pairs_total": 322,
+        "constraints_per_world": [
+          129,
+          125,
+          129,
+          125
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 46,
+        "step": 7,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 110,
+        "broadphase_pairs_total": 323,
+        "constraints_per_world": [
+          113,
+          109,
+          113,
+          109
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 46,
+        "step": 8,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 104,
+        "broadphase_pairs_total": 322,
+        "constraints_per_world": [
+          105,
+          105,
+          105,
+          105
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 46,
+        "step": 9,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 108,
+        "broadphase_pairs_total": 318,
+        "constraints_per_world": [
+          109,
+          109,
+          109,
+          109
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 46,
+        "step": 10,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 196,
+        "broadphase_pairs_total": 340,
+        "constraints_per_world": [
+          197,
+          197,
+          197,
+          197
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 153,
+        "step": 1,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 188,
+        "broadphase_pairs_total": 340,
+        "constraints_per_world": [
+          188,
+          188,
+          188,
+          188
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 153,
+        "step": 2,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 152,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          152,
+          152,
+          152,
+          152
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 153,
+        "step": 3,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 156,
+        "broadphase_pairs_total": 328,
+        "constraints_per_world": [
+          156,
+          156,
+          156,
+          156
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 153,
+        "step": 4,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 144,
+        "broadphase_pairs_total": 328,
+        "constraints_per_world": [
+          144,
+          144,
+          144,
+          144
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 153,
+        "step": 5,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 132,
+        "broadphase_pairs_total": 328,
+        "constraints_per_world": [
+          132,
+          132,
+          132,
+          132
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 153,
+        "step": 6,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 116,
+        "broadphase_pairs_total": 316,
+        "constraints_per_world": [
+          116,
+          116,
+          116,
+          116
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 153,
+        "step": 7,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 140,
+        "broadphase_pairs_total": 306,
+        "constraints_per_world": [
+          140,
+          140,
+          140,
+          140
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 153,
+        "step": 8,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 136,
+        "broadphase_pairs_total": 312,
+        "constraints_per_world": [
+          136,
+          136,
+          136,
+          136
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 153,
+        "step": 9,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 128,
+        "broadphase_pairs_total": 314,
+        "constraints_per_world": [
+          128,
+          128,
+          128,
+          128
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 153,
+        "step": 10,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 196,
+        "broadphase_pairs_total": 340,
+        "constraints_per_world": [
+          199,
+          199,
+          199,
+          199
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 192,
+        "step": 1,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 192,
+        "broadphase_pairs_total": 332,
+        "constraints_per_world": [
+          194,
+          194,
+          194,
+          194
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 192,
+        "step": 2,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 172,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          174,
+          174,
+          174,
+          174
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 192,
+        "step": 3,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 152,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          154,
+          154,
+          154,
+          154
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 192,
+        "step": 4,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 153,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          158,
+          154,
+          154,
+          154
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 192,
+        "step": 5,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 169,
+        "broadphase_pairs_total": 332,
+        "constraints_per_world": [
+          174,
+          170,
+          170,
+          170
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 192,
+        "step": 6,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 202,
+        "broadphase_pairs_total": 336,
+        "constraints_per_world": [
+          206,
+          202,
+          206,
+          202
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 192,
+        "step": 7,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 237,
+        "broadphase_pairs_total": 340,
+        "constraints_per_world": [
+          238,
+          238,
+          242,
+          238
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 192,
+        "step": 8,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 232,
+        "broadphase_pairs_total": 348,
+        "constraints_per_world": [
+          234,
+          234,
+          234,
+          234
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 192,
+        "step": 9,
+        "finite_state": true
+      },
+      {
+        "contacts_total": 214,
+        "broadphase_pairs_total": 341,
+        "constraints_per_world": [
+          214,
+          214,
+          218,
+          218
+        ],
+        "contacts_capacity": 512,
+        "constraints_capacity": 512,
+        "overflow": false,
+        "start_row": 192,
+        "step": 10,
+        "finite_state": true
+      }
+    ],
+    "snapshots_complete": true,
+    "all_snapshots_finite": true,
+    "requested_stress_steps_per_start": 10,
+    "overflow_seen": false,
+    "elapsed_including_compile_s": 5.378251912072301,
+    "scope": "all reference states repeated across worlds; optional short held-control stress, not successful Replay"
+  },
+  "simulation_steps": 200,
+  "training_ready": false,
+  "source_modified": false,
+  "code": {
+    "path": "/data_all/zzx/3.2RL/scripts/audit_taco_contact_capacity.py",
+    "sha256": "97707e88e07caef85dc75422545816f168a40afccd3a2941fca6896875292e0f"
+  }
+}

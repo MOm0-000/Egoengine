@@ -136,7 +136,7 @@ def test_saved_candidate_matches_independent_body_local_point_measurement(inputs
                       if Path(row["path"]).name not in {"taco_bimanual.py", "mink.py"}])
     for key, value in contract.items():
         assert saved_contract[key] == value
-    baseline_report = json.loads((ROOT / "runs/taco_pour_bimanual_mano_fk_v1/retarget_report.json").read_text())
+    baseline_report = json.loads((ROOT / "TRASH/superseded_runs/2026-09-20_right_index_guard/taco_pour_bimanual_mano_fk_v1/retarget_report.json").read_text())
     candidate_report = json.loads((directory / "retarget_report.json").read_text())
     assert candidate_report["inherited_settings"] == baseline_report["inherited_settings"]
     assert not report["reference_overwritten"] and not report["physics_validated"]
@@ -145,6 +145,9 @@ def test_saved_candidate_matches_independent_body_local_point_measurement(inputs
     with np.load(directory / "human_reference.npz", allow_pickle=False) as src:
         for key in target:
             np.testing.assert_array_equal(src[key], target[key])
+    with np.load(ROOT / "TRASH/superseded_runs/2026-09-20_right_index_guard/taco_pour_bimanual_mano_fk_v1/robot_reference.npz",
+                 allow_pickle=False) as src:
+        robot = dict(src)
     np.testing.assert_allclose(candidate["qpos"][:, 36:], robot["qpos"][:, 36:], atol=1e-12, rtol=0)
     model = mujoco.MjModel.from_xml_path(str(scene))
     data = mujoco.MjData(model)

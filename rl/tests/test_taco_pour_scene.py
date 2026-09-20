@@ -17,12 +17,12 @@ sys.path[:0] = [str(ROOT / "src"), str(ROOT / "scripts"), str(ROOT / "diagnostic
 from build_taco_bimanual_scene import selected_objects, snapshot_robot_assets
 from egoengine_repro.retarget.collision_audit import explicit_hand_pairs, hand_ids
 from egoengine_repro.retarget.mink import _enable_planning_collision_masks, _explicit_collision_groups
-from egoengine_repro.retarget.paper_audit import artifact
+from egoengine_repro.retarget.paper_audit import artifact, verify_artifacts
 from egoengine_repro.retarget.taco_bimanual import differentiate, pose7
 from render_exact_deximit_triptych import load_reference_model, map_sim_to_reference_style
 
 SCENE = ROOT / "models/taco_xhand/xhand/bimanual/taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml"
-RUN = ROOT / "runs/taco_pour_bimanual_gt_v1"
+RUN = ROOT / "runs/taco_pour_bimanual_mano_fk_right_guard_v1"
 BUNDLE = ROOT / "data/taco_v1/pour_bowl_plate"
 
 
@@ -76,8 +76,11 @@ def test_pour_scene_has_passive_objects_and_complete_cross_object_pairs(model):
     assert list(map(len, objects)) == [32, 32]
     pairs = {frozenset((int(a), int(b))) for a, b in zip(model.pair_geom1, model.pair_geom2)}
     assert all(frozenset(pair) in pairs for pair in product(*objects))
-    assert all(frozenset(pair) in pairs for pair in product(hand_ids(model), sum(objects, [])))
-    assert model.npair == 2822
+    external_hands = [geom for geom in hand_ids(model) if "guard" not in model.geom(geom).name]
+    guards = [geom for geom in hand_ids(model) if "guard" in model.geom(geom).name]
+    assert all(frozenset(pair) in pairs for pair in product(external_hands, sum(objects, [])))
+    assert not any(frozenset(pair) in pairs for pair in product(guards, sum(objects, [])))
+    assert model.npair == 2824
 
 
 def test_pour_assets_resolve_inside_project_with_native_metric_inertias(model):
@@ -105,10 +108,12 @@ def test_pour_assets_resolve_inside_project_with_native_metric_inertias(model):
 def test_pour_ik_runtime_pair_equality():
     model = mujoco.MjModel.from_xml_path(str(SCENE))
     pairs = explicit_hand_pairs(model)
-    assert len(pairs) == 174
+    assert len(pairs) == 176
     hands = set(hand_ids(model))
     _enable_planning_collision_masks(model, list(hands), [])
-    limit = mink.CollisionAvoidanceLimit(model, _explicit_collision_groups(model, mujoco, hand_geom_ids=hands))
+    limit = mink.CollisionAvoidanceLimit(model,
+        _explicit_collision_groups(model, mujoco, hand_geom_ids=hands),
+        include_explicit_pairs=True)
     assert set(pairs) == set(limit.geom_id_pairs)
 
 
@@ -148,13 +153,12 @@ def test_pour_initialization_audit_preserves_inputs_and_rejects_a_physics_claim(
     report = json.loads((RUN / "initialization_audit.json").read_text())
     assert report["frames"] == 198 and report["sequence"].endswith("20230927_017")
     assert report["topology"]["ik_runtime_pairs_equal"]
-    assert report["topology"]["hand_shell_geometry_equal_pinned_source"]
+    assert not report["topology"]["hand_shell_geometry_equal_pinned_source"]
     assert report["alignment"]["native_compiled_scale_check_max_error_m"] < 1e-7
     assert not report["state_projection_applied"]
     assert report["simulation_steps_executed"] == 0
     assert not report["strict_gate_passed"]
-    for record in report["preserved_artifacts"]:
-        assert artifact(Path(record["path"])) == record
+    verify_artifacts(report["preserved_artifacts"])
 
 
 def test_pour_uses_existing_exact_renderer_mapping_without_rendering(model):
@@ -186,11 +190,13 @@ def test_initial_native_contacts_provide_evidence_without_open_mesh_claims():
     assert report["simulation_steps_executed"] == 0
     assert not report["state_projection_applied"] and not report["physics_validated"]
     assert len(report["records"]) == 3
+    penetrating_samples = []
     for pair in report["records"]:
         forward, reverse = pair["directions"]
-        assert forward["inside_samples_50um"] > 0
-        assert forward["sampled_penetration_max_m"] > 0
+        assert forward["inside_samples_50um"] >= 0
+        assert forward["sampled_penetration_max_m"] >= 0
+        penetrating_samples.append(forward["inside_samples_50um"])
         assert reverse["status"] == "target_open_mesh_signed_containment_not_used"
         assert "inside_samples_50um" not in reverse
-    for source in report["preserved_artifacts"]:
-        assert artifact(Path(source["path"])) == source
+    assert sum(value > 0 for value in penetrating_samples) == 2
+    verify_artifacts(report["preserved_artifacts"])

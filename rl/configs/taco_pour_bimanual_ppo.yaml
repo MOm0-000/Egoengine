@@ -5,9 +5,10 @@ dataset_dir: /data_all/zzx/3.2RL/models
 dataset_name: taco_xhand
 data_id: 0
 model_path: /data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml
-# Corrected MANO orientation reference. Still NOT a validated physical reset;
-# see runs/taco_pour_initialization_preflight/report.json before task training.
-data_path: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_v1/robot_reference.npz
+# Corrected MANO orientation reference retargeted with the audited right
+# palm/index-root guard. Still NOT a validated physical reset; see the active
+# initialization preflight in configs/replay_rl_protocol.yaml.
+data_path: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_right_guard_v1/robot_reference.npz
 simulator: mjwp
 device: cuda:0
 sim_dt: 0.0033333333333333335

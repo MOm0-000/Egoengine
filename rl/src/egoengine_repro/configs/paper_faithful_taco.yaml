@@ -33,6 +33,13 @@ retarget:
   confidence_weighting: true
   sim_dt: 0.005
   max_iterations_per_frame: 8
+  # Local numerical settings, not values reported by EgoEngine.  The solver
+  # tolerance matches the independent 1 um collision acceptance tolerance.
+  solver_primal_tolerance: 1.0e-6
+  solver_dual_tolerance: 1.0e-6
+  # A 2 um planning buffer covers the 1 um feasibility tolerance without
+  # making the tightly coupled finger-contact QP infeasible.
+  self_collision_clearance_m: 2.0e-6
   surface_projection: false
   surface_projection_margin: 0.002
   velocity_limits:

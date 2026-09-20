@@ -21,7 +21,7 @@ from egoengine_repro.retarget.mink import (
 )
 from egoengine_repro.retarget.paper_audit import artifact, scene_mesh_artifacts, verify_artifacts
 
-RUN = ROOT / "runs/taco_pour_bimanual_mano_fk_v1"
+RUN = ROOT / "runs/taco_pour_bimanual_mano_fk_right_guard_v1"
 SIDES = ("right", "left")
 FINGERS = ("thumb", "index", "middle", "ring", "pinky")
 
@@ -103,7 +103,9 @@ def inspect():
                 tasks[hi * 6 + k].set_target(mink.SE3.from_matrix(target))
         before = config.q.copy()
         delta = qp_dt * mink.solve_ik(config, tasks, qp_dt, solver="daqp", damping=1e-5,
-            limits=limits, constraints=locks, primal_tol=1e-9, dual_tol=1e-9)
+            limits=limits, constraints=locks,
+            primal_tol=metadata["solver_primal_tolerance"],
+            dual_tol=metadata["solver_dual_tolerance"])
         np.testing.assert_array_equal(config.q, before)
         probes.append(dict(source_row_zero_based=row, unapplied_wrist_translation_increment_m=delta[[0,1,2,18,19,20]].tolist(),
             maximum_unapplied_finger_increment_rad=float(np.abs(delta[np.r_[6:18,24:36]]).max()),

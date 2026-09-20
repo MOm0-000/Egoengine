@@ -15,7 +15,7 @@ reproduce the vision-based pose reconstruction described in Appendix A.3.
 ### Current checkpoint: contracts are fail-closed; Pour reset and observation remain blocked
 
 The active Pour input remains the corrected full 198-frame MANO/MINK reference
-in `runs/taco_pour_bimanual_mano_fk_v1`. Collision-shape experiments, including
+in `runs/taco_pour_bimanual_mano_fk_right_guard_v1`. Collision-shape experiments, including
 the refined candidate and its actual 4-/16-world GPU capacity checks, are in
 `runs/taco_pour_collision_repair`. They have not replaced the formal model or
 selected a physical reset. The current geometry classification is recorded in

@@ -1,7 +1,7 @@
 # Pour: Common Fingertip Geometry Diagnostic
 
 Input: all 198 frames at 30 Hz of TACO Pour `(pour in some, bowl, plate)/20230927_017`,
-the preserved `taco_pour_bimanual_mano_fk_v1` human/robot references, released
+the preserved `TRASH/superseded_runs/2026-09-20_right_index_guard/taco_pour_bimanual_mano_fk_v1` human/robot references, released
 MANO poses/shapes and MANO v1.2 surfaces, the isolated XHand scene/native meshes,
 and the source XHand XML/URDF. All paired results below are **right, left**.
 

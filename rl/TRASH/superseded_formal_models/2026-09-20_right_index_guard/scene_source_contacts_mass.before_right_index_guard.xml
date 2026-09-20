@@ -132,8 +132,6 @@
                 <joint name="R_forearm_yaw_link_joint" pos="0 0 0" axis="0 -1 0" range="-6.2 6.2" />
                 <geom name="right_hand_link_visual" type="mesh" group="1" density="0" rgba="0.792157 0.819608 0.933333 1" mesh="right_hand_link" contype="0" conaffinity="0" />
                 <geom name="collision_hand_right_palm_0" size="0.04 0.024 0.04" pos="0 0 -0.06" type="box" group="3" rgba="0 1 0 1" contype="0" conaffinity="0" condim="3" friction="1 0.1 0" />
-                <geom name="collision_hand_right_palm_index_root_negative_guard" size="0.000929064511788" pos="0.0133624176979 0.00650000011921 -0.0615201568604" type="sphere" group="3" density="0" rgba="1 0.75 0 1" contype="0" conaffinity="0" condim="3" friction="1 0.1 0" />
-                <geom name="collision_hand_right_palm_index_root_positive_guard" size="0.00150030451896" pos="0.0374132442474 -0.0005 -0.0731002693176" type="sphere" group="3" density="0" rgba="1 0.75 0 1" contype="0" conaffinity="0" condim="3" friction="1 0.1 0" />
                 <site name="right_palm" pos="0 0 0" quat="0 0.707107 0.707107 0" size="0.01 0.02 0.03" type="box" />
                 <body name="right_hand_thumb_bend_link" pos="0.0228 0.0095 -0.0305">
                   <inertial pos="0.0145291 -0.000901303 -0.000127926" quat="0.0288921 0.68936 0.0166971 0.72365" mass="0.00985529" diaginertia="1.30647e-06 1.29142e-06 5.40953e-07" />
@@ -161,8 +159,6 @@
                   <inertial pos="8.08449e-05 0.000675884 0.00420851" quat="0.999802 -0.0189928 -0.00582288 0.000998418" mass="0.0677836" diaginertia="2.16592e-05 2.09943e-05 3.36803e-06" />
                   <joint name="right_hand_index_bend_joint" pos="0 0 0" axis="0 1 0" range="-0.175 0.175" />
                   <geom name="right_index_bend_visual" type="mesh" group="1" density="0" rgba="0.439216 0.439216 0.439216 1" mesh="right_hand_index_bend_link" contype="0" conaffinity="0" />
-                  <geom name="collision_hand_right_index_root_negative_guard" size="0.000929064511788" pos="-0.00647471424846 1.19209290009e-10 0.0305955820467" type="sphere" group="3" density="0" rgba="1 0.75 0 1" contype="0" conaffinity="0" condim="3" friction="1 0.1 0" />
-                  <geom name="collision_hand_right_index_root_positive_guard" size="0.00150030451896" pos="0.00689003938407 -0.007 0.0188110926926" type="sphere" group="3" density="0" rgba="1 0.75 0 1" contype="0" conaffinity="0" condim="3" friction="1 0.1 0" />
                   <body name="right_hand_index_rota_link1" pos="0 0 -0.0178">
                     <inertial pos="-0.00013977 -0.000800517 -0.0356039" quat="0.999865 0.00809183 -0.0131314 0.00566198" mass="0.0630216" diaginertia="2.05301e-05 1.92461e-05 4.135e-06" />
                     <joint name="right_hand_index_joint1" pos="0 0 0" axis="1 0 0" range="0 1.92" />
@@ -540,8 +536,6 @@
     <general name="left_pinky_joint2_position" joint="left_hand_pinky_joint2" ctrlrange="0 1.92" />
   </actuator>
   <contact>
-    <pair name="semantic_right_palm_index_root_negative_guard" geom1="collision_hand_right_palm_index_root_negative_guard" geom2="collision_hand_right_index_root_negative_guard" condim="3" friction="1 1 0.1 0 0" />
-    <pair name="semantic_right_palm_index_root_positive_guard" geom1="collision_hand_right_palm_index_root_positive_guard" geom2="collision_hand_right_index_root_positive_guard" condim="3" friction="1 1 0.1 0 0" />
     <pair name="source_intrahand_0" geom1="collision_hand_right_palm_0" geom2="collision_hand_right_thumb_0" condim="3" friction="1 1 0.1 0 0" />
     <pair name="source_intrahand_1" geom1="collision_hand_right_palm_0" geom2="collision_hand_right_index_0" condim="3" friction="1 1 0.1 0 0" />
     <pair name="source_intrahand_2" geom1="collision_hand_right_palm_0" geom2="collision_hand_right_middle_0" condim="3" friction="1 1 0.1 0 0" />

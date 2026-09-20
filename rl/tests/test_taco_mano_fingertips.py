@@ -18,7 +18,7 @@ from egoengine_repro.retarget.taco_bimanual import MANO_DISTALS, mano_fingertip_
 HANDS = ROOT / "data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017"
 MODELS = ROOT / "data/taco_v1/hand_poses_v1/mano_v1_2/models"
 OLD = ROOT / "runs/taco_pour_bimanual_gt_v1"
-NEW = ROOT / "runs/taco_pour_bimanual_mano_fk_v1"
+NEW = ROOT / "TRASH/superseded_runs/2026-09-20_right_index_guard/taco_pour_bimanual_mano_fk_v1"
 
 
 @pytest.fixture(scope="module", params=["right", "left"])

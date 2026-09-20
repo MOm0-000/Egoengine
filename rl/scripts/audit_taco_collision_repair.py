@@ -22,7 +22,7 @@ from egoengine_repro.retarget.initial_hand import state_summary
 from egoengine_repro.retarget.mesh_distance import closed_mesh_signed_distance, mesh_surface_distance
 from egoengine_repro.retarget.paper_audit import artifact, scene_mesh_artifacts, verify_artifacts
 
-BASELINE = ROOT / "runs/taco_pour_bimanual_mano_fk_v1"
+BASELINE = ROOT / "runs/taco_pour_bimanual_mano_fk_right_guard_v1"
 
 
 def body_hulls(model, body_name):
@@ -119,14 +119,14 @@ def compare():
         raise FileExistsError(destination)
     candidate_scene = OUTPUT / "scene.xml"
     inputs = [artifact(p) for p in (SCENE, candidate_scene, BASELINE / "robot_reference.npz",
-        ROOT / "runs/taco_pour_initialization_preflight/report.json",
+        ROOT / "runs/taco_pour_initialization_preflight_right_guard_v1/report.json",
         ROOT / "runs/taco_pour_initial_hand_v4/initial_hand_candidate.npz")]
     dependencies = scene_mesh_artifacts(SCENE) + scene_mesh_artifacts(candidate_scene)
     before, after = [mujoco.MjModel.from_xml_path(str(p)) for p in (SCENE, candidate_scene)]
     check_unchanged_dynamics(before, after)
     native, _ = visual_meshes(SCENE, before)
     candidate_native, _ = visual_meshes(candidate_scene, after)
-    preflight = json.loads((ROOT / "runs/taco_pour_initialization_preflight/report.json").read_text())
+    preflight = json.loads((ROOT / "runs/taco_pour_initialization_preflight_right_guard_v1/report.json").read_text())
     verify_artifacts(preflight["preserved_artifacts"] + preflight["scene_meshes"])
     with np.load(BASELINE / "robot_reference.npz", allow_pickle=False) as data:
         qpos = data["qpos"]
@@ -260,7 +260,7 @@ def contact_discrepancy_masks(native, minimum, present):
 def screen_hand_geometry(labels=("mesh_hands", "budgeted_palms"), destination=OUTPUT / "hand_geometry_screen.json", models=None):
     if destination is not None and destination.exists():
         raise FileExistsError(destination)
-    report = json.loads((ROOT / "runs/taco_pour_initialization_preflight/report.json").read_text())
+    report = json.loads((ROOT / "runs/taco_pour_initialization_preflight_right_guard_v1/report.json").read_text())
     verify_artifacts(report["preserved_artifacts"] + report["scene_meshes"])
     pairs = [p for p in report["native_surfaces"]["pairs"]
              if p["family"] in ("intrahand", "interhand") and not p["assembly_adjacent"]]
@@ -343,7 +343,7 @@ def compare_refinement():
                                    {"budgeted_palms": before, "refined": after}),
         refined_finger_surfaces=finger_surface_comparison(before, after, native),
         source_reference=artifact(BASELINE / "robot_reference.npz"),
-        native_preflight=artifact(ROOT / "runs/taco_pour_initialization_preflight/report.json"),
+        native_preflight=artifact(ROOT / "runs/taco_pour_initialization_preflight_right_guard_v1/report.json"),
         code=artifact(Path(__file__)),
         distance_code=artifact(ROOT / "src/egoengine_repro/retarget/mesh_distance.py"),
         accepted_for_training=False)

@@ -38,8 +38,7 @@ def run(scene, baseline, previous, sweep_path, output):
               baseline / "retarget_report.json", previous, sweep_path]
     preserved = [artifact(p) for p in inputs]
     sweep = json.loads(sweep_path.read_text())
-    if not all(artifact(Path(p["path"])) == p for p in sweep["preserved_artifacts"]):
-        raise ValueError("thumb sweep inputs changed")
+    verify_artifacts(sweep["preserved_artifacts"])
     verify_artifacts(sweep["source_meshes"])
     verify_artifacts(sweep.get("scene_meshes", []))
     if [artifact(scene), artifact(inputs[1]), artifact(previous)] != sweep["preserved_artifacts"][:3]:

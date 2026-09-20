@@ -154,7 +154,7 @@ def run(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--scene", type=Path, required=True)
-    parser.add_argument("--reference", type=Path, default=ROOT / "runs/taco_pour_bimanual_mano_fk_v1/robot_reference.npz")
+    parser.add_argument("--reference", type=Path, default=ROOT / "runs/taco_pour_bimanual_mano_fk_right_guard_v1/robot_reference.npz")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--gpu", action="store_true")
     parser.add_argument("--device", default="cuda:0")

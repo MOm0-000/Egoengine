@@ -400,12 +400,12 @@ SciPy 弃用警告，138.27 s。另核验 987 个现存候选凸块文件及源�
 
 The rest of this document is the historical orientation-bug baseline/v4 review.
 Its 204.29 mm³ thumb intersection is **not** the current first-frame value.
-The current input is `runs/taco_pour_bimanual_mano_fk_v1`; both the protocol and
+The current input is `runs/taco_pour_bimanual_mano_fk_right_guard_v1`; both the protocol and
 PPO config now point to it. The old reference is retained solely for the
 orientation-fix comparison and regression tests, not as an active training input.
 
 New script: `scripts/audit_taco_initialization_preflight.py`.
-Current results: `runs/taco_pour_initialization_preflight/report.json` and
+Current results: `runs/taco_pour_initialization_preflight_right_guard_v1/report.json` and
 `native_checks.npz`. No new renderer, scene or reference was created. No
 simulation stepping, initialization-candidate comparison or PPO was performed.
 

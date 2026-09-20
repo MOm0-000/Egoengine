@@ -8,7 +8,7 @@ evidence_policy:
   paper_page_numbers: one_based_pdf_pages
   copied_defaults_are_author_settings: false
   new_model_or_reset_procedure_requires_confirmation: true
-  current_revision: false_alarm_classification_corrected_native_penetrations_and_shape_defects_remain
+  current_revision: right_index_root_semantic_guard_adopted_other_collision_and_reset_blockers_remain
 inputs:
   setting: user_approved_gt_oracle_validation_not_full_perception_reproduction
   approved_episodes: ['20230927_027', '20230917_020', '20230926_004', '20231103_071', '20230927_017']
@@ -22,9 +22,10 @@ inputs:
   preserve_source_frames: true
   select_by_eventual_task_success: false
   active_scene: /data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml
-  active_human_reference: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_v1/human_reference.npz
-  active_robot_reference: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_v1/robot_reference.npz
+  active_human_reference: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_right_guard_v1/human_reference.npz
+  active_robot_reference: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_right_guard_v1/robot_reference.npz
   historical_orientation_bug_baseline: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_gt_v1
+  historical_pre_guard_mano_reference: /data_all/zzx/3.2RL/TRASH/superseded_runs/2026-09-20_right_index_guard/taco_pour_bimanual_mano_fk_v1
   historical_baseline_retained_for: orientation_fix_comparison_and_regression_tests_not_active_input
 scene_alignment:
   source: Appendix A.1-A.3, PDF pp.15-16
@@ -45,14 +46,14 @@ retargeting:
   collision_shapes_and_pairs: not_published
   require_ik_runtime_pair_consistency: true
   mink_explicit_parent_child_pair_support: implemented_opt_in_and_tested
-  palm_index_pairs_activated_in_selected_model: false
+  palm_index_pairs_activated_in_selected_model: right_side_pair_specific_semantic_guards_only
   reference_joint_and_declared_self_constraints_required: true
   full_reference_successful_replay_required: false
   all_gt_reference_frames_collision_free_required: false
   wholesale_hand_collision_replacement: on_hold
   active_reference_frames: 198
   declared_kinematic_model_feasible: true
-  declared_kinematic_model_feasible_scope: original_scene_not_refined_candidate_or_all_native_assemblies
+  declared_kinematic_model_feasible_scope: active_scene_with_right_index_root_guards_not_all_native_assemblies
   complete_intrahand_geometry_coverage: false
 initialization:
   source: TACO physical reset procedure not published
@@ -75,7 +76,7 @@ initialization:
     candidates: [collision_free_pre_manipulation_pose, physics_corrected_retargeting]
     sources: [Human2Sim2Robot_Appendix_B, DexMachina_Appendix_A2]
     ready: false
-    blocked_by: palm_index_collision_shapes_falsely_overlap_even_at_native_clear_neutral_pose
+    blocked_by: remaining_left_hand_and_other_collision_coverage_plus_illegal_initial_state
     completed: false
   historical_brush_initial_hand_table_penetration_m: 0.01340
   initial_qpos_qvel_and_reference_index: require_explicit_specification
@@ -166,11 +167,23 @@ audit_results:
   active_depth_registration: /data_all/zzx/3.2RL/runs/taco_pour_depth_registration_v1/report.json
   historical_execution_report_pour: /data_all/zzx/3.2RL/docs/pour_bug_impact_corrections.md
   historical_scene_report: /data_all/zzx/3.2RL/docs/pour_scene_feasibility.md
-  active_retarget: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_v1/retarget_report.json
-  active_collisions: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_v1/collision_audit.json
-  active_initialization: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_v1/initialization_audit.json
-  active_initial_native_contacts: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_v1/initial_native_contact_audit.json
-  active_initialization_preflight: /data_all/zzx/3.2RL/runs/taco_pour_initialization_preflight/report.json
+  active_retarget: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_right_guard_v1/retarget_report.json
+  active_collisions: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_right_guard_v1/collision_audit.json
+  active_initialization: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_right_guard_v1/initialization_audit.json
+  active_initial_native_contacts: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_right_guard_v1/initial_native_contact_audit.json
+  active_initialization_preflight: /data_all/zzx/3.2RL/runs/taco_pour_initialization_preflight_right_guard_v1/report.json
+  active_right_index_root_guard: /data_all/zzx/3.2RL/runs/taco_pour_right_index_guard_v1/right_index_guard_audit.json
+  active_right_index_root_capacity: /data_all/zzx/3.2RL/runs/taco_pour_right_index_guard_v1/capacity_formal_4env.json
+  right_index_root_guard_result:
+    native_clear_interval_rad: [-0.16557519370762744, 0.07507795922938384]
+    pre_guard_reference_interference_frames: 52
+    post_guard_reference_interference_frames: 0
+    sampled_guard_false_positives: 0
+    sampled_guard_false_negatives: 0
+    joint_range_modified: false
+    external_collision_geometries_modified: false
+    formal_capacity_4env_passed: true
+    formal_capacity_per_env: {contacts: 128, constraints: 512}
   collision_repair_comparison: /data_all/zzx/3.2RL/runs/taco_pour_collision_repair/comparison.json
   collision_object_parameter_screen: /data_all/zzx/3.2RL/runs/taco_pour_collision_repair/object_parameter_screen.json
   collision_hand_geometry_screen: /data_all/zzx/3.2RL/runs/taco_pour_collision_repair/hand_geometry_screen.json
@@ -183,15 +196,15 @@ audit_results:
   discussion_handoff: /data_all/zzx/3.2RL/docs/pour_discussion_handoff.md
   source_urdf_joint_checks_passed: 24
   adjacent_assembly_angle_snapshots: 147
-  palm_index_interference:
+  historical_palm_index_interference:
     sides: [right, left]
-    actual_reference_rows_at_positive_limit_zero_based: [45, 13]
+    old_reference_rows_at_positive_limit_zero_based: [45, 13]
     joint_angle_rad: 0.175
     sampled_native_max_inside_m: 0.0029724687337875366
     pair_rules_or_joint_limits_modified: false
   collision_gpu_capacity_4env: /data_all/zzx/3.2RL/runs/taco_pour_collision_repair/capacity_refined.json
   collision_gpu_capacity_16env: /data_all/zzx/3.2RL/runs/taco_pour_collision_repair/capacity_refined_16env.json
-  collision_candidates_adopted: false
+  collision_candidates_adopted: right_index_root_semantic_guard_only
   native_distance_sign_bug: fixed_in_six_audit_scripts_active_reports_recomputed_historical_signed_metrics_not_revalidated
   small_triangle_unsigned_distance_bug: fixed_in_current_refinement_audit_independent_projection_and_scale_regression_added
   candidate_contact_capacity:
@@ -228,7 +241,7 @@ audit_results:
   historical_dev4_inputs: /data_all/zzx/3.2RL/runs/paper_first_audit_v1/inputs.json
   historical_brush_initialization: /data_all/zzx/3.2RL/runs/paper_first_audit_v1/initialization.json
   historical_execution_report: /data_all/zzx/3.2RL/docs/paper_first_audit_results.md
-  local_tests_passed: 530
+  local_tests_passed: 534
   local_tests_skipped: 1
   local_subtests_passed: 57
   separate_real_gpu_adapter_tests_passed: 9
@@ -250,8 +263,7 @@ audit_results:
   capacity_stress_world_steps_4env_16env: [240, 960]
   new_reset_applied: false
 blocking_checks:
-  - demonstrated_palm_index_interference_and_explicit_joint_assembly_exemption_boundaries
-  - same_selected_collision_rules_in_mink_reference_and_runtime
+  - remaining_left_hand_and_other_collision_coverage
   - explicit_initial_state_specification_and_known_initial_penetration
   - paper_objective_unresolved_or_explicit_local_profile_selection
   - explicit_actor_observation_contract

@@ -257,6 +257,14 @@ def retarget(scene: Path, human_path: Path, settings: dict, output: Path) -> dic
     validate_human_reference(human)
     dt = float(np.diff(human["timestamps_s"])[0])
     n = len(human["frame_indices"])
+    primal_tolerance = float(settings.get("solver_primal_tolerance", 1e-9))
+    dual_tolerance = float(settings.get("solver_dual_tolerance", 1e-9))
+    collision_clearance = float(settings.get("self_collision_clearance_m", 0.0))
+    if (not np.isfinite(primal_tolerance) or primal_tolerance <= 0.0
+            or not np.isfinite(dual_tolerance) or dual_tolerance <= 0.0):
+        raise ValueError("solver tolerances must be positive and finite")
+    if not np.isfinite(collision_clearance) or collision_clearance < 0.0:
+        raise ValueError("self-collision clearance must be finite and nonnegative")
     config = mink.Configuration(model)
     tasks = []
     for side in SIDES:
@@ -273,11 +281,11 @@ def retarget(scene: Path, human_path: Path, settings: dict, output: Path) -> dic
     _enable_planning_collision_masks(model, hand_geoms, [])
     groups = _explicit_collision_groups(model, mujoco, hand_geom_ids=set(hand_geoms))
     inner = mink.CollisionAvoidanceLimit(model, groups,
-                  minimum_distance_from_collisions=0.0, collision_detection_distance=0.02,
+                  minimum_distance_from_collisions=collision_clearance, collision_detection_distance=0.02,
                   include_explicit_pairs=True)
     if set(inner.geom_id_pairs) != set(pairs):
         raise ValueError("MINK filtered out runtime self pairs; IK/physics contract differs")
-    collision = _StrictCollisionLimit(inner, mujoco, minimum_distance=0.0,
+    collision = _StrictCollisionLimit(inner, mujoco, minimum_distance=collision_clearance,
                                       depenetration_step=0.002)
     collision.enabled = True
     velocity_map = _joint_velocity_limits(model, mujoco, settings["velocity_limits"])
@@ -311,7 +319,7 @@ def retarget(scene: Path, human_path: Path, settings: dict, output: Path) -> dic
         try:
             return mink.solve_ik(config, tracking_tasks, dt / substeps, solver="daqp",
                                  damping=1e-5, limits=limits, constraints=locks,
-                                 primal_tol=1e-9, dual_tol=1e-9)
+                                 primal_tol=primal_tolerance, dual_tol=dual_tolerance)
         except Exception as error:
             fail(frame, f"QP failed at frame {frame}: {error}")
 
@@ -389,8 +397,10 @@ def retarget(scene: Path, human_path: Path, settings: dict, output: Path) -> dic
                                           wrist_orientation_cost=settings["wrist_orientation_cost"],
                                           fingertip_position_cost=settings["fingertip_position_cost"],
                                           fingertip_orientation_cost=settings["fingertip_orientation_cost"],
-                                          posture_cost=0.0, self_collision_clearance_m=0.0),
-                  solver_primal_tolerance=1e-9, solver_dual_tolerance=1e-9,
+                                          posture_cost=0.0,
+                                          self_collision_clearance_m=collision_clearance),
+                  solver_primal_tolerance=primal_tolerance,
+                  solver_dual_tolerance=dual_tolerance,
                   wrist_position_cost=0.0, object_dofs_locked_during_ik=True,
                   object_dofs_actuated_in_physics=False, hand_order=list(SIDES),
                   fingertip_mean_error_m=tip_errors.mean(axis=(0, 2)).tolist(),

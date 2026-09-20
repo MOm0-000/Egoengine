@@ -17,7 +17,7 @@ from egoengine_repro.retarget.paper_audit import artifact, scene_mesh_artifacts,
 
 SCENE = ROOT / "models/taco_xhand/xhand/bimanual/taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml"
 OLD = ROOT / "runs/taco_pour_bimanual_gt_v1"
-NEW = ROOT / "runs/taco_pour_bimanual_mano_fk_v1"
+NEW = ROOT / "TRASH/superseded_runs/2026-09-20_right_index_guard/taco_pour_bimanual_mano_fk_v1"
 
 
 def inspect():
@@ -44,8 +44,13 @@ def inspect():
     for key in ("inherited_settings", "effective_settings", "scene_sha256", "wrist_position_cost"):
         if reports[0][key] != reports[1][key]:
             raise ValueError(f"comparison changes more than fingertip orientations: {key}")
-    if reports[0]["scene_sha256"] != artifact(SCENE)["sha256"]:
-        raise ValueError("live scene no longer matches the retargeting experiment")
+    historical_scene = dict(path=reports[0]["scene"], sha256=reports[0]["scene_sha256"])
+    verify_artifacts([historical_scene])
+    guard_audit = json.loads((ROOT / "runs/taco_pour_right_index_guard_v1/right_index_guard_audit.json").read_text())
+    if (not guard_audit["external_collision_geometries_unchanged"]
+            or not guard_audit["joint_range_unchanged"]):
+        raise ValueError("active scene cannot be used for historical kinematic measurements")
+    inputs += [historical_scene, artifact(ROOT / "runs/taco_pour_right_index_guard_v1/right_index_guard_audit.json")]
     np.testing.assert_array_equal(robot[0]["qpos"][:, 36:], robot[1]["qpos"][:, 36:])
     model = mujoco.MjModel.from_xml_path(str(SCENE))
     meshes, _ = visual_meshes(SCENE, model)
@@ -101,6 +106,7 @@ def inspect():
         historical_input_hashes_unchanged=len(prior_inputs),
         original_inputs=inputs, results=result,
         limitations=["No physical time integration or reset has been performed.",
+                     "The archived scene hash is verified through TRASH relocation; active-scene FK is used only after the guard audit proves all non-guard geometry and joint ranges unchanged.",
                      "Native signed contact checks are samples, not full-surface penetration bounds.",
                      "The table is the same independently uncalibrated horizontal plane in both branches.",
                      "Whole-trajectory native checks here measure table penetration, not all native pair intersections."],

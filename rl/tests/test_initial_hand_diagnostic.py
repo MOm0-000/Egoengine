@@ -17,16 +17,17 @@ from diagnose_taco_initial_hands import run
 from egoengine_repro.retarget.initial_hand import (
     above_fixed_geometry_seed, solve_initial_hands, state_summary,
 )
-from egoengine_repro.retarget.paper_audit import artifact
+from egoengine_repro.retarget.paper_audit import artifact, verify_artifacts
 
 BASELINE = ROOT / "runs/taco_pour_bimanual_gt_v1"
 SCENE = ROOT / "models/taco_xhand/xhand/bimanual/taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml"
 LATEST = ROOT / "runs/taco_pour_initial_hand_v3"
+ACTIVE = ROOT / "runs/taco_pour_bimanual_mano_fk_right_guard_v1"
 VELOCITY = dict(base_translation=1.5, base_rotation=4.0, finger=8.0)
 
 
-def baseline_qpos():
-    with np.load(BASELINE / "robot_reference.npz", allow_pickle=False) as source:
+def baseline_qpos(run=BASELINE):
+    with np.load(run / "robot_reference.npz", allow_pickle=False) as source:
         return source["qpos"][0]
 
 
@@ -68,7 +69,7 @@ def test_failed_solver_exports_a_failure_not_a_reset(tmp_path, monkeypatch):
 
     monkeypatch.setattr(mink, "solve_ik", fail)
     output = tmp_path / "failed"
-    report = run(SCENE, BASELINE, output, max_iterations=1)
+    report = run(SCENE, ACTIVE, output, max_iterations=1)
     assert not report["candidate_declared_state_feasible"]
     assert not report["accepted_as_reset"]
     assert (output / "failed_initial_hand_candidate.npz").is_file()
@@ -76,7 +77,7 @@ def test_failed_solver_exports_a_failure_not_a_reset(tmp_path, monkeypatch):
     assert report["solver"]["iterations"] == 0
     with np.load(output / "failed_initial_hand_candidate.npz", allow_pickle=False) as data:
         assert "qvel" not in data and "ctrl" not in data
-        np.testing.assert_array_equal(data["qpos"][0], baseline_qpos())
+        np.testing.assert_array_equal(data["qpos"][0], baseline_qpos(ACTIVE))
 
 
 def test_saved_attempts_preserve_failures_and_candidate_scope():
@@ -88,8 +89,7 @@ def test_saved_attempts_preserve_failures_and_candidate_scope():
         assert report["solver"]["constrained_hand_pair_count"] == 1734
         assert not report["accepted_as_reset"] and not report["qvel_selected"]
         assert report["simulation_steps_executed"] == 0
-        for source in report["preserved_artifacts"]:
-            assert artifact(Path(source["path"])) == source
+        verify_artifacts(report["preserved_artifacts"])
         with np.load(report["candidate"]["path"], allow_pickle=False) as candidate:
             assert candidate["qpos"].shape == (1, 50)
             np.testing.assert_array_equal(candidate["qpos"][0, 36:], baseline_qpos()[36:])
@@ -147,6 +147,6 @@ def test_solver_retains_a_feasible_candidate_without_claiming_an_optimum():
     assert not candidate["accepted_as_reset"] and not candidate["qvel_selected"]
     assert Path(protocol["inputs"]["historical_orientation_bug_baseline"]) == BASELINE
     assert Path(protocol["inputs"]["active_robot_reference"]) == (
-        ROOT / "runs/taco_pour_bimanual_mano_fk_v1/robot_reference.npz")
+        ROOT / "runs/taco_pour_bimanual_mano_fk_right_guard_v1/robot_reference.npz")
     assert candidate["baseline"] == "historical_orientation_bug_reference_not_current_mano_fk"
     assert not protocol["audit_results"]["new_reset_applied"] and not protocol["training_ready"]

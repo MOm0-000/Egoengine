@@ -162,7 +162,7 @@ EgoEngine 已公开的 XHand/TACO reset 配方，也没有提供本项目应照�
 
 ## 本地证据位置（网页端无法直接访问，可按需另附）
 
-- `runs/taco_pour_initialization_preflight/report.json`：当前首帧、坐标和原始网格证据。
+- `runs/taco_pour_initialization_preflight_right_guard_v1/report.json`：当前首帧、坐标和原始网格证据。
 - `runs/taco_pour_collision_repair/remaining_contacts.json`：盘边、两条统计差异、关节装配。
 - `runs/taco_pour_collision_repair/index_root_baseline.json`、`index_cavities_screen.json`：误报与真实干涉的逐姿态测量。
 - `docs/pour_raw_depth_table_audit.md`：深度与 GT/桌面不一致的完整说明。
@@ -170,6 +170,6 @@ EgoEngine 已公开的 XHand/TACO reset 配方，也没有提供本项目应照�
 
 上述路径均相对于项目 `/data_all/zzx/3.2RL`。原始数据、参考和正式场景没有因
 这次误报分类清理而改动；原始测量报告保留，避免把删除记录误当成解决问题。
-此次 contract 修改后全项目测试为 530 passed、1 skipped、57 subtests passed；
+此次 contract 修改后全项目测试为 534 passed、1 skipped、57 subtests passed；
 9 项真实 GPU 接口测试也已重新通过，仍只说明接口正确，不是 Pour 成功率。
 本次没有重新训练。

@@ -155,7 +155,10 @@ def test_saved_diagnostics_preserve_inputs_and_match_independent_site_measuremen
     with np.load(directory / "diagnostic_endpoints_not_reference.npz", allow_pickle=False) as src:
         states = src[mode]
     assert states.shape == exp.robot["qpos"].shape
-    np.testing.assert_allclose(states[:, 36:], exp.robot["qpos"][:, 36:], atol=1e-12, rtol=0)
+    with np.load(ROOT / "TRASH/superseded_runs/2026-09-20_right_index_guard/taco_pour_bimanual_mano_fk_v1/robot_reference.npz",
+                 allow_pickle=False) as source:
+        historical_objects = source["qpos"][:, 36:]
+    np.testing.assert_allclose(states[:, 36:], historical_objects, atol=1e-12, rtol=0)
     data = mujoco.MjData(exp.model)
     measured = []
     for row, q in enumerate(states):

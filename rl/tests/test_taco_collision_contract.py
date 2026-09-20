@@ -11,7 +11,7 @@ import numpy as np
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path[:0] = [str(ROOT / "src"), str(ROOT / "scripts")]
+sys.path[:0] = [str(ROOT / "src"), str(ROOT / "scripts"), str(ROOT / "diagnostics")]
 from build_taco_bimanual_scene import _replace_contacts, _set_object_inertials
 from egoengine_repro.retarget.collision_audit import (
     audit_intrahand_trajectory, explicit_hand_pairs, source_topology_report,

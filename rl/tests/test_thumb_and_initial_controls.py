@@ -15,7 +15,7 @@ from audit_taco_initial_controls import contact_normal_velocity, forward_case, p
 from audit_taco_initialization import visual_meshes
 from audit_taco_thumb_assembly import kinematic_source_check, native_intersection
 from diagnose_taco_thumb_clearance import bisect_clear_endpoint, run as run_thumb
-from egoengine_repro.retarget.paper_audit import artifact
+from egoengine_repro.retarget.paper_audit import artifact, verify_artifacts
 
 SCENE = ROOT / "models/taco_xhand/xhand/bimanual/taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml"
 BASELINE = ROOT / "runs/taco_pour_bimanual_gt_v1"
@@ -106,8 +106,7 @@ def test_all_diagnostics_preserve_inputs_and_remain_unaccepted():
     for path in (SWEEP, LATEST / "report.json", LATEST / "audit.json", LATEST / "initial_control_audit.json"):
         report = read_report(path)
         assert not report["accepted_as_reset"] and report["simulation_steps_executed"] == 0
-        for record in report["preserved_artifacts"]:
-            assert artifact(Path(record["path"])) == record
+        verify_artifacts(report["preserved_artifacts"])
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
     scope = protocol["initialization"]["hand_pose_diagnostic_scope"]
     assert scope["status"] == "temporary_single_sample_test"
@@ -116,7 +115,7 @@ def test_all_diagnostics_preserve_inputs_and_remain_unaccepted():
     assert not protocol["training_ready"]
     assert Path(protocol["inputs"]["historical_orientation_bug_baseline"]) == BASELINE
     assert Path(protocol["inputs"]["active_robot_reference"]) == (
-        ROOT / "runs/taco_pour_bimanual_mano_fk_v1/robot_reference.npz")
+        ROOT / "runs/taco_pour_bimanual_mano_fk_right_guard_v1/robot_reference.npz")
     assert protocol["initialization"]["diagnostic_candidate"]["baseline"] == (
         "historical_orientation_bug_reference_not_current_mano_fk")
 

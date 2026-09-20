@@ -2,13 +2,14 @@
 
 ## Current initialization and raw-depth audit
 
-Latest implementation check (2026-09-17): **522 passed, 1 skipped, 57 subtests**
-in 88.13 s. Seven new checks cover pose-specific false-alarm classification,
+Latest implementation check (2026-09-20): **534 passed, 1 skipped, 57 subtests**
+in 91.22 s. The current checks include the right index-root semantic guard,
+TRASH relocation integrity, pose-specific false-alarm classification,
 contained/open CAD limitations, invalid volumes/distances, and separating a
 50-micrometre reporting cut from actual runtime contact generation. Historical
 raw measurements are retained; physics shapes and reset validity are unchanged.
-The separately executed previous GPU adapter suite has **9 passing tests**
-(13.03 s),
+The separately executed GPU adapter suite has **9 passing tests**
+(11.57 s),
 including real official-PPO fallback from an incoming boundary, non-autoreset
 validation, and 40 physical control intervals committing only interval 20 in a
 static test fixture. This is interface evidence, not a Pour task-success run.
@@ -62,7 +63,7 @@ does not mean the measured scene passes physical initialization checks.
 ## Actual GPU capacity validation
 
 The isolated CPU environment has no `mujoco_warp`; the skipped adapter module was
-separately tested in the existing SPIDER environment, **5 passed** (7.47 s).
+separately tested in the existing SPIDER environment, **9 passed** (11.57 s).
 Actual capacity measurements use that same environment, MuJoCo **3.7.0**,
 `mujoco-warp==3.7.0.1`, Warp **1.12.1**, on an A100. No environment was upgraded.
 CPU 3.12 and GPU-environment CPU 3.7 contact counts differ; retain the version

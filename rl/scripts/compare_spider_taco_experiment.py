@@ -27,14 +27,14 @@ def main() -> None:
     parser.add_argument("--experiment", type=Path,
                         default=ROOT / "runs/taco_pour_spider_mink_experiment_v1")
     parser.add_argument("--baseline", type=Path,
-                        default=ROOT / "runs/taco_pour_bimanual_mano_fk_v1")
+                        default=ROOT / "runs/taco_pour_bimanual_mano_fk_right_guard_v1")
     parser.add_argument("--scene", type=Path,
                         default=ROOT / (
                             "models/taco_xhand/xhand/bimanual/"
                             "taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml"
                         ))
     parser.add_argument("--human", type=Path,
-                        default=ROOT / "runs/taco_pour_bimanual_mano_fk_v1/human_reference.npz")
+                        default=ROOT / "runs/taco_pour_bimanual_mano_fk_right_guard_v1/human_reference.npz")
     args = parser.parse_args()
     comparison_path = args.experiment / "comparison.json"
     if comparison_path.exists():
