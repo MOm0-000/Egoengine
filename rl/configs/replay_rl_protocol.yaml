@@ -57,7 +57,9 @@ retargeting:
   complete_intrahand_geometry_coverage: false
 initialization:
   source: TACO physical reset procedure not published
-  status: corrected_reference_fails_native_and_declared_checks_no_reset_adopted
+  status: taco_pour_initialization_protocol_v1_executed_both_candidates_rejected_no_reset_adopted
+  active_local_protocol: /data_all/zzx/3.2RL/configs/taco_pour_initialization_protocol_v1.yaml
+  active_candidate_comparison: /data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v1/comparison.json
   accepted_state_schema: egoengine_replay_rl_initial_state_v1
   physics_contract_schema: egoengine_replay_rl_physics_v1
   physics_contract_covers: [formal_config, scene_xml, external_meshes, runtime_solver_and_contact_options, capacities, dependency_versions, compiled_model]
@@ -76,8 +78,15 @@ initialization:
     candidates: [collision_free_pre_manipulation_pose, physics_corrected_retargeting]
     sources: [Human2Sim2Robot_Appendix_B, DexMachina_Appendix_A2]
     ready: false
-    blocked_by: remaining_other_collision_coverage_plus_illegal_initial_state
-    completed: false
+    completed: true
+    protocol_version: taco_pour_initialization_protocol_v1
+    candidate_a_accepted: false
+    candidate_a_blocked_by: native_left_middle_and_pinky_plate_penetration_plus_left_palm_thumb_interference
+    candidate_b_accepted: false
+    candidate_b_blocked_by: collision_aware_depenetration_failed_before_held_object_preroll
+    release_physics_steps_executed: 0
+    formal_release_environments_created: 0
+    blocked_by: both_candidates_failed_t0_legality_gate
   historical_brush_initial_hand_table_penetration_m: 0.01340
   initial_qpos_qvel_and_reference_index: require_explicit_specification
   environment_constrained_hand_projection: authorized_and_executed_as_separate_first_frame_diagnostic_only
@@ -172,6 +181,7 @@ audit_results:
   active_initialization: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/initialization_audit.json
   active_initial_native_contacts: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/initial_native_contact_audit.json
   active_initialization_preflight: /data_all/zzx/3.2RL/runs/taco_pour_initialization_preflight_bilateral_guard_v1/report.json
+  active_initialization_protocol_v1: /data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v1/comparison.json
   active_right_index_root_guard: /data_all/zzx/3.2RL/runs/taco_pour_bilateral_index_guard_v1/right_index_guard_audit.json
   active_left_index_root_guard: /data_all/zzx/3.2RL/runs/taco_pour_bilateral_index_guard_v1/left_index_guard_audit.json
   active_bilateral_index_root_capacity: /data_all/zzx/3.2RL/runs/taco_pour_bilateral_index_guard_v1/capacity_formal_4env.json
@@ -272,7 +282,7 @@ audit_results:
   historical_dev4_inputs: /data_all/zzx/3.2RL/runs/paper_first_audit_v1/inputs.json
   historical_brush_initialization: /data_all/zzx/3.2RL/runs/paper_first_audit_v1/initialization.json
   historical_execution_report: /data_all/zzx/3.2RL/docs/paper_first_audit_results.md
-  local_tests_passed: 534
+  local_tests_passed: 540
   local_tests_skipped: 1
   local_subtests_passed: 57
   separate_real_gpu_adapter_tests_passed: 9

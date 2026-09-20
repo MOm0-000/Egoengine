@@ -75,7 +75,10 @@ def above_fixed_geometry_seed(model, original):
 
 
 def solve_initial_hands(model, original, velocity_settings, *, source_dt=1 / 30,
-                        max_iterations=128, backtrack_separation=False, seed_mode="original"):
+                        max_iterations=128, backtrack_separation=False, seed_mode="original",
+                        planning_collision_buffer=0.0, accepted_min_distance=-1e-6,
+                        solver_primal_tolerance=1e-9, solver_dual_tolerance=1e-9,
+                        depenetration_step=0.002):
     """Find a nearby hand-only candidate under the unchanged declared geometry.
 
     Costs normalize scalar joint changes by the inherited one-frame velocity
@@ -90,6 +93,16 @@ def solve_initial_hands(model, original, velocity_settings, *, source_dt=1 / 30,
     validate_qpos(model, original)
     if not np.isfinite(source_dt) or source_dt <= 0 or max_iterations < 1:
         raise ValueError("positive source dt and iteration budget required")
+    numerical = (
+        planning_collision_buffer, accepted_min_distance,
+        solver_primal_tolerance, solver_dual_tolerance, depenetration_step,
+    )
+    if not np.isfinite(numerical).all():
+        raise ValueError("finite collision and solver settings required")
+    if (planning_collision_buffer < 0 or accepted_min_distance > planning_collision_buffer
+            or solver_primal_tolerance <= 0 or solver_dual_tolerance <= 0
+            or depenetration_step <= 0):
+        raise ValueError("invalid collision or solver settings")
     families = collision_families(model)
     names = ("self_explicit", "hand_tool", "hand_target", "hand_floor")
     pairs = sorted({tuple(sorted(pair)) for name in names for pair in families[name]})
@@ -105,11 +118,15 @@ def solve_initial_hands(model, original, velocity_settings, *, source_dt=1 / 30,
     others = sorted({g for pair in pairs for g in pair} - set(hands))
     _enable_planning_collision_masks(model, hands, others)
     groups = [([model.geom(a).name], [model.geom(b).name]) for a, b in pairs]
-    inner = mink.CollisionAvoidanceLimit(model, groups, minimum_distance_from_collisions=0.0,
+    inner = mink.CollisionAvoidanceLimit(
+        model, groups, minimum_distance_from_collisions=planning_collision_buffer,
                                          collision_detection_distance=0.02, include_explicit_pairs=True)
     if set(inner.geom_id_pairs) != set(pairs):
         raise ValueError("MINK and declared runtime hand/environment pairs differ")
-    collision = _StrictCollisionLimit(inner, mujoco, minimum_distance=0.0, depenetration_step=0.002)
+    collision = _StrictCollisionLimit(
+        inner, mujoco, minimum_distance=planning_collision_buffer,
+        depenetration_step=depenetration_step,
+    )
     collision.enabled = True
     speeds = _joint_velocity_limits(model, mujoco, velocity_settings)
     if len(speeds) != 36:
@@ -140,7 +157,7 @@ def solve_initial_hands(model, original, velocity_settings, *, source_dt=1 / 30,
         minimum = float(value.min())
         history.append(dict(iteration=iteration, minimum_declared_hand_distance_m=minimum,
                             penetrating_pairs=int((value < -1e-6).sum())))
-        if minimum >= -1e-6:
+        if minimum >= accepted_min_distance:
             cost = float(np.square((config.q[addresses] - original[addresses]) * costs[dofs]).sum())
             if cost < best_cost:
                 best_q, best_cost, best_iteration = config.q.copy(), cost, iteration
@@ -149,13 +166,15 @@ def solve_initial_hands(model, original, velocity_settings, *, source_dt=1 / 30,
                 break
         if iteration == max_iterations:
             break
-        collision.depenetration_step = 0.002
+        collision.depenetration_step = depenetration_step
         velocity = None
         last_error = None
         while collision.depenetration_step >= 1e-6:
             try:
                 velocity = mink.solve_ik(config, [posture], integration_dt, solver="daqp", damping=1e-5,
-                                         limits=limits, constraints=locks, primal_tol=1e-9, dual_tol=1e-9)
+                                         limits=limits, constraints=locks,
+                                         primal_tol=solver_primal_tolerance,
+                                         dual_tol=solver_dual_tolerance)
                 attempts.append(dict(iteration=iteration, separation_step_m=collision.depenetration_step, solved=True))
                 break
             except mink.NoSolutionFound as error:
@@ -194,8 +213,12 @@ def solve_initial_hands(model, original, velocity_settings, *, source_dt=1 / 30,
         object_coordinates_byte_identical=bool(np.array_equal(result[fixed_qpos], original[fixed_qpos])),
         step_limit_provenance="inherited speed limits times source_dt/8; numerical trust region, not elapsed time",
         objective_provenance="user-approved local normalized posture objective, not a published EgoEngine reset",
-        minimum_distance_m=0.0, distance_acceptance_tolerance_m=1e-6,
-        depenetration_step_m=0.002, solver_primal_tolerance=1e-9, solver_dual_tolerance=1e-9), np.asarray(trace)
+        minimum_distance_m=float(planning_collision_buffer),
+        accepted_min_distance_m=float(accepted_min_distance),
+        distance_acceptance_tolerance_m=float(max(0.0, -accepted_min_distance)),
+        depenetration_step_m=float(depenetration_step),
+        solver_primal_tolerance=float(solver_primal_tolerance),
+        solver_dual_tolerance=float(solver_dual_tolerance)), np.asarray(trace)
 
 
 def change_summary(model, before, after, human):

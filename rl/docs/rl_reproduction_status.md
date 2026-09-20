@@ -17,6 +17,20 @@ The Pour scene and complete 198-frame MINK reference now exist. The declared
 kinematic model passes, but native initial hand/table and hand/plate penetrations
 prevent accepting the unchanged initial state. There is no validated reset or
 RL result. See [Pour scene feasibility](/data_all/zzx/3.2RL/docs/pour_scene_feasibility.md).
+
+The local reset-only protocol is now frozen and executed as
+`taco_pour_initialization_protocol_v1`. It keeps object qpos bit-identical to
+reference endpoint 0, uses zero qvel and candidate-hand-qpos control, binds the
+formal 128/512 MJWP physics contract, and refuses release dynamics until the t0
+gate passes. Candidate A passes the runtime shells, all 178 declared self pairs,
+bilateral guards, joint limits and table checks, but is rejected by native CAD
+evidence: left middle/pinky material enters the plate and the omitted left
+palm/proximal-thumb pair interferes. Candidate B's collision-aware projection
+from the original row 0 stops without a legal seed, so its held-object pre-roll
+is not run. Consequently both passive release validations are correctly skipped
+with zero physics steps, neither report sets `accepted_for_replay_rl=true`, and
+`training_ready` remains false. See
+`runs/taco_pour_initialization_protocol_v1/comparison.json`.
 The subsequently authorized initial-hand diagnostic has produced a separate
 declared-feasible candidate, with unchanged object coordinates and source GT.
 The follow-up v4 diagnostic removes the demonstrated native palm/thumb

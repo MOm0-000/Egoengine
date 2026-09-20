@@ -88,7 +88,11 @@ def test_current_protocol_and_ppo_use_corrected_reference_without_promoting_rese
     ppo = yaml.safe_load((ROOT / "configs/taco_pour_bimanual_ppo.yaml").read_text())
     assert ppo["data_path"] == protocol["inputs"]["active_robot_reference"]
     assert "mano_fk" in ppo["data_path"]
-    assert not protocol["initialization"]["candidate_comparison"]["completed"]
+    comparison = protocol["initialization"]["candidate_comparison"]
+    assert comparison["completed"] and not comparison["ready"]
+    assert not comparison["candidate_a_accepted"]
+    assert not comparison["candidate_b_accepted"]
+    assert comparison["release_physics_steps_executed"] == 0
     assert not protocol["training_ready"]
     report = json.loads(Path(protocol["audit_results"]["active_initialization_preflight"]).read_text())
     assert report["coordinates"]["coordinate_export_consistent"]

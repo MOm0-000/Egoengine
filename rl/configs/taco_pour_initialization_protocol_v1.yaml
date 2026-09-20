@@ -1,0 +1,125 @@
+protocol_name: taco_pour_initialization_protocol_v1
+scope: reset_only
+paper_status: local_unpublished_initialization_protocol
+training_ready: false
+
+evidence_boundary:
+  egoengine_reset_recipe_publicly_specified: false
+  upstream_design_inspiration: [Human2Sim2Robot, DexMachina]
+  upstream_numeric_settings_inherited: false
+
+formal_inputs:
+  source_git_commit: 91fc223
+  scene: /data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml
+  scene_sha256: add44e3de084c1dca7bf0f094cff271e3ebea7c63e2375cb175a9dfc9d8fa98d
+  reference: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/robot_reference.npz
+  reference_sha256: 493a1e0196123b1223a8a485eb3657ff5673e339f56ad94587b15b34b88d29d3
+  human_reference: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/human_reference.npz
+  formal_simulator_config: /data_all/zzx/3.2RL/configs/taco_pour_bimanual_ppo.yaml
+  reference_index: 0
+  object_qpos_rule: bit_exact_reference_endpoint_0
+  nconmax_per_env: 128
+  njmax_per_env: 512
+
+timing:
+  sim_dt_s: 0.0033333333333333335
+  ctrl_dt_s: 0.03333333333333333
+  ref_dt_s: 0.03333333333333333
+  physics_steps_per_control: 10
+
+hand_solver:
+  backend: mink
+  max_iterations: 128
+  iterations_per_source_interval: 8
+  depenetration_step_m: 0.002
+  separation_backtracking_min_step_m: 1.0e-6
+  solver_primal_tolerance: 1.0e-6
+  solver_dual_tolerance: 1.0e-6
+  planning_collision_buffer_m: 2.0e-6
+  accepted_min_self_collision_distance_m: -1.0e-6
+  velocity_limits:
+    base_translation: 1.5
+    base_rotation: 4.0
+    finger: 8.0
+
+candidate_a:
+  name: collision_free_pre_manipulation_pose
+  numerical_seed: above_fixed_geometry
+  separation_backtracking: false
+  hand_qpos_provenance: local_procedure:collision_free_pre_manipulation_pose_v1
+  object_hold_method: none_objects_passive_from_candidate_creation
+
+candidate_b:
+  name: fixed_object_physics_corrected_pose
+  numerical_seed: original
+  separation_backtracking: true
+  hand_qpos_provenance: local_procedure:fixed_object_physics_corrected_v1
+  object_hold_method: temporary_kinematic_endpoint0_hold_during_initialization_preroll
+  preroll_control_intervals: 10
+  ramp_intervals: 5
+  ramp_formula: alpha=interval_index/4_for_intervals_0_through_4
+  constant_reference_ctrl_intervals: [5, 9]
+  extract_from_preroll: final_hand_qpos_only
+
+t0_legality_gate:
+  state_shapes: {qpos: 50, qvel: 48, ctrl: 36}
+  declared_pair_min_distance_m: -1.0e-6
+  bilateral_guard_min_distance_m: 0.0
+  native_material_penetration_reporting_threshold_m: 5.0e-5
+  native_threshold_is_not_runtime_tolerance: true
+  require_all_omitted_nonadjacent_pairs_classified: true
+  require_object_object_and_object_table_legal: true
+  allow_dynamics_to_repair_illegal_t0: false
+  ctrlrange_numerical_tolerance: 1.0e-12
+
+state_contract:
+  state_contract_version: egoengine_replay_rl_initial_state_v1
+  reference_index: 0
+  hand_qvel_provenance: zero
+  object_qpos_provenance: reference_endpoint_0
+  object_qvel_provenance: zero
+  ctrl_provenance: candidate_hand_qpos
+  first_command_reference_index: 1
+  first_command_semantics: reference_endpoint_target_plus_residual
+  object_constraints_released: true
+  release_timing: before_accepted_snapshot
+  post_release_validation_steps: 5
+
+passive_release_validation:
+  backend: fresh_formal_mjwp_environment
+  control_intervals: 5
+  physics_steps: 50
+  control: constant_initial_ctrl
+  objects: passive
+  object_hold: none
+  reference_cursor_advanced: false
+  reward_or_objective_computed: false
+  require_all_physics_states_finite: true
+  require_zero_capacity_overflow: true
+  require_no_object_equality_hold: true
+  require_zero_joint_limit_violations: true
+  require_no_new_native_material_penetration_over_m: 5.0e-5
+  max_object_translation_per_interval_m: 0.025
+  max_object_rotation_per_interval_rad: 0.25
+  max_object_translation_cumulative_m: 0.05
+  max_object_rotation_cumulative_rad: 0.50
+  release_terminal_state_becomes_initial_state: false
+
+comparison_metrics:
+  - wrist_translation_from_ref0
+  - wrist_rotation_from_ref0
+  - max_finger_joint_delta
+  - fingertip_mean_and_max_error
+  - wrist_orientation_error
+  - minimum_declared_clearance
+  - native_hand_table_clearance
+  - native_hand_object_penetration_evidence
+  - first_command_delta
+  - release_object_drift
+  - release_max_contacts_and_constraints
+  - initialization_gate
+
+selection_policy:
+  retain_both_if_both_pass: true
+  use_replay_success_to_relabel_reset_validity: false
+  observation_contract_must_be_frozen_before_replay: true
