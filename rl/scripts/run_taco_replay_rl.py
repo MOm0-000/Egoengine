@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from video_to_spider.rl.objective_contract import load_runtime_objective
+from video_to_spider.rl.physics_contract import build_physics_contract, verify_runtime_model
 
 
 def _scalar(initial, name, expected_type):
@@ -96,6 +97,9 @@ def load_accepted_initialization(report_path, config_path):
     if not report.get("accepted_for_replay_rl", False):
         raise ValueError("initialization has not passed model and passive-object release checks")
     config = yaml.safe_load(config_path.read_text())
+    physics_contract = build_physics_contract(config_path)
+    if report.get("physics_contract") != physics_contract:
+        raise ValueError("accepted initialization belongs to another physics contract")
     for key, config_key in (("scene", "model_path"), ("reference", "data_path")):
         path = Path(config[config_key]).resolve(strict=True)
         if str(path) != report[key]["path"] or hashlib.sha256(path.read_bytes()).hexdigest() != report[key]["sha256"]:
@@ -148,13 +152,15 @@ def load_accepted_initialization(report_path, config_path):
     release = report.get("release_validation", {})
     if (not release.get("passed", False)
             or release.get("object_constraints_active_after_release") is not False
-            or release.get("steps") != contract["post_release_validation_steps"]):
+            or release.get("steps") != contract["post_release_validation_steps"]
+            or release.get("physics_contract_sha256") != physics_contract["physics_contract_sha256"]):
         raise ValueError("passive post-release validation is missing or inconsistent")
     scene = ET.parse(config["model_path"]).getroot()
     if _object_hold_constraints(scene):
         raise ValueError("formal scene still contains an object hold constraint; release is not proven")
     report = dict(report)
     report["validated_state_contract"] = contract
+    report["validated_physics_contract"] = physics_contract
     return initial, report
 
 
@@ -191,6 +197,7 @@ def main():
             max_episode_length=len(reference[0]) - 1,
             tracked_object_indices=(0,) if args.tracking_variant == "tool_only" else None,
             object_roles=("tool", "target"), objective=objective))
+    verify_runtime_model(env.env.model_cpu, provenance["validated_physics_contract"])
     tensors = [torch.as_tensor(initial[k][None], device="cuda:0", dtype=torch.float32)
                for k in ("qpos", "qvel", "ctrl")]
     env._write_state(*tensors, np.array([True]))

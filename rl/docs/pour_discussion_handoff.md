@@ -124,7 +124,15 @@ Pour/Bowl/Plate 的位置 0.12 m、旋转 1.5 rad 是附录 C.2 给出的任务�
 初始化 gate 也不再只看 `qpos/qvel/ctrl` 的形状。正式 artifact 必须声明手和
 物体的 qpos/qvel 来源、ctrl 来源、第一条命令、临时固定方法、释放时刻和释放后
 被动物理验证；报告必须与 artifact 元数据逐项一致，正式 XML 不能残留 hold
-约束。当前尚无 Pour artifact 满足此 schema，因此仍没有运行正式 40 步窗口。
+约束。release validation 还必须绑定统一的 physics contract：完整 PPO config、
+scene XML、92 个外部 mesh、MJWP 时间步/容量、依赖版本及应用 Spider solver/contact
+覆盖后的编译模型签名；正式环境创建后会再次核对实际模型签名。当前尚无 Pour
+artifact 满足此 schema，因此仍没有运行正式 40 步窗口。
+
+本地 objective 的 `lift.object_role: tool` 已进入 runtime type contract，会按
+场景的命名角色选择物体，不再硬编码第 0 个物体。逐步 trace 也新增
+`aggregate_tracking_reward / aggregate_contact_bonus / lift_reward`，现在可以逐项
+复算 `total_reward`。
 
 另一个独立 blocker 是 236 维 actor observation 的具体编码属于本地实现。
 物体 goal 在 transition 前用 `t` 还是 `t+1` 尚未批准修改；当前代码保持 `t`，
@@ -162,6 +170,6 @@ EgoEngine 已公开的 XHand/TACO reset 配方，也没有提供本项目应照�
 
 上述路径均相对于项目 `/data_all/zzx/3.2RL`。原始数据、参考和正式场景没有因
 这次误报分类清理而改动；原始测量报告保留，避免把删除记录误当成解决问题。
-此次 contract 修改后全项目测试为 529 passed、1 skipped、57 subtests passed；
+此次 contract 修改后全项目测试为 530 passed、1 skipped、57 subtests passed；
 9 项真实 GPU 接口测试也已重新通过，仍只说明接口正确，不是 Pour 成功率。
 本次没有重新训练。

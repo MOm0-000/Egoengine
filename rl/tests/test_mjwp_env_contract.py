@@ -74,6 +74,7 @@ def test_bimanual_observation_and_contact_contract(env):
     assert env.env_cfg.reset_object_pos_noise_std == 0.0
     assert env.env_cfg.reset_object_rot_noise_std == 0.0
     assert env.tracked_object_indices == (0, 1)
+    assert env.lift_object_index == env.object_roles.index(OBJECTIVE.lift_object_role) == 0
     _, _, _, info = env.step(np.zeros((2, 36), dtype=np.float32))
     assert info["contact_flags"].shape == (2, 2, 2, 5)
     assert info["object_position_error"].shape == (2, 2)
@@ -82,6 +83,11 @@ def test_bimanual_observation_and_contact_contract(env):
     assert info["object_tracking_reward_per_object"].shape == (2, 2)
     assert info["object_terminated"].shape == (2, 2)
     assert info["contact_bonus_per_hand_object"].shape == (2, 2, 2)
+    np.testing.assert_allclose(
+        info["reward"],
+        info["aggregate_tracking_reward"] + info["aggregate_contact_bonus"] + info["lift_reward"],
+        rtol=1e-6, atol=1e-6,
+    )
     np.testing.assert_allclose(
         info["object_tracking_error"], info["object_tracking_error_per_object"].mean(axis=1)
     )
@@ -258,6 +264,11 @@ def test_real_two_chunk_rollout_commits_only_first_chunk():
     assert trace["steps"][0]["tracked_object_roles"] == ["tool", "target"]
     assert len(trace["steps"][0]["position_error_m"]) == 2
     assert np.asarray(trace["steps"][0]["contact_bonus_per_hand_object"]).shape == (2, 2)
+    assert trace["steps"][0]["total_reward"] == pytest.approx(
+        trace["steps"][0]["aggregate_tracking_reward"]
+        + trace["steps"][0]["aggregate_contact_bonus"]
+        + trace["steps"][0]["lift_reward"], abs=1e-6
+    )
     restored = actual_snapshot()
     # Compare with the SAME rollout's captured boundary. Re-running GPU physics
     # is not bitwise deterministic and is precisely why the scheduler saves it.

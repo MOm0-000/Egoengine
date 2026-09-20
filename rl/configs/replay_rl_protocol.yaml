@@ -57,6 +57,11 @@ retargeting:
 initialization:
   source: TACO physical reset procedure not published
   status: corrected_reference_fails_native_and_declared_checks_no_reset_adopted
+  accepted_state_schema: egoengine_replay_rl_initial_state_v1
+  physics_contract_schema: egoengine_replay_rl_physics_v1
+  physics_contract_covers: [formal_config, scene_xml, external_meshes, runtime_solver_and_contact_options, capacities, dependency_versions, compiled_model]
+  release_validation_must_bind_physics_contract_sha256: true
+  runtime_compiled_model_recheck: true
   known_initial_hand_table_shell_penetration_m: 0.02190567820896093
   current_episode_robot_initial_state_audited: true
   known_initial_hand_target_shell_penetration_m: 0.015220828116055761
@@ -131,7 +136,8 @@ contact:
 lift:
   formula: lambda_z_times_current_minus_initial_height
   coefficient: null
-  null_reason: active Pour coefficient is not published
+  object_role: null
+  null_reason: active Pour coefficient and object role are not published
 evaluation:
   auxiliary_rewards: false
   equations: [C.9, C.10, C.11, C.12, C.13]
@@ -222,7 +228,7 @@ audit_results:
   historical_dev4_inputs: /data_all/zzx/3.2RL/runs/paper_first_audit_v1/inputs.json
   historical_brush_initialization: /data_all/zzx/3.2RL/runs/paper_first_audit_v1/initialization.json
   historical_execution_report: /data_all/zzx/3.2RL/docs/paper_first_audit_results.md
-  local_tests_passed: 529
+  local_tests_passed: 530
   local_tests_skipped: 1
   local_subtests_passed: 57
   separate_real_gpu_adapter_tests_passed: 9

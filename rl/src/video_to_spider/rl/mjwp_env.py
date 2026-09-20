@@ -241,6 +241,9 @@ class MJWPVectorEnv:
             raise ValueError("object_roles must name every object")
         self.object_roles = tuple(roles)
         self.tracked_object_roles = tuple(self.object_roles[index] for index in self.tracked_object_indices)
+        if self.objective.lift_object_role not in self.object_roles:
+            raise ValueError("lift object_role does not exist in this scene")
+        self.lift_object_index = self.object_roles.index(self.objective.lift_object_role)
         expected_aggregation = "single_object" if len(self.tracked_object_indices) == 1 else "mean_reward_any_termination"
         if self.objective.aggregation != expected_aggregation:
             raise ValueError(f"runtime objective must declare {expected_aggregation} aggregation")
@@ -281,6 +284,9 @@ class MJWPVectorEnv:
         )
         self._last_terminated = torch.zeros(self.num_envs, dtype=torch.bool, device=str(self.ego_cfg.device))
         self._last_contact_score = torch.zeros(self.num_envs, dtype=torch.float32, device=str(self.ego_cfg.device))
+        self._last_lift_reward = torch.zeros(
+            self.num_envs, dtype=torch.float32, device=str(self.ego_cfg.device)
+        )
         n_tracked = len(self.tracked_object_indices)
         n_hands = 2 if self.ego_cfg.embodiment_type == "bimanual" else 1
         self._last_tracking_position_error = torch.zeros(
@@ -364,6 +370,7 @@ class MJWPVectorEnv:
         done_np = done.cpu().numpy()
         time_outs = self.time_indices >= self.episode_lengths
         terminal_contact_score = self._last_contact_score.cpu().numpy().copy()
+        terminal_lift_reward = self._last_lift_reward.cpu().numpy().copy()
         terminal_tracking_error = self._last_tracking_error.cpu().numpy().copy()
         terminal_terminated = self._last_terminated.cpu().numpy().copy()
         terminal_position_error = self._last_tracking_position_error.cpu().numpy().copy()
@@ -382,6 +389,9 @@ class MJWPVectorEnv:
         infos: dict[str, Any] = {
             "reward": reward.cpu().numpy(),
             "contact_score": terminal_contact_score,
+            "aggregate_tracking_reward": terminal_tracking_rewards.mean(axis=1),
+            "aggregate_contact_bonus": terminal_contact_score,
+            "lift_reward": terminal_lift_reward,
             "contact_flags": privileged["contact_flags"].cpu().numpy(),
             "object_tracking_error": terminal_tracking_error,
             "object_position_error": terminal_position_error,
@@ -436,6 +446,7 @@ class MJWPVectorEnv:
             "last_contact_bonus": self._last_contact_bonus.cpu().clone(),
             "last_terminated": self._last_terminated.cpu().clone(),
             "last_contact_score": self._last_contact_score.cpu().clone(),
+            "last_lift_reward": self._last_lift_reward.cpu().clone(),
         }
         for prefix, data in (("", self.env.data_wp), ("prev.", self.env.data_wp_prev)):
             for name in _WP_STATE_FIELDS:
@@ -468,6 +479,7 @@ class MJWPVectorEnv:
         self._last_contact_bonus = state["last_contact_bonus"].to(str(self.ego_cfg.device)).clone()
         self._last_terminated = state["last_terminated"].to(str(self.ego_cfg.device)).clone()
         self._last_contact_score = state["last_contact_score"].to(str(self.ego_cfg.device)).clone()
+        self._last_lift_reward = state["last_lift_reward"].to(str(self.ego_cfg.device)).clone()
         with wp.ScopedDevice(self.env.device):
             for key, value in state.items():
                 if key in {
@@ -477,6 +489,7 @@ class MJWPVectorEnv:
                     "last_tracking_rotation_error", "last_tracking_errors",
                     "last_tracking_rewards", "last_object_terminated",
                     "last_contact_bonus", "last_terminated", "last_contact_score",
+                    "last_lift_reward",
                 }:
                     continue
                 data = self.env.data_wp_prev if key.startswith("prev.") else self.env.data_wp
@@ -742,6 +755,7 @@ class MJWPVectorEnv:
         self._last_contact_bonus[mask] = 0.0
         self._last_terminated[mask] = False
         self._last_contact_score[mask] = 0.0
+        self._last_lift_reward[mask] = 0.0
         reset_ctrl = self._last_ctrl.clone()
         reference_ctrl = self._reference_ctrls(self.time_indices)
         reset_ctrl[mask] = reference_ctrl[mask]
@@ -880,12 +894,13 @@ class MJWPVectorEnv:
             coefficient=self.objective.contact_coefficient,
         )
         self._last_contact_score = self._last_contact_bonus.mean(dim=(1, 2))
-        reward = self._last_tracking_rewards.mean(dim=1) + self._last_contact_score
-        lift_scale = self.objective.lift_coefficient
-        if lift_scale > 0.0:
-            heights = torch.stack([pose[0][:, 2] for pose in current_objects], dim=1)
-            reward = reward + lifting(heights[:, 0], self._initial_object_heights[:, 0], lambda_z=lift_scale)
-        return reward
+        heights = torch.stack([pose[0][:, 2] for pose in current_objects], dim=1)
+        self._last_lift_reward = lifting(
+            heights[:, self.lift_object_index],
+            self._initial_object_heights[:, self.lift_object_index],
+            lambda_z=self.objective.lift_coefficient,
+        )
+        return self._last_tracking_rewards.mean(dim=1) + self._last_contact_score + self._last_lift_reward
 
     def _compute_done(self) -> torch.Tensor:
         done = self._last_terminated | torch.as_tensor(

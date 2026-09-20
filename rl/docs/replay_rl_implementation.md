@@ -32,8 +32,12 @@ The former standalone components now have an explicit connection:
   The artifact/report pair must state and agree on hand/object qpos/qvel
   provenance, ctrl provenance, first command, any temporary hold, release time,
   and passive post-release validation. The formal XML may not retain a hold
-  equality. No Pour report currently passes that gate. Full source length is
-  198 endpoints / 197 transitions.
+  equality. Release validation is also bound to a `physics_contract_sha256`
+  covering the full PPO config, scene XML, every external mesh, MJWP timing and
+  capacities, MuJoCo/MJWarp/Warp versions, and the compiled model after Spider's
+  solver/contact overrides. The live formal environment must reproduce that
+  compiled-model signature. No Pour report currently passes that gate. Full
+  source length is 198 endpoints / 197 transitions.
 - `scripts/run_mjwp_ppo.py` runs standalone PPO smoke training. It does not call
   `solve_chunk`; its trainer helpers are reused by the new connection.
 
@@ -52,7 +56,9 @@ the formal runner requests the paper objective and rejects it because
 active lift coefficient are unpublished.
 For engineering smoke tests, `configs/taco_pour_local_unpublished_v1.yaml`
 records the former 1/1/1.504792, contact 0.25, and lift 0.1 choices together
-with non-paper provenance and file hashes. Selecting that profile does not
+with non-paper provenance and file hashes. `lift.object_role` is a runtime
+field: it is resolved against named scene roles and selects the actual height
+term instead of silently assuming object index 0. Selecting that profile does not
 bypass `training_ready`, profile-specific `run_ready`, or the separate
 observation gate in `configs/replay_rl_protocol.yaml`.
 
@@ -61,6 +67,8 @@ termination when either tracked object exceeds `C`. Every validation step now
 records tool/target position error, rotation error, combined error, tracking
 reward, termination, and each hand-object contact bonus. The report identifies
 the first failing endpoint and object role instead of retaining only a mean.
+Every step also records aggregate tracking reward, aggregate contact bonus and
+lift reward, so `total_reward` can be reconstructed exactly.
 `tool_only` remains the primary single manipulated-object variant.
 
 The existing 236-D actor observation is now recorded as a local unresolved

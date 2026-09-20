@@ -29,6 +29,7 @@ def test_local_profile_is_explicit_and_auditable_for_smoke_tests():
     assert objective.tracking.boundary == pytest.approx(1.5047923441623355)
     assert objective.contact_coefficient == 0.25
     assert objective.lift_coefficient == 0.1
+    assert objective.lift_object_role == "tool"
     report = objective.as_report()
     assert report["protocol_sha256"]
     assert report["profile_sha256"]
@@ -43,10 +44,16 @@ def test_explicit_local_objective_does_not_bypass_formal_run_gates():
 
 
 def test_aggregation_variant_is_part_of_the_profile_contract(tmp_path):
-    text = LOCAL.read_text().replace(
+    profile = tmp_path / "changed.yaml"
+    profile.write_text(LOCAL.read_text().replace("object_role: tool", "object_role: target"))
+    target_lift = load_runtime_objective(
+        PROTOCOL, profile, tracking_variant="tool_and_target", require_run_ready=False
+    )
+    assert target_lift.lift_object_role == "target"
+
+    text = profile.read_text().replace(
         "tool_and_target: mean_reward_any_termination", "tool_and_target: single_object"
     )
-    profile = tmp_path / "bad.yaml"
     profile.write_text(text)
     with pytest.raises(ValueError, match="aggregation must be explicitly"):
         load_runtime_objective(

@@ -21,6 +21,7 @@ class RuntimeObjective:
     tracking: TrackingObjective
     contact_coefficient: float
     lift_coefficient: float
+    lift_object_role: str
     contact_reduction: str
     aggregation: str
     provenance: str
@@ -90,6 +91,7 @@ def load_runtime_objective(
                 ("contact.coefficient", contact.get("coefficient")),
                 ("contact.reduction", contact.get("reduction")),
                 ("lift.coefficient", lift.get("coefficient")),
+                ("lift.object_role", lift.get("object_role")),
             ) if value is None
         ]
         if unresolved:
@@ -111,7 +113,7 @@ def load_runtime_objective(
                 "C": tracking["C"],
             },
             "contact": {"coefficient": contact["coefficient"], "reduction": contact["reduction"]},
-            "lift": {"coefficient": lift["coefficient"]},
+            "lift": {"coefficient": lift["coefficient"], "object_role": lift["object_role"]},
             "aggregation": {tracking_variant: "single_object"},
         }
     else:
@@ -146,6 +148,9 @@ def load_runtime_objective(
     reduction = contact.get("reduction")
     if not isinstance(reduction, str) or not reduction:
         raise ValueError("contact reduction must be explicit")
+    lift_object_role = lift.get("object_role")
+    if not isinstance(lift_object_role, str) or not lift_object_role:
+        raise ValueError("lift object_role must be explicit")
     aggregation_value = aggregation.get(tracking_variant)
     expected = "single_object" if tracking_variant == "tool_only" else "mean_reward_any_termination"
     if aggregation_value != expected:
@@ -169,6 +174,7 @@ def load_runtime_objective(
         ),
         contact_coefficient=_number(contact, "coefficient"),
         lift_coefficient=_number(lift, "coefficient"),
+        lift_object_role=lift_object_role,
         contact_reduction=reduction,
         aggregation=aggregation_value,
         provenance=provenance,
