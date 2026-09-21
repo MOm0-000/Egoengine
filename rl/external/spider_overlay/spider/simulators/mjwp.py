@@ -76,7 +76,36 @@ def _compile_step(
 
 
 def setup_mj_model(config: Config) -> mujoco.MjModel:
-    model_cpu = mujoco.MjModel.from_xml_path(config.model_path)
+    sdf_depths = getattr(config, "sdf_octree_depths", {}) or {}
+    if not isinstance(sdf_depths, dict):
+        raise ValueError("sdf_octree_depths must map mesh names to depths")
+    if sdf_depths:
+        if any(
+            not isinstance(name, str)
+            or not isinstance(depth, int)
+            or depth < 1
+            for name, depth in sdf_depths.items()
+        ):
+            raise ValueError("sdf_octree_depths must map mesh names to positive integers")
+        # MuJoCo 3.13 does not include octree_maxdepth in its asset-cache key.
+        # Clear the compiler cache so an earlier default-depth compile cannot
+        # silently replace the requested collision geometry.
+        if not all(
+            hasattr(mujoco, name)
+            for name in ("MjSpec", "mj_getCache", "mj_clearCache")
+        ):
+            raise RuntimeError("this MuJoCo version cannot compile configured SDF depths")
+        mujoco.mj_clearCache(mujoco.mj_getCache())
+        spec = mujoco.MjSpec.from_file(config.model_path)
+        for mesh_name, depth in sorted(sdf_depths.items()):
+            mesh = spec.mesh(mesh_name)
+            if not hasattr(mesh, "octree_maxdepth"):
+                raise RuntimeError("this MuJoCo version lacks mesh.octree_maxdepth")
+            mesh.needsdf = True
+            mesh.octree_maxdepth = depth
+        model_cpu = spec.compile()
+    else:
+        model_cpu = mujoco.MjModel.from_xml_path(config.model_path)
     model_cpu.opt.timestep = float(config.sim_dt)
     if config.embodiment_type in ["left", "right", "bimanual"]:
         # setup for hand
@@ -1432,7 +1461,10 @@ def apply_perturbation(config: Config, env: MJWPEnv):
     if left_obj_id != -1:
         xfrc_applied[:, left_obj_id, :3] = config.perturb_force
         xfrc_applied[:, left_obj_id, 3:] = config.perturb_torque
-    wp.copy(env.data_wp.xfrc_applied, wp.from_torch(xfrc_applied))
+    wp.copy(
+        env.data_wp.xfrc_applied,
+        wp.from_torch(xfrc_applied, dtype=env.data_wp.xfrc_applied.dtype),
+    )
     return env
 
 

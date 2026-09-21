@@ -42,6 +42,7 @@ from human2sim2robot.ppo.utils.rewards_shaper import RewardsShaperParams
 from spider.config import Config, load_config_yaml, process_config
 from video_to_spider.rl.mjwp_env import MJWPVectorEnv, MJWPVectorEnvConfig
 from video_to_spider.rl.objective_contract import load_runtime_objective
+from video_to_spider.rl.observation_contract import load_runtime_observation
 
 
 def _load_ego_config(config_path: str, device: str) -> Config:
@@ -77,6 +78,11 @@ def _parse_args() -> argparse.Namespace:
         "--objective-profile",
         default=str(_PROJECT_ROOT / "configs" / "taco_pour_local_unpublished_v1.yaml"),
         help="Explicit local objective for smoke tests; this is not a paper-faithful profile.",
+    )
+    parser.add_argument(
+        "--observation-profile",
+        default=str(_PROJECT_ROOT / "configs" / "taco_pour_observation_local_236d_v1.yaml"),
+        help="Explicit local observation encoding; the paper does not publish the exact fields.",
     )
     parser.add_argument(
         "--asymmetric-critic",
@@ -238,6 +244,11 @@ def main() -> None:
         tracking_variant=args.tracking_variant,
         require_run_ready=False,
     )
+    observation = load_runtime_observation(
+        _PROJECT_ROOT / "configs" / "replay_rl_protocol.yaml",
+        args.observation_profile,
+        require_run_ready=False,
+    )
     ref_data = _load_reference(
         ego_config.data_path,
         args.device,
@@ -252,6 +263,7 @@ def main() -> None:
         tracked_object_indices=(0,) if args.tracking_variant == "tool_only" else None,
         object_roles=("tool", "target"),
         objective=objective,
+        observation=observation,
     )
     env = MJWPVectorEnv(
         ego_config,
@@ -301,6 +313,7 @@ def main() -> None:
         "domain_randomization": False,
         "tracking_variant": args.tracking_variant,
         "objective": objective.as_report(),
+        "observation": observation.as_report(),
         "network": {
             "mlp": {"units": [512, 512]},
             "rnn": {

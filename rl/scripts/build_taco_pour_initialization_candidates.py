@@ -7,6 +7,7 @@ from dataclasses import fields
 import hashlib
 from itertools import combinations
 import json
+import os
 from pathlib import Path
 import sys
 
@@ -19,7 +20,7 @@ import trimesh
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-SPIDER = Path("/data_all/zzx/egoengine/spider")
+SPIDER = Path(os.environ.get("SPIDER_ROOT", ROOT / "external/spider_compat"))
 sys.path[:0] = [str(ROOT / "src"), str(ROOT / "external/mink/src"), str(SPIDER)]
 
 from audit_taco_initialization import visual_meshes, world_vertices
@@ -30,6 +31,7 @@ from egoengine_repro.retarget.collision_audit import (
 from egoengine_repro.retarget.initial_hand import solve_initial_hands
 from egoengine_repro.retarget.mesh_distance import closed_mesh_signed_distance
 from egoengine_repro.retarget.paper_audit import artifact, scene_mesh_artifacts, verify_artifacts
+from video_to_spider.rl.physics_contract import compile_mujoco_model
 
 
 def _sha(path: Path) -> str:
@@ -44,7 +46,10 @@ def _json_default(value):
 
 def load_protocol(path: Path) -> dict:
     protocol = yaml.safe_load(path.read_text())
-    if protocol.get("protocol_name") != "taco_pour_initialization_protocol_v1":
+    if protocol.get("protocol_name") not in {
+        "taco_pour_initialization_protocol_v1",
+        "taco_pour_initialization_protocol_v2",
+    }:
         raise ValueError("unsupported initialization protocol")
     if protocol.get("scope") != "reset_only" or protocol.get("training_ready") is not False:
         raise ValueError("initialization protocol must stay reset-only and training-blocked")
@@ -52,6 +57,14 @@ def load_protocol(path: Path) -> dict:
     scene, reference = Path(formal["scene"]), Path(formal["reference"])
     if _sha(scene) != formal["scene_sha256"] or _sha(reference) != formal["reference_sha256"]:
         raise ValueError("frozen scene/reference hash differs")
+    config_path = Path(formal["formal_simulator_config"])
+    if ("formal_simulator_config_sha256" in formal
+            and _sha(config_path) != formal["formal_simulator_config_sha256"]):
+        raise ValueError("frozen simulator config hash differs")
+    human_path = Path(formal["human_reference"])
+    if ("human_reference_sha256" in formal
+            and _sha(human_path) != formal["human_reference_sha256"]):
+        raise ValueError("frozen human reference hash differs")
     timing = protocol["timing"]
     if timing["physics_steps_per_control"] != round(timing["ctrl_dt_s"] / timing["sim_dt_s"]):
         raise ValueError("protocol timing is inconsistent")
@@ -258,11 +271,14 @@ def t0_legality_gate(model, qpos, reference, contract, protocol, meshes):
     declared = distances(model, data, families["self_explicit"])
     external = {name: distances(model, data, families[name]) for name in
                 ("hand_tool", "hand_target", "hand_floor", "tool_target", "tool_floor", "target_floor")}
-    guards = []
-    for a, b in families["self_explicit"]:
-        pair_names = (model.geom(a).name, model.geom(b).name)
-        if any("index_root_" in name and "guard" in name for name in pair_names):
-            guards.append(float(mujoco.mj_geomDistance(model, data, a, b, 0.05, None)))
+    index_guards, palm_thumb_guards = [], []
+    for pair_id, (a, b) in enumerate(zip(model.pair_geom1, model.pair_geom2)):
+        pair_name = model.pair(pair_id).name or ""
+        value = float(mujoco.mj_geomDistance(model, data, a, b, 0.05, None))
+        if "index_root" in pair_name:
+            index_guards.append(value)
+        elif pair_name.startswith("semantic_self_left_palm_thumb_surface_"):
+            palm_thumb_guards.append(value)
     limited = np.flatnonzero(model.jnt_limited)
     addresses = model.jnt_qposadr[limited]
     margins = np.minimum(qpos[addresses] - model.jnt_range[limited, 0],
@@ -286,8 +302,25 @@ def t0_legality_gate(model, qpos, reference, contract, protocol, meshes):
         "initial_ctrl_within_ctrlrange": initial_ctrl_valid,
         "first_reference_command_within_ctrlrange": first_ctrl_valid,
         "joint_limits": bool(margins.min() >= -1e-12),
-        "declared_self_pairs": bool(len(declared) == 178 and declared.min() >= gate["declared_pair_min_distance_m"]),
-        "bilateral_index_guards": bool(len(guards) == 4 and min(guards) >= gate["bilateral_guard_min_distance_m"]),
+        "declared_self_pairs": bool(
+            len(declared) == gate.get("declared_self_pair_count", 178)
+            and declared.min() >= gate["declared_pair_min_distance_m"]
+        ),
+        "bilateral_index_guards": bool(
+            len(index_guards) == gate.get("bilateral_index_guard_pair_count", 4)
+            and min(index_guards) >= gate["bilateral_guard_min_distance_m"]
+        ),
+        "left_palm_thumb_guards": bool(
+            len(palm_thumb_guards) == gate.get("left_palm_thumb_guard_pair_count", 0)
+            and (
+                not palm_thumb_guards
+                or min(palm_thumb_guards)
+                >= gate.get(
+                    "left_palm_thumb_guard_min_distance_m",
+                    gate["declared_pair_min_distance_m"],
+                )
+            )
+        ),
         "declared_hand_environment_pairs": bool(all(values.min() >= gate["declared_pair_min_distance_m"]
                                                      for name, values in external.items()
                                                      if name.startswith("hand_"))),
@@ -299,7 +332,10 @@ def t0_legality_gate(model, qpos, reference, contract, protocol, meshes):
         "passed": bool(all(checks.values())), "checks": checks,
         "declared_self_pair_count": len(declared),
         "minimum_declared_self_distance_m": float(declared.min()),
-        "minimum_guard_distance_m": float(min(guards)),
+        "minimum_index_guard_distance_m": float(min(index_guards)),
+        "minimum_left_palm_thumb_guard_distance_m": (
+            float(min(palm_thumb_guards)) if palm_thumb_guards else None
+        ),
         "minimum_external_distances_m": {key: float(value.min()) for key, value in external.items()},
         "joint_limit_min_margin": float(margins.min()),
         "initial_ctrl_max_raw_range_violation": initial_ctrl_violation,
@@ -328,14 +364,16 @@ def _fresh_mjwp_state(env, qpos, qvel, ctrl):
     with wp.ScopedDevice(env.device):
         for name, value in arrays.items():
             tensor = torch.as_tensor(value, device=env.device, dtype=torch.float32).contiguous()
-            wp.copy(getattr(env.data_wp, name), wp.from_torch(tensor))
+            target = getattr(env.data_wp, name)
+            wp.copy(target, wp.from_torch(tensor, dtype=target.dtype))
         for name in ("qacc", "qacc_warmstart", "act", "act_dot", "qfrc_applied", "xfrc_applied"):
             if hasattr(env.data_wp, name):
                 value = wp.to_torch(getattr(env.data_wp, name)).clone()
                 value.zero_()
-                wp.copy(getattr(env.data_wp, name), wp.from_torch(value))
+                target = getattr(env.data_wp, name)
+                wp.copy(target, wp.from_torch(value, dtype=target.dtype))
         time = wp.to_torch(env.data_wp.time).clone(); time.zero_()
-        wp.copy(env.data_wp.time, wp.from_torch(time))
+        wp.copy(env.data_wp.time, wp.from_torch(time, dtype=env.data_wp.time.dtype))
         mjwarp.forward(env.model_wp, env.data_wp)
 
 
@@ -370,11 +408,17 @@ def held_object_preroll(seed, reference, protocol):
             qpos[:, 36:] = object_qpos
             qvel[:, 36:] = 0.0
             with wp.ScopedDevice(env.device):
-                wp.copy(env.data_wp.qpos, wp.from_torch(qpos.contiguous()))
-                wp.copy(env.data_wp.qvel, wp.from_torch(qvel.contiguous()))
+                wp.copy(env.data_wp.qpos, wp.from_torch(
+                    qpos.contiguous(), dtype=env.data_wp.qpos.dtype
+                ))
+                wp.copy(env.data_wp.qvel, wp.from_torch(
+                    qvel.contiguous(), dtype=env.data_wp.qvel.dtype
+                ))
                 if hasattr(env.data_wp, "qacc"):
                     qacc = wp.to_torch(env.data_wp.qacc).clone(); qacc[:, 36:] = 0.0
-                    wp.copy(env.data_wp.qacc, wp.from_torch(qacc.contiguous()))
+                    wp.copy(env.data_wp.qacc, wp.from_torch(
+                        qacc.contiguous(), dtype=env.data_wp.qacc.dtype
+                    ))
                 mujoco_warp.forward(env.model_wp, env.data_wp)
             if torch.cuda.is_available():
                 torch.cuda.synchronize(config.device)
@@ -417,7 +461,12 @@ def run(protocol_path: Path, output: Path):
         reference = {key: np.asarray(source[key]) for key in source.files}
     with np.load(human_path, allow_pickle=False) as source:
         human = {key: np.asarray(source[key]) for key in source.files}
-    model = mujoco.MjModel.from_xml_path(str(scene))
+    simulator_config = yaml.safe_load(
+        Path(formal["formal_simulator_config"]).read_text()
+    )
+    model = compile_mujoco_model(
+        scene, simulator_config.get("sdf_octree_depths", {})
+    )
     meshes, mesh_paths = visual_meshes(scene, model)
     solver_cfg = protocol["hand_solver"]
     solver_kwargs = dict(

@@ -19,6 +19,10 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 from egoengine_repro.retarget.collision_audit import validate_qpos
 from egoengine_repro.retarget.paper_audit import artifact, scene_mesh_artifacts, verify_artifacts
+from video_to_spider.rl.physics_contract import (
+    _apply_mjwp_options,
+    compile_mujoco_model,
+)
 from build_taco_collision_repair import SCENE, check_unchanged_dynamics
 
 
@@ -32,18 +36,35 @@ def allocation_usage(data):
                 overflow=bool(max(nacon, ncollision) > data.naconmax or np.any(nefc > data.njmax)))
 
 
+def _parse_sdf_depths(entries):
+    depths = {}
+    for entry in entries:
+        name, separator, value = entry.partition(":")
+        if not separator or not name or not value.isdigit() or int(value) < 1:
+            raise ValueError("--sdf-octree-depth must be MESH:POSITIVE_INTEGER")
+        depths[name] = int(value)
+    return depths
+
+
 def run(args):
     if args.output.exists() or args.output.is_symlink():
         raise FileExistsError(args.output)
     if args.worlds < 1 or args.nconmax < 1 or args.njmax < 1 or args.steps < 0:
         raise ValueError("positive capacities/world count and nonnegative step count required")
+    sdf_depths = _parse_sdf_depths(args.sdf_octree_depth)
     inputs = [artifact(args.scene), artifact(args.reference)] + scene_mesh_artifacts(args.scene)
+    config = None
     if args.spider_config:
         import yaml
-        sys.path.insert(0, str(args.spider_root))
-        from spider.simulators.mjwp import setup_mj_model
         config = yaml.safe_load(args.spider_config.read_text())
         inputs += [artifact(args.spider_config), artifact(args.spider_root / "spider/simulators/mjwp.py")]
+    if sdf_depths:
+        model = compile_mujoco_model(args.scene, sdf_depths)
+        if config is not None:
+            _apply_mjwp_options(model, config)
+    elif config is not None:
+        sys.path.insert(0, str(args.spider_root))
+        from spider.simulators.mjwp import setup_mj_model
         model = setup_mj_model(SimpleNamespace(model_path=str(args.scene), sim_dt=config["sim_dt"],
                                                embodiment_type=config["embodiment_type"]))
     else:
@@ -68,6 +89,9 @@ def run(args):
     result = dict(status="capacity_audit_not_reset_or_training_validation",
         unchanged_source_dynamics=dynamics,
         mujoco_version=mujoco.__version__, inputs=inputs, cpu=cpu,
+        sdf_octree_depths=sdf_depths,
+        sdf_octree_nodes={name: int(model.mesh_octnum[model.mesh(name).id])
+                          for name in sdf_depths},
         cpu_max_contacts=max(r["contacts"] for r in cpu),
         cpu_max_constraints=max(r["constraints"] for r in cpu),
         requested=dict(nworld=args.worlds, nconmax=args.nconmax, njmax=args.njmax),
@@ -164,4 +188,5 @@ if __name__ == "__main__":
     parser.add_argument("--steps", type=int, default=0)
     parser.add_argument("--spider-config", type=Path)
     parser.add_argument("--spider-root", type=Path, default=Path("/data_all/zzx/egoengine/spider"))
+    parser.add_argument("--sdf-octree-depth", action="append", default=[])
     run(parser.parse_args())

@@ -15,8 +15,14 @@ if not torch.cuda.is_available():
     pytest.skip("MJWP uses a CUDA graph", allow_module_level=True)
 
 from run_mjwp_ppo import _load_ego_config, _load_reference
-from video_to_spider.rl.mjwp_env import MJWPVectorEnv, MJWPVectorEnvConfig
+from video_to_spider.rl.mjwp_env import (
+    MJWPVectorEnv,
+    MJWPVectorEnvConfig,
+    _object_pose_parts,
+    _transform_anchors_torch,
+)
 from video_to_spider.rl.objective_contract import load_runtime_objective
+from video_to_spider.rl.observation_contract import load_runtime_observation
 
 
 CONFIG = ROOT / "configs/taco_pour_bimanual_ppo.yaml"
@@ -24,6 +30,11 @@ OBJECTIVE = load_runtime_objective(
     ROOT / "configs/replay_rl_protocol.yaml",
     ROOT / "configs/taco_pour_local_unpublished_v1.yaml",
     tracking_variant="tool_and_target",
+    require_run_ready=False,
+)
+OBSERVATION = load_runtime_observation(
+    ROOT / "configs/replay_rl_protocol.yaml",
+    ROOT / "configs/taco_pour_observation_local_236d_v1.yaml",
     require_run_ready=False,
 )
 
@@ -40,6 +51,7 @@ def env():
             max_episode_length=2,
             asymmetric_critic=True,
             objective=OBJECTIVE,
+            observation=OBSERVATION,
         ),
         seed=11,
     )
@@ -75,6 +87,21 @@ def test_bimanual_observation_and_contact_contract(env):
     assert env.env_cfg.reset_object_rot_noise_std == 0.0
     assert env.tracked_object_indices == (0, 1)
     assert env.lift_object_index == env.object_roles.index(OBJECTIVE.lift_object_role) == 0
+    actor = observation["obs"]
+    np.testing.assert_allclose(
+        actor[:, 144:180],
+        env._reference_ctrls(env.time_indices, offset=1)[:, :36].cpu().numpy(),
+    )
+    np.testing.assert_allclose(
+        actor[:, 180:216],
+        env._reference_ctrls(env.time_indices, offset=2)[:, :36].cpu().numpy(),
+    )
+    goal_indices = np.minimum(env.start_indices + env.time_indices + 1, len(env.qpos_ref) - 1)
+    goal_objects = _object_pose_parts(env.qpos_ref[goal_indices], int(env.ego_cfg.nq_obj))
+    expected_goal_anchors = torch.cat([
+        _transform_anchors_torch(pose[0], pose[1], env.anchors) for pose in goal_objects
+    ], dim=1).reshape(2, -1)
+    np.testing.assert_allclose(actor[:, 126:144], expected_goal_anchors.cpu().numpy())
     _, _, _, info = env.step(np.zeros((2, 36), dtype=np.float32))
     assert info["contact_flags"].shape == (2, 2, 2, 5)
     assert info["object_position_error"].shape == (2, 2)
@@ -155,7 +182,8 @@ def single_env():
     reference = _load_reference(config.data_path, "cuda:0", expected_frequency=30.0)
     return MJWPVectorEnv(config, reference, num_envs=1,
                         env_config=MJWPVectorEnvConfig(max_episode_length=197, asymmetric_critic=True,
-                                                       reference_start_index=0, objective=OBJECTIVE), seed=11)
+                                                       reference_start_index=0, objective=OBJECTIVE,
+                                                       observation=OBSERVATION), seed=11)
 
 
 def test_chunk_reset_restores_actual_incoming_state_not_reference(single_env):
@@ -238,7 +266,8 @@ def test_real_two_chunk_rollout_commits_only_first_chunk():
                  torch.zeros((61, 10), device="cuda:0"), torch.zeros((61, 10, 3), device="cuda:0"))
     env = MJWPVectorEnv(config, reference, num_envs=1,
         env_config=MJWPVectorEnvConfig(max_episode_length=60, asymmetric_critic=True,
-                                      reference_start_index=0, objective=OBJECTIVE))
+                                      reference_start_index=0, objective=OBJECTIVE,
+                                      observation=OBSERVATION))
     backend = MJWPChunkBackend(env)
     snapshots = {}
     actual_snapshot = backend.snapshot
@@ -263,6 +292,11 @@ def test_real_two_chunk_rollout_commits_only_first_chunk():
     assert len(trace["steps"]) == 40 and trace["first_failure"] is None
     assert trace["steps"][0]["tracked_object_roles"] == ["tool", "target"]
     assert len(trace["steps"][0]["position_error_m"]) == 2
+    assert len(trace["steps"][0]["endpoint_qpos"]) == 50
+    assert len(trace["steps"][0]["endpoint_qvel"]) == 48
+    assert len(trace["steps"][0]["commanded_ctrl"]) == 36
+    assert len(trace["steps"][0]["raw_residual_action"]) == 36
+    assert len(trace["steps"][0]["applied_residual"]) == 36
     assert np.asarray(trace["steps"][0]["contact_bonus_per_hand_object"]).shape == (2, 2)
     assert trace["steps"][0]["total_reward"] == pytest.approx(
         trace["steps"][0]["aggregate_tracking_reward"]

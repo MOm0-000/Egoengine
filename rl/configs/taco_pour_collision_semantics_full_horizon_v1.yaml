@@ -1,0 +1,48 @@
+protocol_name: taco_pour_collision_semantics_full_horizon_v1
+scope: read_only_full_horizon_collision_gate
+paper_source: not_published_local_collision_engineering
+training_ready: false
+
+inputs:
+  scene:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_collision_semantics_combined_v1/combined_candidate_scene.xml
+    sha256: cd2600cd195db9086a6a3c6cec5aab49991320c3f300e7fbdd511dc99ab7960f
+  combined_build_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_collision_semantics_combined_v1/build_report.json
+    sha256: db960cb377aa4845d0c93266243a56c0cae1f858d07a4912a13b9a47860ce4ed
+  robot_reference:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_combined_collision_v1/robot_reference.npz
+    sha256: cf99b9846a63617ddd5e439e086708c80a1e9b43f614df63168ffb3236a7685c
+  retarget_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_combined_collision_v1/retarget_report.json
+    sha256: 18a06e29bc5bd86b2881115d0069ce7616a28aa35d656c88cad4f829eb0d965f
+
+window:
+  first_endpoint: 0
+  last_endpoint_inclusive: 197
+  require_source_indexed_198_frame_reference: true
+
+coverage:
+  hand_object: all_26_native_hand_links_x_both_native_objects
+  hand_floor: all_26_native_hand_links
+  changed_external_semantics_reported_separately: true
+  hand_object_avoidance_in_mink: false
+
+thresholds:
+  runtime_interference_m: 0.0
+  native_material_interference_m: 5.0e-5
+
+acceptance:
+  material_false_negatives_over_50um: 0
+  native_clear_runtime_false_positives: 0
+  floor_material_false_negatives_over_50um: 0
+  floor_native_clear_runtime_false_positives: 0
+  surface_only_misses_are_reported_not_promoted_to_material_evidence: true
+
+contracts:
+  read_only: true
+  simulation_steps: 0
+  formal_scene_modified: false
+  reference_modified: false
+  capacity_validation_deferred: true
+  initialization_validation_deferred: true

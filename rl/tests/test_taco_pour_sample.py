@@ -106,10 +106,10 @@ def test_active_protocol_does_not_infer_pour_weights_or_reuse_brush_reset():
         -initialization["initial_distances"]["hand_floor"]["min_distance_m"])
     assert "known_initial_hand_table_penetration_m" not in protocol["initialization"]
     assert protocol["initialization"]["initial_palm_index_native_penetration"] is False
-    # Removing false classifications must not clear independently measured
-    # hand/table penetration or promote the scene to a legal reset.
+    # Historical source-reference penetration remains recorded even though a
+    # separately hash-bound v2 reset has now passed its release gate.
     assert min(protocol["initialization"]["initial_native_all_hand_table_penetration_m"].values()) > .009
     assert protocol["initialization"]["initial_native_left_palm_thumb_intersection_mm3"] > 9
-    assert not protocol["audit_results"]["new_reset_applied"]
-    assert not protocol["training_ready"]
+    assert protocol["audit_results"]["new_reset_applied"]
+    assert protocol["training_ready"]
     assert protocol["solver_modes"] == ["replay", "rl"]

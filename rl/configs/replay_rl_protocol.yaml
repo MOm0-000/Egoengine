@@ -8,7 +8,7 @@ evidence_policy:
   paper_page_numbers: one_based_pdf_pages
   copied_defaults_are_author_settings: false
   new_model_or_reset_procedure_requires_confirmation: true
-  current_revision: left_palm_thumb_boundary_topology_v1_mapped_boundary_curve_cegis_next
+  current_revision: full_horizon_local_run_executed_repeatability_and_objective_mapping_block_result_acceptance
 inputs:
   setting: user_approved_gt_oracle_validation_not_full_perception_reproduction
   approved_episodes: ['20230927_027', '20230917_020', '20230926_004', '20231103_071', '20230927_017']
@@ -21,9 +21,10 @@ inputs:
   compatibility_audit: disclosed_local_checks_not_author_selection_algorithm
   preserve_source_frames: true
   select_by_eventual_task_success: false
-  active_scene: /data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml
+  active_scene: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate.xml
+  active_simulator_config: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml
   active_human_reference: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/human_reference.npz
-  active_robot_reference: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/robot_reference.npz
+  active_robot_reference: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_combined_collision_v1/robot_reference.npz
   historical_orientation_bug_baseline: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_gt_v1
   historical_pre_guard_mano_reference: /data_all/zzx/3.2RL/TRASH/superseded_runs/2026-09-20_right_index_guard/taco_pour_bimanual_mano_fk_v1
   historical_baseline_retained_for: orientation_fix_comparison_and_regression_tests_not_active_input
@@ -111,9 +112,9 @@ retargeting:
     initialization_protocol_v2_run: false
 initialization:
   source: TACO physical reset procedure not published
-  status: taco_pour_initialization_protocol_v1_executed_both_candidates_rejected_no_reset_adopted
-  active_local_protocol: /data_all/zzx/3.2RL/configs/taco_pour_initialization_protocol_v1.yaml
-  active_candidate_comparison: /data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v1/comparison.json
+  status: taco_pour_initialization_protocol_v2_candidate_a_accepted
+  active_local_protocol: /data_all/zzx/3.2RL/configs/taco_pour_initialization_protocol_v2.yaml
+  active_candidate_comparison: /data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v2/comparison.json
   accepted_state_schema: egoengine_replay_rl_initial_state_v1
   physics_contract_schema: egoengine_replay_rl_physics_v1
   physics_contract_covers: [formal_config, scene_xml, external_meshes, runtime_solver_and_contact_options, capacities, dependency_versions, compiled_model]
@@ -131,19 +132,20 @@ initialization:
     authorization: user_requested_coordinate_collision_checks_then_compare_two_literature_based_candidates_then_replay_rl
     candidates: [collision_free_pre_manipulation_pose, physics_corrected_retargeting]
     sources: [Human2Sim2Robot_Appendix_B, DexMachina_Appendix_A2]
-    ready: false
+    ready: true
     completed: true
-    protocol_version: taco_pour_initialization_protocol_v1
-    candidate_a_accepted: false
-    candidate_a_blocked_by: native_left_middle_and_pinky_plate_penetration_plus_left_palm_thumb_interference
+    protocol_version: taco_pour_initialization_protocol_v2
+    candidate_a_accepted: true
+    candidate_a_report: /data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v2/candidate_a/report.json
+    candidate_a_blocked_by: []
     candidate_b_accepted: false
     candidate_b_blocked_by: collision_aware_depenetration_failed_before_held_object_preroll
-    release_physics_steps_executed: 0
-    formal_release_environments_created: 0
-    blocked_by: both_candidates_failed_t0_legality_gate
+    release_physics_steps_executed: 50
+    formal_release_environments_created: 1
+    blocked_by: []
   next_initialization_protocol:
     version: taco_pour_initialization_protocol_v2
-    status: blocked_until_left_palm_thumb_self_collision_contract_passes
+    status: completed_candidate_a_accepted
   historical_brush_initial_hand_table_penetration_m: 0.01340
   initial_qpos_qvel_and_reference_index: require_explicit_specification
   environment_constrained_hand_projection: authorized_and_executed_as_separate_first_frame_diagnostic_only
@@ -217,28 +219,41 @@ runtime_contract:
   local_objective_profiles:
     taco_pour_local_unpublished_v1:
       objective_ready: true
-      run_ready: false
-      blocked_by:
-        - collision_model_and_initialization_contract
-        - observation_contract
+      run_ready: true
+      blocked_by: []
   observation:
-    status: unresolved_local_236d
-    current_object_goal_before_transition: t
-    proposed_object_goal_before_transition: t_plus_1_not_approved
-    formal_run_ready: false
-training_ready: false
+    status: resolved_local_unpublished
+    active_profile: taco_pour_transition_aligned_236d_v1
+    profile_path: /data_all/zzx/3.2RL/configs/taco_pour_observation_local_236d_v1.yaml
+    current_object_state_before_transition: t
+    object_goal_before_transition: t_plus_1
+    command_before_transition: t_plus_1
+    command_preview_before_transition: t_plus_2_local_extension
+    exact_encoding_published_by_egoengine: false
+    formal_run_ready: true
+    local_profiles:
+      taco_pour_transition_aligned_236d_v1:
+        run_ready: true
+        profile_sha256: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+training_ready: true
+training_ready_scope: first_40_step_local_unpublished_objective_and_observation_profile_only
 audit_results:
   active_input: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/input_audit.json
   active_raw_depth_table: /data_all/zzx/3.2RL/runs/taco_pour_raw_depth_table_audit_v2/report.json
   active_depth_registration: /data_all/zzx/3.2RL/runs/taco_pour_depth_registration_v1/report.json
   historical_execution_report_pour: /data_all/zzx/3.2RL/docs/pour_bug_impact_corrections.md
   historical_scene_report: /data_all/zzx/3.2RL/docs/pour_scene_feasibility.md
-  active_retarget: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/retarget_report.json
-  active_collisions: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/collision_audit.json
+  active_retarget: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_combined_collision_v1/retarget_report.json
+  active_collisions: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_combined_collision_v1/intrahand_collision_audit.json
   active_initialization: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/initialization_audit.json
   active_initial_native_contacts: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/initial_native_contact_audit.json
   active_initialization_preflight: /data_all/zzx/3.2RL/runs/taco_pour_initialization_preflight_bilateral_guard_v1/report.json
   active_initialization_protocol_v1: /data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v1/comparison.json
+  active_initialization_protocol_v2: /data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v2/comparison.json
+  active_initialization_candidate: /data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v2/candidate_a/report.json
+  active_runtime_contact_model: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate.xml
+  active_runtime_contract: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/runtime_contract.json
+  active_capacity: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/capacity_4env_256x1024.json
   active_right_index_root_guard: /data_all/zzx/3.2RL/runs/taco_pour_bilateral_index_guard_v1/right_index_guard_audit.json
   active_left_index_root_guard: /data_all/zzx/3.2RL/runs/taco_pour_bilateral_index_guard_v1/left_index_guard_audit.json
   active_bilateral_index_root_capacity: /data_all/zzx/3.2RL/runs/taco_pour_bilateral_index_guard_v1/capacity_formal_4env.json
@@ -339,7 +354,7 @@ audit_results:
   historical_dev4_inputs: /data_all/zzx/3.2RL/runs/paper_first_audit_v1/inputs.json
   historical_brush_initialization: /data_all/zzx/3.2RL/runs/paper_first_audit_v1/initialization.json
   historical_execution_report: /data_all/zzx/3.2RL/docs/paper_first_audit_results.md
-  local_tests_passed: 553
+  local_tests_passed: 566
   local_tests_skipped: 0
   local_subtests_passed: 57
   separate_real_gpu_adapter_tests_passed: 9
@@ -348,23 +363,46 @@ audit_results:
   end_to_end_replay_rl_connected: true
   chunk_scheduler_test_backend: real_MJWP_and_official_PPO_plus_synthetic_unit_tests
   guarded_task_entry: scripts/run_taco_replay_rl.py
-  pour_task_entry_executed: false
+  pour_task_entry_executed: true
   chunk_boundary_multiworld_cloning: explicitly_not_supported_yet
   contact_state_fixes: [restore_live_contact_counters, ignore_stale_contact_tail, mask_invalid_tail_force_vectors]
   palm_index_shape_screen: runs/taco_pour_collision_repair/index_cavities_screen.json
   neutral_palm_index_false_overlap_before_m: [0.003894580915098397, 0.003868273973157197]
   neutral_palm_index_false_overlap_after_local_cavity_repair_m: [0.0022536489981557616, 0.0014596500092021205]
   local_cavity_repair_accepted: false
-  physical_rollout_executed: false
-  physical_rollout_scope: task_tracking_replay_not_capacity_stress
+  physical_rollout_executed: true
+  physical_rollout_scope: first_40_step_two_chunk_lookahead_for_tool_only_and_tool_and_target
+  historical_first_window_summary: /data_all/zzx/3.2RL/TRASH/superseded_runs/2026-09-21_replay_rl_first_window_v1/summary.json
+  first_window_results:
+    tool_only: {mode: replay, validated_intervals: 40, committed_endpoint: 20, ppo_epochs: 0}
+    tool_and_target: {mode: replay, validated_intervals: 40, committed_endpoint: 20, ppo_epochs: 0}
+  full_horizon_task_success: false
+  active_full_horizon_summary: /data_all/zzx/3.2RL/runs/taco_pour_replay_rl_full_v3/summary.json
+  full_horizon_main_result:
+    variant: tool_only
+    latest_status: both_modes_failed_within_local_budget
+    last_committed_endpoint: 140
+    ppo_fallback_executed: true
+    optimized_trajectory_exported: true
+    independently_replayed_full_horizon: false
+  full_horizon_extension_result:
+    variant: tool_and_target
+    latest_local_objective_status: full_horizon_tracking_feasible_and_stitched_replay_validated
+    all_transitions_mode: replay
+    violates_published_position_example_threshold_steps: 38
+    accepted_as_paper_task_success: false
   capacity_stress_executed: true
   capacity_stress_world_steps_4env_16env: [240, 960]
-  new_reset_applied: false
-blocking_checks:
-  - remaining_other_intrahand_and_external_collision_coverage
-  - explicit_initial_state_specification_and_known_initial_penetration
-  - paper_objective_unresolved_or_explicit_local_profile_selection
-  - explicit_actor_observation_contract
+  new_reset_applied: true
+blocking_checks: []
+result_acceptance_blockers:
+  - unpublished_threshold_to_weighted_objective_mapping
+  - tool_only_full_horizon_not_repeatable_under_current_gpu_contact_solver
+  - ppo_containing_saved_trajectory_failed_independent_open_loop_replay
+  - stable_grasp_and_physical_pour_not_demonstrated
+paper_faithful_run_blockers:
+  - unpublished_tracking_contact_and_lift_coefficients
+  - unpublished_exact_actor_observation_encoding
 task_outcomes_not_entry_requirements:
   - successful_full_reference_replay
   - stable_grasp_and_contact_acquisition

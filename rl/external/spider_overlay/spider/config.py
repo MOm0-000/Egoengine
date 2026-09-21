@@ -66,6 +66,9 @@ class Config:
     # Simulation constraints
     nconmax_per_env: int = 100  # max contacts per environment
     njmax_per_env: int = 350  # max joints per environment
+    # Optional mesh-name -> SDF octree depth.  MuJoCo exposes this setting only
+    # through MjSpec, so the MJWP loader must apply it before compilation.
+    sdf_octree_depths: dict[str, int] = field(default_factory=dict)
     # Simulation annealing
     num_dyn: int = (
         1  # number of environments for annealing, used for virtual contact constraint

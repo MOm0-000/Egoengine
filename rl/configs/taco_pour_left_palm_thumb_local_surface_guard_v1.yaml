@@ -1,0 +1,66 @@
+protocol_name: taco_pour_left_palm_thumb_local_surface_guard_v1
+scope: isolated_pair_specific_local_native_surface_guard
+paper_source: not_published_local_collision_engineering
+training_ready: false
+formal_scene_modified: false
+reference_modified: false
+
+inputs:
+  scene:
+    path: /data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml
+    sha256: add44e3de084c1dca7bf0f094cff271e3ebea7c63e2375cb175a9dfc9d8fa98d
+  robot_reference:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/robot_reference.npz
+    sha256: 493a1e0196123b1223a8a485eb3657ff5673e339f56ad94587b15b34b88d29d3
+  topology_v1:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_left_palm_thumb_boundary_topology_v1/report.json
+    sha256: 6dc7fe705b112429702c1f1acddfcfc885104567e6808066d49c7ee49d353856
+  rejected_existing_inventory_cegis:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_left_palm_thumb_boundary_cegis_v1/report.json
+    sha256: a055e0fc9444817c5a211bede2ff7762f21bb760cca39e0877867cb9d7a0d9b2
+
+construction:
+  calibration_bend_fractions: [0.0, 0.5]
+  native_contact_offsets_inside_rad: [5.0e-5, 2.5e-4]
+  inward_prism_thickness_m: 5.0e-5
+  in_plane_triangle_shrink_fraction: 0.0065
+  include_only_observed_native_triangle_pairs: true
+  replace_existing_hand_collision_geoms: false
+
+independent_holdout:
+  bend_fraction: 0.3183098861837907
+  development_fraction_consumed_during_runtime_shape_tuning: 0.6180339887498949
+  rota1_coarse_samples: 513
+  boundary_probe_offsets_rad: [5.0e-5, 2.5e-4]
+  transition_numerical_tolerance_rad: 1.0e-7
+  transition_max_bisections: 24
+
+acceptance:
+  sampled_false_positives: 0
+  sampled_false_negatives: 0
+  topology_mismatch_slices: 0
+  maximum_absolute_boundary_error_rad: 5.0e-5
+  known_old_hybrid_false_negative_detected: true
+  known_old_hybrid_false_positive_rejected: true
+  runtime_and_mink_guard_pair_sets_identical: true
+  boundary_error_limit_is_local_numerical_audit_not_paper_parameter: true
+
+contracts:
+  guards_pair_only_with_each_other: true
+  no_guard_object_floor_or_interhand_pairs: true
+  add_hand_object_avoidance_to_mink: false
+  object_gt_trajectory_unchanged: true
+  joint_ranges_unchanged: true
+  emit_isolated_candidate_scene_only: true
+  run_retargeting: false
+  run_capacity: false
+  run_initialization: false
+  run_training: false
+
+promotion_after_acceptance:
+  - merge_with_external_and_floor_candidate_scene
+  - rerun_all_198_mink_endpoints_with_self_collision_only
+  - rerun_full_horizon_0_197_external_and_floor_attribution_on_new_reference
+  - rerun_candidate_a_and_b_t0_native_probes
+  - rerun_four_world_capacity_and_rebuild_physics_contract
+  - run_initialization_protocol_v2

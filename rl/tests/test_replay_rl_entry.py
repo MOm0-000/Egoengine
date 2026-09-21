@@ -10,7 +10,10 @@ import hashlib
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from run_taco_replay_rl import load_accepted_initialization
-from video_to_spider.rl.physics_contract import build_physics_contract
+from video_to_spider.rl.physics_contract import (
+    build_physics_contract,
+    compile_mujoco_model,
+)
 
 
 def test_old_posture_diagnostic_cannot_be_loaded_as_accepted_reset(tmp_path):
@@ -119,3 +122,10 @@ def test_formal_scene_cannot_retain_hold_constraints(tmp_path):
     report.write_text(json.dumps(payload))
     with pytest.raises(ValueError, match="object hold constraint"):
         load_accepted_initialization(report, config)
+
+
+def test_invalid_sdf_octree_depth_fails_closed_before_compilation(tmp_path):
+    scene = tmp_path / "scene.xml"
+    scene.write_text("<mujoco/>")
+    with pytest.raises(ValueError, match="positive integers"):
+        compile_mujoco_model(scene, {"object_mesh": 0})

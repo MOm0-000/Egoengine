@@ -1,0 +1,32 @@
+# Local collision-model candidate.  This is not the formal Replay->RL config.
+robot_type: xhand
+embodiment_type: bimanual
+task: taco_pour_bowl_plate_20230927_017
+dataset_dir: /data_all/zzx/3.2RL/models
+dataset_name: taco_xhand
+data_id: 0
+model_path: /data_all/zzx/3.2RL/runs/taco_pour_external_sdf_combined_v1/candidate.xml
+data_path: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_combined_collision_v1/robot_reference.npz
+simulator: mjwp
+device: cuda:0
+sim_dt: 0.0033333333333333335
+ctrl_dt: 0.03333333333333333
+ref_dt: 0.03333333333333333
+render_dt: 0.03333333333333333
+num_samples: 4
+num_dyn: 1
+num_dr: 1
+nconmax_per_env: 256
+njmax_per_env: 1024
+sdf_octree_depths:
+  right_visual: 8
+  left_visual: 9
+show_viewer: false
+wait_on_finish: false
+save_video: false
+sanity_check_seconds: 0.0
+contact_guidance: false
+use_rl_reward: false
+action_smoothness_rew_scale: 0.0
+contact_rew_scale: 0.0
+contact_opposition_rew_scale: 0.0

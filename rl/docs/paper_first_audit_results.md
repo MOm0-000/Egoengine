@@ -1,5 +1,8 @@
 # Paper-First Audit Results
 
+> Historical early audit. Current readiness and full-horizon results are in
+> `docs/rl_reproduction_status.md`.
+
 Input: the four approved TACO sequences' original left/right hand GT, tool/target
 world-pose GT, metric meshes, RGB/depth and camera parameters; the preserved brush
 v4 MINK reference and isolated two-XHand/two-passive-object scene. Human GT is a

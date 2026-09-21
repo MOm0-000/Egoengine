@@ -1,5 +1,11 @@
 # Pour collision semantics repair v2
 
+> Historical candidate-stage report. Its blocker status is superseded: the
+> later combined collision model, high-resolution object SDF, floor-contact
+> calibration, capacity audit, and initialization protocol v2 have passed.
+> Current state is in `docs/rl_reproduction_status.md`. The measurements below
+> are retained as provenance for why the final model was built.
+
 ## 输入
 
 - 当前正式 Pour scene（只读）；
@@ -64,7 +70,7 @@ native 有 104 个切片完全不碰、153 个切片只有一个且贴着 rota1 
 均被独立复现。因此下一步是分两条边界做 CEGIS，允许删减或缩紧造成误报的
 旧局部 guard，再补只覆盖漏检带的局部几何；不是继续增加全局球。
 
-## 当前 gate
+## 当时的 gate（已被后续工作取代）
 
 外部 hand-object、hand-floor 与 contact-role contract 已通过候选验收；左掌—
 拇指 self-collision 仍是 blocker。因此：

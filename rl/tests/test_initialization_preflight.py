@@ -83,17 +83,19 @@ def test_compiled_collision_overfill_uses_native_body_frame_and_metric_units(mon
         assert not row["maximum_error_certified"] and not row["underfill_checked"]
 
 
-def test_current_protocol_and_ppo_use_corrected_reference_without_promoting_reset():
+def test_current_protocol_uses_accepted_v2_reset_and_active_runtime_config():
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
-    ppo = yaml.safe_load((ROOT / "configs/taco_pour_bimanual_ppo.yaml").read_text())
+    ppo = yaml.safe_load(Path(protocol["inputs"]["active_simulator_config"]).read_text())
     assert ppo["data_path"] == protocol["inputs"]["active_robot_reference"]
     assert "mano_fk" in ppo["data_path"]
     comparison = protocol["initialization"]["candidate_comparison"]
-    assert comparison["completed"] and not comparison["ready"]
-    assert not comparison["candidate_a_accepted"]
+    assert comparison["completed"] and comparison["ready"]
+    assert comparison["candidate_a_accepted"]
     assert not comparison["candidate_b_accepted"]
-    assert comparison["release_physics_steps_executed"] == 0
-    assert not protocol["training_ready"]
+    assert comparison["release_physics_steps_executed"] == 50
+    assert protocol["training_ready"]
+    accepted = json.loads(Path(comparison["candidate_a_report"]).read_text())
+    assert accepted["accepted_for_replay_rl"]
     report = json.loads(Path(protocol["audit_results"]["active_initialization_preflight"]).read_text())
     assert report["coordinates"]["coordinate_export_consistent"]
     assert not report["coordinates"]["original_sensor_registration_certified"]

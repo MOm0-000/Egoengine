@@ -80,6 +80,14 @@ class MJWPChunkBackend:
             def row(name):
                 return np.asarray(self.last_info[name][0]).tolist()
 
+            endpoint_qpos = qpos[0].detach().cpu().numpy()
+            endpoint_qvel = qvel[0].detach().cpu().numpy()
+            commanded_ctrl = self.env._last_ctrl[0].detach().cpu().numpy()
+            raw_residual = self.env._last_action[0].detach().cpu().numpy()
+            reference_ctrl = self.env._reference_ctrls(
+                self.env.time_indices, offset=0
+            )[0].detach().cpu().numpy()
+
             self._active_trace["steps"].append({
                 "control_interval": int(reference_step),
                 "endpoint": int(self.env.time_indices[0]),
@@ -98,6 +106,11 @@ class MJWPChunkBackend:
                 "total_reward": float(reward[0]),
                 "terminated": bool(self.last_info["terminated"][0]),
                 "finite": finite,
+                "endpoint_qpos": endpoint_qpos.tolist(),
+                "endpoint_qvel": endpoint_qvel.tolist(),
+                "commanded_ctrl": commanded_ctrl.tolist(),
+                "raw_residual_action": raw_residual.tolist(),
+                "applied_residual": (commanded_ctrl - reference_ctrl).tolist(),
             })
         # A window timeout is not object-tracking failure. No autoreset may hide
         # the physical state at either the commit point or a failed endpoint.

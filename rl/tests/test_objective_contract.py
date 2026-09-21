@@ -36,11 +36,12 @@ def test_local_profile_is_explicit_and_auditable_for_smoke_tests():
     assert report["tracking"] == {"lambda_p": 1.0, "lambda_R": 1.0, "C": pytest.approx(1.5047923441623355)}
 
 
-def test_explicit_local_objective_does_not_bypass_formal_run_gates():
-    with pytest.raises(ValueError, match="formal run remains blocked.*initialization.*observation"):
-        load_runtime_objective(
-            PROTOCOL, LOCAL, tracking_variant="tool_and_target", require_run_ready=True
-        )
+def test_explicit_local_objective_is_open_only_after_all_named_gates_pass():
+    objective = load_runtime_objective(
+        PROTOCOL, LOCAL, tracking_variant="tool_and_target", require_run_ready=True
+    )
+    assert objective.status == "resolved_local_unpublished"
+    assert not objective.paper_faithful
 
 
 def test_aggregation_variant_is_part_of_the_profile_contract(tmp_path):

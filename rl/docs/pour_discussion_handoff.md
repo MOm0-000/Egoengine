@@ -1,5 +1,8 @@
 # EgoEngine RL 复现：当前情况与待讨论问题
 
+> 这是 2026-09-17 的历史交接，不应继续作为当前 blocker 清单。当前状态以
+> `docs/rl_reproduction_status.md` 和 `configs/replay_rl_protocol.yaml` 为准。
+
 更新时间：2026-09-17。以下区分论文内容、项目实测和未解决的问题；请不要把
 接口测试、碰撞壳重叠或局部姿态测试当作 Pour 任务成功。
 

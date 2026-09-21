@@ -147,6 +147,6 @@ def test_solver_retains_a_feasible_candidate_without_claiming_an_optimum():
     assert not candidate["accepted_as_reset"] and not candidate["qvel_selected"]
     assert Path(protocol["inputs"]["historical_orientation_bug_baseline"]) == BASELINE
     assert Path(protocol["inputs"]["active_robot_reference"]) == (
-        ROOT / "runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/robot_reference.npz")
+        ROOT / "runs/taco_pour_bimanual_mano_fk_combined_collision_v1/robot_reference.npz")
     assert candidate["baseline"] == "historical_orientation_bug_reference_not_current_mano_fk"
-    assert not protocol["audit_results"]["new_reset_applied"] and not protocol["training_ready"]
+    assert protocol["audit_results"]["new_reset_applied"] and protocol["training_ready"]

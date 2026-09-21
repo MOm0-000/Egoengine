@@ -31,6 +31,7 @@ from video_to_spider.rl.h2s2r import (
 )
 from video_to_spider.rl.reset_sampler import PreGraspResetSampler, PreGraspSamplerConfig
 from video_to_spider.rl.objective_contract import RuntimeObjective
+from video_to_spider.rl.observation_contract import RuntimeObservationContract
 from egoengine_repro.action.paper_rewards import (
     lifting,
     object_tracking,
@@ -70,6 +71,11 @@ _WP_EFC_FIELDS = (
     "type", "id", "J", "J_colind", "J_rowadr", "J_rownnz", "pos", "margin",
     "D", "vel", "aref", "frictionloss", "force", "state", "Ma",
 )
+
+
+def _copy_from_torch(target: Any, value: torch.Tensor) -> None:
+    """Preserve Warp vector/matrix element types when copying Torch storage."""
+    wp.copy(target, wp.from_torch(value, dtype=target.dtype))
 
 
 def _quat_wxyz_to_rot(q: torch.Tensor) -> torch.Tensor:
@@ -166,6 +172,7 @@ class MJWPVectorEnvConfig:
     tracked_object_indices: tuple[int, ...] | None = None
     object_roles: tuple[str, ...] | None = None
     objective: RuntimeObjective | None = None
+    observation: RuntimeObservationContract | None = None
 
 
 class MJWPVectorEnv:
@@ -188,7 +195,10 @@ class MJWPVectorEnv:
         self.env_cfg = env_config or MJWPVectorEnvConfig()
         if self.env_cfg.objective is None:
             raise ValueError("an explicit resolved runtime objective is required")
+        if self.env_cfg.observation is None:
+            raise ValueError("an explicit resolved runtime observation contract is required")
         self.objective = self.env_cfg.objective
+        self.observation_contract = self.env_cfg.observation
         if self.env_cfg.hand_qpos_dof is None:
             object_ctrl_dims = int(getattr(self.ego_cfg, "object_action_dims", 0))
             inferred = int(self.ego_cfg.nu) - (object_ctrl_dims if object_ctrl_dims > 0 else 0)
@@ -497,7 +507,7 @@ class MJWPVectorEnv:
                 parts = key.split(".")
                 target = data if len(parts) == 1 else getattr(data, parts[0])
                 target = getattr(target, parts[-1])
-                wp.copy(target, wp.from_torch(value.to(str(self.env.device))))
+                _copy_from_torch(target, value.to(str(self.env.device)))
         wp.synchronize()
 
     # ------------------------------------------------------------------
@@ -508,7 +518,7 @@ class MJWPVectorEnv:
         n_anchors = self.anchors.shape[0]
         n_objects = 2 if int(self.ego_cfg.nq_obj) in (12, 14) else 1
         n_contact_pairs = len(self.env_cfg.fingertip_site_ids) * n_objects
-        return (
+        dimension = (
             n_hand * 2
             + len(self.env_cfg.fingertip_site_ids) * 3
             + len(self.env_cfg.palm_site_ids) * 3
@@ -516,11 +526,23 @@ class MJWPVectorEnv:
             + n_hand * 2
             + n_contact_pairs
         )
+        if dimension != self.observation_contract.actor_dim:
+            raise ValueError(
+                f"runtime actor dimension {dimension} does not match observation contract "
+                f"{self.observation_contract.actor_dim}"
+            )
+        return dimension
 
     def _compute_privileged_dim(self) -> int:
         n_objects = 2 if int(self.ego_cfg.nq_obj) in (12, 14) else 1
         n_contact_pairs = len(self.env_cfg.fingertip_site_ids) * n_objects
-        return 6 * n_objects + self.env_cfg.hand_qpos_dof + n_contact_pairs * 3
+        dimension = 6 * n_objects + self.env_cfg.hand_qpos_dof + n_contact_pairs * 3
+        if dimension != self.observation_contract.critic_dim:
+            raise ValueError(
+                f"runtime critic dimension {dimension} does not match observation contract "
+                f"{self.observation_contract.critic_dim}"
+            )
+        return dimension
 
     def _reference_ctrls(self, time_indices: np.ndarray, *, offset: int = 0) -> torch.Tensor:
         """Return one reference control row per vectorized environment."""
@@ -560,17 +582,17 @@ class MJWPVectorEnv:
                     if hasattr(self.env.data_wp.efc, name):
                         current = wp.to_torch(getattr(self.env.data_wp.efc, name))
                         preserved[f"efc.{name}"] = current[~rows].clone()
-            wp.copy(self.env.data_wp.qpos, wp.from_torch(qpos))
-            wp.copy(self.env.data_wp.qvel, wp.from_torch(qvel))
-            wp.copy(self.env.data_wp.ctrl, wp.from_torch(ctrl))
+            _copy_from_torch(self.env.data_wp.qpos, qpos)
+            _copy_from_torch(self.env.data_wp.qvel, qvel)
+            _copy_from_torch(self.env.data_wp.ctrl, ctrl)
             for name in ("qacc", "qacc_warmstart", "act", "act_dot", "qfrc_applied", "xfrc_applied"):
                 if hasattr(self.env.data_wp, name):
                     current = wp.to_torch(getattr(self.env.data_wp, name)).clone()
                     current[rows] = 0
-                    wp.copy(getattr(self.env.data_wp, name), wp.from_torch(current))
+                    _copy_from_torch(getattr(self.env.data_wp, name), current)
             time = wp.to_torch(self.env.data_wp.time).clone()
             time[rows] = 0
-            wp.copy(self.env.data_wp.time, wp.from_torch(time))
+            _copy_from_torch(self.env.data_wp.time, time)
 
             contact_world = wp.to_torch(self.env.data_wp.contact.worldid).long()
             valid_world = (contact_world >= 0) & (contact_world < self.num_envs)
@@ -578,13 +600,15 @@ class MJWPVectorEnv:
             for name in _WP_CONTACT_FIELDS:
                 if hasattr(self.env.data_wp.contact, name):
                     current = wp.to_torch(getattr(self.env.data_wp.contact, name)).clone()
+                    if not current.ndim or current.shape[0] != contact_world.shape[0]:
+                        continue
                     current[contact_rows] = -1 if name in {"worldid", "geom", "efc_address"} else 0
-                    wp.copy(getattr(self.env.data_wp.contact, name), wp.from_torch(current))
+                    _copy_from_torch(getattr(self.env.data_wp.contact, name), current)
             for name in _WP_EFC_FIELDS:
                 if hasattr(self.env.data_wp.efc, name):
                     current = wp.to_torch(getattr(self.env.data_wp.efc, name)).clone()
                     current[rows] = 0
-                    wp.copy(getattr(self.env.data_wp.efc, name), wp.from_torch(current))
+                    _copy_from_torch(getattr(self.env.data_wp.efc, name), current)
             mjwarp.forward(self.env.model_wp, self.env.data_wp)
             for key, value in preserved.items():
                 owner, name = (
@@ -594,7 +618,7 @@ class MJWPVectorEnv:
                 )
                 current = wp.to_torch(getattr(owner, name)).clone()
                 current[~rows] = value
-                wp.copy(getattr(owner, name), wp.from_torch(current))
+                _copy_from_torch(getattr(owner, name), current)
         wp.synchronize()
 
     def _resolve_sites(self) -> None:
@@ -777,7 +801,7 @@ class MJWPVectorEnv:
 
         current_objects = _object_pose_parts(qpos, int(self.ego_cfg.nq_obj))
         goal_indices = np.minimum(
-            self.start_indices + self.time_indices,
+            self.start_indices + self.time_indices + self.observation_contract.goal_reference_offset,
             self.qpos_ref.shape[0] - 1,
         )
         goal_qpos = self.qpos_ref[goal_indices].to(qpos.device)
@@ -793,8 +817,12 @@ class MJWPVectorEnv:
 
         hand_qpos = qpos[:, : self.env_cfg.hand_qpos_dof]
         hand_qvel = qvel[:, : self.env_cfg.hand_qpos_dof]
-        current_reference = self._reference_ctrls(self.time_indices, offset=1)[:, : self.env_cfg.hand_qpos_dof]
-        next_reference = self._reference_ctrls(self.time_indices, offset=2)[:, : self.env_cfg.hand_qpos_dof]
+        current_reference = self._reference_ctrls(
+            self.time_indices, offset=self.observation_contract.command_offset
+        )[:, : self.env_cfg.hand_qpos_dof]
+        next_reference = self._reference_ctrls(
+            self.time_indices, offset=self.observation_contract.command_preview_offset
+        )[:, : self.env_cfg.hand_qpos_dof]
         observation = torch.cat(
             [
                 hand_qpos,

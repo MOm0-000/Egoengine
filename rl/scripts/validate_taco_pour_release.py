@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 import sys
 import xml.etree.ElementTree as ET
@@ -11,15 +12,17 @@ import xml.etree.ElementTree as ET
 import mujoco
 import numpy as np
 import torch
+import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-SPIDER = Path("/data_all/zzx/egoengine/spider")
+SPIDER = Path(os.environ.get("SPIDER_ROOT", ROOT / "external/spider_compat"))
 sys.path[:0] = [str(ROOT / "src"), str(ROOT / "scripts"), str(SPIDER)]
 
 from audit_taco_initialization import visual_meshes
 from build_taco_pour_initialization_candidates import (
     _fresh_mjwp_state, _json_default, _load_spider_config, load_protocol, native_geometry_gate,
 )
+from egoengine_repro.retarget.collision_audit import collision_families, distances
 from egoengine_repro.retarget.paper_audit import artifact, verify_artifacts
 from video_to_spider.rl.physics_contract import build_physics_contract, verify_runtime_model
 
@@ -69,7 +72,91 @@ def _native_forbidden(native):
     return {key: value for key, value in native["failures"].items() if value}
 
 
-def validate_candidate(protocol_path: Path, root: Path, key: str):
+def _classify_release_native_failures(model, native, runtime, release_cfg):
+    raw = native["failures"]
+    native_limit = float(release_cfg.get(
+        "max_declared_floor_native_compression_m",
+        release_cfg.get("require_no_new_native_material_penetration_over_m", 5.0e-5),
+    ))
+    runtime_limit = float(release_cfg.get(
+        "max_declared_floor_runtime_compression_m", native_limit
+    ))
+    allowed, forbidden = {"hand_table": [], "object_table": []}, {
+        "hand_table": [],
+        "object_table": [],
+        "hand_object": list(raw["hand_object"]),
+        "omitted_nonadjacent": list(raw["omitted_nonadjacent"]),
+        "unclassified_omitted_nonadjacent": list(
+            raw["unclassified_omitted_nonadjacent"]
+        ),
+    }
+    for family in ("hand_table", "object_table"):
+        for geom_name in raw[family]:
+            body_name = model.body(int(model.geom_bodyid[model.geom(geom_name).id])).name
+            native_distance = float(native["table_clearance_m"][geom_name])
+            runtime_distance = runtime["floor_distance_by_body_m"].get(body_name)
+            record = {
+                "geom": geom_name,
+                "body": body_name,
+                "native_distance_m": native_distance,
+                "runtime_distance_m": runtime_distance,
+            }
+            if (
+                native_distance >= -native_limit
+                and runtime_distance is not None
+                and runtime_distance >= -runtime_limit
+            ):
+                allowed[family].append(record)
+            else:
+                forbidden[family].append(record)
+    return (
+        {key: value for key, value in forbidden.items() if value},
+        {key: value for key, value in allowed.items() if value},
+    )
+
+
+def _runtime_endpoint_diagnostic(model, qpos):
+    data = mujoco.MjData(model)
+    data.qpos[:] = qpos
+    mujoco.mj_forward(model, data)
+    families = collision_families(model)
+    family_minimum = {
+        name: float(distances(model, data, families[name]).min())
+        for name in ("hand_floor", "tool_floor", "target_floor")
+    }
+    floor = model.geom("floor").id
+    body_minimum = {}
+    for pair in (
+        families["hand_floor"] + families["tool_floor"] + families["target_floor"]
+    ):
+        other = pair[1] if pair[0] == floor else pair[0]
+        body_name = model.body(int(model.geom_bodyid[other])).name
+        value = float(mujoco.mj_geomDistance(
+            model, data, pair[0], pair[1], 0.05, None
+        ))
+        body_minimum[body_name] = min(value, body_minimum.get(body_name, np.inf))
+    limited = np.flatnonzero(model.jnt_limited)
+    addresses = model.jnt_qposadr[limited]
+    margins = np.minimum(
+        qpos[addresses] - model.jnt_range[limited, 0],
+        model.jnt_range[limited, 1] - qpos[addresses],
+    )
+    violations = [
+        {
+            "joint": model.joint(int(joint_id)).name,
+            "margin_rad": float(margin),
+        }
+        for joint_id, margin in zip(limited, margins)
+        if margin < -1.0e-6
+    ]
+    return {
+        "family_minimum_distance_m": family_minimum,
+        "floor_distance_by_body_m": body_minimum,
+        "joint_limit_violations": violations,
+    }
+
+
+def validate_candidate(protocol_path: Path, root: Path, key: str, physics=None):
     from spider.simulators import mjwp
     import warp as wp
 
@@ -87,13 +174,14 @@ def validate_candidate(protocol_path: Path, root: Path, key: str):
         initial = {name: np.asarray(source[name]) for name in source.files}
     qpos, qvel, ctrl = (initial[name] for name in ("qpos", "qvel", "ctrl"))
     config_path = Path(protocol["formal_inputs"]["formal_simulator_config"])
-    physics = build_physics_contract(config_path)
+    if physics is None:
+        physics = build_physics_contract(config_path)
     reference_path = Path(protocol["formal_inputs"]["reference"])
     scene = Path(protocol["formal_inputs"]["scene"])
     holds = _object_hold_constraints(ET.parse(scene).getroot())
     release_cfg = protocol["passive_release_validation"]
     t0_passed = bool(builder["t0_legality_gate"]["passed"])
-    trace, endpoints, motions = [], [], []
+    trace, endpoints, motions, runtime_endpoint_diagnostics = [], [], [], []
     failed_reason = None
     formal_environment_created = False
     if t0_passed and not holds:
@@ -145,6 +233,9 @@ def validate_candidate(protocol_path: Path, root: Path, key: str):
                 break
             endpoint = mjwp.get_qpos(config, env)[0].detach().cpu().numpy().astype(float)
             endpoints.append(endpoint)
+            runtime_endpoint_diagnostics.append(
+                _runtime_endpoint_diagnostic(env.model_cpu, endpoint)
+            )
             motions.append(_object_motion(previous, endpoint, qpos))
             previous = endpoint
     else:
@@ -153,10 +244,22 @@ def validate_candidate(protocol_path: Path, root: Path, key: str):
 
     cpu_model = mujoco.MjModel.from_xml_path(str(scene))
     meshes, _ = visual_meshes(scene, cpu_model)
+    reporting_threshold = float(release_cfg.get(
+        "native_material_penetration_reporting_threshold_m",
+        release_cfg.get("require_no_new_native_material_penetration_over_m", 5.0e-5),
+    ))
     endpoint_native = [native_geometry_gate(cpu_model, state, meshes,
-        float(release_cfg["require_no_new_native_material_penetration_over_m"]))
+        reporting_threshold)
         for state in endpoints]
     native_failures = [_native_forbidden(row) for row in endpoint_native]
+    classified = [
+        _classify_release_native_failures(
+            cpu_model, native, runtime, release_cfg
+        )
+        for native, runtime in zip(endpoint_native, runtime_endpoint_diagnostics)
+    ]
+    unmodeled_native_failures = [row[0] for row in classified]
+    allowed_modeled_compression = [row[1] for row in classified]
     all_motion = [row for interval in motions for row in interval]
     release_executed = len(endpoints) == int(release_cfg["control_intervals"])
     max_interval_translation = max((row["interval_translation_m"] for row in all_motion), default=None)
@@ -169,10 +272,13 @@ def validate_candidate(protocol_path: Path, root: Path, key: str):
         "all_states_finite": bool(trace and all(row["finite"] for row in trace)),
         "no_capacity_overflow": bool(trace and not any(row["capacity_overflow"] for row in trace)),
         "object_hold_absent": not holds,
-        "joint_limits": (min(row["joint_limit_min_margin"] for row in trace) >= -1e-6
+        "joint_limits": (min(row["joint_limit_min_margin"] for row in trace)
+                         >= -float(release_cfg.get(
+                             "joint_limit_numerical_tolerance_rad", 1.0e-6
+                         ))
                          if trace else None),
         "no_forbidden_native_penetration_at_endpoints": (
-            not any(native_failures) if release_executed else None),
+            not any(unmodeled_native_failures) if release_executed else None),
         "object_translation_per_interval": (
             max_interval_translation <= release_cfg["max_object_translation_per_interval_m"]
             if release_executed else None),
@@ -214,6 +320,10 @@ def validate_candidate(protocol_path: Path, root: Path, key: str):
         "object_motion_by_endpoint": motions,
         "native_endpoint_audits": endpoint_native,
         "native_endpoint_failures": native_failures,
+        "unmodeled_native_endpoint_failures": unmodeled_native_failures,
+        "allowed_modeled_floor_compression": allowed_modeled_compression,
+        "runtime_endpoint_diagnostics": runtime_endpoint_diagnostics,
+        "endpoint_qpos": [value.tolist() for value in endpoints],
         "trace": trace,
     }
     state_contract = {name: np.asarray(initial[name]).item() for name in (
@@ -244,13 +354,17 @@ def validate_candidate(protocol_path: Path, root: Path, key: str):
 
 
 def run(protocol_path: Path, root: Path):
-    reports = {key: validate_candidate(protocol_path, root, key)
+    protocol = load_protocol(protocol_path)
+    physics = build_physics_contract(
+        Path(protocol["formal_inputs"]["formal_simulator_config"])
+    )
+    reports = {key: validate_candidate(protocol_path, root, key, physics)
                for key in ("candidate_a", "candidate_b")}
     comparison_path = root / "comparison.json"
     if comparison_path.exists() or comparison_path.is_symlink():
         raise FileExistsError(comparison_path)
     comparison = {
-        "status": "initialization_protocol_v1_complete",
+        "status": f"{yaml.safe_load(protocol_path.read_text())['protocol_name']}_complete",
         "protocol": artifact(protocol_path),
         "candidates": {key: {
             "accepted_for_replay_rl": report["accepted_for_replay_rl"],

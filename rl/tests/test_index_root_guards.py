@@ -50,7 +50,9 @@ def test_guard_audit_and_active_reference_are_consistent():
         assert "manufacturing tolerance" in report["native_transition_precision_note"]
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
     ppo = yaml.safe_load((ROOT / "configs/taco_pour_bimanual_ppo.yaml").read_text())
-    assert Path(protocol["inputs"]["active_robot_reference"]) == RUN / "robot_reference.npz"
+    assert Path(protocol["inputs"]["active_robot_reference"]) == (
+        ROOT / "runs/taco_pour_bimanual_mano_fk_combined_collision_v1/robot_reference.npz"
+    )
     assert Path(ppo["data_path"]) == RUN / "robot_reference.npz"
 
 

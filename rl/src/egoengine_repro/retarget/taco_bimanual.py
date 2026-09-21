@@ -263,6 +263,12 @@ def retarget(scene: Path, human_path: Path, settings: dict, output: Path) -> dic
     accepted_min_distance = float(
         settings.get("accepted_min_self_collision_distance_m", -1e-6)
     )
+    acceptance_slack = float(
+        settings.get("collision_acceptance_numerical_slack_m", 1e-12)
+    )
+    local_projection_buffer = float(
+        settings.get("local_surface_guard_projection_buffer_m", 0.0)
+    )
     if (not np.isfinite(primal_tolerance) or primal_tolerance <= 0.0
             or not np.isfinite(dual_tolerance) or dual_tolerance <= 0.0):
         raise ValueError("solver tolerances must be positive and finite")
@@ -270,6 +276,15 @@ def retarget(scene: Path, human_path: Path, settings: dict, output: Path) -> dic
         raise ValueError("planning collision buffer must be finite and nonnegative")
     if not np.isfinite(accepted_min_distance) or accepted_min_distance > 0.0:
         raise ValueError("accepted minimum self-collision distance must be finite and nonpositive")
+    if (not np.isfinite(acceptance_slack) or acceptance_slack < 0.0
+            or acceptance_slack > 1e-9):
+        raise ValueError("collision acceptance numerical slack must be in [0, 1e-9] m")
+    if (not np.isfinite(local_projection_buffer) or local_projection_buffer < 0.0
+            or local_projection_buffer > 1e-6):
+        raise ValueError("local surface-guard projection buffer must be in [0, 1e-6] m")
+    local_minimum_distance = accepted_min_distance + local_projection_buffer
+    if local_minimum_distance > 0.0:
+        raise ValueError("local surface-guard projection target must remain nonpositive")
     config = mink.Configuration(model)
     tasks = []
     for side in SIDES:
@@ -285,17 +300,50 @@ def retarget(scene: Path, human_path: Path, settings: dict, output: Path) -> dic
         raise ValueError("retargeting requires an audited explicit runtime self-collision contract")
     _enable_planning_collision_masks(model, hand_geoms, [])
     groups = _explicit_collision_groups(model, mujoco, hand_geom_ids=set(hand_geoms))
-    inner = mink.CollisionAvoidanceLimit(model, groups,
-                  minimum_distance_from_collisions=planning_buffer, collision_detection_distance=0.02,
-                  include_explicit_pairs=True)
-    if set(inner.geom_id_pairs) != set(pairs):
+    local_guard_token = "_palm_thumb_surface_guard_"
+    local_groups = [group for group in groups if any(
+        local_guard_token in name for side in group for name in side
+    )]
+    standard_groups = [group for group in groups if group not in local_groups]
+    collisions = []
+    if standard_groups:
+        inner = mink.CollisionAvoidanceLimit(
+            model, standard_groups,
+            minimum_distance_from_collisions=planning_buffer,
+            collision_detection_distance=0.02,
+            include_explicit_pairs=True,
+        )
+        collision = _StrictCollisionLimit(
+            inner, mujoco, minimum_distance=planning_buffer,
+            depenetration_step=0.002,
+        )
+        collision.enabled = True
+        collisions.append(collision)
+    if local_groups:
+        # Tiny convex mesh pairs can return an exact zero without a positive
+        # separation witness.  A +2 um planning buffer would activate hundreds
+        # of such non-contact rows.  Keep the same runtime pairs in MINK, but
+        # activate this local family only after actual penetration and enforce
+        # the independently declared -1 um acceptance bound.
+        local_inner = mink.CollisionAvoidanceLimit(
+            model, local_groups,
+            minimum_distance_from_collisions=local_minimum_distance,
+            collision_detection_distance=0.0,
+            include_explicit_pairs=True,
+        )
+        local_collision = _StrictCollisionLimit(
+            local_inner, mujoco, minimum_distance=local_minimum_distance,
+            depenetration_step=0.002, deepest_invalid_only=True,
+        )
+        local_collision.enabled = True
+        collisions.append(local_collision)
+    constrained_pairs = set().union(*(set(limit.geom_id_pairs) for limit in collisions))
+    if constrained_pairs != set(pairs):
         raise ValueError("MINK filtered out runtime self pairs; IK/physics contract differs")
-    collision = _StrictCollisionLimit(inner, mujoco, minimum_distance=planning_buffer,
-                                      depenetration_step=0.002)
-    collision.enabled = True
+    collision_pairs = tuple(sorted(constrained_pairs))
     velocity_map = _joint_velocity_limits(model, mujoco, settings["velocity_limits"])
     displacement = _FrameDisplacementLimit(model, mujoco, velocity_map, mink.Constraint)
-    limits = [mink.ConfigurationLimit(model), collision, displacement]
+    limits = [mink.ConfigurationLimit(model), *collisions, displacement]
     locks = [mink.DofFreezingTask(model, list(range(36, 48)))]
     qpos = np.empty((n, model.nq))
     tip_errors = np.empty((n, 2, 5))
@@ -346,7 +394,8 @@ def retarget(scene: Path, human_path: Path, settings: dict, output: Path) -> dic
             velocity = solve(tasks)
             config.integrate_inplace(velocity, dt / substeps)
         for _ in range(128):
-            if distances(model, config.data, pairs).min() >= accepted_min_distance:
+            if (distances(model, config.data, pairs).min()
+                    >= accepted_min_distance - acceptance_slack):
                 break
             velocity = solve(())
             config.integrate_inplace(velocity, dt / substeps)
@@ -362,11 +411,11 @@ def retarget(scene: Path, human_path: Path, settings: dict, output: Path) -> dic
             relative = config.data.xmat[body].reshape(3, 3).T @ human["T_sim_wrist_target"][frame, h, :3, :3]
             wrist_errors[frame, h] = Rotation.from_matrix(relative).magnitude()
         self_distances[frame] = min((mujoco.mj_geomDistance(model, config.data, a, b, 0.05, None)
-                                    for a, b in collision.geom_id_pairs), default=0.05)
+                                    for a, b in collision_pairs), default=0.05)
         if frame == 0 or self_distances[frame] < self_distances[:frame].min():
             worst_pairs = sorted((dict(geom1=model.geom(a).name, geom2=model.geom(b).name,
                                        distance_m=float(mujoco.mj_geomDistance(model, config.data, a, b, 0.05, None)))
-                                  for a, b in collision.geom_id_pairs), key=lambda item: item["distance_m"])[:12]
+                                  for a, b in collision_pairs), key=lambda item: item["distance_m"])[:12]
         if frame % 25 == 0:
             print(f"MINK {frame + 1}/{n}: tip mean {tip_errors[frame].mean():.4f} m; self clearance {self_distances[frame]:.6f} m", flush=True)
     qvel = differentiate(model, qpos, dt)
@@ -404,7 +453,20 @@ def retarget(scene: Path, human_path: Path, settings: dict, output: Path) -> dic
                                           fingertip_orientation_cost=settings["fingertip_orientation_cost"],
                                           posture_cost=0.0,
                                           planning_collision_buffer_m=planning_buffer,
-                                          accepted_min_self_collision_distance_m=accepted_min_distance),
+                                          standard_self_collision_pair_count=len(standard_groups),
+                                          local_surface_guard_pair_count=len(local_groups),
+                                          local_surface_guard_collision_detection_distance_m=(
+                                              0.0 if local_groups else None
+                                          ),
+                                          local_surface_guard_minimum_distance_m=(
+                                              local_minimum_distance if local_groups else None
+                                          ),
+                                          local_surface_guard_projection_buffer_m=(
+                                              local_projection_buffer if local_groups else None
+                                          ),
+                                          local_surface_guard_deepest_invalid_only=bool(local_groups),
+                                          accepted_min_self_collision_distance_m=accepted_min_distance,
+                                          collision_acceptance_numerical_slack_m=acceptance_slack),
                   solver_primal_tolerance=primal_tolerance,
                   solver_dual_tolerance=dual_tolerance,
                   wrist_position_cost=0.0, object_dofs_locked_during_ik=True,
@@ -419,12 +481,12 @@ def retarget(scene: Path, human_path: Path, settings: dict, output: Path) -> dic
                   joint_limit_violating_frames=int((joint_margin < -1e-6).sum()),
                   frame_velocity_max_ratio=float(velocity_ratio.max()),
                   frame_velocity_violating_intervals=int((velocity_ratio.max(axis=1) > 1 + 1e-6).sum()),
-                  kinematic_model_feasible=bool((self_distances >= accepted_min_distance).all()
+                  kinematic_model_feasible=bool((self_distances >= accepted_min_distance - acceptance_slack).all()
                                                 and (joint_margin >= -1e-6).all()
                                                 and (velocity_ratio <= 1 + 1e-6).all()),
-                  collision_policy="explicit_runtime_pairs; source_intrahand_and_full_interhand",
+                  collision_policy="explicit_runtime_pairs; source_intrahand_full_interhand_and_local_surface_guard",
                   self_collision_resolution="strict separating QP, fixed per-frame velocity envelope",
-                  model_self_collision_passed=bool((self_distances >= -1e-6).all()),
+                  model_self_collision_passed=bool((self_distances >= -1e-6 - acceptance_slack).all()),
                   intrahand_collision_audit_path=str(intrahand_path.resolve()),
                   intrahand_collision_summary=dict(
                       pair_count=intrahand_audit["pair_count"],

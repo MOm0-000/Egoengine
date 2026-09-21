@@ -1,0 +1,54 @@
+protocol_name: taco_pour_left_palm_thumb_boundary_cegis_v1
+scope: isolated_existing_candidate_inventory_cegis
+paper_source: not_published_local_collision_engineering
+training_ready: false
+formal_scene_modified: false
+reference_modified: false
+
+inputs:
+  scene:
+    path: /data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml
+    sha256: add44e3de084c1dca7bf0f094cff271e3ebea7c63e2375cb175a9dfc9d8fa98d
+  robot_reference:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/robot_reference.npz
+    sha256: 493a1e0196123b1223a8a485eb3657ff5673e339f56ad94587b15b34b88d29d3
+  topology_v1:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_left_palm_thumb_boundary_topology_v1/report.json
+    sha256: 6dc7fe705b112429702c1f1acddfcfc885104567e6808066d49c7ee49d353856
+  rejected_hybrid:
+    path: /data_all/zzx/3.2RL/TRASH/rejected_candidates/2026-09-20_collision_semantics_repair_v2_self_guard/left_palm_thumb_hybrid_guard_fit.json
+    sha256: 09cb7264c37022dfc19b7840aab287a46d45cd2a9ee1296b46596a752d821426
+  palm_decomposition:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_collision_repair/assets/left_palm_assembly/provenance.json
+    sha256: 7382ad55204fbe0dfaab9d23bfa6485682901ed0c6703cc0ecd355efb0145ea8
+  thumb_decomposition:
+    path: /data_all/zzx/3.2RL/TRASH/rejected_candidates/2026-09-20_collision_semantics_repair_v2_self_guard/assets/left_thumb_root_local/provenance.json
+    sha256: 6c10af29ba0f2dcb5e7004215d2b1111bdc0bd4a9d1d00b651e45bf2b2aeef4b
+
+sampling:
+  boundary_probe_offsets_rad: [5.0e-5, 2.5e-4]
+  tuning_bend_fraction: 0.5
+  final_holdout_bend_fraction: 0.2360679774997897
+  rota1_coarse_samples: 513
+  transition_numerical_tolerance_rad: 1.0e-7
+  transition_max_bisections: 24
+
+local_diagnostic_acceptance:
+  final_holdout_sampled_false_positives: 0
+  final_holdout_sampled_false_negatives: 0
+  final_holdout_topology_mismatch_slices: 0
+  final_holdout_max_absolute_boundary_error_rad: 5.0e-5
+  note: local numerical audit target; not an EgoEngine paper parameter or manufacturing tolerance
+
+contracts:
+  use_existing_128_part_decompositions_only: true
+  refit_after_tuning_counterexamples_only: true
+  final_holdout_never_enters_fit: true
+  add_hand_object_avoidance_to_mink: false
+  emit_scene_xml: false
+  run_retargeting: false
+  run_capacity: false
+  run_initialization: false
+  run_training: false
+
+on_rejection: contact_local_high_resolution_decomposition_not_whole_hand_redecomposition

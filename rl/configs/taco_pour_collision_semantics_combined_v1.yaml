@@ -1,0 +1,45 @@
+protocol_name: taco_pour_collision_semantics_combined_v1
+scope: isolated_combination_of_accepted_external_floor_and_left_palm_thumb_candidates
+paper_source: not_published_local_collision_engineering
+training_ready: false
+formal_scene_modified: false
+
+inputs:
+  source_scene:
+    path: /data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_pour_bowl_plate_20230927_017/scene_source_contacts_mass.xml
+    sha256: add44e3de084c1dca7bf0f094cff271e3ebea7c63e2375cb175a9dfc9d8fa98d
+  external_floor_candidate:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_collision_semantics_repair_v2/candidate_runtime_semantics_scene.xml
+    sha256: 1dcb67e71e96ad91342e5a7d09c261fa63aa7740fb5c36c68d01823792a1bc70
+  external_floor_audit:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_collision_semantics_repair_v2/audit_report.json
+    sha256: 73c9379842e1b40e3864603b7d460e1d7f7ee8b8862636dd2ed013a851d1b125
+  local_self_guard_build:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_left_palm_thumb_local_surface_guard_v1/build_report.json
+    sha256: 01e62b622bc820dca6dc9137aa78d549267b2b643f088aad04ab3e8bfec89b6d
+  local_self_guard_audit:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_left_palm_thumb_local_surface_guard_v1/audit_report.json
+    sha256: d3856aae7e9ed5a6d6ffbb1c2e504370b0a2873295cb6a6a4e0616721d250ed0
+  human_reference:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/human_reference.npz
+    sha256: 852bda624bb22c9cf0797544294556752d490d11d443eb59a7f1e3e4aaab986a
+
+contracts:
+  external_object_and_floor_semantics_unchanged_from_v2_candidate: true
+  left_palm_thumb_guard_unchanged_from_isolated_passed_candidate: true
+  add_hand_object_avoidance_to_mink: false
+  self_pairs_enter_mink_and_runtime: true
+  external_and_floor_geoms_do_not_enter_mink_self_pairs: true
+  object_gt_trajectory_unchanged: true
+  joint_ranges_unchanged: true
+  emit_combined_candidate_only: true
+  run_capacity_before_new_reference: false
+  run_initialization_before_new_reference: false
+  run_training: false
+
+next_steps:
+  - rerun_all_198_mink_endpoints_with_self_collision_only
+  - rerun_full_horizon_0_197_external_and_floor_attribution_on_new_reference
+  - rerun_candidate_a_and_b_t0_native_probes
+  - rerun_four_world_capacity_and_rebuild_physics_contract
+  - run_initialization_protocol_v2

@@ -1,5 +1,8 @@
 # Pour Sample Status
 
+> Historical sample-acquisition checkpoint. Its old `training_ready=false`
+> statement is superseded; current status is in `docs/rl_reproduction_status.md`.
+
 Input: `(pour in some, bowl, plate)/20230927_017`, with 198 rows of left/right
 hand GT, bowl/plate pose GT and camera transforms, 198 original RGB frames and
 198 original uint16 depth frames. RGB/GT are 30 Hz, approximately 6.6 seconds. Human GT

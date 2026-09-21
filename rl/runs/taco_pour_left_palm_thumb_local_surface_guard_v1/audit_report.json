@@ -1,0 +1,76 @@
+{
+  "status": "isolated_local_surface_self_guard_passed_not_combined_or_promoted",
+  "protocol": {
+    "path": "/data_all/zzx/3.2RL/configs/taco_pour_left_palm_thumb_local_surface_guard_v1.yaml",
+    "sha256": "fcca4ec91d00059aa34308ff6260010dfed2dab7788df99ec5d4c24c2d9d6729"
+  },
+  "build_report": {
+    "path": "/data_all/zzx/3.2RL/runs/taco_pour_left_palm_thumb_local_surface_guard_v1/build_report.json",
+    "sha256": "01e62b622bc820dca6dc9137aa78d549267b2b643f088aad04ab3e8bfec89b6d"
+  },
+  "candidate_scene": {
+    "path": "/data_all/zzx/3.2RL/runs/taco_pour_left_palm_thumb_local_surface_guard_v1/candidate_self_guard_scene.xml",
+    "sha256": "23df198cf918ed25b12d580bad78170da0f81720d3dc7e0ced8396b64ab12711"
+  },
+  "independent_holdout": {
+    "bend_fraction": 0.3183098861837907,
+    "bend_slices": 256,
+    "native_collision_slices": 152,
+    "sampled_false_positive_count": 0,
+    "sampled_false_negative_count": 0,
+    "false_positives": [],
+    "false_negatives": [],
+    "topology_mismatch_slice_indices": [],
+    "comparable_boundary_slices": 152,
+    "boundary_rmse_rad": 1.815333486775601e-05,
+    "boundary_median_absolute_error_rad": 1.3229370117162631e-05,
+    "boundary_p95_absolute_error_rad": 3.3961486816447264e-05,
+    "boundary_maximum_absolute_error_rad": 4.7195434570213024e-05
+  },
+  "known_old_hybrid_counterexamples": {
+    "old_hybrid_false_negative": {
+      "thumb_bend_rad": 0.12112506873163462,
+      "thumb_rota1_rad": 1.4374059661708884,
+      "native_collision": true,
+      "runtime_collision": true,
+      "matched": true
+    },
+    "old_hybrid_false_positive": {
+      "thumb_bend_rad": 0.004048664938583147,
+      "thumb_rota1_rad": 1.4399843552192655,
+      "native_collision": false,
+      "runtime_collision": false,
+      "matched": true
+    }
+  },
+  "pair_contract": {
+    "guard_geom_count": 107,
+    "runtime_guard_pair_count": 241,
+    "compiled_pairs_touching_guard_count": 241,
+    "guards_pair_only_with_each_other": true,
+    "mink_guard_pair_count": 241,
+    "runtime_and_mink_guard_pair_sets_identical": true,
+    "zero_distance_queries_not_counted_as_penetration": 13298,
+    "penetration_definition": "mj_geomDistance < 0; exact zero without a generated contact is boundary/unsupported-positive-distance, not material penetration"
+  },
+  "passed_local_self_guard_gate": true,
+  "formal_scene_modified": false,
+  "combined_with_external_floor_candidate": false,
+  "reference_modified": false,
+  "mink_retarget_run": false,
+  "capacity_run": false,
+  "initialization_run": false,
+  "training_run": false,
+  "next_steps": [
+    "merge_with_external_and_floor_candidate_scene",
+    "rerun_all_198_mink_endpoints_with_self_collision_only",
+    "rerun_full_horizon_0_197_external_and_floor_attribution_on_new_reference",
+    "rerun_candidate_a_and_b_t0_native_probes",
+    "rerun_four_world_capacity_and_rebuild_physics_contract",
+    "run_initialization_protocol_v2"
+  ],
+  "code": {
+    "path": "/data_all/zzx/3.2RL/scripts/audit_taco_left_palm_thumb_local_surface_guard.py",
+    "sha256": "d1fc9092767444165e7b94e2ece0e8ef176b06484b24da1ca409becdcab21bbd"
+  }
+}

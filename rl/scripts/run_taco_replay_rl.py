@@ -171,6 +171,7 @@ def main():
     parser.add_argument("--initialization-report", type=Path, required=True)
     parser.add_argument("--protocol", type=Path, default=ROOT / "configs/replay_rl_protocol.yaml")
     parser.add_argument("--objective-profile", type=Path)
+    parser.add_argument("--observation-profile", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--epochs", type=int, default=2)
     parser.add_argument("--max-chunks", type=int, default=1)
@@ -183,6 +184,10 @@ def main():
     objective = load_runtime_objective(
         args.protocol, args.objective_profile,
         tracking_variant=args.tracking_variant, require_run_ready=True,
+    )
+    from video_to_spider.rl.observation_contract import load_runtime_observation
+    observation = load_runtime_observation(
+        args.protocol, args.observation_profile, require_run_ready=True
     )
     initial, provenance = load_accepted_initialization(args.initialization_report, args.config)
 
@@ -197,7 +202,8 @@ def main():
         env_config=MJWPVectorEnvConfig(reference_start_index=0, asymmetric_critic=True,
             max_episode_length=len(reference[0]) - 1,
             tracked_object_indices=(0,) if args.tracking_variant == "tool_only" else None,
-            object_roles=("tool", "target"), objective=objective))
+            object_roles=("tool", "target"), objective=objective,
+            observation=observation))
     verify_runtime_model(env.env.model_cpu, provenance["validated_physics_contract"])
     tensors = [torch.as_tensor(initial[k][None], device="cuda:0", dtype=torch.float32)
                for k in ("qpos", "qvel", "ctrl")]
@@ -205,10 +211,12 @@ def main():
     env._last_ctrl = tensors[2].clone()
     env._check_capacity()
     backend = MJWPChunkBackend(env)
+    accepted_initial_boundary = backend.snapshot()
     args.output.mkdir(parents=True)
     result = dict(status="running", initialization=provenance,
                   tracking_variant=args.tracking_variant,
                   objective=objective.as_report(),
+                  observation=observation.as_report(),
                   config_artifact=dict(path=str(args.config.resolve()),
                       sha256=hashlib.sha256(args.config.read_bytes()).hexdigest()),
                   local_settings=dict(worlds=1, ppo_epochs=args.epochs, ppo_horizon=40,
@@ -216,6 +224,12 @@ def main():
                       tracking_boundary=env.tracking_boundary),
                   source_frames=len(reference[0]), control_intervals=len(reference[0]) - 1,
                   chunks=[], task_success=False)
+    committed_qpos = [np.asarray(initial["qpos"], dtype=np.float32)]
+    committed_qvel = [np.asarray(initial["qvel"], dtype=np.float32)]
+    committed_ctrl = [np.asarray(initial["ctrl"], dtype=np.float32)]
+    committed_raw_residual = []
+    committed_applied_residual = []
+    committed_modes = []
     start = 0
     try:
         for _ in range(args.max_chunks):
@@ -230,6 +244,24 @@ def main():
             if chunk.mode is None:
                 result["status"] = "both_modes_failed_within_local_budget"
                 break
+            selected_trace = next(
+                trace for trace in chunk_report["validation_traces"]
+                if trace["mode"] == chunk.mode and trace["feasible"]
+            )
+            committed_count = chunk.committed_end - chunk.start
+            committed_steps = selected_trace["steps"][:committed_count]
+            if len(committed_steps) != committed_count:
+                raise RuntimeError("selected validation trace does not contain the committed chunk")
+            committed_qpos.extend(np.asarray(step["endpoint_qpos"], dtype=np.float32) for step in committed_steps)
+            committed_qvel.extend(np.asarray(step["endpoint_qvel"], dtype=np.float32) for step in committed_steps)
+            committed_ctrl.extend(np.asarray(step["commanded_ctrl"], dtype=np.float32) for step in committed_steps)
+            committed_raw_residual.extend(
+                np.asarray(step["raw_residual_action"], dtype=np.float32) for step in committed_steps
+            )
+            committed_applied_residual.extend(
+                np.asarray(step["applied_residual"], dtype=np.float32) for step in committed_steps
+            )
+            committed_modes.extend([chunk.mode] * committed_count)
             start = chunk.committed_end
             torch.save(backend.snapshot(), args.output / "committed_boundary.pt")
             if start == len(reference[0]) - 1:
@@ -237,13 +269,59 @@ def main():
                 break
         else:
             result["status"] = "chunk_budget_reached_not_full_task_success"
+        if result["task_success"]:
+            if len(committed_raw_residual) != len(reference[0]) - 1:
+                raise RuntimeError("full-horizon result does not contain one action per transition")
+            final_committed_boundary = backend.snapshot()
+            backend.restore(accepted_initial_boundary)
+            backend.begin_trial("stitched_trajectory", 0, len(committed_raw_residual))
+            stitched_steps = 0
+            stitched_error = None
+            try:
+                for index, action in enumerate(committed_raw_residual):
+                    if not backend.step(action[None], index):
+                        break
+                    stitched_steps += 1
+            except Exception as error:
+                stitched_error = f"{type(error).__name__}: {error}"
+                raise
+            finally:
+                stitched_feasible = stitched_steps == len(committed_raw_residual)
+                backend.end_trial(
+                    stitched_feasible, stitched_steps, error=stitched_error
+                )
+                result["stitched_trajectory_validation"] = backend.validation_traces[-1]
+                backend.restore(final_committed_boundary)
+            if stitched_feasible:
+                result["status"] = "full_horizon_tracking_feasible_and_stitched_replay_validated"
+            else:
+                result["status"] = "stitched_trajectory_replay_failed"
+                result["task_success"] = False
     except Exception as error:
         result.update(status="error", error=f"{type(error).__name__}: {error}")
         raise
     finally:
         result["simulation_control_intervals"] = env.simulation_control_intervals
         result["simulation_physics_steps"] = env.simulation_physics_steps
-        result["committed_reference_index"] = int(env.time_indices[0])
+        result["committed_reference_index"] = int(start)
+        trajectory_path = args.output / "optimized_trajectory.npz"
+        np.savez_compressed(
+            trajectory_path,
+            qpos=np.stack(committed_qpos),
+            qvel=np.stack(committed_qvel),
+            ctrl=np.stack(committed_ctrl),
+            raw_residual_action=np.stack(committed_raw_residual) if committed_raw_residual else np.empty((0, 36), np.float32),
+            applied_residual=np.stack(committed_applied_residual) if committed_applied_residual else np.empty((0, 36), np.float32),
+            mode=np.asarray(committed_modes),
+            reference_endpoint=np.arange(len(committed_qpos), dtype=np.int32),
+            frequency=np.asarray(30.0, dtype=np.float32),
+        )
+        result["optimized_trajectory"] = {
+            "path": str(trajectory_path.resolve()),
+            "sha256": hashlib.sha256(trajectory_path.read_bytes()).hexdigest(),
+            "endpoints": len(committed_qpos),
+            "transitions": len(committed_modes),
+        }
         (args.output / "report.json").write_text(json.dumps(result, indent=2) + "\n")
 
 

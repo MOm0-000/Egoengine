@@ -41,6 +41,10 @@ retarget:
   # trajectory is accepted separately against the numerical distance bound.
   planning_collision_buffer_m: 2.0e-6
   accepted_min_self_collision_distance_m: -1.0e-6
+  collision_acceptance_numerical_slack_m: 1.0e-12
+  # Local mesh pairs cannot provide a reliable positive-distance witness.
+  # Project actual penetration to zero; final acceptance still uses -1 um.
+  local_surface_guard_projection_buffer_m: 1.0e-6
   surface_projection: false
   surface_projection_margin: 0.002
   velocity_limits:

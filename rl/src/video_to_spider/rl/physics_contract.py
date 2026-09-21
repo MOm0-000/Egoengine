@@ -37,6 +37,40 @@ def _apply_mjwp_options(model: mujoco.MjModel, config: dict[str, Any]) -> None:
     model.opt.integrator = mujoco.mjtIntegrator.mjINT_IMPLICITFAST
 
 
+def compile_mujoco_model(
+    scene: str | Path, sdf_octree_depths: dict[str, int] | None = None,
+) -> mujoco.MjModel:
+    """Compile the exact model requested by the runtime physics contract."""
+    depths = sdf_octree_depths or {}
+    if not isinstance(depths, dict):
+        raise ValueError("sdf_octree_depths must map mesh names to depths")
+    if not depths:
+        return mujoco.MjModel.from_xml_path(str(scene))
+    if any(
+        not isinstance(name, str)
+        or not isinstance(depth, int)
+        or depth < 1
+        for name, depth in depths.items()
+    ):
+        raise ValueError(
+            "sdf_octree_depths must map mesh names to positive integers"
+        )
+    if not all(
+        hasattr(mujoco, name)
+        for name in ("MjSpec", "mj_getCache", "mj_clearCache")
+    ):
+        raise RuntimeError("this MuJoCo version cannot compile configured SDF depths")
+    mujoco.mj_clearCache(mujoco.mj_getCache())
+    spec = mujoco.MjSpec.from_file(str(scene))
+    for mesh_name, depth in sorted(depths.items()):
+        mesh = spec.mesh(mesh_name)
+        if not hasattr(mesh, "octree_maxdepth"):
+            raise RuntimeError("this MuJoCo version lacks mesh.octree_maxdepth")
+        mesh.needsdf = True
+        mesh.octree_maxdepth = depth
+    return spec.compile()
+
+
 def build_physics_contract(config_path: str | Path) -> dict[str, Any]:
     config_path = Path(config_path).resolve(strict=True)
     config = yaml.safe_load(config_path.read_text())
@@ -46,7 +80,8 @@ def build_physics_contract(config_path: str | Path) -> dict[str, Any]:
     if any(key not in config for key in required):
         raise ValueError("formal config is missing a physics-contract field")
     scene = Path(config["model_path"]).resolve(strict=True)
-    model = mujoco.MjModel.from_xml_path(str(scene))
+    sdf_depths = config.get("sdf_octree_depths", {}) or {}
+    model = compile_mujoco_model(scene, sdf_depths)
     _apply_mjwp_options(model, config)
     assets = scene_mesh_artifacts(scene)
     payload = {
@@ -62,6 +97,11 @@ def build_physics_contract(config_path: str | Path) -> dict[str, Any]:
             "physics_steps_per_control": int(round(float(config["ctrl_dt"]) / float(config["sim_dt"]))),
             "nconmax_per_env": int(config["nconmax_per_env"]),
             "njmax_per_env": int(config["njmax_per_env"]),
+            "sdf_octree_depths": dict(sorted(sdf_depths.items())),
+            "sdf_octree_nodes": {
+                name: int(model.mesh_octnum[model.mesh(name).id])
+                for name in sorted(sdf_depths)
+            },
             "iterations": int(model.opt.iterations),
             "ls_iterations": int(model.opt.ls_iterations),
             "integrator": int(model.opt.integrator),

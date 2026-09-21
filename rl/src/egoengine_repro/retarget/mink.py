@@ -123,12 +123,14 @@ class _StrictCollisionLimit:
     def __init__(
         self, inner: Any, mujoco: Any, *, minimum_distance: float,
         depenetration_step: float, gain: float = 0.85,
+        deepest_invalid_only: bool = False,
     ) -> None:
         self.inner = inner
         self.mujoco = mujoco
         self.minimum_distance = float(minimum_distance)
         self.depenetration_step = float(depenetration_step)
         self.gain = float(gain)
+        self.deepest_invalid_only = bool(deepest_invalid_only)
         self.geom_id_pairs = inner.geom_id_pairs
         # Dynamic contact-timing limits disable this collision family on GT
         # contact frames.  Static self/object/floor limits remain active.
@@ -144,9 +146,10 @@ class _StrictCollisionLimit:
         if constraint.inactive or constraint.G is None or constraint.h is None:
             return constraint
         h = np.asarray(constraint.h, dtype=np.float64).copy()
+        matrix = np.asarray(constraint.G, dtype=np.float64).copy()
         fromto = np.empty(6, dtype=np.float64)
         detection = float(self.inner.collision_detection_distance)
-        invalid: list[tuple[float, int]] = []
+        invalid: list[tuple[float, int, np.ndarray]] = []
         for index, (geom_a, geom_b) in enumerate(self.geom_id_pairs):
             distance = float(self.mujoco.mj_geomDistance(
                 configuration.model, configuration.data,
@@ -162,15 +165,22 @@ class _StrictCollisionLimit:
                 # then actively resolve only the deepest one.  Demanding a
                 # finite separating step from many opposing contact normals in
                 # the same linearized QP is commonly infeasible.
-                h[index] = 1e-5
-                invalid.append((residual, index))
+                row = matrix[index].copy()
+                if self.deepest_invalid_only:
+                    matrix[index] = 0.0
+                    h[index] = np.inf
+                else:
+                    h[index] = 1e-5
+                invalid.append((residual, index, row))
         if invalid:
-            residual, index = min(invalid)
+            residual, index, row = min(invalid, key=lambda item: item[0])
+            if self.deepest_invalid_only:
+                matrix[index] = row
             h[index] = -min(
                 self.depenetration_step,
                 self.gain * (-residual),
             )
-        return type(constraint)(constraint.G, h)
+        return type(constraint)(matrix, h)
 
 
 def _wxyz(rotation: np.ndarray) -> np.ndarray:
