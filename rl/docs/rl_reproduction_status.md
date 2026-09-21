@@ -92,6 +92,23 @@ the result does not establish a stable grasp or convincing pour.
 The current consolidated evidence is
 `runs/taco_pour_replay_rl_full_v3/summary.json`.
 
+An objective-mapping sensitivity audit re-scored the saved traces without
+changing controls or training. On the 197-step two-object trace, the current
+raw-unit diagonal mapping accepts 197/197 steps. Three plausible readings of
+the published `0.12 m / 1.5 rad` example instead reject the trace:
+
+| Diagnostic interpretation | Violating steps | First violation |
+| --- | ---: | ---: |
+| axis-intercept normalized ellipse | 51 | 32 |
+| ellipse passing through the threshold corner | 11 | 66 |
+| independent position/rotation limits | 38 | 59 |
+
+On the 140-step committed `tool_only` prefix, the same alternatives reject 98,
+28, and 70 steps respectively. None is promoted to a runtime objective: the
+paper does not disclose which mapping is intended, and the independent-limit
+case is not Eq. C.3/C.4. The audit is
+`runs/taco_pour_objective_mapping_sensitivity_v1/`.
+
 ## What is ready, and what is not
 
 Ready:

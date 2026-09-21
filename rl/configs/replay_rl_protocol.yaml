@@ -213,6 +213,14 @@ evaluation:
   variants: [tool_only, tool_and_target_extension]
   training_switch: scripts/run_mjwp_ppo.py --tracking_variant
   results_available: false
+  objective_mapping_sensitivity:
+    status: diagnostic_only_no_mapping_selected
+    report_directory: /data_all/zzx/3.2RL/runs/taco_pour_objective_mapping_sensitivity_v1
+    interpretations:
+      - current_runtime_local_unpublished
+      - axis_intercept_normalized_ellipse
+      - corner_normalized_ellipse
+      - independent_threshold_box_not_equation_C3
 runtime_contract:
   fail_closed: true
   paper_faithful_run_ready: false
