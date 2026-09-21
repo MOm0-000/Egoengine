@@ -54,6 +54,16 @@ capsule 会在 22 个 CAD-clear endpoint 上误报，因此不能采用。
 `TRASH/rejected_candidates/2026-09-20_collision_semantics_repair_v2_self_guard/`
 作为负实验，不属于正式链路。
 
+后续只读的
+`taco_pour_left_palm_thumb_boundary_topology_v1` 没有继续加 guard，而是先把
+native CAD 与被拒 Hybrid 在完整关节域内的边界画清。257 个 bend 切片上，
+native 有 104 个切片完全不碰、153 个切片只有一个且贴着 rota1 上限的连续
+碰撞区间，没有多区间或孤立碰撞岛。碰撞只出现在两个采样 bend 带：
+`[0, 0.900703125]` 与 `[1.6512890625, 1.83] rad`。Hybrid 的区间拓扑完全一致，
+但边界最大偏移约 `0.00050004 rad (0.02865°)`；原先最终留出集的 1 FN/1 FP
+均被独立复现。因此下一步是分两条边界做 CEGIS，允许删减或缩紧造成误报的
+旧局部 guard，再补只覆盖漏检带的局部几何；不是继续增加全局球。
+
 ## 当前 gate
 
 外部 hand-object、hand-floor 与 contact-role contract 已通过候选验收；左掌—
@@ -66,3 +76,5 @@ capsule 会在 22 个 CAD-clear endpoint 上误报，因此不能采用。
 - 不进入 Replay→RL。
 
 正式依据是 `runs/taco_pour_collision_semantics_repair_v2/audit_report.json`。
+边界拓扑依据是
+`runs/taco_pour_left_palm_thumb_boundary_topology_v1/report.json`。

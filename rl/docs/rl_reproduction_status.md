@@ -56,6 +56,18 @@ pair-specific 候选都能在 first-40 达到 0/0，但都至少在一张未参�
 `initialization_protocol_v2` 均未启动。见
 [v2 报告](/data_all/zzx/3.2RL/docs/taco_pour_collision_semantics_repair_v2.md)。
 
+为避免继续盲加 guard，随后冻结并执行了只读的
+`left_palm_thumb_boundary_topology_v1`。它在整个
+`bend∈[0,1.83]、rota1∈[-1.05,1.57]` 域上使用 257×513 个粗采样，并对每个
+clear/collision 跳变二分。native CAD 在 257 个 bend 切片中表现为 104 个无
+碰撞切片和 153 个单一上尾碰撞区间；没有多区间，采样到的碰撞 bend 带有两
+段。被拒 Hybrid 的拓扑与 native 完全一致，但 153 个可比边界的 RMSE 为
+`0.00021268 rad`，最大绝对偏移为 `0.00050004 rad (0.02865°)`，32 个切片偏早、
+121 个切片偏晚。此前两个最终留出错误点被原样复现。结论是下一轮应对两条
+边界分支做 CEGIS，而不是继续增加全局 primitive。该审计没有修改 scene、
+reference 或 MINK，也没有运行 capacity、初始化和训练。见
+[边界拓扑报告](/data_all/zzx/3.2RL/docs/taco_pour_left_palm_thumb_boundary_topology_v1.md)。
+
 未执行 release 时，报告现在明确区分 requested 与 executed：本轮两候选均为
 `requested_control_intervals=5`、`executed_control_intervals=0` 和
 `executed_physics_steps=0`；依赖运动样本的阈值结果写为 `null/not evaluated`，
