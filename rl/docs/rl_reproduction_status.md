@@ -213,6 +213,33 @@ shows that fixing the interface alone, without retuning PPO for the smaller
 executed-action scale, is insufficient. Full evidence is in
 `runs/taco_pour_normalized_action_scale_v1/comparison.json`.
 
+A follow-up read-only attribution replayed both frozen checkpoints while
+recording the network mean before the PPO `[-1,1]` action limit. Both augmented
+rollouts remained bitwise equal to their frozen CPU traces. Across endpoints
+40--50, the scaled policy had some output beyond the limit (`27.02%` above 1,
+`1.01%` above 2, maximum `2.41`), but this does not explain the critical bowl
+translation failure. At endpoints 46--50, none of the new right-wrist
+translation outputs exceeded 1; their maximum magnitude was `0.9184`.
+
+The critical right-wrist translation direction instead diverged from the old
+policy: flattened action cosine `-0.493`, signed cumulative cosine `-0.594`,
+and only `40%` matching signs. The old command offsets stayed approximately
+`(+x,-y,+z)` and reduced the bowl's y error by `38.96 mm`; the scaled policy
+turned toward `(-x,+y,near-zero/-z)`, while y error increased `34.99 mm` and z
+error worsened `26.56 mm`. Its absolute right-wrist translation command was
+also only `34.52%` of the old policy's, but the negative direction agreement
+means this is not a pure strength shortage. Scalar scale increase/sweep is
+therefore rejected as the next experiment. The next read-only question is
+whether these terminal states and useful correction directions were represented
+in the PPO training data.
+
+The actuator-name audit also exposed a separate contract risk: the first three
+controls of each wrist are slide-joint targets in metres, while wrist rotations
+and fingers are in radians. One scalar residual scale currently spans both
+units. This is recorded as a risk, not claimed as the cause of the endpoint-50
+failure. Full evidence is in
+`runs/taco_pour_action_attribution_v1/report.json`.
+
 The evidence and hashes are frozen in
 `runs/taco_pour_normalized_ellipse_v1/summary.json`. GPU remains the PPO
 training backend, but it no longer has acceptance or commit authority. The

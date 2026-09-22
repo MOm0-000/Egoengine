@@ -160,6 +160,22 @@ disabled TACO smoothness reward remains unchanged. The scale remains a local,
 non-author-recovered candidate, and the result demonstrates that interface
 repair alone is not a sufficient PPO improvement.
 
+The subsequent endpoint 40--50 read-only attribution records the recurrent
+actor's mean before action limiting. At the critical endpoints 46--50, the
+scaled policy's right-wrist translation mean never reached the `[-1,1]` limit
+(`max abs=0.9184`), while its applied direction was opposite the old policy in
+aggregate (`signed-sum cosine=-0.594`). The new bowl y/z position errors grew
+by `+34.99/-26.56 mm`; the old policy reduced y error by `38.96 mm` and kept z
+nearly stable. This rejects a simple “same direction, not enough range” account
+and blocks a scalar-scale sweep. Before one learning change is selected, the
+training rollouts must be audited for coverage of these terminal states and
+corrective directions.
+
+Actuator names also show that the shared residual vector mixes wrist slide
+targets measured in metres with wrist/finger angles measured in radians. The
+single scalar scale across these units is now explicit contract debt; it was not
+changed or promoted by this diagnostic.
+
 A formal-runner smoke in `runs/taco_pour_dual_backend_runner_smoke_v1/` used no
 PPO training: CPU Replay passed 40/40, the runner committed the CPU endpoint-20
 snapshot, GPU simulation work remained zero, and the exact committed snapshot
