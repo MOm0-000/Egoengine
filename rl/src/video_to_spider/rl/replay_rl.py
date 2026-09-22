@@ -87,6 +87,21 @@ class MJWPChunkBackend:
             reference_ctrl = self.env._reference_ctrls(
                 self.env.time_indices, offset=0
             )[0].detach().cpu().numpy()
+            position_error = np.asarray(self.last_info["object_position_error"][0])
+            rotation_error = np.asarray(self.last_info["object_rotation_error"][0])
+            position_threshold = self.env.objective.independent_position_threshold_m
+            rotation_threshold = self.env.objective.independent_rotation_threshold_rad
+            if position_threshold is None or rotation_threshold is None:
+                independent_position_pass = None
+                independent_rotation_pass = None
+                independent_threshold_pass = None
+            else:
+                independent_position_pass = (position_error <= position_threshold).tolist()
+                independent_rotation_pass = (rotation_error <= rotation_threshold).tolist()
+                independent_threshold_pass = (
+                    (position_error <= position_threshold)
+                    & (rotation_error <= rotation_threshold)
+                ).tolist()
 
             self._active_trace["steps"].append({
                 "control_interval": int(reference_step),
@@ -96,6 +111,13 @@ class MJWPChunkBackend:
                 "position_error_m": row("object_position_error"),
                 "rotation_error_rad": row("object_rotation_error"),
                 "tracking_error": row("object_tracking_error_per_object"),
+                "objective_metric_name": self.env.objective.tracking_metric_name,
+                "objective_score": row("object_tracking_error_per_object"),
+                "independent_position_threshold_m": position_threshold,
+                "independent_rotation_threshold_rad": rotation_threshold,
+                "independent_position_pass": independent_position_pass,
+                "independent_rotation_pass": independent_rotation_pass,
+                "independent_threshold_pass": independent_threshold_pass,
                 "tracking_reward": row("object_tracking_reward_per_object"),
                 "object_terminated": row("object_terminated"),
                 "contact_bonus_per_hand_object": row("contact_bonus_per_hand_object"),

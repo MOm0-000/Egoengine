@@ -1,0 +1,72 @@
+{
+  "schema": "taco_pour_normalized_ellipse_v1_summary",
+  "status": "short_rl_improved_but_did_not_pass_no_full_run",
+  "objective": {
+    "id": "taco_pour_local_normalized_ellipse_v1",
+    "profile": "/data_all/zzx/3.2RL/configs/taco_pour_local_normalized_ellipse_v1.yaml",
+    "profile_sha256": "8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9",
+    "paper_faithful": false,
+    "definition": "sqrt((position_error_m / 0.12)^2 + (rotation_error_rad / 1.5)^2) <= 1",
+    "independent_diagnostic": "position_error_m <= 0.12 and rotation_error_rad <= 1.5"
+  },
+  "replay_audits": {
+    "tool_only": {
+      "report": "/data_all/zzx/3.2RL/runs/taco_pour_normalized_ellipse_v1/replay_tool_only.json",
+      "report_sha256": "36cbbf1271735d0d063e85b50aa27573de332d57dfdeec602b3ae8baf93c8a4b",
+      "status": "replay_feasible",
+      "validated_steps": 40,
+      "maximum_ellipse_score": 0.8426977396011353,
+      "independent_threshold_violations": 0
+    },
+    "tool_and_target_extension": {
+      "report": "/data_all/zzx/3.2RL/runs/taco_pour_normalized_ellipse_v1/replay_tool_and_target.json",
+      "report_sha256": "7ff6c1201e011550cdb487d37aa2abe2f0fdf6dab871f86ebb39648cdd206957",
+      "status": "replay_failed",
+      "failure_endpoint": 31,
+      "failure_role": "tool",
+      "ellipse_score": 1.022282361984253,
+      "position_error_m": 0.07955262064933777,
+      "rotation_error_rad": 1.1672791242599487,
+      "independent_threshold_pass": true
+    }
+  },
+  "short_rl": {
+    "two_epochs": {
+      "report": "/data_all/zzx/3.2RL/runs/taco_pour_normalized_ellipse_v1/short_rl_tool_only/report.json",
+      "report_sha256": "ef282b2906ca4840b2af133b3594f102aa12cdef5179c7ac109015aa174267e7",
+      "status": "both_modes_failed_within_local_budget",
+      "incoming_boundary": 20,
+      "replay_failure_endpoint": 57,
+      "rl_failure_endpoint": 49,
+      "common_endpoints": 29,
+      "rl_lower_score_endpoints": 18,
+      "replay_mean_score_on_common_endpoints": 0.6615974923660015,
+      "rl_mean_score_on_common_endpoints": 0.6609114110469818
+    },
+    "eight_epochs": {
+      "report": "/data_all/zzx/3.2RL/runs/taco_pour_normalized_ellipse_v1/short_rl_tool_only_8ep/report.json",
+      "report_sha256": "29e8ceeb45d093c2210b0a94d79e4ed2335c4eaf4a57ebb82d7fdcd8258456e2",
+      "status": "both_modes_failed_within_local_budget",
+      "incoming_boundary": 20,
+      "replay_validated_steps": 27,
+      "replay_failure_endpoint": 48,
+      "rl_validated_steps": 35,
+      "rl_failure_endpoint": 56,
+      "common_endpoints": 28,
+      "rl_lower_score_endpoints": 22,
+      "replay_mean_score_on_common_endpoints": 0.7340055682829448,
+      "rl_mean_score_on_common_endpoints": 0.62798325078828,
+      "replay_score_at_endpoint_48": 1.0507680177688599,
+      "rl_score_at_endpoint_48": 0.4304048418998718,
+      "rl_final_ellipse_score": 1.0013282299041748,
+      "rl_final_position_error_m": 0.10942602157592773,
+      "rl_final_rotation_error_rad": 0.6205119490623474,
+      "rl_final_independent_threshold_pass": true
+    }
+  },
+  "decision": {
+    "full_rl_executed": false,
+    "reason": "The bounded eight-epoch PPO smoke improved the failed window but did not satisfy the normalized ellipse for all 40 lookahead steps.",
+    "paper_success_claimed": false
+  }
+}

@@ -76,7 +76,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--output_dir", default="")
     parser.add_argument(
         "--objective-profile",
-        default=str(_PROJECT_ROOT / "configs" / "taco_pour_local_unpublished_v1.yaml"),
+        default=str(_PROJECT_ROOT / "configs" / "taco_pour_local_normalized_ellipse_v1.yaml"),
         help="Explicit local objective for smoke tests; this is not a paper-faithful profile.",
     )
     parser.add_argument(

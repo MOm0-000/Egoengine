@@ -68,7 +68,10 @@ total = aggregate_tracking_reward + aggregate_contact_bonus + lift_reward
 - scene: `runs/taco_pour_floor_contact_v1/candidate.xml`;
 - reference: `runs/taco_pour_bimanual_mano_fk_combined_collision_v1/robot_reference.npz`;
 - reset: `runs/taco_pour_initialization_protocol_v2/candidate_a/report.json`;
-- objective: `configs/taco_pour_local_unpublished_v1.yaml`;
+- active local proxy objective:
+  `configs/taco_pour_local_normalized_ellipse_v1.yaml`;
+- previous sensitivity comparator:
+  `configs/taco_pour_local_unpublished_v1.yaml`;
 - observation: `configs/taco_pour_observation_local_236d_v1.yaml`;
 - capacities: 256 contacts / 1024 constraints per world;
 - required runtime: MuJoCo 3.13, mujoco-warp 3.13, Warp 1.15 for the high-SDF model.
@@ -79,3 +82,7 @@ A full-horizon result is accepted only after the saved action sequence is
 replayed from the accepted reset; a chunk-wise success flag alone is no longer
 sufficient. Current results and repeatability limitations are in
 `docs/rl_reproduction_status.md`.
+
+For bounded PPO diagnostics, `--stop-after-first-ppo` stops immediately after
+the first PPO-selected chunk. This separates a short learning check from a
+full-horizon run; it does not relax the 40-step validation gate.

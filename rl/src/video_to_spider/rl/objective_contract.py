@@ -24,6 +24,9 @@ class RuntimeObjective:
     lift_object_role: str
     contact_reduction: str
     aggregation: str
+    tracking_metric_name: str
+    independent_position_threshold_m: float | None
+    independent_rotation_threshold_rad: float | None
     provenance: str
     protocol_path: str
     protocol_sha256: str
@@ -128,6 +131,8 @@ def load_runtime_objective(
         if require_run_ready and not gate.get("run_ready", False):
             blockers = ", ".join(gate.get("blocked_by", ()))
             raise ValueError(f"local objective is explicit but formal run remains blocked: {blockers}")
+        if require_run_ready and gate.get("profile_sha256") != profile_hash:
+            raise ValueError("local objective profile does not match the protocol-bound hash")
 
     objective_id = source.get("objective_id")
     if not isinstance(objective_id, str) or not objective_id:
@@ -143,8 +148,21 @@ def load_runtime_objective(
     contact = source.get("contact", {})
     lift = source.get("lift", {})
     aggregation = source.get("aggregation", {})
-    if not all(isinstance(value, dict) for value in (tracking, contact, lift, aggregation)):
-        raise ValueError("tracking/contact/lift/aggregation must be mappings")
+    diagnostics = source.get("diagnostics", {})
+    if not all(isinstance(value, dict) for value in (tracking, contact, lift, aggregation, diagnostics)):
+        raise ValueError("tracking/contact/lift/aggregation/diagnostics must be mappings")
+    tracking_metric_name = tracking.get("metric_name", "weighted_tracking_error")
+    if not isinstance(tracking_metric_name, str) or not tracking_metric_name:
+        raise ValueError("tracking metric_name must be a nonempty string")
+    independent = diagnostics.get("independent_thresholds")
+    if independent is None:
+        independent_position_threshold_m = None
+        independent_rotation_threshold_rad = None
+    else:
+        if not isinstance(independent, dict):
+            raise ValueError("diagnostics independent_thresholds must be a mapping")
+        independent_position_threshold_m = _number(independent, "position_m", positive=True)
+        independent_rotation_threshold_rad = _number(independent, "rotation_rad", positive=True)
     reduction = contact.get("reduction")
     if not isinstance(reduction, str) or not reduction:
         raise ValueError("contact reduction must be explicit")
@@ -177,6 +195,9 @@ def load_runtime_objective(
         lift_object_role=lift_object_role,
         contact_reduction=reduction,
         aggregation=aggregation_value,
+        tracking_metric_name=tracking_metric_name,
+        independent_position_threshold_m=independent_position_threshold_m,
+        independent_rotation_threshold_rad=independent_rotation_threshold_rad,
         provenance=provenance,
         protocol_path=str(protocol_file),
         protocol_sha256=protocol_hash,

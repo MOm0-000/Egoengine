@@ -175,6 +175,11 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--epochs", type=int, default=2)
     parser.add_argument("--max-chunks", type=int, default=1)
+    parser.add_argument(
+        "--stop-after-first-ppo",
+        action="store_true",
+        help="Stop after the first PPO-selected chunk for a bounded smoke test.",
+    )
     parser.add_argument("--tracking-variant", choices=("tool_only", "tool_and_target"), default="tool_only")
     args = parser.parse_args()
     if args.output.exists():
@@ -221,6 +226,7 @@ def main():
                       sha256=hashlib.sha256(args.config.read_bytes()).hexdigest()),
                   local_settings=dict(worlds=1, ppo_epochs=args.epochs, ppo_horizon=40,
                       deterministic_mean_validation=True, fresh_policy_per_failed_chunk=True,
+                      stop_after_first_ppo=args.stop_after_first_ppo,
                       tracking_boundary=env.tracking_boundary),
                   source_frames=len(reference[0]), control_intervals=len(reference[0]) - 1,
                   chunks=[], task_success=False)
@@ -264,6 +270,9 @@ def main():
             committed_modes.extend([chunk.mode] * committed_count)
             start = chunk.committed_end
             torch.save(backend.snapshot(), args.output / "committed_boundary.pt")
+            if args.stop_after_first_ppo and chunk.mode == "rl":
+                result["status"] = "short_rl_smoke_passed"
+                break
             if start == len(reference[0]) - 1:
                 result.update(status="full_horizon_tracking_feasible", task_success=True)
                 break

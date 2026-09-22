@@ -1,5 +1,16 @@
 # Test Environment
 
+## Current normalized-ellipse checkpoint
+
+On 2026-09-22, the complete MuJoCo 3.13 / mujoco-warp 3.13 / Warp 1.15 GPU
+stack passed **569 tests and 57 subtests** in 101.13 s. At the preceding
+checkpoint, the isolated CPU stack passed **559 tests and 57 subtests**, with
+the CUDA/MJWP module skipped. A
+targeted run passed all 9 real-GPU adapter tests plus 9 objective/observation
+contract tests. The remaining warnings are the
+recorded capsule-mesh MULTICCD limitation, upstream AMP deprecations, two
+Trimesh diagnostics and seven SciPy pickle deprecations.
+
 ## Current initialization and raw-depth audit
 
 Latest implementation check (2026-09-20): **558 passed, 57 subtests**

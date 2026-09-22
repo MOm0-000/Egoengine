@@ -11,6 +11,7 @@ from video_to_spider.rl.objective_contract import load_runtime_objective
 
 PROTOCOL = ROOT / "configs/replay_rl_protocol.yaml"
 LOCAL = ROOT / "configs/taco_pour_local_unpublished_v1.yaml"
+NORMALIZED = ROOT / "configs/taco_pour_local_normalized_ellipse_v1.yaml"
 
 
 def test_paper_objective_fails_closed_while_coefficients_are_unresolved():
@@ -42,6 +43,41 @@ def test_explicit_local_objective_is_open_only_after_all_named_gates_pass():
     )
     assert objective.status == "resolved_local_unpublished"
     assert not objective.paper_faithful
+
+
+def test_normalized_ellipse_profile_uses_paper_scales_as_local_axis_intercepts():
+    objective = load_runtime_objective(
+        PROTOCOL, NORMALIZED, tracking_variant="tool_only", require_run_ready=True
+    )
+    assert objective.objective_id == "taco_pour_local_normalized_ellipse_v1"
+    assert not objective.paper_faithful
+    assert objective.tracking_metric_name == "normalized_ellipse_score"
+    assert objective.tracking.lambda_p == pytest.approx(1.0 / 0.12**2)
+    assert objective.tracking.lambda_r == pytest.approx(1.0 / 1.5**2)
+    assert objective.tracking.boundary == 1.0
+    assert objective.independent_position_threshold_m == 0.12
+    assert objective.independent_rotation_threshold_rad == 1.5
+    assert "not author-recovered" in objective.provenance
+
+
+def test_normalized_ellipse_axis_intercepts_and_stricter_interior_tradeoff():
+    objective = load_runtime_objective(
+        PROTOCOL, NORMALIZED, tracking_variant="tool_only", require_run_ready=False
+    )
+    tracking = objective.tracking
+    assert (tracking.lambda_p * 0.12**2) ** 0.5 == pytest.approx(tracking.boundary)
+    assert (tracking.lambda_r * 1.5**2) ** 0.5 == pytest.approx(tracking.boundary)
+    combined = (tracking.lambda_p * 0.10**2 + tracking.lambda_r * 1.0**2) ** 0.5
+    assert combined > tracking.boundary
+
+
+def test_formal_local_objective_is_hash_bound(tmp_path):
+    changed = tmp_path / "changed.yaml"
+    changed.write_text(NORMALIZED.read_text().replace("C: 1.0", "C: 1.01"))
+    with pytest.raises(ValueError, match="protocol-bound hash"):
+        load_runtime_objective(
+            PROTOCOL, changed, tracking_variant="tool_only", require_run_ready=True
+        )
 
 
 def test_aggregation_variant_is_part_of_the_profile_contract(tmp_path):

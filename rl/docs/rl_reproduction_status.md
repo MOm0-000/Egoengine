@@ -55,14 +55,22 @@ known. The `t+2` command is not justified by the paper's two-chunk scheduling
 window and is never described as an author setting.
 
 The paper's TACO reward coefficients remain unpublished. Formal paper-faithful
-training therefore remains blocked. The first engineering run uses only the
-named `taco_pour_local_unpublished_v1` objective. Its values and provenance are
-stored separately; they are never inferred silently from the Pour example
-thresholds.
+training therefore remains blocked. The active engineering objective is now
+the explicitly local `taco_pour_local_normalized_ellipse_v1` proxy:
 
-## Executed results
+```text
+sqrt((position_error / 0.12)^2 + (rotation_error / 1.5)^2) <= 1
+```
 
-The first 40-step window passes Replay for both tracking variants and commits
+It uses the paper-reported Pour scales as axis intercepts, not as recovered
+author coefficients. Every new validation row also logs the independent
+diagnostic `(position <= 0.12) AND (rotation <= 1.5)`. The previous raw-unit
+objective and its results remain available as a sensitivity comparison.
+
+## Previous raw-unit objective results
+
+Under the previous `taco_pour_local_unpublished_v1` objective, the first
+40-step window passed Replay for both tracking variants and committed
 endpoint 20. The scheduler was then run over the full 197 transitions and now
 exports every committed endpoint and action (`qpos/qvel/ctrl`, raw and applied
 residual, and selected mode) to a hash-bound NPZ.
@@ -104,10 +112,34 @@ the published `0.12 m / 1.5 rad` example instead reject the trace:
 | independent position/rotation limits | 38 | 59 |
 
 On the 140-step committed `tool_only` prefix, the same alternatives reject 98,
-28, and 70 steps respectively. None is promoted to a runtime objective: the
-paper does not disclose which mapping is intended, and the independent-limit
+28, and 70 steps respectively. This audit originally selected no mapping. The
+axis-intercept ellipse is now explicitly promoted only as the approved local
+proxy; it remains unresolved as a paper mapping, and the independent-limit
 case is not Eq. C.3/C.4. The audit is
 `runs/taco_pour_objective_mapping_sensitivity_v1/`.
+
+## Normalized-ellipse rerun
+
+The fresh `tool_only` Replay audit passed its first 40 steps with maximum
+ellipse score `0.8427`. A separate `tool_and_target` rollout failed at endpoint
+31 with tool score `1.0223`; its position (`0.0796 m`) and rotation (`1.1673
+rad`) still passed the independent thresholds. This is expected because the
+ellipse is stricter than the rectangular independent check, and it confirms
+that both metrics are being logged separately.
+
+The bounded two-epoch PPO smoke did not pass its failed window. One additional
+bounded eight-epoch smoke provided positive but insufficient evidence: from the
+same endpoint-20 boundary, Replay validated 27 steps and failed at endpoint 48,
+whereas PPO validated 35 and failed at endpoint 56. Across their 28 common
+endpoints, PPO reduced the score on 22 and lowered the mean from `0.7340` to
+`0.6280`; at endpoint 48 it reduced `1.0508` to `0.4304`. It finally missed the
+ellipse boundary by a small but real margin (`1.00133`) while still passing the
+independent thresholds.
+
+Because the short PPO did not pass all 40 lookahead steps, no normalized-
+ellipse full run was started. The evidence is frozen in
+`runs/taco_pour_normalized_ellipse_v1/summary.json`; repeated random reruns are
+not treated as a substitute for passing the fixed gate.
 
 ## What is ready, and what is not
 
@@ -131,7 +163,9 @@ Not yet established:
 - generalization of this reset/collision calibration to other TACO samples;
 - capacity for arbitrary unseen PPO states beyond the recorded stress tests.
 
-Both MuJoCo/MJWP stacks pass the complete repository suite: 566 tests and 57
-subtests. The MuJoCo 3.13 high-SDF stack additionally warns that capsule–mesh
+The MuJoCo 3.13 high-SDF stack passes the complete repository suite: 569 tests
+and 57 subtests. At the preceding checkpoint, the isolated CPU stack passed 559
+tests and 57 subtests with the CUDA/MJWP module skipped. The high-SDF stack
+additionally warns that capsule–mesh
 CCD pairs support at most one contact; this is recorded as a backend limitation,
 not hidden as a successful multicontact guarantee.

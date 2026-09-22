@@ -297,6 +297,9 @@ def test_real_two_chunk_rollout_commits_only_first_chunk():
     assert len(trace["steps"][0]["commanded_ctrl"]) == 36
     assert len(trace["steps"][0]["raw_residual_action"]) == 36
     assert len(trace["steps"][0]["applied_residual"]) == 36
+    assert trace["steps"][0]["objective_metric_name"] == "weighted_tracking_error"
+    assert trace["steps"][0]["objective_score"] == trace["steps"][0]["tracking_error"]
+    assert trace["steps"][0]["independent_threshold_pass"] is None
     assert np.asarray(trace["steps"][0]["contact_bonus_per_hand_object"]).shape == (2, 2)
     assert trace["steps"][0]["total_reward"] == pytest.approx(
         trace["steps"][0]["aggregate_tracking_reward"]
