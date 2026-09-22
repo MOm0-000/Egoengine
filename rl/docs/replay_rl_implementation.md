@@ -2,17 +2,32 @@
 
 ## Scheduling
 
-`src/egoengine_repro/action/replay_rl.py::solve_chunk` implements the approved
-two-mode variant of EgoEngine Appendix C.1:
+`src/egoengine_repro/action/replay_rl.py::solve_chunk_dual_backend` implements
+the approved two-mode variant of EgoEngine Appendix C.1 with a local
+reproducibility extension:
 
 1. At boundary `t`, save the complete simulator state.
 2. Start with zero-residual Replay.
 3. Validate at most 40 control intervals (`t→t+40`).
 4. Save the exact state after interval 20.
-5. If all lookahead steps pass, restore the saved endpoint-20 state and commit
-   it. If Replay fails, restore the identical incoming boundary, train residual
-   PPO, restore the boundary again, and validate the deterministic mean policy.
+5. Replay and the trained policy are evaluated by CPU MJWP. If all lookahead
+   steps pass, restore and commit the CPU endpoint-20 state. If Replay fails,
+   copy the exact CPU boundary to GPU, train residual PPO, transfer the actor
+   weights to CPU, restore the CPU boundary, and validate the deterministic
+   mean policy.
 6. If both modes fail, restore the incoming state and commit nothing.
+
+The corresponding fail-closed contract is
+`configs/taco_pour_gpu_train_cpu_validate_v1.yaml`. GPU simulation may optimize
+the policy but cannot accept a window or provide a committed state. Actor
+inference during acceptance also runs on CPU. Every successful CPU commit is
+copied field-for-field back to GPU before the next chunk; the transfer is
+verified against all snapshot fields.
+
+Each formal output also stores byte-identical snapshots of the protocol,
+dual-backend contract, objective profile, observation profile, and simulator
+config used by that run. The report hashes those copies, so later status edits
+to the live protocol cannot erase the run's exact inputs.
 
 MPC is absent by user decision. Simulation work counters are not rolled back.
 Packed contact state, RNG, reference cursor, previous action/control, lifting
@@ -91,7 +106,7 @@ For bounded PPO diagnostics, `--stop-after-first-ppo` stops immediately after
 the first PPO-selected chunk. This separates a short learning check from a
 full-horizon run; it does not relax the 40-step validation gate.
 
-## Deterministic validation blocker
+## Deterministic validation contract
 
 Complete snapshot restoration does not make GPU MJWP deterministic. In the
 Pour endpoint-20 audit, every one of the 342 restored fields was bitwise equal,
@@ -109,10 +124,22 @@ trying to capture a CUDA graph. In this scene, CPU MJWP reproduced all ten
 physics substeps bitwise and then reproduced both action sequences across three
 same-environment and three fresh-environment trials.
 
-This establishes CPU MJWP as a viable deterministic validation backend, but the
-formal scheduler has not yet been converted into a dual-backend scheduler.
-GPU remains the training backend. A future formal commit must therefore train
-on GPU, restore/canonicalize the same chunk boundary on CPU, evaluate the
-closed-loop recurrent policy for the full 40-step lookahead on CPU, and commit
-only the CPU-validated candidate. No current GPU-only success is promoted by
-this audit.
+This evidence is now bound by the formal dual-backend contract. The runner
+creates distinct GPU-training and CPU-validation environments, verifies both
+against the same physics contract, records a separate version/source/runtime
+hash for each, and verifies each complete CPU→GPU boundary transfer exactly.
+After GPU training, the actor state is copied to a fresh CPU inference agent
+and its tensor-content hash must remain unchanged. Only the CPU closed-loop
+40-step trace can select a mode, and only the CPU endpoint-20 snapshot can be
+committed.
+
+The integration has been tested with a real one-epoch GPU PPO update, CPU actor
+inference, and a CPU physics step. It has not been used to authorize additional
+normalized-ellipse training: the frozen 8-epoch policy remains 38/40 and the
+single 16-epoch policy remains 27/40 under deterministic CPU validation.
+
+A formal-runner smoke in `runs/taco_pour_dual_backend_runner_smoke_v1/` used no
+PPO training: CPU Replay passed 40/40, the runner committed the CPU endpoint-20
+snapshot, GPU simulation work remained zero, and the exact committed snapshot
+was verified after both CPU→GPU transfers. Its status is deliberately
+`chunk_budget_reached_not_full_task_success`, not task success.

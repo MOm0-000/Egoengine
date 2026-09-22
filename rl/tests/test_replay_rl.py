@@ -8,7 +8,7 @@ import sys
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from egoengine_repro.action.replay_rl import solve_chunk
+from egoengine_repro.action.replay_rl import solve_chunk, solve_chunk_dual_backend
 
 
 class Backend:
@@ -85,6 +85,55 @@ def test_both_modes_fail_preserves_boundary_but_not_simulation_cost():
     assert result.committed_end == 0
     assert backend.snapshot() == initial
     assert backend.simulation_steps == 52
+
+
+def test_dual_backend_accepts_and_commits_only_validation_state():
+    training = Backend()
+    validation = Backend(failure=lambda action, index: action == 0 and index == 25)
+    initial = validation.snapshot()
+    calls = []
+
+    def train(training_backend, start, end):
+        calls.append((start, end, training_backend.snapshot() == initial))
+        training_backend.step(9, start)
+        return lambda _validation_backend, _index: 1
+
+    result = solve_chunk_dual_backend(
+        training,
+        validation,
+        lambda _backend, _index: 0,
+        train,
+        start=0,
+        total_steps=60,
+    )
+
+    assert calls == [(0, 40, True)]
+    assert result.mode == "rl"
+    assert [(trial.mode, trial.validated_steps) for trial in result.trials] == [
+        ("replay", 25),
+        ("rl", 40),
+    ]
+    assert validation.state["cursor"] == 20
+    assert validation.state["action"] == 1
+    # The training mutation (action 9) cannot become the committed boundary.
+    assert training.snapshot() == validation.snapshot()
+
+
+def test_dual_backend_failure_restores_both_to_validation_boundary():
+    training = Backend()
+    validation = Backend(failure=lambda _action, index: index == 5)
+    initial = validation.snapshot()
+    result = solve_chunk_dual_backend(
+        training,
+        validation,
+        lambda _backend, _index: 0,
+        lambda *_args: (lambda _backend, _index: 1),
+        start=0,
+        total_steps=40,
+    )
+    assert result.mode is None
+    assert validation.snapshot() == initial
+    assert training.snapshot() == initial
 
 
 @pytest.mark.parametrize("length", [1, 19, 20, 29, 39, 40])

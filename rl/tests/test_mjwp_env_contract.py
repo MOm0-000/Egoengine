@@ -278,6 +278,59 @@ def test_real_replay_to_official_ppo_fallback_contract(single_env, tmp_path):
         torch.testing.assert_close(env.get_env_state()["qpos"], incoming["qpos"], rtol=0, atol=0)
 
 
+def test_gpu_training_actor_transfers_to_cpu_inference(single_env, tmp_path):
+    from video_to_spider.rl.replay_rl import (
+        MJWPChunkBackend,
+        train_chunk_ppo,
+    )
+
+    cpu_config = _load_ego_config(str(CONFIG), "cpu")
+    cpu_reference = _load_reference(
+        cpu_config.data_path, "cpu", expected_frequency=30.0
+    )
+    cpu_env = MJWPVectorEnv(
+        cpu_config,
+        cpu_reference,
+        num_envs=1,
+        env_config=MJWPVectorEnvConfig(
+            max_episode_length=197,
+            asymmetric_critic=False,
+            reference_start_index=0,
+            objective=OBJECTIVE,
+            observation=OBSERVATION,
+        ),
+        seed=11,
+    )
+    cpu_backend = MJWPChunkBackend(cpu_env)
+    training_backend = MJWPChunkBackend(single_env)
+    cpu_env.reset()
+    incoming = cpu_backend.snapshot()
+    training_backend.restore(incoming)
+    training_backend.verify_restored_snapshot(incoming)
+
+    policy = train_chunk_ppo(
+        training_backend,
+        0,
+        4,
+        tmp_path / "dual_backend_ppo",
+        epochs=1,
+        horizon=4,
+        validation_env=cpu_env,
+    )
+    try:
+        assert policy.audit["training_device"] == "cuda:0"
+        assert policy.audit["policy_inference_device"] == "cpu"
+        assert policy.audit["actor_transfer_bitwise_equal"] is True
+        assert policy.audit["actor_state_sha256"] == policy.audit["transferred_actor_state_sha256"]
+        cpu_backend.restore(incoming)
+        action = policy(cpu_backend, 0)
+        assert action.shape == (1, 36)
+        assert np.isfinite(action).all()
+        cpu_backend.step(action, 0)
+    finally:
+        policy.close()
+
+
 def test_real_two_chunk_rollout_commits_only_first_chunk():
     """Static in-memory control fixture, not the Pour demonstration or its SR."""
     from egoengine_repro.action.replay_rl import solve_chunk

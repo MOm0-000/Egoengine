@@ -1,0 +1,91 @@
+{
+  "schema": "taco_pour_dual_backend_contract_audit_v1",
+  "status": "dual_backend_transfer_gate_passed",
+  "scope": {
+    "training_executed": false,
+    "ppo_budget_changed": false,
+    "full_horizon_executed": false,
+    "cpu_control_intervals_executed": 1,
+    "gpu_control_intervals_executed": 0
+  },
+  "backend_contract": {
+    "path": "/data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml",
+    "sha256": "c567ad04dabe1bfc1ff3c8f9ee81db52f9f71d181cd80d56de47c2b237ad65b0",
+    "repeatability_evidence": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_normalized_ellipse_repeatability_cpu_v1/report.json.gz",
+      "artifact_sha256": "2005f17cddc1a742f954efdc15c59ba320a158e1912df7144c565c3276c4327f",
+      "uncompressed_json_sha256": "373ecaf4eceab2203ee7dcc1325c3b1c20ba763987b64ffb6425d1a34fa2fd63",
+      "status": "repeatability_gate_passed"
+    }
+  },
+  "physics_contract_sha256": "fa778d1e1654f2c1dc016280fa4e7c05b2ffa6416b3b7f063c6e0f94d5c79f11",
+  "objective_profile_sha256": "8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9",
+  "observation_profile_sha256": "8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7",
+  "backend_runtime_records": {
+    "training": {
+      "role": "policy_optimization_only",
+      "device": "cuda:0",
+      "policy_inference_device": "cuda:0",
+      "simulator": "MuJoCo-Warp",
+      "mujoco_version": "3.13.0",
+      "mujoco_warp_version": "3.13.0",
+      "warp_lang_version": "1.15.0",
+      "physics_contract_sha256": "fa778d1e1654f2c1dc016280fa4e7c05b2ffa6416b3b7f063c6e0f94d5c79f11",
+      "snapshot_schema": "egoengine_mjwp_snapshot_v2",
+      "warp_state_field_count": 342,
+      "warp_state_keys_sha256": "1a0ee8fc1e695b71153fd1b241322125e0eec371333ba986663c1942d8f9e1cc",
+      "mjwp_adapter": {
+        "path": "/data_all/zzx/3.2RL/src/video_to_spider/rl/mjwp_env.py",
+        "sha256": "e7e05b4b5ae1429aba4f535739444be9151d74324dbf4e0eaca43891cb00f17d"
+      },
+      "spider_mjwp_adapter": {
+        "path": "/data_all/zzx/3.2RL/external/spider_compat/spider/simulators/mjwp.py",
+        "sha256": "3c1fc0c5b83e133d7b8051457198203c45876abd2bb57b3af7fab3bdc62bd17d"
+      },
+      "runtime_contract_sha256": "dd78b2f3491443bc3bcc70a2e728359490c36e742504ad66733c55249e2dcece"
+    },
+    "validation": {
+      "role": "replay_policy_acceptance_and_commit",
+      "device": "cpu",
+      "policy_inference_device": "cpu",
+      "simulator": "MuJoCo-Warp",
+      "mujoco_version": "3.13.0",
+      "mujoco_warp_version": "3.13.0",
+      "warp_lang_version": "1.15.0",
+      "physics_contract_sha256": "fa778d1e1654f2c1dc016280fa4e7c05b2ffa6416b3b7f063c6e0f94d5c79f11",
+      "snapshot_schema": "egoengine_mjwp_snapshot_v2",
+      "warp_state_field_count": 342,
+      "warp_state_keys_sha256": "1a0ee8fc1e695b71153fd1b241322125e0eec371333ba986663c1942d8f9e1cc",
+      "mjwp_adapter": {
+        "path": "/data_all/zzx/3.2RL/src/video_to_spider/rl/mjwp_env.py",
+        "sha256": "e7e05b4b5ae1429aba4f535739444be9151d74324dbf4e0eaca43891cb00f17d"
+      },
+      "spider_mjwp_adapter": {
+        "path": "/data_all/zzx/3.2RL/external/spider_compat/spider/simulators/mjwp.py",
+        "sha256": "3c1fc0c5b83e133d7b8051457198203c45876abd2bb57b3af7fab3bdc62bd17d"
+      },
+      "runtime_contract_sha256": "3afac911aad68577c70808fecf3731e023c1cac406aad38a123c3d89540ea953"
+    }
+  },
+  "cpu_to_gpu_transfers": [
+    {
+      "reference_endpoint": 0,
+      "snapshot_schema": "egoengine_mjwp_snapshot_v2",
+      "warp_state_field_count": 342,
+      "cpu_to_gpu_bitwise_equal": true
+    },
+    {
+      "reference_endpoint": 1,
+      "snapshot_schema": "egoengine_mjwp_snapshot_v2",
+      "warp_state_field_count": 342,
+      "cpu_to_gpu_bitwise_equal": true
+    }
+  ],
+  "verified_transfer_count": 2,
+  "decision": {
+    "gpu_may_decide_acceptance": false,
+    "gpu_may_provide_committed_state": false,
+    "cpu_40_of_40_required_for_commit": true,
+    "commit_state_source": "cpu_validation_endpoint_20"
+  }
+}

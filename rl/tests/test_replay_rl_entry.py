@@ -9,7 +9,7 @@ import hashlib
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
-from run_taco_replay_rl import load_accepted_initialization
+from run_taco_replay_rl import load_accepted_initialization, load_dual_backend_contract
 from video_to_spider.rl.physics_contract import (
     build_physics_contract,
     compile_mujoco_model,
@@ -129,3 +129,25 @@ def test_invalid_sdf_octree_depth_fails_closed_before_compilation(tmp_path):
     scene.write_text("<mujoco/>")
     with pytest.raises(ValueError, match="positive integers"):
         compile_mujoco_model(scene, {"object_mesh": 0})
+
+
+def test_dual_backend_contract_binds_cpu_repeatability_evidence():
+    contract, artifact = load_dual_backend_contract(
+        ROOT / "configs/taco_pour_gpu_train_cpu_validate_v1.yaml"
+    )
+    assert contract["training_backend"]["device"] == "cuda:0"
+    assert contract["training_backend"]["may_decide_acceptance"] is False
+    assert contract["validation_backend"]["device"] == "cpu"
+    assert contract["validation_backend"]["policy_inference_device"] == "cpu"
+    assert contract["scheduler"]["commit_source"] == "cpu_validation_endpoint_20"
+    assert artifact["repeatability_evidence"]["status"] == "repeatability_gate_passed"
+
+
+def test_dual_backend_contract_rejects_gpu_acceptance(tmp_path):
+    path = ROOT / "configs/taco_pour_gpu_train_cpu_validate_v1.yaml"
+    contract = yaml.safe_load(path.read_text())
+    contract["training_backend"]["may_decide_acceptance"] = True
+    altered = tmp_path / "backend.yaml"
+    altered.write_text(yaml.safe_dump(contract))
+    with pytest.raises(ValueError, match="non-authoritative CUDA"):
+        load_dual_backend_contract(altered)

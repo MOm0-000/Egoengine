@@ -165,10 +165,27 @@ before Replay. No seed sweep, 24/32-epoch escalation, or normalized-ellipse
 full run was started.
 
 The evidence and hashes are frozen in
-`runs/taco_pour_normalized_ellipse_v1/summary.json`. GPU is still suitable for
-high-throughput PPO training, but the formal scheduler now requires a separate
-dual-backend change before another run: every candidate policy must pass a
-closed-loop 40/40 CPU MJWP validation before a chunk can be committed.
+`runs/taco_pour_normalized_ellipse_v1/summary.json`. GPU remains the PPO
+training backend, but it no longer has acceptance or commit authority. The
+formal runner now implements the separate
+`taco_pour_gpu_train_cpu_validate_v1` contract: Replay and trained policies are
+evaluated closed-loop on CPU; actor inference is also moved to CPU; 40/40 is
+required; and the next chunk can start only from the CPU validation rollout's
+saved endpoint-20 state. GPU and CPU environments have separate runtime records
+and hashes even though they share one physics contract.
+
+The complete 342-field CPU snapshot has been copied to GPU and restored
+bitwise at both endpoint 0 and after one real CPU control interval. A bounded
+one-epoch integration test also verifies GPU training, bitwise actor-weight
+transfer to CPU, recurrent CPU inference, and a CPU physics transition. This
+integration did not grant another training-budget search and did not change the
+8/16-epoch results above.
+
+The formal runner was then exercised for one Replay-only chunk. CPU Replay
+passed 40/40 and committed the CPU rollout's endpoint-20 state; GPU training
+work was exactly zero, while CPU validation used 40 control intervals / 400
+physics steps. The resulting report remains explicitly
+`chunk_budget_reached_not_full_task_success`.
 
 ## What is ready, and what is not
 
@@ -180,6 +197,8 @@ Ready:
 - explicit local objective and observation encodings;
 - first formal Replay window and endpoint-20 commit;
 - real PPO fallback, complete action export, and independent saved-action replay gate.
+- integrated GPU-training / deterministic-CPU-validation scheduler, including
+  CPU-only acceptance and CPU commit-state ownership.
 
 Not yet established:
 
@@ -189,11 +208,10 @@ Not yet established:
   `lambda_p/lambda_R/C`;
 - stable grasp or a convincing physical pour;
 - independent full-horizon replay of a trajectory containing PPO actions;
-- an integrated GPU-training / deterministic-CPU-validation scheduler;
 - generalization of this reset/collision calibration to other TACO samples;
 - capacity for arbitrary unseen PPO states beyond the recorded stress tests.
 
-The MuJoCo 3.13 high-SDF stack passes the complete repository suite: 569 tests
+The MuJoCo 3.13 high-SDF stack passes the complete repository suite: 579 tests
 and 57 subtests. At the preceding checkpoint, the isolated CPU stack passed 559
 tests and 57 subtests with the CUDA/MJWP module skipped. The high-SDF stack
 additionally warns that capsule–mesh

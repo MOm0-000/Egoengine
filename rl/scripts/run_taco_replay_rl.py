@@ -2,7 +2,10 @@
 
 import argparse
 from dataclasses import asdict
+import gzip
 import hashlib
+from importlib.metadata import version
+import io
 import json
 from pathlib import Path
 import sys
@@ -16,6 +19,112 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from video_to_spider.rl.objective_contract import load_runtime_objective
 from video_to_spider.rl.physics_contract import build_physics_contract, verify_runtime_model
+
+
+def _sha256(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+def load_dual_backend_contract(path):
+    raw = path.read_bytes()
+    contract = yaml.safe_load(raw)
+    if contract.get("schema") != "taco_pour_gpu_train_cpu_validate_v1":
+        raise ValueError("unsupported Replay→RL backend contract")
+    training = contract.get("training_backend", {})
+    validation = contract.get("validation_backend", {})
+    scheduler = contract.get("scheduler", {})
+    requirements = contract.get("runtime_requirements", {})
+    if (
+        training.get("device") != "cuda:0"
+        or training.get("may_decide_acceptance") is not False
+        or training.get("may_provide_committed_state") is not False
+    ):
+        raise ValueError("training backend must be non-authoritative CUDA")
+    if (
+        validation.get("device") != "cpu"
+        or validation.get("policy_inference_device") != "cpu"
+        or validation.get("may_decide_acceptance") is not True
+        or validation.get("may_provide_committed_state") is not True
+    ):
+        raise ValueError("validation and commit must use CPU")
+    if (
+        scheduler.get("lookahead_control_intervals") != 40
+        or scheduler.get("commit_control_intervals") != 20
+        or scheduler.get("required_validated_intervals") != 40
+        or scheduler.get("commit_source") != "cpu_validation_endpoint_20"
+        or scheduler.get("gpu_validation_commit_forbidden") is not True
+    ):
+        raise ValueError("dual-backend scheduler must preserve the 20/40 CPU commit contract")
+    if (
+        requirements.get("identical_physics_contract_required") is not True
+        or requirements.get("exact_cpu_to_gpu_snapshot_transfer_required") is not True
+        or requirements.get("complete_snapshot_schema") != "egoengine_mjwp_snapshot_v2"
+        or requirements.get("separate_backend_records_and_hashes_required") is not True
+    ):
+        raise ValueError("dual-backend runtime requirements are incomplete")
+
+    evidence = contract.get("repeatability_evidence", {})
+    evidence_path = Path(evidence.get("path", ""))
+    evidence_raw = evidence_path.read_bytes()
+    if _sha256(evidence_raw) != evidence.get("artifact_sha256"):
+        raise ValueError("CPU repeatability evidence artifact changed")
+    decoded = gzip.decompress(evidence_raw)
+    if _sha256(decoded) != evidence.get("uncompressed_json_sha256"):
+        raise ValueError("CPU repeatability evidence content changed")
+    report = json.loads(decoded)
+    if report.get("status") != evidence.get("required_status"):
+        raise ValueError("CPU repeatability evidence did not pass")
+    if not all(report.get("same_environment_mode_repeatable", {}).values()):
+        raise ValueError("same-environment CPU repeatability is not proven")
+    if not all(report.get("fresh_environment_mode_repeatable", {}).values()):
+        raise ValueError("fresh-environment CPU repeatability is not proven")
+    if len(report.get("same_environment_repetitions", [])) != evidence.get("same_environment_repeats"):
+        raise ValueError("same-environment CPU repeat count differs from the contract")
+    if len(report.get("fresh_environment_repetitions", [])) != evidence.get("fresh_environment_repeats"):
+        raise ValueError("fresh-environment CPU repeat count differs from the contract")
+    return contract, {
+        "path": str(path.resolve()),
+        "sha256": _sha256(raw),
+        "repeatability_evidence": {
+            "path": str(evidence_path.resolve()),
+            "artifact_sha256": _sha256(evidence_raw),
+            "uncompressed_json_sha256": _sha256(decoded),
+            "status": report["status"],
+        },
+    }
+
+
+def _backend_runtime_record(env, *, role, policy_inference_device, physics_contract_sha256):
+    snapshot = env.get_env_state()
+    adapter_path = Path(__file__).resolve().parents[1] / "src/video_to_spider/rl/mjwp_env.py"
+    spider_path = Path(env._mjwp.__file__).resolve()
+    record = {
+        "role": role,
+        "device": str(env.ego_cfg.device),
+        "policy_inference_device": policy_inference_device,
+        "simulator": "MuJoCo-Warp",
+        "mujoco_version": version("mujoco"),
+        "mujoco_warp_version": version("mujoco-warp"),
+        "warp_lang_version": version("warp-lang"),
+        "physics_contract_sha256": physics_contract_sha256,
+        "snapshot_schema": snapshot["snapshot_schema"],
+        "warp_state_field_count": len(snapshot["warp_state_keys"]),
+        "warp_state_keys_sha256": _sha256(
+            "\n".join(snapshot["warp_state_keys"]).encode()
+        ),
+        "mjwp_adapter": {
+            "path": str(adapter_path),
+            "sha256": _sha256(adapter_path.read_bytes()),
+        },
+        "spider_mjwp_adapter": {
+            "path": str(spider_path),
+            "sha256": _sha256(spider_path.read_bytes()),
+        },
+    }
+    record["runtime_contract_sha256"] = _sha256(
+        json.dumps(record, sort_keys=True, separators=(",", ":")).encode()
+    )
+    return record
 
 
 def _scalar(initial, name, expected_type):
@@ -167,9 +276,18 @@ def load_accepted_initialization(report_path, config_path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=Path, default=ROOT / "configs/taco_pour_bimanual_ppo.yaml")
+    parser.add_argument(
+        "--config",
+        type=Path,
+        default=ROOT / "runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml",
+    )
     parser.add_argument("--initialization-report", type=Path, required=True)
     parser.add_argument("--protocol", type=Path, default=ROOT / "configs/replay_rl_protocol.yaml")
+    parser.add_argument(
+        "--backend-contract",
+        type=Path,
+        default=ROOT / "configs/taco_pour_gpu_train_cpu_validate_v1.yaml",
+    )
     parser.add_argument("--objective-profile", type=Path)
     parser.add_argument("--observation-profile", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
@@ -186,6 +304,9 @@ def main():
         raise FileExistsError(args.output)
     if args.epochs < 1 or args.max_chunks < 1:
         raise ValueError("positive epoch/chunk budgets required")
+    backend_contract, backend_contract_artifact = load_dual_backend_contract(
+        args.backend_contract
+    )
     objective = load_runtime_objective(
         args.protocol, args.objective_profile,
         tracking_variant=args.tracking_variant, require_run_ready=True,
@@ -198,37 +319,116 @@ def main():
 
     # Refuse unaccepted initialization before allocating a GPU or loading PPO.
     from run_mjwp_ppo import _load_ego_config, _load_reference, MJWPVectorEnv, MJWPVectorEnvConfig, torch
-    from egoengine_repro.action.replay_rl import solve_chunk
+    from egoengine_repro.action.replay_rl import solve_chunk_dual_backend
     from video_to_spider.rl.replay_rl import MJWPChunkBackend, replay_action, train_chunk_ppo
 
-    config = _load_ego_config(str(args.config), "cuda:0")
-    reference = _load_reference(config.data_path, "cuda:0", expected_frequency=30)
-    env = MJWPVectorEnv(config, reference, num_envs=1,
-        env_config=MJWPVectorEnvConfig(reference_start_index=0, asymmetric_critic=True,
-            max_episode_length=len(reference[0]) - 1,
-            tracked_object_indices=(0,) if args.tracking_variant == "tool_only" else None,
-            object_roles=("tool", "target"), objective=objective,
-            observation=observation))
-    verify_runtime_model(env.env.model_cpu, provenance["validated_physics_contract"])
-    tensors = [torch.as_tensor(initial[k][None], device="cuda:0", dtype=torch.float32)
-               for k in ("qpos", "qvel", "ctrl")]
-    env._write_state(*tensors, np.array([True]))
-    env._last_ctrl = tensors[2].clone()
-    env._check_capacity()
-    backend = MJWPChunkBackend(env)
-    accepted_initial_boundary = backend.snapshot()
+    tracked_indices = (0,) if args.tracking_variant == "tool_only" else None
+
+    def make_env(device, *, asymmetric_critic):
+        config = _load_ego_config(str(args.config), device)
+        reference = _load_reference(
+            config.data_path, device, expected_frequency=30
+        )
+        env = MJWPVectorEnv(
+            config,
+            reference,
+            num_envs=1,
+            env_config=MJWPVectorEnvConfig(
+                reference_start_index=0,
+                asymmetric_critic=asymmetric_critic,
+                max_episode_length=len(reference[0]) - 1,
+                tracked_object_indices=tracked_indices,
+                object_roles=("tool", "target"),
+                objective=objective,
+                observation=observation,
+            ),
+        )
+        verify_runtime_model(
+            env.env.model_cpu, provenance["validated_physics_contract"]
+        )
+        tensors = [
+            torch.as_tensor(initial[name][None], device=device, dtype=torch.float32)
+            for name in ("qpos", "qvel", "ctrl")
+        ]
+        env._write_state(*tensors, np.array([True]))
+        env._last_ctrl = tensors[2].clone()
+        env._check_capacity()
+        return config, reference, env
+
+    training_device = backend_contract["training_backend"]["device"]
+    validation_device = backend_contract["validation_backend"]["device"]
+    training_config, training_reference, training_env = make_env(
+        training_device, asymmetric_critic=True
+    )
+    validation_config, validation_reference, validation_env = make_env(
+        validation_device, asymmetric_critic=False
+    )
+    if len(training_reference[0]) != len(validation_reference[0]):
+        raise ValueError("training and validation reference lengths differ")
+    training_backend = MJWPChunkBackend(training_env)
+    validation_backend = MJWPChunkBackend(validation_env)
+    accepted_initial_boundary = validation_backend.snapshot()
+    training_backend.restore(accepted_initial_boundary)
+    training_backend.verify_restored_snapshot(accepted_initial_boundary)
+
+    physics_sha256 = provenance["validated_physics_contract"][
+        "physics_contract_sha256"
+    ]
+    backend_records = {
+        "training": _backend_runtime_record(
+            training_env,
+            role="policy_optimization_only",
+            policy_inference_device=training_device,
+            physics_contract_sha256=physics_sha256,
+        ),
+        "validation": _backend_runtime_record(
+            validation_env,
+            role="replay_policy_acceptance_and_commit",
+            policy_inference_device="cpu",
+            physics_contract_sha256=physics_sha256,
+        ),
+    }
     args.output.mkdir(parents=True)
+    snapshot_dir = args.output / "input_contracts"
+    snapshot_dir.mkdir()
+    input_contract_snapshots = {}
+    for name, source in (
+        ("replay_rl_protocol", args.protocol),
+        ("dual_backend_contract", args.backend_contract),
+        ("objective_profile", args.objective_profile),
+        ("observation_profile", args.observation_profile),
+        ("simulator_config", args.config),
+    ):
+        if source is None:
+            continue
+        source = Path(source).resolve(strict=True)
+        raw = source.read_bytes()
+        suffix = "".join(source.suffixes) or ".bin"
+        destination = snapshot_dir / f"{name}{suffix}"
+        destination.write_bytes(raw)
+        input_contract_snapshots[name] = {
+            "source_path": str(source),
+            "snapshot_path": str(destination.resolve()),
+            "sha256": _sha256(raw),
+        }
     result = dict(status="running", initialization=provenance,
                   tracking_variant=args.tracking_variant,
                   objective=objective.as_report(),
                   observation=observation.as_report(),
+                  backend_contract=backend_contract_artifact,
+                  backend_runtime_records=backend_records,
+                  input_contract_snapshots=input_contract_snapshots,
                   config_artifact=dict(path=str(args.config.resolve()),
                       sha256=hashlib.sha256(args.config.read_bytes()).hexdigest()),
                   local_settings=dict(worlds=1, ppo_epochs=args.epochs, ppo_horizon=40,
                       deterministic_mean_validation=True, fresh_policy_per_failed_chunk=True,
                       stop_after_first_ppo=args.stop_after_first_ppo,
-                      tracking_boundary=env.tracking_boundary),
-                  source_frames=len(reference[0]), control_intervals=len(reference[0]) - 1,
+                      tracking_boundary=validation_env.tracking_boundary,
+                      training_backend="GPU MuJoCo-Warp",
+                      acceptance_backend="CPU MuJoCo-Warp",
+                      committed_state_source="CPU validation endpoint 20"),
+                  source_frames=len(validation_reference[0]),
+                  control_intervals=len(validation_reference[0]) - 1,
                   chunks=[], task_success=False)
     committed_qpos = [np.asarray(initial["qpos"], dtype=np.float32)]
     committed_qvel = [np.asarray(initial["qvel"], dtype=np.float32)]
@@ -239,13 +439,34 @@ def main():
     start = 0
     try:
         for _ in range(args.max_chunks):
-            trace_start = len(backend.validation_traces)
-            chunk = solve_chunk(backend, replay_action,
-                lambda current, first, end: train_chunk_ppo(current, first, end,
-                    args.output / f"ppo_chunk_{first}", epochs=args.epochs),
-                start=start, total_steps=len(reference[0]) - 1)
+            trace_start = len(validation_backend.validation_traces)
+            training_audits = []
+
+            def train(current, first, end):
+                policy = train_chunk_ppo(
+                    current,
+                    first,
+                    end,
+                    args.output / f"ppo_chunk_{first}",
+                    epochs=args.epochs,
+                    validation_env=validation_env,
+                )
+                training_audits.append(policy.audit)
+                return policy
+
+            chunk = solve_chunk_dual_backend(
+                training_backend,
+                validation_backend,
+                replay_action,
+                train,
+                start=start,
+                total_steps=len(validation_reference[0]) - 1,
+            )
             chunk_report = asdict(chunk)
-            chunk_report["validation_traces"] = backend.validation_traces[trace_start:]
+            chunk_report["acceptance_backend"] = "cpu"
+            chunk_report["commit_state_backend"] = "cpu"
+            chunk_report["training_runs"] = training_audits
+            chunk_report["validation_traces"] = validation_backend.validation_traces[trace_start:]
             result["chunks"].append(chunk_report)
             if chunk.mode is None:
                 result["status"] = "both_modes_failed_within_local_budget"
@@ -269,26 +490,41 @@ def main():
             )
             committed_modes.extend([chunk.mode] * committed_count)
             start = chunk.committed_end
-            torch.save(backend.snapshot(), args.output / "committed_boundary.pt")
+            boundary_buffer = io.BytesIO()
+            torch.save(validation_backend.snapshot(), boundary_buffer)
+            boundary_raw = boundary_buffer.getvalue()
+            boundary_artifact = gzip.compress(
+                boundary_raw, compresslevel=9, mtime=0
+            )
+            boundary_path = args.output / f"committed_boundary_endpoint_{start}.pt.gz"
+            boundary_path.write_bytes(boundary_artifact)
+            chunk_report["committed_boundary"] = {
+                "path": str(boundary_path.resolve()),
+                "artifact_sha256": _sha256(boundary_artifact),
+                "uncompressed_pt_sha256": _sha256(boundary_raw),
+                "compression": "gzip_compresslevel_9_mtime_0",
+                "source_backend": "cpu_validation",
+                "reference_endpoint": start,
+            }
             if args.stop_after_first_ppo and chunk.mode == "rl":
                 result["status"] = "short_rl_smoke_passed"
                 break
-            if start == len(reference[0]) - 1:
+            if start == len(validation_reference[0]) - 1:
                 result.update(status="full_horizon_tracking_feasible", task_success=True)
                 break
         else:
             result["status"] = "chunk_budget_reached_not_full_task_success"
         if result["task_success"]:
-            if len(committed_raw_residual) != len(reference[0]) - 1:
+            if len(committed_raw_residual) != len(validation_reference[0]) - 1:
                 raise RuntimeError("full-horizon result does not contain one action per transition")
-            final_committed_boundary = backend.snapshot()
-            backend.restore(accepted_initial_boundary)
-            backend.begin_trial("stitched_trajectory", 0, len(committed_raw_residual))
+            final_committed_boundary = validation_backend.snapshot()
+            validation_backend.restore(accepted_initial_boundary)
+            validation_backend.begin_trial("stitched_trajectory", 0, len(committed_raw_residual))
             stitched_steps = 0
             stitched_error = None
             try:
                 for index, action in enumerate(committed_raw_residual):
-                    if not backend.step(action[None], index):
+                    if not validation_backend.step(action[None], index):
                         break
                     stitched_steps += 1
             except Exception as error:
@@ -296,11 +532,11 @@ def main():
                 raise
             finally:
                 stitched_feasible = stitched_steps == len(committed_raw_residual)
-                backend.end_trial(
+                validation_backend.end_trial(
                     stitched_feasible, stitched_steps, error=stitched_error
                 )
-                result["stitched_trajectory_validation"] = backend.validation_traces[-1]
-                backend.restore(final_committed_boundary)
+                result["stitched_trajectory_validation"] = validation_backend.validation_traces[-1]
+                validation_backend.restore(final_committed_boundary)
             if stitched_feasible:
                 result["status"] = "full_horizon_tracking_feasible_and_stitched_replay_validated"
             else:
@@ -310,8 +546,17 @@ def main():
         result.update(status="error", error=f"{type(error).__name__}: {error}")
         raise
     finally:
-        result["simulation_control_intervals"] = env.simulation_control_intervals
-        result["simulation_physics_steps"] = env.simulation_physics_steps
+        result["simulation_work"] = {
+            "gpu_training_backend": {
+                "control_intervals": training_env.simulation_control_intervals,
+                "physics_steps": training_env.simulation_physics_steps,
+                "verified_cpu_snapshot_transfers": training_backend.verified_restore_count,
+            },
+            "cpu_validation_backend": {
+                "control_intervals": validation_env.simulation_control_intervals,
+                "physics_steps": validation_env.simulation_physics_steps,
+            },
+        }
         result["committed_reference_index"] = int(start)
         trajectory_path = args.output / "optimized_trajectory.npz"
         np.savez_compressed(

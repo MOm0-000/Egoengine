@@ -1,6 +1,38 @@
 """Actual MJWP transitions for the paper's two-chunk Replay→RL scheduler."""
 
+import hashlib
+from pathlib import Path
+import tempfile
+
 import numpy as np
+
+
+def _snapshot_value_equal(left, right):
+    if hasattr(left, "detach") and hasattr(right, "detach"):
+        left = left.detach().cpu().numpy()
+        right = right.detach().cpu().numpy()
+    if isinstance(left, np.ndarray) or isinstance(right, np.ndarray):
+        return (
+            isinstance(left, np.ndarray)
+            and isinstance(right, np.ndarray)
+            and left.dtype == right.dtype
+            and left.shape == right.shape
+            and left.tobytes() == right.tobytes()
+        )
+    if isinstance(left, dict) or isinstance(right, dict):
+        return (
+            isinstance(left, dict)
+            and isinstance(right, dict)
+            and left.keys() == right.keys()
+            and all(_snapshot_value_equal(left[key], right[key]) for key in left)
+        )
+    if isinstance(left, (tuple, list)) or isinstance(right, (tuple, list)):
+        return (
+            type(left) is type(right)
+            and len(left) == len(right)
+            and all(_snapshot_value_equal(a, b) for a, b in zip(left, right, strict=True))
+        )
+    return bool(left == right)
 
 
 class MJWPChunkBackend:
@@ -13,6 +45,7 @@ class MJWPChunkBackend:
         self.last_info = None
         self.validation_traces = []
         self._active_trace = None
+        self.verified_restore_count = 0
 
     def begin_trial(self, mode, start, end):
         if self._active_trace is not None:
@@ -62,6 +95,20 @@ class MJWPChunkBackend:
 
     def restore(self, state):
         self.env.set_env_state(state)
+
+    def verify_restored_snapshot(self, expected):
+        """Fail closed if a CPU/GPU boundary transfer changes any saved field."""
+        actual = self.snapshot()
+        if expected.keys() != actual.keys():
+            raise ValueError("restored MJWP snapshot keys differ")
+        mismatches = [
+            key for key in expected
+            if not _snapshot_value_equal(expected[key], actual[key])
+        ]
+        if mismatches:
+            preview = ", ".join(mismatches[:8])
+            raise ValueError(f"restored MJWP snapshot differs: {preview}")
+        self.verified_restore_count += 1
 
     def observation(self):
         obs, privileged = self.env._build_observations()
@@ -144,7 +191,55 @@ def replay_action(backend, reference_step):
     return np.zeros((1, backend.env.env_cfg.residual.hand_dof), dtype=np.float32)
 
 
-def train_chunk_ppo(backend, start, end, output, *, epochs=2, horizon=40, seed=0):
+def _model_state_sha256(state):
+    digest = hashlib.sha256()
+    for name in sorted(state):
+        tensor = state[name].detach().cpu().contiguous()
+        digest.update(name.encode())
+        digest.update(str(tensor.dtype).encode())
+        digest.update(np.asarray(tensor.shape, dtype=np.int64).tobytes())
+        digest.update(tensor.numpy().tobytes())
+    return digest.hexdigest()
+
+
+class _AgentPolicy:
+    """Own one evaluation agent and its optional temporary CPU workspace."""
+
+    def __init__(self, agent, audit, temporary_directory=None):
+        self.agent = agent
+        self.audit = audit
+        self.temporary_directory = temporary_directory
+        self.closed = False
+
+    def __call__(self, current, reference_step):
+        del reference_step
+        result = self.agent.get_action_values(
+            self.agent.obs_to_tensors(current.observation())
+        )
+        self.agent.rnn_states = result["rnn_states"]
+        return self.agent.preprocess_actions(result["mus"])
+
+    def close(self):
+        if self.closed:
+            return
+        if self.agent.writer is not None:
+            self.agent.writer.close()
+        if self.temporary_directory is not None:
+            self.temporary_directory.cleanup()
+        self.closed = True
+
+
+def train_chunk_ppo(
+    backend,
+    start,
+    end,
+    output,
+    *,
+    epochs=2,
+    horizon=40,
+    seed=0,
+    validation_env=None,
+):
     """Reuse the existing official trainer; reset every rollout to this boundary.
 
     Network, optimizer and recurrent state are fresh for each failed chunk in
@@ -168,14 +263,72 @@ def train_chunk_ppo(backend, start, end, output, *, epochs=2, horizon=40, seed=0
     try:
         agent.train()
     finally:
-        agent.writer.close()
-    agent.set_eval()
-    agent.rnn_states = [s.to(agent.device).zero_() for s in agent.model.get_default_rnn_state()]
+        if agent.writer is not None:
+            agent.writer.close()
 
-    def policy(current, reference_step):
-        result = agent.get_action_values(agent.obs_to_tensors(current.observation()))
-        agent.rnn_states = result["rnn_states"]
-        # Deterministic mean action for validation; training remains stochastic.
-        return agent.preprocess_actions(result["mus"])
+    actor_state = {
+        name: tensor.detach().cpu().clone()
+        for name, tensor in agent.model.state_dict().items()
+    }
+    actor_sha256 = _model_state_sha256(actor_state)
+    checkpoints = []
+    for checkpoint in sorted((output / "nn").glob("*.pth")):
+        checkpoints.append({
+            "path": str(checkpoint.resolve()),
+            "sha256": hashlib.sha256(checkpoint.read_bytes()).hexdigest(),
+        })
 
-    return policy
+    if validation_env is None:
+        agent.set_eval()
+        agent.rnn_states = [
+            state.to(agent.device).zero_()
+            for state in agent.model.get_default_rnn_state()
+        ]
+        return _AgentPolicy(agent, {
+            "training_device": str(env.ego_cfg.device),
+            "policy_inference_device": str(agent.device),
+            "actor_state_sha256": actor_sha256,
+            "checkpoint_artifacts": checkpoints,
+        })
+
+    if str(validation_env.ego_cfg.device) != "cpu":
+        raise ValueError("deterministic validation policy requires a CPU MJWP environment")
+    temporary_directory = tempfile.TemporaryDirectory(
+        prefix="egoengine_cpu_policy_validation_"
+    )
+    cpu_config = _build_ppo_config(
+        num_envs=1,
+        horizon_length=horizon,
+        seq_length=4,
+        max_epochs=epochs,
+        learning_rate=1e-4,
+        device="cpu",
+        asymmetric_critic=None,
+    )
+    cpu_agent = PpoAgent(
+        experiment_dir=Path(temporary_directory.name),
+        ppo_config=cpu_config,
+        network_config=_build_network_config(4),
+        env=validation_env,
+    )
+    cpu_agent.model.load_state_dict(actor_state)
+    transferred_sha256 = _model_state_sha256(cpu_agent.model.state_dict())
+    if transferred_sha256 != actor_sha256:
+        cpu_agent.writer.close()
+        temporary_directory.cleanup()
+        raise ValueError("GPU-trained actor changed during transfer to CPU validation")
+    cpu_agent.set_eval()
+    cpu_agent.rnn_states = [
+        state.to("cpu").zero_()
+        for state in cpu_agent.model.get_default_rnn_state()
+    ]
+    return _AgentPolicy(cpu_agent, {
+        "training_device": str(env.ego_cfg.device),
+        "policy_inference_device": "cpu",
+        "actor_state_sha256": actor_sha256,
+        "transferred_actor_state_sha256": transferred_sha256,
+        "actor_transfer_bitwise_equal": True,
+        "deterministic_mean_action": True,
+        "recurrent_state_reset_to_zero": True,
+        "checkpoint_artifacts": checkpoints,
+    }, temporary_directory)
