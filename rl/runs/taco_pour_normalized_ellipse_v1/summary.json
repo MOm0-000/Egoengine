@@ -1,6 +1,6 @@
 {
   "schema": "taco_pour_normalized_ellipse_v1_summary",
-  "status": "short_rl_improved_but_did_not_pass_no_full_run",
+  "status": "cpu_repeatable_eight_epoch_improvement_sixteen_epoch_regression_no_full_run",
   "objective": {
     "id": "taco_pour_local_normalized_ellipse_v1",
     "profile": "/data_all/zzx/3.2RL/configs/taco_pour_local_normalized_ellipse_v1.yaml",
@@ -11,16 +11,18 @@
   },
   "replay_audits": {
     "tool_only": {
-      "report": "/data_all/zzx/3.2RL/runs/taco_pour_normalized_ellipse_v1/replay_tool_only.json",
-      "report_sha256": "36cbbf1271735d0d063e85b50aa27573de332d57dfdeec602b3ae8baf93c8a4b",
+      "artifact_path": "/data_all/zzx/3.2RL/runs/taco_pour_normalized_ellipse_v1/replay_tool_only.json.gz",
+      "artifact_sha256": "9ccbc2d3ace8173b9d114a1984c36015ba43ca01956a27b67a00bedb828ffbab",
+      "uncompressed_json_sha256": "36cbbf1271735d0d063e85b50aa27573de332d57dfdeec602b3ae8baf93c8a4b",
       "status": "replay_feasible",
       "validated_steps": 40,
       "maximum_ellipse_score": 0.8426977396011353,
       "independent_threshold_violations": 0
     },
     "tool_and_target_extension": {
-      "report": "/data_all/zzx/3.2RL/runs/taco_pour_normalized_ellipse_v1/replay_tool_and_target.json",
-      "report_sha256": "7ff6c1201e011550cdb487d37aa2abe2f0fdf6dab871f86ebb39648cdd206957",
+      "artifact_path": "/data_all/zzx/3.2RL/runs/taco_pour_normalized_ellipse_v1/replay_tool_and_target.json.gz",
+      "artifact_sha256": "d3565d69d85a001fb9c16fcf112330d05189f7d0665ea5504e0813ead1a16d07",
+      "uncompressed_json_sha256": "7ff6c1201e011550cdb487d37aa2abe2f0fdf6dab871f86ebb39648cdd206957",
       "status": "replay_failed",
       "failure_endpoint": 31,
       "failure_role": "tool",
@@ -32,8 +34,9 @@
   },
   "short_rl": {
     "two_epochs": {
-      "report": "/data_all/zzx/3.2RL/runs/taco_pour_normalized_ellipse_v1/short_rl_tool_only/report.json",
-      "report_sha256": "ef282b2906ca4840b2af133b3594f102aa12cdef5179c7ac109015aa174267e7",
+      "artifact_path": "/data_all/zzx/3.2RL/runs/taco_pour_normalized_ellipse_v1/short_rl_tool_only/report.json.gz",
+      "artifact_sha256": "76f9198b138ce02e39546107db8511db1c4a7c3a6100b900362335557232f02a",
+      "uncompressed_json_sha256": "ef282b2906ca4840b2af133b3594f102aa12cdef5179c7ac109015aa174267e7",
       "status": "both_modes_failed_within_local_budget",
       "incoming_boundary": 20,
       "replay_failure_endpoint": 57,
@@ -44,8 +47,9 @@
       "rl_mean_score_on_common_endpoints": 0.6609114110469818
     },
     "eight_epochs": {
-      "report": "/data_all/zzx/3.2RL/runs/taco_pour_normalized_ellipse_v1/short_rl_tool_only_8ep/report.json",
-      "report_sha256": "29e8ceeb45d093c2210b0a94d79e4ed2335c4eaf4a57ebb82d7fdcd8258456e2",
+      "artifact_path": "/data_all/zzx/3.2RL/runs/taco_pour_normalized_ellipse_v1/short_rl_tool_only_8ep/report.json.gz",
+      "artifact_sha256": "46200ba0058b402cdec5f332108eeaa4fae4467bb9a0def9a75cfde5d9207b66",
+      "uncompressed_json_sha256": "29e8ceeb45d093c2210b0a94d79e4ed2335c4eaf4a57ebb82d7fdcd8258456e2",
       "status": "both_modes_failed_within_local_budget",
       "incoming_boundary": 20,
       "replay_validated_steps": 27,
@@ -64,9 +68,67 @@
       "rl_final_independent_threshold_pass": true
     }
   },
+  "repeatability_gate": {
+    "gpu_complete_snapshot": {
+      "artifact_path": "/data_all/zzx/3.2RL/runs/taco_pour_normalized_ellipse_repeatability_v3/report.json.gz",
+      "artifact_sha256": "8556802b6be1672aa7078982bf676a700e58c48a0cf02dc9fe93315e751c7d4a",
+      "uncompressed_json_sha256": "cce2390570fa5b59de05976332d86736ab67d763a4f7a40a806005acd16f7583",
+      "restored_warp_state_fields": 342,
+      "restored_state_bitwise_equal": true,
+      "same_environment_repeatable": false,
+      "fresh_environment_repeatable": false,
+      "first_divergent_physics_substep": 1,
+      "first_substep_maximum_qpos_spread": 9.313225746154785e-10,
+      "first_substep_maximum_qvel_spread": 5.364418029785156e-07,
+      "contact_pair_sets_equal_ignoring_order": true,
+      "conclusion": "GPU contact/constraint ordering diverges inside the first physics substep even after complete state restoration."
+    },
+    "cpu_complete_snapshot": {
+      "artifact_path": "/data_all/zzx/3.2RL/runs/taco_pour_normalized_ellipse_repeatability_cpu_v1/report.json.gz",
+      "artifact_sha256": "2005f17cddc1a742f954efdc15c59ba320a158e1912df7144c565c3276c4327f",
+      "uncompressed_json_sha256": "373ecaf4eceab2203ee7dcc1325c3b1c20ba763987b64ffb6425d1a34fa2fd63",
+      "same_environment_repeats": 3,
+      "fresh_environment_repeats": 3,
+      "replay_bitwise_repeatable": true,
+      "rl_action_sequence_bitwise_repeatable": true,
+      "conclusion": "CPU MJWP provides a deterministic validation path for this scene."
+    }
+  },
+  "deterministic_cpu_checkpoint_validation": {
+    "eight_epochs": {
+      "artifact_path": "/data_all/zzx/3.2RL/runs/taco_pour_normalized_ellipse_repeatability_cpu_v1/checkpoint_8ep_closed_loop_v2.json.gz",
+      "artifact_sha256": "a4917a075ab4686447c34d16e76bf0f0f70d288f317927ddf00631e8b0e6e03c",
+      "uncompressed_json_sha256": "3d5df227bb6002e29802c9d23479dfacf8cd1bf078fed8674855c6bb6a7406d2",
+      "repetitions": 3,
+      "replay_validated_steps": 29,
+      "replay_failure_endpoint": 50,
+      "rl_validated_steps": 38,
+      "rl_failure_endpoint": 59,
+      "rl_improvement_steps": 9,
+      "passed_40_step_gate": false
+    },
+    "sixteen_epochs": {
+      "gpu_report_path": "/data_all/zzx/3.2RL/runs/taco_pour_normalized_ellipse_v1/short_rl_tool_only_16ep_cpu_gate_v1/report.json.gz",
+      "gpu_report_artifact_sha256": "6bd5010430f0a360a10a6d589d4d1b6d15b94bb1554e24e26c29bf36b0ea9e40",
+      "gpu_report_uncompressed_json_sha256": "b926fdbfa2cd0cf02c5a4d12ac92fa0d2f0fcbef754a572baabbfccd1a3f908c",
+      "checkpoint_path": "/data_all/zzx/3.2RL/runs/taco_pour_normalized_ellipse_v1/short_rl_tool_only_16ep_cpu_gate_v1/ppo_chunk_20/nn/last_ep_16_rew__5.7482166_.pth",
+      "checkpoint_sha256": "977d2f98e4ee0377d78bcae793cb091d1ee60938247f5c16346ca2768ac67dd7",
+      "cpu_validation_path": "/data_all/zzx/3.2RL/runs/taco_pour_normalized_ellipse_v1/short_rl_tool_only_16ep_cpu_gate_v1/cpu_closed_loop_validation.json.gz",
+      "cpu_validation_artifact_sha256": "4b4afd63d942a15285dcf50e0d0e52e4e723bd7f44da6276dea0651ab4eb50d0",
+      "cpu_validation_uncompressed_json_sha256": "65c5e9e1597df40a89cab27b44e16cbab39ae0911d121ecc910e720ccc32f4fc",
+      "repetitions": 3,
+      "replay_validated_steps": 29,
+      "replay_failure_endpoint": 50,
+      "rl_validated_steps": 27,
+      "rl_failure_endpoint": 48,
+      "rl_improvement_steps": -2,
+      "passed_40_step_gate": false
+    }
+  },
   "decision": {
     "full_rl_executed": false,
-    "reason": "The bounded eight-epoch PPO smoke improved the failed window but did not satisfy the normalized ellipse for all 40 lookahead steps.",
+    "additional_epoch_or_seed_sweep_executed": false,
+    "reason": "Deterministic CPU validation confirmed a repeatable 29-to-38 step improvement for the eight-epoch checkpoint, but it still failed 40/40. The single predeclared sixteen-epoch run regressed to 27/40, so no further budget escalation or full run was allowed.",
     "paper_success_claimed": false
   }
 }

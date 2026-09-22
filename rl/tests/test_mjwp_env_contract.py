@@ -18,6 +18,10 @@ from run_mjwp_ppo import _load_ego_config, _load_reference
 from video_to_spider.rl.mjwp_env import (
     MJWPVectorEnv,
     MJWPVectorEnvConfig,
+    _MJWP_SNAPSHOT_SCHEMA,
+    _WP_CONTACT_FIELDS,
+    _WP_EFC_FIELDS,
+    _WP_STATE_FIELDS,
     _object_pose_parts,
     _transform_anchors_torch,
 )
@@ -158,6 +162,26 @@ def test_snapshot_restores_all_saved_python_state(env):
             np.testing.assert_array_equal(restored[key].numpy(), value.numpy())
         else:
             np.testing.assert_array_equal(restored[key], value)
+
+
+def test_snapshot_field_contract_covers_mujoco_warp_313():
+    import mujoco_warp as mjwarp
+
+    scalar_or_nested = {
+        "contact", "efc", "nworld", "naconmax", "naccdmax", "njmax",
+        "nvmax", "nvmax_pad", "njmax_pad", "njmax_nnz",
+    }
+    assert set(_WP_STATE_FIELDS) == set(mjwarp.Data.__annotations__) - scalar_or_nested
+    assert set(_WP_CONTACT_FIELDS) == set(mjwarp.Contact.__annotations__)
+    assert set(_WP_EFC_FIELDS) == set(mjwarp.Constraint.__annotations__)
+
+
+def test_legacy_partial_snapshot_is_rejected(env):
+    state = env.get_env_state()
+    assert state["snapshot_schema"] == _MJWP_SNAPSHOT_SCHEMA
+    del state["snapshot_schema"]
+    with pytest.raises(ValueError, match="legacy partial snapshots"):
+        env.set_env_state(state)
 
 
 def test_unused_contact_buffer_entries_do_not_count(env):

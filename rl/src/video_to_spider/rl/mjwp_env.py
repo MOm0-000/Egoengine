@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import dataclass, field, replace
+from importlib.metadata import version
 from typing import Any
 
 import mujoco
@@ -47,29 +48,46 @@ except ModuleNotFoundError:  # pragma: no cover - only used in the training runt
 
 
 _XHAND_FINGERS = ("thumb", "index", "middle", "ring", "pinky")
+_MJWP_SNAPSHOT_SCHEMA = "egoengine_mjwp_snapshot_v2"
 _WP_STATE_FIELDS = (
-    "qpos", "qvel", "qacc", "time", "ctrl", "act", "act_dot",
-    "qacc_warmstart", "qfrc_applied", "xfrc_applied", "energy",
-    "mocap_pos", "mocap_quat", "xpos", "xquat", "xmat", "xipos", "ximat",
-    "geom_xpos", "geom_xmat", "site_xpos", "site_xmat", "cacc", "cfrc_int",
-    "cfrc_ext", "sensordata", "actuator_length", "actuator_velocity",
-    "actuator_force", "actuator_moment", "ten_length", "ten_velocity",
-    "qacc_smooth", "qfrc_actuator", "qfrc_bias", "qfrc_constraint",
-    "qfrc_damper", "qfrc_fluid", "qfrc_gravcomp", "qfrc_inverse",
-    "qfrc_passive", "qfrc_smooth", "qfrc_spring", "cdof", "cdof_dot",
-    "cvel", "cinert", "crb", "subtree_angmom", "subtree_com",
-    "subtree_linvel", "xanchor", "xaxis", "qLD", "qLDiagInv", "qM",
-    "moment_colind", "moment_rowadr", "moment_rownnz", "ne", "nefc", "nf",
-    "nisland", "nl", "solver_niter", "tree_island", "eq_active", "nacon", "ncollision",
+    "solver_niter", "ne", "nf", "nl", "nefc", "nisland", "nidof",
+    "ntree_awake", "nbody_awake", "nv_awake", "time", "energy", "qpos",
+    "qvel", "act", "history", "qacc_warmstart", "ctrl", "qfrc_applied",
+    "xfrc_applied", "eq_active", "mocap_pos", "mocap_quat", "qacc",
+    "act_dot", "userdata", "sensordata", "tree_asleep", "xpos", "xquat",
+    "xmat", "xipos", "ximat", "xanchor", "xaxis", "geom_xpos", "geom_xmat",
+    "site_xpos", "site_xmat", "cam_xpos", "cam_xmat", "light_xpos",
+    "light_xdir", "subtree_com", "cdof", "cinert", "flexvert_xpos",
+    "flexedge_J", "flexedge_length", "ten_wrapadr", "ten_wrapnum", "ten_J",
+    "ten_length", "wrap_obj", "wrap_xpos", "actuator_length", "moment_rownnz",
+    "moment_rowadr", "moment_colind", "actuator_moment", "crb", "M", "qLD",
+    "qLDiagInv", "tree_awake", "body_awake", "body_awake_ind", "dof_awake_ind",
+    "flexedge_velocity", "ten_velocity", "actuator_velocity", "cvel", "cdof_dot",
+    "qfrc_bias", "qfrc_spring", "qfrc_damper", "qfrc_gravcomp", "qfrc_fluid",
+    "qfrc_adhesion", "qfrc_passive", "subtree_linvel", "subtree_angmom", "qLU",
+    "actuator_force", "qfrc_actuator", "qfrc_smooth", "qacc_smooth",
+    "qfrc_constraint", "qfrc_inverse", "cacc", "cfrc_int", "cfrc_ext",
+    "tree_island", "dof_island", "island_dofadr", "island_idofadr", "island_nv",
+    "island_nefc", "island_ne", "island_nf", "island_iefcadr", "map_dof2idof",
+    "map_idof2dof", "map_efc2iefc", "map_iefc2efc", "dof_islandid",
+    "efc_islandid", "ncdof", "dof_cdof", "cdof_dof", "ctol", "cls_tol",
+    "cdof_tri_row", "cdof_tri_col", "cM", "cqLD", "crhs", "cx", "cJ", "cMa",
+    "cqfrc_smooth", "cqacc_smooth", "cqacc_warmstart", "cqacc", "cqfrc_constraint",
+    "nacon", "ncollision", "flex_aabb_min", "flex_aabb_max", "flexnode_xpos",
+    "overflow", "face_xpos", "face_quat",
 )
 _WP_CONTACT_FIELDS = (
     "dist", "pos", "frame", "includemargin", "friction", "solref",
     "solreffriction", "solimp", "dim", "geom", "efc_address", "worldid",
-    "type", "flex", "vert", "geomcollisionid",
+    "type", "flex", "elem", "vert", "geomcollisionid", "adhesion",
 )
 _WP_EFC_FIELDS = (
-    "type", "id", "J", "J_colind", "J_rowadr", "J_rownnz", "pos", "margin",
-    "D", "vel", "aref", "frictionloss", "force", "state", "Ma",
+    "type", "id", "jtdaj_adr", "jtdaj_nrow", "jtdaj_nblock", "J_rownnz",
+    "J_rowadr", "J_colind", "J", "pos", "margin", "D", "vel", "aref",
+    "frictionloss", "force", "state", "island", "Ma", "Jqvel",
+)
+_SNAPSHOT_METADATA_FIELDS = (
+    "snapshot_schema", "mujoco_warp_version", "warp_state_keys",
 )
 
 
@@ -440,6 +458,8 @@ class MJWPVectorEnv:
 
     def get_env_state(self) -> Any:
         state: dict[str, Any] = {
+            "snapshot_schema": _MJWP_SNAPSHOT_SCHEMA,
+            "mujoco_warp_version": version("mujoco-warp"),
             "time_indices": self.time_indices.copy(),
             "start_indices": self.start_indices.copy(),
             "episode_lengths": self.episode_lengths.copy(),
@@ -468,11 +488,37 @@ class MJWPVectorEnv:
             for name in _WP_EFC_FIELDS:
                 if hasattr(data.efc, name):
                     state[f"{prefix}efc.{name}"] = wp.to_torch(getattr(data.efc, name)).cpu().clone()
+        state["warp_state_keys"] = self._warp_state_keys()
         return state
+
+    def _warp_state_keys(self) -> tuple[str, ...]:
+        keys = []
+        for prefix, data in (("", self.env.data_wp), ("prev.", self.env.data_wp_prev)):
+            keys.extend(f"{prefix}{name}" for name in _WP_STATE_FIELDS if hasattr(data, name))
+            keys.extend(
+                f"{prefix}contact.{name}" for name in _WP_CONTACT_FIELDS
+                if hasattr(data.contact, name)
+            )
+            keys.extend(
+                f"{prefix}efc.{name}" for name in _WP_EFC_FIELDS
+                if hasattr(data.efc, name)
+            )
+        return tuple(keys)
 
     def set_env_state(self, state: Any) -> None:
         if not isinstance(state, dict):
             raise ValueError("MJWP state must be the dictionary returned by get_env_state")
+        if state.get("snapshot_schema") != _MJWP_SNAPSHOT_SCHEMA:
+            raise ValueError(
+                f"MJWP snapshot schema must be {_MJWP_SNAPSHOT_SCHEMA}; "
+                "legacy partial snapshots cannot be restored"
+            )
+        runtime_version = version("mujoco-warp")
+        if state.get("mujoco_warp_version") != runtime_version:
+            raise ValueError("MJWP snapshot was created by a different mujoco-warp version")
+        expected_keys = self._warp_state_keys()
+        if tuple(state.get("warp_state_keys", ())) != expected_keys:
+            raise ValueError("MJWP snapshot does not contain the complete runtime state field set")
         self.time_indices = np.asarray(state["time_indices"], dtype=np.int32).copy()
         self.start_indices = np.asarray(state["start_indices"], dtype=np.int64).copy()
         self.episode_lengths = np.asarray(state["episode_lengths"], dtype=np.int32).copy()
@@ -493,6 +539,7 @@ class MJWPVectorEnv:
         with wp.ScopedDevice(self.env.device):
             for key, value in state.items():
                 if key in {
+                    *_SNAPSHOT_METADATA_FIELDS,
                     "time_indices", "start_indices", "episode_lengths", "rng_state",
                     "last_action", "last_ctrl", "initial_object_heights",
                     "last_tracking_error", "last_tracking_position_error",

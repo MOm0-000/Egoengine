@@ -16,7 +16,11 @@ two-mode variant of EgoEngine Appendix C.1:
 
 MPC is absent by user decision. Simulation work counters are not rolled back.
 Packed contact state, RNG, reference cursor, previous action/control, lifting
-origin, and physics state are part of each snapshot.
+origin, and physics state are part of each snapshot. Snapshot schema
+`egoengine_mjwp_snapshot_v2` covers all 342 runtime arrays exposed by
+MuJoCo-Warp 3.13 across current/previous Data, Contact, and Constraint storage.
+The loader rejects legacy partial snapshots, a different MuJoCo-Warp version,
+or a missing/extra runtime field before copying any state.
 
 ## Endpoint indexing
 
@@ -86,3 +90,29 @@ sufficient. Current results and repeatability limitations are in
 For bounded PPO diagnostics, `--stop-after-first-ppo` stops immediately after
 the first PPO-selected chunk. This separates a short learning check from a
 full-horizon run; it does not relax the 40-step validation gate.
+
+## Deterministic validation blocker
+
+Complete snapshot restoration does not make GPU MJWP deterministic. In the
+Pour endpoint-20 audit, every one of the 342 restored fields was bitwise equal,
+but three executions in the same compiled CUDA graph diverged in the first
+3.33 ms physics substep. The contact geom set was unchanged when order was
+ignored, while contact arrays, constraint rows, forces, qvel, and qpos differed.
+This agrees with the
+[upstream MJWP documentation](https://mujoco.readthedocs.io/en/latest/mjwarp/#frequently-asked-questions):
+GPU executions can differ because of non-deterministic atomic ordering; CPU
+execution is the supported deterministic path. Upstream GPU determinism remains
+tracked in [issue #562](https://github.com/google-deepmind/mujoco_warp/issues/562).
+
+The copied Spider adapter now executes `mjwarp.step` directly on CPU instead of
+trying to capture a CUDA graph. In this scene, CPU MJWP reproduced all ten
+physics substeps bitwise and then reproduced both action sequences across three
+same-environment and three fresh-environment trials.
+
+This establishes CPU MJWP as a viable deterministic validation backend, but the
+formal scheduler has not yet been converted into a dual-backend scheduler.
+GPU remains the training backend. A future formal commit must therefore train
+on GPU, restore/canonicalize the same chunk boundary on CPU, evaluate the
+closed-loop recurrent policy for the full 40-step lookahead on CPU, and commit
+only the CPU-validated candidate. No current GPU-only success is promoted by
+this audit.

@@ -1,6 +1,6 @@
 # RL reproduction status
 
-Updated: 2026-09-21. Active sample: TACO Pour/Bowl/Plate `20230927_017`.
+Updated: 2026-09-22. Active sample: TACO Pour/Bowl/Plate `20230927_017`.
 
 ## What enters RL
 
@@ -136,10 +136,39 @@ endpoints, PPO reduced the score on 22 and lowered the mean from `0.7340` to
 ellipse boundary by a small but real margin (`1.00133`) while still passing the
 independent thresholds.
 
-Because the short PPO did not pass all 40 lookahead steps, no normalized-
-ellipse full run was started. The evidence is frozen in
-`runs/taco_pour_normalized_ellipse_v1/summary.json`; repeated random reruns are
-not treated as a substitute for passing the fixed gate.
+The original GPU validation was not repeatable across runs. Auditing found a
+real snapshot bug: the old snapshot omitted several MuJoCo-Warp 3.13 Data,
+Contact, and Constraint arrays. Snapshot v2 now captures all 342 current and
+previous runtime arrays and refuses legacy partial snapshots. After this fix,
+the restored state was bitwise exact, but GPU rollouts still diverged inside
+the first physics substep. The contact pair set was equal when order was
+ignored; contact ordering, constraint row allocation/forces, qvel, and qpos
+were already different. This matches MJWP's documented GPU atomic-operation
+non-determinism rather than another missing state field.
+
+The same full snapshot and physics contract were then tested with MJWP on CPU.
+All ten substeps in the first control interval were bitwise identical, followed
+by exact trajectory signatures for three repeats in the same environment and
+three fresh environments. CPU validation of the recurrent eight-epoch
+checkpoint gave the following paired result on one deterministic endpoint-20
+boundary:
+
+| Candidate | Validated intervals | First failed endpoint |
+| --- | ---: | ---: |
+| Replay | 29/40 | 50 |
+| 8-epoch closed-loop PPO | 38/40 | 59 |
+
+Thus the PPO improvement is real and repeatable (`+9` intervals), but still
+fails the strict 40/40 gate. One predeclared 16-epoch run was then allowed. Its
+deterministic CPU result regressed to 27/40 and failed at endpoint 48, two steps
+before Replay. No seed sweep, 24/32-epoch escalation, or normalized-ellipse
+full run was started.
+
+The evidence and hashes are frozen in
+`runs/taco_pour_normalized_ellipse_v1/summary.json`. GPU is still suitable for
+high-throughput PPO training, but the formal scheduler now requires a separate
+dual-backend change before another run: every candidate policy must pass a
+closed-loop 40/40 CPU MJWP validation before a chunk can be committed.
 
 ## What is ready, and what is not
 
@@ -160,6 +189,7 @@ Not yet established:
   `lambda_p/lambda_R/C`;
 - stable grasp or a convincing physical pour;
 - independent full-horizon replay of a trajectory containing PPO actions;
+- an integrated GPU-training / deterministic-CPU-validation scheduler;
 - generalization of this reset/collision calibration to other TACO samples;
 - capacity for arbitrary unseen PPO states beyond the recorded stress tests.
 
