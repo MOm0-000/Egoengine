@@ -160,9 +160,44 @@ boundary:
 
 Thus the PPO improvement is real and repeatable (`+9` intervals), but still
 fails the strict 40/40 gate. One predeclared 16-epoch run was then allowed. Its
-deterministic CPU result regressed to 27/40 and failed at endpoint 48, two steps
-before Replay. No seed sweep, 24/32-epoch escalation, or normalized-ellipse
-full run was started.
+deterministic CPU result was 27/40 and failed at endpoint 48, two steps before
+Replay. These checkpoints came from separate non-deterministic GPU training
+runs. The result therefore establishes that the frozen 8-epoch policy is better
+than the frozen 16-epoch policy; it does not establish that one policy was
+damaged by continuing its training from epoch 8 to epoch 16. The 16-epoch run
+did not preserve an epoch-8 checkpoint from the same optimization path. No seed
+sweep, 24/32-epoch escalation, or normalized-ellipse full run was started.
+
+A subsequent read-only policy audit checked the two checkpoint payloads and
+the deterministic CPU traces before authorizing any further training. Both
+checkpoints contain the 236-dimensional input-normalization mean, variance, and
+count as registered model buffers. Strict loading into the CPU actor reproduced
+all 21 model tensors bitwise, including those buffers and the recurrent weights.
+Training starts from the default zero recurrent state, clears it on every done
+endpoint, and restores the exact chunk boundary; CPU validation also clears the
+state before each trial. No inference-state mismatch was found.
+
+The same audit found a much stronger action-contract issue. PPO exposes a
+normalized `[-1,1]^36` action, while the runtime currently applies
+`clip(action, -0.05, +0.05)` rad. Consequently, `95.94%` of all 8-epoch action
+components and `95.63%` of all 16-epoch components were exactly saturated at
+the residual limit. Every recorded policy step saturated at least one joint,
+and some saturated all 36. At the 8-epoch failure tail (endpoints 55--59), the
+contact bonus was zero and lift reward stayed below `0.00072`, while tracking
+reward fell by about `0.188`; the saved trace therefore does not support reward
+masking as the cause of that final failure. Per-finger contact flags/forces were
+not saved, so a finer contact-switch claim is deliberately not made.
+
+The predeclared decision rule therefore selects the action unit/range contract
+for the next single controlled experiment. Appendix C.2 explicitly says that
+action-smoothness reward is disabled for TACO, so adding such regularization is
+not the paper-first response. The proposed local follow-up is only to map the
+normalized policy output linearly across the already existing `+/-0.05 rad`
+limit (`delta_a = 0.05 u`) instead of clipping almost the entire normalized
+range. The paper does not publish this residual scale, so it remains a labeled
+local mapping. Reward coefficients, epoch budget, and data collection remain
+unchanged. The audit did not run physics or training; its full evidence is in
+`runs/taco_pour_normalized_policy_diagnostics_v1/report.json.gz`.
 
 The evidence and hashes are frozen in
 `runs/taco_pour_normalized_ellipse_v1/summary.json`. GPU remains the PPO

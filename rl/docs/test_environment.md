@@ -1,5 +1,20 @@
 # Test Environment
 
+## Policy diagnostic checkpoint
+
+On 2026-09-22, after adding the read-only normalized-policy diagnostic, the
+isolated CPU suite passed **571 tests, 1 skipped test, and 57 subtests** in
+88.32 s. The four new tests cover checkpoint normalization/RNN state transfer,
+failure-tail decomposition, reward reconstruction, action saturation, and the
+non-causal status of the independent 8/16-epoch comparison. The diagnostic
+itself performs no physics rollout or training.
+
+The older Spider environment still carries MuJoCo/MJWP 3.7, so its two expected
+MJWP contract failures must not be mixed with the 3.13 contract. Conversely,
+placing the 3.13 packages in front of that unadapted 3.7 Spider checkout fails
+at the known `xfrc_applied` vector-layout boundary. Neither mixed environment is
+used as evidence for the policy diagnostic.
+
 ## Current normalized-ellipse checkpoint
 
 On 2026-09-22, the complete MuJoCo 3.13 / mujoco-warp 3.13 / Warp 1.15 GPU

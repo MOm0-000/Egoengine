@@ -136,7 +136,22 @@ committed.
 The integration has been tested with a real one-epoch GPU PPO update, CPU actor
 inference, and a CPU physics step. It has not been used to authorize additional
 normalized-ellipse training: the frozen 8-epoch policy remains 38/40 and the
-single 16-epoch policy remains 27/40 under deterministic CPU validation.
+single 16-epoch policy remains 27/40 under deterministic CPU validation. They
+are independent GPU training runs, not two checkpoints on one deterministic
+learning curve.
+
+The checkpoint/trace audit additionally verified that the input-normalization
+buffers are inside `model.state_dict()` and survive strict CPU loading bitwise.
+It also verified matching zero-state recurrent semantics at training start,
+terminal reset, and CPU validation start. The remaining prominent issue is the
+action mapping: the normalized `[-1,1]` policy output is directly clipped to
+`[-0.05,0.05]` rad, so the frozen 8- and 16-epoch policies saturate `95.94%`
+and `95.63%` of their recorded action components. No mapping change has yet
+been made. Appendix C.2 says action-smoothness reward is disabled for TACO, so
+the selected single follow-up is the local unit/range mapping only: linearly
+map normalized output across the existing `+/-0.05 rad` residual limit. The
+paper does not publish that scale, and it must remain labeled local rather than
+treated as an author-recovered setting.
 
 A formal-runner smoke in `runs/taco_pour_dual_backend_runner_smoke_v1/` used no
 PPO training: CPU Replay passed 40/40, the runner committed the CPU endpoint-20
