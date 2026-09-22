@@ -240,6 +240,32 @@ units. This is recorded as a risk, not claimed as the cause of the endpoint-50
 failure. Full evidence is in
 `runs/taco_pour_action_attribution_v1/report.json`.
 
+The requested one-step CPU sensitivity audit then restored the exact policy
+states that emit the actions producing outcome endpoints 46--50 (source states
+45--49). It held the other 33 policy controls fixed and tested symmetric right-
+wrist translation changes of `+/-0.5 mm` and `+/-1.0 mm`. Because old policy
+commands often lie on the formal `+/-0.05 m` boundary, policy-centred probes use
+a diagnostic-only `+/-0.051 m` cap for one step; this is not a runtime or
+training proposal.
+
+The experiment did **not** recover a scale-stable local favourable direction.
+For policy-centred probes, the per-axis gradient sign agreed between the two
+epsilon sizes on only `53.3%` of old-policy axes and `40.0%` of scaled-policy
+axes. The mean cosine between the two estimated gradient vectors was only
+`0.271` for the old states and `-0.206` for the scaled states. The scaled policy
+action had negative cosine with the estimated favourable increment at four of
+five endpoints, but the old policy also had negative cosine at three of five;
+therefore those cosines cannot be treated as a trustworthy causal label.
+
+This result preserves the trajectory-level fact that the policies issue
+different late wrist directions, but it does not prove that one-step local
+physics identifies the old direction as correct. The likely limitation is the
+non-smooth contact response and one-control-period horizon, but the report does
+not turn that explanation into a fact. No scale sweep or training is authorized
+by this audit. A follow-up, if approved, would need a predeclared contact-mode-
+aware multi-step response or local system-identification contract. Full evidence
+is in `runs/endpoint46_50_local_control_sensitivity_v1/report.json`.
+
 The evidence and hashes are frozen in
 `runs/taco_pour_normalized_ellipse_v1/summary.json`. GPU remains the PPO
 training backend, but it no longer has acceptance or commit authority. The

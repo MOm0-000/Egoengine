@@ -176,6 +176,18 @@ targets measured in metres with wrist/finger angles measured in radians. The
 single scalar scale across these units is now explicit contract debt; it was not
 changed or promoted by this diagnostic.
 
+The one-step local-control sensitivity experiment did not produce a robust
+causal direction label. It probes the deterministic source states 45--49 with
+`+/-0.5 mm` and `+/-1.0 mm` right-wrist translation changes, corresponding to
+outcomes 46--50. Around the actual policy command, the two finite-difference
+gradient vectors have mean epsilon-to-epsilon cosine `0.271` for the old policy
+and `-0.206` for the scaled policy; per-axis sign stability is only `53.3%` and
+`40.0%`. Thus neither old nor scaled actions can be certified against one
+well-defined “locally favourable” direction. The trajectory divergence remains
+an observation, not upgraded causal proof. The diagnostic changed no policy or
+formal physics contract and authorizes neither training nor a scalar-scale
+sweep.
+
 A formal-runner smoke in `runs/taco_pour_dual_backend_runner_smoke_v1/` used no
 PPO training: CPU Replay passed 40/40, the runner committed the CPU endpoint-20
 snapshot, GPU simulation work remained zero, and the exact committed snapshot
