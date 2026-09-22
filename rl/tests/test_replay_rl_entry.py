@@ -10,6 +10,7 @@ import hashlib
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from run_taco_replay_rl import load_accepted_initialization, load_dual_backend_contract
+from video_to_spider.rl.action_contract import load_residual_action_profile
 from video_to_spider.rl.physics_contract import (
     build_physics_contract,
     compile_mujoco_model,
@@ -141,6 +142,18 @@ def test_dual_backend_contract_binds_cpu_repeatability_evidence():
     assert contract["validation_backend"]["policy_inference_device"] == "cpu"
     assert contract["scheduler"]["commit_source"] == "cpu_validation_endpoint_20"
     assert artifact["repeatability_evidence"]["status"] == "repeatability_gate_passed"
+
+
+def test_scaled_residual_action_experiment_is_explicit_and_local():
+    spec, report = load_residual_action_profile(
+        ROOT / "configs/taco_pour_residual_action_scaled_v1.yaml"
+    )
+    assert report["paper_faithful"] is False
+    assert report["author_recovered_scale"] is False
+    assert spec.residual_scale == 0.05
+    assert spec.residual_clip == 0.05
+    assert report["controlled_experiment"]["epochs"] == 8
+    assert report["controlled_experiment"]["seed"] == 0
 
 
 def test_dual_backend_contract_rejects_gpu_acceptance(tmp_path):

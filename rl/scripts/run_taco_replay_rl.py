@@ -18,6 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from video_to_spider.rl.objective_contract import load_runtime_objective
+from video_to_spider.rl.action_contract import load_residual_action_profile
 from video_to_spider.rl.physics_contract import build_physics_contract, verify_runtime_model
 
 
@@ -290,7 +291,18 @@ def main():
     )
     parser.add_argument("--objective-profile", type=Path)
     parser.add_argument("--observation-profile", type=Path, required=True)
+    parser.add_argument(
+        "--action-profile",
+        type=Path,
+        required=True,
+        help="Explicit local residual-action mapping; no failed candidate is selected implicitly.",
+    )
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--resume-boundary",
+        type=Path,
+        help="Optional complete CPU snapshot at a chunk boundary for a controlled suffix run.",
+    )
     parser.add_argument("--epochs", type=int, default=2)
     parser.add_argument("--max-chunks", type=int, default=1)
     parser.add_argument(
@@ -314,6 +326,9 @@ def main():
     from video_to_spider.rl.observation_contract import load_runtime_observation
     observation = load_runtime_observation(
         args.protocol, args.observation_profile, require_run_ready=True
+    )
+    residual_action, residual_action_report = load_residual_action_profile(
+        args.action_profile
     )
     initial, provenance = load_accepted_initialization(args.initialization_report, args.config)
 
@@ -341,6 +356,7 @@ def main():
                 object_roles=("tool", "target"),
                 objective=objective,
                 observation=observation,
+                residual=residual_action,
             ),
         )
         verify_runtime_model(
@@ -368,8 +384,31 @@ def main():
     training_backend = MJWPChunkBackend(training_env)
     validation_backend = MJWPChunkBackend(validation_env)
     accepted_initial_boundary = validation_backend.snapshot()
-    training_backend.restore(accepted_initial_boundary)
-    training_backend.verify_restored_snapshot(accepted_initial_boundary)
+    run_start = 0
+    incoming_boundary = accepted_initial_boundary
+    incoming_boundary_artifact = None
+    if args.resume_boundary is not None:
+        artifact = args.resume_boundary.read_bytes()
+        raw = gzip.decompress(artifact) if args.resume_boundary.suffix == ".gz" else artifact
+        incoming_boundary = torch.load(
+            io.BytesIO(raw), map_location="cpu", weights_only=False
+        )
+        if incoming_boundary.get("snapshot_schema") != "egoengine_mjwp_snapshot_v2":
+            raise ValueError("resume boundary must use the complete v2 snapshot schema")
+        indices = np.asarray(incoming_boundary.get("time_indices"), dtype=np.int64)
+        if indices.shape != (1,) or int(indices[0]) <= 0 or int(indices[0]) % 20:
+            raise ValueError("resume boundary must be a positive 20-step chunk endpoint")
+        run_start = int(indices[0])
+        incoming_boundary_artifact = {
+            "path": str(args.resume_boundary.resolve()),
+            "artifact_sha256": _sha256(artifact),
+            "uncompressed_pt_sha256": _sha256(raw),
+            "reference_endpoint": run_start,
+        }
+        validation_backend.restore(incoming_boundary)
+        validation_backend.verify_restored_snapshot(incoming_boundary)
+    training_backend.restore(incoming_boundary)
+    training_backend.verify_restored_snapshot(incoming_boundary)
 
     physics_sha256 = provenance["validated_physics_contract"][
         "physics_contract_sha256"
@@ -397,7 +436,9 @@ def main():
         ("dual_backend_contract", args.backend_contract),
         ("objective_profile", args.objective_profile),
         ("observation_profile", args.observation_profile),
+        ("action_profile", args.action_profile),
         ("simulator_config", args.config),
+        ("resume_boundary", args.resume_boundary),
     ):
         if source is None:
             continue
@@ -415,8 +456,12 @@ def main():
                   tracking_variant=args.tracking_variant,
                   objective=objective.as_report(),
                   observation=observation.as_report(),
+                  residual_action=residual_action_report,
                   backend_contract=backend_contract_artifact,
                   backend_runtime_records=backend_records,
+                  incoming_boundary=incoming_boundary_artifact or {
+                      "source": "accepted_initialization", "reference_endpoint": 0
+                  },
                   input_contract_snapshots=input_contract_snapshots,
                   config_artifact=dict(path=str(args.config.resolve()),
                       sha256=hashlib.sha256(args.config.read_bytes()).hexdigest()),
@@ -426,17 +471,24 @@ def main():
                       tracking_boundary=validation_env.tracking_boundary,
                       training_backend="GPU MuJoCo-Warp",
                       acceptance_backend="CPU MuJoCo-Warp",
-                      committed_state_source="CPU validation endpoint 20"),
+                      committed_state_source="CPU validation endpoint 20",
+                      residual_scale=residual_action.residual_scale,
+                      residual_clip_rad=residual_action.residual_clip),
                   source_frames=len(validation_reference[0]),
                   control_intervals=len(validation_reference[0]) - 1,
                   chunks=[], task_success=False)
-    committed_qpos = [np.asarray(initial["qpos"], dtype=np.float32)]
-    committed_qvel = [np.asarray(initial["qvel"], dtype=np.float32)]
-    committed_ctrl = [np.asarray(initial["ctrl"], dtype=np.float32)]
+    if run_start:
+        committed_qpos = [incoming_boundary["qpos"][0].cpu().numpy().astype(np.float32)]
+        committed_qvel = [incoming_boundary["qvel"][0].cpu().numpy().astype(np.float32)]
+        committed_ctrl = [incoming_boundary["ctrl"][0].cpu().numpy().astype(np.float32)]
+    else:
+        committed_qpos = [np.asarray(initial["qpos"], dtype=np.float32)]
+        committed_qvel = [np.asarray(initial["qvel"], dtype=np.float32)]
+        committed_ctrl = [np.asarray(initial["ctrl"], dtype=np.float32)]
     committed_raw_residual = []
     committed_applied_residual = []
     committed_modes = []
-    start = 0
+    start = run_start
     try:
         for _ in range(args.max_chunks):
             trace_start = len(validation_backend.validation_traces)
@@ -509,8 +561,11 @@ def main():
             if args.stop_after_first_ppo and chunk.mode == "rl":
                 result["status"] = "short_rl_smoke_passed"
                 break
-            if start == len(validation_reference[0]) - 1:
+            if start == len(validation_reference[0]) - 1 and run_start == 0:
                 result.update(status="full_horizon_tracking_feasible", task_success=True)
+                break
+            if start == len(validation_reference[0]) - 1:
+                result["status"] = "resumed_suffix_tracking_feasible_not_full_task_success"
                 break
         else:
             result["status"] = "chunk_budget_reached_not_full_task_success"
@@ -567,7 +622,9 @@ def main():
             raw_residual_action=np.stack(committed_raw_residual) if committed_raw_residual else np.empty((0, 36), np.float32),
             applied_residual=np.stack(committed_applied_residual) if committed_applied_residual else np.empty((0, 36), np.float32),
             mode=np.asarray(committed_modes),
-            reference_endpoint=np.arange(len(committed_qpos), dtype=np.int32),
+            reference_endpoint=np.arange(
+                run_start, run_start + len(committed_qpos), dtype=np.int32
+            ),
             frequency=np.asarray(30.0, dtype=np.float32),
         )
         result["optimized_trajectory"] = {

@@ -188,16 +188,30 @@ reward fell by about `0.188`; the saved trace therefore does not support reward
 masking as the cause of that final failure. Per-finger contact flags/forces were
 not saved, so a finer contact-switch claim is deliberately not made.
 
-The predeclared decision rule therefore selects the action unit/range contract
-for the next single controlled experiment. Appendix C.2 explicitly says that
-action-smoothness reward is disabled for TACO, so adding such regularization is
-not the paper-first response. The proposed local follow-up is only to map the
-normalized policy output linearly across the already existing `+/-0.05 rad`
-limit (`delta_a = 0.05 u`) instead of clipping almost the entire normalized
-range. The paper does not publish this residual scale, so it remains a labeled
-local mapping. Reward coefficients, epoch budget, and data collection remain
-unchanged. The audit did not run physics or training; its full evidence is in
-`runs/taco_pour_normalized_policy_diagnostics_v1/report.json.gz`.
+The predeclared decision rule therefore selected one action unit/range
+experiment. Appendix C.2 explicitly says that action-smoothness reward is
+disabled for TACO, so no smoothing term was added. The controlled candidate
+mapped normalized output linearly across the existing `+/-0.05 rad` limit,
+`delta_a = clip(0.05 u, -0.05, +0.05)`, while holding the endpoint-20 state,
+seed, eight-epoch budget, reward, observation, network, optimizer, horizon, and
+CPU acceptance backend fixed. The paper does not publish this residual scale;
+the candidate is explicitly local rather than author-recovered.
+
+The exact-boundary experiment did repair the action representation but did not
+improve the strict task gate. The copied endpoint-20 snapshot has the same
+artifact hash as the historical boundary, and its Replay trace is bitwise
+equal. Runtime action saturation fell from `95.94%` to `26.57%`; the maximum
+adjacent scalar jump fell from `0.10000` to `0.03465 rad`. Nevertheless, the
+new eight-epoch policy validated only `29/40` intervals and failed at endpoint
+50, compared with `38/40` and endpoint 59 for the frozen old policy. Three CPU
+repeats of the new policy were bitwise identical. The first failed endpoint was
+dominated by position error (`0.11565 m`) with rotation error `0.68332 rad`.
+The candidate therefore is not promoted, no additional epoch/seed search was
+run, and endpoint 55--59 cannot be compared because the candidate never reached
+them. This result does not make the original unit-mismatch diagnosis false: it
+shows that fixing the interface alone, without retuning PPO for the smaller
+executed-action scale, is insufficient. Full evidence is in
+`runs/taco_pour_normalized_action_scale_v1/comparison.json`.
 
 The evidence and hashes are frozen in
 `runs/taco_pour_normalized_ellipse_v1/summary.json`. GPU remains the PPO

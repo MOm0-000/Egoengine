@@ -20,6 +20,7 @@ sys.path[:0] = [str(ROOT / "src"), str(ROOT / "scripts")]
 from run_taco_replay_rl import load_accepted_initialization, verify_runtime_model
 from video_to_spider.rl.objective_contract import load_runtime_objective
 from video_to_spider.rl.observation_contract import load_runtime_observation
+from video_to_spider.rl.action_contract import load_residual_action_profile
 
 
 def sha256(raw: bytes) -> str:
@@ -48,6 +49,10 @@ def main() -> None:
     parser.add_argument("--protocol", type=Path, default=ROOT / "configs/replay_rl_protocol.yaml")
     parser.add_argument("--objective-profile", type=Path, required=True)
     parser.add_argument("--observation-profile", type=Path, required=True)
+    parser.add_argument(
+        "--action-profile", type=Path,
+        default=ROOT / "configs/taco_pour_residual_action_legacy_v1.yaml",
+    )
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     if args.output.exists():
@@ -71,6 +76,9 @@ def main() -> None:
     observation = load_runtime_observation(
         args.protocol, args.observation_profile, require_run_ready=True,
     )
+    residual_action, residual_action_report = load_residual_action_profile(
+        args.action_profile
+    )
     _, initialization = load_accepted_initialization(args.initialization_report, args.config)
     config = _load_ego_config(str(args.config), "cpu")
     reference = _load_reference(config.data_path, "cpu", expected_frequency=30)
@@ -84,6 +92,7 @@ def main() -> None:
             object_roles=("tool", "target"),
             objective=objective,
             observation=observation,
+            residual=residual_action,
         ),
     )
     verify_runtime_model(env.env.model_cpu, initialization["validated_physics_contract"])
@@ -176,6 +185,7 @@ def main() -> None:
         },
         "objective": objective.as_report(),
         "observation": observation.as_report(),
+        "residual_action": residual_action_report,
         "initialization": initialization,
         "bitwise_trajectory_repeatable": repeatable,
         "repetitions": repetitions,
