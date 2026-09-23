@@ -35,7 +35,7 @@ for _path in (str(_V2S_ROOT), str(_SPIDER_ROOT), str(_H2S2R_ROOT)):
 
 
 import torch
-from human2sim2robot.ppo.ppo_agent import PpoAgent, PpoConfig
+from human2sim2robot.ppo.ppo_agent import PpoAgent as OfficialPpoAgent, PpoConfig
 from human2sim2robot.ppo.utils.asymmetric_critic import AsymmetricCriticConfig
 from human2sim2robot.ppo.utils.network import MlpConfig, NetworkConfig, RnnConfig
 from human2sim2robot.ppo.utils.rewards_shaper import RewardsShaperParams
@@ -43,6 +43,16 @@ from spider.config import Config, load_config_yaml, process_config
 from video_to_spider.rl.mjwp_env import MJWPVectorEnv, MJWPVectorEnvConfig
 from video_to_spider.rl.objective_contract import load_runtime_objective
 from video_to_spider.rl.observation_contract import load_runtime_observation
+
+
+class PpoAgent(OfficialPpoAgent):
+    """Official PPO agent with a read-only sampled-action logging hook."""
+
+    def env_step(self, actions: torch.Tensor) -> tuple:
+        recorder = getattr(self.env, "record_training_policy_output", None)
+        if recorder is not None:
+            recorder(actions)
+        return super().env_step(actions)
 
 
 def _load_ego_config(config_path: str, device: str) -> Config:
@@ -365,7 +375,24 @@ def main() -> None:
         network_config=network_config,
         env=env,
     )
-    last_reward, epoch = agent.train()
+    env.enable_training_trace(experiment_dir / "training_visitation")
+    try:
+        last_reward, epoch = agent.train()
+    except BaseException as error:
+        try:
+            env.finalize_training_trace(completed=False)
+        except Exception as trace_error:
+            error.add_note(f"training-trace finalization also failed: {trace_error}")
+        raise
+    else:
+        training_visitation = env.finalize_training_trace(completed=True)
+    finally:
+        if agent.writer is not None:
+            agent.writer.close()
+    train_metadata["training_visitation"] = training_visitation
+    (experiment_dir / "train_metadata.json").write_text(
+        json.dumps(train_metadata, indent=2) + "\n", encoding="utf-8"
+    )
     print(f"finished smoke training: last_reward={last_reward}, epoch={epoch}")
 
 

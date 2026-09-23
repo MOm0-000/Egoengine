@@ -81,6 +81,39 @@ total = aggregate_tracking_reward + aggregate_contact_bonus + lift_reward
 `tool_only` remains the primary single manipulated-object version;
 `tool_and_target` is a disclosed local extension.
 
+## PPO training-visitation records
+
+Every formal PPO fallback now creates `training_visitation/`. The official
+H2S2R PPO loop and update equations are unchanged; a thin adapter observes the
+sampled action before its official `[-1,1]` clamp, while the environment records
+the bounded action and the residual actually applied to MuJoCo. Samples stay in
+memory during rollout and are written only at the next epoch boundary or after
+training completes.
+
+Each epoch has a lossless NPZ plus a compact JSON summary containing:
+
+- source/outcome reference endpoint and per-endpoint visit counts;
+- tool position error, rotation error and normalized-ellipse score;
+- the six right-wrist translation/rotation outputs before limiting, after the
+  PPO bound, and after the local scale/safety clip;
+- endpoint hand-object finger contact flags and a coarse contact-pattern count;
+- tracking-boundary and timeout termination endpoints.
+
+The contact summary is intentionally only the control-endpoint finger/object
+state. It is not a claim about identical contact pairs at every physics
+substep. All epoch artifacts and the manifest are SHA-256 bound and included in
+the returned policy audit. Missing pre-limit actions, inconsistent shapes,
+non-finite fields, an empty completed run, or a second finalization fail closed.
+
+Before enabling this for a new training experiment, a deterministic CPU audit
+ran one four-step PPO epoch twice from the exact endpoint-20 state: once with
+logging disabled and once enabled. Initial actor/optimizer/critic states were
+bitwise equal. After training, the actor, both optimizers, critic, complete
+simulator state, recurrent state, and Python/NumPy/Torch RNG states were all
+bitwise equal. The logged endpoints were exactly sources 20--23 and outcomes
+21--24. This establishes implementation transparency on CPU; it does not claim
+bitwise GPU repeatability, which MJWP does not provide.
+
 ## Current formal runtime
 
 - config: `runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml`;

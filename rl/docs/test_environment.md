@@ -1,5 +1,16 @@
 # Test Environment
 
+## PPO training-visitation logging checkpoint
+
+On 2026-09-23, after adding epoch-level PPO visitation records and the paired
+logging-transparency audit, the complete isolated suite passed **592 tests, 1
+skipped test, and 57 subtests** in 89.94 s. The skip is the real CUDA adapter
+module in the CPU test environment. The separate real CPU MuJoCo-Warp audit
+ran two one-epoch/four-step PPO trials and found every compared training,
+simulator, recurrent, and RNG state bitwise equal with logging off versus on.
+This audit changes no task-performance result and does not authorize a new
+training-budget or seed search.
+
 ## Policy diagnostic checkpoint
 
 On 2026-09-22, after adding the read-only normalized-policy diagnostic, the

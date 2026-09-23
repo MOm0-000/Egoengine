@@ -114,6 +114,9 @@ def test_bimanual_observation_and_contact_contract(env):
     assert info["object_tracking_reward_per_object"].shape == (2, 2)
     assert info["object_terminated"].shape == (2, 2)
     assert info["contact_bonus_per_hand_object"].shape == (2, 2, 2)
+    np.testing.assert_array_equal(
+        info["outcome_reference_endpoint"], info["source_reference_endpoint"] + 1
+    )
     np.testing.assert_allclose(
         info["reward"],
         info["aggregate_tracking_reward"] + info["aggregate_contact_bonus"] + info["lift_reward"],

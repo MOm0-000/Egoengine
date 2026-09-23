@@ -1,0 +1,55 @@
+{
+  "schema": "taco_ppo_training_visitation_v1",
+  "status": "complete",
+  "logging_semantics": {
+    "policy_output_prelimit": "sampled PPO action before the official [-1,1] action clamp",
+    "policy_output_bounded": "action passed by the official PPO adapter to MJWP",
+    "applied_residual": "bounded residual after local scale and formal safety clip",
+    "contact_summary": "control-endpoint hand-object finger flags; not substep collision topology",
+    "write_timing": "rollout samples are held in memory and written only at the next epoch boundary or after training completes"
+  },
+  "incomplete_step_discarded": false,
+  "action_contract": {
+    "right_wrist_actuator_names": [
+      "R_forearm_tx_position",
+      "R_forearm_ty_position",
+      "R_forearm_tz_position",
+      "R_forearm_roll_position",
+      "R_forearm_pitch_position",
+      "R_forearm_yaw_position"
+    ],
+    "right_wrist_coordinate_units": [
+      "m",
+      "m",
+      "m",
+      "rad",
+      "rad",
+      "rad"
+    ],
+    "residual_scale": 0.05,
+    "residual_clip": 0.05
+  },
+  "object_roles": [
+    "tool",
+    "target"
+  ],
+  "hand_roles": [
+    "right",
+    "left"
+  ],
+  "epochs": [
+    {
+      "epoch": 1,
+      "frame_at_start": 0,
+      "sample_count": 4,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_training_trace_transparency_v1/with_logging/training_visitation/epoch_0001_visits.npz",
+        "sha256": "375abd4a14f8271b5a8538706bbf801f4b0c58ec1b41bd1a13dc5d2cd9a6a13e"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_training_trace_transparency_v1/with_logging/training_visitation/epoch_0001_summary.json",
+        "sha256": "57a2d8e33b1fb37e7f45b3a64e475c8bf0431a20c300c3fbba24eaa7173f0c7a"
+      }
+    }
+  ]
+}

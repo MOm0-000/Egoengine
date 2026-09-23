@@ -266,6 +266,36 @@ by this audit. A follow-up, if approved, would need a predeclared contact-mode-
 aware multi-step response or local system-identification contract. Full evidence
 is in `runs/endpoint46_50_local_control_sensitivity_v1/report.json`.
 
+The approved three-step follow-up was limited to the common frozen-action
+support at source endpoints 45--47. It perturbed only the first right-wrist
+translation command and then replayed the next two already-recorded actions;
+neither policy was called again. Under the predeclared strict contact criterion,
+all feasible perturbations changed the 30-substep global contact geometry
+multiset (old 18/18, scaled 36/36), while repeated unperturbed baselines were
+bitwise exact. This proves there was no sample with globally unchanged contact
+topology; it does not prove that the right-hand/bowl subsystem admits no local
+approximation under a different, post-hoc contact definition. The local finite-
+difference route is therefore stopped rather than repeatedly redefining the
+filter. Evidence is in `runs/endpoint45_49_contact_mode_response_v1/summary.json`.
+
+Training coverage in the historical 8-epoch run remains unknown because that
+run did not save visited states, and a fresh non-deterministic GPU rerun cannot
+reconstruct them. The formal PPO fallback now records each epoch's visited
+reference endpoints, tool position/rotation/ellipse errors, right-wrist action
+distributions, coarse endpoint contacts, and termination endpoints. Raw samples
+are retained alongside summaries and artifact hashes.
+
+This logging was admitted only after a paired CPU transparency gate. From the
+same complete endpoint-20 boundary and seed, one four-step epoch with logging
+off and one with logging on had bitwise-identical initial actor, actor optimizer,
+critic and critic optimizer. Their final actor, both optimizers, critic,
+complete simulator state, recurrent state, and Python/NumPy/Torch RNG states
+were also bitwise identical. The logger captured exactly four visits, sources
+20--23 and outcomes 21--24. No PPO setting, reward, action mapping, sampling or
+acceptance rule changed. The audit is
+`runs/taco_pour_training_trace_transparency_v1/report.json`; it is an
+implementation check, not a new task-performance experiment.
+
 The evidence and hashes are frozen in
 `runs/taco_pour_normalized_ellipse_v1/summary.json`. GPU remains the PPO
 training backend, but it no longer has acceptance or commit authority. The
@@ -301,6 +331,8 @@ Ready:
 - real PPO fallback, complete action export, and independent saved-action replay gate.
 - integrated GPU-training / deterministic-CPU-validation scheduler, including
   CPU-only acceptance and CPU commit-state ownership.
+- epoch-level PPO visitation logging, admitted by a bitwise CPU transparency
+  gate and attached to the formal PPO fallback.
 
 Not yet established:
 
@@ -313,9 +345,8 @@ Not yet established:
 - generalization of this reset/collision calibration to other TACO samples;
 - capacity for arbitrary unseen PPO states beyond the recorded stress tests.
 
-The MuJoCo 3.13 high-SDF stack passes the complete repository suite: 579 tests
-and 57 subtests. At the preceding checkpoint, the isolated CPU stack passed 559
-tests and 57 subtests with the CUDA/MJWP module skipped. The high-SDF stack
-additionally warns that capsule–mesh
+The current isolated suite passes 592 tests, 1 skipped CUDA/MJWP module, and 57
+subtests. At an earlier checkpoint, the MuJoCo 3.13 high-SDF GPU stack passed
+579 tests and 57 subtests. The high-SDF stack additionally warns that capsule–mesh
 CCD pairs support at most one contact; this is recorded as a backend limitation,
 not hidden as a successful multicontact guarantee.

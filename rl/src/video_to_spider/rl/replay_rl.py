@@ -260,8 +260,18 @@ def train_chunk_ppo(
         asymmetric_critic=_build_asymmetric_critic_config(horizon))
     agent = PpoAgent(experiment_dir=output, ppo_config=config,
                      network_config=_build_network_config(4), env=env)
+    env.enable_training_trace(output / "training_visitation")
+    training_visitation = None
     try:
         agent.train()
+    except BaseException as error:
+        try:
+            env.finalize_training_trace(completed=False)
+        except Exception as trace_error:
+            error.add_note(f"training-trace finalization also failed: {trace_error}")
+        raise
+    else:
+        training_visitation = env.finalize_training_trace(completed=True)
     finally:
         if agent.writer is not None:
             agent.writer.close()
@@ -289,6 +299,7 @@ def train_chunk_ppo(
             "policy_inference_device": str(agent.device),
             "actor_state_sha256": actor_sha256,
             "checkpoint_artifacts": checkpoints,
+            "training_visitation": training_visitation,
         })
 
     if str(validation_env.ego_cfg.device) != "cpu":
@@ -331,4 +342,5 @@ def train_chunk_ppo(
         "deterministic_mean_action": True,
         "recurrent_state_reset_to_zero": True,
         "checkpoint_artifacts": checkpoints,
+        "training_visitation": training_visitation,
     }, temporary_directory)
