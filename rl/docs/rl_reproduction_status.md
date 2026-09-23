@@ -281,9 +281,13 @@ filter. Evidence is in `runs/endpoint45_49_contact_mode_response_v1/summary.json
 Training coverage in the historical 8-epoch run remains unknown because that
 run did not save visited states, and a fresh non-deterministic GPU rerun cannot
 reconstruct them. The formal PPO fallback now records each epoch's visited
-reference endpoints, tool position/rotation/ellipse errors, right-wrist action
-distributions, coarse endpoint contacts, and termination endpoints. Raw samples
-are retained alongside summaries and artifact hashes.
+reference endpoints, tool position/rotation/ellipse errors, right-wrist sampled
+action distributions, coarse endpoint contacts, and termination endpoints. The
+three action layers are the pre-clamp stochastic sample, the same sample after
+the official `[-1,1]` clamp, and the residual actually applied after local
+scale/safety clipping. The first layer includes exploration noise and is not the
+actor mean `mu`; neither `mu` nor policy variance is recorded in this schema.
+Raw samples are retained alongside summaries and artifact hashes.
 
 This logging was admitted only after a paired CPU transparency gate. From the
 same complete endpoint-20 boundary and seed, one four-step epoch with logging
@@ -293,7 +297,7 @@ complete simulator state, recurrent state, and Python/NumPy/Torch RNG states
 were also bitwise identical. The logger captured exactly four visits, sources
 20--23 and outcomes 21--24. No PPO setting, reward, action mapping, sampling or
 acceptance rule changed. The audit is
-`runs/taco_pour_training_trace_transparency_v1/report.json`; it is an
+`runs/taco_pour_training_trace_transparency_v2/report.json`; it is an
 implementation check, not a new task-performance experiment.
 
 The evidence and hashes are frozen in

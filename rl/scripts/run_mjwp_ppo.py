@@ -49,7 +49,7 @@ class PpoAgent(OfficialPpoAgent):
     """Official PPO agent with a read-only sampled-action logging hook."""
 
     def env_step(self, actions: torch.Tensor) -> tuple:
-        recorder = getattr(self.env, "record_training_policy_output", None)
+        recorder = getattr(self.env, "record_training_sampled_action", None)
         if recorder is not None:
             recorder(actions)
         return super().env_step(actions)

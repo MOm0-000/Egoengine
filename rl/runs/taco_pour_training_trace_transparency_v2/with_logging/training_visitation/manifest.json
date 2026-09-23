@@ -1,10 +1,11 @@
 {
-  "schema": "taco_ppo_training_visitation_v1",
+  "schema": "taco_ppo_training_visitation_v2",
   "status": "complete",
   "logging_semantics": {
-    "policy_output_prelimit": "sampled PPO action before the official [-1,1] action clamp",
-    "policy_output_bounded": "action passed by the official PPO adapter to MJWP",
+    "sampled_action_preclamp": "stochastic action sampled from the PPO policy distribution before the official [-1,1] clamp; this is not actor mean mu",
+    "sampled_action_clamped": "the same sampled action after the official [-1,1] clamp",
     "applied_residual": "bounded residual after local scale and formal safety clip",
+    "actor_distribution_parameters": "actor mean mu and policy standard deviation are not recorded by this schema",
     "contact_summary": "control-endpoint hand-object finger flags; not substep collision topology",
     "write_timing": "rollout samples are held in memory and written only at the next epoch boundary or after training completes"
   },
@@ -43,12 +44,12 @@
       "frame_at_start": 0,
       "sample_count": 4,
       "visits": {
-        "path": "/data_all/zzx/3.2RL/runs/taco_pour_training_trace_transparency_v1/with_logging/training_visitation/epoch_0001_visits.npz",
-        "sha256": "375abd4a14f8271b5a8538706bbf801f4b0c58ec1b41bd1a13dc5d2cd9a6a13e"
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_training_trace_transparency_v2/with_logging/training_visitation/epoch_0001_visits.npz",
+        "sha256": "4d171a15822b0738a1d976cdac9edcd693121d27bdd0e579eff63bdab926fff1"
       },
       "summary": {
-        "path": "/data_all/zzx/3.2RL/runs/taco_pour_training_trace_transparency_v1/with_logging/training_visitation/epoch_0001_summary.json",
-        "sha256": "57a2d8e33b1fb37e7f45b3a64e475c8bf0431a20c300c3fbba24eaa7173f0c7a"
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_training_trace_transparency_v2/with_logging/training_visitation/epoch_0001_summary.json",
+        "sha256": "542e0ce7f4e5e7d4865c2deb215d0e860b5f4d1ee3d09dedf172a391417d536b"
       }
     }
   ]

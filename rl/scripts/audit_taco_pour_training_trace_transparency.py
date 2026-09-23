@@ -74,7 +74,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--output-dir", type=Path,
-        default=ROOT / "runs/taco_pour_training_trace_transparency_v1",
+        default=ROOT / "runs/taco_pour_training_trace_transparency_v2",
     )
     args = parser.parse_args()
     if args.output_dir.exists():
@@ -199,7 +199,7 @@ def main() -> None:
     )
     passed = all(initial_equal.values()) and all(final_equal.values()) and expected_trace
     report = {
-        "schema": "taco_pour_training_trace_transparency_v1",
+        "schema": "taco_pour_training_trace_transparency_v2",
         "status": "logging_transparency_gate_passed" if passed else "logging_changed_training_behavior",
         "scope": {
             "purpose": "implementation equivalence audit, not an algorithm experiment",

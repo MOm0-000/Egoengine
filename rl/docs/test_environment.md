@@ -8,6 +8,8 @@ skipped test, and 57 subtests** in 89.94 s. The skip is the real CUDA adapter
 module in the CPU test environment. The separate real CPU MuJoCo-Warp audit
 ran two one-epoch/four-step PPO trials and found every compared training,
 simulator, recurrent, and RNG state bitwise equal with logging off versus on.
+The logged pre-clamp value is the stochastic PPO action sample, not actor mean
+`mu`; the visitation schema is version 2 after making that terminology explicit.
 This audit changes no task-performance result and does not authorize a new
 training-budget or seed search.
 

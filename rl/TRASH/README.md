@@ -24,6 +24,12 @@ pre-step GPU synchronization. It is not formal evidence.
 next superseded small report. The active version adds explicit failure-path and
 mixed metre/radian coordinate-unit metadata.
 
+`taco_pour_training_trace_transparency_v1_superseded_terminology` passed the
+same CPU transparency gate, but called the stochastic PPO sample a generic
+`policy_output_prelimit`. Schema v2 replaces it with the unambiguous
+`sampled_action_preclamp` and explicitly states that actor `mu`/variance are not
+recorded. The v1 report is not part of the active evidence chain.
+
 `taco_pour_training_trace_transparency_v1_generated_checkpoints` and its
 `_final` counterpart contain the 84 MB one-epoch checkpoints and TensorBoard
 event files automatically emitted by the official PPO trainer during the
@@ -31,3 +37,8 @@ logging-equivalence audits. They are not used by the comparison: the audit
 compared the live model, both optimizers, critic, complete simulator state,
 recurrent state and RNG states bitwise, and keeps only the small report and
 visitation artifacts active.
+
+`taco_pour_training_trace_transparency_v2_generated_checkpoints` is the same
+automatic output from the active terminology-corrected audit. It is likewise
+excluded from the formal evidence and Git; the active v2 report and visitation
+files remain under `runs/`.

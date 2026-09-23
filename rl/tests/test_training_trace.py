@@ -50,8 +50,8 @@ def test_training_trace_is_lossless_and_flushes_only_at_epoch_boundaries(tmp_pat
     trace.record(
         source_endpoint=np.array([20, 20]),
         outcome_endpoint=np.array([21, 21]),
-        policy_output_prelimit=prelimit,
-        policy_output_bounded=bounded,
+        sampled_action_preclamp=prelimit,
+        sampled_action_clamped=bounded,
         applied_residual=applied,
         info=_info(),
     )
@@ -65,8 +65,8 @@ def test_training_trace_is_lossless_and_flushes_only_at_epoch_boundaries(tmp_pat
     trace.record(
         source_endpoint=np.array([21, 21]),
         outcome_endpoint=np.array([22, 22]),
-        policy_output_prelimit=np.zeros((2, 36), np.float32),
-        policy_output_bounded=np.zeros((2, 36), np.float32),
+        sampled_action_preclamp=np.zeros((2, 36), np.float32),
+        sampled_action_clamped=np.zeros((2, 36), np.float32),
         applied_residual=np.zeros((2, 36), np.float32),
         info=_info(),
     )
@@ -89,8 +89,10 @@ def test_training_trace_is_lossless_and_flushes_only_at_epoch_boundaries(tmp_pat
         "left-target:middle": 1,
         "right-tool:thumb": 1,
     }
-    assert summary["right_wrist_translation"]["prelimit_fraction_abs_gt_1"] == pytest.approx(2 / 6)
-    np.testing.assert_array_equal(raw["right_wrist_policy_output_prelimit"], prelimit[:, :6])
+    assert summary["right_wrist_translation"][
+        "sampled_preclamp_fraction_abs_gt_1"
+    ] == pytest.approx(2 / 6)
+    np.testing.assert_array_equal(raw["right_wrist_sampled_action_preclamp"], prelimit[:, :6])
     for artifact in manifest["epochs"]:
         for key in ("visits", "summary"):
             path = Path(artifact[key]["path"])
@@ -102,8 +104,8 @@ def test_training_trace_fails_closed_on_bad_shape_and_duplicate_finalize(tmp_pat
     with pytest.raises(RuntimeError, match="without an active"):
         trace.record(
             source_endpoint=np.array([0]), outcome_endpoint=np.array([1]),
-            policy_output_prelimit=np.zeros((1, 36)),
-            policy_output_bounded=np.zeros((1, 36)),
+            sampled_action_preclamp=np.zeros((1, 36)),
+            sampled_action_clamped=np.zeros((1, 36)),
             applied_residual=np.zeros((1, 36)), info=_info(),
         )
     trace.begin_epoch(1, 0)
@@ -112,8 +114,8 @@ def test_training_trace_fails_closed_on_bad_shape_and_duplicate_finalize(tmp_pat
     with pytest.raises(ValueError, match="contact flags must have shape"):
         trace.record(
             source_endpoint=np.array([0, 0]), outcome_endpoint=np.array([1, 1]),
-            policy_output_prelimit=np.zeros((2, 36)),
-            policy_output_bounded=np.zeros((2, 36)),
+            sampled_action_preclamp=np.zeros((2, 36)),
+            sampled_action_clamped=np.zeros((2, 36)),
             applied_residual=np.zeros((2, 36)), info=bad,
         )
 

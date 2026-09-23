@@ -1,5 +1,5 @@
 {
-  "schema": "taco_ppo_training_visitation_v1",
+  "schema": "taco_ppo_training_visitation_v2",
   "epoch": 1,
   "frame_at_start": 0,
   "sample_count": 4,
@@ -192,7 +192,7 @@
       "policy": "unitless",
       "applied_residual": "m"
     },
-    "policy_output_prelimit": {
+    "sampled_action_preclamp": {
       "R_forearm_tx_position": {
         "count": 4,
         "mean": 0.09959828108549118,
@@ -224,7 +224,7 @@
         "max": 0.6940003633499146
       }
     },
-    "policy_output_bounded": {
+    "sampled_action_clamped": {
       "R_forearm_tx_position": {
         "count": 4,
         "mean": 0.09834792464971542,
@@ -288,8 +288,8 @@
         "max": 0.03470003604888916
       }
     },
-    "prelimit_fraction_abs_gt_1": 0.3333333333333333,
-    "bounded_fraction_at_limit": 0.3333333333333333,
+    "sampled_preclamp_fraction_abs_gt_1": 0.3333333333333333,
+    "sampled_clamped_fraction_at_limit": 0.3333333333333333,
     "applied_fraction_at_clip": 0.3333333333333333
   },
   "right_wrist_rotation": {
@@ -297,7 +297,7 @@
       "policy": "unitless",
       "applied_residual": "rad"
     },
-    "policy_output_prelimit": {
+    "sampled_action_preclamp": {
       "R_forearm_roll_position": {
         "count": 4,
         "mean": -0.3754693418741226,
@@ -329,7 +329,7 @@
         "max": 0.19389814138412476
       }
     },
-    "policy_output_bounded": {
+    "sampled_action_clamped": {
       "R_forearm_roll_position": {
         "count": 4,
         "mean": -0.16773666441440582,
@@ -393,8 +393,8 @@
         "max": 0.009694933891296387
       }
     },
-    "prelimit_fraction_abs_gt_1": 0.25,
-    "bounded_fraction_at_limit": 0.25,
+    "sampled_preclamp_fraction_abs_gt_1": 0.25,
+    "sampled_clamped_fraction_at_limit": 0.25,
     "applied_fraction_at_clip": 0.25
   },
   "coarse_contact_pattern_counts": {

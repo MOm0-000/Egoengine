@@ -300,7 +300,7 @@ class MJWPVectorEnv:
         self.rng = np.random.default_rng(seed)
         self._chunk_reset_state = None
         self._training_trace: PpoTrainingTrace | None = None
-        self._pending_training_policy_output: torch.Tensor | None = None
+        self._pending_training_sampled_action: torch.Tensor | None = None
         # Work spent on rejected lookahead and PPO must not disappear on restore.
         self.simulation_control_intervals = 0
         self.simulation_physics_steps = 0
@@ -452,8 +452,8 @@ class MJWPVectorEnv:
             "outcome_reference_endpoint": outcome_endpoints.copy(),
         }
         if self._training_trace is not None:
-            if self._pending_training_policy_output is None:
-                raise RuntimeError("training trace is active but the PPO pre-limit action is missing")
+            if self._pending_training_sampled_action is None:
+                raise RuntimeError("training trace is active but the pre-clamp sampled action is missing")
             control_indices = list(self.env_cfg.residual.hand_control_indices)
             applied_residual = (
                 full_ctrl[:, control_indices] - reference_ctrls[:, control_indices]
@@ -461,14 +461,14 @@ class MJWPVectorEnv:
             self._training_trace.record(
                 source_endpoint=source_endpoints,
                 outcome_endpoint=outcome_endpoints,
-                policy_output_prelimit=(
-                    self._pending_training_policy_output.detach().cpu().numpy()
+                sampled_action_preclamp=(
+                    self._pending_training_sampled_action.detach().cpu().numpy()
                 ),
-                policy_output_bounded=policy_actions,
+                sampled_action_clamped=policy_actions,
                 applied_residual=applied_residual,
                 info=infos,
             )
-            self._pending_training_policy_output = None
+            self._pending_training_sampled_action = None
         return self._pack_observation(obs, next_privileged), reward.cpu().numpy(), done_np, infos
 
     def set_train_info(self, frame: int, agent: Any) -> None:
@@ -479,7 +479,7 @@ class MJWPVectorEnv:
         """Enable lossless PPO-rollout logging without changing rollout tensors."""
         if self._training_trace is not None:
             raise RuntimeError("training trace is already enabled")
-        if self._pending_training_policy_output is not None:
+        if self._pending_training_sampled_action is not None:
             raise RuntimeError("cannot enable training trace with a pending action")
         indices = tuple(self.env_cfg.residual.hand_control_indices)
         actuator_names = tuple(
@@ -503,27 +503,27 @@ class MJWPVectorEnv:
             residual_clip=self.env_cfg.residual.residual_clip,
         )
 
-    def record_training_policy_output(self, actions: torch.Tensor) -> None:
+    def record_training_sampled_action(self, actions: torch.Tensor) -> None:
         """Receive the sampled PPO action before the official action clamp."""
         if self._training_trace is None:
             return
-        if self._pending_training_policy_output is not None:
-            raise RuntimeError("previous PPO policy output was not consumed by env.step")
+        if self._pending_training_sampled_action is not None:
+            raise RuntimeError("previous PPO sampled action was not consumed by env.step")
         expected = (self.num_envs, self.env_cfg.residual.hand_dof)
         if tuple(actions.shape) != expected:
-            raise ValueError(f"PPO policy output must have shape {expected}")
+            raise ValueError(f"PPO sampled action must have shape {expected}")
         # Keep a detached reference until env.step has completed. The official
         # adapter already transfers the bounded action to CPU before stepping;
         # avoiding an extra pre-step GPU synchronization keeps this hook passive.
-        self._pending_training_policy_output = actions.detach()
+        self._pending_training_sampled_action = actions.detach()
 
     def finalize_training_trace(self, *, completed: bool) -> dict[str, Any] | None:
         if self._training_trace is None:
             return None
-        pending = self._pending_training_policy_output is not None
+        pending = self._pending_training_sampled_action is not None
         if pending and completed:
             raise RuntimeError("cannot finalize training trace with an unconsumed PPO action")
-        self._pending_training_policy_output = None
+        self._pending_training_sampled_action = None
         report = self._training_trace.finalize(
             completed=completed,
             incomplete_step_discarded=pending,

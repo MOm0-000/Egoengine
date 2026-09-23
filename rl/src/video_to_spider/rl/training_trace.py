@@ -11,7 +11,7 @@ from typing import Any
 import numpy as np
 
 
-SCHEMA = "taco_ppo_training_visitation_v1"
+SCHEMA = "taco_ppo_training_visitation_v2"
 _FINGERS = ("thumb", "index", "middle", "ring", "pinky")
 
 
@@ -83,8 +83,8 @@ class PpoTrainingTrace:
             "tool_position_error_m": [],
             "tool_rotation_error_rad": [],
             "tool_objective_score": [],
-            "right_wrist_policy_output_prelimit": [],
-            "right_wrist_policy_output_bounded": [],
+            "right_wrist_sampled_action_preclamp": [],
+            "right_wrist_sampled_action_clamped": [],
             "right_wrist_applied_residual": [],
             "contact_flags": [],
             "tracking_terminated": [],
@@ -96,8 +96,8 @@ class PpoTrainingTrace:
         *,
         source_endpoint: np.ndarray,
         outcome_endpoint: np.ndarray,
-        policy_output_prelimit: np.ndarray,
-        policy_output_bounded: np.ndarray,
+        sampled_action_preclamp: np.ndarray,
+        sampled_action_clamped: np.ndarray,
         applied_residual: np.ndarray,
         info: dict[str, Any],
     ) -> None:
@@ -109,8 +109,12 @@ class PpoTrainingTrace:
             "tool_position_error_m": np.asarray(info["object_position_error"], np.float32)[:, 0],
             "tool_rotation_error_rad": np.asarray(info["object_rotation_error"], np.float32)[:, 0],
             "tool_objective_score": np.asarray(info["object_tracking_error_per_object"], np.float32)[:, 0],
-            "right_wrist_policy_output_prelimit": np.asarray(policy_output_prelimit, np.float32)[:, :6],
-            "right_wrist_policy_output_bounded": np.asarray(policy_output_bounded, np.float32)[:, :6],
+            "right_wrist_sampled_action_preclamp": np.asarray(
+                sampled_action_preclamp, np.float32
+            )[:, :6],
+            "right_wrist_sampled_action_clamped": np.asarray(
+                sampled_action_clamped, np.float32
+            )[:, :6],
             "right_wrist_applied_residual": np.asarray(applied_residual, np.float32)[:, :6],
             "contact_flags": np.asarray(info["contact_flags"], bool),
             "tracking_terminated": np.asarray(info["terminated"], bool),
@@ -119,8 +123,8 @@ class PpoTrainingTrace:
         batch = len(arrays["source_endpoint"])
         if any(len(value) != batch for value in arrays.values()):
             raise ValueError("training-trace fields have inconsistent world counts")
-        if arrays["right_wrist_policy_output_prelimit"].shape != (batch, 6):
-            raise ValueError("right-wrist policy output must have six coordinates")
+        if arrays["right_wrist_sampled_action_preclamp"].shape != (batch, 6):
+            raise ValueError("right-wrist sampled action must have six coordinates")
         if arrays["contact_flags"].ndim != 4:
             raise ValueError("contact flags must be world x hand x object x finger")
         expected_contacts = (batch, len(self.hand_roles), len(self.object_roles), len(_FINGERS))
@@ -160,8 +164,8 @@ class PpoTrainingTrace:
                 "timeout_count": int(data["time_out"][select].sum()),
             }
         patterns = Counter(self._contact_pattern(flags) for flags in data["contact_flags"])
-        prelimit = data["right_wrist_policy_output_prelimit"]
-        bounded = data["right_wrist_policy_output_bounded"]
+        sampled_preclamp = data["right_wrist_sampled_action_preclamp"]
+        sampled_clamped = data["right_wrist_sampled_action_clamped"]
         applied = data["right_wrist_applied_residual"]
         translation_names = tuple(self.actuator_names[:3])
         rotation_names = tuple(self.actuator_names[3:6])
@@ -179,22 +183,38 @@ class PpoTrainingTrace:
             "tool_objective_score": _distribution(data["tool_objective_score"]),
             "right_wrist_translation": {
                 "unit": {"policy": "unitless", "applied_residual": "m"},
-                "policy_output_prelimit": _component_distributions(prelimit[:, :3], translation_names),
-                "policy_output_bounded": _component_distributions(bounded[:, :3], translation_names),
+                "sampled_action_preclamp": _component_distributions(
+                    sampled_preclamp[:, :3], translation_names
+                ),
+                "sampled_action_clamped": _component_distributions(
+                    sampled_clamped[:, :3], translation_names
+                ),
                 "applied_residual": _component_distributions(applied[:, :3], translation_names),
-                "prelimit_fraction_abs_gt_1": float((np.abs(prelimit[:, :3]) > 1.0).mean()),
-                "bounded_fraction_at_limit": float(np.isclose(np.abs(bounded[:, :3]), 1.0).mean()),
+                "sampled_preclamp_fraction_abs_gt_1": float(
+                    (np.abs(sampled_preclamp[:, :3]) > 1.0).mean()
+                ),
+                "sampled_clamped_fraction_at_limit": float(
+                    np.isclose(np.abs(sampled_clamped[:, :3]), 1.0).mean()
+                ),
                 "applied_fraction_at_clip": float(
                     np.isclose(np.abs(applied[:, :3]), self.residual_clip, atol=1e-7).mean()
                 ),
             },
             "right_wrist_rotation": {
                 "unit": {"policy": "unitless", "applied_residual": "rad"},
-                "policy_output_prelimit": _component_distributions(prelimit[:, 3:6], rotation_names),
-                "policy_output_bounded": _component_distributions(bounded[:, 3:6], rotation_names),
+                "sampled_action_preclamp": _component_distributions(
+                    sampled_preclamp[:, 3:6], rotation_names
+                ),
+                "sampled_action_clamped": _component_distributions(
+                    sampled_clamped[:, 3:6], rotation_names
+                ),
                 "applied_residual": _component_distributions(applied[:, 3:6], rotation_names),
-                "prelimit_fraction_abs_gt_1": float((np.abs(prelimit[:, 3:6]) > 1.0).mean()),
-                "bounded_fraction_at_limit": float(np.isclose(np.abs(bounded[:, 3:6]), 1.0).mean()),
+                "sampled_preclamp_fraction_abs_gt_1": float(
+                    (np.abs(sampled_preclamp[:, 3:6]) > 1.0).mean()
+                ),
+                "sampled_clamped_fraction_at_limit": float(
+                    np.isclose(np.abs(sampled_clamped[:, 3:6]), 1.0).mean()
+                ),
                 "applied_fraction_at_clip": float(
                     np.isclose(np.abs(applied[:, 3:6]), self.residual_clip, atol=1e-7).mean()
                 ),
@@ -263,9 +283,17 @@ class PpoTrainingTrace:
             "schema": SCHEMA,
             "status": status,
             "logging_semantics": {
-                "policy_output_prelimit": "sampled PPO action before the official [-1,1] action clamp",
-                "policy_output_bounded": "action passed by the official PPO adapter to MJWP",
+                "sampled_action_preclamp": (
+                    "stochastic action sampled from the PPO policy distribution before the "
+                    "official [-1,1] clamp; this is not actor mean mu"
+                ),
+                "sampled_action_clamped": (
+                    "the same sampled action after the official [-1,1] clamp"
+                ),
                 "applied_residual": "bounded residual after local scale and formal safety clip",
+                "actor_distribution_parameters": (
+                    "actor mean mu and policy standard deviation are not recorded by this schema"
+                ),
                 "contact_summary": "control-endpoint hand-object finger flags; not substep collision topology",
                 "write_timing": (
                     "rollout samples are held in memory and written only at the next epoch "

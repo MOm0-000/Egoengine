@@ -85,8 +85,9 @@ total = aggregate_tracking_reward + aggregate_contact_bonus + lift_reward
 
 Every formal PPO fallback now creates `training_visitation/`. The official
 H2S2R PPO loop and update equations are unchanged; a thin adapter observes the
-sampled action before its official `[-1,1]` clamp, while the environment records
-the bounded action and the residual actually applied to MuJoCo. Samples stay in
+stochastic action sampled from the policy distribution before its official
+`[-1,1]` clamp, while the environment records the clamped version of that sample
+and the residual actually applied to MuJoCo. Samples stay in
 memory during rollout and are written only at the next epoch boundary or after
 training completes.
 
@@ -94,15 +95,19 @@ Each epoch has a lossless NPZ plus a compact JSON summary containing:
 
 - source/outcome reference endpoint and per-endpoint visit counts;
 - tool position error, rotation error and normalized-ellipse score;
-- the six right-wrist translation/rotation outputs before limiting, after the
-  PPO bound, and after the local scale/safety clip;
+- the six right-wrist translation/rotation sampled actions before the PPO
+  clamp, after the PPO clamp, and after the local scale/safety clip;
 - endpoint hand-object finger contact flags and a coarse contact-pattern count;
 - tracking-boundary and timeout termination endpoints.
 
-The contact summary is intentionally only the control-endpoint finger/object
+The pre-clamp field is not the actor mean `mu`: it includes PPO exploration
+noise. Actor `mu` and policy variance are intentionally not added as a blocker;
+they can be logged later if the question changes from state/action coverage to
+why the policy distribution prefers a direction. The contact summary is
+intentionally only the control-endpoint finger/object
 state. It is not a claim about identical contact pairs at every physics
 substep. All epoch artifacts and the manifest are SHA-256 bound and included in
-the returned policy audit. Missing pre-limit actions, inconsistent shapes,
+the returned policy audit. Missing sampled actions, inconsistent shapes,
 non-finite fields, an empty completed run, or a second finalization fail closed.
 
 Before enabling this for a new training experiment, a deterministic CPU audit
