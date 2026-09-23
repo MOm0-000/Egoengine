@@ -96,12 +96,19 @@ def load_dual_backend_contract(path):
 
 
 def _backend_runtime_record(env, *, role, policy_inference_device, physics_contract_sha256):
-    snapshot = env.get_env_state()
+    representative = getattr(env, "representative_env", env)
+    snapshot = representative.get_env_state()
     adapter_path = Path(__file__).resolve().parents[1] / "src/video_to_spider/rl/mjwp_env.py"
-    spider_path = Path(env._mjwp.__file__).resolve()
+    spider_path = Path(representative._mjwp.__file__).resolve()
     record = {
         "role": role,
         "device": str(env.ego_cfg.device),
+        "worlds": int(env.num_envs),
+        "world_layout": (
+            "independent_one_world_instances"
+            if hasattr(env, "representative_env")
+            else "single_mjwp_instance"
+        ),
         "policy_inference_device": policy_inference_device,
         "simulator": "MuJoCo-Warp",
         "mujoco_version": version("mujoco"),
@@ -304,6 +311,12 @@ def main():
         help="Optional complete CPU snapshot at a chunk boundary for a controlled suffix run.",
     )
     parser.add_argument("--epochs", type=int, default=2)
+    parser.add_argument("--training-worlds", type=int, default=1)
+    parser.add_argument(
+        "--multiworld-gate-report",
+        type=Path,
+        help="Required passed state-copy/short-rollout gate for multi-world training.",
+    )
     parser.add_argument("--max-chunks", type=int, default=1)
     parser.add_argument(
         "--stop-after-first-ppo",
@@ -314,8 +327,32 @@ def main():
     args = parser.parse_args()
     if args.output.exists():
         raise FileExistsError(args.output)
-    if args.epochs < 1 or args.max_chunks < 1:
+    if args.epochs < 1 or args.max_chunks < 1 or args.training_worlds < 1:
         raise ValueError("positive epoch/chunk budgets required")
+    multiworld_gate = None
+    if args.training_worlds > 1:
+        if args.training_worlds != 4 or args.multiworld_gate_report is None:
+            raise ValueError("this controlled experiment requires four worlds and a passed gate report")
+        if args.resume_boundary is None:
+            raise ValueError("multi-world training requires the exact hash-bound resume boundary")
+        gate_raw = args.multiworld_gate_report.read_bytes()
+        gate_report = json.loads(gate_raw)
+        if (
+            gate_report.get("schema") != "taco_pour_multiworld_state_gate_v1"
+            or gate_report.get("status") != "passed"
+            or gate_report.get("worlds") != args.training_worlds
+            or gate_report.get("source_boundary", {}).get("artifact_sha256")
+                != _sha256(args.resume_boundary.read_bytes())
+            or gate_report.get("exact_start_state", {}).get("all_worlds_bitwise_equal") is not True
+            or gate_report.get("isolated_reset", {}).get("passed") is not True
+            or gate_report.get("short_rollout", {}).get("passed") is not True
+        ):
+            raise ValueError("multi-world state-copy gate has not passed")
+        multiworld_gate = {
+            "path": str(args.multiworld_gate_report.resolve()),
+            "sha256": _sha256(gate_raw),
+            "report": gate_report,
+        }
     backend_contract, backend_contract_artifact = load_dual_backend_contract(
         args.backend_contract
     )
@@ -335,53 +372,67 @@ def main():
     # Refuse unaccepted initialization before allocating a GPU or loading PPO.
     from run_mjwp_ppo import _load_ego_config, _load_reference, MJWPVectorEnv, MJWPVectorEnvConfig, torch
     from egoengine_repro.action.replay_rl import solve_chunk_dual_backend
-    from video_to_spider.rl.replay_rl import MJWPChunkBackend, replay_action, train_chunk_ppo
+    from video_to_spider.rl.mjwp_env import IndependentMJWPTrainingEnv
+    from video_to_spider.rl.replay_rl import (
+        MJWPChunkBackend,
+        MJWPIndependentTrainingBackend,
+        replay_action,
+        train_chunk_ppo,
+    )
 
     tracked_indices = (0,) if args.tracking_variant == "tool_only" else None
 
-    def make_env(device, *, asymmetric_critic):
+    def make_env(device, *, asymmetric_critic, worlds):
         config = _load_ego_config(str(args.config), device)
         reference = _load_reference(
             config.data_path, device, expected_frequency=30
         )
-        env = MJWPVectorEnv(
-            config,
-            reference,
-            num_envs=1,
-            env_config=MJWPVectorEnvConfig(
-                reference_start_index=0,
-                asymmetric_critic=asymmetric_critic,
-                max_episode_length=len(reference[0]) - 1,
-                tracked_object_indices=tracked_indices,
-                object_roles=("tool", "target"),
-                objective=objective,
-                observation=observation,
-                residual=residual_action,
-            ),
-        )
-        verify_runtime_model(
-            env.env.model_cpu, provenance["validated_physics_contract"]
-        )
-        tensors = [
-            torch.as_tensor(initial[name][None], device=device, dtype=torch.float32)
-            for name in ("qpos", "qvel", "ctrl")
-        ]
-        env._write_state(*tensors, np.array([True]))
-        env._last_ctrl = tensors[2].clone()
-        env._check_capacity()
+        children = []
+        for _ in range(worlds):
+            child = MJWPVectorEnv(
+                config,
+                reference,
+                num_envs=1,
+                env_config=MJWPVectorEnvConfig(
+                    reference_start_index=0,
+                    asymmetric_critic=asymmetric_critic,
+                    max_episode_length=len(reference[0]) - 1,
+                    tracked_object_indices=tracked_indices,
+                    object_roles=("tool", "target"),
+                    objective=objective,
+                    observation=observation,
+                    residual=residual_action,
+                ),
+            )
+            verify_runtime_model(
+                child.env.model_cpu, provenance["validated_physics_contract"]
+            )
+            tensors = [
+                torch.as_tensor(initial[name][None], device=device, dtype=torch.float32)
+                for name in ("qpos", "qvel", "ctrl")
+            ]
+            child._write_state(*tensors, np.array([True]))
+            child._last_ctrl = tensors[2].clone()
+            child._check_capacity()
+            children.append(child)
+        env = children[0] if worlds == 1 else IndependentMJWPTrainingEnv(children)
         return config, reference, env
 
     training_device = backend_contract["training_backend"]["device"]
     validation_device = backend_contract["validation_backend"]["device"]
     training_config, training_reference, training_env = make_env(
-        training_device, asymmetric_critic=True
+        training_device, asymmetric_critic=True, worlds=args.training_worlds
     )
     validation_config, validation_reference, validation_env = make_env(
-        validation_device, asymmetric_critic=False
+        validation_device, asymmetric_critic=False, worlds=1
     )
     if len(training_reference[0]) != len(validation_reference[0]):
         raise ValueError("training and validation reference lengths differ")
-    training_backend = MJWPChunkBackend(training_env)
+    training_backend = (
+        MJWPChunkBackend(training_env)
+        if args.training_worlds == 1
+        else MJWPIndependentTrainingBackend(training_env)
+    )
     validation_backend = MJWPChunkBackend(validation_env)
     accepted_initial_boundary = validation_backend.snapshot()
     run_start = 0
@@ -439,6 +490,7 @@ def main():
         ("action_profile", args.action_profile),
         ("simulator_config", args.config),
         ("resume_boundary", args.resume_boundary),
+        ("multiworld_gate_report", args.multiworld_gate_report),
     ):
         if source is None:
             continue
@@ -459,13 +511,14 @@ def main():
                   residual_action=residual_action_report,
                   backend_contract=backend_contract_artifact,
                   backend_runtime_records=backend_records,
+                  multiworld_gate=multiworld_gate,
                   incoming_boundary=incoming_boundary_artifact or {
                       "source": "accepted_initialization", "reference_endpoint": 0
                   },
                   input_contract_snapshots=input_contract_snapshots,
                   config_artifact=dict(path=str(args.config.resolve()),
                       sha256=hashlib.sha256(args.config.read_bytes()).hexdigest()),
-                  local_settings=dict(worlds=1, ppo_epochs=args.epochs, ppo_horizon=40,
+                  local_settings=dict(worlds=args.training_worlds, ppo_epochs=args.epochs, ppo_horizon=40,
                       deterministic_mean_validation=True, fresh_policy_per_failed_chunk=True,
                       stop_after_first_ppo=args.stop_after_first_ppo,
                       tracking_boundary=validation_env.tracking_boundary,
@@ -606,6 +659,7 @@ def main():
                 "control_intervals": training_env.simulation_control_intervals,
                 "physics_steps": training_env.simulation_physics_steps,
                 "verified_cpu_snapshot_transfers": training_backend.verified_restore_count,
+                "restore_audits": getattr(training_backend, "restore_audits", []),
             },
             "cpu_validation_backend": {
                 "control_intervals": validation_env.simulation_control_intervals,

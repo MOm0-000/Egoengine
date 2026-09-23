@@ -1,5 +1,23 @@
 # Test Environment
 
+## Four-world training checkpoint
+
+On 2026-09-23, the four-world engineering gate restored all **342** Warp state
+fields bitwise in four independent GPU worlds and proved that a complete reset
+of one world leaves the other three snapshots unchanged. The single authorized
+eight-epoch experiment recorded 1,280 samples and completed GPU actor to CPU
+actor transfer. CPU Replay validated `29/40`; PPO validated `31/40` and failed
+at endpoint 52, so no state was committed. The first attempted run completed
+training but exposed a missing official checkpoint method before CPU
+validation; that incomplete run is isolated under `TRASH/incomplete_runs/`
+and is not used as algorithm evidence.
+
+After adding the independent-world checkpoint, formal evidence audit, and
+regression tests, the complete suite passed **612 tests and 57 subtests** in
+110.48 s. The 17 warnings are existing MuJoCo-Warp contact-capacity,
+PyTorch AMP deprecation, Trimesh degenerate-volume, and SciPy pickle warnings;
+there were no failures or skipped tests.
+
 ## Prospective training-coverage checkpoint
 
 On 2026-09-23, one predeclared eight-epoch prospective coverage run used the

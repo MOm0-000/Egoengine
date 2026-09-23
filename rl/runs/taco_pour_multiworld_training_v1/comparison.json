@@ -1,0 +1,452 @@
+{
+  "schema": "taco_pour_multiworld_training_comparison_v1",
+  "status": "absolute_tail_coverage_and_CPU_validation_improved_but_40_of_40_failed",
+  "artifacts": {
+    "formal_report": {
+      "path": "runs/taco_pour_multiworld_training_v1/report.json",
+      "sha256": "39215e875488d773d3ece9408aa5f04ea352093ac0bb96795df91e476d643e65"
+    },
+    "visitation_manifest": {
+      "path": "runs/taco_pour_multiworld_training_v1/ppo_chunk_20/training_visitation/manifest.json",
+      "sha256": "3eb873b5ba0b1f35273703eb9cabade84dfe10152e2f5911049922c0cf71b055"
+    },
+    "engineering_gate": {
+      "path": "runs/taco_pour_multiworld_state_gate_v1/report.json",
+      "sha256": "d467b2808f9b2a2166672b9c0b0136718d6249010c1c914e5c1e92a1711b182f"
+    },
+    "one_world_baseline": {
+      "path": "runs/taco_pour_training_coverage_v1/coverage_analysis.json",
+      "sha256": "c00e28e7e331e3f34490d0f474cff280a2bac384e93f3d1b17f9e978a12f8bfb"
+    }
+  },
+  "formal_outcome": {
+    "status": "both_modes_failed_within_local_budget",
+    "committed_reference_index": 20,
+    "task_success": false,
+    "CPU_validation": {
+      "replay": {
+        "validated_steps": 29,
+        "first_failure": {
+          "control_interval": 49,
+          "endpoint": 50,
+          "object_roles": [
+            "tool"
+          ],
+          "reason": "tracking_boundary"
+        }
+      },
+      "rl": {
+        "validated_steps": 31,
+        "first_failure": {
+          "control_interval": 51,
+          "endpoint": 52,
+          "object_roles": [
+            "tool"
+          ],
+          "reason": "tracking_boundary"
+        }
+      }
+    }
+  },
+  "four_world_training": {
+    "epochs": 8,
+    "worlds": 4,
+    "samples": 1280,
+    "episode_segments": 50,
+    "completed_episode_segments": 46,
+    "incomplete_segments_at_training_end": 4,
+    "target_endpoint_total_visits": 96,
+    "target_endpoint_visit_fraction": 0.075,
+    "per_target_endpoint": {
+      "46": {
+        "count": 23,
+        "epochs_with_visit": 8,
+        "tool_position_error_m": {
+          "count": 23,
+          "min": 0.056063152849674225,
+          "median": 0.0805186927318573,
+          "mean": 0.08132215913223184,
+          "max": 0.10611196607351303
+        },
+        "tool_rotation_error_rad": {
+          "count": 23,
+          "min": 0.17269881069660187,
+          "median": 0.7024223208427429,
+          "mean": 0.6924656376890514,
+          "max": 1.1966676712036133
+        },
+        "normalized_ellipse_score": {
+          "count": 23,
+          "min": 0.5602344274520874,
+          "median": 0.8638800978660583,
+          "mean": 0.8342874387036199,
+          "max": 0.9956295490264893
+        }
+      },
+      "47": {
+        "count": 23,
+        "epochs_with_visit": 8,
+        "tool_position_error_m": {
+          "count": 23,
+          "min": 0.06025188788771629,
+          "median": 0.0842074602842331,
+          "mean": 0.08507103958855504,
+          "max": 0.1101641058921814
+        },
+        "tool_rotation_error_rad": {
+          "count": 23,
+          "min": 0.1533944457769394,
+          "median": 0.7061777710914612,
+          "mean": 0.7102869911038358,
+          "max": 1.2202918529510498
+        },
+        "normalized_ellipse_score": {
+          "count": 23,
+          "min": 0.6034189462661743,
+          "median": 0.8933887481689453,
+          "mean": 0.8680040991824606,
+          "max": 1.0193966627120972
+        }
+      },
+      "48": {
+        "count": 20,
+        "epochs_with_visit": 8,
+        "tool_position_error_m": {
+          "count": 20,
+          "min": 0.06743215769529343,
+          "median": 0.08749325200915337,
+          "mean": 0.08752163127064705,
+          "max": 0.10894114524126053
+        },
+        "tool_rotation_error_rad": {
+          "count": 20,
+          "min": 0.1834733486175537,
+          "median": 0.7294113039970398,
+          "mean": 0.7093718402087689,
+          "max": 1.2048239707946777
+        },
+        "normalized_ellipse_score": {
+          "count": 20,
+          "min": 0.5847594141960144,
+          "median": 0.9125599563121796,
+          "mean": 0.8828851670026779,
+          "max": 1.0450284481048584
+        }
+      },
+      "49": {
+        "count": 18,
+        "epochs_with_visit": 8,
+        "tool_position_error_m": {
+          "count": 18,
+          "min": 0.06981482356786728,
+          "median": 0.09447942301630974,
+          "mean": 0.09324375208881167,
+          "max": 0.10805516690015793
+        },
+        "tool_rotation_error_rad": {
+          "count": 18,
+          "min": 0.23105737566947937,
+          "median": 0.7473570108413696,
+          "mean": 0.6920668035745621,
+          "max": 1.0979359149932861
+        },
+        "normalized_ellipse_score": {
+          "count": 18,
+          "min": 0.6075006127357483,
+          "median": 0.9500648975372314,
+          "mean": 0.9151496125592126,
+          "max": 1.065873146057129
+        }
+      },
+      "50": {
+        "count": 12,
+        "epochs_with_visit": 6,
+        "tool_position_error_m": {
+          "count": 12,
+          "min": 0.08763308078050613,
+          "median": 0.100117027759552,
+          "mean": 0.09886510856449604,
+          "max": 0.11775005608797073
+        },
+        "tool_rotation_error_rad": {
+          "count": 12,
+          "min": 0.21136122941970825,
+          "median": 0.5885518789291382,
+          "mean": 0.5392711634437243,
+          "max": 0.9042254686355591
+        },
+        "normalized_ellipse_score": {
+          "count": 12,
+          "min": 0.746500551700592,
+          "median": 0.9263310432434082,
+          "mean": 0.9084236671527227,
+          "max": 1.0972999334335327
+        }
+      }
+    },
+    "episode_segments_reaching_endpoint": {
+      "46": 23,
+      "47": 23,
+      "48": 20,
+      "49": 18,
+      "50": 12
+    },
+    "termination_endpoint_counts": {
+      "38": 1,
+      "40": 1,
+      "41": 2,
+      "42": 2,
+      "43": 4,
+      "44": 5,
+      "45": 8,
+      "47": 3,
+      "48": 2,
+      "49": 6,
+      "50": 1,
+      "51": 4,
+      "52": 2,
+      "53": 1,
+      "55": 1,
+      "56": 2,
+      "57": 1
+    },
+    "per_epoch": [
+      {
+        "epoch": 1,
+        "target_endpoint_visits": {
+          "46": 4,
+          "47": 4,
+          "48": 4,
+          "49": 4,
+          "50": 3
+        },
+        "endpoint50_visited": true,
+        "termination_endpoints": [
+          49,
+          51,
+          53,
+          57
+        ]
+      },
+      {
+        "epoch": 2,
+        "target_endpoint_visits": {
+          "46": 1,
+          "47": 1,
+          "48": 1,
+          "49": 1,
+          "50": 1
+        },
+        "endpoint50_visited": true,
+        "termination_endpoints": [
+          41,
+          45,
+          44,
+          51,
+          38,
+          42
+        ]
+      },
+      {
+        "epoch": 3,
+        "target_endpoint_visits": {
+          "46": 4,
+          "47": 4,
+          "48": 2,
+          "49": 2,
+          "50": 2
+        },
+        "endpoint50_visited": true,
+        "termination_endpoints": [
+          42,
+          47,
+          45,
+          52,
+          52,
+          41,
+          47
+        ]
+      },
+      {
+        "epoch": 4,
+        "target_endpoint_visits": {
+          "46": 3,
+          "47": 3,
+          "48": 3,
+          "49": 3,
+          "50": 3
+        },
+        "endpoint50_visited": true,
+        "termination_endpoints": [
+          50,
+          45,
+          51,
+          56
+        ]
+      },
+      {
+        "epoch": 5,
+        "target_endpoint_visits": {
+          "46": 3,
+          "47": 3,
+          "48": 3,
+          "49": 1,
+          "50": 0
+        },
+        "endpoint50_visited": false,
+        "termination_endpoints": [
+          48,
+          45,
+          44,
+          48,
+          45,
+          49,
+          40
+        ]
+      },
+      {
+        "epoch": 6,
+        "target_endpoint_visits": {
+          "46": 4,
+          "47": 4,
+          "48": 3,
+          "49": 3,
+          "50": 0
+        },
+        "endpoint50_visited": false,
+        "termination_endpoints": [
+          49,
+          45,
+          49,
+          49,
+          47
+        ]
+      },
+      {
+        "epoch": 7,
+        "target_endpoint_visits": {
+          "46": 2,
+          "47": 2,
+          "48": 2,
+          "49": 2,
+          "50": 2
+        },
+        "endpoint50_visited": true,
+        "termination_endpoints": [
+          45,
+          45,
+          51,
+          43,
+          44,
+          44
+        ]
+      },
+      {
+        "epoch": 8,
+        "target_endpoint_visits": {
+          "46": 2,
+          "47": 2,
+          "48": 2,
+          "49": 2,
+          "50": 1
+        },
+        "endpoint50_visited": true,
+        "termination_endpoints": [
+          56,
+          55,
+          43,
+          49,
+          43,
+          44,
+          43
+        ]
+      }
+    ],
+    "per_world_target_visits": {
+      "0": {
+        "46": 6,
+        "47": 6,
+        "48": 5,
+        "49": 4,
+        "50": 2
+      },
+      "1": {
+        "46": 4,
+        "47": 4,
+        "48": 4,
+        "49": 4,
+        "50": 3
+      },
+      "2": {
+        "46": 6,
+        "47": 6,
+        "48": 4,
+        "49": 4,
+        "50": 3
+      },
+      "3": {
+        "46": 7,
+        "47": 7,
+        "48": 7,
+        "49": 6,
+        "50": 4
+      }
+    }
+  },
+  "one_world_to_four_world": {
+    "samples": [
+      320,
+      1280
+    ],
+    "target_endpoint_total_visits": [
+      24,
+      96
+    ],
+    "target_endpoint_visit_fraction": [
+      0.075,
+      0.075
+    ],
+    "visits_by_endpoint": {
+      "46": [
+        6,
+        23
+      ],
+      "47": [
+        6,
+        23
+      ],
+      "48": [
+        4,
+        20
+      ],
+      "49": [
+        4,
+        18
+      ],
+      "50": [
+        4,
+        12
+      ]
+    },
+    "epochs_with_endpoint50_visit": [
+      4,
+      6
+    ],
+    "deterministic_CPU_PPO_validated_steps": [
+      28,
+      31
+    ],
+    "same_run_CPU_Replay_validated_steps": [
+      29,
+      29
+    ]
+  },
+  "decision": {
+    "absolute_tail_samples_increased": true,
+    "tail_sample_fraction_increased": false,
+    "deterministic_CPU_policy_improved_over_one_world_run": true,
+    "deterministic_CPU_policy_improved_over_same_run_Replay": true,
+    "passed_40_of_40": false,
+    "interpretation": "Four worlds increased absolute endpoint 46--50 samples from 24 to 96 and CPU validation from 28 to 31 steps, but the target-band share stayed at 7.5% and the policy still failed 40/40. This supports a modest benefit from more independent rollouts, not a sufficient solution or proof that coverage sparsity was the sole cause. GPU training nondeterminism prevents a bitwise causal comparison across the two runs."
+  }
+}

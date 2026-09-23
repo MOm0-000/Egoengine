@@ -1,0 +1,53 @@
+schema: taco_pour_multiworld_training_v1
+status: authorized_gate_not_run
+paper_faithful: false
+purpose: >-
+  Test whether four independent rollouts under one policy version increase
+  endpoint 46--50 coverage and improve deterministic CPU validation.
+
+single_controlled_change:
+  training_worlds: 4
+  previous_training_worlds: 1
+  layout: independent_one_world_mjwp_instances
+  reason: >-
+    Each world keeps a complete private packed contact and constraint buffer;
+    no partial batched-contact copy is permitted.
+
+frozen:
+  source_boundary_endpoint: 20
+  source_boundary_artifact_sha256: 028ffd240c6ac1ba0d298d7caddab482169b772bdec14f4008f1af3865ba3547
+  epochs: 8
+  seed: 0
+  horizon_per_world: 40
+  learning_rate: 0.0001
+  tracking_variant: tool_only
+  objective_profile: taco_pour_local_normalized_ellipse_v1
+  observation_profile: taco_pour_transition_aligned_236d_v1
+  action_profile: taco_pour_residual_action_scaled_v1
+  reward_unchanged: true
+  CPU_40_of_40_acceptance_unchanged: true
+  full_horizon_run_allowed: false
+  seed_or_epoch_sweep_allowed: false
+
+required_engineering_gate:
+  schema: taco_pour_multiworld_state_gate_v1
+  exact_world_count: 4
+  all_342_warp_state_fields_bitwise_equal_at_start: true
+  current_and_previous_contact_constraint_buffers_checked: true
+  isolated_world_reset_leaves_other_worlds_bitwise_unchanged: true
+  no_training_short_rollout_required: true
+  gate_must_be_hash_bound_by_formal_runner: true
+
+predeclared_comparison:
+  - visits_per_outcome_endpoint_46_through_50
+  - epochs_with_at_least_one_endpoint_50_visit
+  - episode_termination_endpoint_distribution
+  - deterministic_CPU_validated_steps
+  - deterministic_CPU_first_failure_endpoint
+  - same_run_CPU_Replay_baseline
+
+interpretation_limits:
+  no_minimum_adequate_visit_count_declared: true
+  task_success_is_not_the_only_question: true
+  historical_training_coverage_inference_allowed: false
+  improvement_must_not_be_selected_post_hoc: true

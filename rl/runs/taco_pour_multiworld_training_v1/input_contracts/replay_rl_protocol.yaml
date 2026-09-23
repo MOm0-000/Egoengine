@@ -8,7 +8,7 @@ evidence_policy:
   paper_page_numbers: one_based_pdf_pages
   copied_defaults_are_author_settings: false
   new_model_or_reset_procedure_requires_confirmation: true
-  current_revision: four_world_training_v1_completed_31_of_40
+  current_revision: four_world_training_state_gate_passed_experiment_authorized
 inputs:
   setting: user_approved_gt_oracle_validation_not_full_perception_reproduction
   approved_episodes: ['20230927_027', '20230917_020', '20230926_004', '20231103_071', '20230927_017']
@@ -239,7 +239,7 @@ evaluation:
     sixteen_epoch_saturated_action_value_fraction: 0.9563492063492064
     same_training_path_epoch_ablation_available: false
     failure_tail_contact_or_lift_masking_detected: false
-    next_controlled_change_family: unselected_after_four_world_result
+    next_controlled_change_family: four_independent_training_worlds_v1
     taco_action_smoothness_reward_paper_status: disabled
     tested_local_mapping: delta_a_rad_equals_clip_0.05_times_normalized_policy_output
     tested_mapping_author_recovered: false
@@ -329,7 +329,7 @@ evaluation:
       sparse_coverage_proven_as_failure_cause: false
       next_algorithm_change_selected: false
     four_world_training_v1:
-      status: completed_absolute_coverage_increased_31_of_40_not_promoted
+      status: engineering_gate_passed_experiment_authorized_not_run
       experiment_contract: /data_all/zzx/3.2RL/configs/taco_pour_multiworld_training_v1.yaml
       controlled_change: training_worlds_1_to_4
       worlds_share_exact_endpoint20_source: true
@@ -347,22 +347,6 @@ evaluation:
       sampled_action_GPU_qpos_spread: 0.029866695404052734
       GPU_nondeterminism_still_present: true
       full_horizon_run_authorized: false
-      comparison: /data_all/zzx/3.2RL/runs/taco_pour_multiworld_training_v1/comparison.json
-      total_training_samples: 1280
-      visits_by_outcome_endpoint: {46: 23, 47: 23, 48: 20, 49: 18, 50: 12}
-      epochs_with_endpoint50_visit: 6
-      target_endpoint_visit_fraction: 0.075
-      deterministic_cpu_replay_validated_steps: 29
-      deterministic_cpu_rl_validated_steps: 31
-      deterministic_cpu_rl_first_failure_endpoint: 52
-      passed_40_of_40: false
-      state_committed: false
-      absolute_tail_coverage_increased: true
-      relative_tail_sample_fraction_increased: false
-      modest_CPU_improvement_observed: true
-      sufficient_solution_demonstrated: false
-      coverage_sparsity_proven_as_sole_cause: false
-      next_algorithm_change_selected: false
     full_rl_executed: false
     independent_thresholds_logged_per_object: true
 runtime_contract:
@@ -596,7 +580,7 @@ result_acceptance_blockers:
   - normalized_ellipse_policy_has_not_passed_deterministic_CPU_40_of_40
   - scaled_action_candidate_repaired_saturation_but_reached_only_29_of_40
   - scaled_policy_right_wrist_translation_diverges_in_direction_at_endpoints_46_to_50
-  - four_world_training_increased_absolute_tail_samples_but_reached_only_31_of_40
+  - prospective_training_visited_endpoints_46_to_50_but_final_policy_reached_only_28_of_40
   - ppo_containing_saved_trajectory_failed_independent_open_loop_replay
   - stable_grasp_and_physical_pour_not_demonstrated
 paper_faithful_run_blockers:

@@ -1076,3 +1076,194 @@ class MJWPVectorEnv:
             device=self._last_terminated.device,
         )
         return done
+
+
+class IndependentMJWPTrainingEnv:
+    """Present independent one-world MJWP instances as one PPO vector env.
+
+    MJWP packs contacts for every world into one global buffer.  A partial
+    reset of that buffer cannot be expressed as a normal leading-dimension
+    assignment.  This adapter deliberately keeps one complete contact and
+    constraint buffer per training world, so a terminated rollout can restore
+    its exact chunk boundary without touching any other rollout.
+    """
+
+    def __init__(self, worlds: list[MJWPVectorEnv]) -> None:
+        if len(worlds) < 2 or any(world.num_envs != 1 for world in worlds):
+            raise ValueError("independent training requires at least two one-world MJWP environments")
+        self.worlds = tuple(worlds)
+        self.num_envs = len(worlds)
+        self.representative_env = worlds[0]
+        self.ego_cfg = replace(worlds[0].ego_cfg, num_samples=self.num_envs)
+        self.env_cfg = worlds[0].env_cfg
+        self.object_roles = worlds[0].object_roles
+        self.tracked_object_indices = worlds[0].tracked_object_indices
+        self.tracked_object_roles = worlds[0].tracked_object_roles
+        self.tracking_boundary = worlds[0].tracking_boundary
+        self._training_trace: PpoTrainingTrace | None = None
+        self._pending_training_sampled_action: torch.Tensor | None = None
+        for world in worlds[1:]:
+            if (
+                world.obs_dim != worlds[0].obs_dim
+                or world.priv_dim != worlds[0].priv_dim
+                or world.object_roles != self.object_roles
+                or world.tracked_object_indices != self.tracked_object_indices
+                or world._warp_state_keys() != worlds[0]._warp_state_keys()
+            ):
+                raise ValueError("independent training worlds do not share one runtime contract")
+
+    @property
+    def simulation_control_intervals(self) -> int:
+        return sum(world.simulation_control_intervals for world in self.worlds)
+
+    @property
+    def simulation_physics_steps(self) -> int:
+        return sum(world.simulation_physics_steps for world in self.worlds)
+
+    def get_env_info(self) -> dict[str, Any]:
+        return self.representative_env.get_env_info()
+
+    def get_number_of_agents(self) -> int:
+        return 1
+
+    @staticmethod
+    def _join_observations(rows: list[Any]) -> Any:
+        if isinstance(rows[0], dict):
+            return {
+                name: np.concatenate([row[name] for row in rows], axis=0)
+                for name in rows[0]
+            }
+        return np.concatenate(rows, axis=0)
+
+    @staticmethod
+    def _join_info(rows: list[dict[str, Any]]) -> dict[str, Any]:
+        joined = {}
+        for name in rows[0]:
+            values = [row[name] for row in rows]
+            if isinstance(values[0], np.ndarray):
+                joined[name] = np.concatenate(values, axis=0)
+            else:
+                if any(value != values[0] for value in values[1:]):
+                    raise ValueError(f"training worlds disagree on info metadata {name}")
+                joined[name] = values[0]
+        return joined
+
+    def reset(self) -> Any:
+        return self._join_observations([world.reset() for world in self.worlds])
+
+    def step(self, actions: np.ndarray) -> tuple[Any, np.ndarray, np.ndarray, dict[str, Any]]:
+        actions = np.asarray(actions, dtype=np.float32)
+        expected = (self.num_envs, self.env_cfg.residual.hand_dof)
+        if actions.shape != expected or not np.isfinite(actions).all():
+            raise ValueError(f"actions must be finite with shape {expected}")
+        rows = [
+            world.step(actions[index : index + 1])
+            for index, world in enumerate(self.worlds)
+        ]
+        observations = self._join_observations([row[0] for row in rows])
+        rewards = np.concatenate([row[1] for row in rows])
+        dones = np.concatenate([row[2] for row in rows])
+        info = self._join_info([row[3] for row in rows])
+        if self._training_trace is not None:
+            if self._pending_training_sampled_action is None:
+                raise RuntimeError("training trace is active but the pre-clamp sampled action is missing")
+            spec = self.env_cfg.residual
+            applied = np.clip(
+                spec.residual_scale * actions,
+                -spec.residual_clip,
+                spec.residual_clip,
+            )
+            self._training_trace.record(
+                source_endpoint=info["source_reference_endpoint"],
+                outcome_endpoint=info["outcome_reference_endpoint"],
+                sampled_action_preclamp=(
+                    self._pending_training_sampled_action.detach().cpu().numpy()
+                ),
+                sampled_action_clamped=actions,
+                applied_residual=applied,
+                info=info,
+            )
+            self._pending_training_sampled_action = None
+        return observations, rewards, dones, info
+
+    def set_chunk_reset(self, *, start: int, end: int) -> None:
+        for world in self.worlds:
+            world.set_chunk_reset(start=start, end=end)
+
+    def get_env_states(self) -> tuple[dict[str, Any], ...]:
+        return tuple(world.get_env_state() for world in self.worlds)
+
+    def get_env_state(self) -> dict[str, Any]:
+        """Checkpoint all worlds without flattening their packed buffers."""
+        return {
+            "schema": "egoengine_independent_mjwp_worlds_v1",
+            "worlds": self.get_env_states(),
+        }
+
+    def set_env_state(self, state: dict[str, Any]) -> None:
+        if state.get("schema") == "egoengine_independent_mjwp_worlds_v1":
+            states = state.get("worlds", ())
+            if len(states) != self.num_envs:
+                raise ValueError("independent checkpoint has the wrong world count")
+            for world, world_state in zip(self.worlds, states, strict=True):
+                world.set_env_state(world_state)
+            return
+        for world in self.worlds:
+            world.set_env_state(state)
+
+    def set_train_info(self, frame: int, agent: Any) -> None:
+        if self._training_trace is not None:
+            self._training_trace.begin_epoch(int(agent.epoch_num), int(frame))
+
+    def enable_training_trace(self, output_dir: str | Path) -> None:
+        if self._training_trace is not None:
+            raise RuntimeError("training trace is already enabled")
+        if self._pending_training_sampled_action is not None:
+            raise RuntimeError("cannot enable training trace with a pending action")
+        representative = self.representative_env
+        indices = tuple(self.env_cfg.residual.hand_control_indices)
+        actuator_names = tuple(
+            mujoco.mj_id2name(
+                representative.env.model_cpu,
+                mujoco.mjtObj.mjOBJ_ACTUATOR,
+                index,
+            ) or f"actuator_{index}"
+            for index in indices
+        )
+        hand_roles = (
+            ("right", "left")
+            if self.ego_cfg.embodiment_type == "bimanual"
+            else (str(self.ego_cfg.embodiment_type),)
+        )
+        self._training_trace = PpoTrainingTrace(
+            output_dir,
+            actuator_names=actuator_names,
+            object_roles=self.object_roles,
+            hand_roles=hand_roles,
+            residual_scale=self.env_cfg.residual.residual_scale,
+            residual_clip=self.env_cfg.residual.residual_clip,
+        )
+
+    def record_training_sampled_action(self, actions: torch.Tensor) -> None:
+        if self._training_trace is None:
+            return
+        if self._pending_training_sampled_action is not None:
+            raise RuntimeError("previous PPO sampled action was not consumed by env.step")
+        expected = (self.num_envs, self.env_cfg.residual.hand_dof)
+        if tuple(actions.shape) != expected:
+            raise ValueError(f"PPO sampled action must have shape {expected}")
+        self._pending_training_sampled_action = actions.detach()
+
+    def finalize_training_trace(self, *, completed: bool) -> dict[str, Any] | None:
+        if self._training_trace is None:
+            return None
+        pending = self._pending_training_sampled_action is not None
+        if pending and completed:
+            raise RuntimeError("cannot finalize training trace with an unconsumed PPO action")
+        self._pending_training_sampled_action = None
+        report = self._training_trace.finalize(
+            completed=completed,
+            incomplete_step_discarded=pending,
+        )
+        self._training_trace = None
+        return report

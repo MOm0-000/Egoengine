@@ -186,6 +186,50 @@ class MJWPChunkBackend:
         return finite and not bool(self.last_info["terminated"][0])
 
 
+class MJWPIndependentTrainingBackend:
+    """Non-authoritative PPO backend with one complete MJWP buffer per world."""
+
+    def __init__(self, env):
+        if env.num_envs < 2:
+            raise ValueError("independent training backend requires multiple worlds")
+        self.env = env
+        self.verified_restore_count = 0
+        self.restore_audits = []
+
+    def snapshot(self):
+        return self.env.get_env_states()
+
+    def restore(self, state):
+        self.env.set_env_state(state)
+
+    def verify_restored_snapshot(self, expected):
+        states = self.snapshot()
+        mismatches = {}
+        for world_index, actual in enumerate(states):
+            if expected.keys() != actual.keys():
+                mismatches[world_index] = ["<snapshot keys differ>"]
+                continue
+            failed = [
+                key for key in expected
+                if not _snapshot_value_equal(expected[key], actual[key])
+            ]
+            if failed:
+                mismatches[world_index] = failed
+        if mismatches:
+            preview = "; ".join(
+                f"world {index}: {', '.join(names[:4])}"
+                for index, names in mismatches.items()
+            )
+            raise ValueError(f"independent training restore differs: {preview}")
+        self.restore_audits.append({
+            "worlds": len(states),
+            "snapshot_keys_per_world": len(expected),
+            "warp_state_fields_per_world": len(expected["warp_state_keys"]),
+            "all_worlds_bitwise_equal_to_source": True,
+        })
+        self.verified_restore_count += 1
+
+
 def replay_action(backend, reference_step):
     """Zero residual uses ctrl[t+1] in the adapter, never repeated endpoint t."""
     return np.zeros((1, backend.env.env_cfg.residual.hand_dof), dtype=np.float32)
@@ -255,9 +299,10 @@ def train_chunk_ppo(
         raise ValueError("positive epochs and horizon divisible by recurrent sequence length 4 required")
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
-    config = _build_ppo_config(num_envs=1, horizon_length=horizon, seq_length=4,
+    training_worlds = int(env.num_envs)
+    config = _build_ppo_config(num_envs=training_worlds, horizon_length=horizon, seq_length=4,
         max_epochs=epochs, learning_rate=1e-4, device=str(env.ego_cfg.device),
-        asymmetric_critic=_build_asymmetric_critic_config(horizon))
+        asymmetric_critic=_build_asymmetric_critic_config(training_worlds * horizon))
     agent = PpoAgent(experiment_dir=output, ppo_config=config,
                      network_config=_build_network_config(4), env=env)
     env.enable_training_trace(output / "training_visitation")
@@ -296,6 +341,7 @@ def train_chunk_ppo(
         ]
         return _AgentPolicy(agent, {
             "training_device": str(env.ego_cfg.device),
+            "training_worlds": training_worlds,
             "policy_inference_device": str(agent.device),
             "actor_state_sha256": actor_sha256,
             "checkpoint_artifacts": checkpoints,
@@ -335,6 +381,7 @@ def train_chunk_ppo(
     ]
     return _AgentPolicy(cpu_agent, {
         "training_device": str(env.ego_cfg.device),
+        "training_worlds": training_worlds,
         "policy_inference_device": "cpu",
         "actor_state_sha256": actor_sha256,
         "transferred_actor_state_sha256": transferred_sha256,

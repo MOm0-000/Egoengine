@@ -131,6 +131,28 @@ was Replay `29/40` versus trained policy `28/40`; no state was committed. The
 lossless evidence and derived audit are under
 `runs/taco_pour_training_coverage_v1/`.
 
+For the subsequent four-world experiment, each PPO world is a complete
+one-world MJWP instance. This is intentional: MJWP stores batched contacts in
+one packed buffer, so partial array copying cannot safely reset one terminated
+world. The independent-world adapter batches observations/actions for the
+official PPO agent while keeping each world's current/previous contact and
+constraint storage private. The official checkpoint interface saves and
+restores all four world snapshots without flattening them.
+
+The engineering gate restores the exact same CPU endpoint-20 snapshot into all
+four GPU instances and compares every one of the 342 Warp state fields bitwise.
+It then verifies that resetting one world does not alter any field in the other
+three. A short no-training rollout is finite and uses distinct fixed sampled
+actions; a same-action baseline separately records the remaining GPU numerical
+non-repeatability. The formal runner requires and hash-snapshots this passed
+gate whenever `--training-worlds 4` is selected.
+
+One frozen four-world/eight-epoch experiment produced 1,280 samples and raised
+absolute endpoint 46--50 visits from 24 to 96, while their share stayed at
+`7.5%`. CPU validation was Replay `29/40` and PPO `31/40`; the PPO policy
+failed at endpoint 52. Thus no boundary was committed and the scheduler did
+not proceed to a full task run.
+
 ## Current formal runtime
 
 - config: `runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml`;

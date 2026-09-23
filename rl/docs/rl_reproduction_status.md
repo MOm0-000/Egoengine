@@ -319,6 +319,30 @@ this result. The report is
 to this prospective run and does not reconstruct historical eight-epoch
 training. It also makes no claim about actor mean `mu` or policy variance.
 
+The next predeclared intervention changed only the number of independent GPU
+training rollouts from one to four. Four separate one-world MJWP instances are
+used rather than partially overwriting one batched contact buffer. Before
+training, all four instances restored the same endpoint-20 source across all
+342 Warp state fields bitwise, including current/previous contacts and
+constraints. Resetting one instance restored its complete boundary while the
+other three snapshots remained bitwise unchanged. The same-action GPU control
+baseline nevertheless diverged by up to `7.38 mm` in qpos after one control
+interval, so the gate retains the known GPU atomic-order nondeterminism and
+does not claim all physical divergence is caused solely by action sampling.
+
+The single authorized four-world/eight-epoch run recorded 1,280 samples.
+Endpoint 46--50 visits increased from `6/6/4/4/4` to
+`23/23/20/18/12`, and endpoint 50 appeared in six rather than four epochs.
+However, these endpoints still represented exactly `7.5%` of all samples
+(`96/1280`, versus `24/320`): absolute data increased, but the rollout
+distribution did not become more tail-focused. Deterministic CPU validation
+improved from the prospective one-world policy's `28/40` to `31/40`, and
+exceeded the same-run Replay baseline `29/40`; it failed at endpoint 52, so no
+state was committed and no full-horizon run was started. This is modest
+evidence that more independent rollout samples helped, not proof that sparse
+coverage was the sole cause or a sufficient solution. Evidence is in
+`runs/taco_pour_multiworld_training_v1/comparison.json`.
+
 The evidence and hashes are frozen in
 `runs/taco_pour_normalized_ellipse_v1/summary.json`. GPU remains the PPO
 training backend, but it no longer has acceptance or commit authority. The
@@ -358,6 +382,8 @@ Ready:
   gate and attached to the formal PPO fallback.
 - one prospective endpoint 46--50 coverage measurement, with raw epoch samples,
   hashes, and deterministic CPU validation retained.
+- a four-world complete-state/reset gate and one frozen four-world/eight-epoch
+  comparison, without seed, epoch, reward, action, or success-threshold search.
 
 Not yet established:
 
