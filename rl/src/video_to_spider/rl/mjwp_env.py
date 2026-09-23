@@ -13,6 +13,7 @@ reference control inside :meth:`step`.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import dataclass, field, replace
 from importlib.metadata import version
@@ -363,7 +364,13 @@ class MJWPVectorEnv:
         obs, privileged = self._build_observations()
         return self._pack_observation(obs, privileged)
 
-    def step(self, actions: np.ndarray, *, auto_reset: bool = True) -> tuple[np.ndarray | dict[str, np.ndarray], np.ndarray, np.ndarray, dict[str, Any]]:
+    def step(
+        self,
+        actions: np.ndarray,
+        *,
+        auto_reset: bool = True,
+        substep_observer: Callable[[int], None] | None = None,
+    ) -> tuple[np.ndarray | dict[str, np.ndarray], np.ndarray, np.ndarray, dict[str, Any]]:
         actions = np.asarray(actions, dtype=np.float32)
         if actions.shape != (self.num_envs, self.env_cfg.residual.hand_dof):
             raise ValueError(f"actions must have shape {(self.num_envs, self.env_cfg.residual.hand_dof)}")
@@ -380,10 +387,12 @@ class MJWPVectorEnv:
         reference_ctrls = self._reference_ctrls(self.time_indices, offset=1)
         delta = torch.as_tensor(actions, dtype=torch.float32, device=str(self.ego_cfg.device))
         full_ctrl = self._apply_residual(reference_ctrls, delta)
-        for _ in range(max(int(self.ego_cfg.ctrl_steps), 1)):
+        for substep in range(max(int(self.ego_cfg.ctrl_steps), 1)):
             self._mjwp.step_env(self.ego_cfg, self.env, full_ctrl)
             self.simulation_physics_steps += self.num_envs
             self._check_capacity()
+            if substep_observer is not None:
+                substep_observer(substep)
         if str(self.ego_cfg.device).startswith("cuda") and torch.cuda.is_available():
             torch.cuda.synchronize(self.ego_cfg.device)
 
