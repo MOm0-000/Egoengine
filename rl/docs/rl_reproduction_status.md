@@ -300,6 +300,25 @@ acceptance rule changed. The audit is
 `runs/taco_pour_training_trace_transparency_v2/report.json`; it is an
 implementation check, not a new task-performance experiment.
 
+One prospective eight-epoch coverage run was then made from the exact saved
+endpoint-20 CPU boundary with the scaled-action profile. It changed no PPO,
+reward, observation, physics, seed, or acceptance setting. Across 320 training
+samples, outcome endpoints 46--50 were visited `6, 6, 4, 4, 4` times,
+respectively: six episode segments reached endpoint 46, but only four reached
+endpoint 50. These five endpoints account for 24 samples (`7.5%`) in total.
+The zero-coverage hypothesis is therefore rejected, while the attrition caused
+by earlier tracking terminations is directly observed.
+
+This result does not establish an adequate-coverage threshold or prove sparse
+coverage is the cause of failure. The newly trained deterministic CPU policy
+validated only `28/40` intervals and failed at endpoint 49; the paired Replay
+baseline validated `29/40` and failed at endpoint 50. No chunk was committed,
+no full-horizon run was started, and no algorithm change has been selected from
+this result. The report is
+`runs/taco_pour_training_coverage_v1/coverage_analysis.json`. It applies only
+to this prospective run and does not reconstruct historical eight-epoch
+training. It also makes no claim about actor mean `mu` or policy variance.
+
 The evidence and hashes are frozen in
 `runs/taco_pour_normalized_ellipse_v1/summary.json`. GPU remains the PPO
 training backend, but it no longer has acceptance or commit authority. The
@@ -337,6 +356,8 @@ Ready:
   CPU-only acceptance and CPU commit-state ownership.
 - epoch-level PPO visitation logging, admitted by a bitwise CPU transparency
   gate and attached to the formal PPO fallback.
+- one prospective endpoint 46--50 coverage measurement, with raw epoch samples,
+  hashes, and deterministic CPU validation retained.
 
 Not yet established:
 
@@ -349,8 +370,8 @@ Not yet established:
 - generalization of this reset/collision calibration to other TACO samples;
 - capacity for arbitrary unseen PPO states beyond the recorded stress tests.
 
-The current isolated suite passes 592 tests, 1 skipped CUDA/MJWP module, and 57
-subtests. At an earlier checkpoint, the MuJoCo 3.13 high-SDF GPU stack passed
+The current isolated-suite count is recorded in `docs/test_environment.md`.
+At an earlier checkpoint, the MuJoCo 3.13 high-SDF GPU stack passed
 579 tests and 57 subtests. The high-SDF stack additionally warns that capsule–mesh
 CCD pairs support at most one contact; this is recorded as a backend limitation,
 not hidden as a successful multicontact guarantee.

@@ -119,6 +119,18 @@ bitwise equal. The logged endpoints were exactly sources 20--23 and outcomes
 21--24. This establishes implementation transparency on CPU; it does not claim
 bitwise GPU repeatability, which MJWP does not provide.
 
+The first prospective use of this logger kept the endpoint-20 boundary, seed,
+eight-epoch budget, scaled residual mapping, PPO settings, rewards,
+observations, and CPU acceptance rule fixed. It recorded 320 samples. Outcome
+endpoints 46--50 were visited `6, 6, 4, 4, 4` times; six episode segments
+reached endpoint 46 and four reached endpoint 50. Thus training did reach the
+previously unobservable failure-tail range, but it reached its end sparsely
+after earlier terminations. No predeclared adequacy threshold exists, so this
+does not prove sparse coverage caused the failure. Deterministic CPU validation
+was Replay `29/40` versus trained policy `28/40`; no state was committed. The
+lossless evidence and derived audit are under
+`runs/taco_pour_training_coverage_v1/`.
+
 ## Current formal runtime
 
 - config: `runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml`;

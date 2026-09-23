@@ -1,0 +1,147 @@
+{
+  "schema": "taco_ppo_training_visitation_v2",
+  "status": "complete",
+  "logging_semantics": {
+    "sampled_action_preclamp": "stochastic action sampled from the PPO policy distribution before the official [-1,1] clamp; this is not actor mean mu",
+    "sampled_action_clamped": "the same sampled action after the official [-1,1] clamp",
+    "applied_residual": "bounded residual after local scale and formal safety clip",
+    "actor_distribution_parameters": "actor mean mu and policy standard deviation are not recorded by this schema",
+    "contact_summary": "control-endpoint hand-object finger flags; not substep collision topology",
+    "write_timing": "rollout samples are held in memory and written only at the next epoch boundary or after training completes"
+  },
+  "incomplete_step_discarded": false,
+  "action_contract": {
+    "right_wrist_actuator_names": [
+      "R_forearm_tx_position",
+      "R_forearm_ty_position",
+      "R_forearm_tz_position",
+      "R_forearm_roll_position",
+      "R_forearm_pitch_position",
+      "R_forearm_yaw_position"
+    ],
+    "right_wrist_coordinate_units": [
+      "m",
+      "m",
+      "m",
+      "rad",
+      "rad",
+      "rad"
+    ],
+    "residual_scale": 0.05,
+    "residual_clip": 0.05
+  },
+  "object_roles": [
+    "tool",
+    "target"
+  ],
+  "hand_roles": [
+    "right",
+    "left"
+  ],
+  "epochs": [
+    {
+      "epoch": 1,
+      "frame_at_start": 0,
+      "sample_count": 40,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_training_coverage_v1/ppo_chunk_20/training_visitation/epoch_0001_visits.npz",
+        "sha256": "69ba8fedee246eb644007f086410c061ee3378a5bc74578b07da179c9490cf38"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_training_coverage_v1/ppo_chunk_20/training_visitation/epoch_0001_summary.json",
+        "sha256": "0c131fe6f8896bafdc89d260d234d9117502a678eed483a6a60b4c2758445cc5"
+      }
+    },
+    {
+      "epoch": 2,
+      "frame_at_start": 40,
+      "sample_count": 40,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_training_coverage_v1/ppo_chunk_20/training_visitation/epoch_0002_visits.npz",
+        "sha256": "24370c80d4b7225beedae84d9775ee54bb0bdce57b12979a5b56bd23761e9c17"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_training_coverage_v1/ppo_chunk_20/training_visitation/epoch_0002_summary.json",
+        "sha256": "8b7bbb95835278416de54f9ece4e76186d24c90253fcc32a92df3f11541ed28d"
+      }
+    },
+    {
+      "epoch": 3,
+      "frame_at_start": 80,
+      "sample_count": 40,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_training_coverage_v1/ppo_chunk_20/training_visitation/epoch_0003_visits.npz",
+        "sha256": "e5c4a8bbd00cadeec60afe42d2251304649ebd2ab7f8bbb9c3745c8172f97e0e"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_training_coverage_v1/ppo_chunk_20/training_visitation/epoch_0003_summary.json",
+        "sha256": "96f6189425ea9502a0f2bd885f1c96af3826cd8dbf290e63e0165d4ab82a9b0f"
+      }
+    },
+    {
+      "epoch": 4,
+      "frame_at_start": 120,
+      "sample_count": 40,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_training_coverage_v1/ppo_chunk_20/training_visitation/epoch_0004_visits.npz",
+        "sha256": "28193e2a0ba0198b1d23959eb77a4d3bab7b24f01ae51ff8ba9cb451288ffbb9"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_training_coverage_v1/ppo_chunk_20/training_visitation/epoch_0004_summary.json",
+        "sha256": "e368d5ca5993be8b41aec0d032a600da1181ec976400231561a7b43bb080e7d5"
+      }
+    },
+    {
+      "epoch": 5,
+      "frame_at_start": 160,
+      "sample_count": 40,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_training_coverage_v1/ppo_chunk_20/training_visitation/epoch_0005_visits.npz",
+        "sha256": "606002fae27e0e654c9ebeb27899840ae21b0609ac08eb77fad310a82229ce05"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_training_coverage_v1/ppo_chunk_20/training_visitation/epoch_0005_summary.json",
+        "sha256": "d8b42f2eda22b40678dc347cdee7d64be7e770d054b66576d37642d057bd95a0"
+      }
+    },
+    {
+      "epoch": 6,
+      "frame_at_start": 200,
+      "sample_count": 40,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_training_coverage_v1/ppo_chunk_20/training_visitation/epoch_0006_visits.npz",
+        "sha256": "0ee7dc0c2b5a09b7502355c513289636415beefa0e5a1b11262766ba36a8327f"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_training_coverage_v1/ppo_chunk_20/training_visitation/epoch_0006_summary.json",
+        "sha256": "62fabd936d28fff233d10c9cf390ec7c978edf7b92b0407920efb78ee7c24b4a"
+      }
+    },
+    {
+      "epoch": 7,
+      "frame_at_start": 240,
+      "sample_count": 40,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_training_coverage_v1/ppo_chunk_20/training_visitation/epoch_0007_visits.npz",
+        "sha256": "8f9b46abf8ddd124935fdebabb7e5ac19fffe6485c77c810c0e64dfefcf9ba14"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_training_coverage_v1/ppo_chunk_20/training_visitation/epoch_0007_summary.json",
+        "sha256": "e45dd2a01d3cb707b37a2b23129522fea38620fafa694db10b0769a8e9ef4540"
+      }
+    },
+    {
+      "epoch": 8,
+      "frame_at_start": 280,
+      "sample_count": 40,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_training_coverage_v1/ppo_chunk_20/training_visitation/epoch_0008_visits.npz",
+        "sha256": "66dff270d8888a9432513b939fc445211121bc52c310d9972d2f43dc0b0c4d01"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_training_coverage_v1/ppo_chunk_20/training_visitation/epoch_0008_summary.json",
+        "sha256": "4e370e7ecffacb09dca023eb344916d39760d791c21d04e17fa78a76b12deb55"
+      }
+    }
+  ]
+}

@@ -1,5 +1,17 @@
 # Test Environment
 
+## Prospective training-coverage checkpoint
+
+On 2026-09-23, one predeclared eight-epoch prospective coverage run used the
+accepted version-2 visitation logger. An independent audit hash-checked the
+formal report, manifest, and all eight raw/summary epoch pairs, reconstructed
+episodes across epoch boundaries, and verified 320 samples. Outcome endpoints
+46--50 were visited `6, 6, 4, 4, 4` times. The deterministic CPU result was
+Replay `29/40` and PPO `28/40`; neither mode passed and no state was committed.
+After adding the portable audit and three static evidence-contract tests, the
+complete isolated suite passed **607 tests and 57 subtests** in 112.79 s. The
+GPU training run itself is experimental evidence, not a unit test.
+
 ## PPO training-visitation logging checkpoint
 
 On 2026-09-23, after adding epoch-level PPO visitation records and the paired

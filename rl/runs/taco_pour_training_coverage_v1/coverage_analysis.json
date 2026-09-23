@@ -1,0 +1,527 @@
+{
+  "schema": "taco_pour_prospective_training_coverage_v1",
+  "status": "target_range_visited_but_sparse_with_termination_attrition",
+  "scope": {
+    "prospective_training_only": true,
+    "historical_8epoch_coverage_inference_allowed": false,
+    "actor_mean_mu_recorded": false,
+    "policy_variance_recorded": false,
+    "task_success_is_primary_question": false,
+    "target_outcome_endpoints": [
+      46,
+      47,
+      48,
+      49,
+      50
+    ]
+  },
+  "artifacts": {
+    "experiment_contract": {
+      "path": "configs/taco_pour_training_coverage_diagnostic_v1.yaml",
+      "sha256": "bf76b0ca128b580068978f992de76b5e27e70da87282f239a617ad5999ce5705"
+    },
+    "formal_run_report": {
+      "path": "runs/taco_pour_training_coverage_v1/report.json",
+      "sha256": "cb9ae17b9429881b1ced5d69fd1352f4464b909b35c36fe986b57fc016818e17"
+    },
+    "training_visitation_manifest": {
+      "path": "runs/taco_pour_training_coverage_v1/ppo_chunk_20/training_visitation/manifest.json",
+      "sha256": "a52cf4bf17799dcc2e02fc2fc42991a2b7336c76b050ec9bbb66d449f8bbebad"
+    }
+  },
+  "run_outcome": {
+    "formal_status": "both_modes_failed_within_local_budget",
+    "task_success": false,
+    "committed_reference_index": 20,
+    "cpu_validation": {
+      "replay": {
+        "validated_steps": 29,
+        "first_failure": {
+          "control_interval": 49,
+          "endpoint": 50,
+          "object_roles": [
+            "tool"
+          ],
+          "reason": "tracking_boundary"
+        }
+      },
+      "rl": {
+        "validated_steps": 28,
+        "first_failure": {
+          "control_interval": 48,
+          "endpoint": 49,
+          "object_roles": [
+            "tool"
+          ],
+          "reason": "tracking_boundary"
+        }
+      }
+    }
+  },
+  "training_samples": {
+    "epochs": 8,
+    "samples_per_epoch": 40,
+    "total_samples": 320,
+    "episode_segments_started": 13,
+    "completed_episode_segments": 12,
+    "incomplete_segments_at_training_end": 1,
+    "termination_endpoint_counts": {
+      "34": 1,
+      "39": 1,
+      "40": 1,
+      "43": 1,
+      "45": 2,
+      "47": 2,
+      "50": 2,
+      "51": 1,
+      "55": 1
+    },
+    "target_endpoint_total_visits": 24,
+    "target_endpoint_visit_fraction_of_all_samples": 0.075,
+    "episode_segments_reaching_endpoint": {
+      "46": 6,
+      "47": 6,
+      "48": 4,
+      "49": 4,
+      "50": 4
+    },
+    "per_epoch": [
+      {
+        "epoch": 1,
+        "target_endpoint_visit_counts": {
+          "46": 0,
+          "47": 0,
+          "48": 0,
+          "49": 0,
+          "50": 0
+        },
+        "maximum_outcome_endpoint": 45,
+        "termination_endpoints": [
+          45
+        ]
+      },
+      {
+        "epoch": 2,
+        "target_endpoint_visit_counts": {
+          "46": 1,
+          "47": 1,
+          "48": 1,
+          "49": 1,
+          "50": 1
+        },
+        "maximum_outcome_endpoint": 50,
+        "termination_endpoints": [
+          50,
+          45
+        ]
+      },
+      {
+        "epoch": 3,
+        "target_endpoint_visit_counts": {
+          "46": 0,
+          "47": 0,
+          "48": 0,
+          "49": 0,
+          "50": 0
+        },
+        "maximum_outcome_endpoint": 41,
+        "termination_endpoints": [
+          39
+        ]
+      },
+      {
+        "epoch": 4,
+        "target_endpoint_visit_counts": {
+          "46": 2,
+          "47": 2,
+          "48": 1,
+          "49": 1,
+          "50": 1
+        },
+        "maximum_outcome_endpoint": 51,
+        "termination_endpoints": [
+          51,
+          47
+        ]
+      },
+      {
+        "epoch": 5,
+        "target_endpoint_visit_counts": {
+          "46": 1,
+          "47": 1,
+          "48": 1,
+          "49": 1,
+          "50": 1
+        },
+        "maximum_outcome_endpoint": 50,
+        "termination_endpoints": [
+          50
+        ]
+      },
+      {
+        "epoch": 6,
+        "target_endpoint_visit_counts": {
+          "46": 0,
+          "47": 0,
+          "48": 0,
+          "49": 0,
+          "50": 0
+        },
+        "maximum_outcome_endpoint": 43,
+        "termination_endpoints": [
+          43,
+          40
+        ]
+      },
+      {
+        "epoch": 7,
+        "target_endpoint_visit_counts": {
+          "46": 1,
+          "47": 1,
+          "48": 0,
+          "49": 0,
+          "50": 0
+        },
+        "maximum_outcome_endpoint": 47,
+        "termination_endpoints": [
+          47,
+          34
+        ]
+      },
+      {
+        "epoch": 8,
+        "target_endpoint_visit_counts": {
+          "46": 1,
+          "47": 1,
+          "48": 1,
+          "49": 1,
+          "50": 1
+        },
+        "maximum_outcome_endpoint": 55,
+        "termination_endpoints": [
+          55
+        ]
+      }
+    ],
+    "per_target_endpoint": {
+      "46": {
+        "visit_count": 6,
+        "epoch_visit_count": 5,
+        "tool_position_error_m": {
+          "count": 6,
+          "min": 0.07836000621318817,
+          "p25": 0.08192222751677036,
+          "p50": 0.08686481416225433,
+          "mean": 0.08750647306442261,
+          "p75": 0.09332188218832016,
+          "max": 0.09720026701688766
+        },
+        "tool_rotation_error_rad": {
+          "count": 6,
+          "min": 0.4767096936702728,
+          "p25": 0.5594004392623901,
+          "p50": 0.6849802732467651,
+          "mean": 0.7296286871035894,
+          "p75": 0.8327669650316238,
+          "max": 1.1315321922302246
+        },
+        "normalized_ellipse_score": {
+          "count": 6,
+          "min": 0.7735931873321533,
+          "p25": 0.8254203200340271,
+          "p50": 0.8817626237869263,
+          "mean": 0.8870569864908854,
+          "p75": 0.9560829699039459,
+          "max": 0.9977275133132935
+        },
+        "tracking_termination_count": 0,
+        "right_wrist_sampled_preclamp_abs": {
+          "count": 36,
+          "min": 0.023418307304382324,
+          "p25": 0.289594441652298,
+          "p50": 0.901294618844986,
+          "mean": 1.0626101026104555,
+          "p75": 1.6348890662193298,
+          "max": 3.106639862060547
+        },
+        "right_wrist_sampled_clamped_abs": {
+          "count": 36,
+          "min": 0.023418307304382324,
+          "p25": 0.289594441652298,
+          "p50": 0.8847222626209259,
+          "mean": 0.6605520740979247,
+          "p75": 1.0,
+          "max": 1.0
+        },
+        "right_wrist_applied_residual_abs": {
+          "count": 36,
+          "min": 0.0011709332466125488,
+          "p25": 0.014479707926511765,
+          "p50": 0.044236116111278534,
+          "mean": 0.03302761043111483,
+          "p75": 0.050000011920928955,
+          "max": 0.050000011920928955
+        },
+        "sampled_preclamp_fraction_abs_gt_1": 0.5,
+        "sampled_clamped_fraction_at_limit": 0.5,
+        "applied_fraction_at_safety_clip": 0.5
+      },
+      "47": {
+        "visit_count": 6,
+        "epoch_visit_count": 5,
+        "tool_position_error_m": {
+          "count": 6,
+          "min": 0.08386661857366562,
+          "p25": 0.08551113866269588,
+          "p50": 0.09178120270371437,
+          "mean": 0.09110828985770543,
+          "p75": 0.09598269127309322,
+          "max": 0.09841641038656235
+        },
+        "tool_rotation_error_rad": {
+          "count": 6,
+          "min": 0.48252061009407043,
+          "p25": 0.5721262544393539,
+          "p50": 0.6737650632858276,
+          "mean": 0.7452565481265386,
+          "p75": 0.8671149462461472,
+          "max": 1.1716769933700562
+        },
+        "normalized_ellipse_score": {
+          "count": 6,
+          "min": 0.8111677169799805,
+          "p25": 0.8393470644950867,
+          "p50": 0.9084023237228394,
+          "mean": 0.9177238245805105,
+          "p75": 0.9875295907258987,
+          "max": 1.048136591911316
+        },
+        "tracking_termination_count": 2,
+        "right_wrist_sampled_preclamp_abs": {
+          "count": 36,
+          "min": 0.006619095802307129,
+          "p25": 0.41414736211299896,
+          "p50": 0.897055447101593,
+          "mean": 1.1761074409716659,
+          "p75": 1.7616470158100128,
+          "max": 3.109334945678711
+        },
+        "right_wrist_sampled_clamped_abs": {
+          "count": 36,
+          "min": 0.006619095802307129,
+          "p25": 0.41414736211299896,
+          "p50": 0.897055447101593,
+          "mean": 0.7072465101050006,
+          "p75": 1.0,
+          "max": 1.0
+        },
+        "right_wrist_applied_residual_abs": {
+          "count": 36,
+          "min": 0.00033095479011535645,
+          "p25": 0.020707372575998306,
+          "p50": 0.044852763414382935,
+          "mean": 0.035362332231468625,
+          "p75": 0.050000011920928955,
+          "max": 0.050000011920928955
+        },
+        "sampled_preclamp_fraction_abs_gt_1": 0.4722222222222222,
+        "sampled_clamped_fraction_at_limit": 0.4722222222222222,
+        "applied_fraction_at_safety_clip": 0.4722222222222222
+      },
+      "48": {
+        "visit_count": 4,
+        "epoch_visit_count": 4,
+        "tool_position_error_m": {
+          "count": 4,
+          "min": 0.09130532294511795,
+          "p25": 0.09441152773797512,
+          "p50": 0.09793524816632271,
+          "mean": 0.09727569483220577,
+          "p75": 0.10079941526055336,
+          "max": 0.10192696005105972
+        },
+        "tool_rotation_error_rad": {
+          "count": 4,
+          "min": 0.45260941982269287,
+          "p25": 0.5482523888349533,
+          "p50": 0.6006955206394196,
+          "mean": 0.5899841040372849,
+          "p75": 0.6424272358417511,
+          "max": 0.7059359550476074
+        },
+        "normalized_ellipse_score": {
+          "count": 4,
+          "min": 0.853530764579773,
+          "p25": 0.8805820047855377,
+          "p50": 0.9068963825702667,
+          "mean": 0.903078094124794,
+          "p75": 0.929392471909523,
+          "max": 0.9449888467788696
+        },
+        "tracking_termination_count": 0,
+        "right_wrist_sampled_preclamp_abs": {
+          "count": 24,
+          "min": 0.028104186058044434,
+          "p25": 0.36899739503860474,
+          "p50": 0.6324547827243805,
+          "mean": 0.950842239583532,
+          "p75": 1.626251220703125,
+          "max": 2.551064968109131
+        },
+        "right_wrist_sampled_clamped_abs": {
+          "count": 24,
+          "min": 0.028104186058044434,
+          "p25": 0.36899739503860474,
+          "p50": 0.6324547827243805,
+          "mean": 0.6485856703172127,
+          "p75": 1.0,
+          "max": 1.0
+        },
+        "right_wrist_applied_residual_abs": {
+          "count": 24,
+          "min": 0.0014052093029022217,
+          "p25": 0.018449872732162476,
+          "p50": 0.031622737646102905,
+          "mean": 0.032429286278784275,
+          "p75": 0.050000011920928955,
+          "max": 0.050000011920928955
+        },
+        "sampled_preclamp_fraction_abs_gt_1": 0.375,
+        "sampled_clamped_fraction_at_limit": 0.375,
+        "applied_fraction_at_safety_clip": 0.375
+      },
+      "49": {
+        "visit_count": 4,
+        "epoch_visit_count": 4,
+        "tool_position_error_m": {
+          "count": 4,
+          "min": 0.09303569793701172,
+          "p25": 0.09679340571165085,
+          "p50": 0.10347681120038033,
+          "mean": 0.10248870216310024,
+          "p75": 0.10917210765182972,
+          "max": 0.1099654883146286
+        },
+        "tool_rotation_error_rad": {
+          "count": 4,
+          "min": 0.44964325428009033,
+          "p25": 0.5191512703895569,
+          "p50": 0.5564946234226227,
+          "mean": 0.5566255897283554,
+          "p75": 0.5939689427614212,
+          "max": 0.6638698577880859
+        },
+        "normalized_ellipse_score": {
+          "count": 4,
+          "min": 0.8554545640945435,
+          "p25": 0.9107776284217834,
+          "p50": 0.9425029456615448,
+          "mean": 0.9331687390804291,
+          "p75": 0.9648940563201904,
+          "max": 0.9922145009040833
+        },
+        "tracking_termination_count": 0,
+        "right_wrist_sampled_preclamp_abs": {
+          "count": 24,
+          "min": 0.03096996247768402,
+          "p25": 0.4743388593196869,
+          "p50": 0.8209011554718018,
+          "mean": 0.9564107079058886,
+          "p75": 1.179766833782196,
+          "max": 3.4209282398223877
+        },
+        "right_wrist_sampled_clamped_abs": {
+          "count": 24,
+          "min": 0.03096996247768402,
+          "p25": 0.4743388593196869,
+          "p50": 0.8209011554718018,
+          "mean": 0.699886979535222,
+          "p75": 1.0,
+          "max": 1.0
+        },
+        "right_wrist_applied_residual_abs": {
+          "count": 24,
+          "min": 0.0015484988689422607,
+          "p25": 0.023716948926448822,
+          "p50": 0.041045043617486954,
+          "mean": 0.03499435416112343,
+          "p75": 0.050000011920928955,
+          "max": 0.050000011920928955
+        },
+        "sampled_preclamp_fraction_abs_gt_1": 0.4166666666666667,
+        "sampled_clamped_fraction_at_limit": 0.4166666666666667,
+        "applied_fraction_at_safety_clip": 0.4166666666666667
+      },
+      "50": {
+        "visit_count": 4,
+        "epoch_visit_count": 4,
+        "tool_position_error_m": {
+          "count": 4,
+          "min": 0.10068387538194656,
+          "p25": 0.10509655065834522,
+          "p50": 0.11172755062580109,
+          "mean": 0.1111278310418129,
+          "p75": 0.11775883100926876,
+          "max": 0.12037234753370285
+        },
+        "tool_rotation_error_rad": {
+          "count": 4,
+          "min": 0.4369661808013916,
+          "p25": 0.5140012800693512,
+          "p50": 0.5781374275684357,
+          "mean": 0.555310994386673,
+          "p75": 0.6194471418857574,
+          "max": 0.628002941608429
+        },
+        "normalized_ellipse_score": {
+          "count": 4,
+          "min": 0.9376879334449768,
+          "p25": 0.9683602452278137,
+          "p50": 1.0084854662418365,
+          "mean": 0.9998013377189636,
+          "p75": 1.0399265587329865,
+          "max": 1.0445464849472046
+        },
+        "tracking_termination_count": 2,
+        "right_wrist_sampled_preclamp_abs": {
+          "count": 24,
+          "min": 0.1624835878610611,
+          "p25": 0.3871763199567795,
+          "p50": 0.6127898395061493,
+          "mean": 0.9866684395819902,
+          "p75": 1.1585272550582886,
+          "max": 4.341400623321533
+        },
+        "right_wrist_sampled_clamped_abs": {
+          "count": 24,
+          "min": 0.1624835878610611,
+          "p25": 0.3871763199567795,
+          "p50": 0.6127898395061493,
+          "mean": 0.6742837944378456,
+          "p75": 1.0,
+          "max": 1.0
+        },
+        "right_wrist_applied_residual_abs": {
+          "count": 24,
+          "min": 0.008124172687530518,
+          "p25": 0.019358813762664795,
+          "p50": 0.030639484524726868,
+          "mean": 0.03371419198811054,
+          "p75": 0.05000000074505806,
+          "max": 0.050000011920928955
+        },
+        "sampled_preclamp_fraction_abs_gt_1": 0.375,
+        "sampled_clamped_fraction_at_limit": 0.375,
+        "applied_fraction_at_safety_clip": 0.375
+      }
+    }
+  },
+  "decision": {
+    "zero_coverage_hypothesis_rejected": true,
+    "endpoint50_seen_in_all_epochs": false,
+    "endpoint50_visit_count": 4,
+    "coverage_adequacy_predeclared_threshold_available": false,
+    "coverage_alone_proven_as_failure_cause": false,
+    "interpretation": "The new run did visit every target endpoint, so it is not a zero-coverage case. Coverage was sparse and narrowed after early terminations: six episode segments reached endpoint 46, but only four reached endpoint 50. Because no adequacy threshold was predeclared and the final deterministic policy still failed, this run does not prove that sparse coverage is the sole cause."
+  }
+}
