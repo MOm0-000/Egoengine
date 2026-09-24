@@ -358,9 +358,13 @@ def main():
         diagnostic_contract = yaml.safe_load(diagnostic_raw)
         training = diagnostic_contract.get("training", {})
         promotion = diagnostic_contract.get("promotion", {})
+        diagnostic_schema = diagnostic_contract.get("schema")
+        supported_diagnostic_schemas = {
+            "taco_pour_ctrlrange_training_distribution_v1",
+            "taco_pour_policy_distribution_attribution_v1",
+        }
         if (
-            diagnostic_contract.get("schema")
-                != "taco_pour_ctrlrange_training_distribution_v1"
+            diagnostic_schema not in supported_diagnostic_schemas
             or diagnostic_contract.get("status")
                 != "frozen_diagnostic_only_no_commit"
             or training.get("worlds") != 4
@@ -385,7 +389,7 @@ def main():
             or args.resume_boundary is None
         ):
             raise ValueError(
-                "ctrlrange diagnostic requires 4 worlds, 8 epochs, one window, "
+                "frozen diagnostic requires 4 worlds, 8 epochs, one window, "
                 "and the endpoint-20 boundary"
             )
         diagnostic_no_commit = {
@@ -475,7 +479,7 @@ def main():
             "sampler_gate_sha256": _sha256(sampler_gate_raw),
         }
     if diagnostic_no_commit is not None and tail_curriculum is None:
-        raise ValueError("ctrlrange diagnostic requires the frozen 3+1 curriculum")
+        raise ValueError("frozen diagnostic requires the frozen 3+1 curriculum")
 
     if diagnostic_no_commit is not None:
         inputs = {
@@ -719,7 +723,12 @@ def main():
                   control_intervals=len(validation_reference[0]) - 1,
                   chunks=[], task_success=False)
     if diagnostic_no_commit is not None:
-        result["schema"] = "taco_pour_ctrlrange_training_distribution_run_v1"
+        result["schema"] = (
+            "taco_pour_policy_distribution_attribution_run_v1"
+            if diagnostic_no_commit["contract"]["schema"]
+                == "taco_pour_policy_distribution_attribution_v1"
+            else "taco_pour_ctrlrange_training_distribution_run_v1"
+        )
         result["promotion"] = {
             "allowed": False,
             "chunk_committed": False,
@@ -728,8 +737,8 @@ def main():
             "task_success_evidence": False,
             "CPU_score_performance_comparison_allowed": False,
             "reason": (
-                "GPU training is nondeterministic; this run only measures the v3 "
-                "training distribution."
+                "GPU training is nondeterministic; this run only measures the frozen "
+                "diagnostic training distribution."
             ),
         }
         diagnostic_traces = []

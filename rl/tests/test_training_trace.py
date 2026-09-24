@@ -56,6 +56,9 @@ def test_training_trace_is_lossless_and_flushes_only_at_epoch_boundaries(tmp_pat
     prelimit = np.zeros((2, 36), np.float32)
     prelimit[:, :6] = [[1.2, 0.5, 0, 0, 0, 0], [-1.4, -0.5, 0, 0, 0, 0]]
     bounded = np.clip(prelimit, -1.0, 1.0)
+    mu = np.full((2, 36), 0.1, np.float32)
+    sigma = np.full((2, 36), 0.6, np.float32)
+    reference_ctrl = np.zeros((2, 36), np.float64)
     requested = np.clip(0.05 * bounded, -0.05, 0.05).astype(np.float64)
     requested[:, 8] = -0.03
     effective = requested.copy()
@@ -66,6 +69,9 @@ def test_training_trace_is_lossless_and_flushes_only_at_epoch_boundaries(tmp_pat
         outcome_endpoint=np.array([21, 21]),
         sampled_action_preclamp=prelimit,
         sampled_action_clamped=bounded,
+        actor_mu=mu,
+        actor_sigma=sigma,
+        reference_ctrl=reference_ctrl,
         requested_residual=requested,
         effective_residual_after_ctrlrange=effective,
         residual_lost_to_ctrlrange=lost,
@@ -83,6 +89,9 @@ def test_training_trace_is_lossless_and_flushes_only_at_epoch_boundaries(tmp_pat
         outcome_endpoint=np.array([22, 22]),
         sampled_action_preclamp=np.zeros((2, 36), np.float32),
         sampled_action_clamped=np.zeros((2, 36), np.float32),
+        actor_mu=np.zeros((2, 36), np.float32),
+        actor_sigma=np.ones((2, 36), np.float32),
+        reference_ctrl=np.zeros((2, 36), np.float64),
         requested_residual=np.zeros((2, 36), np.float64),
         effective_residual_after_ctrlrange=np.zeros((2, 36), np.float64),
         residual_lost_to_ctrlrange=np.zeros((2, 36), np.float64),
@@ -111,7 +120,11 @@ def test_training_trace_is_lossless_and_flushes_only_at_epoch_boundaries(tmp_pat
     assert summary["right_wrist_translation"][
         "sampled_preclamp_fraction_abs_gt_1"
     ] == pytest.approx(2 / 6)
-    np.testing.assert_array_equal(raw["right_wrist_sampled_action_preclamp"], prelimit[:, :6])
+    np.testing.assert_array_equal(raw["sampled_action_preclamp"], prelimit)
+    np.testing.assert_array_equal(raw["sampled_action_clamped"], bounded)
+    np.testing.assert_array_equal(raw["actor_mu"], mu)
+    np.testing.assert_array_equal(raw["actor_sigma"], sigma)
+    np.testing.assert_array_equal(raw["reference_ctrl"], reference_ctrl)
     for name in (
         "requested_residual",
         "effective_residual_after_ctrlrange",
@@ -140,6 +153,9 @@ def test_training_trace_fails_closed_on_bad_shape_and_duplicate_finalize(tmp_pat
             source_endpoint=np.array([0]), outcome_endpoint=np.array([1]),
             sampled_action_preclamp=np.zeros((1, 36)),
             sampled_action_clamped=np.zeros((1, 36)),
+            actor_mu=np.zeros((1, 36)),
+            actor_sigma=np.ones((1, 36)),
+            reference_ctrl=np.zeros((1, 36)),
             requested_residual=np.zeros((1, 36)),
             effective_residual_after_ctrlrange=np.zeros((1, 36)),
             residual_lost_to_ctrlrange=np.zeros((1, 36)),
@@ -153,6 +169,9 @@ def test_training_trace_fails_closed_on_bad_shape_and_duplicate_finalize(tmp_pat
             source_endpoint=np.array([0, 0]), outcome_endpoint=np.array([1, 1]),
             sampled_action_preclamp=np.zeros((2, 36)),
             sampled_action_clamped=np.zeros((2, 36)),
+            actor_mu=np.zeros((2, 36)),
+            actor_sigma=np.ones((2, 36)),
+            reference_ctrl=np.zeros((2, 36)),
             requested_residual=np.zeros((2, 36)),
             effective_residual_after_ctrlrange=np.zeros((2, 36)),
             residual_lost_to_ctrlrange=np.zeros((2, 36)),

@@ -552,31 +552,6 @@ runtime_contract:
           final_rnn_state_bitwise_equal: true
           final_python_numpy_torch_rng_bitwise_equal: true
         next_use: frozen_nonpromotable_mu_sigma_ctrlrange_attribution
-      policy_distribution_attribution_v1:
-        status: completed_descriptive_no_promotion
-        contract: /data_all/zzx/3.2RL/configs/taco_pour_policy_distribution_attribution_v1.yaml
-        run_report: /data_all/zzx/3.2RL/runs/taco_pour_policy_distribution_attribution_v1/report.json
-        attribution_report: /data_all/zzx/3.2RL/runs/taco_pour_policy_distribution_attribution_v1/policy_distribution_attribution_audit.json
-        documentation: /data_all/zzx/3.2RL/docs/taco_pour_policy_distribution_attribution_v1.md
-        frozen_training: {worlds: 4, epochs: 8, samples: 1280, seed: 0, reset_endpoints: [20, 20, 20, 46]}
-        promotion_allowed: false
-        incoming_boundary_restored: true
-        finger_components: 30720
-        raw_mu_outside_intersected_feasible: {count: 7048, fraction: 0.22942708333333334}
-        clamped_mu_outside_actuator_feasible: {count: 2369, fraction: 0.07711588541666667}
-        official_clamp_changed: {count: 12557, fraction: 0.40875651041666666}
-        ctrlrange_lost: {count: 2147, fraction: 0.06988932291666666}
-        fully_blocked: 1986
-        ctrlrange_lost_split:
-          clamped_mu_infeasible: {count: 1552, fraction: 0.7228691197019096}
-          clamped_mu_feasible_exploration_departure: {count: 595, fraction: 0.27713088029809035}
-        Gaussian_mass_mean:
-          outside_official_minus1_plus1: 0.4094246772370146
-          actuator_infeasible_after_official_clamp: 0.06923100661174154
-        actor_sigma: {p05: 0.9992543458938599, p50: 1.0001270771026611, p95: 1.0010746717453003}
-        conclusion: both_policy_centre_and_exploration_support_require_feasible_action_design
-        new_action_parameterization_selected: false
-        next_training_authorized: false
         new_scale_selected: false
         next_algorithm_training_authorized: false
       training_ctrlrange_distribution_v1:

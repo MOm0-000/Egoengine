@@ -46,13 +46,33 @@ from video_to_spider.rl.observation_contract import load_runtime_observation
 
 
 class PpoAgent(OfficialPpoAgent):
-    """Official PPO agent with a read-only sampled-action logging hook."""
+    """Official PPO agent with a read-only policy-distribution logging hook."""
+
+    def get_action_values(self, obs) -> dict:
+        result = super().get_action_values(obs)
+        # These no-grad tensors already exist in the official PPO rollout result
+        # and are also written to its experience buffer.  Keep references for
+        # the immediately following env_step; do not perform a second forward.
+        self._training_trace_distribution = (
+            result["actions"],
+            result["mus"],
+            result["sigmas"],
+        )
+        return result
 
     def env_step(self, actions: torch.Tensor) -> tuple:
-        recorder = getattr(self.env, "record_training_sampled_action", None)
+        recorder = getattr(self.env, "record_training_policy_distribution", None)
         if recorder is not None:
-            recorder(actions)
-        return super().env_step(actions)
+            distribution = getattr(self, "_training_trace_distribution", None)
+            if distribution is None or distribution[0] is not actions:
+                raise RuntimeError(
+                    "PPO env_step did not receive the sampled action from the latest "
+                    "get_action_values call"
+                )
+            recorder(*distribution)
+        result = super().env_step(actions)
+        self._training_trace_distribution = None
+        return result
 
 
 def _load_ego_config(config_path: str, device: str) -> Config:

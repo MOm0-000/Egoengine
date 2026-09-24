@@ -11,7 +11,7 @@ from typing import Any
 import numpy as np
 
 
-SCHEMA = "taco_ppo_training_visitation_v3"
+SCHEMA = "taco_ppo_training_visitation_v4"
 _FINGERS = ("thumb", "index", "middle", "ring", "pinky")
 
 
@@ -90,8 +90,11 @@ class PpoTrainingTrace:
             "tool_position_error_m": [],
             "tool_rotation_error_rad": [],
             "tool_objective_score": [],
-            "right_wrist_sampled_action_preclamp": [],
-            "right_wrist_sampled_action_clamped": [],
+            "sampled_action_preclamp": [],
+            "sampled_action_clamped": [],
+            "actor_mu": [],
+            "actor_sigma": [],
+            "reference_ctrl": [],
             "requested_residual": [],
             "effective_residual_after_ctrlrange": [],
             "residual_lost_to_ctrlrange": [],
@@ -107,6 +110,9 @@ class PpoTrainingTrace:
         outcome_endpoint: np.ndarray,
         sampled_action_preclamp: np.ndarray,
         sampled_action_clamped: np.ndarray,
+        actor_mu: np.ndarray,
+        actor_sigma: np.ndarray,
+        reference_ctrl: np.ndarray,
         requested_residual: np.ndarray,
         effective_residual_after_ctrlrange: np.ndarray,
         residual_lost_to_ctrlrange: np.ndarray,
@@ -120,12 +126,11 @@ class PpoTrainingTrace:
             "tool_position_error_m": np.asarray(info["object_position_error"], np.float32)[:, 0],
             "tool_rotation_error_rad": np.asarray(info["object_rotation_error"], np.float32)[:, 0],
             "tool_objective_score": np.asarray(info["object_tracking_error_per_object"], np.float32)[:, 0],
-            "right_wrist_sampled_action_preclamp": np.asarray(
-                sampled_action_preclamp, np.float32
-            )[:, :6],
-            "right_wrist_sampled_action_clamped": np.asarray(
-                sampled_action_clamped, np.float32
-            )[:, :6],
+            "sampled_action_preclamp": np.asarray(sampled_action_preclamp, np.float32),
+            "sampled_action_clamped": np.asarray(sampled_action_clamped, np.float32),
+            "actor_mu": np.asarray(actor_mu, np.float32),
+            "actor_sigma": np.asarray(actor_sigma, np.float32),
+            "reference_ctrl": np.asarray(reference_ctrl, np.float64),
             "requested_residual": np.asarray(requested_residual, np.float64),
             "effective_residual_after_ctrlrange": np.asarray(
                 effective_residual_after_ctrlrange, np.float64
@@ -140,16 +145,21 @@ class PpoTrainingTrace:
         batch = len(arrays["source_endpoint"])
         if any(len(value) != batch for value in arrays.values()):
             raise ValueError("training-trace fields have inconsistent world counts")
-        if arrays["right_wrist_sampled_action_preclamp"].shape != (batch, 6):
-            raise ValueError("right-wrist sampled action must have six coordinates")
         action_shape = (batch, len(self.actuator_names))
         for name in (
+            "sampled_action_preclamp",
+            "sampled_action_clamped",
+            "actor_mu",
+            "actor_sigma",
+            "reference_ctrl",
             "requested_residual",
             "effective_residual_after_ctrlrange",
             "residual_lost_to_ctrlrange",
         ):
             if arrays[name].shape != action_shape:
                 raise ValueError(f"{name} must have shape {action_shape}")
+        if np.any(arrays["actor_sigma"] <= 0.0):
+            raise ValueError("actor sigma must be finite and strictly positive")
         if not np.allclose(
             arrays["requested_residual"],
             arrays["effective_residual_after_ctrlrange"]
@@ -197,8 +207,8 @@ class PpoTrainingTrace:
                 "timeout_count": int(data["time_out"][select].sum()),
             }
         patterns = Counter(self._contact_pattern(flags) for flags in data["contact_flags"])
-        sampled_preclamp = data["right_wrist_sampled_action_preclamp"]
-        sampled_clamped = data["right_wrist_sampled_action_clamped"]
+        sampled_preclamp = data["sampled_action_preclamp"]
+        sampled_clamped = data["sampled_action_clamped"]
         requested = data["requested_residual"]
         effective = data["effective_residual_after_ctrlrange"]
         lost = data["residual_lost_to_ctrlrange"]
@@ -224,6 +234,8 @@ class PpoTrainingTrace:
                 "sampled_action_clamped": _component_distributions(
                     sampled_clamped[:, :3], translation_names
                 ),
+                "actor_mu": _component_distributions(data["actor_mu"][:, :3], translation_names),
+                "actor_sigma": _component_distributions(data["actor_sigma"][:, :3], translation_names),
                 "requested_residual": _component_distributions(requested[:, :3], translation_names),
                 "effective_residual_after_ctrlrange": _component_distributions(
                     effective[:, :3], translation_names
@@ -247,6 +259,8 @@ class PpoTrainingTrace:
                 "sampled_action_clamped": _component_distributions(
                     sampled_clamped[:, 3:6], rotation_names
                 ),
+                "actor_mu": _component_distributions(data["actor_mu"][:, 3:6], rotation_names),
+                "actor_sigma": _component_distributions(data["actor_sigma"][:, 3:6], rotation_names),
                 "requested_residual": _component_distributions(requested[:, 3:6], rotation_names),
                 "effective_residual_after_ctrlrange": _component_distributions(
                     effective[:, 3:6], rotation_names
@@ -287,10 +301,20 @@ class PpoTrainingTrace:
                 group_lost = lost[:, indices]
                 group_requested = requested[:, indices]
                 group_effective = effective[:, indices]
+                group_sampled_preclamp = sampled_preclamp[:, indices]
+                group_sampled_clamped = sampled_clamped[:, indices]
                 groups[f"{hand_role}_{label}"] = {
                     "indices": indices.tolist(),
                     "unit": self.actuator_units[int(indices[0])],
                     "actuator_names": list(names),
+                    "sampled_action_preclamp": _component_distributions(
+                        group_sampled_preclamp, names
+                    ),
+                    "sampled_action_clamped": _component_distributions(
+                        group_sampled_clamped, names
+                    ),
+                    "actor_mu": _component_distributions(data["actor_mu"][:, indices], names),
+                    "actor_sigma": _component_distributions(data["actor_sigma"][:, indices], names),
                     "requested_residual": _component_distributions(group_requested, names),
                     "effective_residual_after_ctrlrange": _component_distributions(
                         group_effective, names
@@ -373,6 +397,17 @@ class PpoTrainingTrace:
                 "sampled_action_clamped": (
                     "the same sampled action after the official [-1,1] clamp"
                 ),
+                "actor_mu": (
+                    "mean of the Gaussian PPO policy distribution used to draw the recorded sample"
+                ),
+                "actor_sigma": (
+                    "strictly-positive standard deviation (exp(logstd), not variance) of the "
+                    "Gaussian PPO policy distribution used to draw the recorded sample"
+                ),
+                "reference_ctrl": (
+                    "full residual-action control target at transition t->t+1 before the "
+                    "policy residual and before actuator ctrlrange"
+                ),
                 "requested_residual": (
                     "full action-space signed control-target offset after local scale and "
                     "formal safety clip, before actuator ctrlrange"
@@ -389,7 +424,8 @@ class PpoTrainingTrace:
                     "for its recorded six dimensions; v2 artifacts remain immutable"
                 ),
                 "actor_distribution_parameters": (
-                    "actor mean mu and policy standard deviation are not recorded by this schema"
+                    "mu and sigma are passively captured from the same official get_action_values "
+                    "result as the sampled action; no extra actor forward pass is performed"
                 ),
                 "contact_summary": "control-endpoint hand-object finger flags; not substep collision topology",
                 "write_timing": (

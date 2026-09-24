@@ -320,6 +320,22 @@ Evidence is in
 `runs/taco_pour_ctrlrange_training_distribution_v1/ctrlrange_distribution_audit.json`
 and `docs/taco_pour_training_ctrlrange_distribution_v1.md`.
 
+The follow-up v4 logger passively records the full 36-D Gaussian actor `mu` and
+standard deviation `sigma=exp(logstd)` from the same official rollout forward,
+plus full sampled actions before/after `[-1,1]`, reference controls, and all
+three residual layers. It performs no extra actor forward and passed a fresh
+bitwise CPU transparency gate. The one authorized non-promotable 3+1 rerun then
+showed that both policy centre and exploration contribute to the many-to-one
+finger channel. Of 2,147 observed `ctrlrange`-lost finger components, 1,552
+(`72.29%`) occurred while even the officially-clamped `mu` was actuator-
+infeasible; 595 (`27.71%`) occurred while that centre was feasible. Independently,
+the official `[-1,1]` clamp changed 12,557/30,720 finger samples (`40.88%`).
+The Gaussian expected masses closely match those observations: `40.94%` outside
+the official support and `6.92%` actuator-infeasible after the official clamp.
+This supports a future feasible-action parameterization that handles both
+layers, but no mapping or scale has been selected and no training is authorized.
+See `docs/taco_pour_policy_distribution_attribution_v1.md`.
+
 Training coverage in the historical 8-epoch run remains unknown because that
 run did not save visited states, and a fresh non-deterministic GPU rerun cannot
 reconstruct them. The formal PPO fallback now records each epoch's visited
