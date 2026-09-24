@@ -207,6 +207,9 @@ def run(source_report_path: Path, output: Path) -> dict:
         raise ValueError("control target and qpos coordinates are not directly comparable")
     if not np.all(model.actuator_ctrllimited):
         raise ValueError("all audited actuators must have explicit control ranges")
+    clampctrl_flag = int(mujoco.mjtDisableBit.mjDSBL_CLAMPCTRL)
+    if int(model.opt.disableflags) & clampctrl_flag:
+        raise ValueError("the model disables actuator control clamping")
     lower = np.asarray(model.actuator_ctrlrange[:, 0], dtype=np.float64)
     upper = np.asarray(model.actuator_ctrlrange[:, 1], dtype=np.float64)
 
@@ -382,6 +385,8 @@ def run(source_report_path: Path, output: Path) -> dict:
             "qpos_addresses": qpos_addresses.tolist(),
             "position_transmission_gear": model.actuator_gear[:, 0].tolist(),
             "all_ctrl_limited": bool(np.all(model.actuator_ctrllimited)),
+            "control_clamping_enabled": True,
+            "model_disableflags": int(model.opt.disableflags),
             "reference_max_ctrlrange_numerical_excess": float(reference_range_violation.max()),
         },
         "limitations": [

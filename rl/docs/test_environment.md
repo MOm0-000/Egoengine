@@ -10,7 +10,7 @@ action groups materially used the `0.05` bound. Separately, 62 finger requests
 were range-truncated across 28 steps and 57 were fully blocked at a bound; no
 wrist request was range-truncated. The audit selected no new scale.
 After adding the audit and four evidence checks, the complete suite passed
-**631 tests and 57 subtests** in 107.95 s. The 17 warnings are unchanged.
+**631 tests and 57 subtests** in 107.47 s. The 17 warnings are unchanged.
 
 ## Mixed-unit reference-action scale audit
 
