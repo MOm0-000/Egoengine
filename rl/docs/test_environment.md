@@ -1,5 +1,16 @@
 # Test Environment
 
+## Training-time ctrlrange distribution diagnostic
+
+On 2026-09-24, one frozen, non-promotable four-world/eight-epoch 3+1 run
+recorded 1,280 v3 samples. The no-commit runner restored the incoming endpoint
+20 boundary and emitted no optimized trajectory or committed boundary. The
+audit found 2,271 finger-component requests truncated by actuator `ctrlrange`,
+2,099 fully blocked requests, and 1,114/1,280 world-steps with at least one
+affected finger. No action redesign or new scale was selected. With the three
+new evidence tests, the complete MuJoCo 3.13/MJWP 3.13/Warp 1.15 suite passed
+**640 tests and 57 subtests** in 106.96 s, with the same 17 known warnings.
+
 ## Residual logging v3 checkpoint
 
 On 2026-09-24, the formal training, CPU validation, and optimized-trajectory

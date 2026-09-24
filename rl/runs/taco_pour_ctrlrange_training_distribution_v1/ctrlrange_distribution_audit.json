@@ -1,0 +1,1128 @@
+{
+  "schema": "taco_pour_training_ctrlrange_distribution_audit_v1",
+  "status": "descriptive_measurement_complete_no_severity_threshold",
+  "scope": {
+    "diagnostic_only": true,
+    "algorithm_changed": false,
+    "promotion_allowed": false,
+    "chunk_committed": false,
+    "performance_comparison_allowed": false,
+    "new_scale_selected": false,
+    "severity_threshold_defined": false,
+    "worlds": 4,
+    "epochs": 8,
+    "samples": 1280,
+    "seed": 0,
+    "fixed_reset_endpoints": [
+      20,
+      20,
+      20,
+      46
+    ],
+    "world_row_order_contract": "within each rollout step, rows are worlds 0,1,2,3",
+    "numeric_tolerance": 2e-07
+  },
+  "inputs": {
+    "audit_script": {
+      "path": "/data_all/zzx/3.2RL/scripts/audit_taco_pour_training_ctrlrange_distribution.py",
+      "sha256": "66abb76f04e52830808f0f95a378dd0ab2e764100ff809137501d9e1f20e57cf"
+    },
+    "run_report": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_ctrlrange_training_distribution_v1/report.json",
+      "sha256": "d76b6f431ee70964bd662215c27516416b286a54b6016305ff834e1a793bbe3f"
+    },
+    "training_visitation_manifest": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_ctrlrange_training_distribution_v1/ppo_diagnostic_chunk_20/training_visitation/manifest.json",
+      "sha256": "46fb5cbc6da96fc38318b27a4873c965ee265a1bfb59b5ae953e5cf03d9eea56"
+    },
+    "epoch_visit_artifacts": [
+      {
+        "epoch": 1,
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_ctrlrange_training_distribution_v1/ppo_diagnostic_chunk_20/training_visitation/epoch_0001_visits.npz",
+        "sha256": "23f76ca82c7fcbd8c031b7e125e6c4fbddf03673e619e2a32710906de51dafdb"
+      },
+      {
+        "epoch": 2,
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_ctrlrange_training_distribution_v1/ppo_diagnostic_chunk_20/training_visitation/epoch_0002_visits.npz",
+        "sha256": "dc27adc0ecbb7c31989919ca81d17e3e35acf8a85597af35ab05232ed44e02fa"
+      },
+      {
+        "epoch": 3,
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_ctrlrange_training_distribution_v1/ppo_diagnostic_chunk_20/training_visitation/epoch_0003_visits.npz",
+        "sha256": "ed22059e7a5a2f58901dd846a78bef3f5e14990c954abdcb1e2c03df99f026d2"
+      },
+      {
+        "epoch": 4,
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_ctrlrange_training_distribution_v1/ppo_diagnostic_chunk_20/training_visitation/epoch_0004_visits.npz",
+        "sha256": "96dc7e4545cc6b0a3d4fc19628c1c3c9067d8ee1879a5e1b84d557ca72b7fa3e"
+      },
+      {
+        "epoch": 5,
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_ctrlrange_training_distribution_v1/ppo_diagnostic_chunk_20/training_visitation/epoch_0005_visits.npz",
+        "sha256": "aa00f86a1a08876fab9d7b8573e77e371378022ce6576031f278605a92760f90"
+      },
+      {
+        "epoch": 6,
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_ctrlrange_training_distribution_v1/ppo_diagnostic_chunk_20/training_visitation/epoch_0006_visits.npz",
+        "sha256": "ac0db2d841d8d4d7eee003da92fb2ef4b072d6535e59aab6f6854bc442305eb1"
+      },
+      {
+        "epoch": 7,
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_ctrlrange_training_distribution_v1/ppo_diagnostic_chunk_20/training_visitation/epoch_0007_visits.npz",
+        "sha256": "f60466ea86013a21cea68799c384fe0703afb7ded9fb55ed1d0829399ef5f315"
+      },
+      {
+        "epoch": 8,
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_ctrlrange_training_distribution_v1/ppo_diagnostic_chunk_20/training_visitation/epoch_0008_visits.npz",
+        "sha256": "1a8d9fa11291b1a52ebe426b1555ff24632a2f3b0c9ee7fe7fff61bedb165396"
+      }
+    ]
+  },
+  "residual_semantics": {
+    "sampled_action_preclamp": "stochastic action sampled from the PPO policy distribution before the official [-1,1] clamp; this is not actor mean mu",
+    "sampled_action_clamped": "the same sampled action after the official [-1,1] clamp",
+    "requested_residual": "full action-space signed control-target offset after local scale and formal safety clip, before actuator ctrlrange",
+    "effective_residual_after_ctrlrange": "full action-space signed control-target offset remaining after the model's enabled actuator ctrlrange clamp; not realized qpos motion",
+    "residual_lost_to_ctrlrange": "signed requested minus effective control-target residual",
+    "legacy_v2_applied_residual": "historical v2 right_wrist_applied_residual equals requested_residual for its recorded six dimensions; v2 artifacts remain immutable",
+    "actor_distribution_parameters": "actor mean mu and policy standard deviation are not recorded by this schema",
+    "contact_summary": "control-endpoint hand-object finger flags; not substep collision topology",
+    "write_timing": "rollout samples are held in memory and written only at the next epoch boundary or after training completes"
+  },
+  "scopes": {
+    "all_training_samples": {
+      "world_step_samples": 1280,
+      "component_samples": 46080,
+      "truncated_component_count": 2271,
+      "fully_blocked_component_count": 2099,
+      "world_steps_with_any_finger_truncation": 1114,
+      "absolute_lost_over_absolute_requested": 0.04780075004962982,
+      "absolute_requested_sum": 1588.4184581689974,
+      "absolute_lost_sum": 75.92759369315462,
+      "truncated_components_by_requested_direction": {
+        "positive": 37,
+        "negative": 2234
+      },
+      "fully_blocked_components_by_requested_direction": {
+        "positive": 27,
+        "negative": 2072
+      },
+      "ctrlrange_truncation_path": {
+        "requested_at_residual_limit_then_truncated": 929,
+        "requested_below_residual_limit_but_truncated": 1342,
+        "requested_at_residual_limit_then_fully_blocked": 839,
+        "requested_below_residual_limit_but_fully_blocked": 1260
+      }
+    },
+    "anchor_worlds_0_to_2": {
+      "world_step_samples": 960,
+      "component_samples": 34560,
+      "truncated_component_count": 1469,
+      "fully_blocked_component_count": 1331,
+      "world_steps_with_any_finger_truncation": 800,
+      "absolute_lost_over_absolute_requested": 0.04117924523076788,
+      "absolute_requested_sum": 1183.1900501073665,
+      "absolute_lost_sum": 48.72287322797578,
+      "truncated_components_by_requested_direction": {
+        "positive": 34,
+        "negative": 1435
+      },
+      "fully_blocked_components_by_requested_direction": {
+        "positive": 27,
+        "negative": 1304
+      },
+      "ctrlrange_truncation_path": {
+        "requested_at_residual_limit_then_truncated": 605,
+        "requested_below_residual_limit_but_truncated": 864,
+        "requested_at_residual_limit_then_fully_blocked": 529,
+        "requested_below_residual_limit_but_fully_blocked": 802
+      }
+    },
+    "tail_world_3": {
+      "world_step_samples": 320,
+      "component_samples": 11520,
+      "truncated_component_count": 802,
+      "fully_blocked_component_count": 768,
+      "world_steps_with_any_finger_truncation": 314,
+      "absolute_lost_over_absolute_requested": 0.0671342875375146,
+      "absolute_requested_sum": 405.2284080616309,
+      "absolute_lost_sum": 27.204720465178827,
+      "truncated_components_by_requested_direction": {
+        "positive": 3,
+        "negative": 799
+      },
+      "fully_blocked_components_by_requested_direction": {
+        "positive": 0,
+        "negative": 768
+      },
+      "ctrlrange_truncation_path": {
+        "requested_at_residual_limit_then_truncated": 324,
+        "requested_below_residual_limit_but_truncated": 478,
+        "requested_at_residual_limit_then_fully_blocked": 310,
+        "requested_below_residual_limit_but_fully_blocked": 458
+      }
+    },
+    "outcome_endpoints_46_to_53": {
+      "world_step_samples": 411,
+      "component_samples": 14796,
+      "truncated_component_count": 955,
+      "fully_blocked_component_count": 919,
+      "world_steps_with_any_finger_truncation": 396,
+      "absolute_lost_over_absolute_requested": 0.06171688440723264,
+      "absolute_requested_sum": 520.1125633689126,
+      "absolute_lost_sum": 32.09972695218864,
+      "truncated_components_by_requested_direction": {
+        "positive": 2,
+        "negative": 953
+      },
+      "fully_blocked_components_by_requested_direction": {
+        "positive": 0,
+        "negative": 919
+      },
+      "ctrlrange_truncation_path": {
+        "requested_at_residual_limit_then_truncated": 380,
+        "requested_below_residual_limit_but_truncated": 575,
+        "requested_at_residual_limit_then_fully_blocked": 365,
+        "requested_below_residual_limit_but_fully_blocked": 554
+      }
+    }
+  },
+  "per_outcome_endpoint_46_to_53": {
+    "46": {
+      "world_step_samples": 18,
+      "component_samples": 648,
+      "truncated_component_count": 18,
+      "fully_blocked_component_count": 18,
+      "world_steps_with_any_finger_truncation": 17,
+      "absolute_lost_over_absolute_requested": 0.02732456203131048,
+      "absolute_requested_sum": 22.81318283944931,
+      "absolute_lost_sum": 0.6233602296281604,
+      "truncated_components_by_requested_direction": {
+        "positive": 0,
+        "negative": 18
+      },
+      "fully_blocked_components_by_requested_direction": {
+        "positive": 0,
+        "negative": 18
+      },
+      "ctrlrange_truncation_path": {
+        "requested_at_residual_limit_then_truncated": 7,
+        "requested_below_residual_limit_but_truncated": 11,
+        "requested_at_residual_limit_then_fully_blocked": 7,
+        "requested_below_residual_limit_but_fully_blocked": 11
+      }
+    },
+    "47": {
+      "world_step_samples": 68,
+      "component_samples": 2448,
+      "truncated_component_count": 112,
+      "fully_blocked_component_count": 112,
+      "world_steps_with_any_finger_truncation": 65,
+      "absolute_lost_over_absolute_requested": 0.04081970334807751,
+      "absolute_requested_sum": 87.05682112840005,
+      "absolute_lost_sum": 3.5536336128879364,
+      "truncated_components_by_requested_direction": {
+        "positive": 0,
+        "negative": 112
+      },
+      "fully_blocked_components_by_requested_direction": {
+        "positive": 0,
+        "negative": 112
+      },
+      "ctrlrange_truncation_path": {
+        "requested_at_residual_limit_then_truncated": 43,
+        "requested_below_residual_limit_but_truncated": 69,
+        "requested_at_residual_limit_then_fully_blocked": 43,
+        "requested_below_residual_limit_but_fully_blocked": 69
+      }
+    },
+    "48": {
+      "world_step_samples": 67,
+      "component_samples": 2412,
+      "truncated_component_count": 114,
+      "fully_blocked_component_count": 114,
+      "world_steps_with_any_finger_truncation": 63,
+      "absolute_lost_over_absolute_requested": 0.04749718896296886,
+      "absolute_requested_sum": 86.19570140000724,
+      "absolute_lost_sum": 4.094053517191783,
+      "truncated_components_by_requested_direction": {
+        "positive": 0,
+        "negative": 114
+      },
+      "fully_blocked_components_by_requested_direction": {
+        "positive": 0,
+        "negative": 114
+      },
+      "ctrlrange_truncation_path": {
+        "requested_at_residual_limit_then_truncated": 50,
+        "requested_below_residual_limit_but_truncated": 64,
+        "requested_at_residual_limit_then_fully_blocked": 50,
+        "requested_below_residual_limit_but_fully_blocked": 64
+      }
+    },
+    "49": {
+      "world_step_samples": 63,
+      "component_samples": 2268,
+      "truncated_component_count": 172,
+      "fully_blocked_component_count": 138,
+      "world_steps_with_any_finger_truncation": 60,
+      "absolute_lost_over_absolute_requested": 0.07233950279696957,
+      "absolute_requested_sum": 79.1639154194572,
+      "absolute_lost_sum": 5.726678280904887,
+      "truncated_components_by_requested_direction": {
+        "positive": 0,
+        "negative": 172
+      },
+      "fully_blocked_components_by_requested_direction": {
+        "positive": 0,
+        "negative": 138
+      },
+      "ctrlrange_truncation_path": {
+        "requested_at_residual_limit_then_truncated": 66,
+        "requested_below_residual_limit_but_truncated": 106,
+        "requested_at_residual_limit_then_fully_blocked": 52,
+        "requested_below_residual_limit_but_fully_blocked": 86
+      }
+    },
+    "50": {
+      "world_step_samples": 60,
+      "component_samples": 2160,
+      "truncated_component_count": 174,
+      "fully_blocked_component_count": 174,
+      "world_steps_with_any_finger_truncation": 59,
+      "absolute_lost_over_absolute_requested": 0.07300462775640616,
+      "absolute_requested_sum": 76.28861979983623,
+      "absolute_lost_sum": 5.569422290537041,
+      "truncated_components_by_requested_direction": {
+        "positive": 0,
+        "negative": 174
+      },
+      "fully_blocked_components_by_requested_direction": {
+        "positive": 0,
+        "negative": 174
+      },
+      "ctrlrange_truncation_path": {
+        "requested_at_residual_limit_then_truncated": 57,
+        "requested_below_residual_limit_but_truncated": 117,
+        "requested_at_residual_limit_then_fully_blocked": 57,
+        "requested_below_residual_limit_but_fully_blocked": 117
+      }
+    },
+    "51": {
+      "world_step_samples": 55,
+      "component_samples": 1980,
+      "truncated_component_count": 155,
+      "fully_blocked_component_count": 155,
+      "world_steps_with_any_finger_truncation": 54,
+      "absolute_lost_over_absolute_requested": 0.07846595506839221,
+      "absolute_requested_sum": 68.58383393348777,
+      "absolute_lost_sum": 5.381496031843124,
+      "truncated_components_by_requested_direction": {
+        "positive": 0,
+        "negative": 155
+      },
+      "fully_blocked_components_by_requested_direction": {
+        "positive": 0,
+        "negative": 155
+      },
+      "ctrlrange_truncation_path": {
+        "requested_at_residual_limit_then_truncated": 74,
+        "requested_below_residual_limit_but_truncated": 81,
+        "requested_at_residual_limit_then_fully_blocked": 74,
+        "requested_below_residual_limit_but_fully_blocked": 81
+      }
+    },
+    "52": {
+      "world_step_samples": 48,
+      "component_samples": 1728,
+      "truncated_component_count": 138,
+      "fully_blocked_component_count": 138,
+      "world_steps_with_any_finger_truncation": 47,
+      "absolute_lost_over_absolute_requested": 0.07778231015009794,
+      "absolute_requested_sum": 61.02570472143998,
+      "absolute_lost_sum": 4.746720291771341,
+      "truncated_components_by_requested_direction": {
+        "positive": 0,
+        "negative": 138
+      },
+      "fully_blocked_components_by_requested_direction": {
+        "positive": 0,
+        "negative": 138
+      },
+      "ctrlrange_truncation_path": {
+        "requested_at_residual_limit_then_truncated": 58,
+        "requested_below_residual_limit_but_truncated": 80,
+        "requested_at_residual_limit_then_fully_blocked": 58,
+        "requested_below_residual_limit_but_fully_blocked": 80
+      }
+    },
+    "53": {
+      "world_step_samples": 32,
+      "component_samples": 1152,
+      "truncated_component_count": 72,
+      "fully_blocked_component_count": 70,
+      "world_steps_with_any_finger_truncation": 31,
+      "absolute_lost_over_absolute_requested": 0.06167438787404631,
+      "absolute_requested_sum": 38.98478412683471,
+      "absolute_lost_sum": 2.404362697424368,
+      "truncated_components_by_requested_direction": {
+        "positive": 2,
+        "negative": 70
+      },
+      "fully_blocked_components_by_requested_direction": {
+        "positive": 0,
+        "negative": 70
+      },
+      "ctrlrange_truncation_path": {
+        "requested_at_residual_limit_then_truncated": 25,
+        "requested_below_residual_limit_but_truncated": 47,
+        "requested_at_residual_limit_then_fully_blocked": 24,
+        "requested_below_residual_limit_but_fully_blocked": 46
+      }
+    }
+  },
+  "per_epoch": [
+    {
+      "epoch": 1,
+      "world_steps_with_any_finger_truncation": 144,
+      "anchor_world_steps_with_any_finger_truncation": 104,
+      "tail_world_steps_with_any_finger_truncation": 40,
+      "rollout_time_slots_with_any_world_finger_truncation": 40
+    },
+    {
+      "epoch": 2,
+      "world_steps_with_any_finger_truncation": 138,
+      "anchor_world_steps_with_any_finger_truncation": 98,
+      "tail_world_steps_with_any_finger_truncation": 40,
+      "rollout_time_slots_with_any_world_finger_truncation": 40
+    },
+    {
+      "epoch": 3,
+      "world_steps_with_any_finger_truncation": 133,
+      "anchor_world_steps_with_any_finger_truncation": 93,
+      "tail_world_steps_with_any_finger_truncation": 40,
+      "rollout_time_slots_with_any_world_finger_truncation": 40
+    },
+    {
+      "epoch": 4,
+      "world_steps_with_any_finger_truncation": 136,
+      "anchor_world_steps_with_any_finger_truncation": 97,
+      "tail_world_steps_with_any_finger_truncation": 39,
+      "rollout_time_slots_with_any_world_finger_truncation": 40
+    },
+    {
+      "epoch": 5,
+      "world_steps_with_any_finger_truncation": 143,
+      "anchor_world_steps_with_any_finger_truncation": 103,
+      "tail_world_steps_with_any_finger_truncation": 40,
+      "rollout_time_slots_with_any_world_finger_truncation": 40
+    },
+    {
+      "epoch": 6,
+      "world_steps_with_any_finger_truncation": 137,
+      "anchor_world_steps_with_any_finger_truncation": 100,
+      "tail_world_steps_with_any_finger_truncation": 37,
+      "rollout_time_slots_with_any_world_finger_truncation": 40
+    },
+    {
+      "epoch": 7,
+      "world_steps_with_any_finger_truncation": 142,
+      "anchor_world_steps_with_any_finger_truncation": 102,
+      "tail_world_steps_with_any_finger_truncation": 40,
+      "rollout_time_slots_with_any_world_finger_truncation": 40
+    },
+    {
+      "epoch": 8,
+      "world_steps_with_any_finger_truncation": 141,
+      "anchor_world_steps_with_any_finger_truncation": 103,
+      "tail_world_steps_with_any_finger_truncation": 38,
+      "rollout_time_slots_with_any_world_finger_truncation": 40
+    }
+  ],
+  "per_actuator_and_requested_direction": [
+    {
+      "index": 0,
+      "actuator": "R_forearm_tx_position",
+      "unit": "m",
+      "lost_nonzero": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "fully_blocked": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "absolute_lost_over_absolute_requested": 0.0,
+      "truncated_at_residual_limit": 0,
+      "truncated_below_residual_limit": 0
+    },
+    {
+      "index": 1,
+      "actuator": "R_forearm_ty_position",
+      "unit": "m",
+      "lost_nonzero": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "fully_blocked": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "absolute_lost_over_absolute_requested": 0.0,
+      "truncated_at_residual_limit": 0,
+      "truncated_below_residual_limit": 0
+    },
+    {
+      "index": 2,
+      "actuator": "R_forearm_tz_position",
+      "unit": "m",
+      "lost_nonzero": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "fully_blocked": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "absolute_lost_over_absolute_requested": 0.0,
+      "truncated_at_residual_limit": 0,
+      "truncated_below_residual_limit": 0
+    },
+    {
+      "index": 3,
+      "actuator": "R_forearm_roll_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "fully_blocked": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "absolute_lost_over_absolute_requested": 0.0,
+      "truncated_at_residual_limit": 0,
+      "truncated_below_residual_limit": 0
+    },
+    {
+      "index": 4,
+      "actuator": "R_forearm_pitch_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "fully_blocked": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "absolute_lost_over_absolute_requested": 0.0,
+      "truncated_at_residual_limit": 0,
+      "truncated_below_residual_limit": 0
+    },
+    {
+      "index": 5,
+      "actuator": "R_forearm_yaw_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "fully_blocked": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "absolute_lost_over_absolute_requested": 0.0,
+      "truncated_at_residual_limit": 0,
+      "truncated_below_residual_limit": 0
+    },
+    {
+      "index": 6,
+      "actuator": "right_thumb_bend_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 2,
+        "positive_request": 0,
+        "negative_request": 2
+      },
+      "fully_blocked": {
+        "total": 2,
+        "positive_request": 0,
+        "negative_request": 2
+      },
+      "absolute_lost_over_absolute_requested": 0.0008453904270063554,
+      "truncated_at_residual_limit": 0,
+      "truncated_below_residual_limit": 2
+    },
+    {
+      "index": 7,
+      "actuator": "right_thumb_rota1_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 3,
+        "positive_request": 3,
+        "negative_request": 0
+      },
+      "fully_blocked": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "absolute_lost_over_absolute_requested": 0.0004033387469233773,
+      "truncated_at_residual_limit": 1,
+      "truncated_below_residual_limit": 2
+    },
+    {
+      "index": 8,
+      "actuator": "right_thumb_rota2_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 498,
+        "positive_request": 0,
+        "negative_request": 498
+      },
+      "fully_blocked": {
+        "total": 498,
+        "positive_request": 0,
+        "negative_request": 498
+      },
+      "absolute_lost_over_absolute_requested": 0.39619076706883866,
+      "truncated_at_residual_limit": 192,
+      "truncated_below_residual_limit": 306
+    },
+    {
+      "index": 9,
+      "actuator": "right_index_bend_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "fully_blocked": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "absolute_lost_over_absolute_requested": 0.0,
+      "truncated_at_residual_limit": 0,
+      "truncated_below_residual_limit": 0
+    },
+    {
+      "index": 10,
+      "actuator": "right_index_joint1_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 206,
+        "positive_request": 0,
+        "negative_request": 206
+      },
+      "fully_blocked": {
+        "total": 172,
+        "positive_request": 0,
+        "negative_request": 172
+      },
+      "absolute_lost_over_absolute_requested": 0.1615659335779706,
+      "truncated_at_residual_limit": 100,
+      "truncated_below_residual_limit": 106
+    },
+    {
+      "index": 11,
+      "actuator": "right_index_joint2_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "fully_blocked": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "absolute_lost_over_absolute_requested": 0.0,
+      "truncated_at_residual_limit": 0,
+      "truncated_below_residual_limit": 0
+    },
+    {
+      "index": 12,
+      "actuator": "right_middle_joint1_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "fully_blocked": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "absolute_lost_over_absolute_requested": 0.0,
+      "truncated_at_residual_limit": 0,
+      "truncated_below_residual_limit": 0
+    },
+    {
+      "index": 13,
+      "actuator": "right_middle_joint2_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 14,
+        "positive_request": 0,
+        "negative_request": 14
+      },
+      "fully_blocked": {
+        "total": 12,
+        "positive_request": 0,
+        "negative_request": 12
+      },
+      "absolute_lost_over_absolute_requested": 0.005905489631315037,
+      "truncated_at_residual_limit": 0,
+      "truncated_below_residual_limit": 14
+    },
+    {
+      "index": 14,
+      "actuator": "right_ring_joint1_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "fully_blocked": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "absolute_lost_over_absolute_requested": 0.0,
+      "truncated_at_residual_limit": 0,
+      "truncated_below_residual_limit": 0
+    },
+    {
+      "index": 15,
+      "actuator": "right_ring_joint2_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 138,
+        "positive_request": 0,
+        "negative_request": 138
+      },
+      "fully_blocked": {
+        "total": 101,
+        "positive_request": 0,
+        "negative_request": 101
+      },
+      "absolute_lost_over_absolute_requested": 0.0934428177296201,
+      "truncated_at_residual_limit": 53,
+      "truncated_below_residual_limit": 85
+    },
+    {
+      "index": 16,
+      "actuator": "right_pinky_joint1_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 104,
+        "positive_request": 0,
+        "negative_request": 104
+      },
+      "fully_blocked": {
+        "total": 104,
+        "positive_request": 0,
+        "negative_request": 104
+      },
+      "absolute_lost_over_absolute_requested": 0.07248801664800689,
+      "truncated_at_residual_limit": 33,
+      "truncated_below_residual_limit": 71
+    },
+    {
+      "index": 17,
+      "actuator": "right_pinky_joint2_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 447,
+        "positive_request": 0,
+        "negative_request": 447
+      },
+      "fully_blocked": {
+        "total": 426,
+        "positive_request": 0,
+        "negative_request": 426
+      },
+      "absolute_lost_over_absolute_requested": 0.3703914637387084,
+      "truncated_at_residual_limit": 229,
+      "truncated_below_residual_limit": 218
+    },
+    {
+      "index": 18,
+      "actuator": "L_forearm_tx_position",
+      "unit": "m",
+      "lost_nonzero": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "fully_blocked": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "absolute_lost_over_absolute_requested": 0.0,
+      "truncated_at_residual_limit": 0,
+      "truncated_below_residual_limit": 0
+    },
+    {
+      "index": 19,
+      "actuator": "L_forearm_ty_position",
+      "unit": "m",
+      "lost_nonzero": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "fully_blocked": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "absolute_lost_over_absolute_requested": 0.0,
+      "truncated_at_residual_limit": 0,
+      "truncated_below_residual_limit": 0
+    },
+    {
+      "index": 20,
+      "actuator": "L_forearm_tz_position",
+      "unit": "m",
+      "lost_nonzero": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "fully_blocked": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "absolute_lost_over_absolute_requested": 0.0,
+      "truncated_at_residual_limit": 0,
+      "truncated_below_residual_limit": 0
+    },
+    {
+      "index": 21,
+      "actuator": "L_forearm_roll_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "fully_blocked": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "absolute_lost_over_absolute_requested": 0.0,
+      "truncated_at_residual_limit": 0,
+      "truncated_below_residual_limit": 0
+    },
+    {
+      "index": 22,
+      "actuator": "L_forearm_pitch_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "fully_blocked": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "absolute_lost_over_absolute_requested": 0.0,
+      "truncated_at_residual_limit": 0,
+      "truncated_below_residual_limit": 0
+    },
+    {
+      "index": 23,
+      "actuator": "L_forearm_yaw_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "fully_blocked": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "absolute_lost_over_absolute_requested": 0.0,
+      "truncated_at_residual_limit": 0,
+      "truncated_below_residual_limit": 0
+    },
+    {
+      "index": 24,
+      "actuator": "left_thumb_bend_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "fully_blocked": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "absolute_lost_over_absolute_requested": 0.0,
+      "truncated_at_residual_limit": 0,
+      "truncated_below_residual_limit": 0
+    },
+    {
+      "index": 25,
+      "actuator": "left_thumb_rota1_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 34,
+        "positive_request": 34,
+        "negative_request": 0
+      },
+      "fully_blocked": {
+        "total": 27,
+        "positive_request": 27,
+        "negative_request": 0
+      },
+      "absolute_lost_over_absolute_requested": 0.013470010176315089,
+      "truncated_at_residual_limit": 8,
+      "truncated_below_residual_limit": 26
+    },
+    {
+      "index": 26,
+      "actuator": "left_thumb_rota2_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 483,
+        "positive_request": 0,
+        "negative_request": 483
+      },
+      "fully_blocked": {
+        "total": 443,
+        "positive_request": 0,
+        "negative_request": 443
+      },
+      "absolute_lost_over_absolute_requested": 0.3563297982262962,
+      "truncated_at_residual_limit": 162,
+      "truncated_below_residual_limit": 321
+    },
+    {
+      "index": 27,
+      "actuator": "left_index_bend_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "fully_blocked": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "absolute_lost_over_absolute_requested": 0.0,
+      "truncated_at_residual_limit": 0,
+      "truncated_below_residual_limit": 0
+    },
+    {
+      "index": 28,
+      "actuator": "left_index_joint1_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "fully_blocked": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "absolute_lost_over_absolute_requested": 0.0,
+      "truncated_at_residual_limit": 0,
+      "truncated_below_residual_limit": 0
+    },
+    {
+      "index": 29,
+      "actuator": "left_index_joint2_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "fully_blocked": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "absolute_lost_over_absolute_requested": 0.0,
+      "truncated_at_residual_limit": 0,
+      "truncated_below_residual_limit": 0
+    },
+    {
+      "index": 30,
+      "actuator": "left_middle_joint1_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "fully_blocked": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "absolute_lost_over_absolute_requested": 0.0,
+      "truncated_at_residual_limit": 0,
+      "truncated_below_residual_limit": 0
+    },
+    {
+      "index": 31,
+      "actuator": "left_middle_joint2_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "fully_blocked": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "absolute_lost_over_absolute_requested": 0.0,
+      "truncated_at_residual_limit": 0,
+      "truncated_below_residual_limit": 0
+    },
+    {
+      "index": 32,
+      "actuator": "left_ring_joint1_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "fully_blocked": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "absolute_lost_over_absolute_requested": 0.0,
+      "truncated_at_residual_limit": 0,
+      "truncated_below_residual_limit": 0
+    },
+    {
+      "index": 33,
+      "actuator": "left_ring_joint2_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 4,
+        "positive_request": 0,
+        "negative_request": 4
+      },
+      "fully_blocked": {
+        "total": 1,
+        "positive_request": 0,
+        "negative_request": 1
+      },
+      "absolute_lost_over_absolute_requested": 0.0018174224479502558,
+      "truncated_at_residual_limit": 3,
+      "truncated_below_residual_limit": 1
+    },
+    {
+      "index": 34,
+      "actuator": "left_pinky_joint1_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 338,
+        "positive_request": 0,
+        "negative_request": 338
+      },
+      "fully_blocked": {
+        "total": 313,
+        "positive_request": 0,
+        "negative_request": 313
+      },
+      "absolute_lost_over_absolute_requested": 0.27637908859973936,
+      "truncated_at_residual_limit": 148,
+      "truncated_below_residual_limit": 190
+    },
+    {
+      "index": 35,
+      "actuator": "left_pinky_joint2_position",
+      "unit": "rad",
+      "lost_nonzero": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "fully_blocked": {
+        "total": 0,
+        "positive_request": 0,
+        "negative_request": 0
+      },
+      "absolute_lost_over_absolute_requested": 0.0,
+      "truncated_at_residual_limit": 0,
+      "truncated_below_residual_limit": 0
+    }
+  ],
+  "CPU_validation_descriptive_only": {
+    "diagnostic_replay": {
+      "validated_steps": 29,
+      "first_failure": {
+        "control_interval": 49,
+        "endpoint": 50,
+        "object_roles": [
+          "tool"
+        ],
+        "reason": "tracking_boundary"
+      },
+      "feasible": false
+    },
+    "diagnostic_rl": {
+      "validated_steps": 32,
+      "first_failure": {
+        "control_interval": 52,
+        "endpoint": 53,
+        "object_roles": [
+          "tool"
+        ],
+        "reason": "tracking_boundary"
+      },
+      "feasible": false
+    }
+  },
+  "interpretation_guard": "The CPU score is recorded for run completeness only. GPU training is nondeterministic, so it is not performance or causal evidence against the previous 3+1 run.",
+  "descriptive_findings": {
+    "ctrlrange_loss_present_throughout_training": true,
+    "all_eight_epochs_have_finger_truncation": true,
+    "every_epoch_rollout_slot_has_at_least_one_affected_world": true,
+    "loss_is_not_confined_to_tail_world": true,
+    "below_residual_limit_truncation_exists": true,
+    "causal_task_failure_claimed": false,
+    "action_space_redesign_selected": false
+  }
+}

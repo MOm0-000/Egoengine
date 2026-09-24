@@ -332,6 +332,14 @@ def main():
         type=Path,
         help="Required passed no-training sampler gate for the tail curriculum.",
     )
+    parser.add_argument(
+        "--diagnostic-no-commit-contract",
+        type=Path,
+        help=(
+            "Frozen diagnostic contract. Runs Replay and PPO validation but always "
+            "restores the incoming boundary and forbids trajectory promotion."
+        ),
+    )
     parser.add_argument("--max-chunks", type=int, default=1)
     parser.add_argument(
         "--stop-after-first-ppo",
@@ -344,6 +352,47 @@ def main():
         raise FileExistsError(args.output)
     if args.epochs < 1 or args.max_chunks < 1 or args.training_worlds < 1:
         raise ValueError("positive epoch/chunk budgets required")
+    diagnostic_no_commit = None
+    if args.diagnostic_no_commit_contract is not None:
+        diagnostic_raw = args.diagnostic_no_commit_contract.read_bytes()
+        diagnostic_contract = yaml.safe_load(diagnostic_raw)
+        training = diagnostic_contract.get("training", {})
+        promotion = diagnostic_contract.get("promotion", {})
+        if (
+            diagnostic_contract.get("schema")
+                != "taco_pour_ctrlrange_training_distribution_v1"
+            or diagnostic_contract.get("status")
+                != "frozen_diagnostic_only_no_commit"
+            or training.get("worlds") != 4
+            or training.get("epochs") != 8
+            or training.get("horizon_per_world_per_epoch") != 40
+            or training.get("samples_per_epoch") != 160
+            or training.get("total_samples") != 1280
+            or training.get("seed") != 0
+            or training.get("fixed_reset_endpoints") != [20, 20, 20, 46]
+            or promotion.get("chunk_commit_allowed") is not False
+            or promotion.get("committed_boundary_output_allowed") is not False
+            or promotion.get("optimized_trajectory_output_allowed") is not False
+            or promotion.get("task_success_claim_allowed") is not False
+            or promotion.get("CPU_score_as_performance_comparison_allowed") is not False
+            or promotion.get("restore_incoming_boundary_after_diagnostic") is not True
+        ):
+            raise ValueError("diagnostic no-commit contract differs from the frozen run")
+        if (
+            args.training_worlds != 4
+            or args.epochs != 8
+            or args.max_chunks != 1
+            or args.resume_boundary is None
+        ):
+            raise ValueError(
+                "ctrlrange diagnostic requires 4 worlds, 8 epochs, one window, "
+                "and the endpoint-20 boundary"
+            )
+        diagnostic_no_commit = {
+            "contract": diagnostic_contract,
+            "path": str(args.diagnostic_no_commit_contract.resolve()),
+            "sha256": _sha256(diagnostic_raw),
+        }
     multiworld_gate = None
     if args.training_worlds > 1:
         if args.training_worlds != 4 or args.multiworld_gate_report is None:
@@ -425,6 +474,34 @@ def main():
             "sampler_gate_path": str(args.tail_sampler_gate_report.resolve()),
             "sampler_gate_sha256": _sha256(sampler_gate_raw),
         }
+    if diagnostic_no_commit is not None and tail_curriculum is None:
+        raise ValueError("ctrlrange diagnostic requires the frozen 3+1 curriculum")
+
+    if diagnostic_no_commit is not None:
+        inputs = {
+            "initialization_report": args.initialization_report,
+            "replay_rl_protocol": args.protocol,
+            "dual_backend_contract": args.backend_contract,
+            "objective_profile": args.objective_profile,
+            "observation_profile": args.observation_profile,
+            "action_profile": args.action_profile,
+            "simulator_config": args.config,
+            "resume_boundary": args.resume_boundary,
+            "multiworld_gate_report": args.multiworld_gate_report,
+            "tail_curriculum_contract": args.tail_curriculum_contract,
+            "tail_boundaries": args.tail_boundaries,
+            "tail_sampler_gate_report": args.tail_sampler_gate_report,
+        }
+        expected = diagnostic_no_commit["contract"].get("input_sha256", {})
+        if set(expected) != set(inputs) or any(path is None for path in inputs.values()):
+            raise ValueError("diagnostic contract does not bind every required input")
+        mismatches = {
+            name: {"expected": expected[name], "actual": _sha256(Path(path).read_bytes())}
+            for name, path in inputs.items()
+            if _sha256(Path(path).read_bytes()) != expected[name]
+        }
+        if mismatches:
+            raise ValueError(f"diagnostic input hashes differ: {mismatches}")
     backend_contract, backend_contract_artifact = load_dual_backend_contract(
         args.backend_contract
     )
@@ -563,7 +640,11 @@ def main():
         ),
         "validation": _backend_runtime_record(
             validation_env,
-            role="replay_policy_acceptance_and_commit",
+            role=(
+                "diagnostic_replay_policy_validation_no_commit"
+                if diagnostic_no_commit is not None
+                else "replay_policy_acceptance_and_commit"
+            ),
             policy_inference_device="cpu",
             physics_contract_sha256=physics_sha256,
         ),
@@ -584,6 +665,7 @@ def main():
         ("tail_curriculum_contract", args.tail_curriculum_contract),
         ("tail_boundaries", args.tail_boundaries),
         ("tail_sampler_gate_report", args.tail_sampler_gate_report),
+        ("diagnostic_no_commit_contract", args.diagnostic_no_commit_contract),
     ):
         if source is None:
             continue
@@ -606,6 +688,7 @@ def main():
                   backend_runtime_records=backend_records,
                   multiworld_gate=multiworld_gate,
                   tail_curriculum=tail_curriculum,
+                  diagnostic_no_commit=diagnostic_no_commit,
                   incoming_boundary=incoming_boundary_artifact or {
                       "source": "accepted_initialization", "reference_endpoint": 0
                   },
@@ -618,7 +701,11 @@ def main():
                       tracking_boundary=validation_env.tracking_boundary,
                       training_backend="GPU MuJoCo-Warp",
                       acceptance_backend="CPU MuJoCo-Warp",
-                      committed_state_source="CPU validation endpoint 20",
+                      committed_state_source=(
+                          "forbidden_by_diagnostic_contract"
+                          if diagnostic_no_commit is not None
+                          else "CPU validation endpoint 20"
+                      ),
                       training_start_distribution=(
                           [20, 20, 20, 46] if tail_curriculum is not None
                           else [run_start] * args.training_worlds
@@ -631,6 +718,108 @@ def main():
                   source_frames=len(validation_reference[0]),
                   control_intervals=len(validation_reference[0]) - 1,
                   chunks=[], task_success=False)
+    if diagnostic_no_commit is not None:
+        result["schema"] = "taco_pour_ctrlrange_training_distribution_run_v1"
+        result["promotion"] = {
+            "allowed": False,
+            "chunk_committed": False,
+            "committed_boundary_written": False,
+            "optimized_trajectory_written": False,
+            "task_success_evidence": False,
+            "CPU_score_performance_comparison_allowed": False,
+            "reason": (
+                "GPU training is nondeterministic; this run only measures the v3 "
+                "training distribution."
+            ),
+        }
+        diagnostic_traces = []
+        training_audits = []
+
+        def validate_diagnostic(policy, mode, start_endpoint, end_endpoint):
+            validation_backend.restore(incoming_boundary)
+            validation_backend.verify_restored_snapshot(incoming_boundary)
+            validation_backend.begin_trial(mode, start_endpoint, end_endpoint)
+            valid_steps = 0
+            error_text = None
+            try:
+                for index in range(start_endpoint, end_endpoint):
+                    if not validation_backend.step(
+                        policy(validation_backend, index), index
+                    ):
+                        break
+                    valid_steps += 1
+            except Exception as error:
+                error_text = f"{type(error).__name__}: {error}"
+                raise
+            finally:
+                feasible = valid_steps == end_endpoint - start_endpoint
+                validation_backend.end_trial(
+                    feasible, valid_steps, error=error_text
+                )
+            return validation_backend.validation_traces[-1]
+
+        try:
+            lookahead_end = min(run_start + 40, len(validation_reference[0]) - 1)
+            diagnostic_traces.append(
+                validate_diagnostic(
+                    replay_action, "diagnostic_replay", run_start, lookahead_end
+                )
+            )
+            training_backend.restore(incoming_boundary)
+            training_backend.verify_restored_snapshot(incoming_boundary)
+            policy = train_chunk_ppo(
+                training_backend,
+                run_start,
+                lookahead_end,
+                args.output / f"ppo_diagnostic_chunk_{run_start}",
+                epochs=args.epochs,
+                validation_env=validation_env,
+            )
+            training_audits.append(policy.audit)
+            try:
+                diagnostic_traces.append(
+                    validate_diagnostic(
+                        policy, "diagnostic_rl", run_start, lookahead_end
+                    )
+                )
+            finally:
+                policy.close()
+            result.update(
+                status="diagnostic_complete_no_commit",
+                diagnostic={
+                    "start_endpoint": run_start,
+                    "lookahead_end": lookahead_end,
+                    "validation_traces": diagnostic_traces,
+                    "training_runs": training_audits,
+                    "performance_claim_allowed": False,
+                },
+            )
+        except Exception as error:
+            result.update(status="error", error=f"{type(error).__name__}: {error}")
+            raise
+        finally:
+            validation_backend.restore(incoming_boundary)
+            validation_backend.verify_restored_snapshot(incoming_boundary)
+            training_backend.restore(incoming_boundary)
+            training_backend.verify_restored_snapshot(incoming_boundary)
+            result["incoming_boundary_restored_after_diagnostic"] = True
+            result["committed_reference_index"] = run_start
+            result["simulation_work"] = {
+                "gpu_training_backend": {
+                    "control_intervals": training_env.simulation_control_intervals,
+                    "physics_steps": training_env.simulation_physics_steps,
+                    "verified_cpu_snapshot_transfers": training_backend.verified_restore_count,
+                    "restore_audits": getattr(training_backend, "restore_audits", []),
+                },
+                "cpu_validation_backend": {
+                    "control_intervals": validation_env.simulation_control_intervals,
+                    "physics_steps": validation_env.simulation_physics_steps,
+                },
+            }
+            (args.output / "report.json").write_text(
+                json.dumps(result, indent=2) + "\n"
+            )
+        return
     if run_start:
         committed_qpos = [incoming_boundary["qpos"][0].cpu().numpy().astype(np.float32)]
         committed_qvel = [incoming_boundary["qvel"][0].cpu().numpy().astype(np.float32)]

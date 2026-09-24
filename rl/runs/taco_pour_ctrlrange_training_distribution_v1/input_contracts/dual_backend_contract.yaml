@@ -1,0 +1,43 @@
+schema: taco_pour_gpu_train_cpu_validate_v1
+paper_faithful: false
+provenance: local reproducibility contract; EgoEngine does not publish this backend split
+
+training_backend:
+  role: policy_optimization_only
+  device: cuda:0
+  simulator: MuJoCo-Warp
+  may_decide_acceptance: false
+  may_provide_committed_state: false
+
+validation_backend:
+  role: replay_policy_acceptance_and_commit
+  device: cpu
+  policy_inference_device: cpu
+  simulator: MuJoCo-Warp
+  deterministic_mean_action: true
+  may_decide_acceptance: true
+  may_provide_committed_state: true
+
+scheduler:
+  lookahead_control_intervals: 40
+  commit_control_intervals: 20
+  required_validated_intervals: 40
+  incoming_boundary_source: previous_cpu_commit_or_accepted_initialization
+  gpu_training_reset_source: exact_incoming_cpu_snapshot
+  commit_source: cpu_validation_endpoint_20
+  failed_window_commit_forbidden: true
+  gpu_validation_commit_forbidden: true
+
+runtime_requirements:
+  identical_physics_contract_required: true
+  exact_cpu_to_gpu_snapshot_transfer_required: true
+  complete_snapshot_schema: egoengine_mjwp_snapshot_v2
+  separate_backend_records_and_hashes_required: true
+
+repeatability_evidence:
+  path: /data_all/zzx/3.2RL/runs/taco_pour_normalized_ellipse_repeatability_cpu_v1/report.json.gz
+  artifact_sha256: 2005f17cddc1a742f954efdc15c59ba320a158e1912df7144c565c3276c4327f
+  uncompressed_json_sha256: 373ecaf4eceab2203ee7dcc1325c3b1c20ba763987b64ffb6425d1a34fa2fd63
+  required_status: repeatability_gate_passed
+  same_environment_repeats: 3
+  fresh_environment_repeats: 3

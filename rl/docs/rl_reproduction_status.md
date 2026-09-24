@@ -1,6 +1,6 @@
 # RL reproduction status
 
-Updated: 2026-09-22. Active sample: TACO Pour/Bowl/Plate `20230927_017`.
+Updated: 2026-09-24. Active sample: TACO Pour/Bowl/Plate `20230927_017`.
 
 ## What enters RL
 
@@ -297,6 +297,28 @@ rotation losses, 62 truncated finger requests, 57 fully blocked requests, and
 `runs/taco_pour_training_trace_transparency_v3/report.json` and
 `docs/taco_pour_residual_logging_v3.md`. No new scale or training run was
 selected by this audit.
+
+One subsequent diagnostic 3+1 rerun measured whether this loss also occurs
+during PPO training. It was predeclared as non-promotable: `[20,20,20,46]`, four
+worlds, eight epochs, 1,280 samples, seed 0, with no objective, observation,
+action, reward, or PPO change. The runner restored the incoming endpoint-20
+boundary afterward and emitted neither an optimized trajectory nor a committed
+boundary. Its CPU result is recorded only for completeness and is not a
+performance comparison with the earlier non-deterministic GPU training run.
+
+Training-time finger loss was widespread. There were 2,271 truncated component
+requests and 2,099 fully blocked requests; 1,114/1,280 world-step samples had at
+least one affected finger. The absolute lost/requested ratio was `0.04780075`.
+The anchor worlds were affected in 800/960 world-steps, the fixed endpoint-46
+tail world in 314/320, and outcome endpoints 46--53 in 396/411. Every one of 40
+rollout time slots in every epoch had at least one affected world. Moreover,
+1,342 truncations and 1,260 full blocks occurred while the requested residual
+was still below `±0.05`; the effect is not merely residual-limit saturation.
+This establishes a structurally many-to-one training action channel, but does
+not prove task-failure causation or select a replacement parameterization.
+Evidence is in
+`runs/taco_pour_ctrlrange_training_distribution_v1/ctrlrange_distribution_audit.json`
+and `docs/taco_pour_training_ctrlrange_distribution_v1.md`.
 
 Training coverage in the historical 8-epoch run remains unknown because that
 run did not save visited states, and a fresh non-deterministic GPU rerun cannot

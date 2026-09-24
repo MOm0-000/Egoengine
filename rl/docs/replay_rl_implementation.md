@@ -253,6 +253,16 @@ after ctrlrange” does not mean realized joint motion; contact, servos,
 constraints, and dynamics still follow. The same v3 semantics are used by PPO
 training visitation. Historical v2 `applied_residual` fields remain immutable
 and mean the requested pre-`ctrlrange` residual.
+
+For the training-time ctrlrange measurement, the same runner has an explicit
+`--diagnostic-no-commit-contract` mode. It always evaluates Replay, trains the
+single predeclared PPO run, evaluates the resulting policy for a descriptive
+CPU trace, restores the incoming boundary, and returns without writing either
+`optimized_trajectory.npz` or a committed boundary. The frozen diagnostic used
+four worlds, eight epochs and reset endpoints `[20,20,20,46]`; it cannot be
+mistaken for a successful scheduler chunk even if its CPU trace happens to pass
+40/40.
+
 A full-horizon result is accepted only after the saved action sequence is
 replayed from the accepted reset; a chunk-wise success flag alone is no longer
 sufficient. Current results and repeatability limitations are in
