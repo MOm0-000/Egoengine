@@ -278,14 +278,35 @@ approximation under a different, post-hoc contact definition. The local finite-
 difference route is therefore stopped rather than repeatedly redefining the
 filter. Evidence is in `runs/endpoint45_49_contact_mode_response_v1/summary.json`.
 
+The action-log contract has since been upgraded to
+`taco_ppo_training_visitation_v3`. Its raw files record three full 36-D arrays:
+the requested control-target residual, the residual remaining after the
+compiled model's enabled actuator `ctrlrange`, and the signed part lost to that
+range. The after-range quantity is still only a control target; it is not the
+motion physically realized by the robot. New CPU validation traces and
+`optimized_trajectory.npz` use the same names. Historical v2 evidence remains
+immutable; its `applied_residual` name means the requested pre-`ctrlrange`
+quantity.
+
+The v3 logger passed the same paired CPU transparency check: initial and final
+actor, critic, optimizers, complete physics state, RNN state, and all recorded
+RNG states stayed bitwise identical with logging off versus on. Applied to the
+frozen 3+1 CPU trace, it reproduced 0 wrist translation losses, 0 wrist
+rotation losses, 62 truncated finger requests, 57 fully blocked requests, and
+28 affected steps out of 33. See
+`runs/taco_pour_training_trace_transparency_v3/report.json` and
+`docs/taco_pour_residual_logging_v3.md`. No new scale or training run was
+selected by this audit.
+
 Training coverage in the historical 8-epoch run remains unknown because that
 run did not save visited states, and a fresh non-deterministic GPU rerun cannot
 reconstruct them. The formal PPO fallback now records each epoch's visited
 reference endpoints, tool position/rotation/ellipse errors, right-wrist sampled
 action distributions, coarse endpoint contacts, and termination endpoints. The
 three action layers are the pre-clamp stochastic sample, the same sample after
-the official `[-1,1]` clamp, and the residual actually applied after local
-scale/safety clipping. The first layer includes exploration noise and is not the
+the official `[-1,1]` clamp, and the requested control-target residual after
+local scale/safety clipping but before actuator `ctrlrange`. The first layer
+includes exploration noise and is not the
 actor mean `mu`; neither `mu` nor policy variance is recorded in this schema.
 Raw samples are retained alongside summaries and artifact hashes.
 

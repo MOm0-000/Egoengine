@@ -20,6 +20,7 @@ sys.path[:0] = [str(ROOT / "src"), str(ROOT / "scripts")]
 
 from audit_taco_pour_action_attribution import actuator_groups, sha256
 from video_to_spider.rl.replay_rl import _snapshot_value_equal
+from video_to_spider.rl.residual_semantics import residual_from_trace_step
 
 
 BOUNDARY = ROOT / (
@@ -361,7 +362,7 @@ def probe_source(env, state: dict, rows: dict[int, dict], source: int) -> dict:
     )
     if not repeatable:
         raise ValueError(f"baseline three-step response is not repeatable at source {source}")
-    stored_applied = np.asarray(rows[source]["applied_residual"], np.float64)
+    stored_applied = residual_from_trace_step(rows[source])
     observed_applied = np.asarray(baseline["applied_residuals"][0], np.float64)
     if not np.allclose(stored_applied, observed_applied, rtol=0.0, atol=2e-7):
         raise ValueError(f"baseline applied action differs at source {source}")

@@ -18,10 +18,20 @@ def _trace(path: Path) -> PpoTrainingTrace:
     return PpoTrainingTrace(
         path,
         actuator_names=tuple(f"actuator_{index}" for index in range(36)),
+        actuator_units=tuple(
+            "m" if index in (0, 1, 2, 18, 19, 20) else "rad"
+            for index in range(36)
+        ),
         object_roles=("tool", "target"),
         hand_roles=("right", "left"),
         residual_scale=0.05,
         residual_clip=0.05,
+        ctrlrange_contract={
+            "control_clamping_enabled": True,
+            "model_disableflags": 0,
+            "ctrllimited": [True] * 36,
+            "ctrlrange": [[-1.0, 1.0]] * 36,
+        },
     )
 
 
@@ -46,13 +56,19 @@ def test_training_trace_is_lossless_and_flushes_only_at_epoch_boundaries(tmp_pat
     prelimit = np.zeros((2, 36), np.float32)
     prelimit[:, :6] = [[1.2, 0.5, 0, 0, 0, 0], [-1.4, -0.5, 0, 0, 0, 0]]
     bounded = np.clip(prelimit, -1.0, 1.0)
-    applied = np.clip(0.05 * bounded, -0.05, 0.05)
+    requested = np.clip(0.05 * bounded, -0.05, 0.05).astype(np.float64)
+    requested[:, 8] = -0.03
+    effective = requested.copy()
+    effective[:, 8] = 0.0
+    lost = requested - effective
     trace.record(
         source_endpoint=np.array([20, 20]),
         outcome_endpoint=np.array([21, 21]),
         sampled_action_preclamp=prelimit,
         sampled_action_clamped=bounded,
-        applied_residual=applied,
+        requested_residual=requested,
+        effective_residual_after_ctrlrange=effective,
+        residual_lost_to_ctrlrange=lost,
         info=_info(),
     )
     assert list(output.iterdir()) == []
@@ -67,7 +83,9 @@ def test_training_trace_is_lossless_and_flushes_only_at_epoch_boundaries(tmp_pat
         outcome_endpoint=np.array([22, 22]),
         sampled_action_preclamp=np.zeros((2, 36), np.float32),
         sampled_action_clamped=np.zeros((2, 36), np.float32),
-        applied_residual=np.zeros((2, 36), np.float32),
+        requested_residual=np.zeros((2, 36), np.float64),
+        effective_residual_after_ctrlrange=np.zeros((2, 36), np.float64),
+        residual_lost_to_ctrlrange=np.zeros((2, 36), np.float64),
         info=_info(),
     )
     report = trace.finalize(completed=True)
@@ -78,7 +96,8 @@ def test_training_trace_is_lossless_and_flushes_only_at_epoch_boundaries(tmp_pat
     assert manifest["schema"] == report["schema"] == SCHEMA
     assert manifest["status"] == "complete"
     assert manifest["incomplete_step_discarded"] is False
-    assert manifest["action_contract"]["right_wrist_coordinate_units"] == [
+    assert manifest["action_contract"]["dimensions"] == 36
+    assert manifest["action_contract"]["coordinate_units"][:6] == [
         "m", "m", "m", "rad", "rad", "rad"
     ]
     assert [row["sample_count"] for row in manifest["epochs"]] == [2, 2]
@@ -93,6 +112,21 @@ def test_training_trace_is_lossless_and_flushes_only_at_epoch_boundaries(tmp_pat
         "sampled_preclamp_fraction_abs_gt_1"
     ] == pytest.approx(2 / 6)
     np.testing.assert_array_equal(raw["right_wrist_sampled_action_preclamp"], prelimit[:, :6])
+    for name in (
+        "requested_residual",
+        "effective_residual_after_ctrlrange",
+        "residual_lost_to_ctrlrange",
+    ):
+        assert raw[name].shape == (2, 36)
+    assert "right_wrist_applied_residual" not in raw.files
+    np.testing.assert_array_equal(
+        raw["requested_residual"],
+        raw["effective_residual_after_ctrlrange"]
+        + raw["residual_lost_to_ctrlrange"],
+    )
+    assert summary["residual_groups"]["right_fingers"][
+        "range_truncated_component_count"
+    ] == 2
     for artifact in manifest["epochs"]:
         for key in ("visits", "summary"):
             path = Path(artifact[key]["path"])
@@ -106,7 +140,10 @@ def test_training_trace_fails_closed_on_bad_shape_and_duplicate_finalize(tmp_pat
             source_endpoint=np.array([0]), outcome_endpoint=np.array([1]),
             sampled_action_preclamp=np.zeros((1, 36)),
             sampled_action_clamped=np.zeros((1, 36)),
-            applied_residual=np.zeros((1, 36)), info=_info(),
+            requested_residual=np.zeros((1, 36)),
+            effective_residual_after_ctrlrange=np.zeros((1, 36)),
+            residual_lost_to_ctrlrange=np.zeros((1, 36)),
+            info=_info(),
         )
     trace.begin_epoch(1, 0)
     bad = _info()
@@ -116,7 +153,10 @@ def test_training_trace_fails_closed_on_bad_shape_and_duplicate_finalize(tmp_pat
             source_endpoint=np.array([0, 0]), outcome_endpoint=np.array([1, 1]),
             sampled_action_preclamp=np.zeros((2, 36)),
             sampled_action_clamped=np.zeros((2, 36)),
-            applied_residual=np.zeros((2, 36)), info=bad,
+            requested_residual=np.zeros((2, 36)),
+            effective_residual_after_ctrlrange=np.zeros((2, 36)),
+            residual_lost_to_ctrlrange=np.zeros((2, 36)),
+            info=bad,
         )
 
 

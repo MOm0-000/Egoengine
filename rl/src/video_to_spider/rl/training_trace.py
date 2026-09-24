@@ -11,7 +11,7 @@ from typing import Any
 import numpy as np
 
 
-SCHEMA = "taco_ppo_training_visitation_v2"
+SCHEMA = "taco_ppo_training_visitation_v3"
 _FINGERS = ("thumb", "index", "middle", "ring", "pinky")
 
 
@@ -51,22 +51,29 @@ class PpoTrainingTrace:
         output_dir: str | Path,
         *,
         actuator_names: tuple[str, ...],
+        actuator_units: tuple[str, ...],
         object_roles: tuple[str, ...],
         hand_roles: tuple[str, ...],
         residual_scale: float,
         residual_clip: float,
+        ctrlrange_contract: dict[str, Any],
     ) -> None:
         self.output_dir = Path(output_dir)
         if self.output_dir.exists():
             raise FileExistsError(self.output_dir)
         self.output_dir.mkdir(parents=True)
-        if len(actuator_names) < 6:
-            raise ValueError("training trace requires six right-wrist actuators")
+        expected = 18 * len(hand_roles)
+        if len(actuator_names) != expected or len(actuator_units) != expected:
+            raise ValueError("training trace requires all 18 action coordinates per hand")
+        if any(unit not in {"m", "rad"} for unit in actuator_units):
+            raise ValueError("actuator units must be metres or radians")
         self.actuator_names = actuator_names
+        self.actuator_units = actuator_units
         self.object_roles = object_roles
         self.hand_roles = hand_roles
         self.residual_scale = float(residual_scale)
         self.residual_clip = float(residual_clip)
+        self.ctrlrange_contract = ctrlrange_contract
         self._active: dict[str, Any] | None = None
         self._epochs: list[dict[str, Any]] = []
         self._finalized = False
@@ -85,7 +92,9 @@ class PpoTrainingTrace:
             "tool_objective_score": [],
             "right_wrist_sampled_action_preclamp": [],
             "right_wrist_sampled_action_clamped": [],
-            "right_wrist_applied_residual": [],
+            "requested_residual": [],
+            "effective_residual_after_ctrlrange": [],
+            "residual_lost_to_ctrlrange": [],
             "contact_flags": [],
             "tracking_terminated": [],
             "time_out": [],
@@ -98,7 +107,9 @@ class PpoTrainingTrace:
         outcome_endpoint: np.ndarray,
         sampled_action_preclamp: np.ndarray,
         sampled_action_clamped: np.ndarray,
-        applied_residual: np.ndarray,
+        requested_residual: np.ndarray,
+        effective_residual_after_ctrlrange: np.ndarray,
+        residual_lost_to_ctrlrange: np.ndarray,
         info: dict[str, Any],
     ) -> None:
         if self._active is None:
@@ -115,7 +126,13 @@ class PpoTrainingTrace:
             "right_wrist_sampled_action_clamped": np.asarray(
                 sampled_action_clamped, np.float32
             )[:, :6],
-            "right_wrist_applied_residual": np.asarray(applied_residual, np.float32)[:, :6],
+            "requested_residual": np.asarray(requested_residual, np.float64),
+            "effective_residual_after_ctrlrange": np.asarray(
+                effective_residual_after_ctrlrange, np.float64
+            ),
+            "residual_lost_to_ctrlrange": np.asarray(
+                residual_lost_to_ctrlrange, np.float64
+            ),
             "contact_flags": np.asarray(info["contact_flags"], bool),
             "tracking_terminated": np.asarray(info["terminated"], bool),
             "time_out": np.asarray(info["time_outs"], bool),
@@ -125,6 +142,22 @@ class PpoTrainingTrace:
             raise ValueError("training-trace fields have inconsistent world counts")
         if arrays["right_wrist_sampled_action_preclamp"].shape != (batch, 6):
             raise ValueError("right-wrist sampled action must have six coordinates")
+        action_shape = (batch, len(self.actuator_names))
+        for name in (
+            "requested_residual",
+            "effective_residual_after_ctrlrange",
+            "residual_lost_to_ctrlrange",
+        ):
+            if arrays[name].shape != action_shape:
+                raise ValueError(f"{name} must have shape {action_shape}")
+        if not np.allclose(
+            arrays["requested_residual"],
+            arrays["effective_residual_after_ctrlrange"]
+            + arrays["residual_lost_to_ctrlrange"],
+            rtol=0.0,
+            atol=np.finfo(np.float64).eps,
+        ):
+            raise ValueError("requested residual does not equal effective plus lost")
         if arrays["contact_flags"].ndim != 4:
             raise ValueError("contact flags must be world x hand x object x finger")
         expected_contacts = (batch, len(self.hand_roles), len(self.object_roles), len(_FINGERS))
@@ -166,10 +199,12 @@ class PpoTrainingTrace:
         patterns = Counter(self._contact_pattern(flags) for flags in data["contact_flags"])
         sampled_preclamp = data["right_wrist_sampled_action_preclamp"]
         sampled_clamped = data["right_wrist_sampled_action_clamped"]
-        applied = data["right_wrist_applied_residual"]
+        requested = data["requested_residual"]
+        effective = data["effective_residual_after_ctrlrange"]
+        lost = data["residual_lost_to_ctrlrange"]
         translation_names = tuple(self.actuator_names[:3])
         rotation_names = tuple(self.actuator_names[3:6])
-        return {
+        result = {
             "sample_count": int(len(endpoints)),
             "source_endpoint_visit_counts": {
                 str(key): value for key, value in sorted(Counter(map(int, data["source_endpoint"])).items())
@@ -182,41 +217,49 @@ class PpoTrainingTrace:
             "tool_rotation_error_rad": _distribution(data["tool_rotation_error_rad"]),
             "tool_objective_score": _distribution(data["tool_objective_score"]),
             "right_wrist_translation": {
-                "unit": {"policy": "unitless", "applied_residual": "m"},
+                "unit": {"policy": "unitless", "control_target_residual": "m"},
                 "sampled_action_preclamp": _component_distributions(
                     sampled_preclamp[:, :3], translation_names
                 ),
                 "sampled_action_clamped": _component_distributions(
                     sampled_clamped[:, :3], translation_names
                 ),
-                "applied_residual": _component_distributions(applied[:, :3], translation_names),
+                "requested_residual": _component_distributions(requested[:, :3], translation_names),
+                "effective_residual_after_ctrlrange": _component_distributions(
+                    effective[:, :3], translation_names
+                ),
+                "residual_lost_to_ctrlrange": _component_distributions(lost[:, :3], translation_names),
                 "sampled_preclamp_fraction_abs_gt_1": float(
                     (np.abs(sampled_preclamp[:, :3]) > 1.0).mean()
                 ),
                 "sampled_clamped_fraction_at_limit": float(
                     np.isclose(np.abs(sampled_clamped[:, :3]), 1.0).mean()
                 ),
-                "applied_fraction_at_clip": float(
-                    np.isclose(np.abs(applied[:, :3]), self.residual_clip, atol=1e-7).mean()
+                "requested_fraction_at_clip": float(
+                    np.isclose(np.abs(requested[:, :3]), self.residual_clip, atol=1e-7).mean()
                 ),
             },
             "right_wrist_rotation": {
-                "unit": {"policy": "unitless", "applied_residual": "rad"},
+                "unit": {"policy": "unitless", "control_target_residual": "rad"},
                 "sampled_action_preclamp": _component_distributions(
                     sampled_preclamp[:, 3:6], rotation_names
                 ),
                 "sampled_action_clamped": _component_distributions(
                     sampled_clamped[:, 3:6], rotation_names
                 ),
-                "applied_residual": _component_distributions(applied[:, 3:6], rotation_names),
+                "requested_residual": _component_distributions(requested[:, 3:6], rotation_names),
+                "effective_residual_after_ctrlrange": _component_distributions(
+                    effective[:, 3:6], rotation_names
+                ),
+                "residual_lost_to_ctrlrange": _component_distributions(lost[:, 3:6], rotation_names),
                 "sampled_preclamp_fraction_abs_gt_1": float(
                     (np.abs(sampled_preclamp[:, 3:6]) > 1.0).mean()
                 ),
                 "sampled_clamped_fraction_at_limit": float(
                     np.isclose(np.abs(sampled_clamped[:, 3:6]), 1.0).mean()
                 ),
-                "applied_fraction_at_clip": float(
-                    np.isclose(np.abs(applied[:, 3:6]), self.residual_clip, atol=1e-7).mean()
+                "requested_fraction_at_clip": float(
+                    np.isclose(np.abs(requested[:, 3:6]), self.residual_clip, atol=1e-7).mean()
                 ),
             },
             "coarse_contact_pattern_counts": dict(sorted(patterns.items())),
@@ -231,6 +274,46 @@ class PpoTrainingTrace:
                 ).items())
             },
         }
+        groups = {}
+        for hand_index, hand_role in enumerate(self.hand_roles):
+            offset = 18 * hand_index
+            for label, start, stop in (
+                ("wrist_translation", 0, 3),
+                ("wrist_rotation", 3, 6),
+                ("fingers", 6, 18),
+            ):
+                indices = np.arange(offset + start, offset + stop)
+                names = tuple(self.actuator_names[index] for index in indices)
+                group_lost = lost[:, indices]
+                group_requested = requested[:, indices]
+                group_effective = effective[:, indices]
+                groups[f"{hand_role}_{label}"] = {
+                    "indices": indices.tolist(),
+                    "unit": self.actuator_units[int(indices[0])],
+                    "actuator_names": list(names),
+                    "requested_residual": _component_distributions(group_requested, names),
+                    "effective_residual_after_ctrlrange": _component_distributions(
+                        group_effective, names
+                    ),
+                    "residual_lost_to_ctrlrange": _component_distributions(group_lost, names),
+                    "requested_fraction_at_clip": float(
+                        np.isclose(
+                            np.abs(group_requested), self.residual_clip, atol=1e-7
+                        ).mean()
+                    ),
+                    "range_truncated_component_count": int(
+                        (np.abs(group_lost) > 1e-7).sum()
+                    ),
+                    "range_truncated_component_fraction": float(
+                        (np.abs(group_lost) > 1e-7).mean()
+                    ),
+                    "fully_blocked_requested_component_count": int((
+                        (np.abs(group_requested) > 1e-7)
+                        & (np.abs(group_effective) <= 1e-7)
+                    ).sum()),
+                }
+        result["residual_groups"] = groups
+        return result
 
     def _flush_epoch(self, *, allow_empty: bool = False) -> None:
         if self._active is None:
@@ -290,7 +373,21 @@ class PpoTrainingTrace:
                 "sampled_action_clamped": (
                     "the same sampled action after the official [-1,1] clamp"
                 ),
-                "applied_residual": "bounded residual after local scale and formal safety clip",
+                "requested_residual": (
+                    "full action-space signed control-target offset after local scale and "
+                    "formal safety clip, before actuator ctrlrange"
+                ),
+                "effective_residual_after_ctrlrange": (
+                    "full action-space signed control-target offset remaining after the "
+                    "model's enabled actuator ctrlrange clamp; not realized qpos motion"
+                ),
+                "residual_lost_to_ctrlrange": (
+                    "signed requested minus effective control-target residual"
+                ),
+                "legacy_v2_applied_residual": (
+                    "historical v2 right_wrist_applied_residual equals requested_residual "
+                    "for its recorded six dimensions; v2 artifacts remain immutable"
+                ),
                 "actor_distribution_parameters": (
                     "actor mean mu and policy standard deviation are not recorded by this schema"
                 ),
@@ -302,10 +399,12 @@ class PpoTrainingTrace:
             },
             "incomplete_step_discarded": bool(incomplete_step_discarded),
             "action_contract": {
-                "right_wrist_actuator_names": list(self.actuator_names[:6]),
-                "right_wrist_coordinate_units": ["m", "m", "m", "rad", "rad", "rad"],
+                "dimensions": len(self.actuator_names),
+                "actuator_names": list(self.actuator_names),
+                "coordinate_units": list(self.actuator_units),
                 "residual_scale": self.residual_scale,
                 "residual_clip": self.residual_clip,
+                "ctrlrange": self.ctrlrange_contract,
             },
             "object_roles": list(self.object_roles),
             "hand_roles": list(self.hand_roles),

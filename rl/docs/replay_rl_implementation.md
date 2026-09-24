@@ -246,6 +246,13 @@ no new scale and ran no training or physics.
 
 The actual Pour scheduler has now selected PPO on failed Replay windows. Every
 committed endpoint and residual action is exported to `optimized_trajectory.npz`.
+New validation traces and trajectory exports distinguish the requested
+control-target residual, the residual remaining after actuator `ctrlrange`,
+and the signed amount lost to `ctrlrange`, for all 36 actuators. “Effective
+after ctrlrange” does not mean realized joint motion; contact, servos,
+constraints, and dynamics still follow. The same v3 semantics are used by PPO
+training visitation. Historical v2 `applied_residual` fields remain immutable
+and mean the requested pre-`ctrlrange` residual.
 A full-horizon result is accepted only after the saved action sequence is
 replayed from the accepted reset; a chunk-wise success flag alone is no longer
 sufficient. Current results and repeatability limitations are in

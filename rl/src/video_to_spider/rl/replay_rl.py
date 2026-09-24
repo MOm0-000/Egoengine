@@ -6,6 +6,8 @@ import tempfile
 
 import numpy as np
 
+from video_to_spider.rl.residual_semantics import control_target_residuals
+
 
 def _snapshot_value_equal(left, right):
     if hasattr(left, "detach") and hasattr(right, "detach"):
@@ -51,9 +53,22 @@ class MJWPChunkBackend:
         if self._active_trace is not None:
             raise RuntimeError("a validation trace is already active")
         self._active_trace = {
+            "schema": "taco_replay_rl_validation_trace_v3",
             "mode": mode,
             "start": int(start),
             "lookahead_end": int(end),
+            "residual_semantics": {
+                "requested_residual": (
+                    "requested control target minus reference control target"
+                ),
+                "effective_residual_after_ctrlrange": (
+                    "control-target offset remaining after enabled actuator ctrlrange; "
+                    "not realized qpos motion"
+                ),
+                "residual_lost_to_ctrlrange": (
+                    "signed requested residual minus effective residual"
+                ),
+            },
             "steps": [],
         }
 
@@ -134,6 +149,11 @@ class MJWPChunkBackend:
             reference_ctrl = self.env._reference_ctrls(
                 self.env.time_indices, offset=0
             )[0].detach().cpu().numpy()
+            residuals = control_target_residuals(
+                self.env.env.model_cpu,
+                reference_ctrl[None],
+                commanded_ctrl[None],
+            )
             position_error = np.asarray(self.last_info["object_position_error"][0])
             rotation_error = np.asarray(self.last_info["object_rotation_error"][0])
             position_threshold = self.env.objective.independent_position_threshold_m
@@ -179,7 +199,13 @@ class MJWPChunkBackend:
                 "endpoint_qvel": endpoint_qvel.tolist(),
                 "commanded_ctrl": commanded_ctrl.tolist(),
                 "raw_residual_action": raw_residual.tolist(),
-                "applied_residual": (commanded_ctrl - reference_ctrl).tolist(),
+                "requested_residual": residuals["requested_residual"][0].tolist(),
+                "effective_residual_after_ctrlrange": (
+                    residuals["effective_residual_after_ctrlrange"][0].tolist()
+                ),
+                "residual_lost_to_ctrlrange": (
+                    residuals["residual_lost_to_ctrlrange"][0].tolist()
+                ),
             })
         # A window timeout is not object-tracking failure. No autoreset may hide
         # the physical state at either the commit point or a failed endpoint.

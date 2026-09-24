@@ -12,14 +12,15 @@ does not claim an exact reproduction of the paper's three-mode cost comparison.
 
 - The two-hand/two-passive-object model, MINK reference path, paper reward equations,
   20-step chunks, 40-step lookahead and 20-step commit contract are implemented.
-- The real MJWP/Human2Sim2Robot PPO adapter has passed GPU interface, rollback and
-  chunk-boundary tests. These tests are not a successful Pour rollout.
-- The current Pour first frame is not a legal physical reset. Native right/left hand
-  meshes enter the present simulated table by about 20.79/9.65 mm. A legal reset has
-  not been selected, so formal Pour Replay -> RL has not been run.
-- Palm/index shell overlap at the audited initial pose is classified as a collision-
-  shape false positive, not native CAD penetration. The same body pair has confirmed
-  native interference at other joint angles and cannot be globally exempted.
+- The real MJWP/Human2Sim2Robot PPO adapter, complete-state rollback, independent
+  four-world training, and GPU-training/CPU-acceptance contracts are implemented.
+- A collision-checked initialization is accepted for the current local physics
+  contract. This does not make the MINK motion prior itself physically executable.
+- The current local normalized-ellipse experiment still fails the strict first-window
+  `40/40` CPU gate. The latest controlled 3+1 curriculum run reached `32/40`; no
+  full-horizon normalized-ellipse success is claimed.
+- The paper does not publish the exact objective coefficients or actor observation
+  encoding. Local choices remain explicitly separated from paper-recovered facts.
 
 Start with [`docs/pour_discussion_handoff.md`](docs/pour_discussion_handoff.md) for
 the concise technical handoff, then see [`docs/replay_rl_implementation.md`](docs/replay_rl_implementation.md)
@@ -32,14 +33,17 @@ implementation contract.
 - `models/`: the local XHand/MuJoCo model snapshot used by the audits.
 - `runs/`: compact references, geometry candidates and audit reports. PPO checkpoints
   and smoke-training weights are excluded.
-- `external/mink/`: MINK source based on commit
+- `external/mink/`: the MINK runtime and unit-test subset based on commit
   `ab45779fea46933832dee1c240f94103633347a1`, including the three local compatibility
-  and explicit-pair changes used by this project.
+  and explicit-pair changes used by this project. Upstream documentation examples
+  and their collection-only test are omitted.
 - `external/human2sim2robot/`: the PPO source subset used here, copied from commit
   `c468b751041c721ff48146b54a891b1ec99c2e2b`. Unused deployment, data-processing
   and original simulator task code is intentionally not duplicated.
-- `external/spider_overlay/`: the local SPIDER files used by this work, based on
-  `facebookresearch/spider` commit `4bd2756720ea95b9da126d98da3bf414fe964849`.
+- `external/spider_compat/`: the minimal importable SPIDER subset used by the formal
+  runner, based on `facebookresearch/spider` commit
+  `4bd2756720ea95b9da126d98da3bf414fe964849` and adapted for the pinned MuJoCo-Warp
+  3.13 state layout. Unused preprocessing, deployment and simulator code is omitted.
 
 The third-party directories retain their upstream licenses. Local changes are
 engineering adaptations and are not presented as published EgoEngine settings.
@@ -59,16 +63,9 @@ the obsolete resized depth as metric input.
 
 ## External setup
 
-MINK and the required Human2Sim2Robot PPO source are included for an exact code snapshot. SPIDER must
-be cloned separately, checked out at the commit above, and overlaid with the saved
-files:
-
-```bash
-git clone https://github.com/facebookresearch/spider.git external/spider
-git -C external/spider checkout 4bd2756720ea95b9da126d98da3bf414fe964849
-rsync -a external/spider_overlay/ external/spider/
-export SPIDER_ROOT="$PWD/external/spider"
-```
+The required MINK runtime, Human2Sim2Robot PPO source, and minimal importable SPIDER
+compatibility subset are included as pinned code snapshots. The formal entry point
+defaults to `external/spider_compat`; `SPIDER_ROOT` may still override it explicitly.
 
 CPU audit invocation used in the source workspace:
 
@@ -77,7 +74,7 @@ PYTHONPATH="$PWD/src:$PWD/external/mink/src" OMP_NUM_THREADS=4 \
   python -m pytest -q
 ```
 
-The last complete local-data run passed **522 tests, 1 skipped, and 57 subtests**.
+The last complete local-data run passed **637 tests and 57 subtests**.
 The separately executed GPU adapter suite had 9 passing tests. A clone without the
 omitted TACO inputs cannot run the data-dependent tests until those inputs are restored.
 

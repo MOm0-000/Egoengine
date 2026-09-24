@@ -1,5 +1,24 @@
 # Test Environment
 
+## Residual logging v3 checkpoint
+
+On 2026-09-24, the formal training, CPU validation, and optimized-trajectory
+paths adopted the same full 36-D residual vocabulary: requested target offset,
+target offset remaining after actuator `ctrlrange`, and signed offset lost to
+that range. “Effective after ctrlrange” is explicitly not realized `qpos`
+motion. Historical v2 artifacts were left unchanged and are labeled as legacy
+requested-residual evidence.
+
+The paired one-epoch/four-step CPU transparency audit found the initial and
+final actor, critic, optimizers, complete simulator state, RNN state, and
+Python/NumPy/Torch RNG states bitwise identical with logging off versus on. An
+offline regression on the frozen 3+1 CPU trace reproduced 0 wrist losses, 62
+truncated finger requests, 57 fully blocked finger requests, and 28 affected
+steps out of 33. No new scale or task-level training run was selected. After
+adding the shared semantics, evidence, and regression checks, the complete
+suite passed **637 tests and 57 subtests** in 106.62 s with the same 17 known
+warnings.
+
 ## Frozen CPU residual-authority audit
 
 On 2026-09-24, a read-only audit reconstructed all 33 source states in the

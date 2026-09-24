@@ -368,7 +368,11 @@ def test_real_two_chunk_rollout_commits_only_first_chunk():
     assert env.simulation_physics_steps == 400
     assert len(backend.validation_traces) == 1
     trace = backend.validation_traces[0]
+    assert trace["schema"] == "taco_replay_rl_validation_trace_v3"
     assert trace["mode"] == "replay" and trace["feasible"]
+    assert "not realized qpos motion" in trace["residual_semantics"][
+        "effective_residual_after_ctrlrange"
+    ]
     assert len(trace["steps"]) == 40 and trace["first_failure"] is None
     assert trace["steps"][0]["tracked_object_roles"] == ["tool", "target"]
     assert len(trace["steps"][0]["position_error_m"]) == 2
@@ -376,7 +380,20 @@ def test_real_two_chunk_rollout_commits_only_first_chunk():
     assert len(trace["steps"][0]["endpoint_qvel"]) == 48
     assert len(trace["steps"][0]["commanded_ctrl"]) == 36
     assert len(trace["steps"][0]["raw_residual_action"]) == 36
-    assert len(trace["steps"][0]["applied_residual"]) == 36
+    for name in (
+        "requested_residual",
+        "effective_residual_after_ctrlrange",
+        "residual_lost_to_ctrlrange",
+    ):
+        assert len(trace["steps"][0][name]) == 36
+    assert "applied_residual" not in trace["steps"][0]
+    np.testing.assert_allclose(
+        trace["steps"][0]["requested_residual"],
+        np.asarray(trace["steps"][0]["effective_residual_after_ctrlrange"])
+        + np.asarray(trace["steps"][0]["residual_lost_to_ctrlrange"]),
+        rtol=0,
+        atol=np.finfo(np.float64).eps,
+    )
     assert trace["steps"][0]["objective_metric_name"] == "weighted_tracking_error"
     assert trace["steps"][0]["objective_score"] == trace["steps"][0]["tracking_error"]
     assert trace["steps"][0]["independent_threshold_pass"] is None

@@ -18,6 +18,8 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / "src"), str(ROOT / "scripts")]
 
+from video_to_spider.rl.residual_semantics import residual_from_trace_step
+
 BOUNDARY = ROOT / (
     "runs/taco_pour_normalized_ellipse_repeatability_cpu_v1/"
     "endpoint20_complete_boundary.pt.gz"
@@ -107,10 +109,12 @@ def exact_trace_equal(actual: list[dict], frozen: list[dict]) -> bool:
     keys = (
         "endpoint_qpos", "endpoint_qvel", "commanded_ctrl", "objective_score",
         "position_error_m", "rotation_error_rad", "raw_residual_action",
-        "applied_residual",
     )
     return all(
         left["endpoint"] == right["endpoint"]
+        and np.array_equal(
+            residual_from_trace_step(left), residual_from_trace_step(right)
+        )
         and all(
             np.array_equal(np.asarray(left[key]), np.asarray(right[key]))
             for key in keys
@@ -247,7 +251,7 @@ def summarize_policy(
     selected = [row for row in rows if start <= int(row["endpoint"]) <= end]
     mu = np.asarray([row["network_mu_before_action_limit"] for row in selected])
     bounded = np.asarray([row["raw_residual_action"] for row in selected])
-    applied = np.asarray([row["applied_residual"] for row in selected])
+    applied = np.asarray([residual_from_trace_step(row) for row in selected])
     summary = {
         "endpoint_range": [int(selected[0]["endpoint"]), int(selected[-1]["endpoint"])],
         "steps": len(selected),
@@ -311,10 +315,10 @@ def compare_policies(
     }
     for name, indices in groups.items():
         old_action = np.asarray([
-            np.asarray(old[endpoint]["applied_residual"])[indices] for endpoint in endpoints
+            residual_from_trace_step(old[endpoint])[indices] for endpoint in endpoints
         ])
         new_action = np.asarray([
-            np.asarray(new[endpoint]["applied_residual"])[indices] for endpoint in endpoints
+            residual_from_trace_step(new[endpoint])[indices] for endpoint in endpoints
         ])
         old_sum = old_action.sum(axis=0)
         new_sum = new_action.sum(axis=0)

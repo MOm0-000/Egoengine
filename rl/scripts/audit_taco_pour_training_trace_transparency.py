@@ -24,6 +24,10 @@ from video_to_spider.rl.action_contract import load_residual_action_profile
 from video_to_spider.rl.objective_contract import load_runtime_objective
 from video_to_spider.rl.observation_contract import load_runtime_observation
 from video_to_spider.rl.replay_rl import _snapshot_value_equal
+from video_to_spider.rl.residual_semantics import (
+    control_target_residuals,
+    residual_from_trace_step,
+)
 
 
 def _sha256(path: Path) -> str:
@@ -74,7 +78,11 @@ def main() -> None:
     )
     parser.add_argument(
         "--output-dir", type=Path,
-        default=ROOT / "runs/taco_pour_training_trace_transparency_v2",
+        default=ROOT / "runs/taco_pour_training_trace_transparency_v3",
+    )
+    parser.add_argument(
+        "--frozen-3plus1-report", type=Path,
+        default=ROOT / "runs/taco_pour_tail_curriculum_3plus1_v1/report.json",
     )
     args = parser.parse_args()
     if args.output_dir.exists():
@@ -181,25 +189,120 @@ def main() -> None:
     }
     trace = with_logging["trace"]
     summary = json.loads(Path(trace["epochs"][0]["summary"]["path"]).read_text())
+    with np.load(trace["epochs"][0]["visits"]["path"], allow_pickle=False) as raw:
+        required_residual_fields = (
+            "requested_residual",
+            "effective_residual_after_ctrlrange",
+            "residual_lost_to_ctrlrange",
+        )
+        residual_shapes = {
+            name: list(raw[name].shape) for name in required_residual_fields
+        }
+        decomposition_error = float(np.max(np.abs(
+            raw["requested_residual"]
+            - raw["effective_residual_after_ctrlrange"]
+            - raw["residual_lost_to_ctrlrange"]
+        )))
+        decomposition_valid = bool(
+            decomposition_error <= np.finfo(np.float64).eps
+        )
+        legacy_field_absent = "right_wrist_applied_residual" not in raw.files
     trace_contract = {
+        "schema": trace["schema"],
         "epoch_count": len(trace["epochs"]),
         "sample_count": sum(row["sample_count"] for row in trace["epochs"]),
         "source_endpoint_visit_counts": summary["source_endpoint_visit_counts"],
         "outcome_endpoint_visit_counts": summary["outcome_endpoint_visit_counts"],
         "manifest_sha256_matches": _sha256(Path(trace["path"])) == trace["sha256"],
+        "full_residual_array_shapes": residual_shapes,
+        "requested_equals_effective_plus_lost": decomposition_valid,
+        "decomposition_max_abs_error": decomposition_error,
+        "legacy_ambiguous_field_absent": legacy_field_absent,
     }
     expected_trace = (
-        trace_contract["epoch_count"] == 1
+        trace_contract["schema"] == "taco_ppo_training_visitation_v3"
+        and trace_contract["epoch_count"] == 1
         and trace_contract["sample_count"] == 4
         and trace_contract["source_endpoint_visit_counts"]
         == {str(endpoint): 1 for endpoint in range(20, 24)}
         and trace_contract["outcome_endpoint_visit_counts"]
         == {str(endpoint): 1 for endpoint in range(21, 25)}
         and trace_contract["manifest_sha256_matches"]
+        and all(shape == [4, 36] for shape in residual_shapes.values())
+        and decomposition_valid
+        and legacy_field_absent
     )
-    passed = all(initial_equal.values()) and all(final_equal.values()) and expected_trace
+
+    frozen = json.loads(args.frozen_3plus1_report.read_text())
+    chunks = frozen.get("chunks", [])
+    if len(chunks) != 1:
+        raise ValueError("frozen 3+1 report must contain exactly one chunk")
+    rl_traces = [
+        row for row in chunks[0]["validation_traces"] if row.get("mode") == "rl"
+    ]
+    if len(rl_traces) != 1 or len(rl_traces[0]["steps"]) != 33:
+        raise ValueError("frozen 3+1 report must contain the 33-step CPU RL trace")
+    frozen_steps = rl_traces[0]["steps"]
+    reference_ctrl = np.asarray([
+        np.asarray(row["commanded_ctrl"], np.float64)
+        - residual_from_trace_step(row)
+        for row in frozen_steps
+    ])
+    requested_ctrl = np.asarray([
+        row["commanded_ctrl"] for row in frozen_steps
+    ], np.float64)
+    frozen_terms = control_target_residuals(
+        env.env.model_cpu, reference_ctrl, requested_ctrl
+    )
+    frozen_requested = frozen_terms["requested_residual"]
+    frozen_effective = frozen_terms["effective_residual_after_ctrlrange"]
+    frozen_lost = frozen_terms["residual_lost_to_ctrlrange"]
+    tolerance = 2e-7
+    wrist_translation = np.asarray([0, 1, 2, 18, 19, 20])
+    wrist_rotation = np.asarray([3, 4, 5, 21, 22, 23])
+    fingers = np.asarray([*range(6, 18), *range(24, 36)])
+    finger_truncated = np.abs(frozen_lost[:, fingers]) > tolerance
+    finger_blocked = (
+        (np.abs(frozen_requested[:, fingers]) > tolerance)
+        & (np.abs(frozen_effective[:, fingers]) <= tolerance)
+    )
+    frozen_regression = {
+        "source_report": {
+            "path": str(args.frozen_3plus1_report.resolve()),
+            "sha256": _sha256(args.frozen_3plus1_report),
+        },
+        "step_count": len(frozen_steps),
+        "tolerance": tolerance,
+        "wrist_translation_lost_component_count": int(
+            (np.abs(frozen_lost[:, wrist_translation]) > tolerance).sum()
+        ),
+        "wrist_rotation_lost_component_count": int(
+            (np.abs(frozen_lost[:, wrist_rotation]) > tolerance).sum()
+        ),
+        "finger_truncated_component_count": int(finger_truncated.sum()),
+        "finger_fully_blocked_component_count": int(finger_blocked.sum()),
+        "steps_with_any_finger_truncation": int(finger_truncated.any(axis=1).sum()),
+        "decomposition_max_abs_error": float(np.max(np.abs(
+            frozen_requested - frozen_effective - frozen_lost
+        ))),
+    }
+    frozen_regression_passed = bool(
+        frozen_regression["wrist_translation_lost_component_count"] == 0
+        and frozen_regression["wrist_rotation_lost_component_count"] == 0
+        and frozen_regression["finger_truncated_component_count"] == 62
+        and frozen_regression["finger_fully_blocked_component_count"] == 57
+        and frozen_regression["steps_with_any_finger_truncation"] == 28
+        and frozen_regression["decomposition_max_abs_error"]
+        <= np.finfo(np.float64).eps
+    )
+    passed = bool(
+        all(initial_equal.values())
+        and all(final_equal.values())
+        and expected_trace
+        and frozen_regression_passed
+    )
     report = {
-        "schema": "taco_pour_training_trace_transparency_v2",
+        "schema": "taco_pour_training_trace_transparency_v3",
         "status": "logging_transparency_gate_passed" if passed else "logging_changed_training_behavior",
         "scope": {
             "purpose": "implementation equivalence audit, not an algorithm experiment",
@@ -214,6 +317,10 @@ def main() -> None:
             "sampling_changed": False,
         },
         "inputs": {
+            "audit_script": {
+                "path": str(Path(__file__).resolve()),
+                "sha256": _sha256(Path(__file__).resolve()),
+            },
             "config": {"path": str(args.config.resolve()), "sha256": _sha256(args.config)},
             "initialization_report": {
                 "path": str(args.initialization_report.resolve()),
@@ -227,9 +334,14 @@ def main() -> None:
         "initial_state_bitwise_equal": initial_equal,
         "final_state_bitwise_equal": final_equal,
         "training_trace_contract": trace_contract,
+        "frozen_3plus1_numeric_regression": frozen_regression,
         "training_trace": trace,
         "decision": {
             "logging_may_be_enabled_for_next_training": passed,
+            "v3_logger_is_observational_only": passed,
+            "legacy_v2_artifacts_modified": False,
+            "new_action_scale_selected": False,
+            "algorithm_training_authorized_by_this_audit": False,
             "historical_8_epoch_training_coverage_remains_unknown": True,
         },
     }
@@ -240,6 +352,7 @@ def main() -> None:
         "initial_state_bitwise_equal": initial_equal,
         "final_state_bitwise_equal": final_equal,
         "training_trace_contract": trace_contract,
+        "frozen_3plus1_numeric_regression": frozen_regression,
     }, indent=2))
     if not passed:
         raise SystemExit(1)

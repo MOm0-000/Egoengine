@@ -35,6 +35,10 @@ from video_to_spider.rl.h2s2r import (
 from video_to_spider.rl.reset_sampler import PreGraspResetSampler, PreGraspSamplerConfig
 from video_to_spider.rl.objective_contract import RuntimeObjective
 from video_to_spider.rl.observation_contract import RuntimeObservationContract
+from video_to_spider.rl.residual_semantics import (
+    control_target_residuals,
+    ctrlrange_contract,
+)
 from video_to_spider.rl.training_trace import PpoTrainingTrace
 from egoengine_repro.action.paper_rewards import (
     lifting,
@@ -89,6 +93,27 @@ _WP_EFC_FIELDS = (
     "J_rowadr", "J_colind", "J", "pos", "margin", "D", "vel", "aref",
     "frictionloss", "force", "state", "island", "Ma", "Jqvel",
 )
+
+
+def _trace_actuator_metadata(model: mujoco.MjModel, indices: tuple[int, ...]):
+    names = []
+    units = []
+    for index in indices:
+        names.append(
+            mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_ACTUATOR, index)
+            or f"actuator_{index}"
+        )
+        joint = int(model.actuator_trnid[index, 0])
+        joint_type = int(model.jnt_type[joint])
+        if joint_type == int(mujoco.mjtJoint.mjJNT_SLIDE):
+            units.append("m")
+        elif joint_type == int(mujoco.mjtJoint.mjJNT_HINGE):
+            units.append("rad")
+        else:
+            raise ValueError("training trace supports only scalar slide/hinge controls")
+    return tuple(names), tuple(units)
+
+
 _SNAPSHOT_METADATA_FIELDS = (
     "snapshot_schema", "mujoco_warp_version", "warp_state_keys",
 )
@@ -459,9 +484,11 @@ class MJWPVectorEnv:
             if self._pending_training_sampled_action is None:
                 raise RuntimeError("training trace is active but the pre-clamp sampled action is missing")
             control_indices = list(self.env_cfg.residual.hand_control_indices)
-            applied_residual = (
-                full_ctrl[:, control_indices] - reference_ctrls[:, control_indices]
-            ).detach().cpu().numpy()
+            semantics = control_target_residuals(
+                self.env.model_cpu,
+                reference_ctrls.detach().cpu().numpy(),
+                full_ctrl.detach().cpu().numpy(),
+            )
             self._training_trace.record(
                 source_endpoint=source_endpoints,
                 outcome_endpoint=outcome_endpoints,
@@ -469,7 +496,13 @@ class MJWPVectorEnv:
                     self._pending_training_sampled_action.detach().cpu().numpy()
                 ),
                 sampled_action_clamped=policy_actions,
-                applied_residual=applied_residual,
+                requested_residual=semantics["requested_residual"][:, control_indices],
+                effective_residual_after_ctrlrange=(
+                    semantics["effective_residual_after_ctrlrange"][:, control_indices]
+                ),
+                residual_lost_to_ctrlrange=(
+                    semantics["residual_lost_to_ctrlrange"][:, control_indices]
+                ),
                 info=infos,
             )
             self._pending_training_sampled_action = None
@@ -486,10 +519,8 @@ class MJWPVectorEnv:
         if self._pending_training_sampled_action is not None:
             raise RuntimeError("cannot enable training trace with a pending action")
         indices = tuple(self.env_cfg.residual.hand_control_indices)
-        actuator_names = tuple(
-            mujoco.mj_id2name(self.env.model_cpu, mujoco.mjtObj.mjOBJ_ACTUATOR, index)
-            or f"actuator_{index}"
-            for index in indices
+        actuator_names, actuator_units = _trace_actuator_metadata(
+            self.env.model_cpu, indices
         )
         if len(actuator_names) != self.env_cfg.residual.hand_dof:
             raise ValueError("residual action coordinates do not match hand actuator coordinates")
@@ -501,10 +532,12 @@ class MJWPVectorEnv:
         self._training_trace = PpoTrainingTrace(
             output_dir,
             actuator_names=actuator_names,
+            actuator_units=actuator_units,
             object_roles=self.object_roles,
             hand_roles=hand_roles,
             residual_scale=self.env_cfg.residual.residual_scale,
             residual_clip=self.env_cfg.residual.residual_clip,
+            ctrlrange_contract=ctrlrange_contract(self.env.model_cpu, indices),
         )
 
     def record_training_sampled_action(self, actions: torch.Tensor) -> None:
@@ -1168,6 +1201,27 @@ class IndependentMJWPTrainingEnv:
         expected = (self.num_envs, self.env_cfg.residual.hand_dof)
         if actions.shape != expected or not np.isfinite(actions).all():
             raise ValueError(f"actions must be finite with shape {expected}")
+        semantics = None
+        if self._training_trace is not None:
+            if self.env_cfg.domain.action_noise_std != 0.0:
+                raise ValueError("v3 training trace requires zero action noise")
+            indices = list(self.env_cfg.residual.hand_control_indices)
+            reference_ctrl = np.concatenate([
+                world._reference_ctrls(world.time_indices, offset=1)
+                .detach().cpu().numpy()
+                for world in self.worlds
+            ], axis=0)
+            requested_ctrl = reference_ctrl.copy()
+            requested_ctrl[:, indices] += np.clip(
+                self.env_cfg.residual.residual_scale * actions,
+                -self.env_cfg.residual.residual_clip,
+                self.env_cfg.residual.residual_clip,
+            )
+            semantics = control_target_residuals(
+                self.representative_env.env.model_cpu,
+                reference_ctrl,
+                requested_ctrl,
+            )
         rows = [
             world.step(actions[index : index + 1])
             for index, world in enumerate(self.worlds)
@@ -1190,12 +1244,9 @@ class IndependentMJWPTrainingEnv:
         if self._training_trace is not None:
             if self._pending_training_sampled_action is None:
                 raise RuntimeError("training trace is active but the pre-clamp sampled action is missing")
-            spec = self.env_cfg.residual
-            applied = np.clip(
-                spec.residual_scale * actions,
-                -spec.residual_clip,
-                spec.residual_clip,
-            )
+            if semantics is None:
+                raise RuntimeError("residual semantics were not captured")
+            indices = list(self.env_cfg.residual.hand_control_indices)
             self._training_trace.record(
                 source_endpoint=info["source_reference_endpoint"],
                 outcome_endpoint=info["outcome_reference_endpoint"],
@@ -1203,7 +1254,13 @@ class IndependentMJWPTrainingEnv:
                     self._pending_training_sampled_action.detach().cpu().numpy()
                 ),
                 sampled_action_clamped=actions,
-                applied_residual=applied,
+                requested_residual=semantics["requested_residual"][:, indices],
+                effective_residual_after_ctrlrange=(
+                    semantics["effective_residual_after_ctrlrange"][:, indices]
+                ),
+                residual_lost_to_ctrlrange=(
+                    semantics["residual_lost_to_ctrlrange"][:, indices]
+                ),
                 info=info,
             )
             self._pending_training_sampled_action = None
@@ -1390,13 +1447,10 @@ class IndependentMJWPTrainingEnv:
             raise RuntimeError("cannot enable training trace with a pending action")
         representative = self.representative_env
         indices = tuple(self.env_cfg.residual.hand_control_indices)
-        actuator_names = tuple(
-            mujoco.mj_id2name(
-                representative.env.model_cpu,
-                mujoco.mjtObj.mjOBJ_ACTUATOR,
-                index,
-            ) or f"actuator_{index}"
-            for index in indices
+        if self.env_cfg.domain.action_noise_std != 0.0:
+            raise ValueError("v3 training trace requires zero action noise")
+        actuator_names, actuator_units = _trace_actuator_metadata(
+            representative.env.model_cpu, indices
         )
         hand_roles = (
             ("right", "left")
@@ -1406,10 +1460,14 @@ class IndependentMJWPTrainingEnv:
         self._training_trace = PpoTrainingTrace(
             output_dir,
             actuator_names=actuator_names,
+            actuator_units=actuator_units,
             object_roles=self.object_roles,
             hand_roles=hand_roles,
             residual_scale=self.env_cfg.residual.residual_scale,
             residual_clip=self.env_cfg.residual.residual_clip,
+            ctrlrange_contract=ctrlrange_contract(
+                representative.env.model_cpu, indices
+            ),
         )
 
     def record_training_sampled_action(self, actions: torch.Tensor) -> None:

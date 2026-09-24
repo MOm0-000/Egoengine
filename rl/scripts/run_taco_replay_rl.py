@@ -640,7 +640,9 @@ def main():
         committed_qvel = [np.asarray(initial["qvel"], dtype=np.float32)]
         committed_ctrl = [np.asarray(initial["ctrl"], dtype=np.float32)]
     committed_raw_residual = []
-    committed_applied_residual = []
+    committed_requested_residual = []
+    committed_effective_residual = []
+    committed_residual_lost = []
     committed_modes = []
     start = run_start
     try:
@@ -691,8 +693,18 @@ def main():
             committed_raw_residual.extend(
                 np.asarray(step["raw_residual_action"], dtype=np.float32) for step in committed_steps
             )
-            committed_applied_residual.extend(
-                np.asarray(step["applied_residual"], dtype=np.float32) for step in committed_steps
+            committed_requested_residual.extend(
+                np.asarray(step["requested_residual"], dtype=np.float64) for step in committed_steps
+            )
+            committed_effective_residual.extend(
+                np.asarray(
+                    step["effective_residual_after_ctrlrange"], dtype=np.float64
+                ) for step in committed_steps
+            )
+            committed_residual_lost.extend(
+                np.asarray(
+                    step["residual_lost_to_ctrlrange"], dtype=np.float64
+                ) for step in committed_steps
             )
             committed_modes.extend([chunk.mode] * committed_count)
             start = chunk.committed_end
@@ -775,7 +787,21 @@ def main():
             qvel=np.stack(committed_qvel),
             ctrl=np.stack(committed_ctrl),
             raw_residual_action=np.stack(committed_raw_residual) if committed_raw_residual else np.empty((0, 36), np.float32),
-            applied_residual=np.stack(committed_applied_residual) if committed_applied_residual else np.empty((0, 36), np.float32),
+            requested_residual=(
+                np.stack(committed_requested_residual)
+                if committed_requested_residual else np.empty((0, 36), np.float64)
+            ),
+            effective_residual_after_ctrlrange=(
+                np.stack(committed_effective_residual)
+                if committed_effective_residual else np.empty((0, 36), np.float64)
+            ),
+            residual_lost_to_ctrlrange=(
+                np.stack(committed_residual_lost)
+                if committed_residual_lost else np.empty((0, 36), np.float64)
+            ),
+            residual_semantics_schema=np.asarray(
+                "taco_control_target_residual_v1"
+            ),
             mode=np.asarray(committed_modes),
             reference_endpoint=np.arange(
                 run_start, run_start + len(committed_qpos), dtype=np.int32
@@ -787,6 +813,19 @@ def main():
             "sha256": hashlib.sha256(trajectory_path.read_bytes()).hexdigest(),
             "endpoints": len(committed_qpos),
             "transitions": len(committed_modes),
+            "residual_semantics_schema": "taco_control_target_residual_v1",
+            "residual_fields": {
+                "requested_residual": (
+                    "requested control target minus reference control target"
+                ),
+                "effective_residual_after_ctrlrange": (
+                    "control-target offset remaining after enabled actuator ctrlrange; "
+                    "not realized qpos motion"
+                ),
+                "residual_lost_to_ctrlrange": (
+                    "signed requested residual minus effective residual"
+                ),
+            },
         }
         (args.output / "report.json").write_text(json.dumps(result, indent=2) + "\n")
 
