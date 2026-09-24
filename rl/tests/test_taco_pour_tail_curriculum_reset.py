@@ -70,7 +70,7 @@ def test_paired_boundary_artifact_is_hash_bound_and_complete():
         assert boundary["exploration_rng_restored"] is False
 
 
-def test_reset_contract_is_bound_and_actor_update_remains_a_blocker():
+def test_reset_contract_is_bound_and_formal_sampler_gate_is_separate():
     report = json.loads(REPORT.read_text())
     contract = report["contracts"]["tail_curriculum_reset"]
     path = ROOT / contract["path"]
@@ -78,4 +78,6 @@ def test_reset_contract_is_bound_and_actor_update_remains_a_blocker():
     assert _sha256(path) == contract["sha256"]
     protocol = (ROOT / "configs/replay_rl_protocol.yaml").read_text()
     assert "curriculum_training_ready: false" in protocol
-    assert "tail_curriculum_sampler_not_integrated_or_audited" in protocol
+    assert "fixed_world_start_endpoints: [20, 20, 20, 46]" in protocol
+    assert "remaining_engineering_blocker: null" in protocol
+    assert "strict_40_of_40_achieved: false" in protocol

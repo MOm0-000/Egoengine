@@ -1428,7 +1428,14 @@ class PpoAgent:
             env_done_indices = all_done_indices[:: self.num_agents]
 
             if len(all_done_indices) > 0:
-                if self.cfg.zero_rnn_on_done:
+                reset_recurrent = getattr(
+                    self.env, "reset_rnn_states_after_done", None
+                )
+                if reset_recurrent is not None:
+                    self.rnn_states = reset_recurrent(
+                        self.rnn_states, all_done_indices
+                    )
+                elif self.cfg.zero_rnn_on_done:
                     for s in self.rnn_states:
                         s[:, all_done_indices, :] = s[:, all_done_indices, :] * 0.0
                 if self.has_asymmetric_critic:

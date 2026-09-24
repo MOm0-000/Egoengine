@@ -1,0 +1,69 @@
+schema: taco_pour_tail_curriculum_3plus1_v1
+status: frozen_single_controlled_experiment
+paper_faithful: false
+purpose: >-
+  Test whether redistributing a fixed four-world PPO budget toward a naturally
+  reached failure-tail state improves the deterministic CPU-validated policy.
+  This is a local off-policy curriculum experiment, not an author-recovered
+  EgoEngine setting.
+
+training_budget:
+  worlds: 4
+  epochs: 8
+  horizon_per_world_per_epoch: 40
+  samples_per_epoch: 160
+  total_samples: 1280
+  seed: 0
+
+fixed_world_assignment:
+  world_0: {reset_endpoint: 20, role: original_window_anchor}
+  world_1: {reset_endpoint: 20, role: original_window_anchor}
+  world_2: {reset_endpoint: 20, role: original_window_anchor}
+  world_3: {reset_endpoint: 46, role: off_policy_tail_curriculum}
+  assignment_changes_between_epochs: false
+  random_tail_endpoint_selection: false
+  tail_endpoint_candidates_used: [46]
+
+tail_boundary_contract:
+  natural_simulator_rollout_required: true
+  gt_state_injection_allowed: false
+  complete_342_field_physics_state_required: true
+  natural_observation_prefix_start_endpoint: 20
+  natural_observation_prefix_end_endpoint: 46
+  prefix_observations_required: 26
+  actor_and_input_normalization_hash_required: true
+  actor_or_normalization_change_invalidates_saved_hidden: true
+  refresh_hidden_each_epoch: replay_saved_prefix_with_current_actor
+  prefix_replay_must_not_change_input_normalization: true
+  prefix_replay_must_not_change_actor_state: true
+  tail_physical_state_generated_by_current_actor: false
+  off_policy_curriculum_start_disclosed: true
+  episode_reset_returns_to_same_endpoint_46_physics: true
+
+frozen_controls:
+  objective_unchanged: true
+  contact_and_lift_coefficients_unchanged: true
+  observation_unchanged: true
+  residual_action_mapping_unchanged: true
+  PPO_network_optimizer_learning_rate_unchanged: true
+  epoch_sweep_allowed: false
+  seed_sweep_allowed: false
+  world_ratio_sweep_allowed: false
+  tail_endpoint_sweep_allowed: false
+  training_budget_sweep_allowed: false
+
+acceptance:
+  backend: CPU_MuJoCo_Warp
+  start_endpoint: 20
+  required_consecutive_intervals: 40
+  curriculum_rollout_can_be_committed_directly: false
+  success_definition_changed: false
+
+required_report_fields:
+  - endpoint_46_to_50_total_visits_and_fraction_of_1280
+  - epochs_with_endpoint_50_visit
+  - termination_counts_split_by_anchor_and_tail_worlds
+  - deterministic_CPU_replay_validated_steps_and_first_failure
+  - deterministic_CPU_PPO_validated_steps_and_first_failure
+  - per_epoch_actor_and_normalization_hash
+  - per_epoch_prefix_replay_normalization_immutability

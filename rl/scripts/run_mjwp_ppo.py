@@ -23,7 +23,7 @@ _SCRIPT_DIR = Path(__file__).resolve().parent
 _PROJECT_ROOT = _SCRIPT_DIR.parent
 _V2S_ROOT = Path(os.environ.get("VIDEO_TO_SPIDER_ROOT", _PROJECT_ROOT / "src")).resolve()
 _SPIDER_ROOT = Path(
-    os.environ.get("SPIDER_ROOT", "/data_all/zzx/egoengine/spider")
+    os.environ.get("SPIDER_ROOT", _PROJECT_ROOT / "external" / "spider_compat")
 ).resolve()
 _H2S2R_ROOT = Path(
     os.environ.get("H2S2R_ROOT", _PROJECT_ROOT / "external" / "human2sim2robot")

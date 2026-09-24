@@ -180,9 +180,29 @@ unchanged. The same-actor replay matched the saved hidden state bitwise; a
 changed actor rejected the old memory and accepted the refreshed one.
 
 This is an off-policy curriculum start: refreshing memory does not claim the
-updated actor naturally generated the saved physical state. PPO remains
-disabled until a fixed-budget sampler integrates these pairs without silently
-adding prefix transitions or changing the CPU endpoint-20 acceptance path.
+updated actor naturally generated the saved physical state. The fixed-budget
+sampler gate subsequently verified, without an optimizer step, the exact
+`[20,20,20,46]` assignment, normalization immutability during prefix replay,
+and endpoint-46 episode reset of both complete physics and current-actor LSTM
+memory. The formal CPU endpoint-20 acceptance path was not changed.
+
+One predeclared 3+1 experiment was then run. Three worlds reset to endpoint 20
+and one to the naturally generated endpoint-46 state for all eight epochs;
+world count, 1,280-sample budget, seed, PPO batch, rewards, observation, action
+mapping and CPU 40/40 gate were unchanged. Endpoint 46--50 visits increased
+from the prior four-anchor run's `96/1280 (7.5%)` to
+`252/1280 (19.6875%)`, and endpoint 50 appeared in all 8 epochs rather than
+6. The tail world supplied 190 of those 252 visits and terminated on tracking
+43 times; it never reached the endpoint-60 timeout. The three anchor worlds
+terminated 28 times in total.
+
+The deterministic CPU result was Replay `29/40` and PPO `32/40`, with the PPO
+first failing at endpoint 53. This is only one step beyond the previous
+four-anchor policy's `31/40`, and still fails the strict gate. The intended
+distribution change was achieved, but a single non-deterministic GPU training
+run cannot attribute that one-step difference causally. The result therefore
+does not establish tail sparsity as the root cause, and no 2+2 ratio, endpoint,
+epoch, seed or world-count sweep was performed.
 
 ## Current formal runtime
 

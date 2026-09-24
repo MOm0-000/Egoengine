@@ -14,6 +14,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from video_to_spider.rl.curriculum_reset import (
     capture_physics_rnn_boundary,
+    make_rollout_start_boundary,
     refresh_boundary_rnn_for_actor,
     restore_physics_rnn_boundaries,
 )
@@ -137,6 +138,20 @@ def test_capture_binds_physics_memory_actor_and_normalization():
     torch.testing.assert_close(boundary["rnn_states"][0], agent.rnn_states[0])
 
 
+def test_rollout_start_boundary_uses_zero_memory_and_empty_prefix():
+    agent = _Agent()
+    world = _World(20, 1.5)
+    boundary = make_rollout_start_boundary(
+        agent, world, provenance={"role": "original_window_anchor"}
+    )
+    assert boundary["reference_endpoint"] == 20
+    assert boundary["rollout_start_endpoint"] == 20
+    assert boundary["observation_prefix"] == ()
+    assert not boundary["rnn_states"][0].any()
+    assert not boundary["rnn_states"][1].any()
+    assert not boundary["agent_runtime"]["dones"].any()
+
+
 def test_four_world_restore_batches_matching_physics_and_rnn_states():
     source_agent = _Agent()
     boundaries = [
@@ -183,6 +198,14 @@ def test_observation_prefix_refresh_rebinds_memory_to_changed_actor():
     assert refreshed["actor_state_sha256"] != boundary["actor_state_sha256"]
     assert refreshed["provenance"]["rnn_refresh"]["prefix_observations"] == 3
     assert refreshed["provenance"]["rnn_refresh"]["physical_state_changed"] is False
+    assert refreshed["provenance"]["rnn_refresh"][
+        "actor_and_input_normalization_unchanged_during_replay"
+    ] is True
+    assert refreshed["provenance"]["rnn_refresh"][
+        "actor_state_sha256_before_replay"
+    ] == refreshed["provenance"]["rnn_refresh"][
+        "actor_state_sha256_after_replay"
+    ]
     audit = restore_physics_rnn_boundaries(
         target_agent, _World(20, 0.0), [refreshed]
     )

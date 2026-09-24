@@ -326,6 +326,11 @@ def train_chunk_ppo(
         for name, tensor in agent.model.state_dict().items()
     }
     actor_sha256 = _model_state_sha256(actor_state)
+    curriculum_audit = (
+        env.tail_curriculum_audit()
+        if hasattr(env, "tail_curriculum_audit")
+        else None
+    )
     checkpoints = []
     for checkpoint in sorted((output / "nn").glob("*.pth")):
         checkpoints.append({
@@ -346,6 +351,7 @@ def train_chunk_ppo(
             "actor_state_sha256": actor_sha256,
             "checkpoint_artifacts": checkpoints,
             "training_visitation": training_visitation,
+            "tail_curriculum": curriculum_audit,
         })
 
     if str(validation_env.ego_cfg.device) != "cpu":
@@ -390,4 +396,5 @@ def train_chunk_ppo(
         "recurrent_state_reset_to_zero": True,
         "checkpoint_artifacts": checkpoints,
         "training_visitation": training_visitation,
+        "tail_curriculum": curriculum_audit,
     }, temporary_directory)

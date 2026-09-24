@@ -317,6 +317,21 @@ def main():
         type=Path,
         help="Required passed state-copy/short-rollout gate for multi-world training.",
     )
+    parser.add_argument(
+        "--tail-curriculum-contract",
+        type=Path,
+        help="Frozen local 3-anchor + 1-tail experiment contract.",
+    )
+    parser.add_argument(
+        "--tail-boundaries",
+        type=Path,
+        help="Hash-bound paired-boundary artifact containing endpoint 46.",
+    )
+    parser.add_argument(
+        "--tail-sampler-gate-report",
+        type=Path,
+        help="Required passed no-training sampler gate for the tail curriculum.",
+    )
     parser.add_argument("--max-chunks", type=int, default=1)
     parser.add_argument(
         "--stop-after-first-ppo",
@@ -352,6 +367,63 @@ def main():
             "path": str(args.multiworld_gate_report.resolve()),
             "sha256": _sha256(gate_raw),
             "report": gate_report,
+        }
+    tail_args = (
+        args.tail_curriculum_contract,
+        args.tail_boundaries,
+        args.tail_sampler_gate_report,
+    )
+    tail_curriculum = None
+    if any(path is not None for path in tail_args):
+        if not all(path is not None for path in tail_args):
+            raise ValueError("tail curriculum requires contract, boundaries and sampler gate")
+        if args.training_worlds != 4 or args.epochs != 8:
+            raise ValueError("frozen tail curriculum requires four worlds and eight epochs")
+        if args.resume_boundary is None:
+            raise ValueError("tail curriculum requires the exact endpoint-20 boundary")
+        contract_raw = args.tail_curriculum_contract.read_bytes()
+        contract = yaml.safe_load(contract_raw)
+        assignments = contract.get("fixed_world_assignment", {})
+        if (
+            contract.get("schema") != "taco_pour_tail_curriculum_3plus1_v1"
+            or contract.get("status") != "frozen_single_controlled_experiment"
+            or contract.get("training_budget", {}).get("worlds") != 4
+            or contract.get("training_budget", {}).get("epochs") != 8
+            or contract.get("training_budget", {}).get("total_samples") != 1280
+            or [assignments.get(f"world_{index}", {}).get("reset_endpoint") for index in range(4)]
+                != [20, 20, 20, 46]
+            or assignments.get("assignment_changes_between_epochs") is not False
+            or assignments.get("random_tail_endpoint_selection") is not False
+            or contract.get("acceptance", {}).get("start_endpoint") != 20
+            or contract.get("acceptance", {}).get("required_consecutive_intervals") != 40
+        ):
+            raise ValueError("tail curriculum contract differs from the frozen 3+1 experiment")
+        boundary_raw = args.tail_boundaries.read_bytes()
+        sampler_gate_raw = args.tail_sampler_gate_report.read_bytes()
+        sampler_gate = json.loads(sampler_gate_raw)
+        if (
+            sampler_gate.get("schema") != "taco_pour_tail_curriculum_sampler_gate_v1"
+            or sampler_gate.get("status") != "passed"
+            or sampler_gate.get("PPO_training_executed") is not False
+            or sampler_gate.get("optimizer_steps") != 0
+            or sampler_gate.get("frozen_world_start_endpoints") != [20, 20, 20, 46]
+            or sampler_gate.get("contract", {}).get("sha256") != _sha256(contract_raw)
+            or sampler_gate.get("paired_boundaries", {}).get("sha256") != _sha256(boundary_raw)
+            or sampler_gate.get("source_boundary", {}).get("sha256")
+                != _sha256(args.resume_boundary.read_bytes())
+            or sampler_gate.get("normalization_immutability", {}).get("passed") is not True
+            or sampler_gate.get("episode_reset", {}).get("passed") is not True
+            or sampler_gate.get("actor_update_refresh", {}).get("passed") is not True
+        ):
+            raise ValueError("tail curriculum sampler gate has not passed")
+        tail_curriculum = {
+            "contract": contract,
+            "contract_path": str(args.tail_curriculum_contract.resolve()),
+            "contract_sha256": _sha256(contract_raw),
+            "boundaries_path": str(args.tail_boundaries.resolve()),
+            "boundaries_sha256": _sha256(boundary_raw),
+            "sampler_gate_path": str(args.tail_sampler_gate_report.resolve()),
+            "sampler_gate_sha256": _sha256(sampler_gate_raw),
         }
     backend_contract, backend_contract_artifact = load_dual_backend_contract(
         args.backend_contract
@@ -460,6 +532,24 @@ def main():
         validation_backend.verify_restored_snapshot(incoming_boundary)
     training_backend.restore(incoming_boundary)
     training_backend.verify_restored_snapshot(incoming_boundary)
+    if tail_curriculum is not None:
+        encoded = args.tail_boundaries.read_bytes()
+        decoded = gzip.decompress(encoded) if args.tail_boundaries.suffix == ".gz" else encoded
+        payload = torch.load(io.BytesIO(decoded), map_location="cpu", weights_only=False)
+        if payload.get("schema") != "taco_pour_tail_curriculum_boundaries_v1":
+            raise ValueError("tail curriculum boundary artifact has an unsupported schema")
+        matches = [
+            boundary for boundary in payload.get("boundaries", ())
+            if int(boundary.get("reference_endpoint", -1)) == 46
+        ]
+        if len(matches) != 1:
+            raise ValueError("tail curriculum requires exactly one endpoint-46 boundary")
+        training_env.enable_tail_curriculum(
+            matches[0],
+            anchor_endpoint=20,
+            tail_endpoint=46,
+            window_end_endpoint=60,
+        )
 
     physics_sha256 = provenance["validated_physics_contract"][
         "physics_contract_sha256"
@@ -491,6 +581,9 @@ def main():
         ("simulator_config", args.config),
         ("resume_boundary", args.resume_boundary),
         ("multiworld_gate_report", args.multiworld_gate_report),
+        ("tail_curriculum_contract", args.tail_curriculum_contract),
+        ("tail_boundaries", args.tail_boundaries),
+        ("tail_sampler_gate_report", args.tail_sampler_gate_report),
     ):
         if source is None:
             continue
@@ -512,6 +605,7 @@ def main():
                   backend_contract=backend_contract_artifact,
                   backend_runtime_records=backend_records,
                   multiworld_gate=multiworld_gate,
+                  tail_curriculum=tail_curriculum,
                   incoming_boundary=incoming_boundary_artifact or {
                       "source": "accepted_initialization", "reference_endpoint": 0
                   },
@@ -525,6 +619,13 @@ def main():
                       training_backend="GPU MuJoCo-Warp",
                       acceptance_backend="CPU MuJoCo-Warp",
                       committed_state_source="CPU validation endpoint 20",
+                      training_start_distribution=(
+                          [20, 20, 20, 46] if tail_curriculum is not None
+                          else [run_start] * args.training_worlds
+                      ),
+                      tail_curriculum_is_local_off_policy=(
+                          True if tail_curriculum is not None else None
+                      ),
                       residual_scale=residual_action.residual_scale,
                       residual_clip_rad=residual_action.residual_clip),
                   source_frames=len(validation_reference[0]),

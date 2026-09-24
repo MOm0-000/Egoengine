@@ -37,6 +37,56 @@ def _batch_observations(rows: Sequence[Any]) -> Any:
     return np.concatenate([np.asarray(row) for row in rows], axis=0)
 
 
+def make_rollout_start_boundary(
+    agent: Any,
+    env: Any,
+    *,
+    provenance: dict[str, Any],
+) -> dict[str, Any]:
+    """Bind one exact rollout-start physics state to zero recurrent memory."""
+    if env.num_envs != 1:
+        raise ValueError("rollout-start boundary requires exactly one physical world")
+    physics = env.get_env_state()
+    endpoint = int(np.asarray(physics["time_indices"])[0])
+    if bool(np.asarray(physics["last_terminated"])[0]):
+        raise ValueError("terminated physics states cannot become rollout starts")
+    default = agent.model.get_default_rnn_state()
+    if default is None:
+        raise ValueError("the current policy is not recurrent")
+    states = tuple(
+        _cpu_clone(state[:, :1, :].to(agent.device).zero_()) for state in default
+    )
+    normalization_keys = sorted(
+        name for name in agent.model.state_dict() if "running_mean_std" in name
+    )
+    if not normalization_keys:
+        raise ValueError("actor input-normalization state is not present in the model hash")
+    return {
+        "schema": SCHEMA,
+        "reference_endpoint": endpoint,
+        "rollout_start_endpoint": endpoint,
+        "actor_state_sha256": _model_state_sha256(agent.model.state_dict()),
+        "actor_hash_scope": "full_model_state_including_input_normalization",
+        "actor_normalization_state_keys": normalization_keys,
+        "physics_state": _cpu_clone(physics),
+        "rnn_states": states,
+        "agent_runtime": {
+            "dones": torch.zeros(1, dtype=torch.uint8),
+            "current_rewards": torch.zeros(1, 1, dtype=torch.float32),
+            "current_shaped_rewards": torch.zeros(1, 1, dtype=torch.float32),
+            "current_lengths": torch.zeros(1, dtype=torch.float32),
+        },
+        "observation": _cpu_clone(env.current_observation()),
+        "observation_prefix": (),
+        "provenance": _cpu_clone(provenance),
+        "exploration_rng_restored": False,
+        "exploration_rng_reason": (
+            "the rollout start fixes physics and recurrent memory but each training "
+            "branch draws an independent stochastic action"
+        ),
+    }
+
+
 def capture_physics_rnn_boundary(
     agent: Any,
     env: Any,
@@ -54,8 +104,8 @@ def capture_physics_rnn_boundary(
         raise ValueError("capture requires one-world recurrent states")
     physics = env.get_env_state()
     endpoint = int(np.asarray(physics["time_indices"])[0])
-    if endpoint <= rollout_start_endpoint:
-        raise ValueError("tail boundary must be reached after the rollout start")
+    if endpoint < rollout_start_endpoint:
+        raise ValueError("boundary cannot precede the rollout start")
     if len(observation_prefix) != endpoint - rollout_start_endpoint:
         raise ValueError(
             "observation prefix must contain one source observation per transition"
@@ -110,6 +160,7 @@ def refresh_boundary_rnn_for_actor(agent: Any, boundary: dict[str, Any]) -> dict
     default = agent.model.get_default_rnn_state()
     if default is None:
         raise ValueError("the current policy is not recurrent")
+    model_hash_before = _model_state_sha256(agent.model.state_dict())
     previous = agent.rnn_states
     try:
         agent.set_eval()
@@ -123,9 +174,15 @@ def refresh_boundary_rnn_for_actor(agent: Any, boundary: dict[str, Any]) -> dict
     finally:
         agent.rnn_states = previous
 
+    model_hash_after = _model_state_sha256(agent.model.state_dict())
+    if model_hash_after != model_hash_before:
+        raise RuntimeError(
+            "observation-prefix replay changed actor or input-normalization state"
+        )
+
     refreshed = _cpu_clone(boundary)
     old_hash = boundary["actor_state_sha256"]
-    new_hash = _model_state_sha256(agent.model.state_dict())
+    new_hash = model_hash_after
     refreshed["actor_state_sha256"] = new_hash
     refreshed["rnn_states"] = refreshed_states
     refreshed["provenance"]["rnn_refresh"] = {
@@ -134,6 +191,9 @@ def refresh_boundary_rnn_for_actor(agent: Any, boundary: dict[str, Any]) -> dict
         "refreshed_actor_state_sha256": new_hash,
         "prefix_observations": len(prefix),
         "physical_state_changed": False,
+        "actor_and_input_normalization_unchanged_during_replay": True,
+        "actor_state_sha256_before_replay": model_hash_before,
+        "actor_state_sha256_after_replay": model_hash_after,
     }
     return refreshed
 

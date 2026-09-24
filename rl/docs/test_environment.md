@@ -11,11 +11,24 @@ reward, done, and info. An actor parameter change rejected the saved recurrent
 memory. Replaying each saved natural observation prefix under the unchanged
 actor reproduced all five hidden states bitwise; under the changed actor it
 produced a newly bound memory that restored without modifying physics. The gate
-ran no PPO; formal fixed-budget sampler integration remains blocked.
+ran no PPO.
 
-After adding the paired-reset, observation-prefix refresh, real-evidence, and
-regression checks, the complete suite passed **620 tests and 57 subtests** in
-107.14 s. The 17 warnings are the existing MuJoCo-Warp contact-capacity,
+The subsequent real-GPU sampler gate also ran no optimizer step. It fixed the
+world starts to `[20,20,20,46]`, proved prefix replay left the actor and input
+normalization hash unchanged, observed a real tail termination, and restored
+both endpoint-46 physics and the current-actor LSTM memory exactly. Changing an
+LSTM parameter rejected stale memory and caused a new prefix-bound hidden state
+to be installed.
+
+The single authorized 3+1 experiment then kept four worlds, eight epochs and
+1,280 samples fixed. Endpoint 46--50 visits were 252 (`19.6875%`) and endpoint
+50 was visited in every epoch. Deterministic CPU validation was Replay `29/40`
+and PPO `32/40`, with failure at endpoint 53. This did not satisfy 40/40 and
+did not authorize a curriculum-ratio, endpoint, epoch, seed or world sweep.
+
+After adding the paired-reset, fixed sampler, formal experiment evidence, and
+regression checks, the complete suite passed **624 tests and 57 subtests** in
+105.97 s. The 17 warnings are the existing MuJoCo-Warp contact-capacity,
 PyTorch AMP deprecation, Trimesh degenerate-volume, and SciPy pickle warnings;
 there were no failures or skipped tests.
 
