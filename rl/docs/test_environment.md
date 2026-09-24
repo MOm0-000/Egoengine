@@ -1,5 +1,17 @@
 # Test Environment
 
+## Frozen CPU residual-authority audit
+
+On 2026-09-24, a read-only audit reconstructed all 33 source states in the
+frozen 3+1 CPU PPO validation through endpoint 53. It compared recorded
+residual requests, current qpos to next-reference-target gaps, and model
+`ctrlrange` headroom without policy inference, physics, or training. All three
+action groups materially used the `0.05` bound. Separately, 62 finger requests
+were range-truncated across 28 steps and 57 were fully blocked at a bound; no
+wrist request was range-truncated. The audit selected no new scale.
+After adding the audit and four evidence checks, the complete suite passed
+**631 tests and 57 subtests** in 107.95 s. The 17 warnings are unchanged.
+
 ## Mixed-unit reference-action scale audit
 
 On 2026-09-24, a read-only audit checked all 197 consecutive control-target

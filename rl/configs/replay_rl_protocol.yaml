@@ -8,7 +8,7 @@ evidence_policy:
   paper_page_numbers: one_based_pdf_pages
   copied_defaults_are_author_settings: false
   new_model_or_reset_procedure_requires_confirmation: true
-  current_revision: mixed_unit_reference_action_scale_audit_completed_no_new_training
+  current_revision: residual_authority_and_ctrlrange_audit_completed_no_new_scale
 inputs:
   setting: user_approved_gt_oracle_validation_not_full_perception_reproduction
   approved_episodes: ['20230927_027', '20230917_020', '20230926_004', '20231103_071', '20230927_017']
@@ -479,6 +479,26 @@ runtime_contract:
         left_limit_over_p95: {wrist_translation: 7.394863944746998, wrist_rotation: 0.5914798649004196, fingers: 0.41187404670453553}
         mixed_unit_imbalance_quantified: true
         reference_increment_is_realized_motion: false
+        split_scale_candidate_selected: false
+        next_training_authorized: false
+      executed_residual_authority_audit:
+        status: completed_read_only_no_scale_selected
+        report: /data_all/zzx/3.2RL/runs/taco_pour_residual_authority_audit_v1/report.json
+        documentation: /data_all/zzx/3.2RL/docs/taco_pour_residual_authority_audit_v1.md
+        frozen_source: deterministic_CPU_3plus1_PPO_validation_endpoint_20_to_53
+        training_or_physics_executed: false
+        requested_saturation_fraction:
+          full: {wrist_translation: 0.18181818181818182, wrist_rotation: 0.19696969696969696, fingers: 0.20959595959595959}
+          failure_tail_10: {wrist_translation: 0.16666666666666666, wrist_rotation: 0.3, fingers: 0.22083333333333333}
+        source_qpos_to_next_reference_p95:
+          full: {wrist_translation_m: 0.060992893576622, wrist_rotation_rad: 0.1472256660461425, fingers_rad: 0.4546434275805949}
+          failure_tail_10: {wrist_translation_m: 0.04890071749687194, wrist_rotation_rad: 0.11189563423395156, fingers_rad: 0.6532484807074069}
+        finger_ctrlrange_truncated_components: 62
+        finger_steps_with_ctrlrange_truncation: 28
+        finger_fully_blocked_requested_components: 57
+        angular_only_limit_hypothesis_supported: false
+        no_group_limit_active_hypothesis_supported: false
+        mixed_unit_scale_proven_as_endpoint53_primary_cause: false
         split_scale_candidate_selected: false
         next_training_authorized: false
   execution_backends:

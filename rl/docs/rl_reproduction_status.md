@@ -402,6 +402,25 @@ command-space diagnostic, not realized robot motion or proof of the endpoint-53
 cause. No split scale was selected and no training was authorized. Full values
 are in `runs/taco_pour_reference_action_scale_audit_v1/report.json`.
 
+The follow-up authority audit used the frozen deterministic CPU validation
+rows rather than reference increments alone. Full-window component saturation
+was `18.18% / 19.70% / 20.96%` for wrist translation / wrist rotation /
+fingers; in the final ten endpoints it was `16.67% / 30.00% / 22.08%`.
+Translation therefore is not merely an unused over-wide channel, while angular
+and finger bounds are also clearly active. Current-state to next-reference P95
+gaps reached `0.0610 m / 0.1472 rad / 0.4546 rad` overall and `0.0489 m /
+0.1119 rad / 0.6532 rad` in the last ten endpoints. These gaps are descriptive
+servo/reference errors, not optimal residual labels.
+
+Actuator `ctrlrange` adds a distinct finger-only restriction. Sixty-two
+requested finger residuals were truncated across 28 of 33 validation steps;
+57 were fully blocked at a bound. The last ten steps contained 22 truncations
+and every one of those steps was affected. Wrist translation and rotation had
+no range truncation. The mixed-unit action interface remains structurally
+unclean, but this one trace does not establish it as the primary endpoint-53
+cause, and simply increasing angular/finger scale is not supported. No new
+scale or training run was selected.
+
 The evidence and hashes are frozen in
 `runs/taco_pour_normalized_ellipse_v1/summary.json`. GPU remains the PPO
 training backend, but it no longer has acceptance or commit authority. The

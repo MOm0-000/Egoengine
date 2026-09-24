@@ -214,6 +214,22 @@ fingers). This quantifies a mixed-unit imbalance; it does not measure realized
 motion, prescribe split scales, or authorize another PPO run. Exact per-axis
 statistics are in `runs/taco_pour_reference_action_scale_audit_v1/report.json`.
 
+A second read-only audit then used the frozen 3+1 CPU PPO trace itself. Across
+endpoints 21--53, requested `0.05` saturation rates were `18.18%` for wrist
+translation, `19.70%` for wrist rotation, and `20.96%` for fingers. In the last
+ten endpoints they were `16.67%`, `30.00%`, and `22.08%`. Thus angular/finger
+limits are active, but translation is not an unused over-wide channel; neither
+simple predeclared case is supported.
+
+The source-state to next-reference-target P95 gaps were `0.0610 m / 0.1472 rad
+/ 0.4546 rad` over the full trace and `0.0489 m / 0.1119 rad / 0.6532 rad` in
+the final ten steps. These are servo/reference gaps, not desired residual
+labels. The actuator-range check found a separate constraint: 62 finger
+requests were clipped by `ctrlrange` across 28 of 33 steps, and 57 were fully
+blocked at a bound. Wrist commands had no such range truncation. Increasing a
+finger scale alone therefore cannot recover those directions. The audit chose
+no new scale and ran no training or physics.
+
 ## Current formal runtime
 
 - config: `runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml`;
