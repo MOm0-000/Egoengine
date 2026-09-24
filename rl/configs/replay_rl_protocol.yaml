@@ -8,7 +8,7 @@ evidence_policy:
   paper_page_numbers: one_based_pdf_pages
   copied_defaults_are_author_settings: false
   new_model_or_reset_procedure_requires_confirmation: true
-  current_revision: four_world_training_v1_completed_31_of_40
+  current_revision: tail_curriculum_actor_refresh_gate_defined_training_still_blocked
 inputs:
   setting: user_approved_gt_oracle_validation_not_full_perception_reproduction
   approved_episodes: ['20230927_027', '20230917_020', '20230926_004', '20231103_071', '20230927_017']
@@ -239,7 +239,7 @@ evaluation:
     sixteen_epoch_saturated_action_value_fraction: 0.9563492063492064
     same_training_path_epoch_ablation_available: false
     failure_tail_contact_or_lift_masking_detected: false
-    next_controlled_change_family: unselected_after_four_world_result
+    next_controlled_change_family: fixed_budget_tail_focused_sampling_reset_engineering_only
     taco_action_smoothness_reward_paper_status: disabled
     tested_local_mapping: delta_a_rad_equals_clip_0.05_times_normalized_policy_output
     tested_mapping_author_recovered: false
@@ -360,9 +360,40 @@ evaluation:
       absolute_tail_coverage_increased: true
       relative_tail_sample_fraction_increased: false
       modest_CPU_improvement_observed: true
+      PPO_batch_size_changed_from_one_to_four_worlds: [40, 160]
+      reduced_gradient_sampling_noise_is_a_confound: true
+      improvement_attributable_to_tail_coverage_alone: false
+      historical_legacy_action_CPU_result_for_context: 38
+      legacy_action_mapping_valid_for_promotion: false
       sufficient_solution_demonstrated: false
       coverage_sparsity_proven_as_sole_cause: false
       next_algorithm_change_selected: false
+    tail_curriculum_paired_reset_v1:
+      status: engineering_gate_defined_training_forbidden
+      experiment_contract: /data_all/zzx/3.2RL/configs/taco_pour_tail_curriculum_reset_v1.yaml
+      gate_report: /data_all/zzx/3.2RL/runs/taco_pour_tail_curriculum_reset_gate_v1/report.json
+      training_executed: false
+      full_horizon_run_authorized: false
+      natural_rollout_start_endpoint: 20
+      captured_endpoints: [46, 47, 48, 49, 50]
+      GT_state_injected: false
+      complete_snapshot_fields: 342
+      actor_LSTM_state_shapes_per_boundary: [[1, 1, 1024], [1, 1, 1024]]
+      four_world_LSTM_state_shapes: [[1, 4, 1024], [1, 4, 1024]]
+      required_contract:
+        actor_and_input_normalization_hash_bound: true
+        same_actor_restore_bitwise_equal: true
+        deterministic_action_next_RNN_and_next_physics_bitwise_equal: true
+        stale_actor_memory_rejected: true
+        complete_natural_observation_prefix_saved: true
+        same_actor_prefix_replay_matches_saved_memory: true
+        changed_actor_prefix_replay_refreshes_and_rebinds_memory: true
+        physical_state_unchanged_by_memory_refresh: true
+      actor_update_refresh_method: replay_natural_observation_prefix_under_current_actor
+      off_policy_start_distribution_disclosed: true
+      remaining_engineering_blocker: formal_tail_sampler_not_integrated_or_audited
+      curriculum_training_ready: false
+      fixed_future_budget_if_authorized: {worlds: 4, epochs: 8, samples: 1280}
     full_rl_executed: false
     independent_thresholds_logged_per_object: true
 runtime_contract:
@@ -597,6 +628,7 @@ result_acceptance_blockers:
   - scaled_action_candidate_repaired_saturation_but_reached_only_29_of_40
   - scaled_policy_right_wrist_translation_diverges_in_direction_at_endpoints_46_to_50
   - four_world_training_increased_absolute_tail_samples_but_reached_only_31_of_40
+  - tail_curriculum_sampler_not_integrated_or_audited
   - ppo_containing_saved_trajectory_failed_independent_open_loop_replay
   - stable_grasp_and_physical_pour_not_demonstrated
 paper_faithful_run_blockers:

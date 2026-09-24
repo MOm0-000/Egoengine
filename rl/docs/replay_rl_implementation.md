@@ -153,6 +153,37 @@ absolute endpoint 46--50 visits from 24 to 96, while their share stayed at
 failed at endpoint 52. Thus no boundary was committed and the scheduler did
 not proceed to a full task run.
 
+Because PPO uses one minibatch equal to `worlds * horizon`, that intervention
+also changed the update batch from 40 to 160. The result is evidence about the
+combined four-world sampling intervention, not a causal estimate of tail-state
+coverage alone.
+
+## Tail curriculum reset gate
+
+Tail-focused sampling cannot reset only MuJoCo-Warp. The actor is recurrent,
+so every reset boundary now pairs the complete 342-field physical snapshot with
+both LSTM tensors, the current observation, nonterminal runtime bookkeeping,
+and a hash of the full actor state including input normalization. A hidden state
+whose actor hash differs is rejected.
+
+The no-training gate generated endpoint 46--50 only by rolling the frozen
+policy naturally from endpoint 20 on deterministic CPU physics. Four selected
+states restored together into independent worlds, and two restore/one-step
+trials matched bitwise in action, next recurrent state, next physics state,
+observation, reward, done, and info. This proves exact same-actor restore.
+
+Saved memories remain invalid after a PPO update, but the refresh mechanism is
+now explicit: every boundary includes its complete natural observation prefix.
+Replaying that prefix through the current actor recomputes both LSTM tensors,
+updates the actor/normalization hash, and leaves the physical snapshot
+unchanged. The same-actor replay matched the saved hidden state bitwise; a
+changed actor rejected the old memory and accepted the refreshed one.
+
+This is an off-policy curriculum start: refreshing memory does not claim the
+updated actor naturally generated the saved physical state. PPO remains
+disabled until a fixed-budget sampler integrates these pairs without silently
+adding prefix transitions or changing the CPU endpoint-20 acceptance path.
+
 ## Current formal runtime
 
 - config: `runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml`;

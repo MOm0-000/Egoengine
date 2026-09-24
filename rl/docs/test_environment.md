@@ -1,5 +1,24 @@
 # Test Environment
 
+## Tail curriculum paired-reset checkpoint
+
+On 2026-09-24, a CPU-only engineering gate used the frozen four-world actor to
+roll naturally from endpoint 20 and capture endpoints 46--50. Each checkpoint
+contains 362 snapshot entries, including 342 Warp fields and both actor LSTM
+states. Four mixed endpoints restored simultaneously, and two restore-plus-one-
+step trials were bitwise equal for action, next RNN state, physics, observation,
+reward, done, and info. An actor parameter change rejected the saved recurrent
+memory. Replaying each saved natural observation prefix under the unchanged
+actor reproduced all five hidden states bitwise; under the changed actor it
+produced a newly bound memory that restored without modifying physics. The gate
+ran no PPO; formal fixed-budget sampler integration remains blocked.
+
+After adding the paired-reset, observation-prefix refresh, real-evidence, and
+regression checks, the complete suite passed **620 tests and 57 subtests** in
+107.14 s. The 17 warnings are the existing MuJoCo-Warp contact-capacity,
+PyTorch AMP deprecation, Trimesh degenerate-volume, and SciPy pickle warnings;
+there were no failures or skipped tests.
+
 ## Four-world training checkpoint
 
 On 2026-09-23, the four-world engineering gate restored all **342** Warp state

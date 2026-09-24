@@ -365,6 +365,10 @@ class MJWPVectorEnv:
 
     def reset(self) -> np.ndarray | dict[str, np.ndarray]:
         self._reset_worlds()
+        return self.current_observation()
+
+    def current_observation(self) -> np.ndarray | dict[str, np.ndarray]:
+        """Read the observation at the current physics state without resetting it."""
         obs, privileged = self._build_observations()
         return self._pack_observation(obs, privileged)
 
@@ -1150,6 +1154,11 @@ class IndependentMJWPTrainingEnv:
 
     def reset(self) -> Any:
         return self._join_observations([world.reset() for world in self.worlds])
+
+    def current_observation(self) -> Any:
+        return self._join_observations([
+            world.current_observation() for world in self.worlds
+        ])
 
     def step(self, actions: np.ndarray) -> tuple[Any, np.ndarray, np.ndarray, dict[str, Any]]:
         actions = np.asarray(actions, dtype=np.float32)

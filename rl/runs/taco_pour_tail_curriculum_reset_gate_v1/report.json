@@ -1,0 +1,541 @@
+{
+  "schema": "taco_pour_tail_curriculum_reset_gate_v1",
+  "status": "passed",
+  "scope": {
+    "training_executed": false,
+    "algorithm_changed": false,
+    "device": "cpu",
+    "purpose": "paired physics/RNN restore engineering gate only"
+  },
+  "contracts": {
+    "config": {
+      "path": "runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml",
+      "sha256": "0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6"
+    },
+    "protocol": {
+      "path": "configs/replay_rl_protocol.yaml",
+      "sha256": "158c716ffa093c77d199cd457b01b5056dd9ab4fd550d9716796f98d3fb5120d"
+    },
+    "tail_curriculum_reset": {
+      "path": "configs/taco_pour_tail_curriculum_reset_v1.yaml",
+      "sha256": "e37c768b6eb09afd6e1edc7607b8c848f9caeff4612b36f88e894d0c25af1b16"
+    },
+    "objective": {
+      "objective_id": "taco_pour_local_normalized_ellipse_v1",
+      "status": "resolved_local_unpublished",
+      "paper_faithful": false,
+      "tracking": {
+        "lambda_p": 69.44444444444444,
+        "lambda_R": 0.4444444444444444,
+        "C": 1.0
+      },
+      "contact_coefficient": 0.25,
+      "lift_coefficient": 0.1,
+      "lift_object_role": "tool",
+      "contact_reduction": "mean_over_hands_and_tracked_objects",
+      "aggregation": "single_object",
+      "tracking_metric_name": "normalized_ellipse_score",
+      "independent_position_threshold_m": 0.12,
+      "independent_rotation_threshold_rad": 1.5,
+      "provenance": "Locally defined normalized elliptical proxy using the paper-reported Pour scales 0.12 m and 1.5 rad; these are not author-recovered coefficients.",
+      "protocol_path": "/data_all/zzx/3.2RL/configs/replay_rl_protocol.yaml",
+      "protocol_sha256": "158c716ffa093c77d199cd457b01b5056dd9ab4fd550d9716796f98d3fb5120d",
+      "profile_path": "/data_all/zzx/3.2RL/configs/taco_pour_local_normalized_ellipse_v1.yaml",
+      "profile_sha256": "8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9"
+    },
+    "observation": {
+      "observation_id": "taco_pour_transition_aligned_236d_v1",
+      "status": "resolved_local_unpublished",
+      "paper_faithful": false,
+      "actor_dim": 236,
+      "critic_dim": 108,
+      "goal_reference_offset": 1,
+      "command_offset": 1,
+      "command_preview_offset": 2,
+      "include_command_preview": true,
+      "include_contact_flags": true,
+      "component_names": [
+        "hand_qpos",
+        "hand_qvel",
+        "fingertip_positions",
+        "palm_positions",
+        "current_object_anchors",
+        "goal_object_anchors",
+        "reference_ctrl",
+        "reference_ctrl_preview",
+        "contact_flags"
+      ],
+      "provenance": "EgoEngine Section 3.2.2 publishes only the broad categories hand state, object pose, and retargeted reference command. The exact fields, anchor encoding, timestamps, contact flags, and one-step command preview below are local engineering choices and are not claimed as author settings.",
+      "profile_path": "/data_all/zzx/3.2RL/configs/taco_pour_observation_local_236d_v1.yaml",
+      "profile_sha256": "8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7"
+    },
+    "residual_action": {
+      "profile_id": "taco_pour_residual_action_scaled_v1",
+      "status": "resolved_local_unpublished",
+      "paper_faithful": false,
+      "provenance": "One controlled local repair of the diagnosed normalized-action unit mismatch. The existing +/-0.05 rad safety limit is retained; only the normalized output mapping changes. EgoEngine does not publish this residual scale.",
+      "profile_path": "/data_all/zzx/3.2RL/configs/taco_pour_residual_action_scaled_v1.yaml",
+      "profile_sha256": "71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4",
+      "policy_output_range": [
+        -1.0,
+        1.0
+      ],
+      "mapping_kind": "linear_scaled_candidate",
+      "residual_scale": 0.05,
+      "residual_clip_rad": 0.05,
+      "equation": "delta_a = clip(0.05 * u, -0.05, +0.05) rad",
+      "author_recovered_scale": false,
+      "controlled_experiment": {
+        "epochs": 8,
+        "seed": 0,
+        "endpoint_boundary": 20,
+        "lookahead_control_intervals": 40,
+        "ppo_horizon": 40,
+        "learning_rate": 0.0001,
+        "objective_profile_sha256": "8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9",
+        "observation_profile_sha256": "8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7",
+        "backend_contract_sha256": "c567ad04dabe1bfc1ff3c8f9ee81db52f9f71d181cd80d56de47c2b237ad65b0",
+        "simulator_config_sha256": "0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6",
+        "initialization_report_sha256": "9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a",
+        "reference_endpoint20_state": "Bitwise-equal to the CPU endpoint-20 boundary used by the frozen checkpoint validation; serialized artifact bytes may differ while all 362 state entries agree.",
+        "unchanged": [
+          "objective",
+          "contact_and_lift_coefficients",
+          "observation",
+          "network",
+          "learning_rate",
+          "PPO_hyperparameters",
+          "training_seed",
+          "CPU_acceptance"
+        ]
+      }
+    }
+  },
+  "inputs": {
+    "start_boundary": {
+      "path": "runs/taco_pour_normalized_ellipse_repeatability_cpu_v1/endpoint20_complete_boundary.pt.gz",
+      "sha256": "028ffd240c6ac1ba0d298d7caddab482169b772bdec14f4008f1af3865ba3547",
+      "reference_endpoint": 20
+    },
+    "actor_checkpoint": {
+      "path": "runs/taco_pour_multiworld_training_v1/ppo_chunk_20/nn/last_ep_8_rew__8.024075_.pth",
+      "sha256": "718a19b7df6c6f4271c97be8f63e9bc64b39f86d402f16235086fa526966e6f0",
+      "epoch": 8,
+      "frame": 1280
+    }
+  },
+  "natural_rollout": {
+    "gt_state_injected": false,
+    "deterministic_mean_policy": true,
+    "rows": [
+      {
+        "source_endpoint": 20,
+        "outcome_endpoint": 21,
+        "terminated": false,
+        "tool_objective_score": 0.5274580121040344
+      },
+      {
+        "source_endpoint": 21,
+        "outcome_endpoint": 22,
+        "terminated": false,
+        "tool_objective_score": 0.6224717497825623
+      },
+      {
+        "source_endpoint": 22,
+        "outcome_endpoint": 23,
+        "terminated": false,
+        "tool_objective_score": 0.6699790358543396
+      },
+      {
+        "source_endpoint": 23,
+        "outcome_endpoint": 24,
+        "terminated": false,
+        "tool_objective_score": 0.687172532081604
+      },
+      {
+        "source_endpoint": 24,
+        "outcome_endpoint": 25,
+        "terminated": false,
+        "tool_objective_score": 0.6826280355453491
+      },
+      {
+        "source_endpoint": 25,
+        "outcome_endpoint": 26,
+        "terminated": false,
+        "tool_objective_score": 0.6839288473129272
+      },
+      {
+        "source_endpoint": 26,
+        "outcome_endpoint": 27,
+        "terminated": false,
+        "tool_objective_score": 0.6962224245071411
+      },
+      {
+        "source_endpoint": 27,
+        "outcome_endpoint": 28,
+        "terminated": false,
+        "tool_objective_score": 0.7081170082092285
+      },
+      {
+        "source_endpoint": 28,
+        "outcome_endpoint": 29,
+        "terminated": false,
+        "tool_objective_score": 0.7147200107574463
+      },
+      {
+        "source_endpoint": 29,
+        "outcome_endpoint": 30,
+        "terminated": false,
+        "tool_objective_score": 0.7193129062652588
+      },
+      {
+        "source_endpoint": 30,
+        "outcome_endpoint": 31,
+        "terminated": false,
+        "tool_objective_score": 0.7189149856567383
+      },
+      {
+        "source_endpoint": 31,
+        "outcome_endpoint": 32,
+        "terminated": false,
+        "tool_objective_score": 0.7152546644210815
+      },
+      {
+        "source_endpoint": 32,
+        "outcome_endpoint": 33,
+        "terminated": false,
+        "tool_objective_score": 0.7388260960578918
+      },
+      {
+        "source_endpoint": 33,
+        "outcome_endpoint": 34,
+        "terminated": false,
+        "tool_objective_score": 0.7598373889923096
+      },
+      {
+        "source_endpoint": 34,
+        "outcome_endpoint": 35,
+        "terminated": false,
+        "tool_objective_score": 0.7606723308563232
+      },
+      {
+        "source_endpoint": 35,
+        "outcome_endpoint": 36,
+        "terminated": false,
+        "tool_objective_score": 0.7679685354232788
+      },
+      {
+        "source_endpoint": 36,
+        "outcome_endpoint": 37,
+        "terminated": false,
+        "tool_objective_score": 0.7677483558654785
+      },
+      {
+        "source_endpoint": 37,
+        "outcome_endpoint": 38,
+        "terminated": false,
+        "tool_objective_score": 0.773975133895874
+      },
+      {
+        "source_endpoint": 38,
+        "outcome_endpoint": 39,
+        "terminated": false,
+        "tool_objective_score": 0.7873666286468506
+      },
+      {
+        "source_endpoint": 39,
+        "outcome_endpoint": 40,
+        "terminated": false,
+        "tool_objective_score": 0.7956745624542236
+      },
+      {
+        "source_endpoint": 40,
+        "outcome_endpoint": 41,
+        "terminated": false,
+        "tool_objective_score": 0.7988749742507935
+      },
+      {
+        "source_endpoint": 41,
+        "outcome_endpoint": 42,
+        "terminated": false,
+        "tool_objective_score": 0.8010788559913635
+      },
+      {
+        "source_endpoint": 42,
+        "outcome_endpoint": 43,
+        "terminated": false,
+        "tool_objective_score": 0.8168538212776184
+      },
+      {
+        "source_endpoint": 43,
+        "outcome_endpoint": 44,
+        "terminated": false,
+        "tool_objective_score": 0.827545166015625
+      },
+      {
+        "source_endpoint": 44,
+        "outcome_endpoint": 45,
+        "terminated": false,
+        "tool_objective_score": 0.8261299729347229
+      },
+      {
+        "source_endpoint": 45,
+        "outcome_endpoint": 46,
+        "terminated": false,
+        "tool_objective_score": 0.8400366902351379
+      },
+      {
+        "source_endpoint": 46,
+        "outcome_endpoint": 47,
+        "terminated": false,
+        "tool_objective_score": 0.8632649779319763
+      },
+      {
+        "source_endpoint": 47,
+        "outcome_endpoint": 48,
+        "terminated": false,
+        "tool_objective_score": 0.8956493735313416
+      },
+      {
+        "source_endpoint": 48,
+        "outcome_endpoint": 49,
+        "terminated": false,
+        "tool_objective_score": 0.9217234253883362
+      },
+      {
+        "source_endpoint": 49,
+        "outcome_endpoint": 50,
+        "terminated": false,
+        "tool_objective_score": 0.9642800688743591
+      }
+    ],
+    "captured_endpoints": [
+      46,
+      47,
+      48,
+      49,
+      50
+    ]
+  },
+  "paired_boundary_artifact": {
+    "path": "runs/taco_pour_tail_curriculum_reset_gate_v1/paired_boundaries.pt.gz",
+    "sha256": "997c342c29e301829f499aff5d2711bb198bb432db948085fd44ebc5146dcd14",
+    "count": 5,
+    "snapshot_keys_per_boundary": [
+      362,
+      362,
+      362,
+      362,
+      362
+    ],
+    "warp_state_fields_per_boundary": [
+      342,
+      342,
+      342,
+      342,
+      342
+    ],
+    "rnn_state_shapes_per_boundary": [
+      [
+        [
+          1,
+          1,
+          1024
+        ],
+        [
+          1,
+          1,
+          1024
+        ]
+      ],
+      [
+        [
+          1,
+          1,
+          1024
+        ],
+        [
+          1,
+          1,
+          1024
+        ]
+      ],
+      [
+        [
+          1,
+          1,
+          1024
+        ],
+        [
+          1,
+          1,
+          1024
+        ]
+      ],
+      [
+        [
+          1,
+          1,
+          1024
+        ],
+        [
+          1,
+          1,
+          1024
+        ]
+      ],
+      [
+        [
+          1,
+          1,
+          1024
+        ],
+        [
+          1,
+          1,
+          1024
+        ]
+      ]
+    ],
+    "actor_state_sha256": "ca6823825a9d16b209d5a46d3c4be33848d367e504a9ce6b254c9877cd5a99e4",
+    "actor_hash_scope": "full_model_state_including_input_normalization",
+    "input_normalization_keys": [
+      "running_mean_std.count",
+      "running_mean_std.running_mean",
+      "running_mean_std.running_var"
+    ]
+  },
+  "four_world_restore": {
+    "schema": "egoengine_physics_rnn_boundary_v1",
+    "worlds": 4,
+    "reference_endpoints": [
+      46,
+      47,
+      48,
+      50
+    ],
+    "actor_state_sha256": "ca6823825a9d16b209d5a46d3c4be33848d367e504a9ce6b254c9877cd5a99e4",
+    "physics_bitwise_equal": [
+      true,
+      true,
+      true,
+      true
+    ],
+    "observation_bitwise_equal": true,
+    "rnn_state_shapes": [
+      [
+        1,
+        4,
+        1024
+      ],
+      [
+        1,
+        4,
+        1024
+      ]
+    ],
+    "agent_runtime_shapes": {
+      "dones": [
+        4
+      ],
+      "current_rewards": [
+        4,
+        1
+      ],
+      "current_shaped_rewards": [
+        4,
+        1
+      ],
+      "current_lengths": [
+        4
+      ]
+    },
+    "exploration_rng_restored": false
+  },
+  "four_world_second_restore": {
+    "schema": "egoengine_physics_rnn_boundary_v1",
+    "worlds": 4,
+    "reference_endpoints": [
+      46,
+      47,
+      48,
+      50
+    ],
+    "actor_state_sha256": "ca6823825a9d16b209d5a46d3c4be33848d367e504a9ce6b254c9877cd5a99e4",
+    "physics_bitwise_equal": [
+      true,
+      true,
+      true,
+      true
+    ],
+    "observation_bitwise_equal": true,
+    "rnn_state_shapes": [
+      [
+        1,
+        4,
+        1024
+      ],
+      [
+        1,
+        4,
+        1024
+      ]
+    ],
+    "agent_runtime_shapes": {
+      "dones": [
+        4
+      ],
+      "current_rewards": [
+        4,
+        1
+      ],
+      "current_shaped_rewards": [
+        4,
+        1
+      ],
+      "current_lengths": [
+        4
+      ]
+    },
+    "exploration_rng_restored": false
+  },
+  "deterministic_one_interval_repeat": {
+    "bitwise_equal": {
+      "actions": true,
+      "rnn_states": true,
+      "physics": true,
+      "observation": true,
+      "rewards": true,
+      "dones": true,
+      "info": true
+    },
+    "all_bitwise_equal": true
+  },
+  "stale_actor_memory_rejection": {
+    "changed_actor_parameter_rejected": true,
+    "passed": true
+  },
+  "actor_update_memory_refresh": {
+    "method": "replay_natural_observation_prefix_under_current_actor",
+    "same_actor_replay_matches_saved_RNN_bitwise": [
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "changed_actor_old_memory_rejected": true,
+    "changed_actor_refreshed_memory_accepted": true,
+    "physical_state_unchanged_by_refresh": true,
+    "passed": true
+  },
+  "semantic_limit": {
+    "saved_memory_reusable_after_actor_update_without_refresh": false,
+    "implemented_refresh_behavior": "replay each saved natural observation prefix through the current actor",
+    "physical_tail_state_generated_by_current_actor_after_update": false,
+    "exploration_rng_restored": false,
+    "CPU_acceptance_still_starts_at_endpoint": 20,
+    "CPU_acceptance_required_steps": 40
+  },
+  "PPO_training_authorized": false
+}
