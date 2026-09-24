@@ -388,6 +388,20 @@ non-deterministic GPU training run is not a causal estimate. No curriculum
 ratio, endpoint, epoch, seed or world-count sweep was run, and tail sparsity is
 not established as the root cause.
 
+That closes the tail-sample-count line for now. No 2+2/1+3 variant, alternate
+tail endpoint, additional world, epoch, or seed was run. The next read-only
+audit instead examined the unresolved mixed-unit action mapping over all 197
+reference transitions. The common numeric limit of `0.05` is 5 cm for wrist
+translation but 0.05 rad for wrist rotation and fingers. Its ratio to the
+aggregate P95 reference increment is `5.438 / 0.618 / 0.355` for the right
+hand and `7.395 / 0.591 / 0.412` for the left (translation / wrist rotation /
+finger components). Thus the reference changes do not balance the shared
+numeric scale: translations receive several P95 steps of authority, while the
+rotation and aggregate finger limits are below one P95 step. This is a
+command-space diagnostic, not realized robot motion or proof of the endpoint-53
+cause. No split scale was selected and no training was authorized. Full values
+are in `runs/taco_pour_reference_action_scale_audit_v1/report.json`.
+
 The evidence and hashes are frozen in
 `runs/taco_pour_normalized_ellipse_v1/summary.json`. GPU remains the PPO
 training backend, but it no longer has acceptance or commit authority. The

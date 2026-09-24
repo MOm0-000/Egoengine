@@ -8,7 +8,7 @@ evidence_policy:
   paper_page_numbers: one_based_pdf_pages
   copied_defaults_are_author_settings: false
   new_model_or_reset_procedure_requires_confirmation: true
-  current_revision: frozen_3plus1_tail_curriculum_completed_32_of_40
+  current_revision: mixed_unit_reference_action_scale_audit_completed_no_new_training
 inputs:
   setting: user_approved_gt_oracle_validation_not_full_perception_reproduction
   approved_episodes: ['20230927_027', '20230917_020', '20230926_004', '20231103_071', '20230927_017']
@@ -421,6 +421,7 @@ evaluation:
       strict_40_of_40_achieved: false
       single_GPU_training_run_proves_causal_benefit: false
       tail_sparsity_proven_as_root_cause: false
+      curriculum_ratio_endpoint_epoch_seed_or_world_sweep_stopped: true
     full_rl_executed: false
     independent_thresholds_logged_per_object: true
 runtime_contract:
@@ -466,6 +467,20 @@ runtime_contract:
       wrist_rotation_and_finger_controls: radians
       one_scalar_scale_spans_both: true
       proven_endpoint50_cause: false
+      reference_action_scale_audit:
+        status: completed_read_only_no_scale_selected
+        report: /data_all/zzx/3.2RL/runs/taco_pour_reference_action_scale_audit_v1/report.json
+        documentation: /data_all/zzx/3.2RL/docs/taco_pour_reference_action_scale_audit_v1.md
+        reference_frames: 198
+        reference_transitions: 197
+        current_translation_component_limit_m: 0.05
+        current_rotation_and_finger_component_limit_rad: 0.05
+        right_limit_over_p95: {wrist_translation: 5.437937536647576, wrist_rotation: 0.6183708608935552, fingers: 0.3546624575331618}
+        left_limit_over_p95: {wrist_translation: 7.394863944746998, wrist_rotation: 0.5914798649004196, fingers: 0.41187404670453553}
+        mixed_unit_imbalance_quantified: true
+        reference_increment_is_realized_motion: false
+        split_scale_candidate_selected: false
+        next_training_authorized: false
   execution_backends:
     contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
     training: GPU_MuJoCo_Warp_policy_optimization_only

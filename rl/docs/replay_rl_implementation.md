@@ -204,6 +204,16 @@ run cannot attribute that one-step difference causally. The result therefore
 does not establish tail sparsity as the root cause, and no 2+2 ratio, endpoint,
 epoch, seed or world-count sweep was performed.
 
+The curriculum-ratio line stops at that result. A subsequent no-training audit
+checked all 197 consecutive command changes in the 198-frame reference. The
+current scalar `0.05` means 5 cm for each wrist-translation component but only
+0.05 rad for wrist rotations and fingers. Relative to aggregate P95 reference
+increments, those limits are respectively `5.438 / 0.618 / 0.355` on the
+right and `7.395 / 0.591 / 0.412` on the left (translation / wrist rotation /
+fingers). This quantifies a mixed-unit imbalance; it does not measure realized
+motion, prescribe split scales, or authorize another PPO run. Exact per-axis
+statistics are in `runs/taco_pour_reference_action_scale_audit_v1/report.json`.
+
 ## Current formal runtime
 
 - config: `runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml`;

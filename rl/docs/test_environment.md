@@ -1,5 +1,18 @@
 # Test Environment
 
+## Mixed-unit reference-action scale audit
+
+On 2026-09-24, a read-only audit checked all 197 consecutive control-target
+changes in the frozen 198-frame Pour reference. It compiled the formal model
+only to verify the 36-actuator order; it created no simulator environment, ran
+no physics or PPO, and changed no input. The common numeric residual limit is
+5.438/7.395 times the right/left aggregate wrist-translation P95, but only
+0.618/0.591 times the wrist-rotation P95 and 0.355/0.412 times the aggregate
+finger P95. This quantifies mixed-unit imbalance without selecting a new scale.
+After adding the audit, documentation, and three evidence checks, the complete
+suite passed **627 tests and 57 subtests** in 106.43 s. The 17 warnings are the
+same recorded MuJoCo-Warp, AMP, Trimesh, and SciPy warnings.
+
 ## Tail curriculum paired-reset checkpoint
 
 On 2026-09-24, a CPU-only engineering gate used the frozen four-world actor to
