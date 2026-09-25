@@ -8,7 +8,7 @@ evidence_policy:
   order: [paper, verified_implementation_defect, disclosed_local_proposal]
   paper_page_numbers: one_based_pdf_pages
   copied_defaults_are_author_settings: false
-  current_revision: corrected_policy_decision_attributed_no_commit
+  current_revision: corrected_input_bifurcation_attributed_no_commit
 
 inputs:
   setting: user_approved_gt_oracle_validation_not_full_perception_reproduction
@@ -206,7 +206,7 @@ runtime_contract:
     cpu_commit_endpoint_offset: 20
 
 training_ready: false
-training_ready_scope: corrected_policy_mean_saturation_attributed_input_and_action_frame_decision_required
+training_ready_scope: corrected_actor_saturates_on_both_replay_and_ppo_paths_reference_timing_and_action_frame_decision_required
 
 audit_results:
   active_input: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/input_audit.json
@@ -220,6 +220,7 @@ audit_results:
   corrected_endpoint44_48_failure_attribution: /data_all/zzx/3.2RL/runs/corrected_endpoint44_48_failure_attribution_v1/report.json
   corrected_local_controllability: /data_all/zzx/3.2RL/runs/taco_pour_corrected_local_controllability_v1/report.json
   corrected_policy_decision_attribution: /data_all/zzx/3.2RL/runs/taco_pour_corrected_policy_decision_attribution_v1/report.json
+  corrected_input_bifurcation_attribution: /data_all/zzx/3.2RL/runs/taco_pour_corrected_input_bifurcation_attribution_v1/report.json
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -240,13 +241,14 @@ historical_reward_misaligned:
     - old_objective_mapping_closed_loop_outcomes
 
 blocking_checks:
-  - corrected_policy_mean_saturation_attributed_input_and_action_frame_decision_required
+  - corrected_actor_saturates_on_both_replay_and_ppo_paths_reference_timing_and_action_frame_decision_required
 result_acceptance_blockers:
   - corrected_first_PPO_passed_only_27_of_40_and_committed_nothing
   - corrected_PPO_endpoint48_position_term_alone_exceeds_local_ellipse_boundary
-  - deterministic_actor_mu_exceeds_wrist_y_support_from_source43_through47
-  - a_single_zero_y_intervention_at_44_or_45_or_46_recovers_endpoint48
+  - deterministic_actor_mu_exceeds_wrist_y_support_on_both_PPO_and_Replay_states_from_source43_through47
+  - successful_single_zero_y_intervention_does_not_make_later_actor_mu_self_correct
   - wrist_y_control_transmission_collapses_between_source46_and47_with_contact_loss
+  - reference_timing_coordinate_frame_and_residual_representation_not_resolved
   - unpublished_threshold_to_weighted_objective_mapping
   - stable_grasp_and_physical_pour_not_demonstrated
 paper_faithful_run_blockers:

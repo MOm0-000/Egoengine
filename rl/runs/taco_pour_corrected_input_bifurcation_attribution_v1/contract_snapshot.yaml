@@ -1,0 +1,111 @@
+schema: taco_pour_corrected_input_bifurcation_attribution_v1
+status: authorized_read_only_attribution
+paper_faithful: false
+provenance: >-
+  Local frozen-policy diagnosis of the corrected PPO closed-loop branch and
+  actor-input sensitivity. This is not an EgoEngine author-recovered
+  observation or action contract.
+
+inputs:
+  formal_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/report.json
+    sha256: bb126717045617ddbb3484df2eb194b8da5e846d006568d0b3c201fda0020155
+  checkpoint_artifact:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/checkpoint_artifacts/last_ep_8_rew__6.6354837_.pth.gz
+    sha256: 7193da6e2da0e38f41a39edd46569f74da0054455c6388df5a08107413a015eb
+  endpoint_20_boundary:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/input_contracts/resume_boundary.pt.gz
+    sha256: a3646e24af1ba871e5ecc885669508223a5e0f26d3cf29f0482f02678419e337
+  simulator_config:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml
+    sha256: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+  replay_rl_protocol_snapshot:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/input_contracts/replay_rl_protocol.yaml
+    sha256: 262097a3dd2b7768a940ae6dbb82428b94eedb08931af388037a5243097b7807
+  initialization_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v2/candidate_a/report.json
+    sha256: 9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a
+  objective_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/input_contracts/objective_profile.yaml
+    sha256: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+  observation_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/input_contracts/observation_profile.yaml
+    sha256: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  action_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/input_contracts/action_profile.yaml
+    sha256: 71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4
+  distribution_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/input_contracts/state_feasible_action_profile.yaml
+    sha256: 6a4e4bd8f33fa53bfe34f21f822bfa391253cca090892767154320fc9bbfd1b8
+  prior_policy_decision_attribution:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_policy_decision_attribution_v1/report.json
+    sha256: 434961e8f7d411ba40a7ec8ebea8c5c305498a58f13e976304a63d495680bd7b
+
+runtime:
+  backend: CPU_MuJoCo_Warp
+  optimizer_steps: 0
+  actor_frozen: true
+  normalization_frozen: true
+  objective_changed: false
+  reward_changed: false
+  residual_bound_changed: false
+  chunk_acceptance_allowed: false
+  chunk_commit_allowed: false
+  checkpoint_resume_for_training_allowed: false
+
+formal_regression:
+  start_endpoint: 20
+  final_endpoint_exclusive: 60
+  reproduce_replay_trace_exactly: true
+  reproduce_ppo_trace_exactly: true
+
+path_forward_comparison:
+  source_endpoints: [40, 41, 42, 43, 44, 45, 46, 47]
+  replay_path_hidden: path_consistent_replay_observation_history
+  ppo_path_hidden: path_consistent_ppo_observation_history
+  common_hidden_control: ppo_hidden_with_replay_current_observation
+  execute_policy_on_replay_path: false
+
+observation_groups:
+  dimension: 236
+  hand_state_and_geometry: [0, 108]
+  current_object_anchors: [108, 126]
+  reference_context: [126, 216]
+  contact_flags: [216, 236]
+  substitution_sources: [42, 43, 44, 45, 46]
+  base_state: ppo_path
+  replacement_state: replay_path_same_endpoint
+  fixed_hidden: ppo_path_pre_forward_hidden
+  reference_group_must_be_identical_between_paths: true
+
+local_input_sensitivity:
+  source_endpoints: [42, 43, 44, 45, 46]
+  fixed_hidden: ppo_path_pre_forward_hidden
+  central_difference_delta_m: 0.001
+  perturbations:
+    - coherent_right_hand_y_translation
+    - current_tool_anchor_y_translation
+    - goal_tool_anchor_y_translation
+    - current_reference_right_wrist_y
+    - preview_reference_right_wrist_y
+  causal_physics_gradient_claim_allowed: false
+
+single_step_rescue_followup:
+  source_endpoints: [44, 45, 46]
+  intervention: set_right_wrist_y_normalized_action_to_zero_once
+  subsequent_actions: frozen_deterministic_actor_closed_loop
+  final_endpoint: 48
+  record_subsequent_mu_through_source: 47
+
+normalization_audit:
+  record_raw_observation: true
+  record_preclip_zscore: true
+  record_actor_input_after_normalization_clamp: true
+  record_actor_mu_and_logstd: true
+  empirical_training_observation_range_available: false
+  do_not_call_running_statistics_training_range: true
+
+artifacts:
+  full_array_npz: observations_and_actor_outputs.npz
+  snapshots_are_diagnostic_only: true
+  resume_authorized: false

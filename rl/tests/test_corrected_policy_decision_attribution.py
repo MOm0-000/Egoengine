@@ -131,11 +131,11 @@ def test_policy_decision_artifacts_are_hash_bound_and_not_resumable():
     assert checks["maximum_ctrlrange_loss"] == 0.0
 
 
-def test_protocol_promotes_only_policy_input_and_action_frame_decision():
+def test_protocol_keeps_policy_decision_audit_and_advances_one_attribution_layer():
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
     blocker = (
-        "corrected_policy_mean_saturation_attributed_"
-        "input_and_action_frame_decision_required"
+        "corrected_actor_saturates_on_both_replay_and_ppo_paths_"
+        "reference_timing_and_action_frame_decision_required"
     )
     assert protocol["blocking_checks"] == [blocker]
     audit_path = Path(

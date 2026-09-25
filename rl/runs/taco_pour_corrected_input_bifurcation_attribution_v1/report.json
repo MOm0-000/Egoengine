@@ -1,0 +1,2442 @@
+{
+  "actor": {
+    "checkpoint_uncompressed_sha256": "51d114580ccce873472f9917180dd376dc6693d4e69d9c6861d08b0fe116ff70",
+    "distribution": {
+      "distribution": {
+        "PPO_log_probability": "truncated_Normal_with_state_bound_normalizer",
+        "actuator_ctrlrange_retained_as_final_safety_backstop": true,
+        "base_actor_outputs": [
+          "mu",
+          "sigma"
+        ],
+        "deterministic_action": "clip_mu_to_state_bounds",
+        "entropy": "exact_independent_truncated_Normal_entropy",
+        "kind": "independent_state_truncated_normal",
+        "minimum_normalization_mass": 1e-12,
+        "normalized_bounds": {
+          "high": "min(+1, (ctrl_high - snapped_reference_ctrl) / 0.05)",
+          "low": "max(-1, (ctrl_low - snapped_reference_ctrl) / 0.05)"
+        },
+        "official_minus1_plus1_clamp_enabled": false,
+        "reference_snap_tolerance": 2e-07,
+        "residual_scale": 0.05,
+        "residual_scale_changed": false,
+        "rollout_buffer_fields": [
+          "action_lows",
+          "action_highs"
+        ],
+        "scheduler_KL": "same_action_same_bounds_sample_estimate",
+        "stochastic_action": "inverse_CDF_sample_from_Normal_mu_sigma_truncated_to_low_high"
+      },
+      "paper_faithful": false,
+      "profile_id": "taco_pour_state_feasible_truncated_gaussian_v1",
+      "profile_path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/input_contracts/state_feasible_action_profile.yaml",
+      "profile_sha256": "6a4e4bd8f33fa53bfe34f21f822bfa391253cca090892767154320fc9bbfd1b8",
+      "promotion": {
+        "chunk_commit_authorized": false,
+        "optimizer_training_authorized": false,
+        "required_before_authorization": [
+          "offline_v4_1280_state_gate",
+          "finite_log_probability_and_gradient_gate",
+          "exact_same_policy_ratio_gate",
+          "four_world_zero_optimizer_integration_gate"
+        ],
+        "task_level_PPO_authorized": false
+      },
+      "status": "engineering_candidate_gate_only"
+    },
+    "state_sha256": "d4153ac90cbb483a23926a5ff6b1852daed6428a4195dd7547a51231760f7801"
+  },
+  "contract": {
+    "path": "/data_all/zzx/3.2RL/configs/taco_pour_corrected_input_bifurcation_attribution_v1.yaml",
+    "sha256": "12385489e8764dfe8f8bb89a278a85dac25a28ad3d67609e1044e07e4239f507"
+  },
+  "findings": {
+    "all_rescued_branches_keep_later_mu_y_above_support": true,
+    "all_rescued_branches_pass_endpoint_48": true,
+    "empirical_training_support_claim_available": false,
+    "interpretation": "The harmful deterministic +y request is not uniquely triggered by the PPO physical state and does not self-correct after a successful one-step rescue. The frozen actor also saturates on Replay states; the critical intervention changes contact/trajectory timing while the actor keeps requesting +y. Reference timing/coordinate and residual representation remain the next unresolved contract layer.",
+    "maximum_absolute_local_mu_y_derivative_per_m": 1.3889670372009277,
+    "maximum_predicted_mu_y_change_for_one_mm_local_perturbation": 0.0013889670372009277,
+    "normalization_clipped_dimension_count_across_recorded_path_states": 0,
+    "ppo_mu_y_outside_support_sources": [
+      43,
+      44,
+      45,
+      46,
+      47
+    ],
+    "reference_context_is_path_invariant": true,
+    "replay_object_substitution_increases_mu_y_at_every_source_42_to_46": true,
+    "replay_observation_with_common_ppo_hidden_has_higher_mu_y_than_ppo_at_sources_42_to_47": true,
+    "replay_path_mu_y_outside_support_sources": [
+      43,
+      44,
+      45,
+      46,
+      47
+    ],
+    "tail_saturation_is_unique_to_ppo_state_path": false
+  },
+  "inputs": {
+    "action_profile": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/input_contracts/action_profile.yaml",
+      "sha256": "71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4"
+    },
+    "checkpoint_artifact": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/checkpoint_artifacts/last_ep_8_rew__6.6354837_.pth.gz",
+      "sha256": "7193da6e2da0e38f41a39edd46569f74da0054455c6388df5a08107413a015eb"
+    },
+    "distribution_profile": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/input_contracts/state_feasible_action_profile.yaml",
+      "sha256": "6a4e4bd8f33fa53bfe34f21f822bfa391253cca090892767154320fc9bbfd1b8"
+    },
+    "endpoint_20_boundary": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/input_contracts/resume_boundary.pt.gz",
+      "sha256": "a3646e24af1ba871e5ecc885669508223a5e0f26d3cf29f0482f02678419e337"
+    },
+    "formal_report": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/report.json",
+      "sha256": "bb126717045617ddbb3484df2eb194b8da5e846d006568d0b3c201fda0020155"
+    },
+    "initialization_report": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v2/candidate_a/report.json",
+      "sha256": "9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a"
+    },
+    "objective_profile": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/input_contracts/objective_profile.yaml",
+      "sha256": "8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9"
+    },
+    "observation_profile": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/input_contracts/observation_profile.yaml",
+      "sha256": "8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7"
+    },
+    "prior_policy_decision_attribution": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_policy_decision_attribution_v1/report.json",
+      "sha256": "434961e8f7d411ba40a7ec8ebea8c5c305498a58f13e976304a63d495680bd7b"
+    },
+    "replay_rl_protocol_snapshot": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/input_contracts/replay_rl_protocol.yaml",
+      "sha256": "262097a3dd2b7768a940ae6dbb82428b94eedb08931af388037a5243097b7807"
+    },
+    "simulator_config": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml",
+      "sha256": "0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6"
+    }
+  },
+  "interpretation_limits": [
+    "Group substitutions isolate actor-input dependence with fixed PPO hidden but may not be physically realizable observations.",
+    "Central differences measure actor input sensitivity, not causal object response or a smooth contact-dynamics Jacobian.",
+    "Replay-path and PPO-path results are reported both with path-consistent memory and a common PPO-hidden control.",
+    "Historical full observations are unavailable, so standardized magnitude is not called empirical training-range coverage.",
+    "The exact 236-D observation, contact flags, preview and truncated action distribution are local unpublished choices."
+  ],
+  "local_actor_input_sensitivity": {
+    "causal_physics_gradient": false,
+    "central_difference_delta_m": 0.001,
+    "fixed_hidden": "ppo_path_pre_forward_hidden",
+    "rows": {
+      "42": {
+        "coherent_right_hand_y_translation": {
+          "all_action_mu_derivative_l2_per_m": 6.284379525462647,
+          "causal_physics_gradient": false,
+          "central_difference_delta_m": 0.001,
+          "raw_observation_indices": [
+            1,
+            73,
+            76,
+            79,
+            82,
+            85,
+            103
+          ],
+          "right_wrist_y_mu_derivative_per_m": 1.1178553104400635,
+          "right_wrist_y_mu_minus": 0.9463628530502319,
+          "right_wrist_y_mu_plus": 0.9485985636711121
+        },
+        "current_reference_right_wrist_y": {
+          "all_action_mu_derivative_l2_per_m": 3.5604058210495553,
+          "causal_physics_gradient": false,
+          "central_difference_delta_m": 0.001,
+          "raw_observation_indices": [
+            145
+          ],
+          "right_wrist_y_mu_derivative_per_m": -0.5553364753723145,
+          "right_wrist_y_mu_minus": 0.9480379223823547,
+          "right_wrist_y_mu_plus": 0.9469272494316101
+        },
+        "current_tool_anchor_y_translation": {
+          "all_action_mu_derivative_l2_per_m": 3.400565067701484,
+          "causal_physics_gradient": false,
+          "central_difference_delta_m": 0.001,
+          "raw_observation_indices": [
+            109,
+            112,
+            115
+          ],
+          "right_wrist_y_mu_derivative_per_m": -1.1197328567504883,
+          "right_wrist_y_mu_minus": 0.9486014246940613,
+          "right_wrist_y_mu_plus": 0.9463619589805603
+        },
+        "goal_tool_anchor_y_translation": {
+          "all_action_mu_derivative_l2_per_m": 5.1243811155795935,
+          "causal_physics_gradient": false,
+          "central_difference_delta_m": 0.001,
+          "raw_observation_indices": [
+            127,
+            130,
+            133
+          ],
+          "right_wrist_y_mu_derivative_per_m": -1.1357665061950684,
+          "right_wrist_y_mu_minus": 0.9486173987388611,
+          "right_wrist_y_mu_plus": 0.946345865726471
+        },
+        "preview_reference_right_wrist_y": {
+          "all_action_mu_derivative_l2_per_m": 2.5778922995980045,
+          "causal_physics_gradient": false,
+          "central_difference_delta_m": 0.001,
+          "raw_observation_indices": [
+            181
+          ],
+          "right_wrist_y_mu_derivative_per_m": 0.1226663589477539,
+          "right_wrist_y_mu_minus": 0.9473592638969421,
+          "right_wrist_y_mu_plus": 0.9476045966148376
+        }
+      },
+      "43": {
+        "coherent_right_hand_y_translation": {
+          "all_action_mu_derivative_l2_per_m": 6.262352380712066,
+          "causal_physics_gradient": false,
+          "central_difference_delta_m": 0.001,
+          "raw_observation_indices": [
+            1,
+            73,
+            76,
+            79,
+            82,
+            85,
+            103
+          ],
+          "right_wrist_y_mu_derivative_per_m": 1.3320446014404297,
+          "right_wrist_y_mu_minus": 1.2928333282470703,
+          "right_wrist_y_mu_plus": 1.2954974174499512
+        },
+        "current_reference_right_wrist_y": {
+          "all_action_mu_derivative_l2_per_m": 3.5917102240622394,
+          "causal_physics_gradient": false,
+          "central_difference_delta_m": 0.001,
+          "raw_observation_indices": [
+            145
+          ],
+          "right_wrist_y_mu_derivative_per_m": -0.6908774375915527,
+          "right_wrist_y_mu_minus": 1.294858694076538,
+          "right_wrist_y_mu_plus": 1.293476939201355
+        },
+        "current_tool_anchor_y_translation": {
+          "all_action_mu_derivative_l2_per_m": 3.472098198707391,
+          "causal_physics_gradient": false,
+          "central_difference_delta_m": 0.001,
+          "raw_observation_indices": [
+            109,
+            112,
+            115
+          ],
+          "right_wrist_y_mu_derivative_per_m": -1.1162757873535156,
+          "right_wrist_y_mu_minus": 1.2952839136123657,
+          "right_wrist_y_mu_plus": 1.2930513620376587
+        },
+        "goal_tool_anchor_y_translation": {
+          "all_action_mu_derivative_l2_per_m": 5.0839807275451685,
+          "causal_physics_gradient": false,
+          "central_difference_delta_m": 0.001,
+          "raw_observation_indices": [
+            127,
+            130,
+            133
+          ],
+          "right_wrist_y_mu_derivative_per_m": -0.9093880653381348,
+          "right_wrist_y_mu_minus": 1.2950756549835205,
+          "right_wrist_y_mu_plus": 1.2932568788528442
+        },
+        "preview_reference_right_wrist_y": {
+          "all_action_mu_derivative_l2_per_m": 2.6163547878743705,
+          "causal_physics_gradient": false,
+          "central_difference_delta_m": 0.001,
+          "raw_observation_indices": [
+            181
+          ],
+          "right_wrist_y_mu_derivative_per_m": 0.06455183029174805,
+          "right_wrist_y_mu_minus": 1.2941036224365234,
+          "right_wrist_y_mu_plus": 1.294232726097107
+        }
+      },
+      "44": {
+        "coherent_right_hand_y_translation": {
+          "all_action_mu_derivative_l2_per_m": 5.916156974169937,
+          "causal_physics_gradient": false,
+          "central_difference_delta_m": 0.001,
+          "raw_observation_indices": [
+            1,
+            73,
+            76,
+            79,
+            82,
+            85,
+            103
+          ],
+          "right_wrist_y_mu_derivative_per_m": 1.3889670372009277,
+          "right_wrist_y_mu_minus": 1.6846609115600586,
+          "right_wrist_y_mu_plus": 1.6874388456344604
+        },
+        "current_reference_right_wrist_y": {
+          "all_action_mu_derivative_l2_per_m": 3.6103197272167633,
+          "causal_physics_gradient": false,
+          "central_difference_delta_m": 0.001,
+          "raw_observation_indices": [
+            145
+          ],
+          "right_wrist_y_mu_derivative_per_m": -0.7855892181396484,
+          "right_wrist_y_mu_minus": 1.6868423223495483,
+          "right_wrist_y_mu_plus": 1.685271143913269
+        },
+        "current_tool_anchor_y_translation": {
+          "all_action_mu_derivative_l2_per_m": 3.483740364704372,
+          "causal_physics_gradient": false,
+          "central_difference_delta_m": 0.001,
+          "raw_observation_indices": [
+            109,
+            112,
+            115
+          ],
+          "right_wrist_y_mu_derivative_per_m": -1.0265111923217773,
+          "right_wrist_y_mu_minus": 1.687083125114441,
+          "right_wrist_y_mu_plus": 1.6850301027297974
+        },
+        "goal_tool_anchor_y_translation": {
+          "all_action_mu_derivative_l2_per_m": 4.885425938896195,
+          "causal_physics_gradient": false,
+          "central_difference_delta_m": 0.001,
+          "raw_observation_indices": [
+            127,
+            130,
+            133
+          ],
+          "right_wrist_y_mu_derivative_per_m": -0.6356239318847656,
+          "right_wrist_y_mu_minus": 1.6866894960403442,
+          "right_wrist_y_mu_plus": 1.6854182481765747
+        },
+        "preview_reference_right_wrist_y": {
+          "all_action_mu_derivative_l2_per_m": 2.6692030317450577,
+          "causal_physics_gradient": false,
+          "central_difference_delta_m": 0.001,
+          "raw_observation_indices": [
+            181
+          ],
+          "right_wrist_y_mu_derivative_per_m": -0.0928640365600586,
+          "right_wrist_y_mu_minus": 1.6861497163772583,
+          "right_wrist_y_mu_plus": 1.6859639883041382
+        }
+      },
+      "45": {
+        "coherent_right_hand_y_translation": {
+          "all_action_mu_derivative_l2_per_m": 5.442273118506264,
+          "causal_physics_gradient": false,
+          "central_difference_delta_m": 0.001,
+          "raw_observation_indices": [
+            1,
+            73,
+            76,
+            79,
+            82,
+            85,
+            103
+          ],
+          "right_wrist_y_mu_derivative_per_m": 1.043081283569336,
+          "right_wrist_y_mu_minus": 1.9855483770370483,
+          "right_wrist_y_mu_plus": 1.987634539604187
+        },
+        "current_reference_right_wrist_y": {
+          "all_action_mu_derivative_l2_per_m": 3.4616689150205464,
+          "causal_physics_gradient": false,
+          "central_difference_delta_m": 0.001,
+          "raw_observation_indices": [
+            145
+          ],
+          "right_wrist_y_mu_derivative_per_m": -0.7539987564086914,
+          "right_wrist_y_mu_minus": 1.987352967262268,
+          "right_wrist_y_mu_plus": 1.9858449697494507
+        },
+        "current_tool_anchor_y_translation": {
+          "all_action_mu_derivative_l2_per_m": 3.3382831882375252,
+          "causal_physics_gradient": false,
+          "central_difference_delta_m": 0.001,
+          "raw_observation_indices": [
+            109,
+            112,
+            115
+          ],
+          "right_wrist_y_mu_derivative_per_m": -0.948786735534668,
+          "right_wrist_y_mu_minus": 1.9875476360321045,
+          "right_wrist_y_mu_plus": 1.9856500625610352
+        },
+        "goal_tool_anchor_y_translation": {
+          "all_action_mu_derivative_l2_per_m": 4.60463501418777,
+          "causal_physics_gradient": false,
+          "central_difference_delta_m": 0.001,
+          "raw_observation_indices": [
+            127,
+            130,
+            133
+          ],
+          "right_wrist_y_mu_derivative_per_m": -0.6625652313232422,
+          "right_wrist_y_mu_minus": 1.9872592687606812,
+          "right_wrist_y_mu_plus": 1.9859341382980347
+        },
+        "preview_reference_right_wrist_y": {
+          "all_action_mu_derivative_l2_per_m": 2.5788563312947748,
+          "causal_physics_gradient": false,
+          "central_difference_delta_m": 0.001,
+          "raw_observation_indices": [
+            181
+          ],
+          "right_wrist_y_mu_derivative_per_m": -0.3502964973449707,
+          "right_wrist_y_mu_minus": 1.9869483709335327,
+          "right_wrist_y_mu_plus": 1.9862477779388428
+        }
+      },
+      "46": {
+        "coherent_right_hand_y_translation": {
+          "all_action_mu_derivative_l2_per_m": 5.076509974876169,
+          "causal_physics_gradient": false,
+          "central_difference_delta_m": 0.001,
+          "raw_observation_indices": [
+            1,
+            73,
+            76,
+            79,
+            82,
+            85,
+            103
+          ],
+          "right_wrist_y_mu_derivative_per_m": 0.6971359252929688,
+          "right_wrist_y_mu_minus": 2.1043529510498047,
+          "right_wrist_y_mu_plus": 2.1057472229003906
+        },
+        "current_reference_right_wrist_y": {
+          "all_action_mu_derivative_l2_per_m": 3.158036744743128,
+          "causal_physics_gradient": false,
+          "central_difference_delta_m": 0.001,
+          "raw_observation_indices": [
+            145
+          ],
+          "right_wrist_y_mu_derivative_per_m": -0.7159709930419922,
+          "right_wrist_y_mu_minus": 2.1057727336883545,
+          "right_wrist_y_mu_plus": 2.1043407917022705
+        },
+        "current_tool_anchor_y_translation": {
+          "all_action_mu_derivative_l2_per_m": 3.177233819475984,
+          "causal_physics_gradient": false,
+          "central_difference_delta_m": 0.001,
+          "raw_observation_indices": [
+            109,
+            112,
+            115
+          ],
+          "right_wrist_y_mu_derivative_per_m": -0.9458065032958984,
+          "right_wrist_y_mu_minus": 2.10600209236145,
+          "right_wrist_y_mu_plus": 2.1041104793548584
+        },
+        "goal_tool_anchor_y_translation": {
+          "all_action_mu_derivative_l2_per_m": 4.4263901144637305,
+          "causal_physics_gradient": false,
+          "central_difference_delta_m": 0.001,
+          "raw_observation_indices": [
+            127,
+            130,
+            133
+          ],
+          "right_wrist_y_mu_derivative_per_m": -0.7305145263671875,
+          "right_wrist_y_mu_minus": 2.1057846546173096,
+          "right_wrist_y_mu_plus": 2.104323625564575
+        },
+        "preview_reference_right_wrist_y": {
+          "all_action_mu_derivative_l2_per_m": 2.3317650025314403,
+          "causal_physics_gradient": false,
+          "central_difference_delta_m": 0.001,
+          "raw_observation_indices": [
+            181
+          ],
+          "right_wrist_y_mu_derivative_per_m": -0.4385709762573242,
+          "right_wrist_y_mu_minus": 2.105494737625122,
+          "right_wrist_y_mu_plus": 2.1046175956726074
+        }
+      }
+    }
+  },
+  "normalization_audit": {
+    "empirical_training_observation_range_available": false,
+    "preclip_z_and_actor_input_saved_in_npz": true,
+    "reason": "historical training visitation did not store the full 236-D observation; running mean/variance is not empirical min/max support",
+    "running_mean": [
+      0.7707311584091484,
+      -0.1689657934190332,
+      0.8490440717067317,
+      0.9903180720190067,
+      -0.011177803044389877,
+      0.9195508517668082,
+      0.9544300121036384,
+      0.8893370795864132,
+      0.06037534964121849,
+      0.04363644178913126,
+      0.8602080319097134,
+      0.6152755519917567,
+      0.9891920290730318,
+      0.3444719351799017,
+      1.1300241975091938,
+      0.3547406959682587,
+      1.144934526930369,
+      0.1596676847322391,
+      0.4190630023131419,
+      -0.25647249564260916,
+      0.8651996198619929,
+      2.1350956186477696,
+      0.5761714171469909,
+      1.2026073595772118,
+      0.574316863060742,
+      1.377965776739783,
+      -0.12104324862698296,
+      0.06558701268031578,
+      0.5932940215826221,
+      1.2510863846861504,
+      0.8994219584170959,
+      1.1172326480290744,
+      0.8069096758065979,
+      1.4192609913548297,
+      0.5888034848846745,
+      1.3157386541552696,
+      0.028521007742619345,
+      0.07659897499024913,
+      0.031107050729486555,
+      -0.3788792612401886,
+      0.7340101261421816,
+      -0.5691426252592922,
+      0.1578732732913161,
+      -0.28097158107415104,
+      0.4620580567129881,
+      0.025761478655418318,
+      -0.0519968658048808,
+      1.070317001104541,
+      0.23774957024055382,
+      0.19845923625520204,
+      0.2504918391028947,
+      0.5730976637781457,
+      0.34676140681735057,
+      0.6777775948351011,
+      -0.04253370869122475,
+      0.01678617070607149,
+      -0.014090718676762874,
+      0.04999261387245066,
+      -0.7653830928043124,
+      -0.27818354845605353,
+      -0.0550887891317512,
+      -0.02047020731861706,
+      0.03923136493733486,
+      -0.006140416995516799,
+      -0.37976001222835304,
+      0.13749433613028217,
+      -0.32177203060778486,
+      -0.32504292971263354,
+      -0.2021747831892074,
+      -0.3521525273557569,
+      -0.1925663730299724,
+      0.13584657142536424,
+      0.7539831484601798,
+      -0.029196700111764378,
+      0.8167690452796049,
+      0.7784787534643764,
+      -0.021275960077632695,
+      0.784929827914212,
+      0.7666171518366008,
+      -0.028977699106694385,
+      0.770246787149398,
+      0.7534726833012958,
+      -0.04689676048791009,
+      0.7625585343110013,
+      0.7485047920340212,
+      -0.056324087019361244,
+      0.7477616630988974,
+      0.3863023464610854,
+      -0.12860729115536026,
+      0.8258843998905274,
+      0.3707763908618507,
+      -0.12140095838804342,
+      0.8078319778859289,
+      0.38188456744537236,
+      -0.13698126728138266,
+      0.7937441385881125,
+      0.37498474865570186,
+      -0.1529254157686494,
+      0.784115556810723,
+      0.36074725098204186,
+      -0.15934915490489188,
+      0.7673634820204056,
+      0.7706361036576116,
+      -0.16922112836398528,
+      0.8489403661389913,
+      0.4192047878506591,
+      -0.25652845049164985,
+      0.865246603769962,
+      0.9105883753923213,
+      0.19566528318823545,
+      0.7485693306963859,
+      0.6407964350561162,
+      0.22162809118826254,
+      0.7556498078607563,
+      0.7700003431143005,
+      0.08079326962419639,
+      0.9538756898378228,
+      0.6496987130658688,
+      0.06341703230286837,
+      0.7424099421147534,
+      0.37358181631071885,
+      0.11081476308329788,
+      0.7386442760673005,
+      0.48581368657036933,
+      -0.05220009376070259,
+      0.9392583640081448,
+      0.9032758523671539,
+      0.08847136035922168,
+      0.7718806970314902,
+      0.6422061905276487,
+      0.19336321873184667,
+      0.7812956140713241,
+      0.7214735226180756,
+      -0.005883610866248469,
+      0.964268059771476,
+      0.6322611615957459,
+      0.11359730425707351,
+      0.7349360910455851,
+      0.35108341080057354,
+      0.13528321144824657,
+      0.7506122335989339,
+      0.4926263718377976,
+      -0.010769758184471697,
+      0.9464942655183672,
+      0.7712429264017979,
+      -0.14710461320958967,
+      0.8311130291404993,
+      0.9626338893226308,
+      0.044764090128748976,
+      0.8778146912026089,
+      0.968937676554076,
+      0.8682292816138286,
+      0.10301506677518871,
+      0.060913508800116485,
+      0.8312064832676955,
+      0.7589001994315392,
+      1.0003405190556427,
+      0.3742618583125309,
+      1.1430492743582208,
+      0.43635512403358623,
+      1.1623486497270046,
+      0.2486114479618832,
+      0.43019191628782943,
+      -0.26479827157228275,
+      0.8158464156306413,
+      2.141459939258346,
+      0.5109674720257916,
+      1.1793725179751156,
+      0.5780737666205258,
+      1.3798635514056097,
+      -0.13265914045954758,
+      0.06851685503141476,
+      0.5477709848372663,
+      1.2543086424923613,
+      0.8563467304191023,
+      1.0665681974483971,
+      0.7837404970262871,
+      1.353497799256181,
+      0.5742268223580115,
+      1.3410824783885043,
+      0.7712896944116002,
+      -0.14583285575169871,
+      0.8325002641997982,
+      0.9553261383914278,
+      0.06767305444452001,
+      0.8655525389171781,
+      0.9646910117251346,
+      0.8726708429293368,
+      0.11195235844239138,
+      0.060674037717451446,
+      0.8159349264342929,
+      0.8002584786456046,
+      0.9935099700760971,
+      0.3879965291555555,
+      1.12934197419142,
+      0.46530796530468216,
+      1.1488458125689922,
+      0.2779326245339935,
+      0.43143728391720293,
+      -0.26423951967166415,
+      0.8152310090731307,
+      2.150616820764951,
+      0.4806512114966316,
+      1.1798248618585259,
+      0.579693255994024,
+      1.3782949246623197,
+      -0.13245567691037657,
+      0.06825384453439229,
+      0.5360853588273988,
+      1.2503161344744096,
+      0.8444443538168461,
+      1.0494903993271554,
+      0.7758443714770183,
+      1.3301122309545537,
+      0.5626039073208549,
+      1.338319205195526,
+      0.041373926422076705,
+      0.5261514523734718,
+      0.004683840761046963,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.002341920467766815,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.16861827135272178,
+      0.8024980647781693
+    ],
+    "running_mean_std_count": 1281.0,
+    "running_variance": [
+      0.0015254530099434419,
+      0.0013678489819108656,
+      0.001619151433905228,
+      0.017374689633986966,
+      0.04045149515463612,
+      0.021151894834088095,
+      0.026713523262867703,
+      0.04814844533267539,
+      0.08744753208893252,
+      0.0014631442561767152,
+      0.0317503397389711,
+      0.14310140257733547,
+      0.03870234882514655,
+      0.02050221813973599,
+      0.050994359120149435,
+      0.09063991087247503,
+      0.08701708677498585,
+      0.0662876591432177,
+      0.001628121919034164,
+      0.0009560282268021198,
+      0.0017092867791483144,
+      0.02179528300617146,
+      0.12183650587873479,
+      0.004497798323030297,
+      0.017975386511577797,
+      0.01563004699691735,
+      0.002694642665179338,
+      0.0010513721125990306,
+      0.05875353931876551,
+      0.012743419516557624,
+      0.05335303420026936,
+      0.017357282006462596,
+      0.060877793063098914,
+      0.026766739837199523,
+      0.11410541897003056,
+      0.03147250387792702,
+      0.027283062539561646,
+      0.020313030531375433,
+      0.03564313786107002,
+      0.38391431047672653,
+      0.2980092974785593,
+      0.40411346283207394,
+      0.8065389556321056,
+      2.7614343662849596,
+      3.3966682324250024,
+      0.04098708784411138,
+      2.3776887119767225,
+      1.5083412892074561,
+      1.576357859932152,
+      2.2090370446981678,
+      2.7557373845450064,
+      1.600396916758491,
+      4.171574024327111,
+      1.0076774464880789,
+      0.044236986840315094,
+      0.020883495663324175,
+      0.01778207373363322,
+      0.8963729237870707,
+      1.6163810863593755,
+      0.6852413936048518,
+      1.182346283758813,
+      0.9866058188882791,
+      0.17046725700746812,
+      0.03628188129056322,
+      2.351804271859339,
+      1.1435069701140583,
+      1.9209546373396509,
+      0.8194978953125133,
+      2.666866052038555,
+      1.3771810178776447,
+      5.1549256589069135,
+      2.452916777991972,
+      0.001573094605714129,
+      0.0012267933455330402,
+      0.0015666980629376766,
+      0.0015361056781341578,
+      0.000991892583761744,
+      0.0013704301575218432,
+      0.0014453876090796181,
+      0.0011221868667536802,
+      0.0013753090781055352,
+      0.0013817797206014011,
+      0.001062506112440707,
+      0.0013758174532788872,
+      0.0014645314808368135,
+      0.0010549425626655688,
+      0.0014062343764891464,
+      0.0012644324183244046,
+      0.0009153298370930888,
+      0.0013311138729966442,
+      0.0012056760476773167,
+      0.0008675410209909481,
+      0.0013234951148574645,
+      0.0012198939131777466,
+      0.001032655007201764,
+      0.0013252298724056443,
+      0.0011793176913637818,
+      0.001067071022893522,
+      0.0013724631442442183,
+      0.0011187643260386305,
+      0.0009804093116852948,
+      0.0014077688121728734,
+      0.0015250857001274734,
+      0.0013713041122053692,
+      0.00161851982385294,
+      0.0016372227826538773,
+      0.0009562233130023276,
+      0.0017066100214433836,
+      0.003740154907181231,
+      0.002851351322041797,
+      0.0015743187550669856,
+      0.003388866325433471,
+      0.0017372692424841795,
+      0.001984276453309992,
+      0.0021946790237038715,
+      0.0014399588417208428,
+      0.0015081043847145397,
+      0.002056986291052747,
+      0.002058245110517201,
+      0.0015347131355361347,
+      0.001607151389553499,
+      0.0009059418160388447,
+      0.0012422005711979949,
+      0.001509754116264305,
+      0.0011161577277067729,
+      0.0015040377274710569,
+      0.0014750791633139936,
+      0.0008427100774473116,
+      0.0014884349918996317,
+      0.0013078255556626267,
+      0.0009443149344814864,
+      0.0018826340985667427,
+      0.001421323444054508,
+      0.0011131470865845294,
+      0.001812791649109211,
+      0.0010933335300353697,
+      0.0007930111447810725,
+      0.0012059298964897168,
+      0.0008775677654936513,
+      0.0008075428311242252,
+      0.0012664653263780464,
+      0.0010632786639227993,
+      0.0008028953698946999,
+      0.0015165702869950652,
+      0.0013176819371495925,
+      0.0009423109376148295,
+      0.001633089302052718,
+      0.012635038681699216,
+      0.042758220574452194,
+      0.013911362736011578,
+      0.045190170963083955,
+      0.08404850809279922,
+      0.13028284792737546,
+      0.0011951774355512658,
+      0.09127960065567309,
+      0.15911910940820517,
+      0.07583171077723458,
+      0.06357543292798505,
+      0.10574374081452173,
+      0.14778167270794443,
+      0.1738396263972785,
+      0.12547410829455388,
+      0.0014867676446911197,
+      0.0008819984075467274,
+      0.0013794939933556018,
+      0.026968923664058064,
+      0.14773832657833808,
+      0.0026332970695725198,
+      0.03220158703503899,
+      0.027723174582896824,
+      0.00479757589784944,
+      0.000990406034166111,
+      0.10453215452688358,
+      0.030221324412269133,
+      0.0858965273283716,
+      0.04632361522626339,
+      0.10152068786487953,
+      0.06443700787518576,
+      0.2071909075245836,
+      0.05633561938498215,
+      0.0013204854536081126,
+      0.0008995416642728339,
+      0.001702445985454525,
+      0.01176051373351719,
+      0.04358413377978189,
+      0.012495764143239206,
+      0.052620909533347034,
+      0.09238734278650734,
+      0.13174442021701874,
+      0.0012866356135241563,
+      0.10623146324155582,
+      0.14914966197527665,
+      0.08828872091904523,
+      0.07170278831510109,
+      0.12514904205763996,
+      0.1547993838365978,
+      0.2010908271048021,
+      0.135506939642044,
+      0.0015125740921753895,
+      0.000872310022112759,
+      0.001387826054721308,
+      0.02841155897756154,
+      0.15317046567389786,
+      0.002640785708305942,
+      0.03325322024238031,
+      0.028336849243251156,
+      0.0048131827338467464,
+      0.0009968623133082984,
+      0.11055020456079188,
+      0.03297407613281745,
+      0.09028428277607212,
+      0.053361115268586765,
+      0.10602651745750621,
+      0.07667513846433528,
+      0.21690881042940838,
+      0.05964098858628581,
+      0.04068177524568912,
+      0.25163715693765026,
+      0.005471203159346416,
+      0.0007806401249024199,
+      0.0007806401249024199,
+      0.0007806401249024199,
+      0.0007806401249024199,
+      0.0007806401249024199,
+      0.0007806401249024199,
+      0.0031315287304933574,
+      0.0007806401249024199,
+      0.0007806401249024199,
+      0.0007806401249024199,
+      0.0007806401249024199,
+      0.0007806401249024199,
+      0.0007806401249024199,
+      0.0007806401249024199,
+      0.0007806401249024199,
+      0.14182094920473204,
+      0.16024762496871583
+    ]
+  },
+  "observation_group_substitution": {
+    "42": {
+      "base_ppo_right_wrist_y_mu": 0.9474828243255615,
+      "fixed_hidden": "ppo_path_pre_forward_hidden",
+      "substitutions": {
+        "contact_flags": {
+          "all_action_mu_change_l2": 0.37939669272334836,
+          "normalization": {
+            "groups": {
+              "contact_flags": {
+                "maximum_absolute_preclip_z": 0.9445903301239014,
+                "normalization_clipped_dimension_count": 0
+              },
+              "current_object_anchors": {
+                "maximum_absolute_preclip_z": 1.4649451971054077,
+                "normalization_clipped_dimension_count": 0
+              },
+              "hand_state_and_geometry": {
+                "maximum_absolute_preclip_z": 2.4471323490142822,
+                "normalization_clipped_dimension_count": 0
+              },
+              "reference_context": {
+                "maximum_absolute_preclip_z": 1.6486352682113647,
+                "normalization_clipped_dimension_count": 0
+              }
+            },
+            "maximum_absolute_preclip_z": 2.4471323490142822,
+            "normalization_clipped_dimension_count": 0,
+            "normalization_clipped_indices": []
+          },
+          "raw_group_l2_difference": 1.4142135623730951,
+          "right_wrist_y_mu": 0.9304631352424622,
+          "right_wrist_y_mu_change": -0.017019689083099365
+        },
+        "current_object_anchors": {
+          "all_action_mu_change_l2": 0.5096977880122456,
+          "normalization": {
+            "groups": {
+              "contact_flags": {
+                "maximum_absolute_preclip_z": 2.2075724601745605,
+                "normalization_clipped_dimension_count": 0
+              },
+              "current_object_anchors": {
+                "maximum_absolute_preclip_z": 1.7032203674316406,
+                "normalization_clipped_dimension_count": 0
+              },
+              "hand_state_and_geometry": {
+                "maximum_absolute_preclip_z": 2.4471323490142822,
+                "normalization_clipped_dimension_count": 0
+              },
+              "reference_context": {
+                "maximum_absolute_preclip_z": 1.6486352682113647,
+                "normalization_clipped_dimension_count": 0
+              }
+            },
+            "maximum_absolute_preclip_z": 2.4471323490142822,
+            "normalization_clipped_dimension_count": 0,
+            "normalization_clipped_indices": []
+          },
+          "raw_group_l2_difference": 0.2810705874090879,
+          "right_wrist_y_mu": 1.0989151000976562,
+          "right_wrist_y_mu_change": 0.15143227577209473
+        },
+        "hand_state_and_geometry": {
+          "all_action_mu_change_l2": 0.6110643339830066,
+          "normalization": {
+            "groups": {
+              "contact_flags": {
+                "maximum_absolute_preclip_z": 2.2075724601745605,
+                "normalization_clipped_dimension_count": 0
+              },
+              "current_object_anchors": {
+                "maximum_absolute_preclip_z": 1.4649451971054077,
+                "normalization_clipped_dimension_count": 0
+              },
+              "hand_state_and_geometry": {
+                "maximum_absolute_preclip_z": 2.052046775817871,
+                "normalization_clipped_dimension_count": 0
+              },
+              "reference_context": {
+                "maximum_absolute_preclip_z": 1.6486352682113647,
+                "normalization_clipped_dimension_count": 0
+              }
+            },
+            "maximum_absolute_preclip_z": 2.2075724601745605,
+            "normalization_clipped_dimension_count": 0,
+            "normalization_clipped_indices": []
+          },
+          "raw_group_l2_difference": 1.3185006779353512,
+          "right_wrist_y_mu": 0.9726783633232117,
+          "right_wrist_y_mu_change": 0.025195538997650146
+        },
+        "reference_context": {
+          "all_action_mu_change_l2": 0.0,
+          "normalization": {
+            "groups": {
+              "contact_flags": {
+                "maximum_absolute_preclip_z": 2.2075724601745605,
+                "normalization_clipped_dimension_count": 0
+              },
+              "current_object_anchors": {
+                "maximum_absolute_preclip_z": 1.4649451971054077,
+                "normalization_clipped_dimension_count": 0
+              },
+              "hand_state_and_geometry": {
+                "maximum_absolute_preclip_z": 2.4471323490142822,
+                "normalization_clipped_dimension_count": 0
+              },
+              "reference_context": {
+                "maximum_absolute_preclip_z": 1.6486352682113647,
+                "normalization_clipped_dimension_count": 0
+              }
+            },
+            "maximum_absolute_preclip_z": 2.4471323490142822,
+            "normalization_clipped_dimension_count": 0,
+            "normalization_clipped_indices": []
+          },
+          "raw_group_l2_difference": 0.0,
+          "right_wrist_y_mu": 0.9474828243255615,
+          "right_wrist_y_mu_change": 0.0
+        }
+      }
+    },
+    "43": {
+      "base_ppo_right_wrist_y_mu": 1.2941690683364868,
+      "fixed_hidden": "ppo_path_pre_forward_hidden",
+      "substitutions": {
+        "contact_flags": {
+          "all_action_mu_change_l2": 0.426824330012538,
+          "normalization": {
+            "groups": {
+              "contact_flags": {
+                "maximum_absolute_preclip_z": 1.0488532781600952,
+                "normalization_clipped_dimension_count": 0
+              },
+              "current_object_anchors": {
+                "maximum_absolute_preclip_z": 1.8157483339309692,
+                "normalization_clipped_dimension_count": 0
+              },
+              "hand_state_and_geometry": {
+                "maximum_absolute_preclip_z": 2.7101995944976807,
+                "normalization_clipped_dimension_count": 0
+              },
+              "reference_context": {
+                "maximum_absolute_preclip_z": 1.4901725053787231,
+                "normalization_clipped_dimension_count": 0
+              }
+            },
+            "maximum_absolute_preclip_z": 2.7101995944976807,
+            "normalization_clipped_dimension_count": 0,
+            "normalization_clipped_indices": []
+          },
+          "raw_group_l2_difference": 1.7320508075688772,
+          "right_wrist_y_mu": 1.3834346532821655,
+          "right_wrist_y_mu_change": 0.08926558494567871
+        },
+        "current_object_anchors": {
+          "all_action_mu_change_l2": 0.5093740639853263,
+          "normalization": {
+            "groups": {
+              "contact_flags": {
+                "maximum_absolute_preclip_z": 2.2075724601745605,
+                "normalization_clipped_dimension_count": 0
+              },
+              "current_object_anchors": {
+                "maximum_absolute_preclip_z": 1.8748122453689575,
+                "normalization_clipped_dimension_count": 0
+              },
+              "hand_state_and_geometry": {
+                "maximum_absolute_preclip_z": 2.7101995944976807,
+                "normalization_clipped_dimension_count": 0
+              },
+              "reference_context": {
+                "maximum_absolute_preclip_z": 1.4901725053787231,
+                "normalization_clipped_dimension_count": 0
+              }
+            },
+            "maximum_absolute_preclip_z": 2.7101995944976807,
+            "normalization_clipped_dimension_count": 0,
+            "normalization_clipped_indices": []
+          },
+          "raw_group_l2_difference": 0.26755833312608907,
+          "right_wrist_y_mu": 1.460240364074707,
+          "right_wrist_y_mu_change": 0.16607129573822021
+        },
+        "hand_state_and_geometry": {
+          "all_action_mu_change_l2": 0.6183681922975479,
+          "normalization": {
+            "groups": {
+              "contact_flags": {
+                "maximum_absolute_preclip_z": 2.2075724601745605,
+                "normalization_clipped_dimension_count": 0
+              },
+              "current_object_anchors": {
+                "maximum_absolute_preclip_z": 1.8157483339309692,
+                "normalization_clipped_dimension_count": 0
+              },
+              "hand_state_and_geometry": {
+                "maximum_absolute_preclip_z": 2.0827994346618652,
+                "normalization_clipped_dimension_count": 0
+              },
+              "reference_context": {
+                "maximum_absolute_preclip_z": 1.4901725053787231,
+                "normalization_clipped_dimension_count": 0
+              }
+            },
+            "maximum_absolute_preclip_z": 2.2075724601745605,
+            "normalization_clipped_dimension_count": 0,
+            "normalization_clipped_indices": []
+          },
+          "raw_group_l2_difference": 1.251762416167023,
+          "right_wrist_y_mu": 1.334702730178833,
+          "right_wrist_y_mu_change": 0.04053366184234619
+        },
+        "reference_context": {
+          "all_action_mu_change_l2": 0.0,
+          "normalization": {
+            "groups": {
+              "contact_flags": {
+                "maximum_absolute_preclip_z": 2.2075724601745605,
+                "normalization_clipped_dimension_count": 0
+              },
+              "current_object_anchors": {
+                "maximum_absolute_preclip_z": 1.8157483339309692,
+                "normalization_clipped_dimension_count": 0
+              },
+              "hand_state_and_geometry": {
+                "maximum_absolute_preclip_z": 2.7101995944976807,
+                "normalization_clipped_dimension_count": 0
+              },
+              "reference_context": {
+                "maximum_absolute_preclip_z": 1.4901725053787231,
+                "normalization_clipped_dimension_count": 0
+              }
+            },
+            "maximum_absolute_preclip_z": 2.7101995944976807,
+            "normalization_clipped_dimension_count": 0,
+            "normalization_clipped_indices": []
+          },
+          "raw_group_l2_difference": 0.0,
+          "right_wrist_y_mu": 1.2941690683364868,
+          "right_wrist_y_mu_change": 0.0
+        }
+      }
+    },
+    "44": {
+      "base_ppo_right_wrist_y_mu": 1.6860578060150146,
+      "fixed_hidden": "ppo_path_pre_forward_hidden",
+      "substitutions": {
+        "contact_flags": {
+          "all_action_mu_change_l2": 0.392654554356728,
+          "normalization": {
+            "groups": {
+              "contact_flags": {
+                "maximum_absolute_preclip_z": 0.9445903301239014,
+                "normalization_clipped_dimension_count": 0
+              },
+              "current_object_anchors": {
+                "maximum_absolute_preclip_z": 2.058436155319214,
+                "normalization_clipped_dimension_count": 0
+              },
+              "hand_state_and_geometry": {
+                "maximum_absolute_preclip_z": 2.1385984420776367,
+                "normalization_clipped_dimension_count": 0
+              },
+              "reference_context": {
+                "maximum_absolute_preclip_z": 1.7693911790847778,
+                "normalization_clipped_dimension_count": 0
+              }
+            },
+            "maximum_absolute_preclip_z": 2.1385984420776367,
+            "normalization_clipped_dimension_count": 0,
+            "normalization_clipped_indices": []
+          },
+          "raw_group_l2_difference": 1.4142135623730951,
+          "right_wrist_y_mu": 1.6706138849258423,
+          "right_wrist_y_mu_change": -0.015443921089172363
+        },
+        "current_object_anchors": {
+          "all_action_mu_change_l2": 0.4937443139344637,
+          "normalization": {
+            "groups": {
+              "contact_flags": {
+                "maximum_absolute_preclip_z": 2.2075724601745605,
+                "normalization_clipped_dimension_count": 0
+              },
+              "current_object_anchors": {
+                "maximum_absolute_preclip_z": 2.0033469200134277,
+                "normalization_clipped_dimension_count": 0
+              },
+              "hand_state_and_geometry": {
+                "maximum_absolute_preclip_z": 2.1385984420776367,
+                "normalization_clipped_dimension_count": 0
+              },
+              "reference_context": {
+                "maximum_absolute_preclip_z": 1.7693911790847778,
+                "normalization_clipped_dimension_count": 0
+              }
+            },
+            "maximum_absolute_preclip_z": 2.2075724601745605,
+            "normalization_clipped_dimension_count": 0,
+            "normalization_clipped_indices": []
+          },
+          "raw_group_l2_difference": 0.25111076435368307,
+          "right_wrist_y_mu": 1.852832555770874,
+          "right_wrist_y_mu_change": 0.16677474975585938
+        },
+        "hand_state_and_geometry": {
+          "all_action_mu_change_l2": 0.5856468549121662,
+          "normalization": {
+            "groups": {
+              "contact_flags": {
+                "maximum_absolute_preclip_z": 2.2075724601745605,
+                "normalization_clipped_dimension_count": 0
+              },
+              "current_object_anchors": {
+                "maximum_absolute_preclip_z": 2.058436155319214,
+                "normalization_clipped_dimension_count": 0
+              },
+              "hand_state_and_geometry": {
+                "maximum_absolute_preclip_z": 2.0262489318847656,
+                "normalization_clipped_dimension_count": 0
+              },
+              "reference_context": {
+                "maximum_absolute_preclip_z": 1.7693911790847778,
+                "normalization_clipped_dimension_count": 0
+              }
+            },
+            "maximum_absolute_preclip_z": 2.2075724601745605,
+            "normalization_clipped_dimension_count": 0,
+            "normalization_clipped_indices": []
+          },
+          "raw_group_l2_difference": 1.3042886350343366,
+          "right_wrist_y_mu": 1.7080154418945312,
+          "right_wrist_y_mu_change": 0.0219576358795166
+        },
+        "reference_context": {
+          "all_action_mu_change_l2": 0.0,
+          "normalization": {
+            "groups": {
+              "contact_flags": {
+                "maximum_absolute_preclip_z": 2.2075724601745605,
+                "normalization_clipped_dimension_count": 0
+              },
+              "current_object_anchors": {
+                "maximum_absolute_preclip_z": 2.058436155319214,
+                "normalization_clipped_dimension_count": 0
+              },
+              "hand_state_and_geometry": {
+                "maximum_absolute_preclip_z": 2.1385984420776367,
+                "normalization_clipped_dimension_count": 0
+              },
+              "reference_context": {
+                "maximum_absolute_preclip_z": 1.7693911790847778,
+                "normalization_clipped_dimension_count": 0
+              }
+            },
+            "maximum_absolute_preclip_z": 2.2075724601745605,
+            "normalization_clipped_dimension_count": 0,
+            "normalization_clipped_indices": []
+          },
+          "raw_group_l2_difference": 0.0,
+          "right_wrist_y_mu": 1.6860578060150146,
+          "right_wrist_y_mu_change": 0.0
+        }
+      }
+    },
+    "45": {
+      "base_ppo_right_wrist_y_mu": 1.9866005182266235,
+      "fixed_hidden": "ppo_path_pre_forward_hidden",
+      "substitutions": {
+        "contact_flags": {
+          "all_action_mu_change_l2": 0.3829955658706637,
+          "normalization": {
+            "groups": {
+              "contact_flags": {
+                "maximum_absolute_preclip_z": 1.0488532781600952,
+                "normalization_clipped_dimension_count": 0
+              },
+              "current_object_anchors": {
+                "maximum_absolute_preclip_z": 2.373875617980957,
+                "normalization_clipped_dimension_count": 0
+              },
+              "hand_state_and_geometry": {
+                "maximum_absolute_preclip_z": 3.183634042739868,
+                "normalization_clipped_dimension_count": 0
+              },
+              "reference_context": {
+                "maximum_absolute_preclip_z": 2.0118916034698486,
+                "normalization_clipped_dimension_count": 0
+              }
+            },
+            "maximum_absolute_preclip_z": 3.183634042739868,
+            "normalization_clipped_dimension_count": 0,
+            "normalization_clipped_indices": []
+          },
+          "raw_group_l2_difference": 1.7320508075688772,
+          "right_wrist_y_mu": 2.0636484622955322,
+          "right_wrist_y_mu_change": 0.07704794406890869
+        },
+        "current_object_anchors": {
+          "all_action_mu_change_l2": 0.45290308779908967,
+          "normalization": {
+            "groups": {
+              "contact_flags": {
+                "maximum_absolute_preclip_z": 2.2075724601745605,
+                "normalization_clipped_dimension_count": 0
+              },
+              "current_object_anchors": {
+                "maximum_absolute_preclip_z": 2.021380662918091,
+                "normalization_clipped_dimension_count": 0
+              },
+              "hand_state_and_geometry": {
+                "maximum_absolute_preclip_z": 3.183634042739868,
+                "normalization_clipped_dimension_count": 0
+              },
+              "reference_context": {
+                "maximum_absolute_preclip_z": 2.0118916034698486,
+                "normalization_clipped_dimension_count": 0
+              }
+            },
+            "maximum_absolute_preclip_z": 3.183634042739868,
+            "normalization_clipped_dimension_count": 0,
+            "normalization_clipped_indices": []
+          },
+          "raw_group_l2_difference": 0.2314804536369801,
+          "right_wrist_y_mu": 2.1195037364959717,
+          "right_wrist_y_mu_change": 0.13290321826934814
+        },
+        "hand_state_and_geometry": {
+          "all_action_mu_change_l2": 0.5614050738006815,
+          "normalization": {
+            "groups": {
+              "contact_flags": {
+                "maximum_absolute_preclip_z": 2.2075724601745605,
+                "normalization_clipped_dimension_count": 0
+              },
+              "current_object_anchors": {
+                "maximum_absolute_preclip_z": 2.373875617980957,
+                "normalization_clipped_dimension_count": 0
+              },
+              "hand_state_and_geometry": {
+                "maximum_absolute_preclip_z": 2.7304680347442627,
+                "normalization_clipped_dimension_count": 0
+              },
+              "reference_context": {
+                "maximum_absolute_preclip_z": 2.0118916034698486,
+                "normalization_clipped_dimension_count": 0
+              }
+            },
+            "maximum_absolute_preclip_z": 2.7304680347442627,
+            "normalization_clipped_dimension_count": 0,
+            "normalization_clipped_indices": []
+          },
+          "raw_group_l2_difference": 1.4437346184116209,
+          "right_wrist_y_mu": 1.994327187538147,
+          "right_wrist_y_mu_change": 0.0077266693115234375
+        },
+        "reference_context": {
+          "all_action_mu_change_l2": 0.0,
+          "normalization": {
+            "groups": {
+              "contact_flags": {
+                "maximum_absolute_preclip_z": 2.2075724601745605,
+                "normalization_clipped_dimension_count": 0
+              },
+              "current_object_anchors": {
+                "maximum_absolute_preclip_z": 2.373875617980957,
+                "normalization_clipped_dimension_count": 0
+              },
+              "hand_state_and_geometry": {
+                "maximum_absolute_preclip_z": 3.183634042739868,
+                "normalization_clipped_dimension_count": 0
+              },
+              "reference_context": {
+                "maximum_absolute_preclip_z": 2.0118916034698486,
+                "normalization_clipped_dimension_count": 0
+              }
+            },
+            "maximum_absolute_preclip_z": 3.183634042739868,
+            "normalization_clipped_dimension_count": 0,
+            "normalization_clipped_indices": []
+          },
+          "raw_group_l2_difference": 0.0,
+          "right_wrist_y_mu": 1.9866005182266235,
+          "right_wrist_y_mu_change": 0.0
+        }
+      }
+    },
+    "46": {
+      "base_ppo_right_wrist_y_mu": 2.105057954788208,
+      "fixed_hidden": "ppo_path_pre_forward_hidden",
+      "substitutions": {
+        "contact_flags": {
+          "all_action_mu_change_l2": 0.351183522833406,
+          "normalization": {
+            "groups": {
+              "contact_flags": {
+                "maximum_absolute_preclip_z": 0.9445903301239014,
+                "normalization_clipped_dimension_count": 0
+              },
+              "current_object_anchors": {
+                "maximum_absolute_preclip_z": 2.5544593334198,
+                "normalization_clipped_dimension_count": 0
+              },
+              "hand_state_and_geometry": {
+                "maximum_absolute_preclip_z": 3.0217020511627197,
+                "normalization_clipped_dimension_count": 0
+              },
+              "reference_context": {
+                "maximum_absolute_preclip_z": 2.238621711730957,
+                "normalization_clipped_dimension_count": 0
+              }
+            },
+            "maximum_absolute_preclip_z": 3.0217020511627197,
+            "normalization_clipped_dimension_count": 0,
+            "normalization_clipped_indices": []
+          },
+          "raw_group_l2_difference": 1.4142135623730951,
+          "right_wrist_y_mu": 2.0850226879119873,
+          "right_wrist_y_mu_change": -0.020035266876220703
+        },
+        "current_object_anchors": {
+          "all_action_mu_change_l2": 0.4457869337852453,
+          "normalization": {
+            "groups": {
+              "contact_flags": {
+                "maximum_absolute_preclip_z": 2.2075724601745605,
+                "normalization_clipped_dimension_count": 0
+              },
+              "current_object_anchors": {
+                "maximum_absolute_preclip_z": 1.977630853652954,
+                "normalization_clipped_dimension_count": 0
+              },
+              "hand_state_and_geometry": {
+                "maximum_absolute_preclip_z": 3.0217020511627197,
+                "normalization_clipped_dimension_count": 0
+              },
+              "reference_context": {
+                "maximum_absolute_preclip_z": 2.238621711730957,
+                "normalization_clipped_dimension_count": 0
+              }
+            },
+            "maximum_absolute_preclip_z": 3.0217020511627197,
+            "normalization_clipped_dimension_count": 0,
+            "normalization_clipped_indices": []
+          },
+          "raw_group_l2_difference": 0.22613074424052546,
+          "right_wrist_y_mu": 2.2361111640930176,
+          "right_wrist_y_mu_change": 0.13105320930480957
+        },
+        "hand_state_and_geometry": {
+          "all_action_mu_change_l2": 0.5017675238478029,
+          "normalization": {
+            "groups": {
+              "contact_flags": {
+                "maximum_absolute_preclip_z": 2.2075724601745605,
+                "normalization_clipped_dimension_count": 0
+              },
+              "current_object_anchors": {
+                "maximum_absolute_preclip_z": 2.5544593334198,
+                "normalization_clipped_dimension_count": 0
+              },
+              "hand_state_and_geometry": {
+                "maximum_absolute_preclip_z": 2.9544074535369873,
+                "normalization_clipped_dimension_count": 0
+              },
+              "reference_context": {
+                "maximum_absolute_preclip_z": 2.238621711730957,
+                "normalization_clipped_dimension_count": 0
+              }
+            },
+            "maximum_absolute_preclip_z": 2.9544074535369873,
+            "normalization_clipped_dimension_count": 0,
+            "normalization_clipped_indices": []
+          },
+          "raw_group_l2_difference": 1.3721514169880384,
+          "right_wrist_y_mu": 2.0937445163726807,
+          "right_wrist_y_mu_change": -0.011313438415527344
+        },
+        "reference_context": {
+          "all_action_mu_change_l2": 0.0,
+          "normalization": {
+            "groups": {
+              "contact_flags": {
+                "maximum_absolute_preclip_z": 2.2075724601745605,
+                "normalization_clipped_dimension_count": 0
+              },
+              "current_object_anchors": {
+                "maximum_absolute_preclip_z": 2.5544593334198,
+                "normalization_clipped_dimension_count": 0
+              },
+              "hand_state_and_geometry": {
+                "maximum_absolute_preclip_z": 3.0217020511627197,
+                "normalization_clipped_dimension_count": 0
+              },
+              "reference_context": {
+                "maximum_absolute_preclip_z": 2.238621711730957,
+                "normalization_clipped_dimension_count": 0
+              }
+            },
+            "maximum_absolute_preclip_z": 3.0217020511627197,
+            "normalization_clipped_dimension_count": 0,
+            "normalization_clipped_indices": []
+          },
+          "raw_group_l2_difference": 0.0,
+          "right_wrist_y_mu": 2.105057954788208,
+          "right_wrist_y_mu_change": 0.0
+        }
+      }
+    }
+  },
+  "observation_layout": {
+    "dimension": 236,
+    "full_arrays": {
+      "keys": [
+        "ppo_actor_input",
+        "ppo_actor_logstd",
+        "ppo_actor_mu",
+        "ppo_actor_sigma",
+        "ppo_deterministic_action",
+        "ppo_normalization_preclip_z",
+        "ppo_pre_forward_hidden_0",
+        "ppo_pre_forward_hidden_1",
+        "ppo_raw_observation",
+        "ppo_requested_residual",
+        "ppo_state_high",
+        "ppo_state_low",
+        "replay_actor_input",
+        "replay_actor_logstd",
+        "replay_actor_mu",
+        "replay_actor_sigma",
+        "replay_deterministic_action",
+        "replay_normalization_preclip_z",
+        "replay_observation_with_ppo_hidden_actor_mu",
+        "replay_pre_forward_hidden_0",
+        "replay_pre_forward_hidden_1",
+        "replay_raw_observation",
+        "replay_requested_residual",
+        "replay_state_high",
+        "replay_state_low",
+        "sensitivity_source_42_coherent_right_hand_y_translation_mu_derivative_per_m",
+        "sensitivity_source_42_coherent_right_hand_y_translation_mu_minus",
+        "sensitivity_source_42_coherent_right_hand_y_translation_mu_plus",
+        "sensitivity_source_42_current_reference_right_wrist_y_mu_derivative_per_m",
+        "sensitivity_source_42_current_reference_right_wrist_y_mu_minus",
+        "sensitivity_source_42_current_reference_right_wrist_y_mu_plus",
+        "sensitivity_source_42_current_tool_anchor_y_translation_mu_derivative_per_m",
+        "sensitivity_source_42_current_tool_anchor_y_translation_mu_minus",
+        "sensitivity_source_42_current_tool_anchor_y_translation_mu_plus",
+        "sensitivity_source_42_goal_tool_anchor_y_translation_mu_derivative_per_m",
+        "sensitivity_source_42_goal_tool_anchor_y_translation_mu_minus",
+        "sensitivity_source_42_goal_tool_anchor_y_translation_mu_plus",
+        "sensitivity_source_42_preview_reference_right_wrist_y_mu_derivative_per_m",
+        "sensitivity_source_42_preview_reference_right_wrist_y_mu_minus",
+        "sensitivity_source_42_preview_reference_right_wrist_y_mu_plus",
+        "sensitivity_source_43_coherent_right_hand_y_translation_mu_derivative_per_m",
+        "sensitivity_source_43_coherent_right_hand_y_translation_mu_minus",
+        "sensitivity_source_43_coherent_right_hand_y_translation_mu_plus",
+        "sensitivity_source_43_current_reference_right_wrist_y_mu_derivative_per_m",
+        "sensitivity_source_43_current_reference_right_wrist_y_mu_minus",
+        "sensitivity_source_43_current_reference_right_wrist_y_mu_plus",
+        "sensitivity_source_43_current_tool_anchor_y_translation_mu_derivative_per_m",
+        "sensitivity_source_43_current_tool_anchor_y_translation_mu_minus",
+        "sensitivity_source_43_current_tool_anchor_y_translation_mu_plus",
+        "sensitivity_source_43_goal_tool_anchor_y_translation_mu_derivative_per_m",
+        "sensitivity_source_43_goal_tool_anchor_y_translation_mu_minus",
+        "sensitivity_source_43_goal_tool_anchor_y_translation_mu_plus",
+        "sensitivity_source_43_preview_reference_right_wrist_y_mu_derivative_per_m",
+        "sensitivity_source_43_preview_reference_right_wrist_y_mu_minus",
+        "sensitivity_source_43_preview_reference_right_wrist_y_mu_plus",
+        "sensitivity_source_44_coherent_right_hand_y_translation_mu_derivative_per_m",
+        "sensitivity_source_44_coherent_right_hand_y_translation_mu_minus",
+        "sensitivity_source_44_coherent_right_hand_y_translation_mu_plus",
+        "sensitivity_source_44_current_reference_right_wrist_y_mu_derivative_per_m",
+        "sensitivity_source_44_current_reference_right_wrist_y_mu_minus",
+        "sensitivity_source_44_current_reference_right_wrist_y_mu_plus",
+        "sensitivity_source_44_current_tool_anchor_y_translation_mu_derivative_per_m",
+        "sensitivity_source_44_current_tool_anchor_y_translation_mu_minus",
+        "sensitivity_source_44_current_tool_anchor_y_translation_mu_plus",
+        "sensitivity_source_44_goal_tool_anchor_y_translation_mu_derivative_per_m",
+        "sensitivity_source_44_goal_tool_anchor_y_translation_mu_minus",
+        "sensitivity_source_44_goal_tool_anchor_y_translation_mu_plus",
+        "sensitivity_source_44_preview_reference_right_wrist_y_mu_derivative_per_m",
+        "sensitivity_source_44_preview_reference_right_wrist_y_mu_minus",
+        "sensitivity_source_44_preview_reference_right_wrist_y_mu_plus",
+        "sensitivity_source_45_coherent_right_hand_y_translation_mu_derivative_per_m",
+        "sensitivity_source_45_coherent_right_hand_y_translation_mu_minus",
+        "sensitivity_source_45_coherent_right_hand_y_translation_mu_plus",
+        "sensitivity_source_45_current_reference_right_wrist_y_mu_derivative_per_m",
+        "sensitivity_source_45_current_reference_right_wrist_y_mu_minus",
+        "sensitivity_source_45_current_reference_right_wrist_y_mu_plus",
+        "sensitivity_source_45_current_tool_anchor_y_translation_mu_derivative_per_m",
+        "sensitivity_source_45_current_tool_anchor_y_translation_mu_minus",
+        "sensitivity_source_45_current_tool_anchor_y_translation_mu_plus",
+        "sensitivity_source_45_goal_tool_anchor_y_translation_mu_derivative_per_m",
+        "sensitivity_source_45_goal_tool_anchor_y_translation_mu_minus",
+        "sensitivity_source_45_goal_tool_anchor_y_translation_mu_plus",
+        "sensitivity_source_45_preview_reference_right_wrist_y_mu_derivative_per_m",
+        "sensitivity_source_45_preview_reference_right_wrist_y_mu_minus",
+        "sensitivity_source_45_preview_reference_right_wrist_y_mu_plus",
+        "sensitivity_source_46_coherent_right_hand_y_translation_mu_derivative_per_m",
+        "sensitivity_source_46_coherent_right_hand_y_translation_mu_minus",
+        "sensitivity_source_46_coherent_right_hand_y_translation_mu_plus",
+        "sensitivity_source_46_current_reference_right_wrist_y_mu_derivative_per_m",
+        "sensitivity_source_46_current_reference_right_wrist_y_mu_minus",
+        "sensitivity_source_46_current_reference_right_wrist_y_mu_plus",
+        "sensitivity_source_46_current_tool_anchor_y_translation_mu_derivative_per_m",
+        "sensitivity_source_46_current_tool_anchor_y_translation_mu_minus",
+        "sensitivity_source_46_current_tool_anchor_y_translation_mu_plus",
+        "sensitivity_source_46_goal_tool_anchor_y_translation_mu_derivative_per_m",
+        "sensitivity_source_46_goal_tool_anchor_y_translation_mu_minus",
+        "sensitivity_source_46_goal_tool_anchor_y_translation_mu_plus",
+        "sensitivity_source_46_preview_reference_right_wrist_y_mu_derivative_per_m",
+        "sensitivity_source_46_preview_reference_right_wrist_y_mu_minus",
+        "sensitivity_source_46_preview_reference_right_wrist_y_mu_plus",
+        "source_endpoints",
+        "substitution_source_42_contact_flags_actor_input",
+        "substitution_source_42_contact_flags_actor_mu",
+        "substitution_source_42_contact_flags_raw_observation",
+        "substitution_source_42_current_object_anchors_actor_input",
+        "substitution_source_42_current_object_anchors_actor_mu",
+        "substitution_source_42_current_object_anchors_raw_observation",
+        "substitution_source_42_hand_state_and_geometry_actor_input",
+        "substitution_source_42_hand_state_and_geometry_actor_mu",
+        "substitution_source_42_hand_state_and_geometry_raw_observation",
+        "substitution_source_42_reference_context_actor_input",
+        "substitution_source_42_reference_context_actor_mu",
+        "substitution_source_42_reference_context_raw_observation",
+        "substitution_source_43_contact_flags_actor_input",
+        "substitution_source_43_contact_flags_actor_mu",
+        "substitution_source_43_contact_flags_raw_observation",
+        "substitution_source_43_current_object_anchors_actor_input",
+        "substitution_source_43_current_object_anchors_actor_mu",
+        "substitution_source_43_current_object_anchors_raw_observation",
+        "substitution_source_43_hand_state_and_geometry_actor_input",
+        "substitution_source_43_hand_state_and_geometry_actor_mu",
+        "substitution_source_43_hand_state_and_geometry_raw_observation",
+        "substitution_source_43_reference_context_actor_input",
+        "substitution_source_43_reference_context_actor_mu",
+        "substitution_source_43_reference_context_raw_observation",
+        "substitution_source_44_contact_flags_actor_input",
+        "substitution_source_44_contact_flags_actor_mu",
+        "substitution_source_44_contact_flags_raw_observation",
+        "substitution_source_44_current_object_anchors_actor_input",
+        "substitution_source_44_current_object_anchors_actor_mu",
+        "substitution_source_44_current_object_anchors_raw_observation",
+        "substitution_source_44_hand_state_and_geometry_actor_input",
+        "substitution_source_44_hand_state_and_geometry_actor_mu",
+        "substitution_source_44_hand_state_and_geometry_raw_observation",
+        "substitution_source_44_reference_context_actor_input",
+        "substitution_source_44_reference_context_actor_mu",
+        "substitution_source_44_reference_context_raw_observation",
+        "substitution_source_45_contact_flags_actor_input",
+        "substitution_source_45_contact_flags_actor_mu",
+        "substitution_source_45_contact_flags_raw_observation",
+        "substitution_source_45_current_object_anchors_actor_input",
+        "substitution_source_45_current_object_anchors_actor_mu",
+        "substitution_source_45_current_object_anchors_raw_observation",
+        "substitution_source_45_hand_state_and_geometry_actor_input",
+        "substitution_source_45_hand_state_and_geometry_actor_mu",
+        "substitution_source_45_hand_state_and_geometry_raw_observation",
+        "substitution_source_45_reference_context_actor_input",
+        "substitution_source_45_reference_context_actor_mu",
+        "substitution_source_45_reference_context_raw_observation",
+        "substitution_source_46_contact_flags_actor_input",
+        "substitution_source_46_contact_flags_actor_mu",
+        "substitution_source_46_contact_flags_raw_observation",
+        "substitution_source_46_current_object_anchors_actor_input",
+        "substitution_source_46_current_object_anchors_actor_mu",
+        "substitution_source_46_current_object_anchors_raw_observation",
+        "substitution_source_46_hand_state_and_geometry_actor_input",
+        "substitution_source_46_hand_state_and_geometry_actor_mu",
+        "substitution_source_46_hand_state_and_geometry_raw_observation",
+        "substitution_source_46_reference_context_actor_input",
+        "substitution_source_46_reference_context_actor_mu",
+        "substitution_source_46_reference_context_raw_observation"
+      ],
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_input_bifurcation_attribution_v1/observations_and_actor_outputs.npz",
+      "sha256": "8552b8cab3c7ee1d9e0f0fad283fcc6cd7edc1f77e2dca01325a963b5f8e5d7b"
+    },
+    "groups": {
+      "contact_flags": [
+        216,
+        236
+      ],
+      "current_object_anchors": [
+        108,
+        126
+      ],
+      "hand_state_and_geometry": [
+        0,
+        108
+      ],
+      "reference_context": [
+        126,
+        216
+      ]
+    }
+  },
+  "paper_faithful": false,
+  "path_forward_comparison": {
+    "common_ppo_hidden_control_reported": true,
+    "path_consistent_hidden_reported": true,
+    "rows": {
+      "40": {
+        "ppo_minus_replay_obs_common_hidden_mu_y": 0.0034773051738739014,
+        "ppo_minus_replay_path_mu_y": 0.21393132209777832,
+        "ppo_observation_normalization": {
+          "groups": {
+            "contact_flags": {
+              "maximum_absolute_preclip_z": 1.0488532781600952,
+              "normalization_clipped_dimension_count": 0
+            },
+            "current_object_anchors": {
+              "maximum_absolute_preclip_z": 1.3569245338439941,
+              "normalization_clipped_dimension_count": 0
+            },
+            "hand_state_and_geometry": {
+              "maximum_absolute_preclip_z": 2.568136215209961,
+              "normalization_clipped_dimension_count": 0
+            },
+            "reference_context": {
+              "maximum_absolute_preclip_z": 1.8924561738967896,
+              "normalization_clipped_dimension_count": 0
+            }
+          },
+          "maximum_absolute_preclip_z": 2.568136215209961,
+          "normalization_clipped_dimension_count": 0,
+          "normalization_clipped_indices": []
+        },
+        "ppo_path_mu_y": 0.49808362126350403,
+        "ppo_pre_forward_hidden_l2_norm": 4.060051267057499,
+        "replay_obs_ppo_hidden_mu_y": 0.4946063160896301,
+        "replay_observation_normalization": {
+          "groups": {
+            "contact_flags": {
+              "maximum_absolute_preclip_z": 0.9445903301239014,
+              "normalization_clipped_dimension_count": 0
+            },
+            "current_object_anchors": {
+              "maximum_absolute_preclip_z": 0.7938528656959534,
+              "normalization_clipped_dimension_count": 0
+            },
+            "hand_state_and_geometry": {
+              "maximum_absolute_preclip_z": 2.3294918537139893,
+              "normalization_clipped_dimension_count": 0
+            },
+            "reference_context": {
+              "maximum_absolute_preclip_z": 1.8924561738967896,
+              "normalization_clipped_dimension_count": 0
+            }
+          },
+          "maximum_absolute_preclip_z": 2.3294918537139893,
+          "normalization_clipped_dimension_count": 0,
+          "normalization_clipped_indices": []
+        },
+        "replay_path_mu_y": 0.2841522991657257,
+        "replay_pre_forward_hidden_l2_norm": 3.9742152387077785,
+        "source_endpoint": 40
+      },
+      "41": {
+        "ppo_minus_replay_obs_common_hidden_mu_y": 0.002627730369567871,
+        "ppo_minus_replay_path_mu_y": 0.18814325332641602,
+        "ppo_observation_normalization": {
+          "groups": {
+            "contact_flags": {
+              "maximum_absolute_preclip_z": 2.2075724601745605,
+              "normalization_clipped_dimension_count": 0
+            },
+            "current_object_anchors": {
+              "maximum_absolute_preclip_z": 1.3569245338439941,
+              "normalization_clipped_dimension_count": 0
+            },
+            "hand_state_and_geometry": {
+              "maximum_absolute_preclip_z": 2.3854191303253174,
+              "normalization_clipped_dimension_count": 0
+            },
+            "reference_context": {
+              "maximum_absolute_preclip_z": 1.7304438352584839,
+              "normalization_clipped_dimension_count": 0
+            }
+          },
+          "maximum_absolute_preclip_z": 2.3854191303253174,
+          "normalization_clipped_dimension_count": 0,
+          "normalization_clipped_indices": []
+        },
+        "ppo_path_mu_y": 0.740690290927887,
+        "ppo_pre_forward_hidden_l2_norm": 4.348258173928773,
+        "replay_obs_ppo_hidden_mu_y": 0.7380625605583191,
+        "replay_observation_normalization": {
+          "groups": {
+            "contact_flags": {
+              "maximum_absolute_preclip_z": 0.9445903301239014,
+              "normalization_clipped_dimension_count": 0
+            },
+            "current_object_anchors": {
+              "maximum_absolute_preclip_z": 1.2701548337936401,
+              "normalization_clipped_dimension_count": 0
+            },
+            "hand_state_and_geometry": {
+              "maximum_absolute_preclip_z": 2.223137140274048,
+              "normalization_clipped_dimension_count": 0
+            },
+            "reference_context": {
+              "maximum_absolute_preclip_z": 1.7304438352584839,
+              "normalization_clipped_dimension_count": 0
+            }
+          },
+          "maximum_absolute_preclip_z": 2.223137140274048,
+          "normalization_clipped_dimension_count": 0,
+          "normalization_clipped_indices": []
+        },
+        "replay_path_mu_y": 0.552547037601471,
+        "replay_pre_forward_hidden_l2_norm": 4.311739256339617,
+        "source_endpoint": 41
+      },
+      "42": {
+        "ppo_minus_replay_obs_common_hidden_mu_y": -0.13872694969177246,
+        "ppo_minus_replay_path_mu_y": 0.04309135675430298,
+        "ppo_observation_normalization": {
+          "groups": {
+            "contact_flags": {
+              "maximum_absolute_preclip_z": 2.2075724601745605,
+              "normalization_clipped_dimension_count": 0
+            },
+            "current_object_anchors": {
+              "maximum_absolute_preclip_z": 1.4649451971054077,
+              "normalization_clipped_dimension_count": 0
+            },
+            "hand_state_and_geometry": {
+              "maximum_absolute_preclip_z": 2.4471323490142822,
+              "normalization_clipped_dimension_count": 0
+            },
+            "reference_context": {
+              "maximum_absolute_preclip_z": 1.6486352682113647,
+              "normalization_clipped_dimension_count": 0
+            }
+          },
+          "maximum_absolute_preclip_z": 2.4471323490142822,
+          "normalization_clipped_dimension_count": 0,
+          "normalization_clipped_indices": []
+        },
+        "ppo_path_mu_y": 0.9474828243255615,
+        "ppo_pre_forward_hidden_l2_norm": 4.481302261410073,
+        "replay_obs_ppo_hidden_mu_y": 1.086209774017334,
+        "replay_observation_normalization": {
+          "groups": {
+            "contact_flags": {
+              "maximum_absolute_preclip_z": 0.9445903301239014,
+              "normalization_clipped_dimension_count": 0
+            },
+            "current_object_anchors": {
+              "maximum_absolute_preclip_z": 1.7032203674316406,
+              "normalization_clipped_dimension_count": 0
+            },
+            "hand_state_and_geometry": {
+              "maximum_absolute_preclip_z": 2.052046775817871,
+              "normalization_clipped_dimension_count": 0
+            },
+            "reference_context": {
+              "maximum_absolute_preclip_z": 1.6486352682113647,
+              "normalization_clipped_dimension_count": 0
+            }
+          },
+          "maximum_absolute_preclip_z": 2.052046775817871,
+          "normalization_clipped_dimension_count": 0,
+          "normalization_clipped_indices": []
+        },
+        "replay_path_mu_y": 0.9043914675712585,
+        "replay_pre_forward_hidden_l2_norm": 4.46240194188129,
+        "source_endpoint": 42
+      },
+      "43": {
+        "ppo_minus_replay_obs_common_hidden_mu_y": -0.2686415910720825,
+        "ppo_minus_replay_path_mu_y": -0.14540672302246094,
+        "ppo_observation_normalization": {
+          "groups": {
+            "contact_flags": {
+              "maximum_absolute_preclip_z": 2.2075724601745605,
+              "normalization_clipped_dimension_count": 0
+            },
+            "current_object_anchors": {
+              "maximum_absolute_preclip_z": 1.8157483339309692,
+              "normalization_clipped_dimension_count": 0
+            },
+            "hand_state_and_geometry": {
+              "maximum_absolute_preclip_z": 2.7101995944976807,
+              "normalization_clipped_dimension_count": 0
+            },
+            "reference_context": {
+              "maximum_absolute_preclip_z": 1.4901725053787231,
+              "normalization_clipped_dimension_count": 0
+            }
+          },
+          "maximum_absolute_preclip_z": 2.7101995944976807,
+          "normalization_clipped_dimension_count": 0,
+          "normalization_clipped_indices": []
+        },
+        "ppo_path_mu_y": 1.2941690683364868,
+        "ppo_pre_forward_hidden_l2_norm": 4.404915467830526,
+        "replay_obs_ppo_hidden_mu_y": 1.5628106594085693,
+        "replay_observation_normalization": {
+          "groups": {
+            "contact_flags": {
+              "maximum_absolute_preclip_z": 1.0488532781600952,
+              "normalization_clipped_dimension_count": 0
+            },
+            "current_object_anchors": {
+              "maximum_absolute_preclip_z": 1.8748122453689575,
+              "normalization_clipped_dimension_count": 0
+            },
+            "hand_state_and_geometry": {
+              "maximum_absolute_preclip_z": 2.0827994346618652,
+              "normalization_clipped_dimension_count": 0
+            },
+            "reference_context": {
+              "maximum_absolute_preclip_z": 1.4901725053787231,
+              "normalization_clipped_dimension_count": 0
+            }
+          },
+          "maximum_absolute_preclip_z": 2.0827994346618652,
+          "normalization_clipped_dimension_count": 0,
+          "normalization_clipped_indices": []
+        },
+        "replay_path_mu_y": 1.4395757913589478,
+        "replay_pre_forward_hidden_l2_norm": 4.412589217977556,
+        "source_endpoint": 43
+      },
+      "44": {
+        "ppo_minus_replay_obs_common_hidden_mu_y": -0.1538405418395996,
+        "ppo_minus_replay_path_mu_y": -0.12988948822021484,
+        "ppo_observation_normalization": {
+          "groups": {
+            "contact_flags": {
+              "maximum_absolute_preclip_z": 2.2075724601745605,
+              "normalization_clipped_dimension_count": 0
+            },
+            "current_object_anchors": {
+              "maximum_absolute_preclip_z": 2.058436155319214,
+              "normalization_clipped_dimension_count": 0
+            },
+            "hand_state_and_geometry": {
+              "maximum_absolute_preclip_z": 2.1385984420776367,
+              "normalization_clipped_dimension_count": 0
+            },
+            "reference_context": {
+              "maximum_absolute_preclip_z": 1.7693911790847778,
+              "normalization_clipped_dimension_count": 0
+            }
+          },
+          "maximum_absolute_preclip_z": 2.2075724601745605,
+          "normalization_clipped_dimension_count": 0,
+          "normalization_clipped_indices": []
+        },
+        "ppo_path_mu_y": 1.6860578060150146,
+        "ppo_pre_forward_hidden_l2_norm": 4.269807589432011,
+        "replay_obs_ppo_hidden_mu_y": 1.8398983478546143,
+        "replay_observation_normalization": {
+          "groups": {
+            "contact_flags": {
+              "maximum_absolute_preclip_z": 0.9445903301239014,
+              "normalization_clipped_dimension_count": 0
+            },
+            "current_object_anchors": {
+              "maximum_absolute_preclip_z": 2.0033469200134277,
+              "normalization_clipped_dimension_count": 0
+            },
+            "hand_state_and_geometry": {
+              "maximum_absolute_preclip_z": 2.0262489318847656,
+              "normalization_clipped_dimension_count": 0
+            },
+            "reference_context": {
+              "maximum_absolute_preclip_z": 1.7693911790847778,
+              "normalization_clipped_dimension_count": 0
+            }
+          },
+          "maximum_absolute_preclip_z": 2.0262489318847656,
+          "normalization_clipped_dimension_count": 0,
+          "normalization_clipped_indices": []
+        },
+        "replay_path_mu_y": 1.8159472942352295,
+        "replay_pre_forward_hidden_l2_norm": 4.273812602847738,
+        "source_endpoint": 44
+      },
+      "45": {
+        "ppo_minus_replay_obs_common_hidden_mu_y": -0.19752752780914307,
+        "ppo_minus_replay_path_mu_y": -0.17262804508209229,
+        "ppo_observation_normalization": {
+          "groups": {
+            "contact_flags": {
+              "maximum_absolute_preclip_z": 2.2075724601745605,
+              "normalization_clipped_dimension_count": 0
+            },
+            "current_object_anchors": {
+              "maximum_absolute_preclip_z": 2.373875617980957,
+              "normalization_clipped_dimension_count": 0
+            },
+            "hand_state_and_geometry": {
+              "maximum_absolute_preclip_z": 3.183634042739868,
+              "normalization_clipped_dimension_count": 0
+            },
+            "reference_context": {
+              "maximum_absolute_preclip_z": 2.0118916034698486,
+              "normalization_clipped_dimension_count": 0
+            }
+          },
+          "maximum_absolute_preclip_z": 3.183634042739868,
+          "normalization_clipped_dimension_count": 0,
+          "normalization_clipped_indices": []
+        },
+        "ppo_path_mu_y": 1.9866005182266235,
+        "ppo_pre_forward_hidden_l2_norm": 4.205448323543798,
+        "replay_obs_ppo_hidden_mu_y": 2.1841280460357666,
+        "replay_observation_normalization": {
+          "groups": {
+            "contact_flags": {
+              "maximum_absolute_preclip_z": 1.0488532781600952,
+              "normalization_clipped_dimension_count": 0
+            },
+            "current_object_anchors": {
+              "maximum_absolute_preclip_z": 2.021380662918091,
+              "normalization_clipped_dimension_count": 0
+            },
+            "hand_state_and_geometry": {
+              "maximum_absolute_preclip_z": 2.7304680347442627,
+              "normalization_clipped_dimension_count": 0
+            },
+            "reference_context": {
+              "maximum_absolute_preclip_z": 2.0118916034698486,
+              "normalization_clipped_dimension_count": 0
+            }
+          },
+          "maximum_absolute_preclip_z": 2.7304680347442627,
+          "normalization_clipped_dimension_count": 0,
+          "normalization_clipped_indices": []
+        },
+        "replay_path_mu_y": 2.159228563308716,
+        "replay_pre_forward_hidden_l2_norm": 4.273145488872203,
+        "source_endpoint": 45
+      },
+      "46": {
+        "ppo_minus_replay_obs_common_hidden_mu_y": -0.09752511978149414,
+        "ppo_minus_replay_path_mu_y": -0.12156796455383301,
+        "ppo_observation_normalization": {
+          "groups": {
+            "contact_flags": {
+              "maximum_absolute_preclip_z": 2.2075724601745605,
+              "normalization_clipped_dimension_count": 0
+            },
+            "current_object_anchors": {
+              "maximum_absolute_preclip_z": 2.5544593334198,
+              "normalization_clipped_dimension_count": 0
+            },
+            "hand_state_and_geometry": {
+              "maximum_absolute_preclip_z": 3.0217020511627197,
+              "normalization_clipped_dimension_count": 0
+            },
+            "reference_context": {
+              "maximum_absolute_preclip_z": 2.238621711730957,
+              "normalization_clipped_dimension_count": 0
+            }
+          },
+          "maximum_absolute_preclip_z": 3.0217020511627197,
+          "normalization_clipped_dimension_count": 0,
+          "normalization_clipped_indices": []
+        },
+        "ppo_path_mu_y": 2.105057954788208,
+        "ppo_pre_forward_hidden_l2_norm": 4.365605219643849,
+        "replay_obs_ppo_hidden_mu_y": 2.202583074569702,
+        "replay_observation_normalization": {
+          "groups": {
+            "contact_flags": {
+              "maximum_absolute_preclip_z": 0.9445903301239014,
+              "normalization_clipped_dimension_count": 0
+            },
+            "current_object_anchors": {
+              "maximum_absolute_preclip_z": 1.977630853652954,
+              "normalization_clipped_dimension_count": 0
+            },
+            "hand_state_and_geometry": {
+              "maximum_absolute_preclip_z": 2.9544074535369873,
+              "normalization_clipped_dimension_count": 0
+            },
+            "reference_context": {
+              "maximum_absolute_preclip_z": 2.238621711730957,
+              "normalization_clipped_dimension_count": 0
+            }
+          },
+          "maximum_absolute_preclip_z": 2.9544074535369873,
+          "normalization_clipped_dimension_count": 0,
+          "normalization_clipped_indices": []
+        },
+        "replay_path_mu_y": 2.226625919342041,
+        "replay_pre_forward_hidden_l2_norm": 4.493664123501796,
+        "source_endpoint": 46
+      },
+      "47": {
+        "ppo_minus_replay_obs_common_hidden_mu_y": -0.07917904853820801,
+        "ppo_minus_replay_path_mu_y": -0.08531665802001953,
+        "ppo_observation_normalization": {
+          "groups": {
+            "contact_flags": {
+              "maximum_absolute_preclip_z": 2.2075724601745605,
+              "normalization_clipped_dimension_count": 0
+            },
+            "current_object_anchors": {
+              "maximum_absolute_preclip_z": 2.733090877532959,
+              "normalization_clipped_dimension_count": 0
+            },
+            "hand_state_and_geometry": {
+              "maximum_absolute_preclip_z": 3.0763094425201416,
+              "normalization_clipped_dimension_count": 0
+            },
+            "reference_context": {
+              "maximum_absolute_preclip_z": 2.561856508255005,
+              "normalization_clipped_dimension_count": 0
+            }
+          },
+          "maximum_absolute_preclip_z": 3.0763094425201416,
+          "normalization_clipped_dimension_count": 0,
+          "normalization_clipped_indices": []
+        },
+        "ppo_path_mu_y": 2.1384003162384033,
+        "ppo_pre_forward_hidden_l2_norm": 4.697829679659831,
+        "replay_obs_ppo_hidden_mu_y": 2.2175793647766113,
+        "replay_observation_normalization": {
+          "groups": {
+            "contact_flags": {
+              "maximum_absolute_preclip_z": 1.0488532781600952,
+              "normalization_clipped_dimension_count": 0
+            },
+            "current_object_anchors": {
+              "maximum_absolute_preclip_z": 2.020874500274658,
+              "normalization_clipped_dimension_count": 0
+            },
+            "hand_state_and_geometry": {
+              "maximum_absolute_preclip_z": 3.0230112075805664,
+              "normalization_clipped_dimension_count": 0
+            },
+            "reference_context": {
+              "maximum_absolute_preclip_z": 2.561856508255005,
+              "normalization_clipped_dimension_count": 0
+            }
+          },
+          "maximum_absolute_preclip_z": 3.0230112075805664,
+          "normalization_clipped_dimension_count": 0,
+          "normalization_clipped_indices": []
+        },
+        "replay_path_mu_y": 2.223716974258423,
+        "replay_pre_forward_hidden_l2_norm": 4.846789694593976,
+        "source_endpoint": 47
+      }
+    }
+  },
+  "regression_gate": {
+    "actor_state_unchanged": true,
+    "formal_ppo_trace_exactly_reproduced": true,
+    "formal_replay_trace_exactly_reproduced": true,
+    "normalization_state_unchanged": true,
+    "ppo_validated_intervals": 27,
+    "reference_context_identical_between_paths_at_all_sources": true,
+    "replay_validated_intervals": 30
+  },
+  "schema": "taco_pour_corrected_input_bifurcation_attribution_v1",
+  "scope": {
+    "actor_frozen": true,
+    "chunk_acceptance_allowed": false,
+    "chunk_commit_allowed": false,
+    "normalization_frozen": true,
+    "objective_reward_and_residual_bound_unchanged": true,
+    "optimizer_steps": 0,
+    "training_performed": false
+  },
+  "single_step_rescue_followup": {
+    "44": {
+      "endpoint_48": {
+        "actor_mu_y": 2.1625802516937256,
+        "deterministic_action_y_before_intervention": 1.0,
+        "executed_action_y": 1.0,
+        "mu_exceeds_high": true,
+        "outcome_endpoint": 48,
+        "outcome_position_error_m": 0.11043670773506165,
+        "outcome_rotation_error_rad": 0.387876957654953,
+        "outcome_score": 0.9559440612792969,
+        "outcome_tracking_terminated": false,
+        "source_active_right_tool_fingers": [],
+        "source_endpoint": 47,
+        "state_high_y": 1.0
+      },
+      "intervention": "set_right_wrist_y_normalized_action_to_zero_once",
+      "intervention_source": 44,
+      "steps": [
+        {
+          "actor_mu_y": 1.6860578060150146,
+          "deterministic_action_y_before_intervention": 1.0,
+          "executed_action_y": 0.0,
+          "mu_exceeds_high": true,
+          "outcome_endpoint": 45,
+          "outcome_position_error_m": 0.08122997730970383,
+          "outcome_rotation_error_rad": 0.2760646343231201,
+          "outcome_score": 0.7014896869659424,
+          "outcome_tracking_terminated": false,
+          "source_active_right_tool_fingers": [
+            "index"
+          ],
+          "source_endpoint": 44,
+          "state_high_y": 1.0
+        },
+        {
+          "actor_mu_y": 1.9885998964309692,
+          "deterministic_action_y_before_intervention": 1.0,
+          "executed_action_y": 1.0,
+          "mu_exceeds_high": true,
+          "outcome_endpoint": 46,
+          "outcome_position_error_m": 0.08378680795431137,
+          "outcome_rotation_error_rad": 0.35108670592308044,
+          "outcome_score": 0.7364095449447632,
+          "outcome_tracking_terminated": false,
+          "source_active_right_tool_fingers": [
+            "index"
+          ],
+          "source_endpoint": 45,
+          "state_high_y": 1.0
+        },
+        {
+          "actor_mu_y": 2.123509645462036,
+          "deterministic_action_y_before_intervention": 1.0,
+          "executed_action_y": 1.0,
+          "mu_exceeds_high": true,
+          "outcome_endpoint": 47,
+          "outcome_position_error_m": 0.0961831733584404,
+          "outcome_rotation_error_rad": 0.3735443353652954,
+          "outcome_score": 0.8393213748931885,
+          "outcome_tracking_terminated": false,
+          "source_active_right_tool_fingers": [
+            "index"
+          ],
+          "source_endpoint": 46,
+          "state_high_y": 1.0
+        },
+        {
+          "actor_mu_y": 2.1625802516937256,
+          "deterministic_action_y_before_intervention": 1.0,
+          "executed_action_y": 1.0,
+          "mu_exceeds_high": true,
+          "outcome_endpoint": 48,
+          "outcome_position_error_m": 0.11043670773506165,
+          "outcome_rotation_error_rad": 0.387876957654953,
+          "outcome_score": 0.9559440612792969,
+          "outcome_tracking_terminated": false,
+          "source_active_right_tool_fingers": [],
+          "source_endpoint": 47,
+          "state_high_y": 1.0
+        }
+      ],
+      "subsequent_mu_all_remain_above_state_high": true,
+      "subsequent_mu_returns_below_state_high_before_48": false,
+      "subsequent_policy": "frozen_deterministic_actor_closed_loop"
+    },
+    "45": {
+      "endpoint_48": {
+        "actor_mu_y": 2.1304233074188232,
+        "deterministic_action_y_before_intervention": 1.0,
+        "executed_action_y": 1.0,
+        "mu_exceeds_high": true,
+        "outcome_endpoint": 48,
+        "outcome_position_error_m": 0.10655965656042099,
+        "outcome_rotation_error_rad": 0.3439328670501709,
+        "outcome_score": 0.9171217083930969,
+        "outcome_tracking_terminated": false,
+        "source_active_right_tool_fingers": [],
+        "source_endpoint": 47,
+        "state_high_y": 1.0
+      },
+      "intervention": "set_right_wrist_y_normalized_action_to_zero_once",
+      "intervention_source": 45,
+      "steps": [
+        {
+          "actor_mu_y": 1.9866005182266235,
+          "deterministic_action_y_before_intervention": 1.0,
+          "executed_action_y": 0.0,
+          "mu_exceeds_high": true,
+          "outcome_endpoint": 46,
+          "outcome_position_error_m": 0.08761011064052582,
+          "outcome_rotation_error_rad": 0.3008589744567871,
+          "outcome_score": 0.7571343183517456,
+          "outcome_tracking_terminated": false,
+          "source_active_right_tool_fingers": [
+            "index"
+          ],
+          "source_endpoint": 45,
+          "state_high_y": 1.0
+        },
+        {
+          "actor_mu_y": 2.1002228260040283,
+          "deterministic_action_y_before_intervention": 1.0,
+          "executed_action_y": 1.0,
+          "mu_exceeds_high": true,
+          "outcome_endpoint": 47,
+          "outcome_position_error_m": 0.09382005035877228,
+          "outcome_rotation_error_rad": 0.31551140546798706,
+          "outcome_score": 0.8096340894699097,
+          "outcome_tracking_terminated": false,
+          "source_active_right_tool_fingers": [
+            "index"
+          ],
+          "source_endpoint": 46,
+          "state_high_y": 1.0
+        },
+        {
+          "actor_mu_y": 2.1304233074188232,
+          "deterministic_action_y_before_intervention": 1.0,
+          "executed_action_y": 1.0,
+          "mu_exceeds_high": true,
+          "outcome_endpoint": 48,
+          "outcome_position_error_m": 0.10655965656042099,
+          "outcome_rotation_error_rad": 0.3439328670501709,
+          "outcome_score": 0.9171217083930969,
+          "outcome_tracking_terminated": false,
+          "source_active_right_tool_fingers": [],
+          "source_endpoint": 47,
+          "state_high_y": 1.0
+        }
+      ],
+      "subsequent_mu_all_remain_above_state_high": true,
+      "subsequent_mu_returns_below_state_high_before_48": false,
+      "subsequent_policy": "frozen_deterministic_actor_closed_loop"
+    },
+    "46": {
+      "endpoint_48": {
+        "actor_mu_y": 2.1159820556640625,
+        "deterministic_action_y_before_intervention": 1.0,
+        "executed_action_y": 1.0,
+        "mu_exceeds_high": true,
+        "outcome_endpoint": 48,
+        "outcome_position_error_m": 0.11608351767063141,
+        "outcome_rotation_error_rad": 0.27632343769073486,
+        "outcome_score": 0.9847465753555298,
+        "outcome_tracking_terminated": false,
+        "source_active_right_tool_fingers": [],
+        "source_endpoint": 47,
+        "state_high_y": 1.0
+      },
+      "intervention": "set_right_wrist_y_normalized_action_to_zero_once",
+      "intervention_source": 46,
+      "steps": [
+        {
+          "actor_mu_y": 2.105057954788208,
+          "deterministic_action_y_before_intervention": 1.0,
+          "executed_action_y": 0.0,
+          "mu_exceeds_high": true,
+          "outcome_endpoint": 47,
+          "outcome_position_error_m": 0.10561580955982208,
+          "outcome_rotation_error_rad": 0.3031570613384247,
+          "outcome_score": 0.9030383229255676,
+          "outcome_tracking_terminated": false,
+          "source_active_right_tool_fingers": [
+            "index"
+          ],
+          "source_endpoint": 46,
+          "state_high_y": 1.0
+        },
+        {
+          "actor_mu_y": 2.1159820556640625,
+          "deterministic_action_y_before_intervention": 1.0,
+          "executed_action_y": 1.0,
+          "mu_exceeds_high": true,
+          "outcome_endpoint": 48,
+          "outcome_position_error_m": 0.11608351767063141,
+          "outcome_rotation_error_rad": 0.27632343769073486,
+          "outcome_score": 0.9847465753555298,
+          "outcome_tracking_terminated": false,
+          "source_active_right_tool_fingers": [],
+          "source_endpoint": 47,
+          "state_high_y": 1.0
+        }
+      ],
+      "subsequent_mu_all_remain_above_state_high": true,
+      "subsequent_mu_returns_below_state_high_before_48": false,
+      "subsequent_policy": "frozen_deterministic_actor_closed_loop"
+    }
+  },
+  "status": "completed_read_only_attribution"
+}

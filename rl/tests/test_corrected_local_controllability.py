@@ -139,8 +139,8 @@ def test_diagnostic_snapshots_are_hash_bound_and_cannot_resume_training():
 def test_protocol_preserves_local_audit_after_promoting_policy_decision_blocker():
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
     blocker = (
-        "corrected_policy_mean_saturation_attributed_"
-        "input_and_action_frame_decision_required"
+        "corrected_actor_saturates_on_both_replay_and_ppo_paths_"
+        "reference_timing_and_action_frame_decision_required"
     )
     assert protocol["blocking_checks"] == [blocker]
     audit_path = Path(protocol["audit_results"]["corrected_local_controllability"])

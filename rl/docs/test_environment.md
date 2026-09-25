@@ -18,7 +18,7 @@ PYTHONPATH="$PWD/.env_mjwp313_overlay:$PWD/src:$PWD/external/mink/src" \
   /data_all/zzx/egoengine/spider/.venv/bin/python -m pytest -q
 ```
 
-On 2026-09-25 this command passed **620 tests and 57 subtests** in 104.78 s.
+On 2026-09-25 this command passed **627 tests and 57 subtests**.
 The 17 warnings are known upstream/diagnostic warnings: capsule-mesh MULTICCD
 capacity, PyTorch AMP deprecations, two Trimesh degenerate-volume warnings and
 seven SciPy pickle deprecations.
@@ -45,6 +45,7 @@ runs/taco_pour_corrected_first_ppo_v1/
 runs/corrected_endpoint44_48_failure_attribution_v1/
 runs/taco_pour_corrected_local_controllability_v1/
 runs/taco_pour_corrected_policy_decision_attribution_v1/
+runs/taco_pour_corrected_input_bifurcation_attribution_v1/
 ```
 
 The first corrected PPO authorization is consumed. Replay passed the first
@@ -68,6 +69,16 @@ support. It proves that CPU validation already uses deterministic truncated
 mode, tests one-step wrist-y interventions, and records live MJWP contact
 geometry/normal-force evidence from complete endpoint 42--47 snapshots. It
 does not train, accept a chunk or authorize checkpoint resume.
+
+The input/bifurcation attribution exactly reproduces both formal CPU traces,
+then evaluates the frozen actor without training. The actor requests saturated
+right-wrist `+y` on both PPO and Replay states from source 43 onward. A
+successful one-step rescue does not make later policy means fall back inside
+support, so the failure is not uniquely triggered by the PPO state path and is
+not a mean-level self-correcting feedback loop. Full raw/normalized 236-D
+inputs, recurrent states, actor outputs and action bounds are hash-bound in the
+run directory. No recorded input reaches the normalization clamp; historical
+empirical training-observation ranges remain unavailable.
 
 ## Archived invalid performance evidence
 
