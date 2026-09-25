@@ -98,9 +98,49 @@ This supports two limited conclusions: the candidate removed the measured
 many-to-one action-channel defect, and the learned policy was useful relative
 to the same-run Replay. It did **not** solve the 40-step window and does not
 authorize full RL, another seed, another epoch count, or a scale/curriculum
-sweep. The historical ordinary-Gaussian 3+1 run reached 32/40, but the apparent
-`32 -> 37` cross-run difference is context only because GPU optimization is not
-deterministic.
+sweep.
+
+The historical ordinary-Gaussian 3+1 run reached 32/40, but it is not a clean
+baseline for this candidate for two independent reasons. GPU optimization is
+not deterministic, and that older run used the recurrent likelihood
+recomputation path that incorrectly assumed zero LSTM memory after a curriculum
+reset. Its saved rollout `mu/sigma/ctrlrange` data still describes what that
+rollout executed, but the apparent `32 -> 37` task result cannot be attributed
+to the truncated distribution alone. The current local engineering action
+contract is therefore the state-feasible truncated Gaussian **together with**
+the corrected recurrent likelihood evaluator.
+
+## Closed-loop objective-mapping diagnostic
+
+No further PPO tuning was performed after the strict 37/40 result. The frozen
+CPU actor was instead rerun physically from the same complete endpoint-20
+state, with a fresh environment and zero LSTM state for each of the three
+previously declared interpretations:
+
+```text
+axis-intercept normalized ellipse:  37 / 40, failed at endpoint 58
+corner-intercept ellipse:           40 / 40
+independent 0.12 m AND 1.5 rad:     39 / 40, failed at endpoint 60
+```
+
+The axis branch reproduced the authorized run's complete trajectory signature
+exactly. All three branches had bitwise-identical physical states, commands,
+and actor actions through their shared endpoint 58; the two branches that
+continued were also bitwise identical through endpoint 60. Thus the outcome
+difference comes from termination semantics, not a different rollout.
+
+At endpoint 60 the position error was `0.1228889 m`, exceeding the independent
+`0.12 m` threshold by about `2.889 mm`; rotation was still below its threshold
+at `0.6529664 rad`. The corner ellipse score was `1.1127549`, below its
+`sqrt(2)` boundary. This is a mixed result: objective mapping materially changes
+the 40-step verdict, but the independent-threshold branch still exposes a small
+control shortfall at the final endpoint. The diagnostic does not select a new
+formal objective, commit a chunk, or establish task success.
+
+Evidence:
+
+- `configs/taco_pour_objective_mapping_closed_loop_v1.yaml`;
+- `runs/taco_pour_objective_mapping_closed_loop_v1/report.json`.
 
 Experiment evidence:
 

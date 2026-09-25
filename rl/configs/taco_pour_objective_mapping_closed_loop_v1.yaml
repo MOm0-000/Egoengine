@@ -1,0 +1,60 @@
+schema: taco_pour_objective_mapping_closed_loop_v1
+status: frozen_inference_only_no_promotion
+paper_faithful: false
+purpose: >-
+  Re-run one frozen CPU actor from the same complete endpoint-20 boundary under
+  the three objective interpretations already declared by this project. This
+  is a physical closed-loop diagnostic, not offline trace rescoring.
+
+execution:
+  device: cpu
+  training_allowed: false
+  optimizer_updates: 0
+  start_endpoint: 20
+  end_endpoint: 60
+  control_intervals: 40
+  fresh_environment_per_branch: true
+  fresh_zero_RNN_state_per_branch: true
+
+branches:
+  axis_intercept_normalized_ellipse:
+    lambda_p: 69.44444444444444
+    lambda_R: 0.4444444444444444
+    C: 1.0
+    status: current_local_formal_proxy
+  corner_intercept_ellipse:
+    lambda_p: 69.44444444444444
+    lambda_R: 0.4444444444444444
+    C: 1.4142135623730951
+    status: diagnostic_only
+  independent_thresholds:
+    position_m: 0.12
+    rotation_rad: 1.5
+    combination: position_and_rotation
+    status: diagnostic_only
+
+regression_gate:
+  branch: axis_intercept_normalized_ellipse
+  required_validated_steps: 37
+  required_failure_endpoint: 58
+  exact_trajectory_signature_match_to_authorized_run: true
+
+promotion:
+  chunk_commit_allowed: false
+  optimized_trajectory_output_allowed: false
+  formal_objective_change_allowed: false
+  task_success_claim_allowed: false
+
+input_sha256:
+  boundary: 028ffd240c6ac1ba0d298d7caddab482169b772bdec14f4008f1af3865ba3547
+  actor_manifest: c044efa8749de46301497db7c3c999e7ede94e6b9704cb87ef8f4b3760a9f24f
+  actor_artifact: 0c0adf2bda56c565407c9e18b2a9e63446b5deb6a7c6b90f7e3b75a01123d130
+  prior_experiment_report: cf24d7173c65ce6873e0d68dbf86d7c79c6dca44bd5bba99d2cc6f2e8bc2c4e5
+  config: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+  initialization_report: 9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a
+  protocol: 5be16cb83eb7a3b3d2b4a63ddd3dfb0e8690277bc0a67deaa725dad26faa2773
+  objective_profile: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+  observation_profile: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  action_profile: 71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4
+  action_distribution_profile: 6a4e4bd8f33fa53bfe34f21f822bfa391253cca090892767154320fc9bbfd1b8
+  implementation: b4e2cbf795d975795672d357fa0b16f159401394694b65887235b8102d9ed57a

@@ -206,8 +206,12 @@ def main() -> None:
             "difference_steps": policy["validated_steps"] - prior_traces["rl"]["validated_steps"],
             "causal_claim_allowed": False,
             "reason": (
-                "The GPU optimizer is nondeterministic; the historical run is useful "
-                "context, not a paired deterministic training ablation."
+                "The GPU optimizer is nondeterministic, and the historical ordinary-"
+                "Gaussian 3+1 PPO used a recurrent likelihood recomputation path that "
+                "incorrectly assumed zero hidden state after curriculum resets. The "
+                "historical task result is context, not a clean action-distribution "
+                "ablation. Its saved rollout mu/sigma/ctrlrange statistics remain "
+                "descriptive evidence of what that rollout executed."
             ),
         },
         "promotion": {

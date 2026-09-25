@@ -24,7 +24,7 @@
     },
     "analysis_script": {
       "path": "/data_all/zzx/3.2RL/scripts/analyze_taco_pour_truncated_gaussian_experiment.py",
-      "sha256": "9709a1120c0df413defef6cf622a8c91f27eade8ec5682a0afbe0100f976afb0"
+      "sha256": "744993c25854c1d205e57304a8093ca36c1ffdf0cead2fe8563c27ebf02e82a8"
     }
   },
   "frozen_budget": {
@@ -122,7 +122,7 @@
     "truncated_Gaussian_CPU_PPO_validated_steps": 37,
     "difference_steps": 5,
     "causal_claim_allowed": false,
-    "reason": "The GPU optimizer is nondeterministic; the historical run is useful context, not a paired deterministic training ablation."
+    "reason": "The GPU optimizer is nondeterministic, and the historical ordinary-Gaussian 3+1 PPO used a recurrent likelihood recomputation path that incorrectly assumed zero hidden state after curriculum resets. The historical task result is context, not a clean action-distribution ablation. Its saved rollout mu/sigma/ctrlrange statistics remain descriptive evidence of what that rollout executed."
   },
   "promotion": {
     "chunk_committed": false,
