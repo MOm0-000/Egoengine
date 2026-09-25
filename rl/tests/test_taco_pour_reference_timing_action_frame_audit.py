@@ -132,12 +132,7 @@ def test_arrays_contract_and_active_protocol_are_hash_bound():
         assert arrays["timing_shift_1_actor_mu"].shape == (8, 36)
 
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
-    blocker = (
-        "reference_timing_minus1_is_material_but_unpublished_and_"
-        "local_frame_candidate_violates_frozen_action_support"
-    )
-    assert protocol["blocking_checks"] == [blocker]
-    assert protocol["training_ready_scope"] == blocker
+    assert protocol["blocking_checks"] == [protocol["training_ready_scope"]]
     assert Path(
         protocol["audit_results"]["reference_timing_action_frame_audit"]
     ).parts[-3:] == (

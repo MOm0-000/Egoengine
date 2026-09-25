@@ -8,7 +8,7 @@ evidence_policy:
   order: [paper, verified_implementation_defect, disclosed_local_proposal]
   paper_page_numbers: one_based_pdf_pages
   copied_defaults_are_author_settings: false
-  current_revision: reference_timing_action_frame_audited_no_commit
+  current_revision: training_credit_assignment_audited_no_commit
 
 inputs:
   setting: user_approved_gt_oracle_validation_not_full_perception_reproduction
@@ -177,6 +177,32 @@ evaluation:
       candidate_still_points_away_from_desired_bowl_correction_sources_43_to_46: true
       candidate_full_action_inside_frozen_support: false
       candidate_closed_loop_executed: false
+  training_credit_assignment_audit:
+    status: completed_read_only_no_training_no_commit
+    report: /data_all/zzx/3.2RL/runs/taco_pour_training_credit_assignment_audit_v1/report.json
+    formal_trace_regression:
+      replay: 30
+      ppo: 27
+      timing_minus_1: 30
+      formal_plus_y_suffixes_exact: true
+    timing_minus_1:
+      classification: suppression_candidate_not_refinement
+      same_failure_endpoint_and_reason_as_replay: true
+      exceeds_replay_boundary: false
+    one_step_world_y_counterfactual:
+      source_endpoints: [43, 44, 45, 46]
+      formal_plus_1_is_suboptimal_at_every_source: true
+      best_action_and_failure_endpoint:
+        43: [-1.0, 50]
+        44: [-1.0, 51]
+        45: [-1.0, 56]
+        46: [-0.75, 51]
+      any_branch_completes_endpoint_60: false
+      zero_y_rescue_failure_endpoints: {44: 49, 45: 51, 46: 49}
+    historical_training_credit:
+      exact_advantage_value_return_available: false
+      final_critic_backfill_allowed: false
+      reason: rollout_reward_critic_value_return_advantage_observation_and_hidden_not_saved
 
 runtime_contract:
   fail_closed: true
@@ -227,7 +253,7 @@ runtime_contract:
     cpu_commit_endpoint_offset: 20
 
 training_ready: false
-training_ready_scope: reference_timing_minus1_is_material_but_unpublished_and_local_frame_candidate_violates_frozen_action_support
+training_ready_scope: final_actor_world_y_mean_is_counterfactually_suboptimal_but_historical_ppo_credit_was_not_logged
 
 audit_results:
   active_input: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/input_audit.json
@@ -243,6 +269,7 @@ audit_results:
   corrected_policy_decision_attribution: /data_all/zzx/3.2RL/runs/taco_pour_corrected_policy_decision_attribution_v1/report.json
   corrected_input_bifurcation_attribution: /data_all/zzx/3.2RL/runs/taco_pour_corrected_input_bifurcation_attribution_v1/report.json
   reference_timing_action_frame_audit: /data_all/zzx/3.2RL/runs/taco_pour_reference_timing_action_frame_audit_v1/report.json
+  training_credit_assignment_audit: /data_all/zzx/3.2RL/runs/taco_pour_training_credit_assignment_audit_v1/report.json
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -263,7 +290,7 @@ historical_reward_misaligned:
     - old_objective_mapping_closed_loop_outcomes
 
 blocking_checks:
-  - reference_timing_minus1_is_material_but_unpublished_and_local_frame_candidate_violates_frozen_action_support
+  - final_actor_world_y_mean_is_counterfactually_suboptimal_but_historical_ppo_credit_was_not_logged
 result_acceptance_blockers:
   - corrected_first_PPO_passed_only_27_of_40_and_committed_nothing
   - corrected_PPO_endpoint48_position_term_alone_exceeds_local_ellipse_boundary
@@ -274,6 +301,10 @@ result_acceptance_blockers:
   - recurrent_hidden_substitution_does_not_remove_source43_to47_wrist_y_saturation
   - reference_palm_translation_is_less_anti_aligned_but_still_anti_aligned_and_violates_frozen_action_support
   - exact_reference_timing_and_Cartesian_residual_frame_are_not_published
+  - timing_minus1_matches_replay_failure_boundary_and_is_suppression_not_refinement
+  - zero_y_single_step_rescues_do_not_pass_endpoint51_or_complete_the_window
+  - all_eight_non_plus1_grid_actions_outperform_formal_plus1_at_sources43_to46
+  - historical_rollout_advantage_value_return_and_recurrent_context_were_not_logged
   - unpublished_threshold_to_weighted_objective_mapping
   - stable_grasp_and_physical_pour_not_demonstrated
 paper_faithful_run_blockers:

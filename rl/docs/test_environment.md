@@ -18,7 +18,7 @@ PYTHONPATH="$PWD/.env_mjwp313_overlay:$PWD/src:$PWD/external/mink/src" \
   /data_all/zzx/egoengine/spider/.venv/bin/python -m pytest -q
 ```
 
-On 2026-09-25 this command passed **632 tests and 57 subtests**.
+On 2026-09-25 this command passed **638 tests and 57 subtests**.
 The 17 warnings are known upstream/diagnostic warnings: capsule-mesh MULTICCD
 capacity, PyTorch AMP deprecations, two Trimesh degenerate-volume warnings and
 seven SciPy pickle deprecations.
@@ -47,6 +47,7 @@ runs/taco_pour_corrected_local_controllability_v1/
 runs/taco_pour_corrected_policy_decision_attribution_v1/
 runs/taco_pour_corrected_input_bifurcation_attribution_v1/
 runs/taco_pour_reference_timing_action_frame_audit_v1/
+runs/taco_pour_training_credit_assignment_audit_v1/
 ```
 
 The first corrected PPO authorization is consumed. Replay passed the first
@@ -95,6 +96,23 @@ sources 43--46 and transforming the complete bilateral translation action
 would leave the frozen action support from source 42 onward. That frame
 candidate is therefore rejected without clipping, rescaling or rollout. No
 timing or frame diagnostic is a formal success or a paper-recovered choice.
+
+The training-credit assignment audit keeps the final actor and every runtime
+contract frozen. It classifies actor timing shift `-1` as suppression rather
+than refinement: it is slightly closer to Replay than the formal PPO path on
+their common endpoints, but both shift `-1` and Replay fail at endpoint 51.
+Extending the old single-step `y=0` rescues through the complete lookahead also
+shows that none succeeds: interventions at sources 44/45/46 fail at endpoints
+49/51/49. A fixed nine-point, state-feasible wrist-y sweep provides stronger
+evidence about the final actor decision. The formal `+1` branch is
+counterfactually suboptimal at every source 43--46; the best one-step choices
+extend failure to endpoints 50/51/56/51, but no branch reaches endpoint 60.
+These are frozen final-actor rollout returns, not historical critic Q values.
+The v5 visitation artifacts did not save rollout reward, critic observation or
+value, return, advantage, raw observation, or recurrent hidden state, and the
+checkpoint has no rollout buffer or per-epoch critics. Consequently the sign
+of the original PPO advantage cannot be recovered and is not backfilled using
+the final critic.
 
 ## Archived invalid performance evidence
 
