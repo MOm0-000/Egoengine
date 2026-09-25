@@ -1,0 +1,44 @@
+schema: taco_state_feasible_action_distribution_v1
+profile_id: taco_pour_state_feasible_truncated_gaussian_v1
+status: engineering_candidate_gate_only
+paper_faithful: false
+provenance: >-
+  Local engineering candidate motivated by the v4 policy-distribution audit.
+  EgoEngine does not publish this action distribution.
+
+distribution:
+  kind: independent_state_truncated_normal
+  base_actor_outputs: [mu, sigma]
+  residual_scale: 0.05
+  residual_scale_changed: false
+  reference_snap_tolerance: 0.0000002
+  minimum_normalization_mass: 0.000000000001
+  normalized_bounds:
+    low: max(-1, (ctrl_low - snapped_reference_ctrl) / 0.05)
+    high: min(+1, (ctrl_high - snapped_reference_ctrl) / 0.05)
+  stochastic_action: inverse_CDF_sample_from_Normal_mu_sigma_truncated_to_low_high
+  deterministic_action: clip_mu_to_state_bounds
+  official_minus1_plus1_clamp_enabled: false
+  actuator_ctrlrange_retained_as_final_safety_backstop: true
+  rollout_buffer_fields: [action_lows, action_highs]
+  PPO_log_probability: truncated_Normal_with_state_bound_normalizer
+  entropy: exact_independent_truncated_Normal_entropy
+  scheduler_KL: same_action_same_bounds_sample_estimate
+
+frozen_unchanged:
+  - objective
+  - reward
+  - observation
+  - actor_and_critic_architecture
+  - residual_scale
+  - CPU_acceptance_start_and_40_of_40_rule
+
+promotion:
+  optimizer_training_authorized: false
+  task_level_PPO_authorized: false
+  chunk_commit_authorized: false
+  required_before_authorization:
+    - offline_v4_1280_state_gate
+    - finite_log_probability_and_gradient_gate
+    - exact_same_policy_ratio_gate
+    - four_world_zero_optimizer_integration_gate

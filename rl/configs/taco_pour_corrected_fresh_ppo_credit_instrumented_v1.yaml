@@ -1,0 +1,100 @@
+schema: taco_pour_corrected_fresh_ppo_credit_instrumented_v1
+status: authorized_diagnostic_training
+paper_faithful: false
+provenance: >-
+  One fresh corrected PPO run authorized solely to recover rollout, GAE,
+  minibatch, optimizer-update and fixed-probe evidence that the historical
+  checkpoint did not preserve. No algorithm or task contract is changed.
+authorized_output_directory: /data_all/zzx/3.2RL/runs/taco_pour_corrected_fresh_ppo_credit_instrumented_v1
+
+training:
+  worlds: 4
+  epochs: 8
+  horizon_per_world_per_epoch: 40
+  samples_per_epoch: 160
+  total_samples: 1280
+  seed: 0
+  fixed_reset_endpoints: [20, 20, 20, 20]
+  old_actor_or_checkpoint_resume: false
+  tail_curriculum: false
+
+frozen_algorithm:
+  reward_changed: false
+  objective_changed: false
+  action_bound_changed: false
+  action_distribution_changed: false
+  reference_timing_changed: false
+  action_frame_changed: false
+  PPO_hyperparameters_changed: false
+  observation_changed: false
+  critic_changed: false
+
+result_contract:
+  CPU_validation_start_endpoint: 20
+  CPU_validation_intervals: 40
+  chunk_commit_forbidden: true
+  checkpoint_resume_forbidden: true
+  performance_comparison_to_prior_GPU_run_forbidden: true
+  successful_diagnostic_requires_task_success: false
+  purpose: historical_credit_evidence_only
+
+inputs:
+  simulator_config:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml
+    sha256: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+  initialization_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v2/candidate_a/report.json
+    sha256: 9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a
+  protocol:
+    path: /data_all/zzx/3.2RL/configs/replay_rl_protocol.yaml
+    sha256: b8fafc2fe1373f18ca28496e12b6971e6f0e352df2a24dd466efefeacdafdcbc
+  objective_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_local_normalized_ellipse_v1.yaml
+    sha256: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+  observation_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_observation_local_236d_v1.yaml
+    sha256: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  action_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_residual_action_scaled_v1.yaml
+    sha256: 71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4
+  distribution_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_state_feasible_truncated_gaussian_v1.yaml
+    sha256: 6a4e4bd8f33fa53bfe34f21f822bfa391253cca090892767154320fc9bbfd1b8
+  source_boundary:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_replay_rebase_v1/tool_only/committed_boundary_endpoint_20.pt.gz
+    sha256: a3646e24af1ba871e5ecc885669508223a5e0f26d3cf29f0482f02678419e337
+  credit_instrumentation_gate:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_credit_instrumentation_gate_v1/report.json
+    sha256: 4d71287014f684fbc695935aab54e492427a679fde3e93fbc4f7aea643f609a3
+  fixed_probe_panel:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_input_bifurcation_attribution_v1/observations_and_actor_outputs.npz
+    sha256: 8552b8cab3c7ee1d9e0f0fad283fcc6cd7edc1f77e2dca01325a963b5f8e5d7b
+  prior_credit_inventory:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_training_credit_assignment_audit_v1/report.json
+    sha256: 3f9629533b8a30fb942d596448d0277a2c0cbda60a3d72476d63bf9eecf8ec65
+
+implementation:
+  credit_audit:
+    path: /data_all/zzx/3.2RL/src/video_to_spider/rl/credit_audit.py
+    sha256: f104096c17027884922e69a5e2ec552faf5999193f7fd47f23ac81cd77752874
+  state_feasible_distribution:
+    path: /data_all/zzx/3.2RL/src/video_to_spider/rl/state_feasible_truncated_gaussian.py
+    sha256: 43e937efb653142249a59425e62f30011ec5039df16550e7f9735c302f05c020
+  ppo_chunk_adapter:
+    path: /data_all/zzx/3.2RL/src/video_to_spider/rl/replay_rl.py
+    sha256: 893ffa876db0ad465f8a97329cc2ea4112c87ced5c6f622f524c92c26b666089
+  mjwp_environment:
+    path: /data_all/zzx/3.2RL/src/video_to_spider/rl/mjwp_env.py
+    sha256: dde2bec6fb298b127ca6d3275b2b5e38d3a4cd5204144ea25603c610dac912a9
+  training_trace:
+    path: /data_all/zzx/3.2RL/src/video_to_spider/rl/training_trace.py
+    sha256: f74e451fc8bd356bc0ee0338b2e5c4166d175e14c1ea7cf557ec3baf2ef03bc5
+  official_ppo_agent:
+    path: /data_all/zzx/3.2RL/external/human2sim2robot/human2sim2robot/ppo/ppo_agent.py
+    sha256: b41f1c088d8ad4e261b9c5338f90a7f0ae910b7453ab348532312b3d87bc4c30
+  official_asymmetric_critic:
+    path: /data_all/zzx/3.2RL/external/human2sim2robot/human2sim2robot/ppo/utils/asymmetric_critic.py
+    sha256: d492992808cd948a6b22c5488b4a57ae48c2c5361a507504a81fa16b08cc1eec
+  run_script:
+    path: /data_all/zzx/3.2RL/scripts/run_taco_pour_credit_instrumented_ppo.py
+    sha256: 403ac9a8a81d8b996e0042c783bbfae2973c8b69295df6124cd56de9002291dd

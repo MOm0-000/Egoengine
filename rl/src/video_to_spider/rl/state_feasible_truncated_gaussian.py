@@ -305,9 +305,10 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
     def _actor_outputs(self, obs, *, advance_only: bool = False) -> dict[str, torch.Tensor]:
         processed = self._preproc_obs(obs["obs"])
         self.model.eval()
+        rnn_input = self.rnn_states
         input_dict = {
             "obs": self.model.norm_obs(processed),
-            "rnn_states": self.rnn_states,
+            "rnn_states": rnn_input,
         }
         with torch.no_grad():
             mu, logstd, value, states = self.model.a2c_network(input_dict)
@@ -323,6 +324,16 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
             else:
                 value = self.model.denorm_value(value)
             result.update(mus=mu, sigmas=sigma, values=value)
+            observer = getattr(self, "_observe_actor_forward", None)
+            if observer is not None:
+                observer(
+                    raw_observation=obs,
+                    processed_observation=processed,
+                    normalized_observation=input_dict["obs"],
+                    rnn_input=rnn_input,
+                    rnn_output=states,
+                    result=result,
+                )
             return result
 
     def advance_rnn_from_observation(self, obs) -> dict[str, torch.Tensor]:

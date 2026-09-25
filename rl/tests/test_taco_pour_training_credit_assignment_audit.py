@@ -103,7 +103,7 @@ def test_historical_advantage_value_and_return_are_not_recoverable():
     }
 
 
-def test_artifacts_and_active_protocol_are_hash_bound():
+def test_artifacts_remain_hash_bound_and_protocol_advances_to_fresh_evidence():
     report = _report()
     assert _sha256(CONTRACT) == report["contract"]["sha256"]
     arrays_path = RUN / Path(report["full_arrays"]["path"]).name
@@ -117,8 +117,8 @@ def test_artifacts_and_active_protocol_are_hash_bound():
 
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
     blocker = (
-        "final_actor_world_y_mean_is_counterfactually_suboptimal_but_"
-        "historical_ppo_credit_was_not_logged"
+        "ppo_old_new_likelihood_uses_different_observation_"
+        "normalization_statistics"
     )
     assert protocol["blocking_checks"] == [blocker]
     assert protocol["training_ready_scope"] == blocker

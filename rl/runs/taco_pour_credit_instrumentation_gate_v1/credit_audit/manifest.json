@@ -1,0 +1,250 @@
+{
+  "schema": "taco_corrected_fresh_ppo_credit_instrumentation_v1",
+  "status": "completed",
+  "paper_faithful": false,
+  "worlds": 4,
+  "horizon": 4,
+  "epochs": 1,
+  "actor_updates": 4,
+  "right_wrist_y_action_index": 1,
+  "initial_actor": {
+    "path": "/data_all/zzx/3.2RL/runs/taco_pour_credit_instrumentation_gate_v1/credit_audit/initial_actor_state.pt.gz",
+    "artifact_sha256": "3b8e6b80795b1ce6e2134cb3cb3148b3196ea0fc64c6f7d0df40df24f438fa2c",
+    "uncompressed_sha256": "bf108c159bc25718f430f0ad94d3a384aba107c1d1920e8991c5c7d4688c315c",
+    "model_state_sha256": "90952c63eea114643ef30b320c64cf64c4cafd0c0e8a4522412ecf62b0a73b33",
+    "bytes": 24321355
+  },
+  "final_actor": {
+    "path": "/data_all/zzx/3.2RL/runs/taco_pour_credit_instrumentation_gate_v1/credit_audit/final_actor_state.pt.gz",
+    "artifact_sha256": "d923cd6467bbc7d5c631dc9ceb1cd0ed5117e85eaea96034cf0a331483228151",
+    "uncompressed_sha256": "9f52ab1d9d3ebf455cdb4c29b01b544dedbaea21c9d65fc43c576000844c8e15",
+    "model_state_sha256": "936a40c747bef21a093ebbb02a395e94d0b5c768adbaf10ef95b3a0c99f79c48",
+    "bytes": 24655686
+  },
+  "exact_intermediate_actor_reconstruction": "initial state plus ordered lossless XOR forward-state and optimizer-state patches",
+  "epoch_reports": [
+    {
+      "epoch": 1,
+      "samples": 16,
+      "actor_updates": 4,
+      "credit_rows": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_credit_instrumentation_gate_v1/credit_audit/epoch_0001_credit_rows.npz",
+        "sha256": "b01b214fcb8157ad4ecd2e54617941e455eff14ec54d1270db60108c221a8e5a"
+      },
+      "wrist_y_preupdate_bins": [
+        {
+          "interval": [
+            -1.0,
+            -0.5
+          ],
+          "count": 5,
+          "mean_reward": 0.4073142111301422,
+          "mean_return": 0.9039689898490906,
+          "mean_value": -0.17604395747184753,
+          "mean_raw_advantage": 1.0800129175186157,
+          "mean_normalized_advantage": 0.23475381731987,
+          "termination_outcome_counts": {
+            "-1": 5
+          }
+        },
+        {
+          "interval": [
+            -0.5,
+            0.0
+          ],
+          "count": 7,
+          "mean_reward": 0.4410305917263031,
+          "mean_return": 0.7536492943763733,
+          "mean_value": -0.12700700759887695,
+          "mean_raw_advantage": 0.880656361579895,
+          "mean_normalized_advantage": -0.1105978935956955,
+          "termination_outcome_counts": {
+            "-1": 7
+          }
+        },
+        {
+          "interval": [
+            0.0,
+            0.5
+          ],
+          "count": 3,
+          "mean_reward": 0.40963229537010193,
+          "mean_return": 0.9258220791816711,
+          "mean_value": -0.10660615563392639,
+          "mean_raw_advantage": 1.0324283838272095,
+          "mean_normalized_advantage": 0.15232139825820923,
+          "termination_outcome_counts": {
+            "-1": 3
+          }
+        },
+        {
+          "interval": [
+            0.5,
+            1.0
+          ],
+          "count": 1,
+          "mean_reward": 0.3991684317588806,
+          "mean_return": 0.4316018223762512,
+          "mean_value": -0.018450219184160233,
+          "mean_raw_advantage": 0.45005205273628235,
+          "mean_normalized_advantage": -0.8565469980239868,
+          "termination_outcome_counts": {
+            "-1": 1
+          }
+        }
+      ],
+      "actor_state_sha256_after_epoch": "936a40c747bef21a093ebbb02a395e94d0b5c768adbaf10ef95b3a0c99f79c48"
+    }
+  ],
+  "update_reports": [
+    {
+      "epoch": 1,
+      "update_in_epoch": 1,
+      "global_actor_update": 1,
+      "minibatch_index": 0,
+      "sample_count": 16,
+      "sample_ids_sha256": "5d85718ec594b982c252d0279e5966ffca33a5eaf2a455038d3ab331fde70cea",
+      "actor_loss": 0.24653591215610504,
+      "critic_loss": 1.9099383354187012,
+      "entropy": 21.398616790771484,
+      "total_loss": 4.066412448883057,
+      "gradient_norm_before_clip": 137.6005096435547,
+      "ratio": {
+        "min": 0.09992177784442902,
+        "mean": 1.9416213035583496,
+        "max": 8.0859956741333
+      },
+      "forward_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_credit_instrumentation_gate_v1/credit_audit/actor_state_patches/epoch_0001_update_01_forward_state_patch.npz",
+        "sha256": "a3002260c6f8ed8ed1bac65029ac19776147b734bb1793bffe6ae25eb89a1edc",
+        "bytes": 34173,
+        "before_model_state_sha256": "90952c63eea114643ef30b320c64cf64c4cafd0c0e8a4522412ecf62b0a73b33",
+        "after_model_state_sha256": "3481fbe21d953df97f732f76edb767788e3127580ff9b0ab281a5858e3528e33"
+      },
+      "optimizer_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_credit_instrumentation_gate_v1/credit_audit/actor_state_patches/epoch_0001_update_01_optimizer_state_patch.npz",
+        "sha256": "b7a7bd5e9d814f2028dd2d205328459bf5e04a91f8e74fdb9b28eda19d58cdbd",
+        "bytes": 20662173,
+        "before_model_state_sha256": "3481fbe21d953df97f732f76edb767788e3127580ff9b0ab281a5858e3528e33",
+        "after_model_state_sha256": "82bfb5bfcdf236f8d4010d802926dc944aa4ae9a9d69ba4adfe988c64797ed21"
+      },
+      "row_artifact": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_credit_instrumentation_gate_v1/credit_audit/epoch_0001_update_01_ppo_rows.npz",
+        "sha256": "974dd65e7cf5d21bb68e71b82afd2e9d1b589ac84ce10c2b42ee2c5b7b849baf"
+      },
+      "probe": null
+    },
+    {
+      "epoch": 1,
+      "update_in_epoch": 2,
+      "global_actor_update": 2,
+      "minibatch_index": 0,
+      "sample_count": 16,
+      "sample_ids_sha256": "5d85718ec594b982c252d0279e5966ffca33a5eaf2a455038d3ab331fde70cea",
+      "actor_loss": 0.04142343997955322,
+      "critic_loss": 1.5149716138839722,
+      "entropy": 21.368295669555664,
+      "total_loss": 3.071366786956787,
+      "gradient_norm_before_clip": 33.841575622558594,
+      "ratio": {
+        "min": 0.10376337915658951,
+        "mean": 1.4562667608261108,
+        "max": 6.829264163970947
+      },
+      "forward_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_credit_instrumentation_gate_v1/credit_audit/actor_state_patches/epoch_0001_update_02_forward_state_patch.npz",
+        "sha256": "bc9715e628e7252bd36c59b87d5cbb42f3c42a9c4621806c811c812ff79a1dba",
+        "bytes": 31401,
+        "before_model_state_sha256": "82bfb5bfcdf236f8d4010d802926dc944aa4ae9a9d69ba4adfe988c64797ed21",
+        "after_model_state_sha256": "82bfb5bfcdf236f8d4010d802926dc944aa4ae9a9d69ba4adfe988c64797ed21"
+      },
+      "optimizer_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_credit_instrumentation_gate_v1/credit_audit/actor_state_patches/epoch_0001_update_02_optimizer_state_patch.npz",
+        "sha256": "9a38b8fc9befaa4e0972eca2d9713b704d94b62f4a1d4aeccb0f18ad2529dcee",
+        "bytes": 20823753,
+        "before_model_state_sha256": "82bfb5bfcdf236f8d4010d802926dc944aa4ae9a9d69ba4adfe988c64797ed21",
+        "after_model_state_sha256": "703fc0780801fb21a8216e8b5b7dae13ed6d969c37fb372dd2681d733e9a46a8"
+      },
+      "row_artifact": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_credit_instrumentation_gate_v1/credit_audit/epoch_0001_update_02_ppo_rows.npz",
+        "sha256": "d2f9ea1d6352ac267a85f50b798436ceb3a6cc3dfeba0322452585bc6bb06228"
+      },
+      "probe": null
+    },
+    {
+      "epoch": 1,
+      "update_in_epoch": 3,
+      "global_actor_update": 3,
+      "minibatch_index": 0,
+      "sample_count": 16,
+      "sample_ids_sha256": "5d85718ec594b982c252d0279e5966ffca33a5eaf2a455038d3ab331fde70cea",
+      "actor_loss": -0.019535690546035767,
+      "critic_loss": 1.4640116691589355,
+      "entropy": 21.330974578857422,
+      "total_loss": 2.908487558364868,
+      "gradient_norm_before_clip": 12.394920349121094,
+      "ratio": {
+        "min": 0.09599674493074417,
+        "mean": 1.955614686012268,
+        "max": 10.317065238952637
+      },
+      "forward_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_credit_instrumentation_gate_v1/credit_audit/actor_state_patches/epoch_0001_update_03_forward_state_patch.npz",
+        "sha256": "bc9715e628e7252bd36c59b87d5cbb42f3c42a9c4621806c811c812ff79a1dba",
+        "bytes": 31401,
+        "before_model_state_sha256": "703fc0780801fb21a8216e8b5b7dae13ed6d969c37fb372dd2681d733e9a46a8",
+        "after_model_state_sha256": "703fc0780801fb21a8216e8b5b7dae13ed6d969c37fb372dd2681d733e9a46a8"
+      },
+      "optimizer_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_credit_instrumentation_gate_v1/credit_audit/actor_state_patches/epoch_0001_update_03_optimizer_state_patch.npz",
+        "sha256": "d98368b8030b8089064f557a27a5cf7dd977498a183015e5e257306d7098c35a",
+        "bytes": 20629240,
+        "before_model_state_sha256": "703fc0780801fb21a8216e8b5b7dae13ed6d969c37fb372dd2681d733e9a46a8",
+        "after_model_state_sha256": "6910dc0f3b48e7e56d32e57a2b0cb592dd6ecc48f7cc9d21e0e5685e1458bafc"
+      },
+      "row_artifact": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_credit_instrumentation_gate_v1/credit_audit/epoch_0001_update_03_ppo_rows.npz",
+        "sha256": "260251d60b49cbfe15cac245d82b453fc412181d037102c4ae8e863f4e1bd59d"
+      },
+      "probe": null
+    },
+    {
+      "epoch": 1,
+      "update_in_epoch": 4,
+      "global_actor_update": 4,
+      "minibatch_index": 0,
+      "sample_count": 16,
+      "sample_ids_sha256": "5d85718ec594b982c252d0279e5966ffca33a5eaf2a455038d3ab331fde70cea",
+      "actor_loss": -0.07927203178405762,
+      "critic_loss": 1.4505096673965454,
+      "entropy": 21.24154281616211,
+      "total_loss": 2.821747303009033,
+      "gradient_norm_before_clip": 18.60038185119629,
+      "ratio": {
+        "min": 0.056212060153484344,
+        "mean": 3.1789627075195312,
+        "max": 25.573829650878906
+      },
+      "forward_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_credit_instrumentation_gate_v1/credit_audit/actor_state_patches/epoch_0001_update_04_forward_state_patch.npz",
+        "sha256": "bc9715e628e7252bd36c59b87d5cbb42f3c42a9c4621806c811c812ff79a1dba",
+        "bytes": 31401,
+        "before_model_state_sha256": "6910dc0f3b48e7e56d32e57a2b0cb592dd6ecc48f7cc9d21e0e5685e1458bafc",
+        "after_model_state_sha256": "6910dc0f3b48e7e56d32e57a2b0cb592dd6ecc48f7cc9d21e0e5685e1458bafc"
+      },
+      "optimizer_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_credit_instrumentation_gate_v1/credit_audit/actor_state_patches/epoch_0001_update_04_optimizer_state_patch.npz",
+        "sha256": "257f68d7bd92f232391b5258e76ae7149091086d4a4371700a2c14a588272aa0",
+        "bytes": 20512142,
+        "before_model_state_sha256": "6910dc0f3b48e7e56d32e57a2b0cb592dd6ecc48f7cc9d21e0e5685e1458bafc",
+        "after_model_state_sha256": "936a40c747bef21a093ebbb02a395e94d0b5c768adbaf10ef95b3a0c99f79c48"
+      },
+      "row_artifact": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_credit_instrumentation_gate_v1/credit_audit/epoch_0001_update_04_ppo_rows.npz",
+        "sha256": "da67682a748a895d68e271e1788b5209f0400c9acd2b8e78a6cd528ab98c9f67"
+      },
+      "probe": null
+    }
+  ],
+  "probe_reports": []
+}

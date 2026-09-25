@@ -48,6 +48,9 @@ runs/taco_pour_corrected_policy_decision_attribution_v1/
 runs/taco_pour_corrected_input_bifurcation_attribution_v1/
 runs/taco_pour_reference_timing_action_frame_audit_v1/
 runs/taco_pour_training_credit_assignment_audit_v1/
+runs/taco_pour_credit_instrumentation_gate_v1/
+runs/taco_pour_corrected_fresh_ppo_credit_instrumented_v1/
+runs/taco_pour_fresh_ppo_credit_evidence_v1/
 ```
 
 The first corrected PPO authorization is consumed. Replay passed the first
@@ -113,6 +116,38 @@ value, return, advantage, raw observation, or recurrent hidden state, and the
 checkpoint has no rollout buffer or per-epoch critics. Consequently the sign
 of the original PPO advantage cannot be recovered and is not backfilled using
 the final critic.
+
+The subsequent fresh diagnostic run changes no reward, objective, action
+support, timing, frame, observation, critic or PPO hyperparameter. Its CPU
+transparency gate shows that credit logging leaves the actor, critic, both
+optimizers, complete physics state, RNN and Python/NumPy/Torch RNG bitwise
+unchanged. The diagnostic preserves all 1,280 rollout rows, exact GAE inputs,
+raw and normalized advantages, all 32 actor updates and a lossless actor-state
+patch chain. It is explicitly non-promotable and commits no chunk: Replay
+fails at endpoint 51 and the fresh actor fails at endpoint 50.
+
+The recovered credit evidence reveals a concrete likelihood-contract defect.
+On the first mini-epoch the actor weights are still unchanged, but the input
+running mean/variance is updated before recomputing the PPO likelihood. That
+normalizer-only change moves 134/160 old/new likelihood ratios outside the
+configured `[0.8, 1.2]` clip interval (9/10 samples at sources 43--46), with a
+range of `0.000517...` to `19.487...`. In the fixed probe panel the same
+normalizer update moves wrist-y mean by as much as `0.344869`; the subsequent
+optimizer step adds at most `0.105659`. Thus the first large `+y` transition is
+not solely an optimizer response to GAE credit. The rollout log-probability
+itself recomputes from the stored action, mu, sigma and feasible bounds within
+`3.82e-6`, so the mismatch is specifically between the rollout observation
+transform and the first update observation transform, not the truncated
+Gaussian formula or RNN likelihood replay.
+
+Global advantage normalization is also material but is not labeled a bug by
+itself. Across the fresh run, 39 source-43--46 samples change advantage sign;
+in epoch 1 all ten tail actions are negative wrist-y, while eight have positive
+raw advantage but negative normalized advantage. This is direct historical
+credit evidence, not a final-checkpoint backfill. The active training blocker
+is now the inconsistent observation-normalizer state used by PPO old/new
+likelihoods; no further task PPO run is authorized until that contract is
+fixed and passes a no-training likelihood gate.
 
 ## Archived invalid performance evidence
 

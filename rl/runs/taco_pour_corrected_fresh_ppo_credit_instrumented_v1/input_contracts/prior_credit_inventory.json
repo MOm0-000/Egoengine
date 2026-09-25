@@ -1,0 +1,4728 @@
+{
+  "actor": {
+    "checkpoint_uncompressed_sha256": "51d114580ccce873472f9917180dd376dc6693d4e69d9c6861d08b0fe116ff70",
+    "distribution": {
+      "distribution": {
+        "PPO_log_probability": "truncated_Normal_with_state_bound_normalizer",
+        "actuator_ctrlrange_retained_as_final_safety_backstop": true,
+        "base_actor_outputs": [
+          "mu",
+          "sigma"
+        ],
+        "deterministic_action": "clip_mu_to_state_bounds",
+        "entropy": "exact_independent_truncated_Normal_entropy",
+        "kind": "independent_state_truncated_normal",
+        "minimum_normalization_mass": 1e-12,
+        "normalized_bounds": {
+          "high": "min(+1, (ctrl_high - snapped_reference_ctrl) / 0.05)",
+          "low": "max(-1, (ctrl_low - snapped_reference_ctrl) / 0.05)"
+        },
+        "official_minus1_plus1_clamp_enabled": false,
+        "reference_snap_tolerance": 2e-07,
+        "residual_scale": 0.05,
+        "residual_scale_changed": false,
+        "rollout_buffer_fields": [
+          "action_lows",
+          "action_highs"
+        ],
+        "scheduler_KL": "same_action_same_bounds_sample_estimate",
+        "stochastic_action": "inverse_CDF_sample_from_Normal_mu_sigma_truncated_to_low_high"
+      },
+      "paper_faithful": false,
+      "profile_id": "taco_pour_state_feasible_truncated_gaussian_v1",
+      "profile_path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/input_contracts/state_feasible_action_profile.yaml",
+      "profile_sha256": "6a4e4bd8f33fa53bfe34f21f822bfa391253cca090892767154320fc9bbfd1b8",
+      "promotion": {
+        "chunk_commit_authorized": false,
+        "optimizer_training_authorized": false,
+        "required_before_authorization": [
+          "offline_v4_1280_state_gate",
+          "finite_log_probability_and_gradient_gate",
+          "exact_same_policy_ratio_gate",
+          "four_world_zero_optimizer_integration_gate"
+        ],
+        "task_level_PPO_authorized": false
+      },
+      "status": "engineering_candidate_gate_only"
+    },
+    "state_sha256": "d4153ac90cbb483a23926a5ff6b1852daed6428a4195dd7547a51231760f7801"
+  },
+  "contract": {
+    "path": "/data_all/zzx/3.2RL/configs/taco_pour_training_credit_assignment_audit_v1.yaml",
+    "sha256": "c5e292ec29b72a11fd99b6e236f73067c4426ff6becf0f3e4317ed88fafeac5c"
+  },
+  "findings": {
+    "formal_success_or_promotion_claimed": false,
+    "historical_advantage_sign_recoverable": false,
+    "timing_minus1_is_refinement_candidate": false,
+    "timing_minus1_is_suppression_candidate": true,
+    "zero_y_rescue_completes_full_window": false,
+    "zero_y_rescue_passes_replay_failure_endpoint_51": false
+  },
+  "full_arrays": {
+    "keys": [
+      "source_43_y_+0.00_commanded_ctrl",
+      "source_43_y_+0.00_contact_flags",
+      "source_43_y_+0.00_normalized_action",
+      "source_43_y_+0.00_outcome_endpoint",
+      "source_43_y_+0.00_qpos",
+      "source_43_y_+0.00_qvel",
+      "source_43_y_+0.00_total_reward",
+      "source_43_y_+0.00_tracking_reward",
+      "source_43_y_+0.00_tracking_score",
+      "source_43_y_+0.25_commanded_ctrl",
+      "source_43_y_+0.25_contact_flags",
+      "source_43_y_+0.25_normalized_action",
+      "source_43_y_+0.25_outcome_endpoint",
+      "source_43_y_+0.25_qpos",
+      "source_43_y_+0.25_qvel",
+      "source_43_y_+0.25_total_reward",
+      "source_43_y_+0.25_tracking_reward",
+      "source_43_y_+0.25_tracking_score",
+      "source_43_y_+0.50_commanded_ctrl",
+      "source_43_y_+0.50_contact_flags",
+      "source_43_y_+0.50_normalized_action",
+      "source_43_y_+0.50_outcome_endpoint",
+      "source_43_y_+0.50_qpos",
+      "source_43_y_+0.50_qvel",
+      "source_43_y_+0.50_total_reward",
+      "source_43_y_+0.50_tracking_reward",
+      "source_43_y_+0.50_tracking_score",
+      "source_43_y_+0.75_commanded_ctrl",
+      "source_43_y_+0.75_contact_flags",
+      "source_43_y_+0.75_normalized_action",
+      "source_43_y_+0.75_outcome_endpoint",
+      "source_43_y_+0.75_qpos",
+      "source_43_y_+0.75_qvel",
+      "source_43_y_+0.75_total_reward",
+      "source_43_y_+0.75_tracking_reward",
+      "source_43_y_+0.75_tracking_score",
+      "source_43_y_+1.00_commanded_ctrl",
+      "source_43_y_+1.00_contact_flags",
+      "source_43_y_+1.00_normalized_action",
+      "source_43_y_+1.00_outcome_endpoint",
+      "source_43_y_+1.00_qpos",
+      "source_43_y_+1.00_qvel",
+      "source_43_y_+1.00_total_reward",
+      "source_43_y_+1.00_tracking_reward",
+      "source_43_y_+1.00_tracking_score",
+      "source_43_y_-0.25_commanded_ctrl",
+      "source_43_y_-0.25_contact_flags",
+      "source_43_y_-0.25_normalized_action",
+      "source_43_y_-0.25_outcome_endpoint",
+      "source_43_y_-0.25_qpos",
+      "source_43_y_-0.25_qvel",
+      "source_43_y_-0.25_total_reward",
+      "source_43_y_-0.25_tracking_reward",
+      "source_43_y_-0.25_tracking_score",
+      "source_43_y_-0.50_commanded_ctrl",
+      "source_43_y_-0.50_contact_flags",
+      "source_43_y_-0.50_normalized_action",
+      "source_43_y_-0.50_outcome_endpoint",
+      "source_43_y_-0.50_qpos",
+      "source_43_y_-0.50_qvel",
+      "source_43_y_-0.50_total_reward",
+      "source_43_y_-0.50_tracking_reward",
+      "source_43_y_-0.50_tracking_score",
+      "source_43_y_-0.75_commanded_ctrl",
+      "source_43_y_-0.75_contact_flags",
+      "source_43_y_-0.75_normalized_action",
+      "source_43_y_-0.75_outcome_endpoint",
+      "source_43_y_-0.75_qpos",
+      "source_43_y_-0.75_qvel",
+      "source_43_y_-0.75_total_reward",
+      "source_43_y_-0.75_tracking_reward",
+      "source_43_y_-0.75_tracking_score",
+      "source_43_y_-1.00_commanded_ctrl",
+      "source_43_y_-1.00_contact_flags",
+      "source_43_y_-1.00_normalized_action",
+      "source_43_y_-1.00_outcome_endpoint",
+      "source_43_y_-1.00_qpos",
+      "source_43_y_-1.00_qvel",
+      "source_43_y_-1.00_total_reward",
+      "source_43_y_-1.00_tracking_reward",
+      "source_43_y_-1.00_tracking_score",
+      "source_44_y_+0.00_commanded_ctrl",
+      "source_44_y_+0.00_contact_flags",
+      "source_44_y_+0.00_normalized_action",
+      "source_44_y_+0.00_outcome_endpoint",
+      "source_44_y_+0.00_qpos",
+      "source_44_y_+0.00_qvel",
+      "source_44_y_+0.00_total_reward",
+      "source_44_y_+0.00_tracking_reward",
+      "source_44_y_+0.00_tracking_score",
+      "source_44_y_+0.25_commanded_ctrl",
+      "source_44_y_+0.25_contact_flags",
+      "source_44_y_+0.25_normalized_action",
+      "source_44_y_+0.25_outcome_endpoint",
+      "source_44_y_+0.25_qpos",
+      "source_44_y_+0.25_qvel",
+      "source_44_y_+0.25_total_reward",
+      "source_44_y_+0.25_tracking_reward",
+      "source_44_y_+0.25_tracking_score",
+      "source_44_y_+0.50_commanded_ctrl",
+      "source_44_y_+0.50_contact_flags",
+      "source_44_y_+0.50_normalized_action",
+      "source_44_y_+0.50_outcome_endpoint",
+      "source_44_y_+0.50_qpos",
+      "source_44_y_+0.50_qvel",
+      "source_44_y_+0.50_total_reward",
+      "source_44_y_+0.50_tracking_reward",
+      "source_44_y_+0.50_tracking_score",
+      "source_44_y_+0.75_commanded_ctrl",
+      "source_44_y_+0.75_contact_flags",
+      "source_44_y_+0.75_normalized_action",
+      "source_44_y_+0.75_outcome_endpoint",
+      "source_44_y_+0.75_qpos",
+      "source_44_y_+0.75_qvel",
+      "source_44_y_+0.75_total_reward",
+      "source_44_y_+0.75_tracking_reward",
+      "source_44_y_+0.75_tracking_score",
+      "source_44_y_+1.00_commanded_ctrl",
+      "source_44_y_+1.00_contact_flags",
+      "source_44_y_+1.00_normalized_action",
+      "source_44_y_+1.00_outcome_endpoint",
+      "source_44_y_+1.00_qpos",
+      "source_44_y_+1.00_qvel",
+      "source_44_y_+1.00_total_reward",
+      "source_44_y_+1.00_tracking_reward",
+      "source_44_y_+1.00_tracking_score",
+      "source_44_y_-0.25_commanded_ctrl",
+      "source_44_y_-0.25_contact_flags",
+      "source_44_y_-0.25_normalized_action",
+      "source_44_y_-0.25_outcome_endpoint",
+      "source_44_y_-0.25_qpos",
+      "source_44_y_-0.25_qvel",
+      "source_44_y_-0.25_total_reward",
+      "source_44_y_-0.25_tracking_reward",
+      "source_44_y_-0.25_tracking_score",
+      "source_44_y_-0.50_commanded_ctrl",
+      "source_44_y_-0.50_contact_flags",
+      "source_44_y_-0.50_normalized_action",
+      "source_44_y_-0.50_outcome_endpoint",
+      "source_44_y_-0.50_qpos",
+      "source_44_y_-0.50_qvel",
+      "source_44_y_-0.50_total_reward",
+      "source_44_y_-0.50_tracking_reward",
+      "source_44_y_-0.50_tracking_score",
+      "source_44_y_-0.75_commanded_ctrl",
+      "source_44_y_-0.75_contact_flags",
+      "source_44_y_-0.75_normalized_action",
+      "source_44_y_-0.75_outcome_endpoint",
+      "source_44_y_-0.75_qpos",
+      "source_44_y_-0.75_qvel",
+      "source_44_y_-0.75_total_reward",
+      "source_44_y_-0.75_tracking_reward",
+      "source_44_y_-0.75_tracking_score",
+      "source_44_y_-1.00_commanded_ctrl",
+      "source_44_y_-1.00_contact_flags",
+      "source_44_y_-1.00_normalized_action",
+      "source_44_y_-1.00_outcome_endpoint",
+      "source_44_y_-1.00_qpos",
+      "source_44_y_-1.00_qvel",
+      "source_44_y_-1.00_total_reward",
+      "source_44_y_-1.00_tracking_reward",
+      "source_44_y_-1.00_tracking_score",
+      "source_45_y_+0.00_commanded_ctrl",
+      "source_45_y_+0.00_contact_flags",
+      "source_45_y_+0.00_normalized_action",
+      "source_45_y_+0.00_outcome_endpoint",
+      "source_45_y_+0.00_qpos",
+      "source_45_y_+0.00_qvel",
+      "source_45_y_+0.00_total_reward",
+      "source_45_y_+0.00_tracking_reward",
+      "source_45_y_+0.00_tracking_score",
+      "source_45_y_+0.25_commanded_ctrl",
+      "source_45_y_+0.25_contact_flags",
+      "source_45_y_+0.25_normalized_action",
+      "source_45_y_+0.25_outcome_endpoint",
+      "source_45_y_+0.25_qpos",
+      "source_45_y_+0.25_qvel",
+      "source_45_y_+0.25_total_reward",
+      "source_45_y_+0.25_tracking_reward",
+      "source_45_y_+0.25_tracking_score",
+      "source_45_y_+0.50_commanded_ctrl",
+      "source_45_y_+0.50_contact_flags",
+      "source_45_y_+0.50_normalized_action",
+      "source_45_y_+0.50_outcome_endpoint",
+      "source_45_y_+0.50_qpos",
+      "source_45_y_+0.50_qvel",
+      "source_45_y_+0.50_total_reward",
+      "source_45_y_+0.50_tracking_reward",
+      "source_45_y_+0.50_tracking_score",
+      "source_45_y_+0.75_commanded_ctrl",
+      "source_45_y_+0.75_contact_flags",
+      "source_45_y_+0.75_normalized_action",
+      "source_45_y_+0.75_outcome_endpoint",
+      "source_45_y_+0.75_qpos",
+      "source_45_y_+0.75_qvel",
+      "source_45_y_+0.75_total_reward",
+      "source_45_y_+0.75_tracking_reward",
+      "source_45_y_+0.75_tracking_score",
+      "source_45_y_+1.00_commanded_ctrl",
+      "source_45_y_+1.00_contact_flags",
+      "source_45_y_+1.00_normalized_action",
+      "source_45_y_+1.00_outcome_endpoint",
+      "source_45_y_+1.00_qpos",
+      "source_45_y_+1.00_qvel",
+      "source_45_y_+1.00_total_reward",
+      "source_45_y_+1.00_tracking_reward",
+      "source_45_y_+1.00_tracking_score",
+      "source_45_y_-0.25_commanded_ctrl",
+      "source_45_y_-0.25_contact_flags",
+      "source_45_y_-0.25_normalized_action",
+      "source_45_y_-0.25_outcome_endpoint",
+      "source_45_y_-0.25_qpos",
+      "source_45_y_-0.25_qvel",
+      "source_45_y_-0.25_total_reward",
+      "source_45_y_-0.25_tracking_reward",
+      "source_45_y_-0.25_tracking_score",
+      "source_45_y_-0.50_commanded_ctrl",
+      "source_45_y_-0.50_contact_flags",
+      "source_45_y_-0.50_normalized_action",
+      "source_45_y_-0.50_outcome_endpoint",
+      "source_45_y_-0.50_qpos",
+      "source_45_y_-0.50_qvel",
+      "source_45_y_-0.50_total_reward",
+      "source_45_y_-0.50_tracking_reward",
+      "source_45_y_-0.50_tracking_score",
+      "source_45_y_-0.75_commanded_ctrl",
+      "source_45_y_-0.75_contact_flags",
+      "source_45_y_-0.75_normalized_action",
+      "source_45_y_-0.75_outcome_endpoint",
+      "source_45_y_-0.75_qpos",
+      "source_45_y_-0.75_qvel",
+      "source_45_y_-0.75_total_reward",
+      "source_45_y_-0.75_tracking_reward",
+      "source_45_y_-0.75_tracking_score",
+      "source_45_y_-1.00_commanded_ctrl",
+      "source_45_y_-1.00_contact_flags",
+      "source_45_y_-1.00_normalized_action",
+      "source_45_y_-1.00_outcome_endpoint",
+      "source_45_y_-1.00_qpos",
+      "source_45_y_-1.00_qvel",
+      "source_45_y_-1.00_total_reward",
+      "source_45_y_-1.00_tracking_reward",
+      "source_45_y_-1.00_tracking_score",
+      "source_46_y_+0.00_commanded_ctrl",
+      "source_46_y_+0.00_contact_flags",
+      "source_46_y_+0.00_normalized_action",
+      "source_46_y_+0.00_outcome_endpoint",
+      "source_46_y_+0.00_qpos",
+      "source_46_y_+0.00_qvel",
+      "source_46_y_+0.00_total_reward",
+      "source_46_y_+0.00_tracking_reward",
+      "source_46_y_+0.00_tracking_score",
+      "source_46_y_+0.25_commanded_ctrl",
+      "source_46_y_+0.25_contact_flags",
+      "source_46_y_+0.25_normalized_action",
+      "source_46_y_+0.25_outcome_endpoint",
+      "source_46_y_+0.25_qpos",
+      "source_46_y_+0.25_qvel",
+      "source_46_y_+0.25_total_reward",
+      "source_46_y_+0.25_tracking_reward",
+      "source_46_y_+0.25_tracking_score",
+      "source_46_y_+0.50_commanded_ctrl",
+      "source_46_y_+0.50_contact_flags",
+      "source_46_y_+0.50_normalized_action",
+      "source_46_y_+0.50_outcome_endpoint",
+      "source_46_y_+0.50_qpos",
+      "source_46_y_+0.50_qvel",
+      "source_46_y_+0.50_total_reward",
+      "source_46_y_+0.50_tracking_reward",
+      "source_46_y_+0.50_tracking_score",
+      "source_46_y_+0.75_commanded_ctrl",
+      "source_46_y_+0.75_contact_flags",
+      "source_46_y_+0.75_normalized_action",
+      "source_46_y_+0.75_outcome_endpoint",
+      "source_46_y_+0.75_qpos",
+      "source_46_y_+0.75_qvel",
+      "source_46_y_+0.75_total_reward",
+      "source_46_y_+0.75_tracking_reward",
+      "source_46_y_+0.75_tracking_score",
+      "source_46_y_+1.00_commanded_ctrl",
+      "source_46_y_+1.00_contact_flags",
+      "source_46_y_+1.00_normalized_action",
+      "source_46_y_+1.00_outcome_endpoint",
+      "source_46_y_+1.00_qpos",
+      "source_46_y_+1.00_qvel",
+      "source_46_y_+1.00_total_reward",
+      "source_46_y_+1.00_tracking_reward",
+      "source_46_y_+1.00_tracking_score",
+      "source_46_y_-0.25_commanded_ctrl",
+      "source_46_y_-0.25_contact_flags",
+      "source_46_y_-0.25_normalized_action",
+      "source_46_y_-0.25_outcome_endpoint",
+      "source_46_y_-0.25_qpos",
+      "source_46_y_-0.25_qvel",
+      "source_46_y_-0.25_total_reward",
+      "source_46_y_-0.25_tracking_reward",
+      "source_46_y_-0.25_tracking_score",
+      "source_46_y_-0.50_commanded_ctrl",
+      "source_46_y_-0.50_contact_flags",
+      "source_46_y_-0.50_normalized_action",
+      "source_46_y_-0.50_outcome_endpoint",
+      "source_46_y_-0.50_qpos",
+      "source_46_y_-0.50_qvel",
+      "source_46_y_-0.50_total_reward",
+      "source_46_y_-0.50_tracking_reward",
+      "source_46_y_-0.50_tracking_score",
+      "source_46_y_-0.75_commanded_ctrl",
+      "source_46_y_-0.75_contact_flags",
+      "source_46_y_-0.75_normalized_action",
+      "source_46_y_-0.75_outcome_endpoint",
+      "source_46_y_-0.75_qpos",
+      "source_46_y_-0.75_qvel",
+      "source_46_y_-0.75_total_reward",
+      "source_46_y_-0.75_tracking_reward",
+      "source_46_y_-0.75_tracking_score",
+      "source_46_y_-1.00_commanded_ctrl",
+      "source_46_y_-1.00_contact_flags",
+      "source_46_y_-1.00_normalized_action",
+      "source_46_y_-1.00_outcome_endpoint",
+      "source_46_y_-1.00_qpos",
+      "source_46_y_-1.00_qvel",
+      "source_46_y_-1.00_total_reward",
+      "source_46_y_-1.00_tracking_reward",
+      "source_46_y_-1.00_tracking_score"
+    ],
+    "path": "/data_all/zzx/3.2RL/runs/taco_pour_training_credit_assignment_audit_v1/credit_assignment_arrays.npz",
+    "sha256": "3e7ef15d488d5a18d6ea4a645fba9914d06532dfe7c326aaeeb8f04b359a2a5b"
+  },
+  "historical_training_credit": {
+    "checkpoint_contains_rollout_buffer": false,
+    "checkpoint_top_level_fields": [
+      "assymetric_vf_nets",
+      "central_val_stats",
+      "env_state",
+      "epoch",
+      "frame",
+      "last_mean_rewards",
+      "model",
+      "optimizer"
+    ],
+    "exact_historical_advantage_value_return_available": false,
+    "exact_historical_credit_reconstruction_allowed": false,
+    "final_critic_backfill_rejected": true,
+    "missing_credit_fields": [
+      "advantage",
+      "critic_observation",
+      "critic_value",
+      "raw_observation",
+      "return",
+      "reward",
+      "rnn_hidden"
+    ],
+    "observed_npz_fields": [
+      "actor_mu",
+      "actor_sigma",
+      "command_reference_endpoint",
+      "contact_flags",
+      "effective_residual_after_ctrlrange",
+      "next_observation_goal_reference_endpoint",
+      "outcome_endpoint",
+      "reference_ctrl",
+      "requested_residual",
+      "residual_lost_to_ctrlrange",
+      "reward_reference_endpoint",
+      "sampled_action_clamped",
+      "sampled_action_preclamp",
+      "source_endpoint",
+      "time_out",
+      "tool_objective_score",
+      "tool_position_error_m",
+      "tool_rotation_error_rad",
+      "tracking_terminated"
+    ],
+    "per_epoch_actor_or_critic_checkpoints_available": false,
+    "reason": "v5 visitation omitted rollout reward, critic observation/value, return, advantage, raw observation and recurrent hidden; the final checkpoint contains only final networks/optimizers/environment state, not historical rollout buffers or per-epoch critics",
+    "tail_source_summary": {
+      "43": {
+        "actor_mu_y": {
+          "count": 34,
+          "max": 1.3955665826797485,
+          "mean": 0.6538019986713633,
+          "min": -0.8839413523674011,
+          "p50": 0.7571697235107422
+        },
+        "actor_mu_y_above_plus_one_count": 11,
+        "actor_sigma_y": {
+          "count": 34,
+          "max": 1.0002988576889038,
+          "mean": 0.9999363317209131,
+          "min": 0.9995848536491394,
+          "p50": 1.0000100135803223
+        },
+        "epochs_with_visit": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "outcome_tracking_score": {
+          "count": 34,
+          "max": 1.0408601760864258,
+          "mean": 0.8537690516780404,
+          "min": 0.5240125060081482,
+          "p50": 0.8763860464096069
+        },
+        "sampled_action_y": {
+          "count": 34,
+          "max": 0.9792149066925049,
+          "mean": 0.15593497082591057,
+          "min": -0.8790191411972046,
+          "p50": 0.17564932256937027
+        },
+        "tracking_termination_count": 3,
+        "visits": 34
+      },
+      "44": {
+        "actor_mu_y": {
+          "count": 31,
+          "max": 1.7938634157180786,
+          "mean": 1.0510684857445378,
+          "min": -0.867169976234436,
+          "p50": 1.2253059148788452
+        },
+        "actor_mu_y_above_plus_one_count": 19,
+        "actor_sigma_y": {
+          "count": 31,
+          "max": 1.0002988576889038,
+          "mean": 0.9999043249314831,
+          "min": 0.9995848536491394,
+          "p50": 1.0
+        },
+        "epochs_with_visit": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "outcome_tracking_score": {
+          "count": 31,
+          "max": 1.066218376159668,
+          "mean": 0.8554664388779671,
+          "min": 0.5840080380439758,
+          "p50": 0.881132960319519
+        },
+        "sampled_action_y": {
+          "count": 31,
+          "max": 0.9548471570014954,
+          "mean": 0.10371731846563277,
+          "min": -0.9379501342773438,
+          "p50": 0.3184340298175812
+        },
+        "tracking_termination_count": 2,
+        "visits": 31
+      },
+      "45": {
+        "actor_mu_y": {
+          "count": 28,
+          "max": 1.9772214889526367,
+          "mean": 1.272693823490824,
+          "min": -0.6744956970214844,
+          "p50": 1.4386942386627197
+        },
+        "actor_mu_y_above_plus_one_count": 20,
+        "actor_sigma_y": {
+          "count": 28,
+          "max": 1.0002988576889038,
+          "mean": 0.9999155104160309,
+          "min": 0.9995848536491394,
+          "p50": 1.0000050067901611
+        },
+        "epochs_with_visit": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "outcome_tracking_score": {
+          "count": 28,
+          "max": 1.0328474044799805,
+          "mean": 0.8699000882250922,
+          "min": 0.5998850464820862,
+          "p50": 0.885195404291153
+        },
+        "sampled_action_y": {
+          "count": 28,
+          "max": 0.9959993958473206,
+          "mean": 0.07032004377937742,
+          "min": -0.8745559453964233,
+          "p50": 0.10182465240359306
+        },
+        "tracking_termination_count": 3,
+        "visits": 28
+      },
+      "46": {
+        "actor_mu_y": {
+          "count": 25,
+          "max": 2.096646785736084,
+          "mean": 1.3947395706176757,
+          "min": -0.3654077649116516,
+          "p50": 1.550235390663147
+        },
+        "actor_mu_y_above_plus_one_count": 23,
+        "actor_sigma_y": {
+          "count": 25,
+          "max": 1.0002988576889038,
+          "mean": 0.9999349403381348,
+          "min": 0.9995848536491394,
+          "p50": 1.0000100135803223
+        },
+        "epochs_with_visit": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "outcome_tracking_score": {
+          "count": 25,
+          "max": 1.0100497007369995,
+          "mean": 0.8716781997680664,
+          "min": 0.6429792046546936,
+          "p50": 0.9039733409881592
+        },
+        "sampled_action_y": {
+          "count": 25,
+          "max": 0.9771497845649719,
+          "mean": 0.27086680322885515,
+          "min": -0.8716057538986206,
+          "p50": 0.26455625891685486
+        },
+        "tracking_termination_count": 2,
+        "visits": 25
+      },
+      "47": {
+        "actor_mu_y": {
+          "count": 23,
+          "max": 2.022897481918335,
+          "mean": 1.493273544570674,
+          "min": -0.1432381570339203,
+          "p50": 1.5614930391311646
+        },
+        "actor_mu_y_above_plus_one_count": 22,
+        "actor_sigma_y": {
+          "count": 23,
+          "max": 1.0002988576889038,
+          "mean": 0.9999074417611827,
+          "min": 0.9995848536491394,
+          "p50": 1.0
+        },
+        "epochs_with_visit": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "outcome_tracking_score": {
+          "count": 23,
+          "max": 1.0370908975601196,
+          "mean": 0.9013324354005896,
+          "min": 0.699135422706604,
+          "p50": 0.930036187171936
+        },
+        "sampled_action_y": {
+          "count": 23,
+          "max": 0.96797114610672,
+          "mean": 0.41479525591611216,
+          "min": -0.8952746987342834,
+          "p50": 0.6246246695518494
+        },
+        "tracking_termination_count": 2,
+        "visits": 23
+      }
+    },
+    "visitation_schema": "taco_ppo_training_visitation_v5"
+  },
+  "inputs": {
+    "action_profile": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/input_contracts/action_profile.yaml",
+      "sha256": "71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4"
+    },
+    "checkpoint_artifact": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/checkpoint_artifacts/last_ep_8_rew__6.6354837_.pth.gz",
+      "sha256": "7193da6e2da0e38f41a39edd46569f74da0054455c6388df5a08107413a015eb"
+    },
+    "distribution_profile": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/input_contracts/state_feasible_action_profile.yaml",
+      "sha256": "6a4e4bd8f33fa53bfe34f21f822bfa391253cca090892767154320fc9bbfd1b8"
+    },
+    "endpoint_20_boundary": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/input_contracts/resume_boundary.pt.gz",
+      "sha256": "a3646e24af1ba871e5ecc885669508223a5e0f26d3cf29f0482f02678419e337"
+    },
+    "formal_report": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/report.json",
+      "sha256": "bb126717045617ddbb3484df2eb194b8da5e846d006568d0b3c201fda0020155"
+    },
+    "initialization_report": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v2/candidate_a/report.json",
+      "sha256": "9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a"
+    },
+    "objective_profile": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/input_contracts/objective_profile.yaml",
+      "sha256": "8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9"
+    },
+    "observation_profile": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/input_contracts/observation_profile.yaml",
+      "sha256": "8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7"
+    },
+    "prior_timing_frame_audit": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_reference_timing_action_frame_audit_v1/report.json",
+      "sha256": "47f3f9da070ea184ad226a06fcd31ef792e72b49585bd4568ade9fbbae66eff4"
+    },
+    "replay_rl_protocol_snapshot": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/input_contracts/replay_rl_protocol.yaml",
+      "sha256": "262097a3dd2b7768a940ae6dbb82428b94eedb08931af388037a5243097b7807"
+    },
+    "simulator_config": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml",
+      "sha256": "0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6"
+    },
+    "training_epoch_1": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/ppo_chunk_20/training_visitation/epoch_0001_visits.npz",
+      "sha256": "b605525123ad67f81453b3d7bc9dc6234887487c362d38bbf0ce593cd5a94d96"
+    },
+    "training_epoch_2": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/ppo_chunk_20/training_visitation/epoch_0002_visits.npz",
+      "sha256": "cb0eceeda04362fc59a58ad2b994eb5a432f617cb455570ffb9e3ca42a2fd25c"
+    },
+    "training_epoch_3": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/ppo_chunk_20/training_visitation/epoch_0003_visits.npz",
+      "sha256": "487d7fafbee7cb00fb66d4e4f1dd33ee00ea70e5c6eb2f45e69d1b5a41794ee0"
+    },
+    "training_epoch_4": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/ppo_chunk_20/training_visitation/epoch_0004_visits.npz",
+      "sha256": "802740b058086fd81e67a92f176b993060c564bf6cc127256df8d024b0a2fa33"
+    },
+    "training_epoch_5": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/ppo_chunk_20/training_visitation/epoch_0005_visits.npz",
+      "sha256": "e62837ef533aa34c06d947520fc4b2aed166997c1aee9668b98ec25c4dfff5b5"
+    },
+    "training_epoch_6": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/ppo_chunk_20/training_visitation/epoch_0006_visits.npz",
+      "sha256": "959aa5b4f20adf2be56968bfc63af8a4abfadef391cdd4c2cc14fea1fbf0ee90"
+    },
+    "training_epoch_7": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/ppo_chunk_20/training_visitation/epoch_0007_visits.npz",
+      "sha256": "6d123291d2801955218559871750a05fd076525ed784835fe42b92710129c184"
+    },
+    "training_epoch_8": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/ppo_chunk_20/training_visitation/epoch_0008_visits.npz",
+      "sha256": "cb50e1666325ff643b07aa3ce3ba22c9f767925bc9b147d50eb4a6e0ea93820a"
+    },
+    "training_visitation_manifest": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/ppo_chunk_20/training_visitation/manifest.json",
+      "sha256": "38ffabe25c7580f1809cd101975d8199e1378f8acb2d0981d040f6922d6d4492"
+    }
+  },
+  "interpretation_limits": [
+    "Counterfactual rollout returns use the frozen final actor and are not the historical critic Q estimate.",
+    "One-action branches restore exact physical and recurrent states, then replace only wrist-y for one control interval.",
+    "Historical visitation rows identify endpoint-level samples, not exact equality with any CPU validation state.",
+    "Missing historical value/return/advantage fields are not backfilled with the final critic.",
+    "All timing and action branches are diagnostic and cannot accept or commit a chunk."
+  ],
+  "one_action_counterfactual": {
+    "any_zero_y_rescue_completes_40_step_window": false,
+    "any_zero_y_rescue_passes_endpoint_51": false,
+    "by_source": {
+      "43": {
+        "actions_better_than_formal_by_termination_then_discounted_return": [
+          -1.0,
+          -0.75,
+          -0.5,
+          -0.25,
+          0.0,
+          0.25,
+          0.5,
+          0.75
+        ],
+        "best_action_y": -1.0,
+        "best_termination_endpoint_or_60": 50,
+        "formal_mean_is_counterfactually_suboptimal": true,
+        "formal_saturated_action": {
+          "active_contacts": [
+            [
+              "right_tool_index",
+              "left_target_ring"
+            ],
+            [
+              "right_tool_index",
+              "left_target_ring"
+            ],
+            [
+              "right_tool_index",
+              "left_target_ring"
+            ],
+            [
+              "left_target_ring"
+            ],
+            [
+              "left_target_ring"
+            ]
+          ],
+          "first_failure": {
+            "control_interval": 47,
+            "endpoint": 48,
+            "object_roles": [
+              "tool"
+            ],
+            "reason": "tracking_boundary"
+          },
+          "formal_actor_mu_y": 1.2941690683364868,
+          "formal_deterministic_action_y": 1.0,
+          "formal_success_or_commit_allowed": false,
+          "full_remaining_horizon_passed": false,
+          "object_tracking_return_discounted_gamma_0_99": 0.7313358835254061,
+          "object_tracking_return_undiscounted": 0.7365765571594238,
+          "one_step_action_y": 1.0,
+          "outcome_endpoints": [
+            44,
+            45,
+            46,
+            47,
+            48
+          ],
+          "source_endpoint": 43,
+          "state_feasible_y": [
+            -1.0,
+            1.0
+          ],
+          "termination_endpoint_or_60": 48,
+          "total_reward_return_undiscounted": 0.7383848503232002,
+          "tracking_scores": [
+            0.6820613741874695,
+            0.7550538182258606,
+            0.8238928318023682,
+            0.9362934827804565,
+            1.0661219358444214
+          ],
+          "validated_remaining_intervals": 4
+        },
+        "rows": [
+          {
+            "active_contacts": [
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring",
+                "left_target_pinky"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 49,
+              "endpoint": 50,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 1.2941690683364868,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 1.3327264940251426,
+            "object_tracking_return_undiscounted": 1.3499844670295715,
+            "one_step_action_y": -1.0,
+            "outcome_endpoints": [
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50
+            ],
+            "source_endpoint": 43,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 50,
+            "total_reward_return_undiscounted": 1.351131934672594,
+            "tracking_scores": [
+              0.5962159037590027,
+              0.5977485775947571,
+              0.6904587745666504,
+              0.8400096893310547,
+              0.9027594923973083,
+              0.9818774461746216,
+              1.0409456491470337
+            ],
+            "validated_remaining_intervals": 6
+          },
+          {
+            "active_contacts": [
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring",
+                "left_target_pinky"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 48,
+              "endpoint": 49,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 1.2941690683364868,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 1.1522759881952982,
+            "object_tracking_return_undiscounted": 1.1645904779434204,
+            "one_step_action_y": -0.75,
+            "outcome_endpoints": [
+              44,
+              45,
+              46,
+              47,
+              48,
+              49
+            ],
+            "source_endpoint": 43,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 49,
+            "total_reward_return_undiscounted": 1.1661216700449586,
+            "tracking_scores": [
+              0.6143860816955566,
+              0.6235142350196838,
+              0.7083010077476501,
+              0.8673641681671143,
+              0.9870892763137817,
+              1.034754753112793
+            ],
+            "validated_remaining_intervals": 5
+          },
+          {
+            "active_contacts": [
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 48,
+              "endpoint": 49,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 1.2941690683364868,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 1.2461236990282387,
+            "object_tracking_return_undiscounted": 1.262993037700653,
+            "one_step_action_y": -0.5,
+            "outcome_endpoints": [
+              44,
+              45,
+              46,
+              47,
+              48,
+              49
+            ],
+            "source_endpoint": 43,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 49,
+            "total_reward_return_undiscounted": 1.2653510449454188,
+            "tracking_scores": [
+              0.6170601844787598,
+              0.6370199918746948,
+              0.7256755232810974,
+              0.8209348320960999,
+              0.9313903450965881,
+              1.004926085472107
+            ],
+            "validated_remaining_intervals": 5
+          },
+          {
+            "active_contacts": [
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 48,
+              "endpoint": 49,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 1.2941690683364868,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 1.0685712706829038,
+            "object_tracking_return_undiscounted": 1.0788177847862244,
+            "one_step_action_y": -0.25,
+            "outcome_endpoints": [
+              44,
+              45,
+              46,
+              47,
+              48,
+              49
+            ],
+            "source_endpoint": 43,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 49,
+            "total_reward_return_undiscounted": 1.0806097369641066,
+            "tracking_scores": [
+              0.623552143573761,
+              0.6315567493438721,
+              0.7385004758834839,
+              0.8928194642066956,
+              0.987313449382782,
+              1.0474399328231812
+            ],
+            "validated_remaining_intervals": 5
+          },
+          {
+            "active_contacts": [
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring",
+                "left_target_pinky"
+              ],
+              [
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 49,
+              "endpoint": 50,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 1.2941690683364868,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 1.0130453534862995,
+            "object_tracking_return_undiscounted": 1.0232052206993103,
+            "one_step_action_y": 0.0,
+            "outcome_endpoints": [
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50
+            ],
+            "source_endpoint": 43,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 50,
+            "total_reward_return_undiscounted": 1.0247483672574162,
+            "tracking_scores": [
+              0.638819694519043,
+              0.6785069704055786,
+              0.7771615386009216,
+              0.8832587003707886,
+              0.949802041053772,
+              0.9944244623184204,
+              1.0548213720321655
+            ],
+            "validated_remaining_intervals": 6
+          },
+          {
+            "active_contacts": [
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 47,
+              "endpoint": 48,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 1.2941690683364868,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 0.9544662523478817,
+            "object_tracking_return_undiscounted": 0.9644474983215332,
+            "one_step_action_y": 0.25,
+            "outcome_endpoints": [
+              44,
+              45,
+              46,
+              47,
+              48
+            ],
+            "source_endpoint": 43,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 48,
+            "total_reward_return_undiscounted": 0.9664325099438429,
+            "tracking_scores": [
+              0.6566035151481628,
+              0.7039051055908203,
+              0.7620193958282471,
+              0.8822322487831116,
+              1.030792236328125
+            ],
+            "validated_remaining_intervals": 4
+          },
+          {
+            "active_contacts": [
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 47,
+              "endpoint": 48,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 1.2941690683364868,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 0.8887983278992272,
+            "object_tracking_return_undiscounted": 0.8975692987442017,
+            "one_step_action_y": 0.5,
+            "outcome_endpoints": [
+              44,
+              45,
+              46,
+              47,
+              48
+            ],
+            "source_endpoint": 43,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 48,
+            "total_reward_return_undiscounted": 0.898845124989748,
+            "tracking_scores": [
+              0.6626931428909302,
+              0.710508406162262,
+              0.7980025410652161,
+              0.9120229482650757,
+              1.0192036628723145
+            ],
+            "validated_remaining_intervals": 4
+          },
+          {
+            "active_contacts": [
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 48,
+              "endpoint": 49,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 1.2941690683364868,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 0.8431239876570072,
+            "object_tracking_return_undiscounted": 0.8521061539649963,
+            "one_step_action_y": 0.75,
+            "outcome_endpoints": [
+              44,
+              45,
+              46,
+              47,
+              48,
+              49
+            ],
+            "source_endpoint": 43,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 49,
+            "total_reward_return_undiscounted": 0.8524207919836044,
+            "tracking_scores": [
+              0.6772121787071228,
+              0.7425039410591125,
+              0.8312056064605713,
+              0.9071676135063171,
+              0.9782741069793701,
+              1.0115303993225098
+            ],
+            "validated_remaining_intervals": 5
+          },
+          {
+            "active_contacts": [
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 47,
+              "endpoint": 48,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 1.2941690683364868,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 0.7313358835254061,
+            "object_tracking_return_undiscounted": 0.7365765571594238,
+            "one_step_action_y": 1.0,
+            "outcome_endpoints": [
+              44,
+              45,
+              46,
+              47,
+              48
+            ],
+            "source_endpoint": 43,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 48,
+            "total_reward_return_undiscounted": 0.7383848503232002,
+            "tracking_scores": [
+              0.6820613741874695,
+              0.7550538182258606,
+              0.8238928318023682,
+              0.9362934827804565,
+              1.0661219358444214
+            ],
+            "validated_remaining_intervals": 4
+          }
+        ],
+        "zero_y_action": {
+          "active_contacts": [
+            [
+              "right_tool_index",
+              "left_target_ring"
+            ],
+            [
+              "right_tool_index",
+              "left_target_ring"
+            ],
+            [
+              "right_tool_index",
+              "left_target_ring"
+            ],
+            [
+              "left_target_ring"
+            ],
+            [
+              "left_target_ring"
+            ],
+            [
+              "right_tool_index",
+              "left_target_ring",
+              "left_target_pinky"
+            ],
+            [
+              "left_target_ring"
+            ]
+          ],
+          "first_failure": {
+            "control_interval": 49,
+            "endpoint": 50,
+            "object_roles": [
+              "tool"
+            ],
+            "reason": "tracking_boundary"
+          },
+          "formal_actor_mu_y": 1.2941690683364868,
+          "formal_deterministic_action_y": 1.0,
+          "formal_success_or_commit_allowed": false,
+          "full_remaining_horizon_passed": false,
+          "object_tracking_return_discounted_gamma_0_99": 1.0130453534862995,
+          "object_tracking_return_undiscounted": 1.0232052206993103,
+          "one_step_action_y": 0.0,
+          "outcome_endpoints": [
+            44,
+            45,
+            46,
+            47,
+            48,
+            49,
+            50
+          ],
+          "source_endpoint": 43,
+          "state_feasible_y": [
+            -1.0,
+            1.0
+          ],
+          "termination_endpoint_or_60": 50,
+          "total_reward_return_undiscounted": 1.0247483672574162,
+          "tracking_scores": [
+            0.638819694519043,
+            0.6785069704055786,
+            0.7771615386009216,
+            0.8832587003707886,
+            0.949802041053772,
+            0.9944244623184204,
+            1.0548213720321655
+          ],
+          "validated_remaining_intervals": 6
+        }
+      },
+      "44": {
+        "actions_better_than_formal_by_termination_then_discounted_return": [
+          -1.0,
+          -0.75,
+          -0.5,
+          -0.25,
+          0.0,
+          0.25,
+          0.5,
+          0.75
+        ],
+        "best_action_y": -1.0,
+        "best_termination_endpoint_or_60": 51,
+        "formal_mean_is_counterfactually_suboptimal": true,
+        "formal_saturated_action": {
+          "active_contacts": [
+            [
+              "right_tool_index",
+              "left_target_ring"
+            ],
+            [
+              "right_tool_index",
+              "left_target_ring"
+            ],
+            [
+              "left_target_ring"
+            ],
+            [
+              "left_target_ring"
+            ]
+          ],
+          "first_failure": {
+            "control_interval": 47,
+            "endpoint": 48,
+            "object_roles": [
+              "tool"
+            ],
+            "reason": "tracking_boundary"
+          },
+          "formal_actor_mu_y": 1.6860578060150146,
+          "formal_deterministic_action_y": 1.0,
+          "formal_success_or_commit_allowed": false,
+          "full_remaining_horizon_passed": false,
+          "object_tracking_return_discounted_gamma_0_99": 0.41757298758876327,
+          "object_tracking_return_undiscounted": 0.4186379313468933,
+          "one_step_action_y": 1.0,
+          "outcome_endpoints": [
+            45,
+            46,
+            47,
+            48
+          ],
+          "source_endpoint": 44,
+          "state_feasible_y": [
+            -1.0,
+            1.0
+          ],
+          "termination_endpoint_or_60": 48,
+          "total_reward_return_undiscounted": 0.420205719769001,
+          "tracking_scores": [
+            0.7550538182258606,
+            0.8238928318023682,
+            0.9362934827804565,
+            1.0661219358444214
+          ],
+          "validated_remaining_intervals": 3
+        },
+        "rows": [
+          {
+            "active_contacts": [
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 50,
+              "endpoint": 51,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 1.6860578060150146,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 1.129567826496421,
+            "object_tracking_return_undiscounted": 1.1447784900665283,
+            "one_step_action_y": -1.0,
+            "outcome_endpoints": [
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "source_endpoint": 44,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 51,
+            "total_reward_return_undiscounted": 1.1458206716924906,
+            "tracking_scores": [
+              0.6581947207450867,
+              0.6478747725486755,
+              0.7586671113967896,
+              0.8688122034072876,
+              0.9240613579750061,
+              0.9851111769676208,
+              1.0125001668930054
+            ],
+            "validated_remaining_intervals": 6
+          },
+          {
+            "active_contacts": [
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 49,
+              "endpoint": 50,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 1.6860578060150146,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 1.0532470543853372,
+            "object_tracking_return_undiscounted": 1.0677456259727478,
+            "one_step_action_y": -0.75,
+            "outcome_endpoints": [
+              45,
+              46,
+              47,
+              48,
+              49,
+              50
+            ],
+            "source_endpoint": 44,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 50,
+            "total_reward_return_undiscounted": 1.0678076595067978,
+            "tracking_scores": [
+              0.6739282608032227,
+              0.6913809776306152,
+              0.7866660952568054,
+              0.8485758304595947,
+              0.9294568300247192,
+              1.002246379852295
+            ],
+            "validated_remaining_intervals": 5
+          },
+          {
+            "active_contacts": [
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 49,
+              "endpoint": 50,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 1.6860578060150146,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 0.8587252525129062,
+            "object_tracking_return_undiscounted": 0.8660901188850403,
+            "one_step_action_y": -0.5,
+            "outcome_endpoints": [
+              45,
+              46,
+              47,
+              48,
+              49,
+              50
+            ],
+            "source_endpoint": 44,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 50,
+            "total_reward_return_undiscounted": 0.8677306892350316,
+            "tracking_scores": [
+              0.6804733872413635,
+              0.6955377459526062,
+              0.7977795004844666,
+              0.9159562587738037,
+              0.9962834119796753,
+              1.0478795766830444
+            ],
+            "validated_remaining_intervals": 5
+          },
+          {
+            "active_contacts": [
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring",
+                "left_target_pinky"
+              ],
+              [
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 49,
+              "endpoint": 50,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 1.6860578060150146,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 0.7872894452004098,
+            "object_tracking_return_undiscounted": 0.7940629124641418,
+            "one_step_action_y": -0.25,
+            "outcome_endpoints": [
+              45,
+              46,
+              47,
+              48,
+              49,
+              50
+            ],
+            "source_endpoint": 44,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 50,
+            "total_reward_return_undiscounted": 0.7950253542512655,
+            "tracking_scores": [
+              0.6905355453491211,
+              0.7229307293891907,
+              0.8417139649391174,
+              0.9231549501419067,
+              0.9920127987861633,
+              1.0355890989303589
+            ],
+            "validated_remaining_intervals": 5
+          },
+          {
+            "active_contacts": [
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 48,
+              "endpoint": 49,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 1.6860578060150146,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 0.7515115371844172,
+            "object_tracking_return_undiscounted": 0.7583178281784058,
+            "one_step_action_y": 0.0,
+            "outcome_endpoints": [
+              45,
+              46,
+              47,
+              48,
+              49
+            ],
+            "source_endpoint": 44,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 49,
+            "total_reward_return_undiscounted": 0.7591741988435388,
+            "tracking_scores": [
+              0.7014896869659424,
+              0.7364095449447632,
+              0.8393213748931885,
+              0.9559440612792969,
+              1.0085175037384033
+            ],
+            "validated_remaining_intervals": 4
+          },
+          {
+            "active_contacts": [
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 48,
+              "endpoint": 49,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 1.6860578060150146,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 0.718823561891843,
+            "object_tracking_return_undiscounted": 0.7244368195533752,
+            "one_step_action_y": 0.25,
+            "outcome_endpoints": [
+              45,
+              46,
+              47,
+              48,
+              49
+            ],
+            "source_endpoint": 44,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 49,
+            "total_reward_return_undiscounted": 0.7264243960380554,
+            "tracking_scores": [
+              0.7035667896270752,
+              0.7366836667060852,
+              0.8360483646392822,
+              0.9678933620452881,
+              1.031370997428894
+            ],
+            "validated_remaining_intervals": 4
+          },
+          {
+            "active_contacts": [
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 48,
+              "endpoint": 49,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 1.6860578060150146,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 0.6066996277290189,
+            "object_tracking_return_undiscounted": 0.6109411716461182,
+            "one_step_action_y": 0.5,
+            "outcome_endpoints": [
+              45,
+              46,
+              47,
+              48,
+              49
+            ],
+            "source_endpoint": 44,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 49,
+            "total_reward_return_undiscounted": 0.6113444762304425,
+            "tracking_scores": [
+              0.7225123643875122,
+              0.7832773923873901,
+              0.8769533634185791,
+              0.9870713949203491,
+              1.0192443132400513
+            ],
+            "validated_remaining_intervals": 4
+          },
+          {
+            "active_contacts": [
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 47,
+              "endpoint": 48,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 1.6860578060150146,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 0.5489876050155162,
+            "object_tracking_return_undiscounted": 0.5527917146682739,
+            "one_step_action_y": 0.75,
+            "outcome_endpoints": [
+              45,
+              46,
+              47,
+              48
+            ],
+            "source_endpoint": 44,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 48,
+            "total_reward_return_undiscounted": 0.5540510565042496,
+            "tracking_scores": [
+              0.7383289337158203,
+              0.8023682832717896,
+              0.9031810760498047,
+              1.0033299922943115
+            ],
+            "validated_remaining_intervals": 3
+          },
+          {
+            "active_contacts": [
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 47,
+              "endpoint": 48,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 1.6860578060150146,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 0.41757298758876327,
+            "object_tracking_return_undiscounted": 0.4186379313468933,
+            "one_step_action_y": 1.0,
+            "outcome_endpoints": [
+              45,
+              46,
+              47,
+              48
+            ],
+            "source_endpoint": 44,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 48,
+            "total_reward_return_undiscounted": 0.420205719769001,
+            "tracking_scores": [
+              0.7550538182258606,
+              0.8238928318023682,
+              0.9362934827804565,
+              1.0661219358444214
+            ],
+            "validated_remaining_intervals": 3
+          }
+        ],
+        "zero_y_action": {
+          "active_contacts": [
+            [
+              "right_tool_index",
+              "left_target_ring"
+            ],
+            [
+              "right_tool_index",
+              "left_target_ring"
+            ],
+            [
+              "left_target_ring"
+            ],
+            [
+              "left_target_ring"
+            ],
+            [
+              "left_target_ring"
+            ]
+          ],
+          "first_failure": {
+            "control_interval": 48,
+            "endpoint": 49,
+            "object_roles": [
+              "tool"
+            ],
+            "reason": "tracking_boundary"
+          },
+          "formal_actor_mu_y": 1.6860578060150146,
+          "formal_deterministic_action_y": 1.0,
+          "formal_success_or_commit_allowed": false,
+          "full_remaining_horizon_passed": false,
+          "object_tracking_return_discounted_gamma_0_99": 0.7515115371844172,
+          "object_tracking_return_undiscounted": 0.7583178281784058,
+          "one_step_action_y": 0.0,
+          "outcome_endpoints": [
+            45,
+            46,
+            47,
+            48,
+            49
+          ],
+          "source_endpoint": 44,
+          "state_feasible_y": [
+            -1.0,
+            1.0
+          ],
+          "termination_endpoint_or_60": 49,
+          "total_reward_return_undiscounted": 0.7591741988435388,
+          "tracking_scores": [
+            0.7014896869659424,
+            0.7364095449447632,
+            0.8393213748931885,
+            0.9559440612792969,
+            1.0085175037384033
+          ],
+          "validated_remaining_intervals": 4
+        }
+      },
+      "45": {
+        "actions_better_than_formal_by_termination_then_discounted_return": [
+          -1.0,
+          -0.75,
+          -0.5,
+          -0.25,
+          0.0,
+          0.25,
+          0.5,
+          0.75
+        ],
+        "best_action_y": -1.0,
+        "best_termination_endpoint_or_60": 56,
+        "formal_mean_is_counterfactually_suboptimal": true,
+        "formal_saturated_action": {
+          "active_contacts": [
+            [
+              "right_tool_index",
+              "left_target_ring"
+            ],
+            [
+              "left_target_ring"
+            ],
+            [
+              "left_target_ring"
+            ]
+          ],
+          "first_failure": {
+            "control_interval": 47,
+            "endpoint": 48,
+            "object_roles": [
+              "tool"
+            ],
+            "reason": "tracking_boundary"
+          },
+          "formal_actor_mu_y": 1.9866005182266235,
+          "formal_deterministic_action_y": 1.0,
+          "formal_success_or_commit_allowed": false,
+          "full_remaining_horizon_passed": false,
+          "object_tracking_return_discounted_gamma_0_99": 0.17437051092386247,
+          "object_tracking_return_undiscounted": 0.1736917495727539,
+          "one_step_action_y": 1.0,
+          "outcome_endpoints": [
+            46,
+            47,
+            48
+          ],
+          "source_endpoint": 45,
+          "state_feasible_y": [
+            -1.0,
+            1.0
+          ],
+          "termination_endpoint_or_60": 48,
+          "total_reward_return_undiscounted": 0.17520908266305923,
+          "tracking_scores": [
+            0.8238928318023682,
+            0.9362934827804565,
+            1.0661219358444214
+          ],
+          "validated_remaining_intervals": 2
+        },
+        "rows": [
+          {
+            "active_contacts": [
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "right_tool_pinky",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_pinky",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_pinky",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_pinky",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_pinky",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_pinky",
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 55,
+              "endpoint": 56,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 1.9866005182266235,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 1.3165683958410237,
+            "object_tracking_return_undiscounted": 1.3500868678092957,
+            "one_step_action_y": -1.0,
+            "outcome_endpoints": [
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56
+            ],
+            "source_endpoint": 45,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 56,
+            "total_reward_return_undiscounted": 1.349947647890076,
+            "tracking_scores": [
+              0.7336310148239136,
+              0.7499336004257202,
+              0.7683544158935547,
+              0.7927576899528503,
+              0.8514841794967651,
+              0.8942663073539734,
+              0.9321825504302979,
+              0.9565002918243408,
+              0.9767895936965942,
+              0.9922594428062439,
+              1.0017540454864502
+            ],
+            "validated_remaining_intervals": 10
+          },
+          {
+            "active_contacts": [
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring",
+                "left_target_pinky"
+              ],
+              [
+                "left_target_ring",
+                "left_target_pinky"
+              ],
+              [
+                "right_tool_pinky",
+                "left_target_ring",
+                "left_target_pinky"
+              ],
+              [
+                "right_tool_pinky",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_pinky",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_pinky",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_pinky",
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 54,
+              "endpoint": 55,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 1.9866005182266235,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 1.1503925733627653,
+            "object_tracking_return_undiscounted": 1.1768869161605835,
+            "one_step_action_y": -0.75,
+            "outcome_endpoints": [
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55
+            ],
+            "source_endpoint": 45,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 55,
+            "total_reward_return_undiscounted": 1.176754368469119,
+            "tracking_scores": [
+              0.7432700395584106,
+              0.7640314698219299,
+              0.7893145680427551,
+              0.8310311436653137,
+              0.8802550435066223,
+              0.9052170515060425,
+              0.942600429058075,
+              0.9709666967391968,
+              0.9912566542625427,
+              1.0051699876785278
+            ],
+            "validated_remaining_intervals": 9
+          },
+          {
+            "active_contacts": [
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "right_tool_pinky",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_pinky",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_pinky",
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 53,
+              "endpoint": 54,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 1.9866005182266235,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 0.9897461045279895,
+            "object_tracking_return_undiscounted": 1.0096531510353088,
+            "one_step_action_y": -0.5,
+            "outcome_endpoints": [
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54
+            ],
+            "source_endpoint": 45,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 54,
+            "total_reward_return_undiscounted": 1.012947278097272,
+            "tracking_scores": [
+              0.745097815990448,
+              0.7651252746582031,
+              0.8335893750190735,
+              0.8611271381378174,
+              0.9045519828796387,
+              0.932293713092804,
+              0.958128035068512,
+              0.9842658638954163,
+              1.0061676502227783
+            ],
+            "validated_remaining_intervals": 8
+          },
+          {
+            "active_contacts": [
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "right_tool_pinky",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_pinky",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_pinky",
+                "left_target_ring"
+              ],
+              [
+                "right_tool_pinky",
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 53,
+              "endpoint": 54,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 1.9866005182266235,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 0.88147938060012,
+            "object_tracking_return_undiscounted": 0.8961997032165527,
+            "one_step_action_y": -0.25,
+            "outcome_endpoints": [
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54
+            ],
+            "source_endpoint": 45,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 54,
+            "total_reward_return_undiscounted": 0.9014914885628968,
+            "tracking_scores": [
+              0.7448849678039551,
+              0.7578763961791992,
+              0.8630130290985107,
+              0.8912503123283386,
+              0.913856029510498,
+              0.9408308863639832,
+              0.9708511829376221,
+              0.9982516765594482,
+              1.022985816001892
+            ],
+            "validated_remaining_intervals": 8
+          },
+          {
+            "active_contacts": [
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 50,
+              "endpoint": 51,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 1.9866005182266235,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 0.5267743418485868,
+            "object_tracking_return_undiscounted": 0.5302629470825195,
+            "one_step_action_y": 0.0,
+            "outcome_endpoints": [
+              46,
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "source_endpoint": 45,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 51,
+            "total_reward_return_undiscounted": 0.5344378282316029,
+            "tracking_scores": [
+              0.7571343183517456,
+              0.8096340894699097,
+              0.9171217083930969,
+              0.9628860354423523,
+              0.9956963062286377,
+              1.0272645950317383
+            ],
+            "validated_remaining_intervals": 5
+          },
+          {
+            "active_contacts": [
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 49,
+              "endpoint": 50,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 1.9866005182266235,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 0.4330367613775265,
+            "object_tracking_return_undiscounted": 0.43521738052368164,
+            "one_step_action_y": 0.25,
+            "outcome_endpoints": [
+              46,
+              47,
+              48,
+              49,
+              50
+            ],
+            "source_endpoint": 45,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 50,
+            "total_reward_return_undiscounted": 0.4384276997298002,
+            "tracking_scores": [
+              0.7723050713539124,
+              0.8365527391433716,
+              0.9467572569847107,
+              0.9843196868896484,
+              1.0248478651046753
+            ],
+            "validated_remaining_intervals": 4
+          },
+          {
+            "active_contacts": [
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "right_tool_index",
+                "left_target_ring",
+                "left_target_pinky"
+              ],
+              [
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 49,
+              "endpoint": 50,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 1.9866005182266235,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 0.37798547054863335,
+            "object_tracking_return_undiscounted": 0.37968283891677856,
+            "one_step_action_y": 0.5,
+            "outcome_endpoints": [
+              46,
+              47,
+              48,
+              49,
+              50
+            ],
+            "source_endpoint": 45,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 50,
+            "total_reward_return_undiscounted": 0.38173900824040174,
+            "tracking_scores": [
+              0.7938892841339111,
+              0.8715999126434326,
+              0.9368852376937866,
+              0.986024796962738,
+              1.031917929649353
+            ],
+            "validated_remaining_intervals": 4
+          },
+          {
+            "active_contacts": [
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 48,
+              "endpoint": 49,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 1.9866005182266235,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 0.33759858141160015,
+            "object_tracking_return_undiscounted": 0.3393462896347046,
+            "one_step_action_y": 0.75,
+            "outcome_endpoints": [
+              46,
+              47,
+              48,
+              49
+            ],
+            "source_endpoint": 45,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 49,
+            "total_reward_return_undiscounted": 0.3408137261867523,
+            "tracking_scores": [
+              0.8063361048698425,
+              0.8893904089927673,
+              0.959179162979126,
+              1.0057480335235596
+            ],
+            "validated_remaining_intervals": 3
+          },
+          {
+            "active_contacts": [
+              [
+                "right_tool_index",
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 47,
+              "endpoint": 48,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 1.9866005182266235,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 0.17437051092386247,
+            "object_tracking_return_undiscounted": 0.1736917495727539,
+            "one_step_action_y": 1.0,
+            "outcome_endpoints": [
+              46,
+              47,
+              48
+            ],
+            "source_endpoint": 45,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 48,
+            "total_reward_return_undiscounted": 0.17520908266305923,
+            "tracking_scores": [
+              0.8238928318023682,
+              0.9362934827804565,
+              1.0661219358444214
+            ],
+            "validated_remaining_intervals": 2
+          }
+        ],
+        "zero_y_action": {
+          "active_contacts": [
+            [
+              "right_tool_index",
+              "left_target_ring"
+            ],
+            [
+              "left_target_ring"
+            ],
+            [
+              "left_target_ring"
+            ],
+            [
+              "left_target_ring"
+            ],
+            [
+              "left_target_ring"
+            ],
+            [
+              "left_target_ring"
+            ]
+          ],
+          "first_failure": {
+            "control_interval": 50,
+            "endpoint": 51,
+            "object_roles": [
+              "tool"
+            ],
+            "reason": "tracking_boundary"
+          },
+          "formal_actor_mu_y": 1.9866005182266235,
+          "formal_deterministic_action_y": 1.0,
+          "formal_success_or_commit_allowed": false,
+          "full_remaining_horizon_passed": false,
+          "object_tracking_return_discounted_gamma_0_99": 0.5267743418485868,
+          "object_tracking_return_undiscounted": 0.5302629470825195,
+          "one_step_action_y": 0.0,
+          "outcome_endpoints": [
+            46,
+            47,
+            48,
+            49,
+            50,
+            51
+          ],
+          "source_endpoint": 45,
+          "state_feasible_y": [
+            -1.0,
+            1.0
+          ],
+          "termination_endpoint_or_60": 51,
+          "total_reward_return_undiscounted": 0.5344378282316029,
+          "tracking_scores": [
+            0.7571343183517456,
+            0.8096340894699097,
+            0.9171217083930969,
+            0.9628860354423523,
+            0.9956963062286377,
+            1.0272645950317383
+          ],
+          "validated_remaining_intervals": 5
+        }
+      },
+      "46": {
+        "actions_better_than_formal_by_termination_then_discounted_return": [
+          -1.0,
+          -0.75,
+          -0.5,
+          -0.25,
+          0.0,
+          0.25,
+          0.5,
+          0.75
+        ],
+        "best_action_y": -0.75,
+        "best_termination_endpoint_or_60": 51,
+        "formal_mean_is_counterfactually_suboptimal": true,
+        "formal_saturated_action": {
+          "active_contacts": [
+            [
+              "left_target_ring"
+            ],
+            [
+              "left_target_ring"
+            ]
+          ],
+          "first_failure": {
+            "control_interval": 47,
+            "endpoint": 48,
+            "object_roles": [
+              "tool"
+            ],
+            "reason": "tracking_boundary"
+          },
+          "formal_actor_mu_y": 2.105057954788208,
+          "formal_deterministic_action_y": 1.0,
+          "formal_success_or_commit_allowed": false,
+          "full_remaining_horizon_passed": false,
+          "object_tracking_return_discounted_gamma_0_99": -0.0017541992664337203,
+          "object_tracking_return_undiscounted": -0.0024154186248779297,
+          "one_step_action_y": 1.0,
+          "outcome_endpoints": [
+            47,
+            48
+          ],
+          "source_endpoint": 46,
+          "state_feasible_y": [
+            -1.0,
+            1.0
+          ],
+          "termination_endpoint_or_60": 48,
+          "total_reward_return_undiscounted": -0.0015138760209083557,
+          "tracking_scores": [
+            0.9362934827804565,
+            1.0661219358444214
+          ],
+          "validated_remaining_intervals": 1
+        },
+        "rows": [
+          {
+            "active_contacts": [
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 49,
+              "endpoint": 50,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 2.105057954788208,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 0.18727936199879647,
+            "object_tracking_return_undiscounted": 0.18782782554626465,
+            "one_step_action_y": -1.0,
+            "outcome_endpoints": [
+              47,
+              48,
+              49,
+              50
+            ],
+            "source_endpoint": 46,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 50,
+            "total_reward_return_undiscounted": 0.1887564342468977,
+            "tracking_scores": [
+              0.8845746517181396,
+              0.9332371354103088,
+              0.9707512259483337,
+              1.0236091613769531
+            ],
+            "validated_remaining_intervals": 3
+          },
+          {
+            "active_contacts": [
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring",
+                "left_target_pinky"
+              ],
+              [
+                "left_target_ring",
+                "left_target_pinky"
+              ],
+              [
+                "left_target_ring",
+                "left_target_pinky"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 50,
+              "endpoint": 51,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 2.105057954788208,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 0.20781346615137575,
+            "object_tracking_return_undiscounted": 0.20846647024154663,
+            "one_step_action_y": -0.75,
+            "outcome_endpoints": [
+              47,
+              48,
+              49,
+              50,
+              51
+            ],
+            "source_endpoint": 46,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 51,
+            "total_reward_return_undiscounted": 0.2097339672036469,
+            "tracking_scores": [
+              0.878126859664917,
+              0.9340481758117676,
+              0.960780143737793,
+              0.9943390488624573,
+              1.0242393016815186
+            ],
+            "validated_remaining_intervals": 4
+          },
+          {
+            "active_contacts": [
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring",
+                "left_target_pinky"
+              ],
+              [
+                "left_target_ring",
+                "left_target_pinky"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 49,
+              "endpoint": 50,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 2.105057954788208,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 0.12933130532479287,
+            "object_tracking_return_undiscounted": 0.1288132667541504,
+            "one_step_action_y": -0.5,
+            "outcome_endpoints": [
+              47,
+              48,
+              49,
+              50
+            ],
+            "source_endpoint": 46,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 50,
+            "total_reward_return_undiscounted": 0.12903731828555465,
+            "tracking_scores": [
+              0.8882077932357788,
+              0.9495128393173218,
+              0.9970479011535645,
+              1.0364181995391846
+            ],
+            "validated_remaining_intervals": 3
+          },
+          {
+            "active_contacts": [
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring",
+                "left_target_pinky"
+              ],
+              [
+                "left_target_ring",
+                "left_target_pinky"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 49,
+              "endpoint": 50,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 2.105057954788208,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 0.20719349601507187,
+            "object_tracking_return_undiscounted": 0.20811247825622559,
+            "one_step_action_y": -0.25,
+            "outcome_endpoints": [
+              47,
+              48,
+              49,
+              50
+            ],
+            "source_endpoint": 46,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 50,
+            "total_reward_return_undiscounted": 0.210024181753397,
+            "tracking_scores": [
+              0.8717005252838135,
+              0.9420091509819031,
+              0.9684658646583557,
+              1.0097119808197021
+            ],
+            "validated_remaining_intervals": 3
+          },
+          {
+            "active_contacts": [
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 48,
+              "endpoint": 49,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 2.105057954788208,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 0.08969598848819732,
+            "object_tracking_return_undiscounted": 0.08939439058303833,
+            "one_step_action_y": 0.0,
+            "outcome_endpoints": [
+              47,
+              48,
+              49
+            ],
+            "source_endpoint": 46,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 49,
+            "total_reward_return_undiscounted": 0.09029099997133017,
+            "tracking_scores": [
+              0.9030383229255676,
+              0.9847465753555298,
+              1.0228207111358643
+            ],
+            "validated_remaining_intervals": 2
+          },
+          {
+            "active_contacts": [
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring",
+                "left_target_pinky"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 48,
+              "endpoint": 49,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 2.105057954788208,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 0.09677135778665542,
+            "object_tracking_return_undiscounted": 0.09655052423477173,
+            "one_step_action_y": 0.25,
+            "outcome_endpoints": [
+              47,
+              48,
+              49
+            ],
+            "source_endpoint": 46,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 49,
+            "total_reward_return_undiscounted": 0.09739485383033752,
+            "tracking_scores": [
+              0.9012802243232727,
+              0.9820539951324463,
+              1.0201152563095093
+            ],
+            "validated_remaining_intervals": 2
+          },
+          {
+            "active_contacts": [
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 47,
+              "endpoint": 48,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 2.105057954788208,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 0.08196893572807312,
+            "object_tracking_return_undiscounted": 0.0819278359413147,
+            "one_step_action_y": 0.5,
+            "outcome_endpoints": [
+              47,
+              48
+            ],
+            "source_endpoint": 46,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 48,
+            "total_reward_return_undiscounted": 0.08269875054247677,
+            "tracking_scores": [
+              0.913962185382843,
+              1.0041099786758423
+            ],
+            "validated_remaining_intervals": 1
+          },
+          {
+            "active_contacts": [
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 47,
+              "endpoint": 48,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 2.105057954788208,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": 0.07048210144042968,
+            "object_tracking_return_undiscounted": 0.07034486532211304,
+            "one_step_action_y": 0.75,
+            "outcome_endpoints": [
+              47,
+              48
+            ],
+            "source_endpoint": 46,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 48,
+            "total_reward_return_undiscounted": 0.07126616965979338,
+            "tracking_scores": [
+              0.9159315228462219,
+              1.013723611831665
+            ],
+            "validated_remaining_intervals": 1
+          },
+          {
+            "active_contacts": [
+              [
+                "left_target_ring"
+              ],
+              [
+                "left_target_ring"
+              ]
+            ],
+            "first_failure": {
+              "control_interval": 47,
+              "endpoint": 48,
+              "object_roles": [
+                "tool"
+              ],
+              "reason": "tracking_boundary"
+            },
+            "formal_actor_mu_y": 2.105057954788208,
+            "formal_deterministic_action_y": 1.0,
+            "formal_success_or_commit_allowed": false,
+            "full_remaining_horizon_passed": false,
+            "object_tracking_return_discounted_gamma_0_99": -0.0017541992664337203,
+            "object_tracking_return_undiscounted": -0.0024154186248779297,
+            "one_step_action_y": 1.0,
+            "outcome_endpoints": [
+              47,
+              48
+            ],
+            "source_endpoint": 46,
+            "state_feasible_y": [
+              -1.0,
+              1.0
+            ],
+            "termination_endpoint_or_60": 48,
+            "total_reward_return_undiscounted": -0.0015138760209083557,
+            "tracking_scores": [
+              0.9362934827804565,
+              1.0661219358444214
+            ],
+            "validated_remaining_intervals": 1
+          }
+        ],
+        "zero_y_action": {
+          "active_contacts": [
+            [
+              "left_target_ring"
+            ],
+            [
+              "left_target_ring"
+            ],
+            [
+              "left_target_ring"
+            ]
+          ],
+          "first_failure": {
+            "control_interval": 48,
+            "endpoint": 49,
+            "object_roles": [
+              "tool"
+            ],
+            "reason": "tracking_boundary"
+          },
+          "formal_actor_mu_y": 2.105057954788208,
+          "formal_deterministic_action_y": 1.0,
+          "formal_success_or_commit_allowed": false,
+          "full_remaining_horizon_passed": false,
+          "object_tracking_return_discounted_gamma_0_99": 0.08969598848819732,
+          "object_tracking_return_undiscounted": 0.08939439058303833,
+          "one_step_action_y": 0.0,
+          "outcome_endpoints": [
+            47,
+            48,
+            49
+          ],
+          "source_endpoint": 46,
+          "state_feasible_y": [
+            -1.0,
+            1.0
+          ],
+          "termination_endpoint_or_60": 49,
+          "total_reward_return_undiscounted": 0.09029099997133017,
+          "tracking_scores": [
+            0.9030383229255676,
+            0.9847465753555298,
+            1.0228207111358643
+          ],
+          "validated_remaining_intervals": 2
+        }
+      }
+    },
+    "full_zero_y_rescues": {
+      "44": {
+        "full_remaining_horizon_passed": false,
+        "passes_beyond_replay_failure_endpoint_51": false,
+        "termination_endpoint_or_60": 49
+      },
+      "45": {
+        "full_remaining_horizon_passed": false,
+        "passes_beyond_replay_failure_endpoint_51": false,
+        "termination_endpoint_or_60": 51
+      },
+      "46": {
+        "full_remaining_horizon_passed": false,
+        "passes_beyond_replay_failure_endpoint_51": false,
+        "termination_endpoint_or_60": 49
+      }
+    }
+  },
+  "paper_faithful": false,
+  "regression_gate": {
+    "actor_state_unchanged": true,
+    "formal_plus_y_suffix_exactly_reproduced": {
+      "43": true,
+      "44": true,
+      "45": true,
+      "46": true
+    },
+    "formal_ppo_trace_exactly_reproduced": true,
+    "formal_replay_trace_exactly_reproduced": true,
+    "normalization_state_unchanged": true,
+    "ppo_validated_intervals": 27,
+    "replay_validated_intervals": 30,
+    "timing_minus1_validated_intervals": 30
+  },
+  "schema": "taco_pour_training_credit_assignment_audit_v1",
+  "scope": {
+    "actor_frozen": true,
+    "chunk_acceptance_allowed": false,
+    "chunk_commit_allowed": false,
+    "normalization_frozen": true,
+    "optimizer_steps": 0,
+    "reward_objective_scale_bound_and_formal_timing_unchanged": true,
+    "training_performed": false
+  },
+  "status": "completed_read_only_training_credit_audit",
+  "timing_minus1_replay_alignment": {
+    "classified_as_refinement_candidate": false,
+    "classified_as_suppression_candidate": true,
+    "closer_to_replay_than_formal_ppo_on_common_endpoints": true,
+    "comparison_endpoints": [
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51
+    ],
+    "formal_ppo_common_endpoints": [
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48
+    ],
+    "mean_formal_ppo_qpos_l2_to_replay_common": 0.38669745115584697,
+    "mean_timing_minus1_qpos_l2_to_replay_all_40_51": 0.404312120595452,
+    "mean_timing_minus1_qpos_l2_to_replay_common_ppo": 0.3696760309200796,
+    "no_validated_interval_beyond_replay": true,
+    "rows": {
+      "40": {
+        "endpoint": 40,
+        "formal_ppo_qpos_l2_to_replay": 0.3295750222008911,
+        "replay": {
+          "contacts": {
+            "active": [
+              "right_tool_index",
+              "left_target_pinky"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  true,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  true
+                ]
+              ]
+            ]
+          },
+          "normalized_residual_l2": 0.0,
+          "position_error_m": 0.0759785920381546,
+          "rotation_error_rad": 0.31918832659721375,
+          "tracking_score": 0.6679563522338867
+        },
+        "timing_minus1": {
+          "contacts": {
+            "active": [
+              "left_target_pinky"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  true
+                ]
+              ]
+            ]
+          },
+          "normalized_residual_l2": 3.596386441296471,
+          "position_error_m": 0.07581329345703125,
+          "rotation_error_rad": 0.2554689049720764,
+          "tracking_score": 0.6543310284614563
+        },
+        "timing_minus1_distance_to_replay": {
+          "commanded_ctrl_l2": 0.17981931820516953,
+          "qpos_l2": 0.2594681028149724,
+          "qvel_l2": 5.819169476751026,
+          "tool_position_m": 0.023269774292588793
+        }
+      },
+      "41": {
+        "endpoint": 41,
+        "formal_ppo_qpos_l2_to_replay": 0.3777531299188633,
+        "replay": {
+          "contacts": {
+            "active": [
+              "right_tool_index",
+              "left_target_pinky"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  true,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  true
+                ]
+              ]
+            ]
+          },
+          "normalized_residual_l2": 0.0,
+          "position_error_m": 0.07059016078710556,
+          "rotation_error_rad": 0.4516543745994568,
+          "tracking_score": 0.660834789276123
+        },
+        "timing_minus1": {
+          "contacts": {
+            "active": [],
+            "flags": [
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ]
+            ]
+          },
+          "normalized_residual_l2": 3.731166238350517,
+          "position_error_m": 0.07708745449781418,
+          "rotation_error_rad": 0.267942875623703,
+          "tracking_score": 0.6667683720588684
+        },
+        "timing_minus1_distance_to_replay": {
+          "commanded_ctrl_l2": 0.18655827111354928,
+          "qpos_l2": 0.28223612476475224,
+          "qvel_l2": 6.44636283340502,
+          "tool_position_m": 0.02520975079284762
+        }
+      },
+      "42": {
+        "endpoint": 42,
+        "formal_ppo_qpos_l2_to_replay": 0.4298953458808192,
+        "replay": {
+          "contacts": {
+            "active": [
+              "right_tool_index",
+              "left_target_pinky"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  true,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  true
+                ]
+              ]
+            ]
+          },
+          "normalized_residual_l2": 0.0,
+          "position_error_m": 0.07022394984960556,
+          "rotation_error_rad": 0.6252042651176453,
+          "tracking_score": 0.718458890914917
+        },
+        "timing_minus1": {
+          "contacts": {
+            "active": [
+              "left_target_ring"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  true,
+                  false
+                ]
+              ]
+            ]
+          },
+          "normalized_residual_l2": 3.865462619843881,
+          "position_error_m": 0.07740286737680435,
+          "rotation_error_rad": 0.285486102104187,
+          "tracking_score": 0.672516942024231
+        },
+        "timing_minus1_distance_to_replay": {
+          "commanded_ctrl_l2": 0.19327309813257484,
+          "qpos_l2": 0.3324333363132913,
+          "qvel_l2": 8.682767475651621,
+          "tool_position_m": 0.026990487409330983
+        }
+      },
+      "43": {
+        "endpoint": 43,
+        "formal_ppo_qpos_l2_to_replay": 0.40919129890308276,
+        "replay": {
+          "contacts": {
+            "active": [
+              "left_target_pinky"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  true
+                ]
+              ]
+            ]
+          },
+          "normalized_residual_l2": 0.0,
+          "position_error_m": 0.07168738543987274,
+          "rotation_error_rad": 0.7191982865333557,
+          "tracking_score": 0.7660077214241028
+        },
+        "timing_minus1": {
+          "contacts": {
+            "active": [
+              "left_target_ring"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  true,
+                  false
+                ]
+              ]
+            ]
+          },
+          "normalized_residual_l2": 3.929214980266966,
+          "position_error_m": 0.07547502219676971,
+          "rotation_error_rad": 0.3049706816673279,
+          "tracking_score": 0.6610032320022583
+        },
+        "timing_minus1_distance_to_replay": {
+          "commanded_ctrl_l2": 0.19646075164732263,
+          "qpos_l2": 0.36593371065825664,
+          "qvel_l2": 3.4776323820222372,
+          "tool_position_m": 0.02724968964772265
+        }
+      },
+      "44": {
+        "endpoint": 44,
+        "formal_ppo_qpos_l2_to_replay": 0.3906195147115171,
+        "replay": {
+          "contacts": {
+            "active": [
+              "right_tool_index",
+              "left_target_pinky"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  true,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  true
+                ]
+              ]
+            ]
+          },
+          "normalized_residual_l2": 0.0,
+          "position_error_m": 0.07224825024604797,
+          "rotation_error_rad": 0.7983522415161133,
+          "tracking_score": 0.8035923838615417
+        },
+        "timing_minus1": {
+          "contacts": {
+            "active": [
+              "right_tool_index",
+              "left_target_ring"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  true,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  true,
+                  false
+                ]
+              ]
+            ]
+          },
+          "normalized_residual_l2": 4.064776966864566,
+          "position_error_m": 0.07672169059515,
+          "rotation_error_rad": 0.3209535479545593,
+          "tracking_score": 0.6742016673088074
+        },
+        "timing_minus1_distance_to_replay": {
+          "commanded_ctrl_l2": 0.20323887000671512,
+          "qpos_l2": 0.38399040420402875,
+          "qvel_l2": 3.6020014288680797,
+          "tool_position_m": 0.024048988959135854
+        }
+      },
+      "45": {
+        "endpoint": 45,
+        "formal_ppo_qpos_l2_to_replay": 0.3712998789687051,
+        "replay": {
+          "contacts": {
+            "active": [
+              "left_target_pinky"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  true
+                ]
+              ]
+            ]
+          },
+          "normalized_residual_l2": 0.0,
+          "position_error_m": 0.07257065176963806,
+          "rotation_error_rad": 0.8379664421081543,
+          "tracking_score": 0.8232937455177307
+        },
+        "timing_minus1": {
+          "contacts": {
+            "active": [
+              "left_target_ring"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  true,
+                  false
+                ]
+              ]
+            ]
+          },
+          "normalized_residual_l2": 4.208336315695717,
+          "position_error_m": 0.0828431025147438,
+          "rotation_error_rad": 0.330997496843338,
+          "tracking_score": 0.7247681617736816
+        },
+        "timing_minus1_distance_to_replay": {
+          "commanded_ctrl_l2": 0.21041679485683687,
+          "qpos_l2": 0.3962326151005332,
+          "qvel_l2": 2.2845774018318603,
+          "tool_position_m": 0.01960232150320936
+        }
+      },
+      "46": {
+        "endpoint": 46,
+        "formal_ppo_qpos_l2_to_replay": 0.37805200162469826,
+        "replay": {
+          "contacts": {
+            "active": [
+              "right_tool_index",
+              "left_target_pinky"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  true,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  true
+                ]
+              ]
+            ]
+          },
+          "normalized_residual_l2": 0.0,
+          "position_error_m": 0.07406708598136902,
+          "rotation_error_rad": 0.8460164666175842,
+          "tracking_score": 0.836107611656189
+        },
+        "timing_minus1": {
+          "contacts": {
+            "active": [
+              "left_target_ring",
+              "left_target_pinky"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  true,
+                  true
+                ]
+              ]
+            ]
+          },
+          "normalized_residual_l2": 4.399350044025042,
+          "position_error_m": 0.09030330926179886,
+          "rotation_error_rad": 0.33898669481277466,
+          "tracking_score": 0.7857288122177124
+        },
+        "timing_minus1_distance_to_replay": {
+          "commanded_ctrl_l2": 0.21996750018509134,
+          "qpos_l2": 0.41179064962276896,
+          "qvel_l2": 2.2342467860959334,
+          "tool_position_m": 0.02003072382003889
+        }
+      },
+      "47": {
+        "endpoint": 47,
+        "formal_ppo_qpos_l2_to_replay": 0.38802897266312686,
+        "replay": {
+          "contacts": {
+            "active": [
+              "left_target_pinky"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  true
+                ]
+              ]
+            ]
+          },
+          "normalized_residual_l2": 0.0,
+          "position_error_m": 0.07794640213251114,
+          "rotation_error_rad": 0.8654902577400208,
+          "tracking_score": 0.8688158988952637
+        },
+        "timing_minus1": {
+          "contacts": {
+            "active": [
+              "left_target_ring",
+              "left_target_pinky"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  true,
+                  true
+                ]
+              ]
+            ]
+          },
+          "normalized_residual_l2": 4.343494924508685,
+          "position_error_m": 0.09619361162185669,
+          "rotation_error_rad": 0.36445292830467224,
+          "tracking_score": 0.8376262784004211
+        },
+        "timing_minus1_distance_to_replay": {
+          "commanded_ctrl_l2": 0.21717475874025538,
+          "qpos_l2": 0.4333483708863237,
+          "qvel_l2": 2.7383376014443424,
+          "tool_position_m": 0.02307087599687664
+        }
+      },
+      "48": {
+        "endpoint": 48,
+        "formal_ppo_qpos_l2_to_replay": 0.4058618955309187,
+        "replay": {
+          "contacts": {
+            "active": [
+              "right_tool_index",
+              "left_target_ring",
+              "left_target_pinky"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  true,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  true,
+                  true
+                ]
+              ]
+            ]
+          },
+          "normalized_residual_l2": 0.0,
+          "position_error_m": 0.08122146129608154,
+          "rotation_error_rad": 0.9010717272758484,
+          "tracking_score": 0.9049738645553589
+        },
+        "timing_minus1": {
+          "contacts": {
+            "active": [
+              "left_target_ring",
+              "left_target_pinky"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  true,
+                  true
+                ]
+              ]
+            ]
+          },
+          "normalized_residual_l2": 4.449389603788698,
+          "position_error_m": 0.10373948514461517,
+          "rotation_error_rad": 0.4269236922264099,
+          "tracking_score": 0.9101423025131226
+        },
+        "timing_minus1_distance_to_replay": {
+          "commanded_ctrl_l2": 0.2224694997365614,
+          "qpos_l2": 0.46165096391578925,
+          "qvel_l2": 2.775086559806687,
+          "tool_position_m": 0.030150458785799715
+        }
+      },
+      "49": {
+        "endpoint": 49,
+        "replay": {
+          "contacts": {
+            "active": [
+              "left_target_ring",
+              "left_target_pinky"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  true,
+                  true
+                ]
+              ]
+            ]
+          },
+          "normalized_residual_l2": 0.0,
+          "position_error_m": 0.08683523535728455,
+          "rotation_error_rad": 0.9201596975326538,
+          "tracking_score": 0.9486539959907532
+        },
+        "timing_minus1": {
+          "contacts": {
+            "active": [
+              "left_target_ring",
+              "left_target_pinky"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  true,
+                  true
+                ]
+              ]
+            ]
+          },
+          "normalized_residual_l2": 4.484289547863507,
+          "position_error_m": 0.10820461809635162,
+          "rotation_error_rad": 0.48412129282951355,
+          "tracking_score": 0.9577255249023438
+        },
+        "timing_minus1_distance_to_replay": {
+          "commanded_ctrl_l2": 0.22421445078563026,
+          "qpos_l2": 0.48439516829549284,
+          "qvel_l2": 2.633295514048543,
+          "tool_position_m": 0.031091884513036162
+        }
+      },
+      "50": {
+        "endpoint": 50,
+        "replay": {
+          "contacts": {
+            "active": [
+              "right_tool_index",
+              "left_target_ring",
+              "left_target_pinky"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  true,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  true,
+                  true
+                ]
+              ]
+            ]
+          },
+          "normalized_residual_l2": 0.0,
+          "position_error_m": 0.0913563072681427,
+          "rotation_error_rad": 0.9597967267036438,
+          "tracking_score": 0.9944888353347778
+        },
+        "timing_minus1": {
+          "contacts": {
+            "active": [
+              "right_tool_index",
+              "left_target_ring",
+              "left_target_pinky"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  true,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  true,
+                  true
+                ]
+              ]
+            ]
+          },
+          "normalized_residual_l2": 4.44657542111567,
+          "position_error_m": 0.11274690926074982,
+          "rotation_error_rad": 0.5060151219367981,
+          "tracking_score": 0.9982830286026001
+        },
+        "timing_minus1_distance_to_replay": {
+          "commanded_ctrl_l2": 0.2223287750349284,
+          "qpos_l2": 0.516024499208349,
+          "qvel_l2": 2.180339450658676,
+          "tool_position_m": 0.0333844328165997
+        }
+      },
+      "51": {
+        "endpoint": 51,
+        "replay": {
+          "contacts": {
+            "active": [
+              "right_tool_index",
+              "left_target_ring",
+              "left_target_pinky"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  true,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  true,
+                  true
+                ]
+              ]
+            ]
+          },
+          "normalized_residual_l2": 0.0,
+          "position_error_m": 0.09631697088479996,
+          "rotation_error_rad": 0.9551905989646912,
+          "tracking_score": 1.02456796169281
+        },
+        "timing_minus1": {
+          "contacts": {
+            "active": [
+              "right_tool_index",
+              "left_target_ring",
+              "left_target_pinky"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  true,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  true,
+                  true
+                ]
+              ]
+            ]
+          },
+          "normalized_residual_l2": 4.397495961632523,
+          "position_error_m": 0.11666432023048401,
+          "rotation_error_rad": 0.4902738630771637,
+          "tracking_score": 1.02567458152771
+        },
+        "timing_minus1_distance_to_replay": {
+          "commanded_ctrl_l2": 0.2198748060642611,
+          "qpos_l2": 0.5242415013608658,
+          "qvel_l2": 1.321541469091152,
+          "tool_position_m": 0.03315300673461866
+        }
+      }
+    },
+    "same_failure_endpoint_and_reason_as_replay": true
+  }
+}

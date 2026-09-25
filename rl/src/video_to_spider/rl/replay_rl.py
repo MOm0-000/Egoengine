@@ -326,6 +326,8 @@ def train_chunk_ppo(
     seed=0,
     validation_env=None,
     action_distribution_spec=None,
+    credit_audit_dir=None,
+    credit_probe_panel=None,
 ):
     """Reuse the existing official trainer; reset every rollout to this boundary.
 
@@ -341,15 +343,25 @@ def train_chunk_ppo(
         agent_class = PpoAgent
         agent_kwargs = {}
     else:
-        from video_to_spider.rl.state_feasible_truncated_gaussian import (
-            StateFeasibleTruncatedGaussianPpoAgent,
-        )
         if not action_distribution_spec.optimizer_training_authorized:
             raise ValueError(
                 "state-feasible optimizer training lacks an exact authorization"
             )
-        agent_class = StateFeasibleTruncatedGaussianPpoAgent
         agent_kwargs = {"distribution_spec": action_distribution_spec}
+        if credit_audit_dir is None:
+            from video_to_spider.rl.state_feasible_truncated_gaussian import (
+                StateFeasibleTruncatedGaussianPpoAgent,
+            )
+            agent_class = StateFeasibleTruncatedGaussianPpoAgent
+        else:
+            from video_to_spider.rl.credit_audit import (
+                CreditInstrumentedTruncatedGaussianPpoAgent,
+            )
+            agent_class = CreditInstrumentedTruncatedGaussianPpoAgent
+            agent_kwargs.update(
+                credit_audit_dir=Path(credit_audit_dir),
+                credit_probe_panel=credit_probe_panel,
+            )
 
     env = backend.env
     env.set_chunk_reset(start=start, end=end)
@@ -381,6 +393,12 @@ def train_chunk_ppo(
     finally:
         if agent.writer is not None:
             agent.writer.close()
+
+    credit_audit = (
+        agent.finalize_credit_audit()
+        if credit_audit_dir is not None
+        else None
+    )
 
     actor_state = {
         name: tensor.detach().cpu().clone()
@@ -418,6 +436,7 @@ def train_chunk_ppo(
             "actor_state_sha256": actor_sha256,
             "checkpoint_artifacts": checkpoints,
             "training_visitation": training_visitation,
+            "credit_audit": credit_audit,
             "tail_curriculum": curriculum_audit,
             "state_feasible_action": state_feasible_action_audit,
         })
@@ -438,12 +457,20 @@ def train_chunk_ppo(
     )
     if action_distribution_spec is not None:
         cpu_config = replace(cpu_config, clip_actions=False)
-    cpu_agent = agent_class(
+    cpu_agent_class = agent_class
+    cpu_agent_kwargs = dict(agent_kwargs)
+    if credit_audit_dir is not None:
+        from video_to_spider.rl.state_feasible_truncated_gaussian import (
+            StateFeasibleTruncatedGaussianPpoAgent,
+        )
+        cpu_agent_class = StateFeasibleTruncatedGaussianPpoAgent
+        cpu_agent_kwargs = {"distribution_spec": action_distribution_spec}
+    cpu_agent = cpu_agent_class(
         experiment_dir=Path(temporary_directory.name),
         ppo_config=cpu_config,
         network_config=_build_network_config(4),
         env=validation_env,
-        **agent_kwargs,
+        **cpu_agent_kwargs,
     )
     cpu_agent.model.load_state_dict(actor_state)
     transferred_sha256 = _model_state_sha256(cpu_agent.model.state_dict())
@@ -468,6 +495,7 @@ def train_chunk_ppo(
         "recurrent_state_reset_to_zero": True,
         "checkpoint_artifacts": checkpoints,
         "training_visitation": training_visitation,
+        "credit_audit": credit_audit,
         "tail_curriculum": curriculum_audit,
         "state_feasible_action": state_feasible_action_audit,
     }, temporary_directory)

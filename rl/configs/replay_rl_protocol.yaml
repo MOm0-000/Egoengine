@@ -8,7 +8,7 @@ evidence_policy:
   order: [paper, verified_implementation_defect, disclosed_local_proposal]
   paper_page_numbers: one_based_pdf_pages
   copied_defaults_are_author_settings: false
-  current_revision: training_credit_assignment_audited_no_commit
+  current_revision: fresh_credit_audit_found_observation_normalizer_likelihood_mismatch
 
 inputs:
   setting: user_approved_gt_oracle_validation_not_full_perception_reproduction
@@ -203,6 +203,32 @@ evaluation:
       exact_advantage_value_return_available: false
       final_critic_backfill_allowed: false
       reason: rollout_reward_critic_value_return_advantage_observation_and_hidden_not_saved
+  corrected_fresh_ppo_credit_instrumented:
+    status: completed_diagnostic_not_promotable_no_commit
+    report: /data_all/zzx/3.2RL/runs/taco_pour_corrected_fresh_ppo_credit_instrumented_v1/report.json
+    evidence: /data_all/zzx/3.2RL/runs/taco_pour_fresh_ppo_credit_evidence_v1/report.json
+    settings_unchanged: true
+    training: {worlds: 4, epochs: 8, samples: 1280, seed: 0, starts: [20, 20, 20, 20]}
+    replay: {first_failure_endpoint: 51, committed: false}
+    ppo: {first_failure_endpoint: 50, committed: false}
+    rollout_logprob_direct_recompute_max_abs_error: 3.814697265625e-06
+    source_43_to_46_raw_to_normalized_advantage_sign_flip_count: 39
+    first_actor_update:
+      actor_weights_unchanged_during_forward: true
+      only_changed_forward_state:
+        - running_mean_std.count
+        - running_mean_std.running_mean
+        - running_mean_std.running_var
+      fixed_probe_max_mu_y_change_from_normalizer_update: 0.34486889839172363
+      fixed_probe_max_mu_y_change_from_optimizer: 0.10565942525863647
+      ratio_outside_0p8_1p2: {count: 134, total: 160}
+      source_43_to_46_ratio_outside_0p8_1p2: {count: 9, total: 10}
+      ratio_range: [0.0005173733807168901, 19.487037658691406]
+    conclusion: >-
+      Rollout old log-probabilities use the pre-rollout observation normalizer,
+      while the first PPO likelihood pass updates that normalizer before
+      computing new log-probabilities. The old/new ratio therefore compares
+      different observation transforms before any optimizer step.
 
 runtime_contract:
   fail_closed: true
@@ -253,7 +279,7 @@ runtime_contract:
     cpu_commit_endpoint_offset: 20
 
 training_ready: false
-training_ready_scope: final_actor_world_y_mean_is_counterfactually_suboptimal_but_historical_ppo_credit_was_not_logged
+training_ready_scope: ppo_old_new_likelihood_uses_different_observation_normalization_statistics
 
 audit_results:
   active_input: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/input_audit.json
@@ -270,6 +296,9 @@ audit_results:
   corrected_input_bifurcation_attribution: /data_all/zzx/3.2RL/runs/taco_pour_corrected_input_bifurcation_attribution_v1/report.json
   reference_timing_action_frame_audit: /data_all/zzx/3.2RL/runs/taco_pour_reference_timing_action_frame_audit_v1/report.json
   training_credit_assignment_audit: /data_all/zzx/3.2RL/runs/taco_pour_training_credit_assignment_audit_v1/report.json
+  credit_instrumentation_gate: /data_all/zzx/3.2RL/runs/taco_pour_credit_instrumentation_gate_v1/report.json
+  corrected_fresh_ppo_credit_instrumented: /data_all/zzx/3.2RL/runs/taco_pour_corrected_fresh_ppo_credit_instrumented_v1/report.json
+  fresh_ppo_credit_evidence: /data_all/zzx/3.2RL/runs/taco_pour_fresh_ppo_credit_evidence_v1/report.json
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -290,7 +319,7 @@ historical_reward_misaligned:
     - old_objective_mapping_closed_loop_outcomes
 
 blocking_checks:
-  - final_actor_world_y_mean_is_counterfactually_suboptimal_but_historical_ppo_credit_was_not_logged
+  - ppo_old_new_likelihood_uses_different_observation_normalization_statistics
 result_acceptance_blockers:
   - corrected_first_PPO_passed_only_27_of_40_and_committed_nothing
   - corrected_PPO_endpoint48_position_term_alone_exceeds_local_ellipse_boundary
@@ -305,6 +334,10 @@ result_acceptance_blockers:
   - zero_y_single_step_rescues_do_not_pass_endpoint51_or_complete_the_window
   - all_eight_non_plus1_grid_actions_outperform_formal_plus1_at_sources43_to46
   - historical_rollout_advantage_value_return_and_recurrent_context_were_not_logged
+  - fresh_credit_run_failed_endpoint50_and_committed_nothing
+  - first_PPO_update_changes_input_normalizer_before_new_logprob_and_moves_134_of_160_ratios_outside_clip
+  - first_normalizer_update_moves_fixed_probe_mu_y_more_than_the_first_optimizer_step
+  - source43_to46_has_39_raw_to_normalized_advantage_sign_flips_across_fresh_rollouts
   - unpublished_threshold_to_weighted_objective_mapping
   - stable_grasp_and_physical_pour_not_demonstrated
 paper_faithful_run_blockers:
