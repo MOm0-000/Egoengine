@@ -55,7 +55,7 @@ except ModuleNotFoundError:  # pragma: no cover - only used in the training runt
 
 
 _XHAND_FINGERS = ("thumb", "index", "middle", "ring", "pinky")
-_MJWP_SNAPSHOT_SCHEMA = "egoengine_mjwp_snapshot_v2"
+_MJWP_SNAPSHOT_SCHEMA = "egoengine_mjwp_snapshot_v3_reward_aligned"
 _WP_STATE_FIELDS = (
     "solver_niter", "ne", "nf", "nl", "nefc", "nisland", "nidof",
     "ntree_awake", "nbody_awake", "nv_awake", "time", "energy", "qpos",
@@ -414,6 +414,9 @@ class MJWPVectorEnv:
             raise ValueError("residual actions must be finite")
         policy_actions = actions.copy()
         source_endpoints = self.start_indices + self.time_indices
+        command_reference_endpoints = np.minimum(
+            source_endpoints + 1, self.ctrl_ref.shape[0] - 1
+        )
         if self.env_cfg.domain.action_noise_std > 0.0:
             actions = actions + self.rng.normal(
                 0.0,
@@ -440,9 +443,21 @@ class MJWPVectorEnv:
         self._last_ctrl = full_ctrl.detach().clone()
         self.time_indices += 1
         outcome_endpoints = self.start_indices + self.time_indices
+        reward_reference_endpoints = np.minimum(
+            outcome_endpoints, self.qpos_ref.shape[0] - 1
+        )
+        next_observation_goal_reference_endpoints = np.minimum(
+            outcome_endpoints + self.observation_contract.goal_reference_offset,
+            self.qpos_ref.shape[0] - 1,
+        )
         self.simulation_control_intervals += self.num_envs
         obs, privileged = self._build_observations()
-        reward = self._compute_reward(privileged["object_pose"], privileged["goal_object_pose"], privileged["contact_flags"])
+        reward_goal_objects = self._reference_object_poses_at_absolute_endpoints(
+            reward_reference_endpoints
+        )
+        reward = self._compute_reward(
+            privileged["object_pose"], reward_goal_objects, privileged["contact_flags"]
+        )
         done = self._compute_done()
 
         done_np = done.cpu().numpy()
@@ -484,6 +499,11 @@ class MJWPVectorEnv:
             "terminated": terminal_terminated,
             "source_reference_endpoint": source_endpoints.copy(),
             "outcome_reference_endpoint": outcome_endpoints.copy(),
+            "command_reference_endpoint": command_reference_endpoints.copy(),
+            "reward_reference_endpoint": reward_reference_endpoints.copy(),
+            "next_observation_goal_reference_endpoint": (
+                next_observation_goal_reference_endpoints.copy()
+            ),
         }
         if self._training_trace is not None:
             if self._pending_training_policy_distribution is None:
@@ -819,7 +839,7 @@ class MJWPVectorEnv:
         if state.get("snapshot_schema") != _MJWP_SNAPSHOT_SCHEMA:
             raise ValueError(
                 f"MJWP snapshot schema must be {_MJWP_SNAPSHOT_SCHEMA}; "
-                "legacy partial snapshots cannot be restored"
+                "legacy partial or pre-reward-alignment snapshots cannot be restored"
             )
         runtime_version = version("mujoco-warp")
         if state.get("mujoco_warp_version") != runtime_version:
@@ -906,6 +926,22 @@ class MJWPVectorEnv:
             self.ctrl_ref.shape[0] - 1,
         )
         return self.ctrl_ref[indices].to(str(self.ego_cfg.device))
+
+    def _reference_object_poses_at_absolute_endpoints(
+        self, endpoints: np.ndarray
+    ) -> tuple[tuple[torch.Tensor, torch.Tensor], ...]:
+        """Return object poses at explicit absolute reference endpoints.
+
+        Reward targets use this path so they cannot accidentally inherit the
+        one-step-ahead goal exposed to the next actor observation.
+        """
+        indices = np.minimum(
+            np.asarray(endpoints, dtype=np.int64), self.qpos_ref.shape[0] - 1
+        )
+        if indices.shape != (self.num_envs,) or np.any(indices < 0):
+            raise ValueError("reference object endpoints must be one nonnegative row per world")
+        qpos = self.qpos_ref[indices].to(str(self.ego_cfg.device))
+        return _object_pose_parts(qpos, int(self.ego_cfg.nq_obj))
 
     def _apply_residual(self, reference_ctrls: torch.Tensor, delta: torch.Tensor) -> torch.Tensor:
         spec = self.env_cfg.residual

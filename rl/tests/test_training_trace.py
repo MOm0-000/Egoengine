@@ -35,11 +35,16 @@ def _trace(path: Path) -> PpoTrainingTrace:
     )
 
 
-def _info() -> dict:
+def _info(outcome_endpoint: int = 21) -> dict:
     contacts = np.zeros((2, 2, 2, 5), dtype=bool)
     contacts[0, 0, 0, 0] = True
     contacts[1, 1, 1, 2] = True
     return {
+        "command_reference_endpoint": np.array([outcome_endpoint] * 2, np.int32),
+        "reward_reference_endpoint": np.array([outcome_endpoint] * 2, np.int32),
+        "next_observation_goal_reference_endpoint": np.array(
+            [outcome_endpoint + 1] * 2, np.int32
+        ),
         "object_position_error": np.array([[0.04, 0.02], [0.06, 0.03]], np.float32),
         "object_rotation_error": np.array([[0.4, 0.2], [0.6, 0.3]], np.float32),
         "object_tracking_error_per_object": np.array([[0.5, 0.25], [0.75, 0.375]], np.float32),
@@ -95,7 +100,7 @@ def test_training_trace_is_lossless_and_flushes_only_at_epoch_boundaries(tmp_pat
         requested_residual=np.zeros((2, 36), np.float64),
         effective_residual_after_ctrlrange=np.zeros((2, 36), np.float64),
         residual_lost_to_ctrlrange=np.zeros((2, 36), np.float64),
-        info=_info(),
+        info=_info(22),
     )
     report = trace.finalize(completed=True)
 
@@ -124,6 +129,11 @@ def test_training_trace_is_lossless_and_flushes_only_at_epoch_boundaries(tmp_pat
     np.testing.assert_array_equal(raw["sampled_action_clamped"], bounded)
     np.testing.assert_array_equal(raw["actor_mu"], mu)
     np.testing.assert_array_equal(raw["actor_sigma"], sigma)
+    np.testing.assert_array_equal(raw["command_reference_endpoint"], [21, 21])
+    np.testing.assert_array_equal(raw["reward_reference_endpoint"], [21, 21])
+    np.testing.assert_array_equal(
+        raw["next_observation_goal_reference_endpoint"], [22, 22]
+    )
     np.testing.assert_array_equal(raw["reference_ctrl"], reference_ctrl)
     for name in (
         "requested_residual",
@@ -162,7 +172,7 @@ def test_training_trace_fails_closed_on_bad_shape_and_duplicate_finalize(tmp_pat
             info=_info(),
         )
     trace.begin_epoch(1, 0)
-    bad = _info()
+    bad = _info(1)
     bad["contact_flags"] = np.zeros((2, 1, 2, 5), dtype=bool)
     with pytest.raises(ValueError, match="contact flags must have shape"):
         trace.record(

@@ -1,0 +1,235 @@
+{
+  "schema": "taco_pour_reward_alignment_gate_v1",
+  "status": "passed",
+  "checks": {
+    "runtime_reward_matches_outcome_endpoint_reference": true,
+    "legacy_outcome_plus_one_reference_is_negative_control": true,
+    "actor_pre_step_goal_remains_t_plus_1": true,
+    "returned_next_observation_goal_remains_t_plus_2": true,
+    "fixed_action_physics_is_bitwise_unchanged_by_reward_target": true,
+    "contact_lift_and_ctrl_are_unchanged_by_reward_target": true,
+    "reward_changes_under_legacy_negative_control": true,
+    "terminal_info_retains_pre_reset_same_time_reward": true,
+    "single_world_endpoint_provenance_passes": true,
+    "four_world_20_20_20_46_endpoint_provenance_passes": true
+  },
+  "optimizer_updates": 0,
+  "task_level_training_executed": false,
+  "chunk_commit_written": false,
+  "inputs": {
+    "gate_contract": {
+      "path": "/data_all/zzx/3.2RL/configs/taco_pour_reward_alignment_gate_v1.yaml",
+      "sha256": "0dfaad341da1788e4a31573ea78ca11fb869fade376243ccf9339e931ab66a3f"
+    },
+    "protocol": {
+      "path": "/data_all/zzx/3.2RL/configs/replay_rl_protocol.yaml",
+      "sha256": "262097a3dd2b7768a940ae6dbb82428b94eedb08931af388037a5243097b7807"
+    },
+    "objective_profile": {
+      "path": "/data_all/zzx/3.2RL/configs/taco_pour_local_normalized_ellipse_v1.yaml",
+      "sha256": "8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9"
+    },
+    "observation_profile": {
+      "path": "/data_all/zzx/3.2RL/configs/taco_pour_observation_local_236d_v1.yaml",
+      "sha256": "8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7"
+    },
+    "action_profile": {
+      "path": "/data_all/zzx/3.2RL/configs/taco_pour_residual_action_scaled_v1.yaml",
+      "sha256": "71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4"
+    },
+    "simulator_config": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml",
+      "sha256": "0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6"
+    },
+    "initialization_report": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v2/candidate_a/report.json",
+      "sha256": "9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a"
+    }
+  },
+  "runtime": {
+    "snapshot_schema": "egoengine_mjwp_snapshot_v3_reward_aligned",
+    "training_trace_schema": "taco_ppo_training_visitation_v5",
+    "residual_action": {
+      "profile_id": "taco_pour_residual_action_scaled_v1",
+      "status": "resolved_local_unpublished",
+      "paper_faithful": false,
+      "provenance": "One controlled local repair of the diagnosed normalized-action unit mismatch. The existing +/-0.05 rad safety limit is retained; only the normalized output mapping changes. EgoEngine does not publish this residual scale.",
+      "profile_path": "/data_all/zzx/3.2RL/configs/taco_pour_residual_action_scaled_v1.yaml",
+      "profile_sha256": "71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4",
+      "policy_output_range": [
+        -1.0,
+        1.0
+      ],
+      "mapping_kind": "linear_scaled_candidate",
+      "residual_scale": 0.05,
+      "residual_clip_rad": 0.05,
+      "equation": "delta_a = clip(0.05 * u, -0.05, +0.05) rad",
+      "author_recovered_scale": false,
+      "controlled_experiment": {
+        "epochs": 8,
+        "seed": 0,
+        "endpoint_boundary": 20,
+        "lookahead_control_intervals": 40,
+        "ppo_horizon": 40,
+        "learning_rate": 0.0001,
+        "objective_profile_sha256": "8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9",
+        "observation_profile_sha256": "8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7",
+        "backend_contract_sha256": "c567ad04dabe1bfc1ff3c8f9ee81db52f9f71d181cd80d56de47c2b237ad65b0",
+        "simulator_config_sha256": "0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6",
+        "initialization_report_sha256": "9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a",
+        "reference_endpoint20_state": "Bitwise-equal to the CPU endpoint-20 boundary used by the frozen checkpoint validation; serialized artifact bytes may differ while all 362 state entries agree.",
+        "unchanged": [
+          "objective",
+          "contact_and_lift_coefficients",
+          "observation",
+          "network",
+          "learning_rate",
+          "PPO_hyperparameters",
+          "training_seed",
+          "CPU_acceptance"
+        ]
+      }
+    }
+  },
+  "implementation": {
+    "mjwp_environment": {
+      "path": "/data_all/zzx/3.2RL/src/video_to_spider/rl/mjwp_env.py",
+      "sha256": "dde2bec6fb298b127ca6d3275b2b5e38d3a4cd5204144ea25603c610dac912a9"
+    },
+    "chunk_backend": {
+      "path": "/data_all/zzx/3.2RL/src/video_to_spider/rl/replay_rl.py",
+      "sha256": "6f6c4d02c7031e207bf284fb0dd54164087a2b4b713b67247e0af3c996961c45"
+    },
+    "training_trace": {
+      "path": "/data_all/zzx/3.2RL/src/video_to_spider/rl/training_trace.py",
+      "sha256": "f74e451fc8bd356bc0ee0338b2e5c4166d175e14c1ea7cf557ec3baf2ef03bc5"
+    },
+    "formal_runner": {
+      "path": "/data_all/zzx/3.2RL/scripts/run_taco_replay_rl.py",
+      "sha256": "fbdbf4ee6131f9cb6da04f8b39a4b0725b92bcf775b34541a3c37d8e86582b70"
+    },
+    "gate_script": {
+      "path": "/data_all/zzx/3.2RL/scripts/audit_taco_pour_reward_alignment.py",
+      "sha256": "7908d54805134854649e6eb03df785ed0c10d6b4d4dfe00ecd1f70451a5643a2"
+    }
+  },
+  "single_world": {
+    "source_endpoint": 0,
+    "outcome_endpoint": 1,
+    "same_time_recompute_max_abs_error": 0.0,
+    "legacy_plus_one_recompute_max_abs_error": 0.00032555870711803436,
+    "actor_pre_step_goal_max_abs_error": 0.0,
+    "next_observation_goal_max_abs_error": 0.0
+  },
+  "fixed_vs_legacy_reward_target": {
+    "steps": 5,
+    "physics": [
+      {
+        "endpoint": 1,
+        "field": "qpos",
+        "bitwise_equal": true
+      },
+      {
+        "endpoint": 1,
+        "field": "qvel",
+        "bitwise_equal": true
+      },
+      {
+        "endpoint": 1,
+        "field": "ctrl",
+        "bitwise_equal": true
+      },
+      {
+        "endpoint": 2,
+        "field": "qpos",
+        "bitwise_equal": true
+      },
+      {
+        "endpoint": 2,
+        "field": "qvel",
+        "bitwise_equal": true
+      },
+      {
+        "endpoint": 2,
+        "field": "ctrl",
+        "bitwise_equal": true
+      },
+      {
+        "endpoint": 3,
+        "field": "qpos",
+        "bitwise_equal": true
+      },
+      {
+        "endpoint": 3,
+        "field": "qvel",
+        "bitwise_equal": true
+      },
+      {
+        "endpoint": 3,
+        "field": "ctrl",
+        "bitwise_equal": true
+      },
+      {
+        "endpoint": 4,
+        "field": "qpos",
+        "bitwise_equal": true
+      },
+      {
+        "endpoint": 4,
+        "field": "qvel",
+        "bitwise_equal": true
+      },
+      {
+        "endpoint": 4,
+        "field": "ctrl",
+        "bitwise_equal": true
+      },
+      {
+        "endpoint": 5,
+        "field": "qpos",
+        "bitwise_equal": true
+      },
+      {
+        "endpoint": 5,
+        "field": "qvel",
+        "bitwise_equal": true
+      },
+      {
+        "endpoint": 5,
+        "field": "ctrl",
+        "bitwise_equal": true
+      }
+    ],
+    "reward_difference_seen": true,
+    "contact_lift_equal": true
+  },
+  "terminal_autoreset": {
+    "done": true,
+    "reward_reference_endpoint": 1,
+    "terminal_position_recompute_max_abs_error": 0.0,
+    "terminal_rotation_recompute_max_abs_error": 0.0
+  },
+  "multiworld": {
+    "source_endpoints": [
+      20,
+      20,
+      20,
+      46
+    ],
+    "outcome_endpoints": [
+      21,
+      21,
+      21,
+      47
+    ],
+    "same_time_recompute_max_abs_error": 0.0,
+    "actor_pre_step_goal_max_abs_error": 0.0,
+    "next_observation_goal_max_abs_error": 0.0
+  },
+  "decision": {
+    "formal_reward_alignment_validated": true,
+    "old_endpoint20_boundary_reuse_allowed": false,
+    "corrected_replay_must_rebase_from_endpoint": 0,
+    "old_policy_resume_allowed": false
+  }
+}

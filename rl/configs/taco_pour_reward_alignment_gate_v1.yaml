@@ -1,0 +1,30 @@
+schema: taco_pour_reward_alignment_gate_v1
+paper_faithful: false
+purpose: >-
+  Prove the local runtime transition contract after fixing the reward/reference
+  off-by-one defect. This gate performs no optimizer update and authorizes no
+  task-level performance claim.
+transition_contract:
+  source_state_endpoint: t
+  actor_goal_reference_endpoint: t_plus_1
+  command_reference_endpoint: t_plus_1
+  action_interval: t_to_t_plus_1
+  reward_reference_endpoint: t_plus_1
+  next_observation_goal_reference_endpoint: t_plus_2
+  final_reference_row_is_clipped: true
+required_checks:
+  - runtime_reward_matches_outcome_endpoint_reference
+  - legacy_outcome_plus_one_reference_is_negative_control
+  - actor_pre_step_goal_remains_t_plus_1
+  - returned_next_observation_goal_remains_t_plus_2
+  - fixed_action_physics_is_bitwise_unchanged_by_reward_target
+  - terminal_info_retains_pre_reset_same_time_reward
+  - single_world_endpoint_provenance_passes
+  - four_world_20_20_20_46_endpoint_provenance_passes
+training:
+  optimizer_updates: 0
+  task_level_training_executed: false
+promotion:
+  task_success_evidence: false
+  chunk_commit_allowed: false
+  formal_training_gate_may_open_only_after_all_checks_pass: true

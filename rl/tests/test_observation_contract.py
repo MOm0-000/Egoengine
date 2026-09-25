@@ -30,9 +30,9 @@ def test_transition_aligned_local_observation_is_fully_resolved():
     assert observation.profile_sha256
 
 
-def test_formal_observation_is_blocked_by_reward_goal_alignment_bug():
-    with pytest.raises(ValueError, match="formal run gate is closed"):
-        load_runtime_observation(PROTOCOL, PROFILE, require_run_ready=True)
+def test_formal_observation_is_ready_after_reward_alignment_fix():
+    observation = load_runtime_observation(PROTOCOL, PROFILE, require_run_ready=True)
+    assert observation.observation_id == "taco_pour_transition_aligned_236d_v1"
 
 
 def test_profile_content_is_hash_bound_to_protocol(tmp_path):

@@ -1,0 +1,403 @@
+{
+  "schema": "taco_ppo_training_visitation_v5",
+  "status": "complete",
+  "logging_semantics": {
+    "endpoint_alignment": "transition t->t+1 commands ctrl[t+1], scores physical state[t+1] against ref[t+1], and exposes ref[t+2] to the next actor observation except for reference-tail clipping",
+    "sampled_action_preclamp": "stochastic action sampled from the PPO policy distribution before the official [-1,1] clamp; this is not actor mean mu",
+    "sampled_action_clamped": "the same sampled action after the official [-1,1] clamp",
+    "actor_mu": "mean of the Gaussian PPO policy distribution used to draw the recorded sample",
+    "actor_sigma": "strictly-positive standard deviation (exp(logstd), not variance) of the Gaussian PPO policy distribution used to draw the recorded sample",
+    "reference_ctrl": "full residual-action control target at transition t->t+1 before the policy residual and before actuator ctrlrange",
+    "requested_residual": "full action-space signed control-target offset after local scale and formal safety clip, before actuator ctrlrange",
+    "effective_residual_after_ctrlrange": "full action-space signed control-target offset remaining after the model's enabled actuator ctrlrange clamp; not realized qpos motion",
+    "residual_lost_to_ctrlrange": "signed requested minus effective control-target residual",
+    "legacy_v2_applied_residual": "historical v2 right_wrist_applied_residual equals requested_residual for its recorded six dimensions; v2 artifacts remain immutable",
+    "actor_distribution_parameters": "mu and sigma are passively captured from the same official get_action_values result as the sampled action; no extra actor forward pass is performed",
+    "contact_summary": "control-endpoint hand-object finger flags; not substep collision topology",
+    "write_timing": "rollout samples are held in memory and written only at the next epoch boundary or after training completes"
+  },
+  "incomplete_step_discarded": false,
+  "action_contract": {
+    "dimensions": 36,
+    "actuator_names": [
+      "R_forearm_tx_position",
+      "R_forearm_ty_position",
+      "R_forearm_tz_position",
+      "R_forearm_roll_position",
+      "R_forearm_pitch_position",
+      "R_forearm_yaw_position",
+      "right_thumb_bend_position",
+      "right_thumb_rota1_position",
+      "right_thumb_rota2_position",
+      "right_index_bend_position",
+      "right_index_joint1_position",
+      "right_index_joint2_position",
+      "right_middle_joint1_position",
+      "right_middle_joint2_position",
+      "right_ring_joint1_position",
+      "right_ring_joint2_position",
+      "right_pinky_joint1_position",
+      "right_pinky_joint2_position",
+      "L_forearm_tx_position",
+      "L_forearm_ty_position",
+      "L_forearm_tz_position",
+      "L_forearm_roll_position",
+      "L_forearm_pitch_position",
+      "L_forearm_yaw_position",
+      "left_thumb_bend_position",
+      "left_thumb_rota1_position",
+      "left_thumb_rota2_position",
+      "left_index_bend_position",
+      "left_index_joint1_position",
+      "left_index_joint2_position",
+      "left_middle_joint1_position",
+      "left_middle_joint2_position",
+      "left_ring_joint1_position",
+      "left_ring_joint2_position",
+      "left_pinky_joint1_position",
+      "left_pinky_joint2_position"
+    ],
+    "coordinate_units": [
+      "m",
+      "m",
+      "m",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "m",
+      "m",
+      "m",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad"
+    ],
+    "residual_scale": 0.05,
+    "residual_clip": 0.05,
+    "ctrlrange": {
+      "control_clamping_enabled": true,
+      "model_disableflags": 0,
+      "ctrllimited": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "ctrlrange": [
+        [
+          -5.0,
+          5.0
+        ],
+        [
+          -5.0,
+          5.0
+        ],
+        [
+          -5.0,
+          5.0
+        ],
+        [
+          -6.2,
+          6.2
+        ],
+        [
+          -6.2,
+          6.2
+        ],
+        [
+          -6.2,
+          6.2
+        ],
+        [
+          0.0,
+          1.83
+        ],
+        [
+          -1.05,
+          1.57
+        ],
+        [
+          -0.175,
+          1.83
+        ],
+        [
+          -0.175,
+          0.175
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.94
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          -5.0,
+          5.0
+        ],
+        [
+          -5.0,
+          5.0
+        ],
+        [
+          -5.0,
+          5.0
+        ],
+        [
+          -6.2,
+          6.2
+        ],
+        [
+          -6.2,
+          6.2
+        ],
+        [
+          -6.2,
+          6.2
+        ],
+        [
+          0.0,
+          1.83
+        ],
+        [
+          -1.05,
+          1.57
+        ],
+        [
+          -0.17,
+          1.83
+        ],
+        [
+          -0.175,
+          0.175
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ]
+      ]
+    }
+  },
+  "object_roles": [
+    "tool",
+    "target"
+  ],
+  "hand_roles": [
+    "right",
+    "left"
+  ],
+  "epochs": [
+    {
+      "epoch": 1,
+      "frame_at_start": 0,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/ppo_chunk_20/training_visitation/epoch_0001_visits.npz",
+        "sha256": "b605525123ad67f81453b3d7bc9dc6234887487c362d38bbf0ce593cd5a94d96"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/ppo_chunk_20/training_visitation/epoch_0001_summary.json",
+        "sha256": "62f19701de000501980632f63e4105d7f063b1f9b0fe93f5f3556d7996b9fb5c"
+      }
+    },
+    {
+      "epoch": 2,
+      "frame_at_start": 160,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/ppo_chunk_20/training_visitation/epoch_0002_visits.npz",
+        "sha256": "cb0eceeda04362fc59a58ad2b994eb5a432f617cb455570ffb9e3ca42a2fd25c"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/ppo_chunk_20/training_visitation/epoch_0002_summary.json",
+        "sha256": "b3bc4415d6f8e158dd1deb370c8ebce374ef22b05b8f7304f37e3035a6373064"
+      }
+    },
+    {
+      "epoch": 3,
+      "frame_at_start": 320,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/ppo_chunk_20/training_visitation/epoch_0003_visits.npz",
+        "sha256": "487d7fafbee7cb00fb66d4e4f1dd33ee00ea70e5c6eb2f45e69d1b5a41794ee0"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/ppo_chunk_20/training_visitation/epoch_0003_summary.json",
+        "sha256": "554f7cd19bf96a08156312700437f192bfc1c7524d42d2a88f9c5e8ca11085b3"
+      }
+    },
+    {
+      "epoch": 4,
+      "frame_at_start": 480,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/ppo_chunk_20/training_visitation/epoch_0004_visits.npz",
+        "sha256": "802740b058086fd81e67a92f176b993060c564bf6cc127256df8d024b0a2fa33"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/ppo_chunk_20/training_visitation/epoch_0004_summary.json",
+        "sha256": "fe651ab0aa90165435251a228e005cbcd8a57e3108b4ce16869630c70c5d0af7"
+      }
+    },
+    {
+      "epoch": 5,
+      "frame_at_start": 640,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/ppo_chunk_20/training_visitation/epoch_0005_visits.npz",
+        "sha256": "e62837ef533aa34c06d947520fc4b2aed166997c1aee9668b98ec25c4dfff5b5"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/ppo_chunk_20/training_visitation/epoch_0005_summary.json",
+        "sha256": "1f5cabcebc927f4a8a6dc8079d596f2735291cdbdf3b64ad73afff913fd15e0f"
+      }
+    },
+    {
+      "epoch": 6,
+      "frame_at_start": 800,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/ppo_chunk_20/training_visitation/epoch_0006_visits.npz",
+        "sha256": "959aa5b4f20adf2be56968bfc63af8a4abfadef391cdd4c2cc14fea1fbf0ee90"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/ppo_chunk_20/training_visitation/epoch_0006_summary.json",
+        "sha256": "c3a246f7d0ef9c5b471f19e1ae2b22e3a1322c9bd91c0c3f67922c6ed19c9a66"
+      }
+    },
+    {
+      "epoch": 7,
+      "frame_at_start": 960,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/ppo_chunk_20/training_visitation/epoch_0007_visits.npz",
+        "sha256": "6d123291d2801955218559871750a05fd076525ed784835fe42b92710129c184"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/ppo_chunk_20/training_visitation/epoch_0007_summary.json",
+        "sha256": "38d0941ca40af173d790b264724e99d006c5d25ae69a6ec686e804a777631480"
+      }
+    },
+    {
+      "epoch": 8,
+      "frame_at_start": 1120,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/ppo_chunk_20/training_visitation/epoch_0008_visits.npz",
+        "sha256": "cb50e1666325ff643b07aa3ce3ba22c9f767925bc9b147d50eb4a6e0ea93820a"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/ppo_chunk_20/training_visitation/epoch_0008_summary.json",
+        "sha256": "d87708680ddc6fbf3c1c9f2cc681bee00ce4525f964c9c18b2b11f0b50f362c5"
+      }
+    }
+  ]
+}

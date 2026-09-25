@@ -20,7 +20,7 @@ class _World:
 
     def __init__(self, value: int):
         self.state = {
-            "snapshot_schema": "egoengine_mjwp_snapshot_v2",
+            "snapshot_schema": "egoengine_mjwp_snapshot_v3_reward_aligned",
             "warp_state_keys": ("qpos",),
             "qpos": torch.tensor([[value]], dtype=torch.float32),
             "time_indices": np.array([20], dtype=np.int32),
@@ -46,7 +46,7 @@ def test_checkpoint_round_trip_preserves_each_independent_world():
     assert checkpoint["schema"] == "egoengine_independent_mjwp_worlds_v1"
     assert [int(state["qpos"][0, 0]) for state in checkpoint["worlds"]] == [1, 2, 3, 4]
     env.set_env_state({
-        "snapshot_schema": "egoengine_mjwp_snapshot_v2",
+        "snapshot_schema": "egoengine_mjwp_snapshot_v3_reward_aligned",
         "warp_state_keys": ("qpos",),
         "qpos": torch.tensor([[9]], dtype=torch.float32),
         "time_indices": np.array([20], dtype=np.int32),

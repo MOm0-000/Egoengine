@@ -1,0 +1,51 @@
+schema: taco_pour_corrected_first_ppo_v1
+status: authorized_single_corrected_experiment
+paper_faithful: false
+provenance: local one-run authorization after the reward-alignment fix and endpoint-0 Replay rebase
+authorized_output_directory: /data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1
+
+training:
+  worlds: 4
+  epochs: 8
+  horizon_per_world_per_epoch: 40
+  samples_per_epoch: 160
+  total_samples: 1280
+  seed: 0
+  fixed_reset_endpoints: [20, 20, 20, 20]
+  old_actor_or_checkpoint_resume: false
+  tail_curriculum: false
+
+acceptance:
+  backend: CPU_MuJoCo_Warp
+  start_endpoint: 20
+  required_consecutive_intervals: 40
+  commit_endpoint_on_success: 40
+  failed_window_commit_forbidden: true
+
+action_distribution_authorization:
+  profile_id: taco_pour_state_feasible_truncated_gaussian_v1
+  optimizer_training_authorized: true
+  task_level_PPO_runs_authorized: 1
+  parameter_sweeps_authorized: false
+  tail_curriculum_allowed: false
+  residual_scale_changed: false
+
+input_sha256:
+  initialization_report: 9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a
+  replay_rl_protocol: 262097a3dd2b7768a940ae6dbb82428b94eedb08931af388037a5243097b7807
+  dual_backend_contract: 897adf078175d7dec126cd4d55bd14e91f5c7723559ac14bb18f001890a68f2e
+  reward_alignment_gate: 627106fc9e33a323f81a7bea115b6e1fd26c634c9b7309c4d6e8d90266352018
+  objective_profile: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+  observation_profile: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  action_profile: 71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4
+  simulator_config: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+  resume_boundary: a3646e24af1ba871e5ecc885669508223a5e0f26d3cf29f0482f02678419e337
+  state_feasible_action_profile: 6a4e4bd8f33fa53bfe34f21f822bfa391253cca090892767154320fc9bbfd1b8
+  corrected_ppo_gate_report: 2e85c22ba8211a0d7148cd41a3908ba0f70fd392b5da5f2db065b717f96bd785
+
+implementation_sha256:
+  state_feasible_distribution: dc45717300133bb94cef30c88f038ca0e35aebf7f0ad06f0fe9438cdb1a4fb8b
+  mjwp_environment: dde2bec6fb298b127ca6d3275b2b5e38d3a4cd5204144ea25603c610dac912a9
+  ppo_chunk_adapter: 6f6c4d02c7031e207bf284fb0dd54164087a2b4b713b67247e0af3c996961c45
+  formal_runner: fbdbf4ee6131f9cb6da04f8b39a4b0725b92bcf775b34541a3c37d8e86582b70
+  gate_script: 6d820277720a44dd452a59def89f7cd749fef7e5f3625842bb117ead21857170

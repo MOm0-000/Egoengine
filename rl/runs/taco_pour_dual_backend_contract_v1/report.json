@@ -6,15 +6,16 @@
     "ppo_budget_changed": false,
     "full_horizon_executed": false,
     "cpu_control_intervals_executed": 1,
-    "gpu_control_intervals_executed": 0
+    "gpu_control_intervals_executed": 0,
+    "formal_training_gate_opened": false
   },
   "backend_contract": {
     "path": "/data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml",
-    "sha256": "c567ad04dabe1bfc1ff3c8f9ee81db52f9f71d181cd80d56de47c2b237ad65b0",
+    "sha256": "897adf078175d7dec126cd4d55bd14e91f5c7723559ac14bb18f001890a68f2e",
     "repeatability_evidence": {
-      "path": "/data_all/zzx/3.2RL/runs/taco_pour_normalized_ellipse_repeatability_cpu_v1/report.json.gz",
-      "artifact_sha256": "2005f17cddc1a742f954efdc15c59ba320a158e1912df7144c565c3276c4327f",
-      "uncompressed_json_sha256": "373ecaf4eceab2203ee7dcc1325c3b1c20ba763987b64ffb6425d1a34fa2fd63",
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_cpu_backend_repeatability_v1/report.json.gz",
+      "artifact_sha256": "dcda748ff3157d93e19d1e3ebd478dd41717b49f7db197078b2cbb4c88dae286",
+      "uncompressed_json_sha256": "cf8be094a6d527ec8bf0a3851eb6a787968d992c565c4015ccd54d2757ba7140",
       "status": "repeatability_gate_passed"
     }
   },
@@ -25,58 +26,62 @@
     "training": {
       "role": "policy_optimization_only",
       "device": "cuda:0",
+      "worlds": 1,
+      "world_layout": "single_mjwp_instance",
       "policy_inference_device": "cuda:0",
       "simulator": "MuJoCo-Warp",
       "mujoco_version": "3.13.0",
       "mujoco_warp_version": "3.13.0",
       "warp_lang_version": "1.15.0",
       "physics_contract_sha256": "fa778d1e1654f2c1dc016280fa4e7c05b2ffa6416b3b7f063c6e0f94d5c79f11",
-      "snapshot_schema": "egoengine_mjwp_snapshot_v2",
+      "snapshot_schema": "egoengine_mjwp_snapshot_v3_reward_aligned",
       "warp_state_field_count": 342,
       "warp_state_keys_sha256": "1a0ee8fc1e695b71153fd1b241322125e0eec371333ba986663c1942d8f9e1cc",
       "mjwp_adapter": {
         "path": "/data_all/zzx/3.2RL/src/video_to_spider/rl/mjwp_env.py",
-        "sha256": "e7e05b4b5ae1429aba4f535739444be9151d74324dbf4e0eaca43891cb00f17d"
+        "sha256": "dde2bec6fb298b127ca6d3275b2b5e38d3a4cd5204144ea25603c610dac912a9"
       },
       "spider_mjwp_adapter": {
         "path": "/data_all/zzx/3.2RL/external/spider_compat/spider/simulators/mjwp.py",
         "sha256": "3c1fc0c5b83e133d7b8051457198203c45876abd2bb57b3af7fab3bdc62bd17d"
       },
-      "runtime_contract_sha256": "dd78b2f3491443bc3bcc70a2e728359490c36e742504ad66733c55249e2dcece"
+      "runtime_contract_sha256": "dd3eb30cef19fd5b49f4e0f5346966d52cb76fa54d7e261f730f28ce1883b86e"
     },
     "validation": {
       "role": "replay_policy_acceptance_and_commit",
       "device": "cpu",
+      "worlds": 1,
+      "world_layout": "single_mjwp_instance",
       "policy_inference_device": "cpu",
       "simulator": "MuJoCo-Warp",
       "mujoco_version": "3.13.0",
       "mujoco_warp_version": "3.13.0",
       "warp_lang_version": "1.15.0",
       "physics_contract_sha256": "fa778d1e1654f2c1dc016280fa4e7c05b2ffa6416b3b7f063c6e0f94d5c79f11",
-      "snapshot_schema": "egoengine_mjwp_snapshot_v2",
+      "snapshot_schema": "egoengine_mjwp_snapshot_v3_reward_aligned",
       "warp_state_field_count": 342,
       "warp_state_keys_sha256": "1a0ee8fc1e695b71153fd1b241322125e0eec371333ba986663c1942d8f9e1cc",
       "mjwp_adapter": {
         "path": "/data_all/zzx/3.2RL/src/video_to_spider/rl/mjwp_env.py",
-        "sha256": "e7e05b4b5ae1429aba4f535739444be9151d74324dbf4e0eaca43891cb00f17d"
+        "sha256": "dde2bec6fb298b127ca6d3275b2b5e38d3a4cd5204144ea25603c610dac912a9"
       },
       "spider_mjwp_adapter": {
         "path": "/data_all/zzx/3.2RL/external/spider_compat/spider/simulators/mjwp.py",
         "sha256": "3c1fc0c5b83e133d7b8051457198203c45876abd2bb57b3af7fab3bdc62bd17d"
       },
-      "runtime_contract_sha256": "3afac911aad68577c70808fecf3731e023c1cac406aad38a123c3d89540ea953"
+      "runtime_contract_sha256": "b918a14a26a768e63c5cf7646724fbd424b62b36842ff9866b30d35453cab7dd"
     }
   },
   "cpu_to_gpu_transfers": [
     {
       "reference_endpoint": 0,
-      "snapshot_schema": "egoengine_mjwp_snapshot_v2",
+      "snapshot_schema": "egoengine_mjwp_snapshot_v3_reward_aligned",
       "warp_state_field_count": 342,
       "cpu_to_gpu_bitwise_equal": true
     },
     {
       "reference_endpoint": 1,
-      "snapshot_schema": "egoengine_mjwp_snapshot_v2",
+      "snapshot_schema": "egoengine_mjwp_snapshot_v3_reward_aligned",
       "warp_state_field_count": 342,
       "cpu_to_gpu_bitwise_equal": true
     }

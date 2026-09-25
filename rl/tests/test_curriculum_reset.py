@@ -72,7 +72,7 @@ class _World:
 
     def __init__(self, endpoint: int, value: float):
         self.state = {
-            "snapshot_schema": "egoengine_mjwp_snapshot_v2",
+            "snapshot_schema": "egoengine_mjwp_snapshot_v3_reward_aligned",
             "time_indices": np.array([endpoint], dtype=np.int32),
             "last_terminated": torch.tensor([False]),
             "warp_state_keys": ("qpos",),

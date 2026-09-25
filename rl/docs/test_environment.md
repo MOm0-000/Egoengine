@@ -1,291 +1,82 @@
-# Test Environment
+# Test environment
 
-## State-feasible truncated-Gaussian engineering gate
+## Active reward-aligned baseline
 
-On 2026-09-25, the local gate-only candidate passed an offline audit over 1,280
-frozen v4 states and 368,640 sampled action components, followed by a real
-four-world/40-step rollout with no optimizer update. All samples stayed inside
-their stored state bounds, the ordinary action clamp changed zero components,
-and the real environment recorded exactly zero actuator-range residual loss.
-Replaying the same four-world recurrent layout, including the curriculum's
-nonzero hidden-state reset, reproduced `mu`, `sigma`, log-probability, and ratio
-bitwise. Task-level PPO remained disabled pending explicit authorization.
-With `TRASH` and the local dependency overlay excluded from collection, the
-formal MuJoCo-Warp 3.13 stack passed **649 tests and 57 subtests** in 106.03 s;
-the 17 warnings are the previously recorded backend/deprecation warnings.
+The active Replay→RL chain uses:
 
-## Training-time ctrlrange distribution diagnostic
+- Python from `/data_all/zzx/egoengine/spider/.venv/bin/python`;
+- the local `.env_mjwp313_overlay` containing MuJoCo 3.13,
+  MuJoCo-Warp 3.13 and Warp 1.15;
+- project sources in `src` and the checked-in MINK source in
+  `external/mink/src`.
 
-On 2026-09-24, one frozen, non-promotable four-world/eight-epoch 3+1 run
-recorded 1,280 v3 samples. The no-commit runner restored the incoming endpoint
-20 boundary and emitted no optimized trajectory or committed boundary. The
-audit found 2,271 finger-component requests truncated by actuator `ctrlrange`,
-2,099 fully blocked requests, and 1,114/1,280 world-steps with at least one
-affected finger. No action redesign or new scale was selected. With the three
-new evidence tests, the complete MuJoCo 3.13/MJWP 3.13/Warp 1.15 suite passed
-**640 tests and 57 subtests** in 106.96 s, with the same 17 known warnings.
-
-## Residual logging v3 checkpoint
-
-On 2026-09-24, the formal training, CPU validation, and optimized-trajectory
-paths adopted the same full 36-D residual vocabulary: requested target offset,
-target offset remaining after actuator `ctrlrange`, and signed offset lost to
-that range. “Effective after ctrlrange” is explicitly not realized `qpos`
-motion. Historical v2 artifacts were left unchanged and are labeled as legacy
-requested-residual evidence.
-
-The paired one-epoch/four-step CPU transparency audit found the initial and
-final actor, critic, optimizers, complete simulator state, RNN state, and
-Python/NumPy/Torch RNG states bitwise identical with logging off versus on. An
-offline regression on the frozen 3+1 CPU trace reproduced 0 wrist losses, 62
-truncated finger requests, 57 fully blocked finger requests, and 28 affected
-steps out of 33. No new scale or task-level training run was selected. After
-adding the shared semantics, evidence, and regression checks, the complete
-suite passed **637 tests and 57 subtests** in 106.62 s with the same 17 known
-warnings.
-
-## Frozen CPU residual-authority audit
-
-On 2026-09-24, a read-only audit reconstructed all 33 source states in the
-frozen 3+1 CPU PPO validation through endpoint 53. It compared recorded
-residual requests, current qpos to next-reference-target gaps, and model
-`ctrlrange` headroom without policy inference, physics, or training. All three
-action groups materially used the `0.05` bound. Separately, 62 finger requests
-were range-truncated across 28 steps and 57 were fully blocked at a bound; no
-wrist request was range-truncated. The audit selected no new scale.
-After adding the audit and four evidence checks, the complete suite passed
-**631 tests and 57 subtests** in 107.47 s. The 17 warnings are unchanged.
-
-## Mixed-unit reference-action scale audit
-
-On 2026-09-24, a read-only audit checked all 197 consecutive control-target
-changes in the frozen 198-frame Pour reference. It compiled the formal model
-only to verify the 36-actuator order; it created no simulator environment, ran
-no physics or PPO, and changed no input. The common numeric residual limit is
-5.438/7.395 times the right/left aggregate wrist-translation P95, but only
-0.618/0.591 times the wrist-rotation P95 and 0.355/0.412 times the aggregate
-finger P95. This quantifies mixed-unit imbalance without selecting a new scale.
-After adding the audit, documentation, and three evidence checks, the complete
-suite passed **627 tests and 57 subtests** in 106.43 s. The 17 warnings are the
-same recorded MuJoCo-Warp, AMP, Trimesh, and SciPy warnings.
-
-## Tail curriculum paired-reset checkpoint
-
-On 2026-09-24, a CPU-only engineering gate used the frozen four-world actor to
-roll naturally from endpoint 20 and capture endpoints 46--50. Each checkpoint
-contains 362 snapshot entries, including 342 Warp fields and both actor LSTM
-states. Four mixed endpoints restored simultaneously, and two restore-plus-one-
-step trials were bitwise equal for action, next RNN state, physics, observation,
-reward, done, and info. An actor parameter change rejected the saved recurrent
-memory. Replaying each saved natural observation prefix under the unchanged
-actor reproduced all five hidden states bitwise; under the changed actor it
-produced a newly bound memory that restored without modifying physics. The gate
-ran no PPO.
-
-The subsequent real-GPU sampler gate also ran no optimizer step. It fixed the
-world starts to `[20,20,20,46]`, proved prefix replay left the actor and input
-normalization hash unchanged, observed a real tail termination, and restored
-both endpoint-46 physics and the current-actor LSTM memory exactly. Changing an
-LSTM parameter rejected stale memory and caused a new prefix-bound hidden state
-to be installed.
-
-The single authorized 3+1 experiment then kept four worlds, eight epochs and
-1,280 samples fixed. Endpoint 46--50 visits were 252 (`19.6875%`) and endpoint
-50 was visited in every epoch. Deterministic CPU validation was Replay `29/40`
-and PPO `32/40`, with failure at endpoint 53. This did not satisfy 40/40 and
-did not authorize a curriculum-ratio, endpoint, epoch, seed or world sweep.
-
-After adding the paired-reset, fixed sampler, formal experiment evidence, and
-regression checks, the complete suite passed **624 tests and 57 subtests** in
-105.97 s. The 17 warnings are the existing MuJoCo-Warp contact-capacity,
-PyTorch AMP deprecation, Trimesh degenerate-volume, and SciPy pickle warnings;
-there were no failures or skipped tests.
-
-## Four-world training checkpoint
-
-On 2026-09-23, the four-world engineering gate restored all **342** Warp state
-fields bitwise in four independent GPU worlds and proved that a complete reset
-of one world leaves the other three snapshots unchanged. The single authorized
-eight-epoch experiment recorded 1,280 samples and completed GPU actor to CPU
-actor transfer. CPU Replay validated `29/40`; PPO validated `31/40` and failed
-at endpoint 52, so no state was committed. The first attempted run completed
-training but exposed a missing official checkpoint method before CPU
-validation; that incomplete run is isolated under `TRASH/incomplete_runs/`
-and is not used as algorithm evidence.
-
-After adding the independent-world checkpoint, formal evidence audit, and
-regression tests, the complete suite passed **612 tests and 57 subtests** in
-110.48 s. The 17 warnings are existing MuJoCo-Warp contact-capacity,
-PyTorch AMP deprecation, Trimesh degenerate-volume, and SciPy pickle warnings;
-there were no failures or skipped tests.
-
-## Prospective training-coverage checkpoint
-
-On 2026-09-23, one predeclared eight-epoch prospective coverage run used the
-accepted version-2 visitation logger. An independent audit hash-checked the
-formal report, manifest, and all eight raw/summary epoch pairs, reconstructed
-episodes across epoch boundaries, and verified 320 samples. Outcome endpoints
-46--50 were visited `6, 6, 4, 4, 4` times. The deterministic CPU result was
-Replay `29/40` and PPO `28/40`; neither mode passed and no state was committed.
-After adding the portable audit and three static evidence-contract tests, the
-complete isolated suite passed **607 tests and 57 subtests** in 112.79 s. The
-GPU training run itself is experimental evidence, not a unit test.
-
-## PPO training-visitation logging checkpoint
-
-On 2026-09-23, after adding epoch-level PPO visitation records and the paired
-logging-transparency audit, the complete isolated suite passed **592 tests, 1
-skipped test, and 57 subtests** in 89.94 s. The skip is the real CUDA adapter
-module in the CPU test environment. The separate real CPU MuJoCo-Warp audit
-ran two one-epoch/four-step PPO trials and found every compared training,
-simulator, recurrent, and RNG state bitwise equal with logging off versus on.
-The logged pre-clamp value is the stochastic PPO action sample, not actor mean
-`mu`; the visitation schema is version 2 after making that terminology explicit.
-This audit changes no task-performance result and does not authorize a new
-training-budget or seed search.
-
-## Policy diagnostic checkpoint
-
-On 2026-09-22, after adding the read-only normalized-policy diagnostic, the
-isolated CPU suite passed **571 tests, 1 skipped test, and 57 subtests** in
-88.32 s. The four new tests cover checkpoint normalization/RNN state transfer,
-failure-tail decomposition, reward reconstruction, action saturation, and the
-non-causal status of the independent 8/16-epoch comparison. The diagnostic
-itself performs no physics rollout or training.
-
-The older Spider environment still carries MuJoCo/MJWP 3.7, so its two expected
-MJWP contract failures must not be mixed with the 3.13 contract. Conversely,
-placing the 3.13 packages in front of that unadapted 3.7 Spider checkout fails
-at the known `xfrc_applied` vector-layout boundary. Neither mixed environment is
-used as evidence for the policy diagnostic.
-
-## Current normalized-ellipse checkpoint
-
-On 2026-09-22, the complete MuJoCo 3.13 / mujoco-warp 3.13 / Warp 1.15 GPU
-stack passed **569 tests and 57 subtests** in 101.13 s. At the preceding
-checkpoint, the isolated CPU stack passed **559 tests and 57 subtests**, with
-the CUDA/MJWP module skipped. A
-targeted run passed all 9 real-GPU adapter tests plus 9 objective/observation
-contract tests. The remaining warnings are the
-recorded capsule-mesh MULTICCD limitation, upstream AMP deprecations, two
-Trimesh diagnostics and seven SciPy pickle deprecations.
-
-## Current initialization and raw-depth audit
-
-Latest implementation check (2026-09-20): **558 passed, 57 subtests**
-in 105.04 s. The current checks include the frozen first-40 four-way collision
-attribution, the training-blocked collision-semantics v2 candidate, its isolated
-object/floor contact roles and rejected palm/thumb guards, the skipped-release
-`not evaluated` schema, the bilateral index-root semantic-guard contract,
-TRASH relocation integrity, pose-specific false-alarm classification,
-contained/open CAD limitations, invalid volumes/distances, and separating a
-50-micrometre reporting cut from actual runtime contact generation. Historical
-raw measurements are retained; physics shapes and reset validity are unchanged.
-The separately executed GPU adapter suite has **9 passing tests**
-(11.37 s),
-including real official-PPO fallback from an incoming boundary, non-autoreset
-validation, and 40 physical control intervals committing only interval 20 in a
-static test fixture. This is interface evidence, not a Pour task-success run.
-Local MINK now has opt-in preservation of requested explicit parent-child pairs.
-Original GT, scene and archived diagnostic provenance hashes remain unchanged.
-The archived fingertip-contract regression now rebuilds and compares the complete
-geometry definition and independently remeasures its saved trajectories instead
-of requiring the historical generation solver's entire file to remain unedited.
-The three newest tests certify empty-cavity subtraction on a known solid,
-reject cutting actual native material, and reject invalid CoACD output before
-creating a partial asset directory. Local repairs remain rejected for training
-because the real palm/index shape screen still reports false overlaps.
-
-The 2026-09-17 audit uses the already isolated environment:
+Run the complete suite from the project root with:
 
 ```bash
-PYTHONPATH=src:external/mink/src OMP_NUM_THREADS=4 \
-  /data_all/zzx/deximit_isolated/env-py311-cu118/bin/python -m pytest -q
-```
-
-Its versions are Python 3.11, NumPy 1.26.4 and MuJoCo 3.12.0. Native triangle
-checks additionally require `python-fcl==0.7.0.11` (installed for this audit;
-its Cython dependency is 3.3.0). FCL is a diagnostic dependency, not a change
-to MuJoCo's physical collision solver. Closed-native distance audits now use
-the existing Open3D 0.18.0, with independent float64 solid-angle checks for
-extreme points; ambiguous Trimesh ray signs failed real-bowl regressions.
-Closed intersection volumes still use Manifold. Collision experiments installed
-`coacd==1.0.12`, matching the original decomposition version. No main robot or
-simulator dependency was upgraded during this audit.
-
-After the collision-shape refinement and contact-capacity checks, the full suite
-passed **510 tests and 57 subtests**, with **1 skipped** and 7 existing SciPy
-deprecation warnings (112.37 s). The previous checkpoint had 504 passing tests.
-The latest six checks cover true solid overlap vs surface crossing, open meshes,
-explicitly disabling implicit hole repair, actual distal geometry invariance,
-URDF joint comparison and overwrite protection. The final targeted contact and
-two-chunk scheduler test run passed 18 tests (1.95 s).
-The new tests cover allocation overflow (including broadphase and per-world
-constraints), physical-vs-visual mesh selection, clipped-piece containment, and
-avoiding contact dynamics during pure mesh measurement. A further real clipped
-finger regression exposed a false 0.176 mm gap in metre-scale Trimesh proximity
-queries: Open3D, a millimetre-scaled query and independent convex projection
-agree on about 2.8 nm at that point. Current object/finger missing-coverage
-measurements use unsigned Open3D distance; no mesh or simulator was changed by
-this numerical fix. Open-surface and scale-invariance tests are included.
-The earlier seven preflight tests cover native-triangle intersections,
-transform updates, open surfaces, the contained-solid limitation, metric object
-overfill, overwrite protection, and corrected-reference selection. Tests passing
-does not mean the measured scene passes physical initialization checks.
-
-## Actual GPU capacity validation
-
-The isolated CPU environment has no `mujoco_warp`; the skipped adapter module was
-separately tested in the existing SPIDER environment, **9 passed** (11.37 s).
-Actual capacity measurements use that same environment, MuJoCo **3.7.0**,
-`mujoco-warp==3.7.0.1`, Warp **1.12.1**, on an A100. No environment was upgraded.
-CPU 3.12 and GPU-environment CPU 3.7 contact counts differ; retain the version
-beside every reported count instead of treating them as interchangeable.
-
-```bash
-CUDA_VISIBLE_DEVICES=6 OMP_NUM_THREADS=4 \
-  /data_all/zzx/egoengine/spider/.venv/bin/python \
-  scripts/audit_taco_contact_capacity.py \
-  --scene runs/taco_pour_collision_repair/scene_refined.xml \
-  --gpu --worlds 16 --nconmax 1024 --njmax 2048 --steps 30 \
-  --spider-config configs/taco_pour_bimanual_ppo.yaml \
-  --output runs/taco_pour_collision_repair/capacity_refined_16env.json
-```
-
-The output already exists and the script refuses to overwrite it. For a rerun,
-first decide whether the previous result is still a needed comparison; do not
-silently replace it or proliferate versions. The 4- and 16-world runs completed
-198 synchronized reference snapshots and 0.1 s held-control stresses from rows
-0 and 111 without overflow or nonfinite states. This is capacity validation,
-not successful Replay, a legal reset, or PPO training. Formal PPO settings and
-the active source scene remain unchanged.
-
-## Earlier test environment (historical)
-
-The earlier reproducible environment used for this checkout is:
-
-```text
-/data_all/zzx/egoengine/spider/.venv/bin/python
-```
-
-It contains NumPy `2.4.4`, MuJoCo `3.7.0`, PyTorch `2.11.0+cu130`,
-`smplx`, `pytest`, and `robot_descriptions`, GitPython and its
-`gitdb`/`smmap` dependencies. The local MINK checkout is installed in editable
-mode, so imports resolve to `external/mink/src/mink`.
-
-Run the complete project suite from the repository root with:
-
-```bash
-PYTHONPATH="$PWD/src:$PWD/external/mink/src" \
+PYTHONPATH="$PWD/.env_mjwp313_overlay:$PWD/src:$PWD/external/mink/src" \
+  OMP_NUM_THREADS=4 \
   /data_all/zzx/egoengine/spider/.venv/bin/python -m pytest -q
 ```
 
-On 2026-09-09 this command passed **481 tests and 57 subtests**. Seven MANO
-pickle NumPy/SciPy deprecation warnings remain; they do not change numerical
-results.
+On 2026-09-25 this command passed **603 tests and 57 subtests** in 104.38 s.
+The 17 warnings are known upstream/diagnostic warnings: capsule-mesh MULTICCD
+capacity, PyTorch AMP deprecations, two Trimesh degenerate-volume warnings and
+seven SciPy pickle deprecations.
 
-MuJoCo 3.12 no longer exposes `MjData.qM`, and its compiled enum fields are
-NumPy integers. The vendored MINK compatibility change uses the current
-`mj_fullM(model, data, dense)` call and falls back to the historical form;
-project comparisons cast enum values to integers. This only fixes binding/API
-compatibility and does not change the robot model or controller behavior.
+The active runtime contract is reward-aligned:
+
+```text
+state t + command ref[t+1]
+        -> physical state t+1
+reward/termination against ref[t+1]
+returned next observation goal ref[t+2]
+```
+
+The no-training temporal gate, corrected Replay rebase, CPU repeatability
+gate, dual-backend transfer gate and the first corrected PPO run are under:
+
+```text
+runs/taco_pour_reward_alignment_gate_v1/
+runs/taco_pour_corrected_replay_rebase_v1/
+runs/taco_pour_cpu_backend_repeatability_v1/
+runs/taco_pour_dual_backend_contract_v1/
+runs/taco_pour_corrected_ppo_gate_v1/
+runs/taco_pour_corrected_first_ppo_v1/
+```
+
+The first corrected PPO authorization is consumed. Replay passed the first
+40-step lookahead and committed the CPU endpoint-20 boundary. In the second
+lookahead Replay passed 30 intervals and PPO passed 27; neither passed 40/40,
+so no new boundary was committed and formal training is closed pending a new
+algorithm decision.
+
+## Archived invalid performance evidence
+
+Runs and diagnostics produced by the former off-by-one reward path are not
+active evidence. They are isolated under:
+
+```text
+TRASH/historical_reward_misaligned_2026-09-25/
+```
+
+That archive must not be used to resume a boundary, warm-start an actor, or
+compare task performance. Its README records the exact reason and scope. The
+old files remain recoverable only as bug history.
+
+## Other environments
+
+The CPU-only collision and mesh audit environment remains:
+
+```text
+/data_all/zzx/deximit_isolated/env-py311-cu118/bin/python
+```
+
+It uses Python 3.11, NumPy 1.26.4 and MuJoCo 3.12.0. Native triangle checks
+require `python-fcl==0.7.0.11`; closed-solid and distance audits use the
+already-installed Manifold/Open3D tools. These diagnostics do not replace the
+MuJoCo-Warp 3.13 runtime used by Replay→RL.
+
+The legacy Spider environment without the local overlay carries a different
+MuJoCo/MuJoCo-Warp version and is not accepted as task-performance evidence.
+Every runtime report records its backend contract and physics-contract hash so
+results from the two stacks cannot be silently mixed.

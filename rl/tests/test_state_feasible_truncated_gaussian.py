@@ -102,21 +102,8 @@ def test_deterministic_mode_preserves_zero_at_one_sided_boundary():
     torch.testing.assert_close(action, torch.tensor([[0.0, 0.0, 0.25]]))
 
 
-def test_offline_evidence_passes_without_authorizing_training():
-    report = json.loads((
-        ROOT / "runs/taco_pour_truncated_gaussian_offline_gate_v1/report.json"
-    ).read_text())
-    assert report["status"] == "passed"
-    assert report["sampled_components"] == 368640
-    assert report["sampled_outside_state_bounds"] == 0
-    assert report["official_clamp_changed_components"] == 0
-    assert report["theoretical_ctrlrange_lost_components"] == 0
-    assert all(report["checks"].values())
-    assert report["decision"]["optimizer_training_authorized"] is False
-
-
-def test_integration_evidence_is_zero_optimizer_and_exact():
-    run = ROOT / "runs/taco_pour_truncated_gaussian_integration_gate_v1"
+def test_corrected_integration_evidence_is_zero_optimizer_and_exact():
+    run = ROOT / "runs/taco_pour_corrected_ppo_gate_v1"
     report = json.loads((run / "report.json").read_text())
     assert report["status"] == "passed"
     assert report["PPO_optimizer_steps"] == 0
@@ -126,10 +113,9 @@ def test_integration_evidence_is_zero_optimizer_and_exact():
     assert report["environment_action_semantics"][
         "actual_ctrlrange_nonzero_lost_components"
     ] == 0
-    assert report["environment_action_semantics"][
-        "maximum_abs_residual_lost_to_ctrlrange"
-    ] == 0.0
+    assert report["frozen_rollout"]["world_start_endpoints"] == [20, 20, 20, 20]
+    assert report["rollout_buffer"]["network_recomputed_ratio_max_abs_error"] == 0.0
     assert all(report["checks"].values())
-    assert report["decision"]["optimizer_training_authorized"] is False
+    assert report["decision"]["single_corrected_ppo_experiment_may_be_authorized"] is True
     assert not list(run.rglob("*.pth"))
     assert not list(run.rglob("*committed_boundary*"))

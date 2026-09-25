@@ -38,8 +38,8 @@ def test_local_profile_is_explicit_and_auditable_for_smoke_tests():
     assert report["tracking"] == {"lambda_p": 1.0, "lambda_R": 1.0, "C": pytest.approx(1.5047923441623355)}
 
 
-def test_explicit_local_objective_is_blocked_by_reward_goal_alignment_bug():
-    with pytest.raises(ValueError, match="reward_goal_reference_off_by_one"):
+def test_completed_one_run_closes_the_next_formal_training_gate():
+    with pytest.raises(ValueError, match="training_ready is false"):
         load_runtime_objective(
             PROTOCOL, LOCAL, tracking_variant="tool_and_target", require_run_ready=True
         )

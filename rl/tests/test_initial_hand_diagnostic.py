@@ -151,4 +151,4 @@ def test_solver_retains_a_feasible_candidate_without_claiming_an_optimum():
     assert candidate["baseline"] == "historical_orientation_bug_reference_not_current_mano_fk"
     assert protocol["audit_results"]["new_reset_applied"]
     assert not protocol["training_ready"]
-    assert "reward_goal_reference_off_by_one" in protocol["blocking_checks"]
+    assert "corrected_first_PPO_single_run_completed_no_commit_new_decision_required" in protocol["blocking_checks"]

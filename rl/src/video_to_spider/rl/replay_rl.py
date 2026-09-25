@@ -53,7 +53,7 @@ class MJWPChunkBackend:
         if self._active_trace is not None:
             raise RuntimeError("a validation trace is already active")
         self._active_trace = {
-            "schema": "taco_replay_rl_validation_trace_v3",
+            "schema": "taco_replay_rl_validation_trace_v4",
             "mode": mode,
             "start": int(start),
             "lookahead_end": int(end),
@@ -173,6 +173,15 @@ class MJWPChunkBackend:
             self._active_trace["steps"].append({
                 "control_interval": int(reference_step),
                 "endpoint": int(self.env.time_indices[0]),
+                "command_reference_endpoint": int(
+                    self.last_info["command_reference_endpoint"][0]
+                ),
+                "reward_reference_endpoint": int(
+                    self.last_info["reward_reference_endpoint"][0]
+                ),
+                "next_observation_goal_reference_endpoint": int(
+                    self.last_info["next_observation_goal_reference_endpoint"][0]
+                ),
                 "tracked_object_indices": list(self.last_info["tracked_object_indices"]),
                 "tracked_object_roles": list(self.last_info["tracked_object_roles"]),
                 "position_error_m": row("object_position_error"),

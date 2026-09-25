@@ -78,12 +78,15 @@ def main():
         args.protocol,
         args.objective_profile,
         tracking_variant="tool_only",
-        require_run_ready=True,
+        # This is a no-training state-transfer audit.  The formal training gate
+        # is intentionally closed after the single corrected PPO authorization
+        # was consumed, but that must not prevent revalidating backend transfer.
+        require_run_ready=False,
     )
     observation = load_runtime_observation(
         args.protocol,
         args.observation_profile,
-        require_run_ready=True,
+        require_run_ready=False,
     )
     initial, initialization = load_accepted_initialization(
         args.initialization_report, args.config
@@ -155,6 +158,7 @@ def main():
             "full_horizon_executed": False,
             "cpu_control_intervals_executed": 1,
             "gpu_control_intervals_executed": 0,
+            "formal_training_gate_opened": False,
         },
         "backend_contract": contract_artifact,
         "physics_contract_sha256": physics_sha256,

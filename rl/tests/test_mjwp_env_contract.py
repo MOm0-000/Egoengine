@@ -117,6 +117,16 @@ def test_bimanual_observation_and_contact_contract(env):
     np.testing.assert_array_equal(
         info["outcome_reference_endpoint"], info["source_reference_endpoint"] + 1
     )
+    np.testing.assert_array_equal(
+        info["command_reference_endpoint"], info["outcome_reference_endpoint"]
+    )
+    np.testing.assert_array_equal(
+        info["reward_reference_endpoint"], info["outcome_reference_endpoint"]
+    )
+    np.testing.assert_array_equal(
+        info["next_observation_goal_reference_endpoint"],
+        info["outcome_reference_endpoint"] + 1,
+    )
     np.testing.assert_allclose(
         info["reward"],
         info["aggregate_tracking_reward"] + info["aggregate_contact_bonus"] + info["lift_reward"],
@@ -183,7 +193,7 @@ def test_legacy_partial_snapshot_is_rejected(env):
     state = env.get_env_state()
     assert state["snapshot_schema"] == _MJWP_SNAPSHOT_SCHEMA
     del state["snapshot_schema"]
-    with pytest.raises(ValueError, match="legacy partial snapshots"):
+    with pytest.raises(ValueError, match="legacy partial or pre-reward-alignment"):
         env.set_env_state(state)
 
 
@@ -368,12 +378,15 @@ def test_real_two_chunk_rollout_commits_only_first_chunk():
     assert env.simulation_physics_steps == 400
     assert len(backend.validation_traces) == 1
     trace = backend.validation_traces[0]
-    assert trace["schema"] == "taco_replay_rl_validation_trace_v3"
+    assert trace["schema"] == "taco_replay_rl_validation_trace_v4"
     assert trace["mode"] == "replay" and trace["feasible"]
     assert "not realized qpos motion" in trace["residual_semantics"][
         "effective_residual_after_ctrlrange"
     ]
     assert len(trace["steps"]) == 40 and trace["first_failure"] is None
+    assert trace["steps"][0]["command_reference_endpoint"] == 1
+    assert trace["steps"][0]["reward_reference_endpoint"] == 1
+    assert trace["steps"][0]["next_observation_goal_reference_endpoint"] == 2
     assert trace["steps"][0]["tracked_object_roles"] == ["tool", "target"]
     assert len(trace["steps"][0]["position_error_m"]) == 2
     assert len(trace["steps"][0]["endpoint_qpos"]) == 50

@@ -11,7 +11,7 @@ from typing import Any
 import numpy as np
 
 
-SCHEMA = "taco_ppo_training_visitation_v4"
+SCHEMA = "taco_ppo_training_visitation_v5"
 _FINGERS = ("thumb", "index", "middle", "ring", "pinky")
 
 
@@ -87,6 +87,9 @@ class PpoTrainingTrace:
             "frame_at_start": int(frame),
             "source_endpoint": [],
             "outcome_endpoint": [],
+            "command_reference_endpoint": [],
+            "reward_reference_endpoint": [],
+            "next_observation_goal_reference_endpoint": [],
             "tool_position_error_m": [],
             "tool_rotation_error_rad": [],
             "tool_objective_score": [],
@@ -123,6 +126,15 @@ class PpoTrainingTrace:
         arrays = {
             "source_endpoint": np.asarray(source_endpoint, np.int32),
             "outcome_endpoint": np.asarray(outcome_endpoint, np.int32),
+            "command_reference_endpoint": np.asarray(
+                info["command_reference_endpoint"], np.int32
+            ),
+            "reward_reference_endpoint": np.asarray(
+                info["reward_reference_endpoint"], np.int32
+            ),
+            "next_observation_goal_reference_endpoint": np.asarray(
+                info["next_observation_goal_reference_endpoint"], np.int32
+            ),
             "tool_position_error_m": np.asarray(info["object_position_error"], np.float32)[:, 0],
             "tool_rotation_error_rad": np.asarray(info["object_rotation_error"], np.float32)[:, 0],
             "tool_objective_score": np.asarray(info["object_tracking_error_per_object"], np.float32)[:, 0],
@@ -160,6 +172,22 @@ class PpoTrainingTrace:
                 raise ValueError(f"{name} must have shape {action_shape}")
         if np.any(arrays["actor_sigma"] <= 0.0):
             raise ValueError("actor sigma must be finite and strictly positive")
+        if not np.array_equal(
+            arrays["command_reference_endpoint"], arrays["outcome_endpoint"]
+        ):
+            raise ValueError("command reference endpoint must equal outcome endpoint")
+        if not np.array_equal(
+            arrays["reward_reference_endpoint"], arrays["outcome_endpoint"]
+        ):
+            raise ValueError("reward reference endpoint must equal outcome endpoint")
+        if np.any(
+            arrays["next_observation_goal_reference_endpoint"]
+            < arrays["outcome_endpoint"]
+        ) or np.any(
+            arrays["next_observation_goal_reference_endpoint"]
+            > arrays["outcome_endpoint"] + 1
+        ):
+            raise ValueError("next observation goal endpoint must be outcome or outcome plus one")
         if not np.allclose(
             arrays["requested_residual"],
             arrays["effective_residual_after_ctrlrange"]
@@ -390,6 +418,11 @@ class PpoTrainingTrace:
             "schema": SCHEMA,
             "status": status,
             "logging_semantics": {
+                "endpoint_alignment": (
+                    "transition t->t+1 commands ctrl[t+1], scores physical state[t+1] "
+                    "against ref[t+1], and exposes ref[t+2] to the next actor observation "
+                    "except for reference-tail clipping"
+                ),
                 "sampled_action_preclamp": (
                     "stochastic action sampled from the PPO policy distribution before the "
                     "official [-1,1] clamp; this is not actor mean mu"

@@ -9,7 +9,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = ROOT / "configs/taco_pour_gpu_train_cpu_validate_v1.yaml"
 REPORT = ROOT / "runs/taco_pour_dual_backend_contract_v1/report.json"
-RUNNER_REPORT = ROOT / "runs/taco_pour_dual_backend_runner_smoke_v1/report.json"
+RUNNER_REPORT = ROOT / "runs/taco_pour_corrected_replay_rebase_v1/tool_only/report.json"
 
 
 def test_gpu_cannot_accept_or_commit_cpu_validation_state():
@@ -35,6 +35,7 @@ def test_real_cpu_to_gpu_snapshot_transfer_audit_is_bound_and_passed():
         "full_horizon_executed": False,
         "cpu_control_intervals_executed": 1,
         "gpu_control_intervals_executed": 0,
+        "formal_training_gate_opened": False,
     }
     assert report["backend_contract"]["sha256"] == hashlib.sha256(
         CONTRACT.read_bytes()
@@ -53,12 +54,12 @@ def test_real_cpu_to_gpu_snapshot_transfer_audit_is_bound_and_passed():
     assert training["runtime_contract_sha256"] != validation["runtime_contract_sha256"]
 
 
-def test_formal_runner_commits_only_cpu_state_and_snapshots_its_inputs():
+def test_reward_aligned_runner_commits_only_cpu_state_and_snapshots_its_inputs():
     report = json.loads(RUNNER_REPORT.read_text())
-    assert report["status"] == "chunk_budget_reached_not_full_task_success"
+    assert report["status"] == "corrected_replay_failed_ppo_not_started"
     assert report["task_success"] is False
     assert report["committed_reference_index"] == 20
-    assert len(report["chunks"]) == 1
+    assert len(report["chunks"]) == 2
     chunk = report["chunks"][0]
     assert chunk["mode"] == "replay"
     assert chunk["trials"][0]["validated_steps"] == 40
@@ -77,11 +78,12 @@ def test_formal_runner_commits_only_cpu_state_and_snapshots_its_inputs():
     assert report["simulation_work"]["gpu_training_backend"] == {
         "control_intervals": 0,
         "physics_steps": 0,
-        "verified_cpu_snapshot_transfers": 2,
+        "verified_cpu_snapshot_transfers": 4,
+        "restore_audits": [],
     }
     assert report["simulation_work"]["cpu_validation_backend"] == {
-        "control_intervals": 40,
-        "physics_steps": 400,
+        "control_intervals": 71,
+        "physics_steps": 710,
     }
     for row in report["input_contract_snapshots"].values():
         snapshot = Path(row["snapshot_path"])

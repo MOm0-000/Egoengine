@@ -1,0 +1,59 @@
+{
+  "schema": "taco_pour_corrected_first_ppo_analysis_v1",
+  "status": "strict_cpu_gate_failed_no_commit",
+  "paper_faithful": false,
+  "training": {
+    "world_start_endpoints": [20, 20, 20, 20],
+    "worlds": 4,
+    "epochs": 8,
+    "samples": 1280,
+    "seed": 0,
+    "tail_curriculum": false,
+    "old_policy_resumed": false
+  },
+  "cpu_validation": {
+    "required_intervals": 40,
+    "replay_validated_intervals": 30,
+    "replay_first_failure_endpoint": 51,
+    "ppo_validated_intervals": 27,
+    "ppo_first_failure_endpoint": 48,
+    "ppo_failure_position_error_m": 0.12372609227895737,
+    "ppo_failure_rotation_error_rad": 0.40680232644081116,
+    "ppo_failure_normalized_ellipse_score": 1.0661219358444214,
+    "committed_reference_index": 20,
+    "new_boundary_written": false
+  },
+  "paired_common_endpoints": {
+    "start": 21,
+    "end": 48,
+    "count": 28,
+    "ppo_lower_score_count": 26,
+    "ppo_higher_score_count": 2,
+    "replay_mean_score": 0.7057427976812635,
+    "ppo_mean_score": 0.587378132556166,
+    "mean_ppo_minus_replay": -0.11836466512509755,
+    "interpretation": "The policy improved most shared endpoints but worsened at endpoints 47 and 48 enough to fail earlier; this is not a passed chunk."
+  },
+  "training_trace": {
+    "schema": "taco_ppo_training_visitation_v5",
+    "command_matches_outcome_for_all_samples": true,
+    "reward_matches_outcome_for_all_samples": true,
+    "next_goal_matches_outcome_plus_one_for_all_samples": true,
+    "official_clamp_changed_components": 0,
+    "ctrlrange_lost_components": 0,
+    "outcome_endpoint_46_to_50_visits": {
+      "46": 28,
+      "47": 25,
+      "48": 23,
+      "49": 21,
+      "50": 15
+    }
+  },
+  "decision": {
+    "chunk_promoted": false,
+    "additional_epoch_seed_scale_world_or_curriculum_sweep_authorized": false,
+    "performance_comparison_to_reward_misaligned_history_allowed": false,
+    "optimized_trajectory_artifact_contains_only_incoming_boundary": true,
+    "optimized_trajectory_transitions": 0
+  }
+}

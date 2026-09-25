@@ -446,7 +446,18 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
         )
         dones_by_world = input_dict["dones"].reshape(worlds, horizon).bool()
         initial_states = input_dict["rnn_states"]
-        reset_states = self.env.curriculum_rnn_reset_states()
+        curriculum = self.env.tail_curriculum_audit()
+        if curriculum is None:
+            reset_states = tuple(
+                torch.zeros(
+                    (state.shape[0], worlds, state.shape[2]),
+                    dtype=state.dtype,
+                    device=state.device,
+                )
+                for state in initial_states
+            )
+        else:
+            reset_states = self.env.curriculum_rnn_reset_states()
         if len(initial_states) != len(reset_states):
             raise ValueError("rollout and curriculum RNN state structures differ")
 
