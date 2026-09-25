@@ -75,7 +75,7 @@ def test_revalidation_preserves_inputs_and_does_not_promote_a_reset():
     assert audit["revalidated_metric_discrepancies"] == report["discrepancy_count"]
     assert not audit["injected_bug_counterexamples_are_actual_bad_pour_data"]
     assert not protocol["training_ready"]
-    assert "corrected_first_PPO_single_run_completed_no_commit_new_decision_required" in protocol["blocking_checks"]
+    assert "corrected_first_PPO_failure_attributed_new_algorithm_decision_required" in protocol["blocking_checks"]
 
 
 def test_original_native_support_measurements_are_recomputed_not_inferred(monkeypatch):
