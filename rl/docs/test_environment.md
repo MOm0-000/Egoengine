@@ -18,7 +18,7 @@ PYTHONPATH="$PWD/.env_mjwp313_overlay:$PWD/src:$PWD/external/mink/src" \
   /data_all/zzx/egoengine/spider/.venv/bin/python -m pytest -q
 ```
 
-On 2026-09-25 this command passed **627 tests and 57 subtests**.
+On 2026-09-25 this command passed **632 tests and 57 subtests**.
 The 17 warnings are known upstream/diagnostic warnings: capsule-mesh MULTICCD
 capacity, PyTorch AMP deprecations, two Trimesh degenerate-volume warnings and
 seven SciPy pickle deprecations.
@@ -46,6 +46,7 @@ runs/corrected_endpoint44_48_failure_attribution_v1/
 runs/taco_pour_corrected_local_controllability_v1/
 runs/taco_pour_corrected_policy_decision_attribution_v1/
 runs/taco_pour_corrected_input_bifurcation_attribution_v1/
+runs/taco_pour_reference_timing_action_frame_audit_v1/
 ```
 
 The first corrected PPO authorization is consumed. Replay passed the first
@@ -79,6 +80,21 @@ not a mean-level self-correcting feedback loop. Full raw/normalized 236-D
 inputs, recurrent states, actor outputs and action bounds are hash-bound in the
 run directory. No recorded input reaches the normalization clamp; historical
 empirical training-observation ranges remain unavailable.
+
+The reference-timing/action-frame audit is the next read-only semantic gate.
+It explicitly confirms the active `state[t] + ref[t+1] -> state[t+1]` ledger,
+then varies only the reference context shown to the frozen actor. Showing the
+actor the preceding reference context reduces its summed positive wrist-y mean
+excess by 11.54%, but its diagnostic rollout still passes only 30/40 and fails
+at endpoint 51. Replay, zero and previous-step recurrent states all leave the
+mean outside support at sources 43--47, so hidden-state mismatch does not
+remove the tail bias. Independent FK confirms that the current wrist slide
+axes are world axes. A reference-palm local translation basis is geometrically
+less anti-aligned with the bowl correction, but is still anti-aligned over
+sources 43--46 and transforming the complete bilateral translation action
+would leave the frozen action support from source 42 onward. That frame
+candidate is therefore rejected without clipping, rescaling or rollout. No
+timing or frame diagnostic is a formal success or a paper-recovered choice.
 
 ## Archived invalid performance evidence
 

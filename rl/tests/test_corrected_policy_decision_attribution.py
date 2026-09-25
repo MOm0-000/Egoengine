@@ -131,13 +131,9 @@ def test_policy_decision_artifacts_are_hash_bound_and_not_resumable():
     assert checks["maximum_ctrlrange_loss"] == 0.0
 
 
-def test_protocol_keeps_policy_decision_audit_and_advances_one_attribution_layer():
+def test_protocol_keeps_policy_decision_audit_after_later_attribution_layers():
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
-    blocker = (
-        "corrected_actor_saturates_on_both_replay_and_ppo_paths_"
-        "reference_timing_and_action_frame_decision_required"
-    )
-    assert protocol["blocking_checks"] == [blocker]
+    assert protocol["blocking_checks"] == [protocol["training_ready_scope"]]
     audit_path = Path(
         protocol["audit_results"]["corrected_policy_decision_attribution"]
     )

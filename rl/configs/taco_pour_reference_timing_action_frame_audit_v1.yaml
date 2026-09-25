@@ -1,0 +1,122 @@
+schema: taco_pour_reference_timing_action_frame_audit_v1
+status: authorized_read_only_semantic_audit
+paper_faithful: false
+provenance: >-
+  Local audit of exact reference indexing, recurrent context and Cartesian
+  residual-frame semantics. EgoEngine publishes only the broad residual-policy
+  interface, not these simulator-level choices.
+
+inputs:
+  formal_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/report.json
+    sha256: bb126717045617ddbb3484df2eb194b8da5e846d006568d0b3c201fda0020155
+  checkpoint_artifact:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/checkpoint_artifacts/last_ep_8_rew__6.6354837_.pth.gz
+    sha256: 7193da6e2da0e38f41a39edd46569f74da0054455c6388df5a08107413a015eb
+  endpoint_20_boundary:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/input_contracts/resume_boundary.pt.gz
+    sha256: a3646e24af1ba871e5ecc885669508223a5e0f26d3cf29f0482f02678419e337
+  simulator_config:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml
+    sha256: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+  replay_rl_protocol_snapshot:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/input_contracts/replay_rl_protocol.yaml
+    sha256: 262097a3dd2b7768a940ae6dbb82428b94eedb08931af388037a5243097b7807
+  initialization_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v2/candidate_a/report.json
+    sha256: 9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a
+  objective_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/input_contracts/objective_profile.yaml
+    sha256: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+  observation_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/input_contracts/observation_profile.yaml
+    sha256: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  action_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/input_contracts/action_profile.yaml
+    sha256: 71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4
+  distribution_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/input_contracts/state_feasible_action_profile.yaml
+    sha256: 6a4e4bd8f33fa53bfe34f21f822bfa391253cca090892767154320fc9bbfd1b8
+  prior_input_bifurcation_attribution:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_input_bifurcation_attribution_v1/report.json
+    sha256: 9a677ff6c18cf2e80365ffbe01e6800caf4fae03dcc0168cb74079a175e7810d
+
+runtime:
+  backend: CPU_MuJoCo_Warp
+  optimizer_steps: 0
+  actor_frozen: true
+  normalization_frozen: true
+  reward_changed: false
+  objective_changed: false
+  formal_residual_scale_changed: false
+  formal_residual_bound_changed: false
+  chunk_acceptance_allowed: false
+  chunk_commit_allowed: false
+  checkpoint_resume_for_training_allowed: false
+
+formal_regression:
+  reproduce_replay_trace_exactly: true
+  reproduce_ppo_trace_exactly: true
+  start_endpoint: 20
+  final_endpoint_exclusive: 60
+
+timing_ledger:
+  source_endpoints: [40, 41, 42, 43, 44, 45, 46, 47]
+  state_endpoint: t
+  goal_object_anchors_reference_endpoint: t_plus_1
+  actor_reference_ctrl_endpoint: t_plus_1
+  actor_reference_ctrl_preview_endpoint: t_plus_2
+  base_command_reference_endpoint: t_plus_1
+  residual_corrects_command_endpoint: t_plus_1
+  outcome_state_endpoint: t_plus_1
+  reward_reference_endpoint: t_plus_1
+  returned_observation_goal_endpoint: t_plus_2
+
+reference_forward_counterfactual:
+  source_endpoints: [40, 41, 42, 43, 44, 45, 46, 47]
+  coherent_reference_context_shifts: [-1, 0, 1]
+  fixed_physical_observation: ppo_path_current_state
+  fixed_hidden: ppo_path_pre_forward_hidden
+  shifted_fields: [goal_object_anchors, reference_ctrl, reference_ctrl_preview]
+  execute_action: false
+  candidate_metric: sum_positive_right_wrist_y_mu_excess_above_state_high
+  minimum_relative_improvement_for_closed_loop: 0.05
+  tie_order: [-1, 1]
+
+hidden_isolation:
+  source_endpoints: [40, 41, 42, 43, 44, 45, 46, 47]
+  fixed_observation: ppo_path_current_236d
+  hidden_variants:
+    - ppo_path_pre_forward
+    - replay_path_pre_forward
+    - zero_hidden
+    - previous_source_ppo_pre_forward
+  no_hidden_variant_executes_action: true
+
+frame_geometry:
+  source_endpoints: [40, 41, 42, 43, 44, 45, 46, 47]
+  right_wrist_positive_y_bases: [world_or_robot_base, current_palm_site, reference_palm_site]
+  reference_wrist_endpoint: t_plus_1
+  desired_object_direction: reference_tool_position_t_plus_1_minus_actual_tool_position_t
+  geometry_selection_sources: [43, 44, 45, 46]
+  candidate_metric: mean_signed_projection_on_normalized_desired_object_direction
+  minimum_projection_improvement_over_world: 0.1
+  full_translation_transform: true
+  closed_loop_requires_transformed_action_inside_existing_normalized_support: true
+  post_transform_clipping_or_rescaling_allowed: false
+
+closed_loop_counterfactual:
+  start_endpoint: 20
+  final_endpoint_exclusive: 60
+  maximum_candidates: 2
+  timing_candidate_limit: 1
+  frame_candidate_limit: 1
+  success_criterion_changed: false
+  diagnostic_only: true
+  promotion_allowed: false
+  commit_allowed: false
+  selection_must_follow_predeclared_metrics: true
+
+artifacts:
+  full_array_npz: timing_hidden_frame_arrays.npz
+  resume_authorized: false

@@ -3,7 +3,6 @@ import json
 from pathlib import Path
 
 import numpy as np
-import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -129,21 +128,3 @@ def test_full_actor_inputs_outputs_bounds_and_hidden_are_hash_bound():
             arrays["ppo_requested_residual"],
             0.05 * arrays["ppo_deterministic_action"],
         )
-
-
-def test_protocol_advances_to_reference_timing_and_action_frame_decision():
-    protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
-    blocker = (
-        "corrected_actor_saturates_on_both_replay_and_ppo_paths_"
-        "reference_timing_and_action_frame_decision_required"
-    )
-    assert protocol["blocking_checks"] == [blocker]
-    audit_path = Path(
-        protocol["audit_results"]["corrected_input_bifurcation_attribution"]
-    )
-    assert audit_path.parts[-3:] == (
-        "runs",
-        "taco_pour_corrected_input_bifurcation_attribution_v1",
-        "report.json",
-    )
-    assert protocol["training_ready"] is False

@@ -136,13 +136,9 @@ def test_diagnostic_snapshots_are_hash_bound_and_cannot_resume_training():
         assert _sha256(path) == row["artifact_sha256"]
 
 
-def test_protocol_preserves_local_audit_after_promoting_policy_decision_blocker():
+def test_protocol_preserves_local_controllability_audit_after_later_audits():
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
-    blocker = (
-        "corrected_actor_saturates_on_both_replay_and_ppo_paths_"
-        "reference_timing_and_action_frame_decision_required"
-    )
-    assert protocol["blocking_checks"] == [blocker]
+    assert protocol["blocking_checks"] == [protocol["training_ready_scope"]]
     audit_path = Path(protocol["audit_results"]["corrected_local_controllability"])
     assert audit_path.parts[-3:] == (
         "runs",

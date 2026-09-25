@@ -112,5 +112,5 @@ def test_active_protocol_does_not_infer_pour_weights_or_reuse_brush_reset():
     assert protocol["initialization"]["initial_native_left_palm_thumb_intersection_mm3"] > 9
     assert protocol["audit_results"]["new_reset_applied"]
     assert not protocol["training_ready"]
-    assert "corrected_actor_saturates_on_both_replay_and_ppo_paths_reference_timing_and_action_frame_decision_required" in protocol["blocking_checks"]
+    assert protocol["blocking_checks"] == [protocol["training_ready_scope"]]
     assert protocol["solver_modes"] == ["replay", "rl"]
