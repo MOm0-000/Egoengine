@@ -61,6 +61,29 @@ increasing y scale the wrong next intervention. The next algorithm decision
 must address the earlier saturated y decision/action parameterization, with
 contact retention treated as a coupled mechanism.
 
+The follow-up policy-decision attribution shows that formal CPU validation is
+already deterministic: it executes `clip(mu, state_low, state_high)` from the
+truncated distribution, with no stochastic sample and no squash transform.
+Right-wrist-y `mu` rises from 0.498 at source 40 to 0.947 at 42, crosses the
+upper bound at source 43 (1.294), and continues to 2.138 at source 47. Thus the
+harmful positive-y command is a deterministic policy-function decision, not
+evaluation exploration noise.
+
+Setting only one wrist-y action to zero at source 44, 45 or 46, then immediately
+returning to the unmodified policy, gives endpoint-48 scores 0.95594, 0.91712
+and 0.98475. All three pass that endpoint. A within-support 12.5 mm negative-y
+probe still changes endpoint-48 bowl-y by 5.94 mm from source 46, but by only
+0.05 mm from source 47. The formal right-index/tool contact is present at
+source 46 and absent at 47. This local response is non-smooth, so it is not
+called a Jacobian; it nevertheless identifies source 47 as too late for a
+useful wrist-y correction.
+
+Contact geom, penetration, normal and force evidence comes directly from the
+MJWP contact buffers. CPU `mj_geomDistance` is not used for positive separation
+because it is invalid for the active mesh--SDF pair. The next read-only decision
+must inspect actor inputs, reference timing and action coordinate frame. Reward,
+residual bounds and exploration variance remain frozen.
+
 All old performance, tail-curriculum and objective-mapping results produced with
 the off-by-one reward target are archived under
 `TRASH/historical_reward_misaligned_2026-09-25/`. They are not active performance

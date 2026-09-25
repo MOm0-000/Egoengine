@@ -94,7 +94,7 @@ def test_current_protocol_uses_accepted_v2_reset_and_active_runtime_config():
     assert not comparison["candidate_b_accepted"]
     assert comparison["release_physics_steps_executed"] == 50
     assert not protocol["training_ready"]
-    assert "corrected_local_controllability_diagnosed_new_action_parameterization_decision_required" in protocol["blocking_checks"]
+    assert "corrected_policy_mean_saturation_attributed_input_and_action_frame_decision_required" in protocol["blocking_checks"]
     accepted = json.loads(Path(comparison["candidate_a_report"]).read_text())
     assert accepted["accepted_for_replay_rl"]
     report = json.loads(Path(protocol["audit_results"]["active_initialization_preflight"]).read_text())
