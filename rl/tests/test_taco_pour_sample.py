@@ -111,5 +111,6 @@ def test_active_protocol_does_not_infer_pour_weights_or_reuse_brush_reset():
     assert min(protocol["initialization"]["initial_native_all_hand_table_penetration_m"].values()) > .009
     assert protocol["initialization"]["initial_native_left_palm_thumb_intersection_mm3"] > 9
     assert protocol["audit_results"]["new_reset_applied"]
-    assert protocol["training_ready"]
+    assert not protocol["training_ready"]
+    assert "reward_goal_reference_off_by_one" in protocol["blocking_checks"]
     assert protocol["solver_modes"] == ["replay", "rl"]

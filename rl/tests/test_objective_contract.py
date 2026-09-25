@@ -2,6 +2,7 @@ from pathlib import Path
 import sys
 
 import pytest
+import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -37,17 +38,16 @@ def test_local_profile_is_explicit_and_auditable_for_smoke_tests():
     assert report["tracking"] == {"lambda_p": 1.0, "lambda_R": 1.0, "C": pytest.approx(1.5047923441623355)}
 
 
-def test_explicit_local_objective_is_open_only_after_all_named_gates_pass():
-    objective = load_runtime_objective(
-        PROTOCOL, LOCAL, tracking_variant="tool_and_target", require_run_ready=True
-    )
-    assert objective.status == "resolved_local_unpublished"
-    assert not objective.paper_faithful
+def test_explicit_local_objective_is_blocked_by_reward_goal_alignment_bug():
+    with pytest.raises(ValueError, match="reward_goal_reference_off_by_one"):
+        load_runtime_objective(
+            PROTOCOL, LOCAL, tracking_variant="tool_and_target", require_run_ready=True
+        )
 
 
 def test_normalized_ellipse_profile_uses_paper_scales_as_local_axis_intercepts():
     objective = load_runtime_objective(
-        PROTOCOL, NORMALIZED, tracking_variant="tool_only", require_run_ready=True
+        PROTOCOL, NORMALIZED, tracking_variant="tool_only", require_run_ready=False
     )
     assert objective.objective_id == "taco_pour_local_normalized_ellipse_v1"
     assert not objective.paper_faithful
@@ -74,9 +74,20 @@ def test_normalized_ellipse_axis_intercepts_and_stricter_interior_tradeoff():
 def test_formal_local_objective_is_hash_bound(tmp_path):
     changed = tmp_path / "changed.yaml"
     changed.write_text(NORMALIZED.read_text().replace("C: 1.0", "C: 1.01"))
+    protocol = yaml.safe_load(PROTOCOL.read_text())
+    protocol["runtime_contract"]["local_objective_profiles"][
+        "taco_pour_local_normalized_ellipse_v1"
+    ]["run_ready"] = True
+    protocol["runtime_contract"]["observation"]["formal_run_ready"] = True
+    protocol["runtime_contract"]["observation"]["local_profiles"][
+        "taco_pour_transition_aligned_236d_v1"
+    ]["run_ready"] = True
+    protocol["training_ready"] = True
+    open_protocol = tmp_path / "open_protocol.yaml"
+    open_protocol.write_text(yaml.safe_dump(protocol, sort_keys=False))
     with pytest.raises(ValueError, match="protocol-bound hash"):
         load_runtime_objective(
-            PROTOCOL, changed, tracking_variant="tool_only", require_run_ready=True
+            open_protocol, changed, tracking_variant="tool_only", require_run_ready=True
         )
 
 

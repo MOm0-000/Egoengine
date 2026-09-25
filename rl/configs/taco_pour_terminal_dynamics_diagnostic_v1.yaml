@@ -1,0 +1,49 @@
+schema: taco_pour_terminal_dynamics_diagnostic_v1
+status: frozen_read_only_no_promotion
+paper_faithful: false
+purpose: >-
+  Explain the frozen actor's endpoint 54-60 position-error growth without
+  training or action perturbations. Compare only ref(t), ref(t-1), and ref(t-2),
+  inspect state-feasible action margins, hand tracking, velocity, and the
+  reward-facing coarse contact state.
+
+execution:
+  device: cpu
+  training_allowed: false
+  optimizer_updates: 0
+  local_action_perturbations_allowed: false
+  start_endpoint: 20
+  end_endpoint: 60
+  analysis_endpoints: [54, 55, 56, 57, 58, 59, 60]
+  phase_reference_offsets: [0, -1, -2]
+  runtime_reward_reference_offset_audit: 1
+
+continuation_semantics:
+  axis_valid_prefix_end: 57
+  axis_failure_endpoint: 58
+  diagnostic_continuation_endpoints: [59, 60]
+  interpretation: >-
+    Endpoints 59-60 do not belong to the formal axis-intercept rollout. They are
+    a diagnostic continuation already proven bitwise identical between the
+    corner-ellipse and independent-threshold branches.
+
+promotion:
+  training_allowed: false
+  chunk_commit_allowed: false
+  formal_objective_change_allowed: false
+  task_success_claim_allowed: false
+
+input_sha256:
+  boundary: 028ffd240c6ac1ba0d298d7caddab482169b772bdec14f4008f1af3865ba3547
+  actor_manifest: c044efa8749de46301497db7c3c999e7ede94e6b9704cb87ef8f4b3760a9f24f
+  actor_artifact: 0c0adf2bda56c565407c9e18b2a9e63446b5deb6a7c6b90f7e3b75a01123d130
+  objective_mapping_report: 8be752d4fb4b678598ff18b5580fc8cf4ef9247616faeff58425b1a00aa5a16a
+  config: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+  initialization_report: 9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a
+  protocol: a34d20c173c28db5502fa940c6fe3f7584cb0869497d259268c26affc24a5646
+  objective_profile: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+  observation_profile: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  action_profile: 71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4
+  action_distribution_profile: 6a4e4bd8f33fa53bfe34f21f822bfa391253cca090892767154320fc9bbfd1b8
+  objective_mapping_implementation: b4e2cbf795d975795672d357fa0b16f159401394694b65887235b8102d9ed57a
+  implementation: 543a5af6d623b3cba2deba987da0154fe82a2d4ff4713d07446470eadd6b32a6

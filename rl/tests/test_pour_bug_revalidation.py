@@ -74,7 +74,8 @@ def test_revalidation_preserves_inputs_and_does_not_promote_a_reset():
     assert audit["revalidated_metric_groups"] == report["comparison_count"]
     assert audit["revalidated_metric_discrepancies"] == report["discrepancy_count"]
     assert not audit["injected_bug_counterexamples_are_actual_bad_pour_data"]
-    assert protocol["training_ready"]
+    assert not protocol["training_ready"]
+    assert "reward_goal_reference_off_by_one" in protocol["blocking_checks"]
 
 
 def test_original_native_support_measurements_are_recomputed_not_inferred(monkeypatch):

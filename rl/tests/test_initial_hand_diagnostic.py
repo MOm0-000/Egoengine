@@ -149,4 +149,6 @@ def test_solver_retains_a_feasible_candidate_without_claiming_an_optimum():
     assert Path(protocol["inputs"]["active_robot_reference"]) == (
         ROOT / "runs/taco_pour_bimanual_mano_fk_combined_collision_v1/robot_reference.npz")
     assert candidate["baseline"] == "historical_orientation_bug_reference_not_current_mano_fk"
-    assert protocol["audit_results"]["new_reset_applied"] and protocol["training_ready"]
+    assert protocol["audit_results"]["new_reset_applied"]
+    assert not protocol["training_ready"]
+    assert "reward_goal_reference_off_by_one" in protocol["blocking_checks"]

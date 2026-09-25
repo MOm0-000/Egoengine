@@ -112,7 +112,8 @@ def test_all_diagnostics_preserve_inputs_and_remain_unaccepted():
     assert scope["status"] == "temporary_single_sample_test"
     assert not scope["part_of_formal_pipeline"] and not scope["automatic_use_for_new_samples"]
     assert scope["cross_sample_generalization"] == "not_established"
-    assert protocol["training_ready"]
+    assert not protocol["training_ready"]
+    assert "reward_goal_reference_off_by_one" in protocol["blocking_checks"]
     assert Path(protocol["inputs"]["historical_orientation_bug_baseline"]) == BASELINE
     assert Path(protocol["inputs"]["active_robot_reference"]) == (
         ROOT / "runs/taco_pour_bimanual_mano_fk_combined_collision_v1/robot_reference.npz")
