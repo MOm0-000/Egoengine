@@ -1,0 +1,78 @@
+schema: taco_pour_state_feasible_truncated_gaussian_experiment_v1
+status: authorized_single_controlled_experiment_no_commit
+paper_faithful: false
+authorized_output_directory: /data_all/zzx/3.2RL/runs/taco_pour_state_feasible_truncated_gaussian_experiment_v1
+purpose: >-
+  Run the one user-authorized controlled test of the local state-feasible
+  truncated-Gaussian PPO action distribution. This is not an EgoEngine author
+  setting and cannot promote or commit a task chunk.
+
+training:
+  worlds: 4
+  epochs: 8
+  horizon_per_world_per_epoch: 40
+  samples_per_epoch: 160
+  total_samples: 1280
+  seed: 0
+  fixed_reset_endpoints: [20, 20, 20, 46]
+
+frozen_controls:
+  objective_unchanged: true
+  observation_unchanged: true
+  reward_unchanged: true
+  critic_network_optimizer_unchanged: true
+  residual_scale: 0.05
+  residual_scale_changed: false
+  curriculum_unchanged: true
+  epoch_sweep_allowed: false
+  seed_sweep_allowed: false
+  scale_sweep_allowed: false
+  curriculum_sweep_allowed: false
+
+action_distribution_authorization:
+  profile_id: taco_pour_state_feasible_truncated_gaussian_v1
+  optimizer_training_authorized: true
+  task_level_PPO_runs_authorized: 1
+  parameter_sweeps_authorized: false
+  chunk_commit_authorized: false
+  stochastic_training_action: state_feasible_truncated_Normal
+  deterministic_CPU_action: clip_mu_to_state_bounds
+  official_minus1_plus1_clamp_enabled: false
+  actuator_ctrlrange_retained_as_final_safety_backstop: true
+
+acceptance:
+  backend: CPU_MuJoCo_Warp
+  start_endpoint: 20
+  required_consecutive_intervals: 40
+  strict_boundary: true
+  GPU_may_decide_acceptance: false
+
+promotion:
+  chunk_commit_allowed: false
+  committed_boundary_output_allowed: false
+  optimized_trajectory_output_allowed: false
+  task_success_claim_allowed: false
+  CPU_score_as_performance_comparison_allowed: true
+  restore_incoming_boundary_after_diagnostic: true
+
+input_sha256:
+  initialization_report: 9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a
+  replay_rl_protocol: 2e4e9ebba250ea52ad3fe1ad5b348fa58d71651a3901671261d43cf71177cac2
+  dual_backend_contract: c567ad04dabe1bfc1ff3c8f9ee81db52f9f71d181cd80d56de47c2b237ad65b0
+  objective_profile: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+  observation_profile: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  action_profile: 71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4
+  simulator_config: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+  resume_boundary: 028ffd240c6ac1ba0d298d7caddab482169b772bdec14f4008f1af3865ba3547
+  multiworld_gate_report: d467b2808f9b2a2166672b9c0b0136718d6249010c1c914e5c1e92a1711b182f
+  tail_curriculum_contract: 4c71044af98604e0afcf6efed14861c983f0dc12e287be1028305464d3ee0020
+  tail_boundaries: 997c342c29e301829f499aff5d2711bb198bb432db948085fd44ebc5146dcd14
+  tail_sampler_gate_report: ec3a870b3844e389fa185262efc8add8bda18f01b404e60fed3d300567da0e26
+  state_feasible_action_profile: 6a4e4bd8f33fa53bfe34f21f822bfa391253cca090892767154320fc9bbfd1b8
+  truncated_gaussian_offline_gate_report: 64e6666bbea9456d98a0145d86e1702971210764c1f7d59f2584beb79a3fbb2f
+  truncated_gaussian_integration_gate_report: 11ddf92c30a68860dcedb4e9fbdaded58988d11024504e9cee76c7c2f87304c7
+
+implementation_sha256:
+  state_feasible_distribution: 51e1410842db427ff2dbbf98836f48556190e396d7e098ed414611dce6682168
+  ppo_chunk_adapter: d499d9bc0bf479a5a6bf53bd2e6a6aceb597b0dcf3c2e967db56f8182d0b1361
+  formal_runner: 52829fc374e18721bc852932d11c97d4114fd12a7589498cc33cbc17dc52e56b

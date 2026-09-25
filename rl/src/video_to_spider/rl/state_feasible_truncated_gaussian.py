@@ -358,6 +358,27 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
         )
         return result
 
+    def get_deterministic_action_values(self, obs) -> dict:
+        """Evaluate the truncated-distribution mode without sampling.
+
+        CPU acceptance uses this path so the judge neither consumes exploration
+        RNG nor accidentally executes an unclipped Gaussian mean.
+        """
+        result = self._actor_outputs(obs)
+        low, high = self.env.current_normalized_action_bounds()
+        low = low.to(self.device)
+        high = high.to(self.device)
+        if low.shape != result["mus"].shape or high.shape != result["mus"].shape:
+            raise ValueError("actor batch and state-dependent bounds differ")
+        result.update(
+            action_lows=low,
+            action_highs=high,
+            deterministic_actions=deterministic_truncated_action(
+                result["mus"], low, high
+            ),
+        )
+        return result
+
     def env_step(self, actions: torch.Tensor) -> tuple:
         recorder = getattr(self.env, "record_training_policy_distribution", None)
         if recorder is not None:
@@ -414,7 +435,15 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
                 "exact rollout likelihood requires the frozen full 4-world batch"
             )
         blocks = horizon // sequence
-        obs_by_world = obs.reshape(worlds, horizon, *obs.shape[1:])
+        # Match the official PPO normalization contract: the first mini-epoch
+        # updates running statistics once from the complete rollout batch; later
+        # mini-epochs use the frozen statistics.  Normalizing one time step at a
+        # time would produce a different policy and silently change this
+        # controlled experiment.
+        normalized_obs = self.model.norm_obs(obs)
+        obs_by_world = normalized_obs.reshape(
+            worlds, horizon, *normalized_obs.shape[1:]
+        )
         dones_by_world = input_dict["dones"].reshape(worlds, horizon).bool()
         initial_states = input_dict["rnn_states"]
         reset_states = self.env.curriculum_rnn_reset_states()
@@ -452,9 +481,8 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
                         )
                         for state, reset in zip(states, reset_states, strict=True)
                     ]
-                normalized = self.model.norm_obs(obs_by_world[:, time_index])
                 mu_step, logstd_step, value_step, states = self.model.a2c_network({
-                    "obs": normalized,
+                    "obs": obs_by_world[:, time_index],
                     "rnn_states": states,
                 })
                 for world in range(worlds):

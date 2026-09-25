@@ -8,7 +8,7 @@ evidence_policy:
   paper_page_numbers: one_based_pdf_pages
   copied_defaults_are_author_settings: false
   new_model_or_reset_procedure_requires_confirmation: true
-  current_revision: state_feasible_truncated_gaussian_engineering_gates_passed_training_not_authorized
+  current_revision: state_feasible_truncated_gaussian_single_authorized_experiment_completed_37_of_40
 inputs:
   setting: user_approved_gt_oracle_validation_not_full_perception_reproduction
   approved_episodes: ['20230927_027', '20230917_020', '20230926_004', '20231103_071', '20230927_017']
@@ -580,7 +580,7 @@ runtime_contract:
         new_scale_selected: false
         next_algorithm_training_authorized: false
       state_feasible_truncated_gaussian_v1:
-        status: engineering_gates_passed_optimizer_and_task_training_not_authorized
+        status: engineering_gates_passed_single_no_commit_experiment_completed_strict_gate_failed
         paper_faithful: false
         profile: /data_all/zzx/3.2RL/configs/taco_pour_state_feasible_truncated_gaussian_v1.yaml
         documentation: /data_all/zzx/3.2RL/docs/taco_pour_state_feasible_truncated_gaussian_v1.md
@@ -609,9 +609,21 @@ runtime_contract:
           logprob_bitwise_equal: true
           ratio_bitwise_one: true
           nonzero_curriculum_RNN_reset_semantics_preserved: true
-        optimizer_steps: 0
-        task_level_training_executed: false
+        gate_optimizer_steps: 0
+        gate_task_level_training_executed: false
         chunk_commit_written: false
+        one_time_experiment_contract: /data_all/zzx/3.2RL/configs/taco_pour_state_feasible_truncated_gaussian_experiment_v1.yaml
+        one_time_experiment_report: /data_all/zzx/3.2RL/runs/taco_pour_state_feasible_truncated_gaussian_experiment_v1/report.json
+        one_time_experiment_analysis: /data_all/zzx/3.2RL/runs/taco_pour_state_feasible_truncated_gaussian_experiment_v1/analysis.json
+        one_time_experiment_training_samples: 1280
+        training_official_clamp_changed_components: 0
+        training_ctrlrange_lost_components: 0
+        deterministic_CPU_replay_validated_steps: 29
+        deterministic_CPU_PPO_validated_steps: 37
+        deterministic_CPU_PPO_first_failure_endpoint: 58
+        deterministic_CPU_PPO_failure_score: 1.0136032104492188
+        strict_40_of_40_passed: false
+        incoming_boundary_restored_after_experiment: true
         next_algorithm_training_authorized: false
       training_ctrlrange_distribution_v1:
         status: completed_diagnostic_only_no_commit
@@ -838,6 +850,7 @@ result_acceptance_blockers:
   - scaled_policy_right_wrist_translation_diverges_in_direction_at_endpoints_46_to_50
   - four_world_training_increased_absolute_tail_samples_but_reached_only_31_of_40
   - frozen_3plus1_tail_curriculum_reached_only_32_of_40
+  - state_feasible_truncated_gaussian_reached_only_37_of_40
   - ppo_containing_saved_trajectory_failed_independent_open_loop_replay
   - stable_grasp_and_physical_pour_not_demonstrated
 paper_faithful_run_blockers:

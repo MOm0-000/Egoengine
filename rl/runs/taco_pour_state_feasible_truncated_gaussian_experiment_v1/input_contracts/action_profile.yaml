@@ -1,0 +1,40 @@
+schema_version: 1
+action_profile_id: taco_pour_residual_action_scaled_v1
+status: resolved_local_unpublished
+paper_faithful: false
+provenance: >-
+  One controlled local repair of the diagnosed normalized-action unit mismatch.
+  The existing +/-0.05 rad safety limit is retained; only the normalized output
+  mapping changes. EgoEngine does not publish this residual scale.
+policy_output:
+  lower: -1.0
+  upper: 1.0
+mapping:
+  kind: linear_scaled_candidate
+  residual_scale: 0.05
+  residual_clip_rad: 0.05
+  author_recovered: false
+controlled_experiment:
+  epochs: 8
+  seed: 0
+  endpoint_boundary: 20
+  lookahead_control_intervals: 40
+  ppo_horizon: 40
+  learning_rate: 0.0001
+  objective_profile_sha256: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+  observation_profile_sha256: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  backend_contract_sha256: c567ad04dabe1bfc1ff3c8f9ee81db52f9f71d181cd80d56de47c2b237ad65b0
+  simulator_config_sha256: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+  initialization_report_sha256: 9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a
+  reference_endpoint20_state: >-
+    Bitwise-equal to the CPU endpoint-20 boundary used by the frozen checkpoint
+    validation; serialized artifact bytes may differ while all 362 state entries agree.
+  unchanged:
+    - objective
+    - contact_and_lift_coefficients
+    - observation
+    - network
+    - learning_rate
+    - PPO_hyperparameters
+    - training_seed
+    - CPU_acceptance

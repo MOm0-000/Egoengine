@@ -74,7 +74,42 @@ Evidence:
 
 ## Status
 
-The engineering gates pass. The profile remains
-`engineering_candidate_gate_only`: task-level PPO, optimizer updates, chunk
-commit, and any claim of paper faithfulness remain disabled. A task experiment
-requires a separate explicit authorization and promotion of the profile.
+The reusable profile remains `engineering_candidate_gate_only`; it cannot
+silently enable optimizer training. A separate hash-bound contract authorized
+exactly one no-commit experiment with four worlds, eight epochs, seed 0, starts
+`[20,20,20,46]`, and the unchanged `0.05` residual scale.
+
+That experiment is complete. Deterministic CPU validation produced:
+
+```text
+Replay:                    29 / 40, failed at endpoint 50
+Truncated-Gaussian PPO:    37 / 40, failed at endpoint 58
+```
+
+The PPO failure score was `1.0136032`, so it remains a strict failure. Across
+the 30 endpoints shared with Replay, PPO had a lower tracking score at 28.
+During all 1,280 GPU training samples, the ordinary hard clamp changed zero
+components and actuator `ctrlrange` removed zero residual components. In CPU
+validation, 61 components had only float-level reference-snap residue, with a
+maximum of `5.24521e-8`, below the frozen `2e-7` tolerance; no material actuator
+clipping occurred.
+
+This supports two limited conclusions: the candidate removed the measured
+many-to-one action-channel defect, and the learned policy was useful relative
+to the same-run Replay. It did **not** solve the 40-step window and does not
+authorize full RL, another seed, another epoch count, or a scale/curriculum
+sweep. The historical ordinary-Gaussian 3+1 run reached 32/40, but the apparent
+`32 -> 37` cross-run difference is context only because GPU optimization is not
+deterministic.
+
+Experiment evidence:
+
+- `configs/taco_pour_state_feasible_truncated_gaussian_experiment_v1.yaml`;
+- `runs/taco_pour_state_feasible_truncated_gaussian_experiment_v1/report.json`;
+- `runs/taco_pour_state_feasible_truncated_gaussian_experiment_v1/analysis.json`;
+- `runs/taco_pour_state_feasible_truncated_gaussian_experiment_v1/cpu_validated_actor.pt.gz`.
+
+The portable actor artifact is `24.7 MB` and matches the actor used for CPU
+validation (`actor_state_sha256=39534360...d6711`). It intentionally excludes
+the optimizer and asymmetric critic; the full local training checkpoint is not
+part of the compact versioned evidence set.

@@ -283,11 +283,18 @@ class _AgentPolicy:
 
     def __call__(self, current, reference_step):
         del reference_step
-        result = self.agent.get_action_values(
-            self.agent.obs_to_tensors(current.observation())
+        observation = self.agent.obs_to_tensors(current.observation())
+        deterministic = getattr(
+            self.agent, "get_deterministic_action_values", None
+        )
+        result = (
+            deterministic(observation)
+            if deterministic is not None
+            else self.agent.get_action_values(observation)
         )
         self.agent.rnn_states = result["rnn_states"]
-        return self.agent.preprocess_actions(result["mus"])
+        action = result.get("deterministic_actions", result["mus"])
+        return self.agent.preprocess_actions(action)
 
     def close(self):
         if self.closed:
@@ -309,15 +316,31 @@ def train_chunk_ppo(
     horizon=40,
     seed=0,
     validation_env=None,
+    action_distribution_spec=None,
 ):
     """Reuse the existing official trainer; reset every rollout to this boundary.
 
     Network, optimizer and recurrent state are fresh for each failed chunk in
     this local diagnostic. This is not an unpublished EgoEngine hyperparameter.
     """
+    from dataclasses import replace
     import torch
     from run_mjwp_ppo import (PpoAgent, _build_ppo_config, _build_network_config,
                              _build_asymmetric_critic_config)
+
+    if action_distribution_spec is None:
+        agent_class = PpoAgent
+        agent_kwargs = {}
+    else:
+        from video_to_spider.rl.state_feasible_truncated_gaussian import (
+            StateFeasibleTruncatedGaussianPpoAgent,
+        )
+        if not action_distribution_spec.optimizer_training_authorized:
+            raise ValueError(
+                "state-feasible optimizer training lacks an exact authorization"
+            )
+        agent_class = StateFeasibleTruncatedGaussianPpoAgent
+        agent_kwargs = {"distribution_spec": action_distribution_spec}
 
     env = backend.env
     env.set_chunk_reset(start=start, end=end)
@@ -329,8 +352,11 @@ def train_chunk_ppo(
     config = _build_ppo_config(num_envs=training_worlds, horizon_length=horizon, seq_length=4,
         max_epochs=epochs, learning_rate=1e-4, device=str(env.ego_cfg.device),
         asymmetric_critic=_build_asymmetric_critic_config(training_worlds * horizon))
-    agent = PpoAgent(experiment_dir=output, ppo_config=config,
-                     network_config=_build_network_config(4), env=env)
+    if action_distribution_spec is not None:
+        config = replace(config, clip_actions=False)
+    agent = agent_class(experiment_dir=output, ppo_config=config,
+                        network_config=_build_network_config(4), env=env,
+                        **agent_kwargs)
     env.enable_training_trace(output / "training_visitation")
     training_visitation = None
     try:
@@ -357,6 +383,12 @@ def train_chunk_ppo(
         if hasattr(env, "tail_curriculum_audit")
         else None
     )
+    state_feasible_action_audit = (
+        env.state_feasible_action_audit()
+        if action_distribution_spec is not None
+        and hasattr(env, "state_feasible_action_audit")
+        else None
+    )
     checkpoints = []
     for checkpoint in sorted((output / "nn").glob("*.pth")):
         checkpoints.append({
@@ -378,6 +410,7 @@ def train_chunk_ppo(
             "checkpoint_artifacts": checkpoints,
             "training_visitation": training_visitation,
             "tail_curriculum": curriculum_audit,
+            "state_feasible_action": state_feasible_action_audit,
         })
 
     if str(validation_env.ego_cfg.device) != "cpu":
@@ -394,11 +427,14 @@ def train_chunk_ppo(
         device="cpu",
         asymmetric_critic=None,
     )
-    cpu_agent = PpoAgent(
+    if action_distribution_spec is not None:
+        cpu_config = replace(cpu_config, clip_actions=False)
+    cpu_agent = agent_class(
         experiment_dir=Path(temporary_directory.name),
         ppo_config=cpu_config,
         network_config=_build_network_config(4),
         env=validation_env,
+        **agent_kwargs,
     )
     cpu_agent.model.load_state_dict(actor_state)
     transferred_sha256 = _model_state_sha256(cpu_agent.model.state_dict())
@@ -418,9 +454,11 @@ def train_chunk_ppo(
         "actor_state_sha256": actor_sha256,
         "transferred_actor_state_sha256": transferred_sha256,
         "actor_transfer_bitwise_equal": True,
-        "deterministic_mean_action": True,
+        "deterministic_mean_action": action_distribution_spec is None,
+        "deterministic_truncated_mode_action": action_distribution_spec is not None,
         "recurrent_state_reset_to_zero": True,
         "checkpoint_artifacts": checkpoints,
         "training_visitation": training_visitation,
         "tail_curriculum": curriculum_audit,
+        "state_feasible_action": state_feasible_action_audit,
     }, temporary_directory)

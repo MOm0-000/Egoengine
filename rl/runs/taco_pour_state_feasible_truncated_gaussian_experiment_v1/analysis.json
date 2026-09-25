@@ -1,0 +1,138 @@
+{
+  "schema": "taco_pour_state_feasible_truncated_gaussian_analysis_v1",
+  "status": "completed_strict_gate_failed",
+  "paper_faithful": false,
+  "inputs": {
+    "authorized_run_report": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_state_feasible_truncated_gaussian_experiment_v1/report.json",
+      "sha256": "cf24d7173c65ce6873e0d68dbf86d7c79c6dca44bd5bba99d2cc6f2e8bc2c4e5"
+    },
+    "training_manifest": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_state_feasible_truncated_gaussian_experiment_v1/ppo_diagnostic_chunk_20/training_visitation/manifest.json",
+      "sha256": "8af4c6685679248eb267da3e7e94f38dd3a6c043684e85d678dceae396c8bc99"
+    },
+    "historical_3plus1_run": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_tail_curriculum_3plus1_v1/report.json",
+      "sha256": "d8a8540536712552e96456405a443a200855c02e390845c967a11bc6415e610b"
+    },
+    "CPU_validated_actor": {
+      "manifest_path": "/data_all/zzx/3.2RL/runs/taco_pour_state_feasible_truncated_gaussian_experiment_v1/actor_artifact.json",
+      "manifest_sha256": "c044efa8749de46301497db7c3c999e7ede94e6b9704cb87ef8f4b3760a9f24f",
+      "artifact_path": "/data_all/zzx/3.2RL/runs/taco_pour_state_feasible_truncated_gaussian_experiment_v1/cpu_validated_actor.pt.gz",
+      "artifact_sha256": "0c0adf2bda56c565407c9e18b2a9e63446b5deb6a7c6b90f7e3b75a01123d130",
+      "actor_state_sha256": "39534360f1bd2ae82cdce2dd19e3a59631eb917fcf530a34042934ae3e4d6711"
+    },
+    "analysis_script": {
+      "path": "/data_all/zzx/3.2RL/scripts/analyze_taco_pour_truncated_gaussian_experiment.py",
+      "sha256": "9709a1120c0df413defef6cf622a8c91f27eade8ec5682a0afbe0100f976afb0"
+    }
+  },
+  "frozen_budget": {
+    "world_start_endpoints": [
+      20,
+      20,
+      20,
+      46
+    ],
+    "worlds": 4,
+    "epochs": 8,
+    "horizon_per_world": 40,
+    "samples": 1280,
+    "seed": 0,
+    "residual_scale": 0.05
+  },
+  "deterministic_CPU_validation": {
+    "required_steps": 40,
+    "replay": {
+      "validated_steps": 29,
+      "first_failure": {
+        "control_interval": 49,
+        "endpoint": 50,
+        "object_roles": [
+          "tool"
+        ],
+        "reason": "tracking_boundary"
+      }
+    },
+    "truncated_gaussian_PPO": {
+      "validated_steps": 37,
+      "first_failure": {
+        "control_interval": 57,
+        "endpoint": 58,
+        "object_roles": [
+          "tool"
+        ],
+        "reason": "tracking_boundary"
+      },
+      "failing_score": 1.0136032104492188,
+      "failing_position_error_m": 0.1133669763803482,
+      "failing_rotation_error_rad": 0.5509034395217896
+    },
+    "paired_improvement_over_same_run_replay_steps": 8,
+    "strict_40_of_40_passed": false,
+    "common_endpoint_comparison": {
+      "endpoints": [
+        21,
+        50
+      ],
+      "count": 30,
+      "PPO_lower_score_count": 28,
+      "PPO_higher_score_count": 2,
+      "replay_mean_score": 0.7356583575407664,
+      "PPO_mean_score": 0.6439041793346405
+    }
+  },
+  "training_action_channel": {
+    "sample_count": 1280,
+    "action_components": 46080,
+    "ordinary_minus1_plus1_clamp_changed_components": 0,
+    "ctrlrange_lost_components_exact": 0,
+    "ctrlrange_lost_world_steps_exact": 0,
+    "maximum_abs_ctrlrange_loss": 0.0,
+    "residual_identity_max_abs_error": 0.0
+  },
+  "CPU_deterministic_action_channel": {
+    "ctrlrange_lost_components_exact": 61,
+    "ctrlrange_lost_components_above_2e_7": 0,
+    "maximum_abs_ctrlrange_loss": 5.245208734017126e-08,
+    "interpretation": "All nonzero CPU losses are reference-snap numerical residue below the frozen 2e-7 tolerance; no material actuator clipping occurred."
+  },
+  "training_distribution": {
+    "outcome_endpoint_46_to_50_visits": {
+      "46": 14,
+      "47": 65,
+      "48": 61,
+      "49": 60,
+      "50": 54
+    },
+    "endpoint_46_to_50_total": 254,
+    "endpoint_46_to_50_fraction": 0.1984375,
+    "epochs_with_endpoint_50_visit": 8,
+    "tracking_terminations_by_world": [
+      9,
+      8,
+      9,
+      43
+    ],
+    "anchor_world_tracking_terminations": 26,
+    "tail_world_tracking_terminations": 43
+  },
+  "historical_cross_run_context": {
+    "ordinary_Gaussian_3plus1_CPU_PPO_validated_steps": 32,
+    "truncated_Gaussian_CPU_PPO_validated_steps": 37,
+    "difference_steps": 5,
+    "causal_claim_allowed": false,
+    "reason": "The GPU optimizer is nondeterministic; the historical run is useful context, not a paired deterministic training ablation."
+  },
+  "promotion": {
+    "chunk_committed": false,
+    "optimized_trajectory_written": false,
+    "incoming_endpoint_20_boundary_restored": true,
+    "full_RL_authorized_by_this_result": false
+  },
+  "decision": {
+    "action_channel_structural_loss_removed": true,
+    "task_window_solved": false,
+    "conclusion": "The state-feasible truncated Gaussian removed the two hard-clamp information-loss layers and learned a useful 29-to-37 step correction, but it still failed the strict 40-of-40 CPU gate at endpoint 58."
+  }
+}

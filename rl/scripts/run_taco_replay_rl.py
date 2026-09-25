@@ -1,7 +1,7 @@
 """Guarded full-source Replay→PPO runner; no implicit reset or task promotion."""
 
 import argparse
-from dataclasses import asdict
+from dataclasses import asdict, replace
 import gzip
 import hashlib
 from importlib.metadata import version
@@ -340,6 +340,21 @@ def main():
             "restores the incoming boundary and forbids trajectory promotion."
         ),
     )
+    parser.add_argument(
+        "--state-feasible-action-profile",
+        type=Path,
+        help="Gate-only local truncated-Gaussian profile selected by an exact experiment contract.",
+    )
+    parser.add_argument(
+        "--truncated-gaussian-offline-gate-report",
+        type=Path,
+        help="Passed offline gate bound by the authorized truncated-Gaussian experiment.",
+    )
+    parser.add_argument(
+        "--truncated-gaussian-integration-gate-report",
+        type=Path,
+        help="Passed zero-optimizer four-world gate bound by the authorized experiment.",
+    )
     parser.add_argument("--max-chunks", type=int, default=1)
     parser.add_argument(
         "--stop-after-first-ppo",
@@ -362,11 +377,20 @@ def main():
         supported_diagnostic_schemas = {
             "taco_pour_ctrlrange_training_distribution_v1",
             "taco_pour_policy_distribution_attribution_v1",
+            "taco_pour_state_feasible_truncated_gaussian_experiment_v1",
         }
+        truncated_experiment = (
+            diagnostic_schema
+            == "taco_pour_state_feasible_truncated_gaussian_experiment_v1"
+        )
+        expected_status = (
+            "authorized_single_controlled_experiment_no_commit"
+            if truncated_experiment
+            else "frozen_diagnostic_only_no_commit"
+        )
         if (
             diagnostic_schema not in supported_diagnostic_schemas
-            or diagnostic_contract.get("status")
-                != "frozen_diagnostic_only_no_commit"
+            or diagnostic_contract.get("status") != expected_status
             or training.get("worlds") != 4
             or training.get("epochs") != 8
             or training.get("horizon_per_world_per_epoch") != 40
@@ -378,8 +402,14 @@ def main():
             or promotion.get("committed_boundary_output_allowed") is not False
             or promotion.get("optimized_trajectory_output_allowed") is not False
             or promotion.get("task_success_claim_allowed") is not False
-            or promotion.get("CPU_score_as_performance_comparison_allowed") is not False
+            or promotion.get("CPU_score_as_performance_comparison_allowed")
+                is not truncated_experiment
             or promotion.get("restore_incoming_boundary_after_diagnostic") is not True
+            or (
+                truncated_experiment
+                and diagnostic_contract.get("authorized_output_directory")
+                != str(args.output.resolve())
+            )
         ):
             raise ValueError("diagnostic no-commit contract differs from the frozen run")
         if (
@@ -397,6 +427,30 @@ def main():
             "path": str(args.diagnostic_no_commit_contract.resolve()),
             "sha256": _sha256(diagnostic_raw),
         }
+    state_feasible_args = (
+        args.state_feasible_action_profile,
+        args.truncated_gaussian_offline_gate_report,
+        args.truncated_gaussian_integration_gate_report,
+    )
+    if any(path is not None for path in state_feasible_args):
+        if diagnostic_no_commit is None or not all(
+            path is not None for path in state_feasible_args
+        ):
+            raise ValueError(
+                "state-feasible training requires its profile, both gates, and "
+                "the exact no-commit experiment authorization"
+            )
+        if (
+            diagnostic_no_commit["contract"].get("schema")
+            != "taco_pour_state_feasible_truncated_gaussian_experiment_v1"
+        ):
+            raise ValueError("state-feasible action profile lacks its exact experiment contract")
+    elif (
+        diagnostic_no_commit is not None
+        and diagnostic_no_commit["contract"].get("schema")
+        == "taco_pour_state_feasible_truncated_gaussian_experiment_v1"
+    ):
+        raise ValueError("truncated-Gaussian authorization is missing its profile or gate reports")
     multiworld_gate = None
     if args.training_worlds > 1:
         if args.training_worlds != 4 or args.multiworld_gate_report is None:
@@ -496,6 +550,19 @@ def main():
             "tail_boundaries": args.tail_boundaries,
             "tail_sampler_gate_report": args.tail_sampler_gate_report,
         }
+        if (
+            diagnostic_no_commit["contract"].get("schema")
+            == "taco_pour_state_feasible_truncated_gaussian_experiment_v1"
+        ):
+            inputs.update({
+                "state_feasible_action_profile": args.state_feasible_action_profile,
+                "truncated_gaussian_offline_gate_report": (
+                    args.truncated_gaussian_offline_gate_report
+                ),
+                "truncated_gaussian_integration_gate_report": (
+                    args.truncated_gaussian_integration_gate_report
+                ),
+            })
         expected = diagnostic_no_commit["contract"].get("input_sha256", {})
         if set(expected) != set(inputs) or any(path is None for path in inputs.values()):
             raise ValueError("diagnostic contract does not bind every required input")
@@ -506,6 +573,104 @@ def main():
         }
         if mismatches:
             raise ValueError(f"diagnostic input hashes differ: {mismatches}")
+    action_distribution_spec = None
+    action_distribution_artifact = None
+    if args.state_feasible_action_profile is not None:
+        from video_to_spider.rl.state_feasible_truncated_gaussian import (
+            load_truncated_gaussian_profile,
+        )
+
+        base_spec, profile_artifact = load_truncated_gaussian_profile(
+            args.state_feasible_action_profile
+        )
+        offline_raw = args.truncated_gaussian_offline_gate_report.read_bytes()
+        integration_raw = args.truncated_gaussian_integration_gate_report.read_bytes()
+        offline = json.loads(offline_raw)
+        integration = json.loads(integration_raw)
+        profile_sha256 = profile_artifact["profile_sha256"]
+        offline_checks = offline.get("checks", {})
+        if (
+            offline.get("schema") != "taco_pour_truncated_gaussian_offline_gate_v1"
+            or offline.get("status") != "passed"
+            or offline.get("optimizer_steps") != 0
+            or offline.get("task_level_training_executed") is not False
+            or offline.get("profile", {}).get("profile_sha256") != profile_sha256
+            or not offline_checks
+            or not all(offline_checks.values())
+            or offline.get("decision", {}).get("optimizer_training_authorized") is not False
+        ):
+            raise ValueError("truncated-Gaussian offline gate is missing or inconsistent")
+        rollout = integration.get("frozen_rollout", {})
+        integration_buffer = integration.get("rollout_buffer", {})
+        environment_semantics = integration.get("environment_action_semantics", {})
+        if (
+            integration.get("schema")
+                != "taco_pour_truncated_gaussian_integration_gate_v1"
+            or integration.get("status") != "passed"
+            or integration.get("PPO_optimizer_steps") != 0
+            or integration.get("task_level_training_executed") is not False
+            or integration.get("chunk_commit_written") is not False
+            or integration.get("profile", {}).get("profile_sha256") != profile_sha256
+            or integration.get("inputs", {}).get("offline_gate", {}).get("sha256")
+                != _sha256(offline_raw)
+            or rollout.get("world_start_endpoints") != [20, 20, 20, 46]
+            or rollout.get("worlds") != 4
+            or rollout.get("horizon") != 40
+            or rollout.get("samples") != 160
+            or rollout.get("seed") != 0
+            or rollout.get("optimizer_updates") != 0
+            or integration_buffer.get("all_actions_inside_state_bounds") is not True
+            or integration_buffer.get("network_recomputed_ratio_max_abs_error") != 0.0
+            or environment_semantics.get("official_clamp_changed_components") != 0
+            or environment_semantics.get("actual_ctrlrange_nonzero_lost_components") != 0
+        ):
+            raise ValueError("truncated-Gaussian integration gate is missing or inconsistent")
+        authorization = diagnostic_no_commit["contract"].get(
+            "action_distribution_authorization", {}
+        )
+        implementation_paths = {
+            "state_feasible_distribution": (
+                ROOT / "src/video_to_spider/rl/state_feasible_truncated_gaussian.py"
+            ),
+            "ppo_chunk_adapter": ROOT / "src/video_to_spider/rl/replay_rl.py",
+            "formal_runner": Path(__file__).resolve(),
+        }
+        implementation_expected = diagnostic_no_commit["contract"].get(
+            "implementation_sha256", {}
+        )
+        implementation_actual = {
+            name: _sha256(path.read_bytes())
+            for name, path in implementation_paths.items()
+        }
+        if (
+            authorization.get("profile_id") != base_spec.profile_id
+            or authorization.get("optimizer_training_authorized") is not True
+            or authorization.get("task_level_PPO_runs_authorized") != 1
+            or authorization.get("parameter_sweeps_authorized") is not False
+            or authorization.get("chunk_commit_authorized") is not False
+            or implementation_expected != implementation_actual
+        ):
+            raise ValueError("truncated-Gaussian optimizer authorization differs from the frozen experiment")
+        action_distribution_spec = replace(
+            base_spec, optimizer_training_authorized=True
+        )
+        action_distribution_artifact = {
+            "profile": profile_artifact,
+            "authorization_contract_sha256": diagnostic_no_commit["sha256"],
+            "offline_gate": {
+                "path": str(args.truncated_gaussian_offline_gate_report.resolve()),
+                "sha256": _sha256(offline_raw),
+                "status": offline["status"],
+            },
+            "integration_gate": {
+                "path": str(args.truncated_gaussian_integration_gate_report.resolve()),
+                "sha256": _sha256(integration_raw),
+                "status": integration["status"],
+            },
+            "optimizer_training_authorized_for_this_run": True,
+            "paper_faithful": False,
+            "implementation_sha256": implementation_actual,
+        }
     backend_contract, backend_contract_artifact = load_dual_backend_contract(
         args.backend_contract
     )
@@ -520,6 +685,16 @@ def main():
     residual_action, residual_action_report = load_residual_action_profile(
         args.action_profile
     )
+    if action_distribution_spec is not None and (
+        not np.isclose(
+            residual_action.residual_scale,
+            action_distribution_spec.residual_scale,
+        )
+        or not np.isclose(residual_action.residual_clip, 0.05)
+    ):
+        raise ValueError(
+            "state-feasible distribution and residual-action profile disagree"
+        )
     initial, provenance = load_accepted_initialization(args.initialization_report, args.config)
 
     # Refuse unaccepted initialization before allocating a GPU or loading PPO.
@@ -670,6 +845,9 @@ def main():
         ("tail_boundaries", args.tail_boundaries),
         ("tail_sampler_gate_report", args.tail_sampler_gate_report),
         ("diagnostic_no_commit_contract", args.diagnostic_no_commit_contract),
+        ("state_feasible_action_profile", args.state_feasible_action_profile),
+        ("truncated_gaussian_offline_gate_report", args.truncated_gaussian_offline_gate_report),
+        ("truncated_gaussian_integration_gate_report", args.truncated_gaussian_integration_gate_report),
     ):
         if source is None:
             continue
@@ -688,6 +866,7 @@ def main():
                   objective=objective.as_report(),
                   observation=observation.as_report(),
                   residual_action=residual_action_report,
+                  action_distribution=action_distribution_artifact,
                   backend_contract=backend_contract_artifact,
                   backend_runtime_records=backend_records,
                   multiworld_gate=multiworld_gate,
@@ -700,7 +879,9 @@ def main():
                   config_artifact=dict(path=str(args.config.resolve()),
                       sha256=hashlib.sha256(args.config.read_bytes()).hexdigest()),
                   local_settings=dict(worlds=args.training_worlds, ppo_epochs=args.epochs, ppo_horizon=40,
-                      deterministic_mean_validation=True, fresh_policy_per_failed_chunk=True,
+                      deterministic_mean_validation=(action_distribution_spec is None),
+                      deterministic_truncated_mode_validation=(action_distribution_spec is not None),
+                      fresh_policy_per_failed_chunk=True,
                       stop_after_first_ppo=args.stop_after_first_ppo,
                       tracking_boundary=validation_env.tracking_boundary,
                       training_backend="GPU MuJoCo-Warp",
@@ -723,21 +904,33 @@ def main():
                   control_intervals=len(validation_reference[0]) - 1,
                   chunks=[], task_success=False)
     if diagnostic_no_commit is not None:
-        result["schema"] = (
-            "taco_pour_policy_distribution_attribution_run_v1"
-            if diagnostic_no_commit["contract"]["schema"]
-                == "taco_pour_policy_distribution_attribution_v1"
-            else "taco_pour_ctrlrange_training_distribution_run_v1"
-        )
+        diagnostic_schema = diagnostic_no_commit["contract"]["schema"]
+        result["schema"] = {
+            "taco_pour_policy_distribution_attribution_v1": (
+                "taco_pour_policy_distribution_attribution_run_v1"
+            ),
+            "taco_pour_ctrlrange_training_distribution_v1": (
+                "taco_pour_ctrlrange_training_distribution_run_v1"
+            ),
+            "taco_pour_state_feasible_truncated_gaussian_experiment_v1": (
+                "taco_pour_state_feasible_truncated_gaussian_experiment_run_v1"
+            ),
+        }[diagnostic_schema]
+        cpu_comparison_allowed = diagnostic_no_commit["contract"]["promotion"][
+            "CPU_score_as_performance_comparison_allowed"
+        ]
         result["promotion"] = {
             "allowed": False,
             "chunk_committed": False,
             "committed_boundary_written": False,
             "optimized_trajectory_written": False,
             "task_success_evidence": False,
-            "CPU_score_performance_comparison_allowed": False,
+            "CPU_score_performance_comparison_allowed": cpu_comparison_allowed,
             "reason": (
-                "GPU training is nondeterministic; this run only measures the frozen "
+                "This is the single authorized no-commit action-distribution experiment; "
+                "CPU validation may be compared but cannot promote a task chunk."
+                if cpu_comparison_allowed
+                else "GPU training is nondeterministic; this run only measures the frozen "
                 "diagnostic training distribution."
             ),
         }
@@ -783,6 +976,7 @@ def main():
                 args.output / f"ppo_diagnostic_chunk_{run_start}",
                 epochs=args.epochs,
                 validation_env=validation_env,
+                action_distribution_spec=action_distribution_spec,
             )
             training_audits.append(policy.audit)
             try:
@@ -800,7 +994,7 @@ def main():
                     "lookahead_end": lookahead_end,
                     "validation_traces": diagnostic_traces,
                     "training_runs": training_audits,
-                    "performance_claim_allowed": False,
+                    "performance_claim_allowed": cpu_comparison_allowed,
                 },
             )
         except Exception as error:
