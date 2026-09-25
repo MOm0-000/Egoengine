@@ -44,6 +44,23 @@ This is metric-level evidence only: v5 did not save complete observations,
 physics/solver state, or RNN state, so it cannot prove or disprove visitation
 of the exact final CPU state.
 
+The subsequent frozen-state controllability audit rejects the simple
+"positive wrist-y scale is too small" explanation. Removing the first
+`+0.05 m` y residual at sources 44, 45 and 46 reduces endpoint-48 bowl-y error
+by 13.24, 19.43 and 8.57 mm respectively; extending the positive command is
+worse. Zeroing wrist-y residual from each source onward changes the final score
+from 1.06612 to 0.78347, 0.82702 and 0.98475, all passing at endpoint 48.
+
+At source 47, translation perturbations still move the wrist qpos by roughly
+14--15 mm across the grid. Final bowl-y spans only 0.078 mm for wrist y and
+0.090 mm for wrist z; wrist x has a larger but still weak and non-monotonic
+0.625 mm span. No recorded right fingertip/tool contact is active in those
+branches. The late failure is therefore not a wrist actuator that cannot move;
+local control transmission to the bowl has become very weak. This makes
+increasing y scale the wrong next intervention. The next algorithm decision
+must address the earlier saturated y decision/action parameterization, with
+contact retention treated as a coupled mechanism.
+
 All old performance, tail-curriculum and objective-mapping results produced with
 the off-by-one reward target are archived under
 `TRASH/historical_reward_misaligned_2026-09-25/`. They are not active performance

@@ -18,7 +18,7 @@ PYTHONPATH="$PWD/.env_mjwp313_overlay:$PWD/src:$PWD/external/mink/src" \
   /data_all/zzx/egoengine/spider/.venv/bin/python -m pytest -q
 ```
 
-On 2026-09-25 this command passed **607 tests and 57 subtests** in 105.62 s.
+On 2026-09-25 this command passed **613 tests and 57 subtests** in 105.07 s.
 The 17 warnings are known upstream/diagnostic warnings: capsule-mesh MULTICCD
 capacity, PyTorch AMP deprecations, two Trimesh degenerate-volume warnings and
 seven SciPy pickle deprecations.
@@ -43,6 +43,7 @@ runs/taco_pour_dual_backend_contract_v1/
 runs/taco_pour_corrected_ppo_gate_v1/
 runs/taco_pour_corrected_first_ppo_v1/
 runs/corrected_endpoint44_48_failure_attribution_v1/
+runs/taco_pour_corrected_local_controllability_v1/
 ```
 
 The first corrected PPO authorization is consumed. Replay passed the first
@@ -55,6 +56,11 @@ The endpoint 44--48 attribution is a no-training replay of the frozen actor.
 It requires exact equality with both saved formal CPU traces before reporting
 new contact flags, action bounds, actor distribution values or training-v5
 coverage statistics.
+
+The local-controllability run is also no-training. It restores hash-bound
+complete physics plus RNN states at endpoints 44--47, checks every zero
+perturbation branch against formal endpoint 48, and marks all actions outside
+the formal residual support as diagnostic-only.
 
 ## Archived invalid performance evidence
 
