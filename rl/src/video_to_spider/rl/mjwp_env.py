@@ -328,6 +328,7 @@ class MJWPVectorEnv:
         self._pending_training_policy_distribution: tuple[
             torch.Tensor, torch.Tensor, torch.Tensor
         ] | None = None
+        self._state_feasible_action_contract: dict[str, Any] | None = None
         # Work spent on rejected lookahead and PPO must not disappear on restore.
         self.simulation_control_intervals = 0
         self.simulation_physics_steps = 0
@@ -422,6 +423,8 @@ class MJWPVectorEnv:
         # ctrl[k] is the saved endpoint-k position target. Use row t+1 to
         # advance from reference endpoint t to endpoint t+1.
         reference_ctrls = self._reference_ctrls(self.time_indices, offset=1)
+        if self._state_feasible_action_contract is not None:
+            reference_ctrls, _ = self._snap_state_feasible_reference(reference_ctrls)
         delta = torch.as_tensor(actions, dtype=torch.float32, device=str(self.ego_cfg.device))
         full_ctrl = self._apply_residual(reference_ctrls, delta)
         for substep in range(max(int(self.ego_cfg.ctrl_steps), 1)):
@@ -517,6 +520,170 @@ class MJWPVectorEnv:
     def set_train_info(self, frame: int, agent: Any) -> None:
         if self._training_trace is not None:
             self._training_trace.begin_epoch(int(agent.epoch_num), int(frame))
+
+    def enable_state_feasible_action_contract(
+        self, *, reference_snap_tolerance: float
+    ) -> None:
+        """Enable the local truncated-Gaussian reference/bounds contract."""
+        if self._state_feasible_action_contract is not None:
+            raise RuntimeError("state-feasible action contract is already enabled")
+        tolerance = float(reference_snap_tolerance)
+        if not np.isfinite(tolerance) or tolerance <= 0.0:
+            raise ValueError("reference snap tolerance must be finite and positive")
+        if not np.isclose(self.env_cfg.residual.residual_scale, 0.05):
+            raise ValueError("state-feasible candidate is frozen to residual_scale=0.05")
+        if not np.isclose(self.env_cfg.residual.residual_clip, 0.05):
+            raise ValueError("state-feasible candidate is frozen to residual_clip=0.05")
+        indices = np.asarray(self.env_cfg.residual.hand_control_indices, dtype=np.int64)
+        model = self.env.model_cpu
+        limited = np.asarray(model.actuator_ctrllimited, dtype=bool)[indices]
+        ranges = np.asarray(model.actuator_ctrlrange, dtype=np.float64)[indices]
+        lower = torch.as_tensor(
+            ranges[:, 0], dtype=torch.float64, device=str(self.ego_cfg.device)
+        )
+        upper = torch.as_tensor(
+            ranges[:, 1], dtype=torch.float64, device=str(self.ego_cfg.device)
+        )
+        lower_f32 = lower.to(torch.float32)
+        upper_f32 = upper.to(torch.float32)
+        positive_inf = torch.full_like(lower_f32, float("inf"))
+        negative_inf = torch.full_like(upper_f32, float("-inf"))
+        # Decimal MJCF limits are often not exactly representable as float32.
+        # Pick the nearest representable value on the feasible side so that a
+        # tolerance-level reference repair cannot itself remain outside.
+        safe_lower = torch.where(
+            lower_f32.to(torch.float64) < lower,
+            torch.nextafter(lower_f32, positive_inf),
+            lower_f32,
+        )
+        safe_upper = torch.where(
+            upper_f32.to(torch.float64) > upper,
+            torch.nextafter(upper_f32, negative_inf),
+            upper_f32,
+        )
+        self._state_feasible_action_contract = {
+            "reference_snap_tolerance": tolerance,
+            "indices": indices,
+            "limited": torch.as_tensor(limited, device=str(self.ego_cfg.device)),
+            "lower": lower,
+            "upper": upper,
+            "safe_lower_f32": safe_lower,
+            "safe_upper_f32": safe_upper,
+            "snap_calls": 0,
+            "snapped_component_count": 0,
+            "maximum_reference_violation": 0.0,
+        }
+
+    def _snap_state_feasible_reference(
+        self, reference_ctrls: torch.Tensor
+    ) -> tuple[torch.Tensor, dict[str, Any]]:
+        contract = self._state_feasible_action_contract
+        if contract is None:
+            raise RuntimeError("state-feasible action contract is not enabled")
+        indices = contract["indices"]
+        controlled = reference_ctrls[:, indices].to(torch.float64)
+        limited = contract["limited"]
+        lower = contract["lower"]
+        upper = contract["upper"]
+        below = torch.where(limited, torch.clamp_min(lower - controlled, 0.0), 0.0)
+        above = torch.where(limited, torch.clamp_min(controlled - upper, 0.0), 0.0)
+        violation = torch.maximum(below, above)
+        maximum = float(violation.max().item())
+        tolerance = contract["reference_snap_tolerance"]
+        if maximum > tolerance:
+            raise ValueError(
+                f"reference control exceeds ctrlrange by {maximum:.9g}, above "
+                f"the {tolerance:.9g} fail-closed tolerance"
+            )
+        controlled_f32 = reference_ctrls[:, indices]
+        snapped = torch.where(
+            limited,
+            torch.clamp(
+                controlled_f32,
+                contract["safe_lower_f32"],
+                contract["safe_upper_f32"],
+            ),
+            controlled_f32,
+        )
+        result = reference_ctrls.clone()
+        result[:, indices] = snapped
+        count = int((violation > 0.0).sum().item())
+        contract["snap_calls"] += 1
+        contract["snapped_component_count"] += count
+        contract["maximum_reference_violation"] = max(
+            contract["maximum_reference_violation"], maximum
+        )
+        return result, {
+            "snapped_component_count": count,
+            "maximum_reference_violation": maximum,
+        }
+
+    def current_normalized_action_bounds(self) -> tuple[torch.Tensor, torch.Tensor]:
+        """Return the exact normalized residual support for the current transition."""
+        reference = self._reference_ctrls(self.time_indices, offset=1)
+        reference, _ = self._snap_state_feasible_reference(reference)
+        contract = self._state_feasible_action_contract
+        assert contract is not None
+        controlled_f32 = reference[:, contract["indices"]]
+        low_f32 = torch.full_like(controlled_f32, -1.0)
+        high_f32 = torch.full_like(controlled_f32, 1.0)
+        limited = contract["limited"]
+        scale = float(self.env_cfg.residual.residual_scale)
+        scale_f32 = torch.tensor(
+            scale, dtype=torch.float32, device=controlled_f32.device
+        )
+        low_f32[:, limited] = torch.maximum(
+            low_f32[:, limited],
+            (
+                contract["safe_lower_f32"][limited]
+                - controlled_f32[:, limited]
+            ) / scale_f32,
+        )
+        high_f32[:, limited] = torch.minimum(
+            high_f32[:, limited],
+            (
+                contract["safe_upper_f32"][limited]
+                - controlled_f32[:, limited]
+            ) / scale_f32,
+        )
+        positive_inf = torch.full_like(low_f32, float("inf"))
+        negative_inf = torch.full_like(high_f32, float("-inf"))
+        # Bounds are consumed as float32 and the environment applies the
+        # residual in float32. Move a rounded endpoint inward until that exact
+        # execution path stays inside the original float64 MJCF ctrlrange.
+        for _ in range(4):
+            requested_low = (
+                controlled_f32 + scale_f32 * low_f32
+            ).to(torch.float64)
+            requested_high = (
+                controlled_f32 + scale_f32 * high_f32
+            ).to(torch.float64)
+            low_outside = limited & (requested_low < contract["lower"])
+            high_outside = limited & (requested_high > contract["upper"])
+            if not bool((low_outside | high_outside).any().item()):
+                break
+            low_f32 = torch.where(
+                low_outside, torch.nextafter(low_f32, positive_inf), low_f32
+            )
+            high_f32 = torch.where(
+                high_outside, torch.nextafter(high_f32, negative_inf), high_f32
+            )
+        else:
+            raise RuntimeError("could not construct float32-safe action bounds")
+        if bool((low_f32 > high_f32).any().item()):
+            raise ValueError("state-feasible normalized action interval is empty")
+        return low_f32, high_f32
+
+    def state_feasible_action_audit(self) -> dict[str, Any] | None:
+        contract = self._state_feasible_action_contract
+        if contract is None:
+            return None
+        return {
+            "reference_snap_tolerance": contract["reference_snap_tolerance"],
+            "snap_calls": contract["snap_calls"],
+            "snapped_component_count": contract["snapped_component_count"],
+            "maximum_reference_violation": contract["maximum_reference_violation"],
+        }
 
     def enable_training_trace(self, output_dir: str | Path) -> None:
         """Enable lossless PPO-rollout logging without changing rollout tensors."""
@@ -1209,6 +1376,26 @@ class IndependentMJWPTrainingEnv:
             world.current_observation() for world in self.worlds
         ])
 
+    def enable_state_feasible_action_contract(
+        self, *, reference_snap_tolerance: float
+    ) -> None:
+        for world in self.worlds:
+            world.enable_state_feasible_action_contract(
+                reference_snap_tolerance=reference_snap_tolerance
+            )
+
+    def current_normalized_action_bounds(self) -> tuple[torch.Tensor, torch.Tensor]:
+        rows = [world.current_normalized_action_bounds() for world in self.worlds]
+        return (
+            torch.cat([row[0] for row in rows], dim=0),
+            torch.cat([row[1] for row in rows], dim=0),
+        )
+
+    def state_feasible_action_audit(self) -> dict[str, Any]:
+        return {
+            "worlds": [world.state_feasible_action_audit() for world in self.worlds]
+        }
+
     def step(self, actions: np.ndarray) -> tuple[Any, np.ndarray, np.ndarray, dict[str, Any]]:
         actions = np.asarray(actions, dtype=np.float32)
         expected = (self.num_envs, self.env_cfg.residual.hand_dof)
@@ -1219,11 +1406,13 @@ class IndependentMJWPTrainingEnv:
             if self.env_cfg.domain.action_noise_std != 0.0:
                 raise ValueError("v4 training trace requires zero action noise")
             indices = list(self.env_cfg.residual.hand_control_indices)
-            reference_ctrl = np.concatenate([
-                world._reference_ctrls(world.time_indices, offset=1)
-                .detach().cpu().numpy()
-                for world in self.worlds
-            ], axis=0)
+            reference_rows = []
+            for world in self.worlds:
+                row = world._reference_ctrls(world.time_indices, offset=1)
+                if world._state_feasible_action_contract is not None:
+                    row, _ = world._snap_state_feasible_reference(row)
+                reference_rows.append(row.detach().cpu().numpy())
+            reference_ctrl = np.concatenate(reference_rows, axis=0)
             requested_ctrl = reference_ctrl.copy()
             requested_ctrl[:, indices] += np.clip(
                 self.env_cfg.residual.residual_scale * actions,
@@ -1456,6 +1645,12 @@ class IndependentMJWPTrainingEnv:
             "tail_physical_state_is_off_policy": True,
             "epochs_prepared": deepcopy(self._curriculum_epoch_audits),
         }
+
+    def curriculum_rnn_reset_states(self) -> tuple[torch.Tensor, ...]:
+        """Return the epoch-bound nonzero memories used after episode resets."""
+        if self._tail_curriculum is None or self._curriculum_reset_rnn_states is None:
+            raise RuntimeError("tail curriculum RNN reset states are not prepared")
+        return tuple(state.detach().clone() for state in self._curriculum_reset_rnn_states)
 
     def enable_training_trace(self, output_dir: str | Path) -> None:
         if self._training_trace is not None:

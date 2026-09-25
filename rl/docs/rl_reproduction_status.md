@@ -1,6 +1,6 @@
 # RL reproduction status
 
-Updated: 2026-09-24. Active sample: TACO Pour/Bowl/Plate `20230927_017`.
+Updated: 2026-09-25. Active sample: TACO Pour/Bowl/Plate `20230927_017`.
 
 ## What enters RL
 
@@ -333,8 +333,33 @@ the official `[-1,1]` clamp changed 12,557/30,720 finger samples (`40.88%`).
 The Gaussian expected masses closely match those observations: `40.94%` outside
 the official support and `6.92%` actuator-infeasible after the official clamp.
 This supports a future feasible-action parameterization that handles both
-layers, but no mapping or scale has been selected and no training is authorized.
+layers. The selected gate-only candidate is now the state-feasible truncated
+Gaussian described below; no task training is authorized.
 See `docs/taco_pour_policy_distribution_attribution_v1.md`.
+
+The local `taco_pour_state_feasible_truncated_gaussian_v1` candidate keeps the
+`0.05` scale and samples each actuator directly inside the intersection of
+`[-1,1]` and its current `ctrlrange`-feasible normalized interval. It stores
+those intervals with every rollout action and uses the matching truncated-
+Normal likelihood. Decimal control limits are projected to the nearest
+feasible `float32` value only when the original reference excess is at most
+`2e-7`; larger errors fail closed.
+
+Its 1,280-state offline gate sampled 368,640 action components. All were inside
+their support, the ordinary clamp changed none, theoretical `ctrlrange` loss
+was exactly zero, the minimum normalization mass was `0.00731560`, gradients
+were finite, and the same-policy ratio was bitwise one. A real four-world,
+40-step, zero-optimizer rollout then stored `160 x 36` bounds and recorded zero
+nonzero `residual_lost_to_ctrlrange` values.
+
+That integration gate also caught a separate RNN recomputation defect: the
+3+1 curriculum restores nonzero hidden memory after done, while the generic
+batched PPO path assumes zero. The candidate evaluator now replays the original
+four-world time order and the same nonzero resets. Recomputed `mu`, `sigma`,
+log-probability, and ratio are bitwise identical; actor, critic, optimizers, and
+normalization remain unchanged. This is an engineering-gate result, not PPO
+training or task-performance evidence. See
+`docs/taco_pour_state_feasible_truncated_gaussian_v1.md`.
 
 Training coverage in the historical 8-epoch run remains unknown because that
 run did not save visited states, and a fresh non-deterministic GPU rerun cannot
@@ -525,6 +550,9 @@ Ready:
   actor-memory rejection.
 - a real-GPU fixed 3+1 sampler/reset gate and one frozen 1,280-sample
   tail-focused experiment, without a curriculum-ratio or endpoint sweep.
+- offline and real-GPU zero-optimizer gates for the local state-feasible
+  truncated-Gaussian action candidate, including exact recurrent likelihood
+  recomputation and zero actuator-range loss.
 
 Not yet established:
 
@@ -536,6 +564,7 @@ Not yet established:
 - independent full-horizon replay of a trajectory containing PPO actions;
 - generalization of this reset/collision calibration to other TACO samples;
 - capacity for arbitrary unseen PPO states beyond the recorded stress tests.
+- task-level PPO performance under the gate-only truncated-Gaussian candidate.
 
 The current isolated-suite count is recorded in `docs/test_environment.md`.
 At an earlier checkpoint, the MuJoCo 3.13 high-SDF GPU stack passed

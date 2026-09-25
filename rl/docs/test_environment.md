@@ -1,5 +1,19 @@
 # Test Environment
 
+## State-feasible truncated-Gaussian engineering gate
+
+On 2026-09-25, the local gate-only candidate passed an offline audit over 1,280
+frozen v4 states and 368,640 sampled action components, followed by a real
+four-world/40-step rollout with no optimizer update. All samples stayed inside
+their stored state bounds, the ordinary action clamp changed zero components,
+and the real environment recorded exactly zero actuator-range residual loss.
+Replaying the same four-world recurrent layout, including the curriculum's
+nonzero hidden-state reset, reproduced `mu`, `sigma`, log-probability, and ratio
+bitwise. Task-level PPO remained disabled pending explicit authorization.
+With `TRASH` and the local dependency overlay excluded from collection, the
+formal MuJoCo-Warp 3.13 stack passed **649 tests and 57 subtests** in 106.03 s;
+the 17 warnings are the previously recorded backend/deprecation warnings.
+
 ## Training-time ctrlrange distribution diagnostic
 
 On 2026-09-24, one frozen, non-promotable four-world/eight-epoch 3+1 run

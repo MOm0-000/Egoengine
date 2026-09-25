@@ -168,7 +168,9 @@ def refresh_boundary_rnn_for_actor(agent: Any, boundary: dict[str, Any]) -> dict
             state[:, :1, :].to(agent.device).zero_() for state in default
         ]
         for observation in prefix:
-            result = agent.get_action_values(agent.obs_to_tensors(observation))
+            obs = agent.obs_to_tensors(observation)
+            advance = getattr(agent, "advance_rnn_from_observation", None)
+            result = advance(obs) if advance is not None else agent.get_action_values(obs)
             agent.rnn_states = result["rnn_states"]
         refreshed_states = tuple(_cpu_clone(state) for state in agent.rnn_states)
     finally:

@@ -8,7 +8,7 @@ evidence_policy:
   paper_page_numbers: one_based_pdf_pages
   copied_defaults_are_author_settings: false
   new_model_or_reset_procedure_requires_confirmation: true
-  current_revision: training_ctrlrange_distribution_diagnostic_completed_no_action_redesign_selected
+  current_revision: state_feasible_truncated_gaussian_engineering_gates_passed_training_not_authorized
 inputs:
   setting: user_approved_gt_oracle_validation_not_full_perception_reproduction
   approved_episodes: ['20230927_027', '20230917_020', '20230926_004', '20231103_071', '20230927_017']
@@ -575,9 +575,43 @@ runtime_contract:
           actuator_infeasible_after_official_clamp: 0.06923100661174154
         actor_sigma: {p05: 0.9992543458938599, p50: 1.0001270771026611, p95: 1.0010746717453003}
         conclusion: both_policy_centre_and_exploration_support_require_feasible_action_design
-        new_action_parameterization_selected: false
+        new_action_parameterization_selected: state_feasible_truncated_gaussian_v1_gate_only
         next_training_authorized: false
         new_scale_selected: false
+        next_algorithm_training_authorized: false
+      state_feasible_truncated_gaussian_v1:
+        status: engineering_gates_passed_optimizer_and_task_training_not_authorized
+        paper_faithful: false
+        profile: /data_all/zzx/3.2RL/configs/taco_pour_state_feasible_truncated_gaussian_v1.yaml
+        documentation: /data_all/zzx/3.2RL/docs/taco_pour_state_feasible_truncated_gaussian_v1.md
+        offline_gate: /data_all/zzx/3.2RL/runs/taco_pour_truncated_gaussian_offline_gate_v1/report.json
+        integration_gate: /data_all/zzx/3.2RL/runs/taco_pour_truncated_gaussian_integration_gate_v1/report.json
+        residual_scale: 0.05
+        reference_snap_tolerance: 0.0000002
+        distribution: independent_state_truncated_normal
+        deterministic_action: clip_mu_to_state_bounds
+        official_minus1_plus1_clamp_enabled: false
+        rollout_bounds_stored: true
+        offline_states: 1280
+        offline_samples_per_state: 8
+        offline_sampled_components: 368640
+        offline_minimum_normalization_mass: 0.00731560126243451
+        offline_sampled_outside_support: 0
+        offline_theoretical_ctrlrange_lost_components: 0
+        integration_world_starts: [20, 20, 20, 46]
+        integration_samples: 160
+        integration_sampled_outside_support: 0
+        integration_official_clamp_changed_components: 0
+        integration_actual_ctrlrange_lost_components: 0
+        exact_network_recompute:
+          mu_bitwise_equal: true
+          sigma_bitwise_equal: true
+          logprob_bitwise_equal: true
+          ratio_bitwise_one: true
+          nonzero_curriculum_RNN_reset_semantics_preserved: true
+        optimizer_steps: 0
+        task_level_training_executed: false
+        chunk_commit_written: false
         next_algorithm_training_authorized: false
       training_ctrlrange_distribution_v1:
         status: completed_diagnostic_only_no_commit
