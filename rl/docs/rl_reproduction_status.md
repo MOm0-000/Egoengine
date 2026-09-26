@@ -131,5 +131,42 @@ The active blocker is now:
 > any new training candidate can be authorized. The half-LR candidate remains
 > blocked.
 
+## Source-46 state-entry gate
+
+The source-46 audit starts from the exact formal PPO physics snapshot and RNN
+hidden. It changes one declared action group for one control interval, then
+returns to the unchanged deterministic actor. Formal Replay, formal PPO and
+the restored source-46 PPO suffix are reproduced exactly before interpreting
+any branch.
+
+```text
+branch                                contact@48  score@49  first failure
+zero R_forearm_ty only                no          0.958052  endpoint 50
+zero right-wrist translation          no          0.987501  endpoint 50
+zero complete right wrist             no          0.973379  endpoint 50
+zero complete right hand              yes         1.029588  endpoint 49
+zero all 36 residuals                 yes         1.044594  endpoint 49
+formal PPO                            no          1.114293  endpoint 49
+```
+
+Endpoint-47 contact is deliberately not a success condition: formal Replay
+has no right-hand/tool contact there and reacquires index contact at endpoint
+48. The actual gate requires a live endpoint-48 contact, survival through
+endpoint 49, and a lower endpoint-49 score than formal PPO.
+
+The result exposes a tradeoff rather than an admissible repair. Suppressing
+wrist motion improves feasibility and postpones failure, but does not restore
+live transmission at endpoint 48. Suppressing the complete right hand or all
+36 residuals restores index contact, but position/rotation tracking still
+crosses the local ellipse at endpoint 49. Endpoint-47 comparisons report
+position, angle, velocity and fingertip distances separately; they do not mix
+metres and radians into a synthetic success distance, and no unreliable
+positive mesh gap is computed.
+
+Therefore all five predeclared branches fail. No reward, action scale,
+learning rate or training setting changes; no chunk is accepted or committed.
+The `actor_learning_rate=5e-5` candidate remains blocked, and the next
+read-only state-entry attribution moves to source 45.
+
 Superseded or invalid evidence remains isolated under `TRASH/` and is not part
 of the active decision chain.

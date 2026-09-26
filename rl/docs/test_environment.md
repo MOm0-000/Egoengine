@@ -18,7 +18,7 @@ PYTHONPATH="$PWD/.env_mjwp313_overlay:$PWD/src:$PWD/scripts:$PWD/external/mink/s
   /data_all/zzx/egoengine/spider/.venv/bin/python -m pytest -q
 ```
 
-On 2026-09-26 this command passed **673 tests and 57 subtests**.
+On 2026-09-26 this command passed **677 tests and 57 subtests**.
 The 19 warnings are known upstream/diagnostic warnings: capsule-mesh MULTICCD
 capacity, PyTorch AMP deprecations, two Trimesh degenerate-volume warnings and
 seven SciPy pickle deprecations.
@@ -59,6 +59,7 @@ runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/
 runs/taco_pour_postfix_single_actor_pass_audit_v1/
 runs/taco_pour_single_pass_endpoint47_49_gate_v1/
 runs/taco_pour_source47_semantic_action_subspace_gate_v1/
+runs/taco_pour_source46_state_entry_gate_v1/
 ```
 
 The first corrected PPO authorization is consumed. Replay passed the first
@@ -257,6 +258,17 @@ translation or the whole wrist improves endpoint-49 score by about `0.024` to
 advantage, but are only `4/23` and `3/20` samples and never satisfy the
 thumb-plus-non-thumb bonus condition. No source-47 training candidate is
 authorized; the next read-only decision moves to source-46 state entry.
+
+The source-46 state-entry gate changes exactly one declared residual group for
+one control interval from the bitwise-reproduced formal state and RNN hidden,
+then resumes the frozen actor. Zeroing only `R_forearm_ty`, all wrist
+translation, or the complete wrist postpones failure from endpoint 49 to
+endpoint 50, but none has a live right-hand/tool contact at endpoint 48.
+Zeroing the complete right hand or all 36 residuals restores index contact at
+endpoint 48, but both still terminate at endpoint 49. No branch satisfies
+contact reacquisition and endpoint-49 feasibility together. The half-LR
+candidate remains blocked; the next read-only state-entry attribution moves to
+source 45.
 
 ## Archived invalid performance evidence
 

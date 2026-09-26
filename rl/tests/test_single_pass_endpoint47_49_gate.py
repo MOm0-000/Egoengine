@@ -110,8 +110,8 @@ def test_half_lr_candidate_and_protocol_remain_blocked():
     assert _sha256(Path(evidence["report"]["path"])) == evidence["report"]["sha256"]
     assert protocol["training_ready"] is False
     assert protocol["training_ready_scope"] == (
-        "source47_semantic_subspace_gate_failed_source46_state_entry_required"
+        "source46_state_entry_gate_failed_source45_attribution_required"
     )
     assert protocol["blocking_checks"] == [
-        "source47_semantic_subspace_gate_failed_source46_state_entry_required"
+        "source46_state_entry_gate_failed_source45_attribution_required"
     ]

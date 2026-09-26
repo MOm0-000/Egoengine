@@ -99,7 +99,7 @@ def test_protocol_moves_to_source46_without_unblocking_half_lr():
     half_lr = yaml.safe_load((
         ROOT / "configs/taco_pour_postfix_single_actor_pass_lr_half_candidate_v1.yaml"
     ).read_text())
-    blocker = "source47_semantic_subspace_gate_failed_source46_state_entry_required"
+    blocker = "source46_state_entry_gate_failed_source45_attribution_required"
     assert protocol["training_ready"] is False
     assert protocol["training_ready_scope"] == blocker
     assert protocol["blocking_checks"] == [blocker]

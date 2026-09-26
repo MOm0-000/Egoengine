@@ -79,7 +79,7 @@ def test_evidence_separates_normalizer_state_from_optimizer_update():
 def test_protocol_records_the_consumed_single_pass_result_without_authorizing_more_training():
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
     assert protocol["training_ready"] is False
-    blocker = "source47_semantic_subspace_gate_failed_source46_state_entry_required"
+    blocker = "source46_state_entry_gate_failed_source45_attribution_required"
     assert protocol["training_ready_scope"] == blocker
     assert protocol["blocking_checks"] == [blocker]
     repair = protocol["runtime_contract"]["observation_normalization"]
