@@ -1,0 +1,83 @@
+schema: taco_pour_tail_mode_necessity_transition_audit_v1
+status: authorized_read_only_audit
+paper_faithful: false
+classification: local_engineering_attribution_not_EgoEngine_RL
+purpose: >-
+  Quantify exact score margins and nested semantic-suppression increments from
+  the saved tail oracle, then reproduce only its selected path to explain the
+  source56-to-endpoint57 transition and the existing endpoint58 failure.
+
+runtime:
+  backend: CPU_MuJoCo_Warp
+  training_allowed: false
+  optimizer_steps: 0
+  actor_frozen: true
+  critic_frozen: true
+  observation_normalization_frozen: true
+  reward_changed: false
+  objective_changed: false
+  action_scale_changed: false
+  action_bound_changed: false
+  action_distribution_changed: false
+  reference_timing_changed: false
+  action_frame_changed: false
+  PPO_hyperparameters_changed: false
+  learned_gate_training_allowed: false
+  actor_learning_rate_5e_minus_5_training_allowed: false
+  PPO_retraining_allowed: false
+  chunk_acceptance_allowed: false
+  chunk_commit_allowed: false
+
+mode_necessity:
+  source_results: saved_parent_report_only
+  sources: [44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55]
+  numerical_tolerance_for_merging_modes: null
+  report_exact_winner_runner_up_margin: true
+  report_all_candidate_delta_from_winner: true
+  nested_chain:
+    - zero_right_wrist_translation
+    - zero_complete_right_wrist
+    - zero_entire_right_hand
+    - zero_full_36d_residual
+  incremental_effect_sign: score_more_suppression_minus_score_less_suppression
+  causal_claim_from_near_tie_allowed: false
+  learned_gate_label_generation_allowed: false
+
+transition_reproduction:
+  untouched_prefix_last_source: 43
+  reproduce_parent_selected_sources: [44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56]
+  require_parent_scores_exact: true
+  source57_new_semantic_candidates_allowed: false
+  reproduce_existing_source57_binary_ON_OFF_only: true
+  required_state_endpoints: [56, 57, 58]
+  required_diagnostics:
+    - tool_position_and_error_xyz
+    - tool_actual_and_reference_displacement
+    - tool_actual_and_reference_velocity
+    - wrist_tool_relative_pose_and_velocity
+    - right_hand_tool_contact_and_force
+    - normalized_36d_action_source56_vs_source57
+    - position_and_rotation_contributions
+
+inputs:
+  parent_contract:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_tail_semantic_suppression_oracle_v1.yaml
+    sha256: bd65ff5edc36d2895ec9163542b6db6137372bcdcb4115d45799e6ac496baa1f
+  parent_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_tail_semantic_suppression_oracle_v1/report.json
+    sha256: 5f667a9691f9094657d78fe998c2f9b2599b08785518a44580556f2741cd7f6e
+  parent_arrays:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_tail_semantic_suppression_oracle_v1/tail_semantic_oracle_trace.npz
+    sha256: a2f87114867f051c57e765e60b3aae09c5e45bad1733bb930b8d08ddeef93f21
+
+frozen_decisions:
+  actor_learning_rate_5e_minus_5: blocked
+  learned_gate: blocked
+  reward_change: blocked
+  PPO_retraining: blocked
+  chunk_commit: blocked
+
+artifacts:
+  report: report.json
+  summary: summary.md
+  arrays: transition_trace.npz

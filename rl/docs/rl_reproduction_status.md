@@ -401,5 +401,51 @@ blocker is to characterize this tail mode structure and the new endpoint-58
 failure. PPO retraining, the half-LR candidate, reward changes, learned-gate
 training, task acceptance and chunk commit all remain blocked.
 
+## Tail mode necessity and source56--58 transition audit
+
+The winner sequence is not treated as a set of categorical training labels.
+The audit reads the seven saved scores at each source and reports exact
+margins plus the nested increments
+`translation → complete wrist → entire right hand → full 36-D`, with no
+engineering epsilon or post-hoc merging.
+
+The complete-wrist improvement over translation-only is `0.00217515` at
+source 44 and `0.00637680` at source 45, supporting an additional wrist-
+rotation effect there. Several later broad winners are not comparably distinct:
+
+```text
+source 48  full36 over entire right hand   2.98e-7
+source 52  full36 over entire right hand   2.38e-6
+source 53  entire right hand vs full36     exact tie
+source 55  six candidates                  exact minimum tie
+```
+
+Thus translation remains the main narrow suppression through most of the
+later tail. The saved evidence does not establish a separate finger mechanism
+or bilateral mechanism, and those near-tied winner names are not eligible as
+learned-gate labels.
+
+The physical transition audit then reproduces only the existing selected path
+and source-57 binary ON/OFF continuation. It does not add a seven-way source-57
+gate. From source 56 to endpoint 57, actual bowl displacement is only
+`[0.039, 0.278, 0.050] mm`, while the reference moves
+`[-1.460, 0.441, 4.490] mm`. Consequently the z absolute position error grows
+by `4.440 mm`, even though rotation error improves. Pinky contact is reacquired
+at endpoint 57 with summed normal force `10.689`.
+
+From source 57 to endpoint 58, the bowl moves
+`[-2.797, 4.756, 2.134] mm` against a reference displacement of
+`[-2.414, 0.538, 4.618] mm`. Absolute y and z errors therefore grow by
+`4.218 mm` and `2.484 mm`. Pinky contact remains geometrically present, but
+summed normal force drops to `0.174`; position contribution rises while
+rotation contribution falls. The new failure is a position-dominated loss of
+tracking with weakened transmission, not an orientation failure.
+
+The next unresolved question is how to turn the stable margin/state evidence
+into a state-explainable mode criterion or an active correction for endpoint
+58 without using near-tied oracle labels. The half-LR candidate, learned gate,
+reward modification, PPO retraining, task acceptance and chunk commit remain
+blocked.
+
 Superseded or invalid evidence remains isolated under `TRASH/` and is not part
 of the active decision chain.

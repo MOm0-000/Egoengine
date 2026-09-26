@@ -106,7 +106,7 @@ def test_protocol_selects_translation_direction_without_authorizing_training():
     half_lr = yaml.safe_load((
         ROOT / "configs/taco_pour_postfix_single_actor_pass_lr_half_candidate_v1.yaml"
     ).read_text())
-    blocker = "tail_semantic_suppression_creates_recoverable_source56_state_requires_mode_characterization"
+    blocker = "tail_mode_state_criterion_and_endpoint58_active_correction_unresolved"
     assert report["decision"]["gate_passed"] is True
     assert report["decision"]["new_training_authorized"] is False
     assert report["decision"]["actor_LR_5e_minus_5_unblocked"] is False
@@ -121,7 +121,7 @@ def test_protocol_selects_translation_direction_without_authorizing_training():
         "right_wrist_translation_temporal_scale_or_gating"
     )
     assert half_lr["status"] == (
-        "frozen_blocked_not_selected_after_tail_semantic_oracle"
+        "frozen_blocked_not_selected_after_tail_mode_transition_audit"
     )
     assert half_lr["latest_state_entry_evidence"][
         "half_LR_selected_for_next_experiment"

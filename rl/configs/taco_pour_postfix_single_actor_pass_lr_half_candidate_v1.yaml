@@ -1,5 +1,5 @@
 schema: taco_pour_postfix_single_actor_pass_lr_half_candidate_v1
-status: frozen_blocked_not_selected_after_tail_semantic_oracle
+status: frozen_blocked_not_selected_after_tail_mode_transition_audit
 paper_faithful: false
 purpose: >-
   Freeze, but do not authorize, the single-variable local reproduction
@@ -111,6 +111,13 @@ latest_state_entry_evidence:
   tail_semantic_oracle_source56_all_candidates_pass: true
   tail_semantic_oracle_successful_intervals: 37
   tail_semantic_oracle_first_failure_endpoint: 58
+  tail_mode_necessity_transition_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_tail_mode_necessity_transition_audit_v1/report.json
+    sha256: 7ed95e1f7bcb60e38b799878eed6c203d2edee68c5f14161b846a760a3474508
+  distinct_finger_causality_established: false
+  distinct_bilateral_causality_established: false
+  source56_to_57_dominant_position_growth_axis: z
+  source57_to_58_dominant_position_growth_axis: y
   half_LR_selected_for_next_experiment: false
   interpretation: >-
     A one-step binary translation oracle extends the frozen actor to 36/40.
@@ -122,11 +129,12 @@ latest_state_entry_evidence:
     Source-56 semantic suppression alone fails endpoint 57. A tail semantic
     oracle over sources 44--55 then produces a recoverable source-56 state and
     passes endpoint 57 with all seven candidates, but fails endpoint 58 and
-    reaches only 37/40. The selected modes include complete-wrist, complete
-    right-hand and full-36D suppression in addition to translation, so the
-    next work is mode/new-failure characterization rather than a global actor
-    learning-rate change. This historical candidate remains frozen and
-    unauthorized.
+    reaches only 37/40. Exact margin analysis shows measurable extra complete-
+    wrist benefit at sources 44--45, while several later broader-mode winners
+    are exact or near ties and do not establish distinct finger or bilateral
+    causality. The 56--57 transition lags the reference mainly on z; the
+    57--58 failure combines y/z position growth with a sharp loss of pinky
+    normal force. This historical LR candidate remains frozen and unauthorized.
 
 evidence:
   source_run_report:

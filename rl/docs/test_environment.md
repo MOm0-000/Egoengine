@@ -18,7 +18,7 @@ PYTHONPATH="$PWD/.env_mjwp313_overlay:$PWD/src:$PWD/scripts:$PWD/external/mink/s
   /data_all/zzx/egoengine/spider/.venv/bin/python -m pytest -q
 ```
 
-On 2026-09-26 this command passed **701 tests and 57 subtests**.
+On 2026-09-26 this command passed **705 tests and 57 subtests**.
 The 19 warnings are known upstream/diagnostic warnings: capsule-mesh MULTICCD
 capacity, PyTorch AMP deprecations, two Trimesh degenerate-volume warnings and
 seven SciPy pickle deprecations.
@@ -66,6 +66,7 @@ runs/taco_pour_binary_translation_oracle_gate_v1/
 runs/taco_pour_binary_translation_last_off_reversal_gate_v1/
 runs/taco_pour_source56_semantic_action_gate_v1/
 runs/taco_pour_tail_semantic_suppression_oracle_v1/
+runs/taco_pour_tail_mode_necessity_transition_audit_v1/
 ```
 
 The first corrected PPO authorization is consumed. Replay passed the first
@@ -110,6 +111,26 @@ continued binary selector then fails endpoint 58 (`ON=1.02272546`,
 `OFF=1.02330267`), so the result is `37/40`, not task success. The frozen PPO
 suppression family is therefore not exhausted, but no deployable selector,
 new training, reward change or chunk commit is authorized.
+
+The follow-up necessity audit reads the saved seven-candidate scores directly
+and uses no tolerance to merge modes. Complete-wrist suppression improves on
+translation-only by `0.00217515` at source 44 and `0.00637680` at source 45.
+In contrast, the full-36D winner margins at sources 48 and 52 are only
+`2.98e-7` and `2.38e-6`; source 53 is an exact right-hand/full-36D tie, and
+six candidates tie exactly at source 55. These winner names are therefore not
+used as learned-gate labels and do not establish separate finger or bilateral
+causality.
+
+The same audit bitwise reproduces the selected tail path and the already
+existing source-57 ON/OFF continuation; it does not introduce a source-57
+semantic search. From source 56 to 57, the bowl moves only about `0.285 mm`
+while its reference moves about `4.74 mm`; the z absolute error grows by
+`4.44 mm`. Pinky contact is reacquired with summed normal force `10.689`.
+From source 57 to 58, y and z absolute errors grow by `4.218 mm` and
+`2.484 mm`, while that pinky force falls to `0.174`. Endpoint 58 is therefore
+a new position-dominated failure involving reference lag and weakened contact
+transmission, not evidence that a near-tied broad suppression mode is needed.
+All algorithm changes and commit remain blocked.
 
 The endpoint 44--48 attribution is a no-training replay of the frozen actor.
 It requires exact equality with both saved formal CPU traces before reporting

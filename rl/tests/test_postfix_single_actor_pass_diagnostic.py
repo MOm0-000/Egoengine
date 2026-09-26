@@ -81,7 +81,7 @@ def test_protocol_records_failure_and_requires_a_new_decision():
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
     assert protocol["training_ready"] is False
     assert protocol["training_ready_scope"] == (
-        "tail_semantic_suppression_creates_recoverable_source56_state_requires_mode_characterization"
+        "tail_mode_state_criterion_and_endpoint58_active_correction_unresolved"
     )
     run = protocol["evaluation"]["postfix_single_actor_pass_diagnostic"]
     assert run["sole_change"] == {"actor_mini_epochs": {"baseline": 4, "candidate": 1}}

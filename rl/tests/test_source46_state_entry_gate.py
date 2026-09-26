@@ -106,7 +106,7 @@ def test_protocol_moves_to_source45_and_keeps_half_lr_blocked():
     half_lr = yaml.safe_load((
         ROOT / "configs/taco_pour_postfix_single_actor_pass_lr_half_candidate_v1.yaml"
     ).read_text())
-    blocker = "tail_semantic_suppression_creates_recoverable_source56_state_requires_mode_characterization"
+    blocker = "tail_mode_state_criterion_and_endpoint58_active_correction_unresolved"
     assert report["decision"]["passing_branches"] == []
     assert report["decision"]["gate_passed"] is False
     assert report["decision"]["actor_LR_5e_minus_5_unblocked"] is False
