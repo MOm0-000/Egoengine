@@ -95,7 +95,7 @@ def test_half_lr_candidate_and_protocol_remain_blocked():
     candidate = yaml.safe_load(CANDIDATE.read_text())
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
     assert candidate["status"] == (
-        "frozen_blocked_not_selected_after_source56_semantic_gate"
+        "frozen_blocked_not_selected_after_tail_semantic_oracle"
     )
     assert candidate["single_change"] == {
         "field": "PPO_actor_learning_rate",
@@ -110,8 +110,8 @@ def test_half_lr_candidate_and_protocol_remain_blocked():
     assert _sha256(Path(evidence["report"]["path"])) == evidence["report"]["sha256"]
     assert protocol["training_ready"] is False
     assert protocol["training_ready_scope"] == (
-        "source56_semantic_action_suppression_insufficient_failure_attribution_must_move_earlier"
+        "tail_semantic_suppression_creates_recoverable_source56_state_requires_mode_characterization"
     )
     assert protocol["blocking_checks"] == [
-        "source56_semantic_action_suppression_insufficient_failure_attribution_must_move_earlier"
+        "tail_semantic_suppression_creates_recoverable_source56_state_requires_mode_characterization"
     ]

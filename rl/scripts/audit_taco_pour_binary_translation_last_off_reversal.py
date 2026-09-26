@@ -223,7 +223,9 @@ def array_result(arrays: dict[str, list]) -> dict[str, np.ndarray]:
 
 def reproduce_baseline(*, backend, policy, boundary, reference_qpos,
                        reference_qvel, objective, expected_arrays: Path,
-                       expected_off_sources: list[int]) -> tuple[dict, dict]:
+                       expected_off_sources: list[int],
+                       capture_sources: tuple[int, ...] = FORCED_SOURCES,
+                       ) -> tuple[dict, dict]:
     backend.restore(boundary)
     backend.verify_restored_snapshot(boundary)
     policy.rnn_states = zero_hidden(policy)
@@ -231,7 +233,7 @@ def reproduce_baseline(*, backend, policy, boundary, reference_qpos,
     decisions = []
     arrays = {key: [] for key in ARRAY_KEYS}
     for source in range(START, END):
-        if source in FORCED_SOURCES:
+        if source in capture_sources:
             captures[source] = {
                 "snapshot": backend.snapshot(),
                 "pre_hidden": clone_hidden(policy.rnn_states),
@@ -262,7 +264,7 @@ def reproduce_baseline(*, backend, policy, boundary, reference_qpos,
         if key not in expected.files or not np.array_equal(actual[key], expected[key]):
             raise RuntimeError(f"baseline oracle changed: {key}")
     off_sources = [row["source_endpoint"] for row in decisions if row["selected"] == "OFF"]
-    if off_sources != expected_off_sources or len(captures) != len(FORCED_SOURCES):
+    if off_sources != expected_off_sources or len(captures) != len(capture_sources):
         raise RuntimeError("baseline OFF decisions or forced-source captures changed")
     if decisions[-1]["selected_outcome_endpoint"] != 57 or not decisions[-1]["selected_terminated"]:
         raise RuntimeError("baseline endpoint-57 failure changed")

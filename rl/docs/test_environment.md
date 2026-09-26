@@ -18,7 +18,7 @@ PYTHONPATH="$PWD/.env_mjwp313_overlay:$PWD/src:$PWD/scripts:$PWD/external/mink/s
   /data_all/zzx/egoengine/spider/.venv/bin/python -m pytest -q
 ```
 
-On 2026-09-26 this command passed **697 tests and 57 subtests**.
+On 2026-09-26 this command passed **701 tests and 57 subtests**.
 The 19 warnings are known upstream/diagnostic warnings: capsule-mesh MULTICCD
 capacity, PyTorch AMP deprecations, two Trimesh degenerate-volume warnings and
 seven SciPy pickle deprecations.
@@ -65,6 +65,7 @@ runs/taco_pour_source45_prefix_source50_refinement_gate_v1/
 runs/taco_pour_binary_translation_oracle_gate_v1/
 runs/taco_pour_binary_translation_last_off_reversal_gate_v1/
 runs/taco_pour_source56_semantic_action_gate_v1/
+runs/taco_pour_tail_semantic_suppression_oracle_v1/
 ```
 
 The first corrected PPO authorization is consumed. Replay passed the first
@@ -96,6 +97,19 @@ range only from `1.00305593` to `1.00422549`; position contributes about
 retain pinky contact and still fails. Source-56 semantic subspace selection is
 therefore exhausted at the declared resolution, and attribution must move to
 an earlier state. No training or commit is authorized.
+
+The tail semantic oracle leaves sources 20--43 bitwise identical to the
+binary translation oracle, then compares seven predeclared semantic actions
+from the same snapshot and post-forward hidden at every source 44--55. Its
+selected modes are two complete-wrist suppressions, six translation
+suppressions, two full-36D suppressions, one complete-right-hand suppression
+and one complete PPO action. This broader state-entry correction changes the
+source-56 result decisively: all seven source-56 candidates now pass endpoint
+57, and complete PPO is the lowest-score candidate at `0.99185961`. The
+continued binary selector then fails endpoint 58 (`ON=1.02272546`,
+`OFF=1.02330267`), so the result is `37/40`, not task success. The frozen PPO
+suppression family is therefore not exhausted, but no deployable selector,
+new training, reward change or chunk commit is authorized.
 
 The endpoint 44--48 attribution is a no-training replay of the frozen actor.
 It requires exact equality with both saved formal CPU traces before reporting

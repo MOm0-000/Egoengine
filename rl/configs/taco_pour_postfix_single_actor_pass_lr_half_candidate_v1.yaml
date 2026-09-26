@@ -1,5 +1,5 @@
 schema: taco_pour_postfix_single_actor_pass_lr_half_candidate_v1
-status: frozen_blocked_not_selected_after_source56_semantic_gate
+status: frozen_blocked_not_selected_after_tail_semantic_oracle
 paper_faithful: false
 purpose: >-
   Freeze, but do not authorize, the single-variable local reproduction
@@ -105,6 +105,12 @@ latest_state_entry_evidence:
     sha256: 34f0110632e98fc2ee632a26e9c07441eb214aa482e6180f25dd59338ef3614e
   source56_passing_semantic_branches: []
   source56_semantic_action_selection_exhausted: true
+  tail_semantic_oracle_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_tail_semantic_suppression_oracle_v1/report.json
+    sha256: 5f667a9691f9094657d78fe998c2f9b2599b08785518a44580556f2741cd7f6e
+  tail_semantic_oracle_source56_all_candidates_pass: true
+  tail_semantic_oracle_successful_intervals: 37
+  tail_semantic_oracle_first_failure_endpoint: 58
   half_LR_selected_for_next_experiment: false
   interpretation: >-
     A one-step binary translation oracle extends the frozen actor to 36/40.
@@ -113,11 +119,14 @@ latest_state_entry_evidence:
     source-56 bowl pose and contact but still cannot make endpoint 57
     feasible. Position and rotation are reported separately; no mixed
     position-plus-quaternion norm is interpreted as a metric distance. The
-    source-56 semantic action attribution then shows that zeroing rotation,
-    fingers, the complete wrist, the entire right hand or all 36 residuals
-    still fails endpoint 57. Failure attribution must move earlier, rather
-    than changing the global actor learning rate. This historical candidate
-    remains frozen and unauthorized.
+    Source-56 semantic suppression alone fails endpoint 57. A tail semantic
+    oracle over sources 44--55 then produces a recoverable source-56 state and
+    passes endpoint 57 with all seven candidates, but fails endpoint 58 and
+    reaches only 37/40. The selected modes include complete-wrist, complete
+    right-hand and full-36D suppression in addition to translation, so the
+    next work is mode/new-failure characterization rather than a global actor
+    learning-rate change. This historical candidate remains frozen and
+    unauthorized.
 
 evidence:
   source_run_report:

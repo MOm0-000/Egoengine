@@ -1,0 +1,144 @@
+schema: taco_pour_tail_semantic_suppression_oracle_v1
+status: authorized_read_only_gate
+paper_faithful: false
+classification: local_engineering_semantic_suppression_oracle_not_EgoEngine_RL
+purpose: >-
+  Test whether one-step semantic suppression over sources 44--55 can create a
+  source-56 state where at least one predeclared semantic action survives
+  endpoint 57.
+
+runtime:
+  backend: CPU_MuJoCo_Warp
+  training_allowed: false
+  optimizer_steps: 0
+  actor_frozen: true
+  critic_frozen: true
+  observation_normalization_frozen: true
+  reward_changed: false
+  objective_changed: false
+  action_scale_changed: false
+  action_bound_changed: false
+  action_distribution_changed: false
+  reference_timing_changed: false
+  action_frame_changed: false
+  PPO_hyperparameters_changed: false
+  learned_gate_training_allowed: false
+  actor_learning_rate_5e_minus_5_training_allowed: false
+  chunk_acceptance_allowed: false
+  chunk_commit_allowed: false
+  checkpoint_resume_for_training_allowed: false
+
+prefix:
+  start_endpoint: 20
+  last_untouched_source: 43
+  exact_binary_oracle_arrays_required: true
+  capture_exact_source44_complete_physics_state_and_pre_forward_RNN_hidden: true
+
+tail_selection:
+  first_source: 44
+  last_source: 55
+  actor_forward_calls_per_source: 1
+  same_pre_step_snapshot_and_post_forward_hidden_for_all_candidates: true
+  branch_horizon_control_intervals: 1
+  criterion: next_endpoint_active_object_tracking_termination_and_score_only
+  contact_used: false
+  source_index_used: false
+  future_beyond_one_step_used: false
+  scale_sweep_allowed: false
+  additional_candidates_allowed: false
+  ordered_rules:
+    - prefer_nonterminated_candidate
+    - prefer_lower_objective_score
+    - exact_tie_prefer_fewer_zeroed_action_dimensions
+    - remaining_exact_tie_use_declared_candidate_order
+
+candidates:
+  - name: complete_PPO
+    zero_normalized_action_indices: []
+  - name: zero_right_wrist_translation
+    zero_normalized_action_indices: [0, 1, 2]
+  - name: zero_right_wrist_rotation
+    zero_normalized_action_indices: [3, 4, 5]
+  - name: zero_right_fingers
+    zero_normalized_action_indices: [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+  - name: zero_complete_right_wrist
+    zero_normalized_action_indices: [0, 1, 2, 3, 4, 5]
+  - name: zero_entire_right_hand
+    zero_normalized_action_indices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+  - name: zero_full_36d_residual
+    zero_normalized_action_indices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35]
+
+source56_fork:
+  evaluate_same_seven_candidates: true
+  actor_forward_calls: 1
+  contact_used_for_pass_fail: false
+  primary_passing_condition:
+    - endpoint57_does_not_terminate
+    - endpoint57_objective_score_strictly_below_1
+  selection_if_multiple_pass: same_tail_selection_rule
+  continuation_if_passed: selected_source56_branch_then_original_binary_translation_oracle_to_endpoint60_or_failure
+  continuation_if_none_pass: none
+
+required_diagnostics:
+  - selected_semantic_mode_by_source_44_to_55
+  - all_candidate_scores_and_termination_by_source
+  - source56_all_candidate_position_and_rotation_contributions
+  - source56_all_candidate_contact
+  - first_failure_endpoint
+
+decision_if_source56_passes: >-
+  tail_semantic_suppression_creates_recoverable_source56_state_requires_mode_characterization
+decision_if_source56_all_fail: >-
+  frozen_PPO_semantic_suppression_family_exhausted_pivot_to_active_corrective_action_or_parameterization
+
+frozen_candidates:
+  learned_gate: blocked
+  actor_learning_rate_5e_minus_5: blocked
+  reward_change: blocked
+  PPO_retraining: blocked
+
+inputs:
+  source56_semantic_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_source56_semantic_action_gate_v1/report.json
+    sha256: 34f0110632e98fc2ee632a26e9c07441eb214aa482e6180f25dd59338ef3614e
+  source56_semantic_arrays:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_source56_semantic_action_gate_v1/source56_semantic_branches.npz
+    sha256: 8779f7241dc9e49bccf84e6ec893e64feb3efffec2863743f93c5e5b975eb77f
+  baseline_oracle_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_binary_translation_oracle_gate_v1/report.json
+    sha256: 396754a62be72190bc87db1a55d57af28bc77acf082f539e1eb668a0c161b9b4
+  baseline_oracle_arrays:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_binary_translation_oracle_gate_v1/binary_translation_oracle_trace.npz
+    sha256: 3e967c534c14bcec491af736fa613c4f643f11ea5765f5824064678944e72144
+  checkpoint:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/ppo_chunk_20/nn/last_ep_8_rew__5.815153_.pth.gz
+    sha256: 159e7e462b584e10fd62764b82aac3725630088e45ee7720d71cd27bdfe59b97
+  boundary:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/source_boundary.pt.gz
+    sha256: a3646e24af1ba871e5ecc885669508223a5e0f26d3cf29f0482f02678419e337
+  simulator_config:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml
+    sha256: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+  initialization_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/initialization_report.json
+    sha256: 9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a
+  protocol:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/protocol.yaml
+    sha256: e90830ea1971f2238f4de6a54600930ed9b4cb308ada948fb43110a844098ac8
+  objective_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/objective_profile.yaml
+    sha256: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+  observation_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/observation_profile.yaml
+    sha256: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  action_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/action_profile.yaml
+    sha256: 71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4
+  distribution_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/distribution_profile.yaml
+    sha256: 6a4e4bd8f33fa53bfe34f21f822bfa391253cca090892767154320fc9bbfd1b8
+
+artifacts:
+  report: report.json
+  summary: summary.md
+  decision_arrays: tail_semantic_oracle_trace.npz

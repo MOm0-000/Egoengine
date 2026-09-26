@@ -95,8 +95,8 @@ def test_protocol_moves_attribution_earlier_and_keeps_all_training_blocked():
         ROOT / "configs/taco_pour_postfix_single_actor_pass_lr_half_candidate_v1.yaml"
     ).read_text())
     blocker = (
-        "source56_semantic_action_suppression_insufficient_"
-        "failure_attribution_must_move_earlier"
+        "tail_semantic_suppression_creates_recoverable_source56_state_"
+        "requires_mode_characterization"
     )
     assert protocol["training_ready"] is False
     assert protocol["training_ready_scope"] == blocker
@@ -111,10 +111,10 @@ def test_protocol_moves_attribution_earlier_and_keeps_all_training_blocked():
     assert gate["reward_change_authorized"] is False
     assert gate["chunk_acceptance_or_commit_authorized"] is False
     assert gate["next_read_only_direction"] == (
-        "move_failure_attribution_earlier_than_source56"
+        "completed_by_tail_semantic_suppression_oracle"
     )
     assert half_lr["status"] == (
-        "frozen_blocked_not_selected_after_source56_semantic_gate"
+        "frozen_blocked_not_selected_after_tail_semantic_oracle"
     )
     assert half_lr["latest_state_entry_evidence"][
         "source56_semantic_action_report"

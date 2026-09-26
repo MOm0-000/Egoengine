@@ -360,5 +360,46 @@ possible source-56 action has been mathematically exhausted.
 Failure attribution must now move earlier than source 56. The learned gate,
 half-LR PPO, reward change, task acceptance and chunk commit remain blocked.
 
+## Tail semantic suppression oracle
+
+The follow-up leaves the existing binary-oracle path through source 43
+untouched and bitwise reproduces its saved arrays. From source 44 through 55,
+the frozen actor is forwarded once per source and seven candidates share the
+same complete physics snapshot and post-forward RNN hidden: complete PPO,
+translation suppression, rotation suppression, finger suppression, complete
+wrist suppression, complete right-hand suppression and full-36D suppression.
+Selection uses only the next endpoint's formal tracking termination and score;
+exact ties prefer fewer zeroed dimensions and then the declared order.
+
+The selected sequence is:
+
+```text
+source 44--45  zero complete right wrist
+source 46--47  zero right-wrist translation
+source 48      zero full 36-D residual
+source 49--51  zero right-wrist translation
+source 52      zero full 36-D residual
+source 53      zero entire right hand
+source 54      zero right-wrist translation
+source 55      complete PPO
+```
+
+This result distinguishes the old source-56 state from an inevitable terminal
+condition. After the broader semantic state-entry corrections, all seven
+source-56 candidates survive endpoint 57 with scores below one. Complete PPO
+is selected at `0.99185961`, with squared position and rotation contributions
+`0.82991104` and `0.15387439`; it also has live pinky contact. The next binary
+decision at source 57 cannot survive endpoint 58: ON scores `1.02272546` and
+OFF scores `1.02330267`. The overall result is therefore `37/40`, not 40/40.
+
+The earlier conclusion that the declared semantic suppression family was
+exhausted at source 56 is now scoped correctly: suppression at the already bad
+source-56 state was insufficient, while semantic suppression over sources
+44--55 can create a recoverable source-56 state. The mode pattern is broader
+than translation alone and is not yet a deployable or learned gate. The next
+blocker is to characterize this tail mode structure and the new endpoint-58
+failure. PPO retraining, the half-LR candidate, reward changes, learned-gate
+training, task acceptance and chunk commit all remain blocked.
+
 Superseded or invalid evidence remains isolated under `TRASH/` and is not part
 of the active decision chain.

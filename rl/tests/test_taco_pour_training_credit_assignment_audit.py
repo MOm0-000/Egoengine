@@ -117,10 +117,10 @@ def test_artifacts_remain_hash_bound_and_protocol_advances_to_fresh_evidence():
 
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
     assert protocol["blocking_checks"] == [
-        "source56_semantic_action_suppression_insufficient_failure_attribution_must_move_earlier"
+        "tail_semantic_suppression_creates_recoverable_source56_state_requires_mode_characterization"
     ]
     assert protocol["training_ready_scope"] == (
-        "source56_semantic_action_suppression_insufficient_failure_attribution_must_move_earlier"
+        "tail_semantic_suppression_creates_recoverable_source56_state_requires_mode_characterization"
     )
     assert protocol["historical_observation_normalization_misaligned"][
         "active_algorithm_evidence"

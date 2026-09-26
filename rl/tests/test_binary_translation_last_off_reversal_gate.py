@@ -107,8 +107,8 @@ def test_protocol_moves_to_source56_semantic_attribution_and_keeps_training_bloc
         ROOT / "configs/taco_pour_postfix_single_actor_pass_lr_half_candidate_v1.yaml"
     ).read_text())
     blocker = (
-        "source56_semantic_action_suppression_insufficient_"
-        "failure_attribution_must_move_earlier"
+        "tail_semantic_suppression_creates_recoverable_source56_state_"
+        "requires_mode_characterization"
     )
     assert protocol["training_ready"] is False
     assert protocol["training_ready_scope"] == blocker
@@ -131,7 +131,9 @@ def test_protocol_moves_to_source56_semantic_attribution_and_keeps_training_bloc
     assert gate["next_read_only_direction"] == (
         "completed_by_source56_semantic_action_gate"
     )
-    assert half_lr["status"] == "frozen_blocked_not_selected_after_source56_semantic_gate"
+    assert half_lr["status"] == (
+        "frozen_blocked_not_selected_after_tail_semantic_oracle"
+    )
     assert half_lr["latest_state_entry_evidence"][
         "binary_translation_last_OFF_reversal_report"
     ]["sha256"] == _sha256(REPORT)
