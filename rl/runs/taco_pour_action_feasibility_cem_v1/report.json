@@ -1,0 +1,2318 @@
+{
+  "schema": "taco_pour_action_feasibility_cem_v1",
+  "status": "completed_read_only_gate_A0",
+  "paper_faithful": false,
+  "classification": "local_engineering_action_space_feasibility_not_EgoEngine_RL",
+  "training_executed": false,
+  "policy_optimizer_steps": 0,
+  "chunk_commit_written": false,
+  "contract": {
+    "path": "/data_all/zzx/3.2RL/configs/taco_pour_action_feasibility_cem_v1.yaml",
+    "sha256": "645cb8f30cbc69506467a35bd291662beab0219227accf530ad85ff970fd1e54"
+  },
+  "regression_gate": {
+    "formal_single_pass_PPO_trace_exactly_reproduced": true,
+    "source45_translation_prefix_exactly_reproduced": true,
+    "tail_selected_sources44_through56_exactly_reproduced": true,
+    "all_best_sequences_bitwise_repeatable_on_CPU": true
+  },
+  "actuator_names": [
+    "R_forearm_tx_position",
+    "R_forearm_ty_position",
+    "R_forearm_tz_position",
+    "R_forearm_roll_position",
+    "R_forearm_pitch_position",
+    "R_forearm_yaw_position",
+    "right_thumb_bend_position",
+    "right_thumb_rota1_position",
+    "right_thumb_rota2_position",
+    "right_index_bend_position",
+    "right_index_joint1_position",
+    "right_index_joint2_position",
+    "right_middle_joint1_position",
+    "right_middle_joint2_position",
+    "right_ring_joint1_position",
+    "right_ring_joint2_position",
+    "right_pinky_joint1_position",
+    "right_pinky_joint2_position",
+    "L_forearm_tx_position",
+    "L_forearm_ty_position",
+    "L_forearm_tz_position",
+    "L_forearm_roll_position",
+    "L_forearm_pitch_position",
+    "L_forearm_yaw_position",
+    "left_thumb_bend_position",
+    "left_thumb_rota1_position",
+    "left_thumb_rota2_position",
+    "left_index_bend_position",
+    "left_index_joint1_position",
+    "left_index_joint2_position",
+    "left_middle_joint1_position",
+    "left_middle_joint2_position",
+    "left_ring_joint1_position",
+    "left_ring_joint2_position",
+    "left_pinky_joint1_position",
+    "left_pinky_joint2_position"
+  ],
+  "optimizer": {
+    "algorithm": "deterministic_CEM",
+    "horizon_control_intervals": 3,
+    "population": 24,
+    "elites": 6,
+    "iterations": 5,
+    "restarts": [
+      {
+        "name": "frozen_actor_centered",
+        "seed_offset": 0
+      },
+      {
+        "name": "zero_residual_centered",
+        "seed_offset": 1000
+      }
+    ],
+    "benchmark_base_seeds": {
+      "formal_source45": 45000,
+      "prefix_source50": 50000,
+      "tail_source57": 57000
+    },
+    "normalized_latent_interval": [
+      -1.0,
+      1.0
+    ],
+    "initial_standard_deviation": 0.6,
+    "elite_update_new_weight": 0.75,
+    "minimum_standard_deviation": 0.05,
+    "injected_candidates_each_iteration": [
+      "current_CEM_mean",
+      "frozen_actor_open_loop_sequence",
+      "zero_residual_sequence"
+    ],
+    "stop_on_first_feasible": false,
+    "candidate_sequence_count_per_state": 240,
+    "ranking_lexicographic": [
+      "nonfinite_endpoint_count",
+      "tracking_boundary_violation_count",
+      "maximum_objective_score",
+      "sum_objective_score",
+      "squared_normalized_action_norm_tie_break_only"
+    ]
+  },
+  "benchmarks": [
+    {
+      "name": "formal_source45",
+      "source_endpoint": 45,
+      "provenance": "formal_single_pass_deterministic_PPO_path",
+      "source_state": {
+        "endpoint": 45,
+        "tracking": {
+          "tool_position_error_xyz_actual_minus_reference_m": [
+            0.008467316627502441,
+            0.06411970406770706,
+            -0.022466659545898438
+          ],
+          "position_error_m": 0.06846738414567931,
+          "rotation_error_rad": 0.4798280865921856,
+          "ellipse_squared_contributions": {
+            "position": 0.32554046470500125,
+            "rotation": 0.10232666341454133
+          },
+          "objective_score": 0.6541155311713234
+        },
+        "tool": {
+          "freejoint_qpos": [
+            0.7293746471405029,
+            0.06918156147003174,
+            0.7610276341438293,
+            0.9158667325973511,
+            -0.007000692654401064,
+            -0.005659535527229309,
+            0.4013816714286804
+          ],
+          "freejoint_qvel": [
+            -0.40333953499794006,
+            0.3640207350254059,
+            -0.013223975896835327,
+            0.686862051486969,
+            -0.2799171209335327,
+            0.9273226261138916
+          ],
+          "position_world_m": [
+            0.7293746471405029,
+            0.06918156147003174,
+            0.7610276341438293
+          ],
+          "quaternion_world_wxyz": [
+            0.9158667325973511,
+            -0.007000692654401064,
+            -0.005659535527229309,
+            0.4013816714286804
+          ],
+          "rotation_matrix_world": [
+            [
+              0.6777216050749241,
+              -0.7351449985341125,
+              -0.015986660060248237
+            ],
+            [
+              0.7353034812092838,
+              0.6776876463644091,
+              0.008280135355750562
+            ],
+            [
+              0.004746861185120299,
+              -0.017366670673467755,
+              0.9998380779974035
+            ]
+          ],
+          "origin_linear_velocity_world_m_s": [
+            -0.39237911655268576,
+            0.35561859739009094,
+            0.013176497590769998
+          ],
+          "angular_velocity_world_rad_s": [
+            1.0504679679870605,
+            0.7086727619171143,
+            1.0944135189056396
+          ]
+        },
+        "right_wrist_relative_to_tool": {
+          "position_in_tool_frame_m": [
+            -0.11177826167335776,
+            -0.1865066942814643,
+            0.06282887113660256
+          ],
+          "quaternion_relative_to_tool_wxyz": [
+            0.1443730110249776,
+            0.6667839068380771,
+            0.6296889199695405,
+            0.3715474657926307
+          ],
+          "rotation_relative_to_tool_rad": 2.8518343619024993,
+          "linear_velocity_relative_to_tool_in_tool_frame_m_s": [
+            -0.015609070999155967,
+            -0.003186983736329577,
+            0.05061793512805335
+          ],
+          "angular_velocity_relative_to_tool_in_tool_frame_rad_s": [
+            -0.15778098604357602,
+            0.6215396975271985,
+            -1.0313239525749809
+          ]
+        },
+        "reference_tool_freejoint_qvel": [
+          0.04113592207431793,
+          0.06026511639356613,
+          0.17535656690597534,
+          -0.08816411346197128,
+          0.5475621819496155,
+          -1.1353577375411987
+        ],
+        "reference_velocity_semantics": "The released robot reference qvel free-joint slice [36:42] is reported directly; no mixed-unit norm is formed.",
+        "right_hand_tool_contact": {
+          "has_any_live_right_hand_tool_contact": true,
+          "active_finger_roles": [
+            "index"
+          ],
+          "unmapped_right_hand_contact_geoms": [],
+          "live_contacts": [
+            {
+              "finger_role": "index",
+              "hand_geom": "collision_hand_right_index_rota_link2_external_exact_mesh",
+              "tool_geom": "right_object_external_exact_sdf",
+              "contact_distance_m": -0.002345895627513528,
+              "normal_force": 0.7487017512321472,
+              "hand_to_tool_contact_normal_world": [
+                -0.8696625828742981,
+                0.4711672067642212,
+                -0.14727020263671875
+              ]
+            }
+          ],
+          "semantics": "all compiled contacts between hand_group=right and object_group=tool with nonpositive distance and positive normal force; finger_role is null for palm or other right-hand geoms outside the finger map",
+          "finger_mapped_force_closure_view": {
+            "right_tool_finger_flags": [
+              false,
+              true,
+              false,
+              false,
+              false
+            ],
+            "active_right_tool_fingers": [
+              "index"
+            ],
+            "aggregated_normal_force_vectors_world": [
+              [
+                0.0,
+                0.0,
+                0.0
+              ],
+              [
+                -0.6511179208755493,
+                0.35276371240615845,
+                -0.1102614551782608
+              ],
+              [
+                0.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                0.0
+              ]
+            ],
+            "aggregated_normal_force_magnitudes": [
+              0.0,
+              0.7487017912185736,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "live_mjwp_contacts": [
+              {
+                "finger": "index",
+                "hand_geom": "collision_hand_right_index_rota_link2_external_exact_mesh",
+                "tool_geom": "right_object_external_exact_sdf",
+                "contact_distance_m": -0.002345895627513528,
+                "normal_force": 0.7487017512321472,
+                "hand_to_tool_contact_normal_world": [
+                  -0.8696625828742981,
+                  0.4711672067642212,
+                  -0.14727020263671875
+                ]
+              }
+            ],
+            "right_fingertip_site_to_tool_origin_distance_m": [
+              0.09677159688671454,
+              0.09161103299171135,
+              0.07729526012417332,
+              0.10128399210985738,
+              0.11485214037114118
+            ],
+            "distance_semantics": "site-to-tool-origin is a continuous pose surrogate, not surface distance; live contact_distance_m is available only for active MJWP contacts"
+          }
+        }
+      },
+      "horizon_control_intervals": 3,
+      "evaluated_CEM_sequences": 240,
+      "feasible_CEM_sequence_count": 232,
+      "any_CEM_sequence_feasible": true,
+      "anchor_sequences": {
+        "frozen_actor_open_loop": {
+          "scores": [
+            0.7763866186141968,
+            0.8679251074790955,
+            0.9799022674560547
+          ],
+          "feasible": true,
+          "tracking_boundary_violation_count": 0
+        },
+        "zero_residual": {
+          "scores": [
+            0.7632890939712524,
+            0.7823994159698486,
+            0.8115033507347107
+          ],
+          "feasible": true,
+          "tracking_boundary_violation_count": 0
+        }
+      },
+      "state_feasible_low": [
+        [
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          0.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -3.433048983980669e-11,
+          -1.0
+        ],
+        [
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          0.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          0.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -2.6572694104788283e-16,
+          -1.0
+        ],
+        [
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          0.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          0.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          0.0,
+          -1.0
+        ]
+      ],
+      "state_feasible_high": [
+        [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      ],
+      "restarts": [
+        {
+          "name": "frozen_actor_centered",
+          "seed": 45000,
+          "iterations": [
+            {
+              "iteration": 0,
+              "feasible_sequences": 20,
+              "best_scores": [
+                0.7632890939712524,
+                0.7823994159698486,
+                0.8115033507347107
+              ],
+              "best_violation_count": 0,
+              "best_maximum_score": 0.8115033507347107,
+              "mean_standard_deviation": 0.46052578187682414
+            },
+            {
+              "iteration": 1,
+              "feasible_sequences": 21,
+              "best_scores": [
+                0.7632890939712524,
+                0.7823994159698486,
+                0.8115033507347107
+              ],
+              "best_violation_count": 0,
+              "best_maximum_score": 0.8115033507347107,
+              "mean_standard_deviation": 0.3828657600477734
+            },
+            {
+              "iteration": 2,
+              "feasible_sequences": 23,
+              "best_scores": [
+                0.7632890939712524,
+                0.7823994159698486,
+                0.8115033507347107
+              ],
+              "best_violation_count": 0,
+              "best_maximum_score": 0.8115033507347107,
+              "mean_standard_deviation": 0.33371839053015234
+            },
+            {
+              "iteration": 3,
+              "feasible_sequences": 24,
+              "best_scores": [
+                0.7632890939712524,
+                0.7823994159698486,
+                0.8115033507347107
+              ],
+              "best_violation_count": 0,
+              "best_maximum_score": 0.8115033507347107,
+              "mean_standard_deviation": 0.30055804874375575
+            },
+            {
+              "iteration": 4,
+              "feasible_sequences": 24,
+              "best_scores": [
+                0.7540299892425537,
+                0.778387725353241,
+                0.7982103824615479
+              ],
+              "best_violation_count": 0,
+              "best_maximum_score": 0.7982103824615479,
+              "mean_standard_deviation": 0.2738729399429778
+            }
+          ]
+        },
+        {
+          "name": "zero_residual_centered",
+          "seed": 46000,
+          "iterations": [
+            {
+              "iteration": 0,
+              "feasible_sequences": 24,
+              "best_scores": [
+                0.7468001842498779,
+                0.7445325255393982,
+                0.7385586500167847
+              ],
+              "best_violation_count": 0,
+              "best_maximum_score": 0.7468001842498779,
+              "mean_standard_deviation": 0.4815867389025079
+            },
+            {
+              "iteration": 1,
+              "feasible_sequences": 24,
+              "best_scores": [
+                0.7614593505859375,
+                0.7625434994697571,
+                0.7595574855804443
+              ],
+              "best_violation_count": 0,
+              "best_maximum_score": 0.7625434994697571,
+              "mean_standard_deviation": 0.40007242785616265
+            },
+            {
+              "iteration": 2,
+              "feasible_sequences": 24,
+              "best_scores": [
+                0.7553355693817139,
+                0.7260403037071228,
+                0.7232188582420349
+              ],
+              "best_violation_count": 0,
+              "best_maximum_score": 0.7553355693817139,
+              "mean_standard_deviation": 0.3519087080770968
+            },
+            {
+              "iteration": 3,
+              "feasible_sequences": 24,
+              "best_scores": [
+                0.7378321290016174,
+                0.7436884045600891,
+                0.7600516080856323
+              ],
+              "best_violation_count": 0,
+              "best_maximum_score": 0.7600516080856323,
+              "mean_standard_deviation": 0.3122998939899422
+            },
+            {
+              "iteration": 4,
+              "feasible_sequences": 24,
+              "best_scores": [
+                0.7677562832832336,
+                0.749830961227417,
+                0.75589519739151
+              ],
+              "best_violation_count": 0,
+              "best_maximum_score": 0.7677562832832336,
+              "mean_standard_deviation": 0.27881084793433597
+            }
+          ]
+        }
+      ],
+      "best_sequence": {
+        "scores": [
+          0.7468001842498779,
+          0.7445325255393982,
+          0.7385586500167847
+        ],
+        "finite": [
+          true,
+          true,
+          true
+        ],
+        "terminated": [
+          false,
+          false,
+          false
+        ],
+        "actions": [
+          [
+            -0.8277291655540466,
+            0.10689589381217957,
+            -0.9428902864456177,
+            0.6880903840065002,
+            0.04506979510188103,
+            0.9179244041442871,
+            0.2916317582130432,
+            0.6721178889274597,
+            0.3791164457798004,
+            -0.6120545864105225,
+            -0.39638763666152954,
+            0.4130866825580597,
+            -0.00015379769320134073,
+            -0.28607484698295593,
+            -0.15811845660209656,
+            0.16923131048679352,
+            0.47217074036598206,
+            -0.580893874168396,
+            0.04134293645620346,
+            0.8676727414131165,
+            -0.40327656269073486,
+            1.0,
+            -0.6752276420593262,
+            0.2551247775554657,
+            0.11915012449026108,
+            0.35311341285705566,
+            0.05768505856394768,
+            0.2655707001686096,
+            -0.7841876745223999,
+            0.8185073137283325,
+            -0.49552756547927856,
+            -0.10229943692684174,
+            0.29974672198295593,
+            1.0,
+            -3.433048983980669e-11,
+            0.1639641672372818
+          ],
+          [
+            -0.22380134463310242,
+            -0.6258581876754761,
+            -1.0,
+            -0.3102429211139679,
+            0.6175665259361267,
+            0.274684339761734,
+            -0.30859506130218506,
+            0.18635953962802887,
+            0.0,
+            0.31843146681785583,
+            -0.1535053700208664,
+            -0.32049915194511414,
+            0.285040020942688,
+            -0.9379866123199463,
+            -0.39006975293159485,
+            0.41447192430496216,
+            -0.35022303462028503,
+            1.0,
+            -0.28820517659187317,
+            0.07234285026788712,
+            0.2796492874622345,
+            -0.5918922424316406,
+            0.6326034069061279,
+            -0.20393118262290955,
+            -0.2212328165769577,
+            0.1627890169620514,
+            0.10815989226102829,
+            -0.25801321864128113,
+            -1.0,
+            0.09270356595516205,
+            0.16172435879707336,
+            0.3522564172744751,
+            -0.8071555495262146,
+            -0.5632026791572571,
+            0.32439491152763367,
+            -0.24047763645648956
+          ],
+          [
+            0.029930151998996735,
+            -0.5548544526100159,
+            0.46917641162872314,
+            0.1696956604719162,
+            0.08949831128120422,
+            -0.5018707513809204,
+            -0.6230093240737915,
+            -0.9768157005310059,
+            0.0,
+            0.6593631505966187,
+            1.0,
+            1.0,
+            0.37709203362464905,
+            0.41567423939704895,
+            0.2934337556362152,
+            0.620803952217102,
+            -0.203708216547966,
+            0.9477454423904419,
+            -0.8277256488800049,
+            0.1754453480243683,
+            -0.4999009072780609,
+            -1.0,
+            -0.4535624384880066,
+            0.5323722958564758,
+            -0.2888886034488678,
+            -0.5254390835762024,
+            0.026316657662391663,
+            0.350483238697052,
+            0.27239933609962463,
+            0.21397677063941956,
+            -0.6972545385360718,
+            0.15864895284175873,
+            0.47824007272720337,
+            -0.22969044744968414,
+            0.0,
+            0.35618674755096436
+          ]
+        ],
+        "tracking_boundary_violation_count": 0,
+        "maximum_objective_score": 0.7468001842498779,
+        "sum_objective_score": 2.229891359806061,
+        "feasible": true,
+        "bitwise_repeatable_on_CPU": true
+      }
+    },
+    {
+      "name": "prefix_source50",
+      "source_endpoint": 50,
+      "provenance": "source45_zero_right_wrist_translation_then_frozen_PPO",
+      "source_state": {
+        "endpoint": 50,
+        "tracking": {
+          "tool_position_error_xyz_actual_minus_reference_m": [
+            -0.03616225719451904,
+            0.0861224913969636,
+            -0.061644554138183594
+          ],
+          "position_error_m": 0.11191444689904008,
+          "rotation_error_rad": 0.5147650579215918,
+          "ellipse_squared_contributions": {
+            "position": 0.8697807933831987,
+            "rotation": 0.11777025104756432
+          },
+          "objective_score": 0.9937560286261227
+        },
+        "tool": {
+          "freejoint_qpos": [
+            0.690803050994873,
+            0.10077700763940811,
+            0.7591230869293213,
+            0.9376872181892395,
+            -0.09102601557970047,
+            -0.03364088758826256,
+            0.33365458250045776
+          ],
+          "freejoint_qvel": [
+            -0.0766482800245285,
+            -0.08037644624710083,
+            -0.0043152510188519955,
+            0.31159740686416626,
+            -1.625563621520996,
+            -2.0689189434051514
+          ],
+          "position_world_m": [
+            0.690803050994873,
+            0.10077700763940811,
+            0.7591230869293213
+          ],
+          "quaternion_world_wxyz": [
+            0.9376872181892395,
+            -0.09102601557970047,
+            -0.03364088758826256,
+            0.33365458250045776
+          ],
+          "rotation_matrix_world": [
+            [
+              0.7750859649265094,
+              -0.6196028826864444,
+              -0.12383175504995991
+            ],
+            [
+              0.631851666517341,
+              0.76077791253733,
+              0.14825899005714627
+            ],
+            [
+              0.002346766150259416,
+              -0.19315673526997257,
+              0.9811652547489873
+            ]
+          ],
+          "origin_linear_velocity_world_m_s": [
+            -0.08542361016006339,
+            -0.07161115742258772,
+            -0.0055515001656836205
+          ],
+          "angular_velocity_world_rad_s": [
+            1.3686615228652954,
+            -1.4922584295272827,
+            -1.716874361038208
+          ]
+        },
+        "right_wrist_relative_to_tool": {
+          "position_in_tool_frame_m": [
+            -0.09143929556724702,
+            -0.21552841922754654,
+            0.08570053151420698
+          ],
+          "quaternion_relative_to_tool_wxyz": [
+            -0.014284920983394341,
+            0.6245979605422449,
+            0.6238567799766941,
+            0.46954876934784684
+          ],
+          "rotation_relative_to_tool_rad": 3.113024060705783,
+          "linear_velocity_relative_to_tool_in_tool_frame_m_s": [
+            0.05342936815273901,
+            0.2662191957778748,
+            0.3871906197596405
+          ],
+          "angular_velocity_relative_to_tool_in_tool_frame_rad_s": [
+            0.6514386304287322,
+            1.4622509877610967,
+            2.5738940618229456
+          ]
+        },
+        "reference_tool_freejoint_qvel": [
+          0.022693276405334473,
+          0.02018035389482975,
+          0.18780648708343506,
+          0.1073027104139328,
+          -0.21932190656661987,
+          -0.41460108757019043
+        ],
+        "reference_velocity_semantics": "The released robot reference qvel free-joint slice [36:42] is reported directly; no mixed-unit norm is formed.",
+        "right_hand_tool_contact": {
+          "has_any_live_right_hand_tool_contact": false,
+          "active_finger_roles": [],
+          "unmapped_right_hand_contact_geoms": [],
+          "live_contacts": [],
+          "semantics": "all compiled contacts between hand_group=right and object_group=tool with nonpositive distance and positive normal force; finger_role is null for palm or other right-hand geoms outside the finger map",
+          "finger_mapped_force_closure_view": {
+            "right_tool_finger_flags": [
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "active_right_tool_fingers": [],
+            "aggregated_normal_force_vectors_world": [
+              [
+                0.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                0.0
+              ]
+            ],
+            "aggregated_normal_force_magnitudes": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "live_mjwp_contacts": [],
+            "right_fingertip_site_to_tool_origin_distance_m": [
+              0.13156309121914683,
+              0.10019348488091466,
+              0.08684118266982342,
+              0.0875079982457295,
+              0.0888766016231195
+            ],
+            "distance_semantics": "site-to-tool-origin is a continuous pose surrogate, not surface distance; live contact_distance_m is available only for active MJWP contacts"
+          }
+        }
+      },
+      "horizon_control_intervals": 3,
+      "evaluated_CEM_sequences": 240,
+      "feasible_CEM_sequence_count": 186,
+      "any_CEM_sequence_feasible": true,
+      "anchor_sequences": {
+        "frozen_actor_open_loop": {
+          "scores": [
+            1.0194225311279297,
+            1.0519661903381348,
+            1.0681296586990356
+          ],
+          "feasible": false,
+          "tracking_boundary_violation_count": 3
+        },
+        "zero_residual": {
+          "scores": [
+            0.9920122623443604,
+            0.9695988893508911,
+            0.9442260265350342
+          ],
+          "feasible": true,
+          "tracking_boundary_violation_count": 0
+        }
+      },
+      "state_feasible_low": [
+        [
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          0.0,
+          -1.0,
+          0.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -2.2185486954484634e-16,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          0.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          0.0,
+          -1.0
+        ],
+        [
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          0.0,
+          -1.0,
+          0.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          0.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          0.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          0.0,
+          -1.0
+        ],
+        [
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          0.0,
+          -1.0,
+          0.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          0.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          0.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0
+        ]
+      ],
+      "state_feasible_high": [
+        [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.8256053924560547,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      ],
+      "restarts": [
+        {
+          "name": "frozen_actor_centered",
+          "seed": 50000,
+          "iterations": [
+            {
+              "iteration": 0,
+              "feasible_sequences": 5,
+              "best_scores": [
+                0.9920122623443604,
+                0.9695988893508911,
+                0.9442260265350342
+              ],
+              "best_violation_count": 0,
+              "best_maximum_score": 0.9920122623443604,
+              "mean_standard_deviation": 0.47769014645326
+            },
+            {
+              "iteration": 1,
+              "feasible_sequences": 12,
+              "best_scores": [
+                0.9920122623443604,
+                0.9695988893508911,
+                0.9442260265350342
+              ],
+              "best_violation_count": 0,
+              "best_maximum_score": 0.9920122623443604,
+              "mean_standard_deviation": 0.383326918017695
+            },
+            {
+              "iteration": 2,
+              "feasible_sequences": 16,
+              "best_scores": [
+                0.9920122623443604,
+                0.969599187374115,
+                0.9442251920700073
+              ],
+              "best_violation_count": 0,
+              "best_maximum_score": 0.9920122623443604,
+              "mean_standard_deviation": 0.298459403753424
+            },
+            {
+              "iteration": 3,
+              "feasible_sequences": 23,
+              "best_scores": [
+                0.9920122623443604,
+                0.969599187374115,
+                0.9442253708839417
+              ],
+              "best_violation_count": 0,
+              "best_maximum_score": 0.9920122623443604,
+              "mean_standard_deviation": 0.25526869935383784
+            },
+            {
+              "iteration": 4,
+              "feasible_sequences": 23,
+              "best_scores": [
+                0.9920122623443604,
+                0.9695988893508911,
+                0.9442256093025208
+              ],
+              "best_violation_count": 0,
+              "best_maximum_score": 0.9920122623443604,
+              "mean_standard_deviation": 0.2099928664861366
+            }
+          ]
+        },
+        {
+          "name": "zero_residual_centered",
+          "seed": 51000,
+          "iterations": [
+            {
+              "iteration": 0,
+              "feasible_sequences": 18,
+              "best_scores": [
+                0.9920122623443604,
+                0.9681447744369507,
+                0.9423994421958923
+              ],
+              "best_violation_count": 0,
+              "best_maximum_score": 0.9920122623443604,
+              "mean_standard_deviation": 0.40948477788786614
+            },
+            {
+              "iteration": 1,
+              "feasible_sequences": 21,
+              "best_scores": [
+                0.9920122623443604,
+                0.969599187374115,
+                0.9442254900932312
+              ],
+              "best_violation_count": 0,
+              "best_maximum_score": 0.9920122623443604,
+              "mean_standard_deviation": 0.2986002745559081
+            },
+            {
+              "iteration": 2,
+              "feasible_sequences": 23,
+              "best_scores": [
+                0.9920122623443604,
+                0.969599187374115,
+                0.9442252516746521
+              ],
+              "best_violation_count": 0,
+              "best_maximum_score": 0.9920122623443604,
+              "mean_standard_deviation": 0.2576686639476365
+            },
+            {
+              "iteration": 3,
+              "feasible_sequences": 22,
+              "best_scores": [
+                0.9920122623443604,
+                0.969599187374115,
+                0.9442252516746521
+              ],
+              "best_violation_count": 0,
+              "best_maximum_score": 0.9920122623443604,
+              "mean_standard_deviation": 0.22525918250089252
+            },
+            {
+              "iteration": 4,
+              "feasible_sequences": 23,
+              "best_scores": [
+                0.9920122623443604,
+                0.969599187374115,
+                0.9353043437004089
+              ],
+              "best_violation_count": 0,
+              "best_maximum_score": 0.9920122623443604,
+              "mean_standard_deviation": 0.204164042075158
+            }
+          ]
+        }
+      ],
+      "best_sequence": {
+        "scores": [
+          0.9920122623443604,
+          0.969599187374115,
+          0.9353043437004089
+        ],
+        "finite": [
+          true,
+          true,
+          true
+        ],
+        "terminated": [
+          false,
+          false,
+          false
+        ],
+        "actions": [
+          [
+            0.32352113723754883,
+            0.18568801879882812,
+            0.24481196701526642,
+            -0.26262643933296204,
+            -0.21067868173122406,
+            -0.00875629298388958,
+            0.03729349002242088,
+            0.3699408173561096,
+            0.0278826542198658,
+            0.3106234669685364,
+            0.0,
+            0.09186282753944397,
+            -0.22742637991905212,
+            0.119174525141716,
+            -0.1646644026041031,
+            -0.30630284547805786,
+            -2.2185486954484634e-16,
+            -0.2707289755344391,
+            -0.1879737675189972,
+            0.6901969313621521,
+            0.28879067301750183,
+            -0.16712552309036255,
+            -0.32799801230430603,
+            0.4347270429134369,
+            0.16802211105823517,
+            0.19088248908519745,
+            0.1445418894290924,
+            -0.06603943556547165,
+            0.8144406676292419,
+            -0.27871420979499817,
+            0.4048510193824768,
+            0.7283956408500671,
+            -0.29016444087028503,
+            0.049458231776952744,
+            0.11997941136360168,
+            -0.0428808368742466
+          ],
+          [
+            -0.2566806375980377,
+            0.726080060005188,
+            -0.16478879749774933,
+            -0.11278029531240463,
+            -0.004013432189822197,
+            0.1727144867181778,
+            -0.134224072098732,
+            0.5187484622001648,
+            0.011784526519477367,
+            0.22734898328781128,
+            0.19822844862937927,
+            0.22485922276973724,
+            -0.326266884803772,
+            -0.13247761130332947,
+            0.28203874826431274,
+            -0.05198696628212929,
+            0.07665053755044937,
+            -0.10881326347589493,
+            0.03370169550180435,
+            -0.6602947115898132,
+            0.15325197577476501,
+            0.03194784000515938,
+            0.10757336020469666,
+            0.5444439649581909,
+            -0.11808695644140244,
+            0.24542927742004395,
+            0.0145336939021945,
+            0.03761306405067444,
+            -0.22020366787910461,
+            -0.024830708280205727,
+            0.33395320177078247,
+            0.593309760093689,
+            -0.16974496841430664,
+            1.0,
+            0.09929574280977249,
+            0.12021878361701965
+          ],
+          [
+            0.04068906977772713,
+            0.02660902962088585,
+            -0.6698659658432007,
+            0.1938793659210205,
+            -0.09917370975017548,
+            0.5700482130050659,
+            1.0,
+            0.09903652220964432,
+            0.030246959999203682,
+            -0.07107799500226974,
+            0.02892354130744934,
+            0.1908572018146515,
+            -0.17578910291194916,
+            0.21245698630809784,
+            0.08361408114433289,
+            -0.47908246517181396,
+            0.015170767903327942,
+            0.12130702286958694,
+            0.15047135949134827,
+            -0.03143411874771118,
+            -0.5931920409202576,
+            0.5032206773757935,
+            -0.15637178719043732,
+            0.045896533876657486,
+            -0.567121148109436,
+            0.6932780146598816,
+            0.14597581326961517,
+            0.3292170763015747,
+            0.12008200585842133,
+            -0.4536183178424835,
+            0.25806480646133423,
+            0.25611552596092224,
+            -0.05490729212760925,
+            -0.22243691980838776,
+            0.03639156371355057,
+            -0.15445658564567566
+          ]
+        ],
+        "tracking_boundary_violation_count": 0,
+        "maximum_objective_score": 0.9920122623443604,
+        "sum_objective_score": 2.8969157934188843,
+        "feasible": true,
+        "bitwise_repeatable_on_CPU": true
+      }
+    },
+    {
+      "name": "tail_source57",
+      "source_endpoint": 57,
+      "provenance": "selected_tail_semantic_oracle_path_through_source56",
+      "source_state": {
+        "endpoint": 57,
+        "tracking": {
+          "tool_position_error_xyz_actual_minus_reference_m": [
+            -0.01456153392791748,
+            0.04617075249552727,
+            -0.09801501035690308
+          ],
+          "position_error_m": 0.10931934372104941,
+          "rotation_error_rad": 0.588402756560225,
+          "ellipse_squared_contributions": {
+            "position": 0.8299110355278435,
+            "rotation": 0.15387457952340952
+          },
+          "objective_score": 0.9918596750807309
+        },
+        "tool": {
+          "freejoint_qpos": [
+            0.7101229429244995,
+            0.06378201395273209,
+            0.7546374797821045,
+            0.9039348363876343,
+            0.0025859600864350796,
+            0.0031316212844103575,
+            0.42765089869499207
+          ],
+          "freejoint_qvel": [
+            -0.023185187950730324,
+            0.04483042657375336,
+            0.02562217228114605,
+            -0.8394977450370789,
+            0.42763957381248474,
+            -0.1475362777709961
+          ],
+          "position_world_m": [
+            0.7101229429244995,
+            0.06378201395273209,
+            0.7546374797821045
+          ],
+          "quaternion_world_wxyz": [
+            0.9039348363876343,
+            0.0025859600864350796,
+            0.0031316212844103575,
+            0.42765089869499207
+          ],
+          "rotation_matrix_world": [
+            [
+              0.6342097774182045,
+              -0.7731208937904702,
+              0.007873339456609701
+            ],
+            [
+              0.7731532867810594,
+              0.6342160171428051,
+              -0.001996597501972383
+            ],
+            [
+              -0.003449786836796337,
+              0.007353560128574202,
+              0.999966985348336
+            ]
+          ],
+          "origin_linear_velocity_world_m_s": [
+            -0.001127103911685172,
+            -0.0011435919649386232,
+            -0.0007462620554550825
+          ],
+          "angular_velocity_world_rad_s": [
+            0.03432733565568924,
+            -0.033647630363702774,
+            0.0002055517106782645
+          ]
+        },
+        "right_wrist_relative_to_tool": {
+          "position_in_tool_frame_m": [
+            -0.13044539799099586,
+            -0.16059685465341328,
+            0.14757441964702628
+          ],
+          "quaternion_relative_to_tool_wxyz": [
+            0.1096304021780047,
+            0.6419119766659915,
+            0.6274890742721605,
+            0.42683445362355127
+          ],
+          "rotation_relative_to_tool_rad": 2.921889975540655,
+          "linear_velocity_relative_to_tool_in_tool_frame_m_s": [
+            0.12790827051518733,
+            0.25769574970507625,
+            0.27624456902594946
+          ],
+          "angular_velocity_relative_to_tool_in_tool_frame_rad_s": [
+            -0.5898720466831229,
+            -0.13327773339484145,
+            0.2843765882825088
+          ]
+        },
+        "reference_tool_freejoint_qvel": [
+          -0.05812056362628937,
+          0.014685317873954773,
+          0.1366192102432251,
+          0.07955295592546463,
+          -0.33912980556488037,
+          0.2303314059972763
+        ],
+        "reference_velocity_semantics": "The released robot reference qvel free-joint slice [36:42] is reported directly; no mixed-unit norm is formed.",
+        "right_hand_tool_contact": {
+          "has_any_live_right_hand_tool_contact": true,
+          "active_finger_roles": [
+            "pinky"
+          ],
+          "unmapped_right_hand_contact_geoms": [],
+          "live_contacts": [
+            {
+              "finger_role": "pinky",
+              "hand_geom": "collision_hand_right_pinky_0",
+              "tool_geom": "right_object_9",
+              "contact_distance_m": -0.00039546843618154526,
+              "normal_force": 5.38163423538208,
+              "hand_to_tool_contact_normal_world": [
+                -0.2559303343296051,
+                0.9627696871757507,
+                -0.08703023940324783
+              ]
+            },
+            {
+              "finger_role": "pinky",
+              "hand_geom": "collision_hand_right_pinky_0",
+              "tool_geom": "right_object_23",
+              "contact_distance_m": -0.0003896942362189293,
+              "normal_force": 5.307593822479248,
+              "hand_to_tool_contact_normal_world": [
+                -0.2895125150680542,
+                0.9530126452445984,
+                -0.0891592726111412
+              ]
+            }
+          ],
+          "semantics": "all compiled contacts between hand_group=right and object_group=tool with nonpositive distance and positive normal force; finger_role is null for palm or other right-hand geoms outside the finger map",
+          "finger_mapped_force_closure_view": {
+            "right_tool_finger_flags": [
+              false,
+              false,
+              false,
+              false,
+              true
+            ],
+            "active_right_tool_fingers": [
+              "pinky"
+            ],
+            "aggregated_normal_force_vectors_world": [
+              [
+                0.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                0.0
+              ],
+              [
+                -2.913938522338867,
+                10.239479064941406,
+                -0.9415861368179321
+              ]
+            ],
+            "aggregated_normal_force_magnitudes": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              10.68758876858534
+            ],
+            "live_mjwp_contacts": [
+              {
+                "finger": "pinky",
+                "hand_geom": "collision_hand_right_pinky_0",
+                "tool_geom": "right_object_9",
+                "contact_distance_m": -0.00039546843618154526,
+                "normal_force": 5.38163423538208,
+                "hand_to_tool_contact_normal_world": [
+                  -0.2559303343296051,
+                  0.9627696871757507,
+                  -0.08703023940324783
+                ]
+              },
+              {
+                "finger": "pinky",
+                "hand_geom": "collision_hand_right_pinky_0",
+                "tool_geom": "right_object_23",
+                "contact_distance_m": -0.0003896942362189293,
+                "normal_force": 5.307593822479248,
+                "hand_to_tool_contact_normal_world": [
+                  -0.2895125150680542,
+                  0.9530126452445984,
+                  -0.0891592726111412
+                ]
+              }
+            ],
+            "right_fingertip_site_to_tool_origin_distance_m": [
+              0.14794844095888662,
+              0.10134668977206052,
+              0.08604556963216438,
+              0.08239030511143837,
+              0.077739236604263
+            ],
+            "distance_semantics": "site-to-tool-origin is a continuous pose surrogate, not surface distance; live contact_distance_m is available only for active MJWP contacts"
+          }
+        }
+      },
+      "horizon_control_intervals": 3,
+      "evaluated_CEM_sequences": 240,
+      "feasible_CEM_sequence_count": 0,
+      "any_CEM_sequence_feasible": false,
+      "anchor_sequences": {
+        "frozen_actor_open_loop": {
+          "scores": [
+            1.0227257013320923,
+            1.0653083324432373,
+            1.104068636894226
+          ],
+          "feasible": false,
+          "tracking_boundary_violation_count": 3
+        },
+        "zero_residual": {
+          "scores": [
+            1.0253746509552002,
+            1.0629298686981201,
+            1.101854920387268
+          ],
+          "feasible": false,
+          "tracking_boundary_violation_count": 3
+        }
+      },
+      "state_feasible_low": [
+        [
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          0.0,
+          -1.0,
+          0.0,
+          -1.0,
+          0.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -0.8205897212028503,
+          -1.0,
+          0.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          0.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          0.0,
+          -1.0,
+          -1.0
+        ],
+        [
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -2.620543914770454e-17,
+          -1.0,
+          0.0,
+          -1.0,
+          -4.972893375638555e-16,
+          -1.0,
+          -1.0,
+          -1.0,
+          -0.827531635761261,
+          -1.0,
+          0.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          0.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          0.0,
+          -1.0,
+          -1.0
+        ],
+        [
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -3.4782770057309443e-16,
+          -1.0,
+          0.0,
+          -1.0,
+          -1.1099673265542041e-15,
+          -1.0,
+          -1.0,
+          -1.0,
+          -0.765594482421875,
+          -1.0,
+          0.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          0.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0,
+          -9.079854381387198e-16,
+          -1.0,
+          -1.0
+        ]
+      ],
+      "state_feasible_high": [
+        [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.9319067001342773,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.9045290946960449,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      ],
+      "restarts": [
+        {
+          "name": "frozen_actor_centered",
+          "seed": 57000,
+          "iterations": [
+            {
+              "iteration": 0,
+              "feasible_sequences": 0,
+              "best_scores": [
+                1.0069180727005005,
+                1.0286277532577515,
+                1.0534464120864868
+              ],
+              "best_violation_count": 3,
+              "best_maximum_score": 1.0534464120864868,
+              "mean_standard_deviation": 0.4742971348054536
+            },
+            {
+              "iteration": 1,
+              "feasible_sequences": 0,
+              "best_scores": [
+                1.0019068717956543,
+                1.0178020000457764,
+                1.0385065078735352
+              ],
+              "best_violation_count": 3,
+              "best_maximum_score": 1.0385065078735352,
+              "mean_standard_deviation": 0.3980507288680979
+            },
+            {
+              "iteration": 2,
+              "feasible_sequences": 0,
+              "best_scores": [
+                1.0018439292907715,
+                1.0166912078857422,
+                1.0468244552612305
+              ],
+              "best_violation_count": 3,
+              "best_maximum_score": 1.0468244552612305,
+              "mean_standard_deviation": 0.3079781774365014
+            },
+            {
+              "iteration": 3,
+              "feasible_sequences": 0,
+              "best_scores": [
+                1.0051459074020386,
+                1.0187758207321167,
+                1.041007399559021
+              ],
+              "best_violation_count": 3,
+              "best_maximum_score": 1.041007399559021,
+              "mean_standard_deviation": 0.2475345785183069
+            },
+            {
+              "iteration": 4,
+              "feasible_sequences": 0,
+              "best_scores": [
+                1.002278447151184,
+                1.0133832693099976,
+                1.0380656719207764
+              ],
+              "best_violation_count": 3,
+              "best_maximum_score": 1.0380656719207764,
+              "mean_standard_deviation": 0.20042316247452235
+            }
+          ]
+        },
+        {
+          "name": "zero_residual_centered",
+          "seed": 58000,
+          "iterations": [
+            {
+              "iteration": 0,
+              "feasible_sequences": 0,
+              "best_scores": [
+                1.0089192390441895,
+                1.0312094688415527,
+                1.0662935972213745
+              ],
+              "best_violation_count": 3,
+              "best_maximum_score": 1.0662935972213745,
+              "mean_standard_deviation": 0.48979875956138996
+            },
+            {
+              "iteration": 1,
+              "feasible_sequences": 0,
+              "best_scores": [
+                1.005231261253357,
+                1.0267027616500854,
+                1.0595024824142456
+              ],
+              "best_violation_count": 3,
+              "best_maximum_score": 1.0595024824142456,
+              "mean_standard_deviation": 0.38540872614090776
+            },
+            {
+              "iteration": 2,
+              "feasible_sequences": 0,
+              "best_scores": [
+                1.0014643669128418,
+                1.0203686952590942,
+                1.0504213571548462
+              ],
+              "best_violation_count": 3,
+              "best_maximum_score": 1.0504213571548462,
+              "mean_standard_deviation": 0.3117016928502803
+            },
+            {
+              "iteration": 3,
+              "feasible_sequences": 0,
+              "best_scores": [
+                1.0041084289550781,
+                1.0184553861618042,
+                1.0507380962371826
+              ],
+              "best_violation_count": 3,
+              "best_maximum_score": 1.0507380962371826,
+              "mean_standard_deviation": 0.2619864459319791
+            },
+            {
+              "iteration": 4,
+              "feasible_sequences": 0,
+              "best_scores": [
+                1.0037987232208252,
+                1.019956111907959,
+                1.0381827354431152
+              ],
+              "best_violation_count": 3,
+              "best_maximum_score": 1.0381827354431152,
+              "mean_standard_deviation": 0.20759703600817644
+            }
+          ]
+        }
+      ],
+      "best_sequence": {
+        "scores": [
+          1.002278447151184,
+          1.0133832693099976,
+          1.0380656719207764
+        ],
+        "finite": [
+          true,
+          true,
+          true
+        ],
+        "terminated": [
+          true,
+          true,
+          true
+        ],
+        "actions": [
+          [
+            -0.9544355869293213,
+            -0.17046645283699036,
+            0.5411149263381958,
+            0.3825744688510895,
+            -0.26271140575408936,
+            -0.50038743019104,
+            0.42604443430900574,
+            -0.21226423978805542,
+            0.025259321555495262,
+            0.8265360593795776,
+            0.1360902339220047,
+            0.38042858242988586,
+            0.6873750686645508,
+            -0.031510621309280396,
+            0.56679368019104,
+            0.17323359847068787,
+            0.9448590874671936,
+            0.5924025774002075,
+            8.631619130028412e-05,
+            -0.39750948548316956,
+            0.027982719242572784,
+            -0.23374103009700775,
+            0.48777106404304504,
+            0.1544766128063202,
+            -0.22256451845169067,
+            0.47253555059432983,
+            0.5301958322525024,
+            -0.8855205774307251,
+            0.17554354667663574,
+            -0.44327130913734436,
+            0.685918390750885,
+            -0.33044177293777466,
+            0.6275750994682312,
+            0.04872845485806465,
+            -0.13216839730739594,
+            0.33596277236938477
+          ],
+          [
+            0.0821448415517807,
+            0.26006975769996643,
+            0.609376072883606,
+            0.29053470492362976,
+            -0.37255457043647766,
+            -0.8314952850341797,
+            0.46423766016960144,
+            -0.07428406178951263,
+            0.4744592607021332,
+            0.8458253741264343,
+            0.06088227406144142,
+            0.4770914316177368,
+            0.7095823884010315,
+            -0.7806947231292725,
+            -0.00035516562638804317,
+            -0.07181499898433685,
+            0.6345856189727783,
+            -0.2949444651603699,
+            -0.15829429030418396,
+            -0.8805807828903198,
+            -0.3089800477027893,
+            -0.4057125449180603,
+            -0.32189807295799255,
+            0.0811518058180809,
+            -0.5374642610549927,
+            -0.08845078200101852,
+            0.03645327687263489,
+            0.46902164816856384,
+            0.4516966938972473,
+            -0.06542856246232986,
+            0.45238956809043884,
+            -0.7470179796218872,
+            0.5760982632637024,
+            0.07284863293170929,
+            0.28222760558128357,
+            -0.4351755678653717
+          ],
+          [
+            -0.36831724643707275,
+            0.3554380536079407,
+            0.6294360160827637,
+            0.3833967447280884,
+            -0.048204947263002396,
+            -0.624239444732666,
+            0.7010078430175781,
+            -0.6459736227989197,
+            0.008108722046017647,
+            0.08284527063369751,
+            0.38025209307670593,
+            -0.5048161149024963,
+            0.10414532572031021,
+            -0.49252501130104065,
+            0.08828528970479965,
+            0.2495259791612625,
+            0.5755904912948608,
+            -0.06392610818147659,
+            -0.10891987383365631,
+            0.05165825039148331,
+            -0.030400825664401054,
+            -0.17382535338401794,
+            0.24090445041656494,
+            -0.6359825134277344,
+            0.3753998875617981,
+            0.009746541269123554,
+            0.10642676055431366,
+            -0.3566640019416809,
+            -0.46110859513282776,
+            0.20155039429664612,
+            0.6918841004371643,
+            -0.5184919834136963,
+            0.7271679639816284,
+            0.019364187493920326,
+            0.2574947774410248,
+            0.14013247191905975
+          ]
+        ],
+        "tracking_boundary_violation_count": 3,
+        "maximum_objective_score": 1.0380656719207764,
+        "sum_objective_score": 3.053727388381958,
+        "feasible": false,
+        "bitwise_repeatable_on_CPU": true
+      }
+    }
+  ],
+  "decision": {
+    "source57_classification": "current_support_feasibility_not_demonstrated_by_finite_CEM",
+    "source57_current_support_feasible_sequence_found": false,
+    "finite_optimizer_failure_is_mathematical_infeasibility_proof": false,
+    "support_or_frame_change_authorized": false,
+    "gate_B_observation_sufficiency_read_only_design_allowed": false,
+    "gate_C_policy_representability_allowed": false,
+    "gate_D_fresh_PPO_allowed": false,
+    "actor_LR_5e_minus_5_unblocked": false,
+    "learned_gate_training_authorized": false,
+    "reward_change_authorized": false,
+    "PPO_retraining_authorized": false,
+    "chunk_acceptance_or_commit_authorized": false,
+    "next_blocker": "gate_A_minimum_rho_or_coordinate_frame_contract_required"
+  },
+  "measurement_boundaries": {
+    "no_new_per_source_manual_counterfactuals": true,
+    "current_world_frame_36d_support_only": true,
+    "three_interval_horizon_only": true,
+    "no_support_relaxation_or_frame_search": true,
+    "no_policy_training_or_chunk_commit": true
+  },
+  "artifacts": {
+    "candidate_dataset": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_action_feasibility_cem_v1/action_feasibility_candidates.npz",
+      "sha256": "b8bc30add403b6b8b7e1b6d5b5f310a9eb4f88ea4d476b0520ef6741865f7039"
+    },
+    "best_sequences": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_action_feasibility_cem_v1/best_sequences.npz",
+      "sha256": "3d835549843e36595c12feb127dd1b598245e234dd0bacdff1e0acf970079914"
+    }
+  }
+}

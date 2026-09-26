@@ -1,0 +1,131 @@
+schema: taco_pour_action_feasibility_reference_object_frame_v1
+status: authorized_read_only_gate
+paper_faithful: false
+classification: local_engineering_reference_object_frame_action_feasibility_not_EgoEngine_RL
+purpose: >-
+  Complete Gate A with one predeclared coordinate-frame comparison after the
+  current world-frame support and rho<=3 world-translation support gates found
+  no feasible three-step source57 sequence.
+
+runtime:
+  backend: CPU_MuJoCo_Warp
+  training_allowed: false
+  optimizer_updates_policy: false
+  actor_frozen: true
+  critic_frozen: true
+  observation_normalization_frozen: true
+  reward_changed: false
+  objective_changed: false
+  reference_timing_changed: false
+  nontranslation_action_semantics_changed: false
+  chunk_acceptance_allowed: false
+  chunk_commit_allowed: false
+
+source_state:
+  name: tail_source57
+  source_endpoint: 57
+  provenance: selected_tail_semantic_oracle_path_through_source56
+  exact_gate_A0_state_reproduction_required: true
+
+translation_parameterization:
+  normalized_action_indices: [0, 1, 2]
+  semantic_group: right_wrist_translation
+  input_coordinate_frame: command_endpoint_reference_tool_frame
+  output_coordinate_frame: world_frame_actuator_command
+  transform: delta_p_world = R_world_from_reference_tool_at_t_plus_1 * delta_p_local
+  reference_index_offset_from_source: 1
+  local_component_interval: [-1.0, 1.0]
+  local_component_scale_m: 0.05
+  world_component_hard_clip_before_ctrlrange: false
+  actuator_ctrlrange_remains_hard_constraint: true
+  invalid_ctrlrange_candidates_are_rejected_not_projected: true
+  all_other_33_dimensions_use_current_world_frame_state_feasible_support: true
+
+optimizer:
+  algorithm: deterministic_CEM
+  horizon_control_intervals: 3
+  population: 24
+  elites: 6
+  iterations: 5
+  restarts:
+    - {name: transformed_gate_A0_best_centered, seed: 57201}
+    - {name: zero_residual_centered, seed: 57202}
+  initial_standard_deviation: 0.6
+  elite_update_new_weight: 0.75
+  minimum_standard_deviation: 0.05
+  injected_candidates_each_iteration:
+    - current_CEM_mean
+    - transformed_gate_A0_best_sequence
+    - zero_residual_sequence
+  stop_on_first_feasible: false
+  candidate_sequence_count: 240
+  ranking_lexicographic:
+    - invalid_actuator_bound_count
+    - nonfinite_endpoint_count
+    - tracking_boundary_violation_count
+    - maximum_objective_score
+    - sum_objective_score
+
+primary_gate:
+  feasible_if:
+    - no_actuator_bound_violation
+    - all_three_endpoint_states_finite
+    - all_three_objective_scores_strictly_below_1
+  finite_optimizer_failure_is_mathematical_infeasibility_proof: false
+  if_feasible: >-
+    reference-object-frame translation is a supported Gate-A architecture
+    candidate, but no action-interface promotion or training is automatic
+  if_not_feasible: >-
+    Gate A did not demonstrate a feasible source57 sequence under current
+    world support, rho<=3 world support, or this reference-object-frame
+    parameterization; a new active corrective parameterization requires a
+    separate design decision
+
+stopping_rule:
+  current_tool_frame_comparison_allowed: false
+  alternative_object_or_palm_frame_search_allowed: false
+  frame_scale_or_axis_sweep_allowed: false
+  automatic_support_expansion_allowed: false
+  gate_B_before_action_interface_classification_allowed: false
+  policy_training_allowed: false
+
+inputs:
+  gate_A0_contract:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_action_feasibility_cem_v1.yaml
+    sha256: 645cb8f30cbc69506467a35bd291662beab0219227accf530ad85ff970fd1e54
+  gate_A0_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_action_feasibility_cem_v1/report.json
+    sha256: 067cdd0a5b56ef25b7f1d73dbe8eb46d656f16b14e754b0a08527a603de9b139
+  gate_A0_best_sequences:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_action_feasibility_cem_v1/best_sequences.npz
+    sha256: 3d835549843e36595c12feb127dd1b598245e234dd0bacdff1e0acf970079914
+  gate_A_rho_contract:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_action_feasibility_minimum_rho_v1.yaml
+    sha256: 479557b56a4535f98fce3f9dbe054d5749c10cd8773ce373224fe2a09b7a2c6d
+  gate_A_rho_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_action_feasibility_minimum_rho_v1/report.json
+    sha256: 1bf11df231b5467d96a84eedade5f882e115490437e5db351e4c0a3ffe882856
+  tail_contract:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_tail_semantic_suppression_oracle_v1.yaml
+    sha256: bd65ff5edc36d2895ec9163542b6db6137372bcdcb4115d45799e6ac496baa1f
+  tail_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_tail_semantic_suppression_oracle_v1/report.json
+    sha256: 5f667a9691f9094657d78fe998c2f9b2599b08785518a44580556f2741cd7f6e
+  tail_arrays:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_tail_semantic_suppression_oracle_v1/tail_semantic_oracle_trace.npz
+    sha256: a2f87114867f051c57e765e60b3aae09c5e45bad1733bb930b8d08ddeef93f21
+
+frozen_decisions:
+  actor_learning_rate_5e_minus_5: blocked
+  learned_gate: blocked
+  reward_change: blocked
+  observation_change: blocked_pending_gate_B
+  policy_architecture_change: blocked_pending_gate_C
+  PPO_retraining: blocked_pending_gate_D
+  chunk_commit: blocked
+
+artifacts:
+  report: report.json
+  summary: summary.md
+  candidate_dataset: reference_object_frame_candidates.npz
+  best_sequence: reference_object_frame_best_sequence.npz

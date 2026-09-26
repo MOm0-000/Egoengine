@@ -123,7 +123,7 @@ def test_protocol_keeps_training_and_commit_blocked_after_source56_recovery():
     half_lr = yaml.safe_load((
         ROOT / "configs/taco_pour_postfix_single_actor_pass_lr_half_candidate_v1.yaml"
     ).read_text())
-    blocker = "unit_gain_active_lag_correction_insufficient_no_parameter_sweep_authorized"
+    blocker = "gate_A_active_corrective_parameterization_decision_required"
     assert protocol["training_ready"] is False
     assert protocol["training_ready_scope"] == blocker
     assert protocol["blocking_checks"] == [blocker]
@@ -139,7 +139,7 @@ def test_protocol_keeps_training_and_commit_blocked_after_source56_recovery():
     assert gate["reward_change_authorized"] is False
     assert gate["chunk_acceptance_or_commit_authorized"] is False
     assert half_lr["status"] == (
-        "frozen_blocked_not_selected_after_source57_active_lag_gate"
+        "frozen_blocked_not_selected_after_gate_A_action_feasibility_classification"
     )
     assert half_lr["latest_state_entry_evidence"]["tail_semantic_oracle_report"][
         "sha256"

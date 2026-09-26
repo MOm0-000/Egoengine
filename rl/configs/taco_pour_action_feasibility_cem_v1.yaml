@@ -1,0 +1,141 @@
+schema: taco_pour_action_feasibility_cem_v1
+status: authorized_read_only_gate
+paper_faithful: false
+classification: local_engineering_action_space_feasibility_not_EgoEngine_RL
+purpose: >-
+  Freeze the previous per-source counterfactual chain and test whether the
+  current world-frame 36-D residual representation and its current support can
+  produce a three-control-interval feasible sequence from three exact states.
+
+runtime:
+  backend: CPU_MuJoCo_Warp
+  training_allowed: false
+  optimizer_updates_policy: false
+  actor_frozen: true
+  critic_frozen: true
+  observation_normalization_frozen: true
+  reward_changed: false
+  objective_changed: false
+  reference_timing_changed: false
+  action_frame_changed: false
+  action_scale_changed: false
+  action_support_changed: false
+  PPO_hyperparameters_changed: false
+  chunk_acceptance_allowed: false
+  chunk_commit_allowed: false
+
+fixed_diagnostic_states:
+  - name: formal_source45
+    source_endpoint: 45
+    provenance: formal_single_pass_deterministic_PPO_path
+  - name: prefix_source50
+    source_endpoint: 50
+    provenance: source45_zero_right_wrist_translation_then_frozen_PPO
+  - name: tail_source57
+    source_endpoint: 57
+    provenance: selected_tail_semantic_oracle_path_through_source56
+
+action_contract:
+  action_dimensions: 36
+  representation: world_frame_additive_residual
+  residual_scale: 0.05
+  current_state_feasible_support_only: true
+  per_transition_bounds_recomputed_from_frozen_reference_and_ctrlrange: true
+  relaxed_support_allowed: false
+  object_frame_comparison_allowed: false
+  axis_or_scale_sweep_allowed: false
+
+optimizer:
+  algorithm: deterministic_CEM
+  horizon_control_intervals: 3
+  population: 24
+  elites: 6
+  iterations: 5
+  restarts:
+    - name: frozen_actor_centered
+      seed_offset: 0
+    - name: zero_residual_centered
+      seed_offset: 1000
+  benchmark_base_seeds:
+    formal_source45: 45000
+    prefix_source50: 50000
+    tail_source57: 57000
+  normalized_latent_interval: [-1.0, 1.0]
+  initial_standard_deviation: 0.6
+  elite_update_new_weight: 0.75
+  minimum_standard_deviation: 0.05
+  injected_candidates_each_iteration:
+    - current_CEM_mean
+    - frozen_actor_open_loop_sequence
+    - zero_residual_sequence
+  stop_on_first_feasible: false
+  candidate_sequence_count_per_state: 240
+  ranking_lexicographic:
+    - nonfinite_endpoint_count
+    - tracking_boundary_violation_count
+    - maximum_objective_score
+    - sum_objective_score
+    - squared_normalized_action_norm_tie_break_only
+
+primary_gate:
+  local_sequence_feasible_if:
+    - all_three_endpoint_states_finite
+    - all_three_objective_scores_strictly_below_1
+  source57_is_decisive_for_current_second_window: true
+  optimizer_failure_is_mathematical_infeasibility_proof: false
+  if_source57_feasible: current_action_representation_and_support_sufficient_for_this_local_window
+  if_source57_not_feasible: >-
+    current_support_feasibility_not_demonstrated; a separately frozen minimum-rho
+    or coordinate-frame gate is required before changing the action interface
+
+stopping_rule:
+  new_per_source_suppression_hold_or_manual_counterfactuals_allowed: false
+  automatic_translation_support_search_allowed: false
+  automatic_coordinate_frame_search_allowed: false
+  gate_B_observation_sufficiency_allowed_before_gate_A_classification: false
+  gate_C_policy_representability_allowed_before_gate_B: false
+  gate_D_fresh_PPO_allowed_before_gates_A_B_C: false
+
+inputs:
+  formal_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/report.json
+    sha256: d1690633bb3c29c16f92e8114a9f71142a8bde0d141114abd68fda359eb0344b
+  source45_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_source45_state_entry_gate_v1/report.json
+    sha256: 2f8a0ad2bccd5b5c0aacbe1fe5be59e32a56c15d4c39bf498f5965e906e1e64a
+  source45_arrays:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_source45_state_entry_gate_v1/state_entry_branches.npz
+    sha256: 89eae444922260c0c616bdb2bbee8ac2c0ade99de1ee40682a3aa6f4a8aab0ce
+  source50_contract:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_source45_prefix_source50_refinement_gate_v1.yaml
+    sha256: 7f690a21c5d975ccb22abac66c0e8f5c3985621b8f4a1f56d83ee2b42caf7ad5
+  source50_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_source45_prefix_source50_refinement_gate_v1/report.json
+    sha256: 052dbf4127b2f96227dc865e36dad89c1a983bc0900a634372521b7d1ab45ad9
+  tail_contract:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_tail_semantic_suppression_oracle_v1.yaml
+    sha256: bd65ff5edc36d2895ec9163542b6db6137372bcdcb4115d45799e6ac496baa1f
+  tail_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_tail_semantic_suppression_oracle_v1/report.json
+    sha256: 5f667a9691f9094657d78fe998c2f9b2599b08785518a44580556f2741cd7f6e
+  tail_arrays:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_tail_semantic_suppression_oracle_v1/tail_semantic_oracle_trace.npz
+    sha256: a2f87114867f051c57e765e60b3aae09c5e45bad1733bb930b8d08ddeef93f21
+  active_lag_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_source57_active_lag_correction_gate_v1/report.json
+    sha256: 3c347a382f53141d5cf5d8debef6e8d1c4b9abfe274d3fec6c3c082c45a85bc0
+
+frozen_decisions:
+  actor_learning_rate_5e_minus_5: blocked
+  learned_gate: blocked
+  reward_change: blocked
+  observation_change: blocked_pending_gate_B
+  policy_architecture_change: blocked_pending_gate_C
+  PPO_retraining: blocked_pending_gate_D
+  chunk_commit: blocked
+
+artifacts:
+  report: report.json
+  summary: summary.md
+  candidate_dataset: action_feasibility_candidates.npz
+  best_sequences: best_sequences.npz

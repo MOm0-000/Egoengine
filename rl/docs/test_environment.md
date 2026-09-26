@@ -18,7 +18,7 @@ PYTHONPATH="$PWD/.env_mjwp313_overlay:$PWD/src:$PWD/scripts:$PWD/external/mink/s
   /data_all/zzx/egoengine/spider/.venv/bin/python -m pytest -q
 ```
 
-On 2026-09-26 this command passed **713 tests and 57 subtests**.
+On 2026-09-27 this command passed **719 tests and 57 subtests**.
 The 19 warnings are known upstream/diagnostic warnings: capsule-mesh MULTICCD
 capacity, PyTorch AMP deprecations, two Trimesh degenerate-volume warnings and
 seven SciPy pickle deprecations.
@@ -69,6 +69,9 @@ runs/taco_pour_tail_semantic_suppression_oracle_v1/
 runs/taco_pour_tail_mode_necessity_transition_audit_v1/
 runs/taco_pour_source57_temporal_hold_gate_v1/
 runs/taco_pour_source57_active_lag_correction_gate_v1/
+runs/taco_pour_action_feasibility_cem_v1/
+runs/taco_pour_action_feasibility_minimum_rho_v1/
+runs/taco_pour_action_feasibility_reference_object_frame_v1/
 ```
 
 The first corrected PPO authorization is consumed. Replay passed the first
@@ -371,6 +374,23 @@ reduces the saturated y decision: the raw y mean rises slightly and the
 deterministic y action remains `+1`. The narrowest supported direction is a
 right-wrist-translation temporal or state-dependent gate, not the frozen
 half-LR candidate. No new training or chunk commit is authorized.
+
+Gate A replaces further per-source counterfactuals with fixed short-horizon
+action-feasibility benchmarks. Current world-frame support produces feasible
+three-step sequences for source45 (`232/240`) and source50 (`186/240`), but
+none for source57 (`0/240`). A joint source57 sequence-plus-support diagnostic
+finds `0/512` feasible candidates for a constant world-translation multiplier
+`rho` in `[1,3]`; its best observed scores are
+`[0.9932946, 1.0009767, 1.0196047]`. The result is not a mathematical
+infeasibility proof and does not authorize a larger bound.
+
+The final declared Gate-A frame comparison interprets only right-wrist
+translation in the command-endpoint reference-tool frame, rotates it into the
+world command, and keeps the `0.05 m` local component scale. All 240 candidates
+respect actuator bounds, but none makes endpoints 58--60 all feasible; the
+best scores are `[0.9990851, 1.0100034, 1.0314951]`. All three best sequences
+are bitwise repeatable on CPU. Gate B/C/D, PPO training and chunk commit remain
+blocked pending a separately designed active corrective parameterization.
 
 ## Archived invalid performance evidence
 

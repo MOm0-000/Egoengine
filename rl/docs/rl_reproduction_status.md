@@ -520,3 +520,49 @@ reward modification, PPO retraining, task acceptance or chunk commit.
 
 Superseded or invalid evidence remains isolated under `TRASH/` and is not part
 of the active decision chain.
+
+## Gate A: short-horizon action feasibility
+
+The source-by-source suppression and hold chain is now frozen. Gate A treats
+the exact source-45, source-50 and source-57 states as fixed architecture
+benchmarks and searches three control intervals with a deterministic CPU CEM.
+It optimizes actions only; it does not train a policy or accept a chunk.
+
+Under the unchanged 36-D world-frame residual and current state-feasible
+support, 240 sequences were evaluated per state:
+
+```text
+formal source45   232 / 240 feasible
+prefix source50   186 / 240 feasible
+tail source57       0 / 240 feasible
+```
+
+The positive source-45/source-50 controls show that the finite optimizer is not
+globally incapable of finding feasible sequences. The best source-57 scores
+were `[1.002278, 1.013383, 1.038066]`; this is a negative finite-search result,
+not a proof that no current-support action exists.
+
+The next predeclared Gate-A diagnostic jointly optimized the same three-step
+source-57 sequence and a constant right-wrist world-translation multiplier
+`rho` over `[1,3]`. The other 33 action dimensions retained current support and
+actuator `ctrlrange` remained hard. None of 512 candidates was feasible. The
+best observed candidate used `rho=2.392197` and scored
+`[0.993295, 1.000977, 1.019605]`. There is no claimed mathematical minimum,
+manual rho sweep, per-axis search or automatic upper-bound expansion.
+
+Gate A then ran its one declared coordinate comparison. Only right-wrist
+translation changed basis: local components in the command-endpoint reference
+bowl frame, each scaled by `0.05 m`, were rotated into the world actuator
+command. The remaining 33 dimensions were unchanged. Candidates outside
+actuator `ctrlrange` would be rejected rather than silently projected; all 240
+candidates were valid, but none was feasible. The best scores were
+`[0.999085, 1.010003, 1.031495]`.
+
+Thus Gate A has not demonstrated source-57 feasibility under current world
+support, world-translation support through `rho=3`, or the single declared
+reference-object-frame parameterization. This does not establish mathematical
+infeasibility and does not authorize more frame/scale searching. The active
+blocker is a separate design decision for an active corrective action
+parameterization. Observation Gate B, representability Gate C, fresh-PPO Gate
+D, the half-LR candidate, learned-gate training, reward changes, task
+acceptance and chunk commit all remain blocked.

@@ -1,5 +1,5 @@
 schema: taco_pour_postfix_single_actor_pass_lr_half_candidate_v1
-status: frozen_blocked_not_selected_after_source57_active_lag_gate
+status: frozen_blocked_not_selected_after_gate_A_action_feasibility_classification
 paper_faithful: false
 purpose: >-
   Freeze, but do not authorize, the single-variable local reproduction
@@ -131,6 +131,22 @@ latest_state_entry_evidence:
   source57_active_lag_correction_passes_endpoint58: false
   source57_active_lag_correction_projection_changed_axes: [z]
   source57_gain_or_axis_sweep_authorized: false
+  action_feasibility_gate_A0_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_action_feasibility_cem_v1/report.json
+    sha256: 067cdd0a5b56ef25b7f1d73dbe8eb46d656f16b14e754b0a08527a603de9b139
+  action_feasibility_gate_A0_source57_feasible_candidates: 0
+  action_feasibility_minimum_rho_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_action_feasibility_minimum_rho_v1/report.json
+    sha256: 1bf11df231b5467d96a84eedade5f882e115490437e5db351e4c0a3ffe882856
+  action_feasibility_minimum_rho_feasible_candidates: 0
+  action_feasibility_minimum_rho_upper: 3.0
+  action_feasibility_reference_object_frame_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_action_feasibility_reference_object_frame_v1/report.json
+    sha256: 8cfe2a0fa8f6cefa0e067fe1df42fd1cddbe58bfbee8e1f3b051c55923a835c5
+  action_feasibility_reference_object_frame_feasible_candidates: 0
+  gate_B_observation_sufficiency_allowed: false
+  gate_C_policy_representability_allowed: false
+  gate_D_fresh_PPO_allowed: false
   half_LR_selected_for_next_experiment: false
   interpretation: >-
     A one-step binary translation oracle extends the frozen actor to 36/40.
@@ -154,7 +170,12 @@ latest_state_entry_evidence:
     predeclared unit-gain object-position-lag correction improves score to
     1.017898 but still fails; its z request also exceeds and is projected to
     the existing state-feasible action bound. No gain or axis sweep is
-    authorized. This historical LR candidate remains frozen and unauthorized.
+    authorized. Gate A subsequently found no source57 three-step solution in
+    the finite current-support, rho<=3 world-translation, or reference-object-
+    frame CEM candidate sets. These negative finite searches are not proofs of
+    mathematical infeasibility, but they require a separate active-corrective-
+    parameterization design before Gate B, Gate C or Gate D. This historical
+    LR candidate remains frozen and unauthorized.
 
 evidence:
   source_run_report:
