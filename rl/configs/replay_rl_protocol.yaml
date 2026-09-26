@@ -8,7 +8,7 @@ evidence_policy:
   order: [paper, verified_implementation_defect, disclosed_local_proposal]
   paper_page_numbers: one_based_pdf_pages
   copied_defaults_are_author_settings: false
-  current_revision: endpoint47_49_gate_failed_half_LR_candidate_frozen_not_authorized
+  current_revision: source47_semantic_subspace_gate_failed_source46_state_entry_required
 
 inputs:
   setting: user_approved_gt_oracle_validation_not_full_perception_reproduction
@@ -394,6 +394,29 @@ evaluation:
     warm_start_allowed: false
     seed_or_LR_sweep_allowed: false
     chunk_commit_allowed: false
+  source47_semantic_action_subspace_gate:
+    status: completed_read_only_gate_no_branch_passed
+    paper_faithful: false
+    contract: /data_all/zzx/3.2RL/configs/taco_pour_source47_semantic_action_subspace_gate_v1.yaml
+    output: /data_all/zzx/3.2RL/runs/taco_pour_source47_semantic_action_subspace_gate_v1
+    report: /data_all/zzx/3.2RL/runs/taco_pour_source47_semantic_action_subspace_gate_v1/report.json
+    formal_traces_and_source47_suffix_bitwise_reproduced: true
+    branch_results:
+      zero_right_wrist_translation: {contact_at_48: false, endpoint49_score: 1.0902138948440552, failure_endpoint: 49}
+      zero_right_wrist_rotation: {contact_at_48: false, endpoint49_score: 1.1122767925262451, failure_endpoint: 49}
+      zero_right_fingers: {contact_at_48: false, endpoint49_score: 1.1150819063186646, failure_endpoint: 49}
+      zero_right_wrist_translation_and_rotation: {contact_at_48: false, endpoint49_score: 1.0883245468139648, failure_endpoint: 49}
+      zero_entire_right_hand_residual: {contact_at_48: false, endpoint49_score: 1.088700294494629, failure_endpoint: 49}
+    passing_branches: []
+    training_credit:
+      source46_contact_vs_no_contact_samples: [4, 19]
+      source47_contact_vs_no_contact_samples: [3, 17]
+      contact_preserving_samples_have_higher_relative_return_and_advantage: true
+      paper_thumb_plus_non_thumb_bonus_examples: 0
+      exact_final_CPU_state_coverage_claimed: false
+    gate_passed: false
+    new_training_authorized: false
+    next_read_only_direction: source46_state_entry_attribution
 
 runtime_contract:
   fail_closed: true
@@ -459,7 +482,7 @@ runtime_contract:
     cpu_commit_endpoint_offset: 20
 
 training_ready: false
-training_ready_scope: half_LR_candidate_blocked_by_endpoint47_49_read_only_gate_failure
+training_ready_scope: source47_semantic_subspace_gate_failed_source46_state_entry_required
 
 audit_results:
   active_input: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/input_audit.json
@@ -489,6 +512,7 @@ audit_results:
   postfix_single_actor_pass_audit: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_audit_v1/report.json
   postfix_single_actor_pass_endpoint47_49_gate: /data_all/zzx/3.2RL/runs/taco_pour_single_pass_endpoint47_49_gate_v1/report.json
   postfix_single_actor_pass_half_LR_candidate: /data_all/zzx/3.2RL/configs/taco_pour_postfix_single_actor_pass_lr_half_candidate_v1.yaml
+  source47_semantic_action_subspace_gate: /data_all/zzx/3.2RL/runs/taco_pour_source47_semantic_action_subspace_gate_v1/report.json
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -528,11 +552,12 @@ historical_observation_normalization_misaligned:
     - old_checkpoint_task_performance_as_an_algorithm_baseline
 
 blocking_checks:
-  - half_LR_candidate_blocked_by_endpoint47_49_read_only_gate_failure
+  - source47_semantic_subspace_gate_failed_source46_state_entry_required
 result_acceptance_blockers:
   - active_corrected_Replay_passes_only_30_of_40_in_second_window
   - postfix_single_actor_pass_PPO_passes_only_28_intervals_before_failure_at_endpoint49
   - source47_zero_residual_still_fails_endpoint49_and_source48_has_no_tool_effect
+  - no_source47_semantic_action_subspace_preserves_contact_or_survives_endpoint49
   - unpublished_threshold_to_weighted_objective_mapping
   - stable_grasp_and_physical_pour_not_demonstrated
 paper_faithful_run_blockers:

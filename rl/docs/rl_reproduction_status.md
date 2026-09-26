@@ -89,12 +89,47 @@ not an EgoEngine author-recovered parameter. Because the endpoint gate failed,
 fresh training is not authorized. No warm start, seed sweep, fallback learning
 rate sweep, diagnostic chunk commit or automatic `2.5e-5` follow-up is allowed.
 
+## Source-47 semantic action-subspace gate
+
+The next frozen audit kept every non-selected action component equal to the
+formal policy and, for one source-47 interval only, zeroed one of five declared
+right-hand semantic groups: translation, rotation, fingers, the complete wrist,
+or the complete right hand. The left-hand action remained bitwise unchanged.
+Each branch immediately resumed the same deterministic policy.
+
+No branch retains a live right-hand/tool contact at endpoint 48 and every branch
+still terminates at endpoint 49:
+
+```text
+branch                                      score@49
+zero right-wrist translation                1.090214
+zero right-wrist rotation                   1.112277
+zero right fingers                          1.115082
+zero complete right wrist                   1.088325
+zero complete right hand                    1.088700
+formal PPO                                  1.114293
+```
+
+Removing translation or the whole wrist reduces the score by about `0.024` to
+`0.026`, but does not restore contact or feasibility. Removing fingers alone is
+slightly worse, so full-action suppression had indeed mixed beneficial and
+harmful components; nevertheless none supplies an admissible source-47 repair.
+
+Across the saved eight-epoch training data, next-step right-tool contact occurs
+in only `4/23` source-46 samples and `3/20` source-47 samples. In both endpoint
+groups these samples have higher mean return, raw advantage and normalized
+advantage than no-contact samples. They are index-only or middle-only contacts,
+so none meets the paper-style thumb-plus-non-thumb contact-bonus condition.
+This is endpoint-level training evidence, not proof that the exact final CPU
+state was visited, and it does not authorize a reward change.
+
 The active blocker is now:
 
-> The source-47 weaker action gives only partial improvement, while source 48
-> is already physically decoupled from the bowl. The current evidence does not
-> support weaker local residual as a sufficient mitigation of the endpoint-49
-> divergence, so the half-LR candidate remains frozen but blocked.
+> Source 47 is already too late for every declared semantic subspace repair:
+> none preserves object transmission or survives endpoint 49. The next
+> read-only attribution must move to source 46 and examine state entry before
+> any new training candidate can be authorized. The half-LR candidate remains
+> blocked.
 
 Superseded or invalid evidence remains isolated under `TRASH/` and is not part
 of the active decision chain.

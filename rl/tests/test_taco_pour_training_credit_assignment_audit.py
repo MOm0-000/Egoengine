@@ -117,10 +117,10 @@ def test_artifacts_remain_hash_bound_and_protocol_advances_to_fresh_evidence():
 
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
     assert protocol["blocking_checks"] == [
-        "half_LR_candidate_blocked_by_endpoint47_49_read_only_gate_failure"
+        "source47_semantic_subspace_gate_failed_source46_state_entry_required"
     ]
     assert protocol["training_ready_scope"] == (
-        "half_LR_candidate_blocked_by_endpoint47_49_read_only_gate_failure"
+        "source47_semantic_subspace_gate_failed_source46_state_entry_required"
     )
     assert protocol["historical_observation_normalization_misaligned"][
         "active_algorithm_evidence"

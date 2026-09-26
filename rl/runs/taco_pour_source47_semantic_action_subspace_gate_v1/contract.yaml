@@ -1,0 +1,122 @@
+schema: taco_pour_source47_semantic_action_subspace_gate_v1
+status: authorized_read_only_gate
+paper_faithful: false
+purpose: >-
+  Separate potentially harmful and beneficial components of the formal
+  source-47 residual without training or scanning individual actuators.
+
+runtime:
+  backend: CPU_MuJoCo_Warp
+  training_allowed: false
+  optimizer_steps: 0
+  actor_frozen: true
+  critic_frozen: true
+  observation_normalization_frozen: true
+  reward_changed: false
+  objective_changed: false
+  action_scale_changed: false
+  action_bound_changed: false
+  action_distribution_changed: false
+  reference_timing_changed: false
+  action_frame_changed: false
+  chunk_acceptance_allowed: false
+  chunk_commit_allowed: false
+  checkpoint_resume_for_training_allowed: false
+
+source:
+  endpoint: 47
+  formal_state_and_RNN_hidden_required: true
+  restored_formal_suffix_must_be_bitwise_exact: true
+
+branches:
+  - name: zero_right_wrist_translation
+    zero_normalized_action_indices: [0, 1, 2]
+  - name: zero_right_wrist_rotation
+    zero_normalized_action_indices: [3, 4, 5]
+  - name: zero_right_fingers
+    zero_normalized_action_indices: [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+  - name: zero_right_wrist_translation_and_rotation
+    zero_normalized_action_indices: [0, 1, 2, 3, 4, 5]
+  - name: zero_entire_right_hand_residual
+    zero_normalized_action_indices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+intervention_control_steps: 1
+continuation: frozen_deterministic_PPO
+rollout_end_endpoint: 60
+left_hand_action_always_formal: true
+individual_actuator_sweep_allowed: false
+scale_sweep_allowed: false
+
+passing_condition:
+  all_required_for_one_branch:
+    - endpoint_48_has_live_right_hand_tool_contact
+    - endpoint_49_does_not_terminate
+    - endpoint_49_score_is_strictly_lower_than_formal_PPO
+  effect_if_passed: identify_semantic_subspace_for_a_separately_authorized_candidate
+  effect_if_failed: source_47_is_too_late_and_next_read_only_work_moves_to_source_46_state_entry
+  training_automatically_authorized: false
+
+training_credit_grouping:
+  source_endpoints: [46, 47]
+  group_by: next_step_any_right_hand_tool_contact_flag
+  statistics:
+    - sample_count
+    - return
+    - raw_advantage
+    - normalized_advantage
+    - future_termination_endpoint
+  exact_final_CPU_state_coverage_claimed: false
+  reward_change_authorized: false
+
+contact_semantics:
+  effective_contact_requires:
+    - right_tool_finger_flag
+    - live_MJWP_contact_with_nonpositive_distance_and_positive_normal_force
+  record:
+    - finger_role
+    - hand_and_tool_geom_names
+    - penetration_or_contact_distance_m
+    - contact_normal_world
+    - normal_force
+  paper_contact_bonus_note: >-
+    The paper-style bonus requires thumb plus at least one non-thumb contact;
+    a transmission-relevant index-only contact does not by itself earn it.
+
+inputs:
+  formal_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/report.json
+    sha256: d1690633bb3c29c16f92e8114a9f71142a8bde0d141114abd68fda359eb0344b
+  credit_manifest:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/manifest.json
+    sha256: d8059c32fcae6c20ab1a2720191b3df766003aa6665f693b8c0bdb5128fffe7f
+  checkpoint:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/ppo_chunk_20/nn/last_ep_8_rew__5.815153_.pth.gz
+    sha256: 159e7e462b584e10fd62764b82aac3725630088e45ee7720d71cd27bdfe59b97
+  boundary:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/source_boundary.pt.gz
+    sha256: a3646e24af1ba871e5ecc885669508223a5e0f26d3cf29f0482f02678419e337
+  simulator_config:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml
+    sha256: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+  initialization_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/initialization_report.json
+    sha256: 9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a
+  protocol:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/protocol.yaml
+    sha256: e90830ea1971f2238f4de6a54600930ed9b4cb308ada948fb43110a844098ac8
+  objective_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/objective_profile.yaml
+    sha256: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+  observation_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/observation_profile.yaml
+    sha256: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  action_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/action_profile.yaml
+    sha256: 71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4
+  distribution_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/distribution_profile.yaml
+    sha256: 6a4e4bd8f33fa53bfe34f21f822bfa391253cca090892767154320fc9bbfd1b8
+
+artifacts:
+  report: report.json
+  summary: summary.md
+  branch_arrays: semantic_branches.npz

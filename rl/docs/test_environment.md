@@ -18,7 +18,7 @@ PYTHONPATH="$PWD/.env_mjwp313_overlay:$PWD/src:$PWD/scripts:$PWD/external/mink/s
   /data_all/zzx/egoengine/spider/.venv/bin/python -m pytest -q
 ```
 
-On 2026-09-26 this command passed **669 tests and 57 subtests**.
+On 2026-09-26 this command passed **673 tests and 57 subtests**.
 The 19 warnings are known upstream/diagnostic warnings: capsule-mesh MULTICCD
 capacity, PyTorch AMP deprecations, two Trimesh degenerate-volume warnings and
 seven SciPy pickle deprecations.
@@ -58,6 +58,7 @@ runs/taco_pour_postfix_policy_extremization_audit_v1/
 runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/
 runs/taco_pour_postfix_single_actor_pass_audit_v1/
 runs/taco_pour_single_pass_endpoint47_49_gate_v1/
+runs/taco_pour_source47_semantic_action_subspace_gate_v1/
 ```
 
 The first corrected PPO authorization is consumed. Replay passed the first
@@ -244,6 +245,18 @@ qpos norm; right-hand/tool contact is already absent and the endpoint-49 score
 is unchanged. Neither branch survives endpoint 49, so the predeclared gate
 fails. The `actor_learning_rate: 1e-4 -> 5e-5` candidate is recorded but not
 authorized for training, sweeping, warm start or chunk commit.
+
+The source-47 semantic action-subspace gate then zeros, for one control step,
+right-wrist translation, right-wrist rotation, right fingers, the whole wrist,
+or the whole right hand. Every branch keeps the left hand bitwise unchanged
+and resumes the frozen actor. None preserves or restores a live right-hand/tool
+contact at endpoint 48, and all still fail at endpoint 49. Removing wrist
+translation or the whole wrist improves endpoint-49 score by about `0.024` to
+`0.026`; removing fingers alone is slightly worse. Training samples at sources
+46/47 that retain next-step right-tool contact have higher relative return and
+advantage, but are only `4/23` and `3/20` samples and never satisfy the
+thumb-plus-non-thumb bonus condition. No source-47 training candidate is
+authorized; the next read-only decision moves to source-46 state entry.
 
 ## Archived invalid performance evidence
 
