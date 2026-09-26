@@ -8,7 +8,7 @@ evidence_policy:
   order: [paper, verified_implementation_defect, disclosed_local_proposal]
   paper_page_numbers: one_based_pdf_pages
   copied_defaults_are_author_settings: false
-  current_revision: source50_two_stage_gate_passed_temporal_wrist_translation_candidate_design_required
+  current_revision: binary_translation_oracle_36_of_40_endpoint57_failure_attribution_required
 
 inputs:
   setting: user_approved_gt_oracle_validation_not_full_perception_reproduction
@@ -385,7 +385,7 @@ evaluation:
       right-hand tool contact is already absent. The predeclared evidence gate
       therefore does not authorize the half-learning-rate training candidate.
   postfix_single_actor_pass_half_LR_candidate:
-    status: frozen_blocked_not_selected_after_source50_refinement_gate
+    status: frozen_blocked_not_selected_after_binary_translation_oracle_gate
     paper_faithful: false
     contract: /data_all/zzx/3.2RL/configs/taco_pour_postfix_single_actor_pass_lr_half_candidate_v1.yaml
     sole_future_change: {actor_learning_rate: {baseline: 0.0001, candidate: 0.00005}}
@@ -504,6 +504,52 @@ evaluation:
       performs refinement.
     new_training_authorized: false
     half_LR_candidate_unblocked: false
+  binary_translation_oracle_gate:
+    status: completed_read_only_36_of_40_no_training_authorized
+    paper_faithful: false
+    classification: local_engineering_oracle_shield_not_EgoEngine_RL
+    contract: /data_all/zzx/3.2RL/configs/taco_pour_binary_translation_oracle_gate_v1.yaml
+    output: /data_all/zzx/3.2RL/runs/taco_pour_binary_translation_oracle_gate_v1
+    report: /data_all/zzx/3.2RL/runs/taco_pour_binary_translation_oracle_gate_v1/report.json
+    formal_Replay_and_PPO_bitwise_reproduced: true
+    source45_and_source50_known_counterfactuals_bitwise_reproduced: true
+    selection:
+      action_candidates: [full_PPO_action, zero_right_wrist_translation]
+      horizon_control_intervals: 1
+      criterion: next_endpoint_object_tracking_score_and_termination_only
+      contact_used: false
+      source_index_used: false
+      manual_threshold_used: false
+      same_snapshot_and_post_forward_hidden_for_ON_OFF: true
+    successful_intervals: 36
+    Replay_successful_intervals: 30
+    formal_PPO_successful_intervals: 28
+    first_failure_endpoint: 57
+    OFF_count: 19
+    ON_count: 18
+    OFF_fraction_of_executed_sources: 0.5135135135135135
+    OFF_sources: [27, 31, 35, 36, 37, 38, 42, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55]
+    longest_consecutive_OFF_sources: [44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55]
+    automatically_selects_source45_OFF: true
+    automatically_selects_source50_OFF: true
+    sparse_gate_supported: false
+    endpoint57_failure:
+      source_endpoint: 56
+      ON_score: 1.004638910293579
+      OFF_score: 1.004638910293579
+      both_terminate: true
+      right_hand_tool_contact: false
+      wrist_world_position_ON_OFF_delta_m: 0.006331534267210198
+      tool_freejoint_qpos_ON_OFF_delta_l2: 1.7701254979472804e-08
+      interpretation: >-
+        Translation ON/OFF moves the wrist differently but has no task-scale
+        one-step influence on the bowl at the terminal transition.
+    forty_of_forty: false
+    learned_gate_training_authorized: false
+    new_PPO_training_authorized: false
+    half_LR_candidate_unblocked: false
+    chunk_acceptance_or_commit_authorized: false
+    next_read_only_direction: endpoint57_failure_attribution
 
 runtime_contract:
   fail_closed: true
@@ -569,7 +615,7 @@ runtime_contract:
     cpu_commit_endpoint_offset: 20
 
 training_ready: false
-training_ready_scope: source50_two_stage_gate_passed_temporal_wrist_translation_candidate_design_required
+training_ready_scope: binary_translation_oracle_36_of_40_endpoint57_failure_attribution_required
 
 audit_results:
   active_input: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/input_audit.json
@@ -603,6 +649,7 @@ audit_results:
   source46_state_entry_gate: /data_all/zzx/3.2RL/runs/taco_pour_source46_state_entry_gate_v1/report.json
   source45_state_entry_gate: /data_all/zzx/3.2RL/runs/taco_pour_source45_state_entry_gate_v1/report.json
   source45_prefix_source50_refinement_gate: /data_all/zzx/3.2RL/runs/taco_pour_source45_prefix_source50_refinement_gate_v1/report.json
+  binary_translation_oracle_gate: /data_all/zzx/3.2RL/runs/taco_pour_binary_translation_oracle_gate_v1/report.json
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -642,7 +689,7 @@ historical_observation_normalization_misaligned:
     - old_checkpoint_task_performance_as_an_algorithm_baseline
 
 blocking_checks:
-  - source50_two_stage_gate_passed_temporal_wrist_translation_candidate_design_required
+  - binary_translation_oracle_36_of_40_endpoint57_failure_attribution_required
 result_acceptance_blockers:
   - active_corrected_Replay_passes_only_30_of_40_in_second_window
   - postfix_single_actor_pass_PPO_passes_only_28_intervals_before_failure_at_endpoint49
@@ -653,6 +700,9 @@ result_acceptance_blockers:
   - source45_translation_or_wrist_suppression_survives_endpoint50_but_fails_endpoint51
   - two_stage_time_local_suppression_exceeds_Replay_endpoint51_but_fails_by_endpoint53
   - learned_deterministic_PPO_refinement_beyond_Replay_not_demonstrated
+  - binary_translation_oracle_extends_to_36_of_40_but_fails_endpoint57
+  - binary_translation_oracle_selects_OFF_for_19_of_37_sources_not_a_sparse_gate
+  - endpoint57_translation_ON_OFF_has_no_task_scale_tool_effect
   - unpublished_threshold_to_weighted_objective_mapping
   - stable_grasp_and_physical_pour_not_demonstrated
 paper_faithful_run_blockers:

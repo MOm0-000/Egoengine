@@ -1,5 +1,5 @@
 schema: taco_pour_postfix_single_actor_pass_lr_half_candidate_v1
-status: frozen_blocked_not_selected_after_source50_refinement_gate
+status: frozen_blocked_not_selected_after_binary_translation_oracle_gate
 paper_faithful: false
 purpose: >-
   Freeze, but do not authorize, the single-variable local reproduction
@@ -89,12 +89,19 @@ latest_state_entry_evidence:
     sha256: 052dbf4127b2f96227dc865e36dad89c1a983bc0900a634372521b7d1ab45ad9
   source50_all_predeclared_branches_cross_Replay_endpoint51: true
   source50_narrowest_passing_branch: zero_R_forearm_ty_residual_only
+  binary_translation_oracle_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_binary_translation_oracle_gate_v1/report.json
+    sha256: 396754a62be72190bc87db1a55d57af28bc77acf082f539e1eb668a0c161b9b4
+  binary_translation_oracle_successful_intervals: 36
+  binary_translation_oracle_OFF_count: 19
+  binary_translation_oracle_first_failure_endpoint: 57
   half_LR_selected_for_next_experiment: false
   interpretation: >-
-    The strongest evidence now points to two time-local, state-dependent wrist
-    suppressions: source-45 translation suppression establishes the prefix and
-    source-50 R_forearm_ty suppression crosses the Replay failure boundary.
-    This historical half-LR candidate remains frozen and unauthorized.
+    A one-step binary translation oracle extends the frozen actor to 36/40 but
+    selects OFF for 19 of 37 evaluated sources and loses task-scale translation
+    authority at endpoint 57. The next work is failure attribution, not a
+    global actor learning-rate change. This historical candidate remains
+    frozen and unauthorized.
 
 evidence:
   source_run_report:

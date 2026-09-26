@@ -1,0 +1,148 @@
+schema: taco_pour_binary_translation_oracle_gate_v1
+status: authorized_read_only_gate
+paper_faithful: false
+classification: local_engineering_oracle_shield_not_EgoEngine_RL
+purpose: >-
+  Test whether a threshold-free, state-dependent binary selector over only the
+  right-wrist translation residual can automatically reproduce useful
+  suppressions and extend the frozen actor over the complete endpoint-20 to
+  endpoint-60 lookahead.
+
+runtime:
+  backend: CPU_MuJoCo_Warp
+  training_allowed: false
+  optimizer_steps: 0
+  actor_frozen: true
+  critic_frozen: true
+  observation_normalization_frozen: true
+  reward_changed: false
+  objective_changed: false
+  action_scale_changed: false
+  action_bound_changed: false
+  action_distribution_changed: false
+  reference_timing_changed: false
+  action_frame_changed: false
+  PPO_hyperparameters_changed: false
+  chunk_acceptance_allowed: false
+  chunk_commit_allowed: false
+  checkpoint_resume_for_training_allowed: false
+
+window:
+  start_endpoint: 20
+  lookahead_end_endpoint: 60
+  required_control_intervals: 40
+
+candidate_actions:
+  'on':
+    definition: complete_frozen_deterministic_PPO_action
+  'off':
+    definition: complete_frozen_deterministic_PPO_action_with_only_indices_0_1_2_zeroed
+    zero_normalized_action_indices: [0, 1, 2]
+    semantic_group: right_wrist_translation
+  scale_sweep_allowed: false
+  additional_action_candidates_allowed: false
+
+branch_semantics:
+  same_pre_step_complete_physics_snapshot: true
+  same_pre_forward_observation: true
+  same_pre_forward_RNN_hidden: true
+  actor_forward_calls_per_source: 1
+  same_post_forward_RNN_hidden_for_both_physics_branches: true
+  recurrent_state_intervention_allowed: false
+  branch_horizon_control_intervals: 1
+
+selection_rule:
+  criterion: active_object_tracking_objective_only
+  nonfinite_candidate: fail_closed_abort_audit
+  contact_used: false
+  source_index_used: false
+  future_beyond_one_step_used: false
+  rules_in_order:
+    - if_exactly_one_candidate_terminates_choose_the_nonterminated_candidate
+    - if_both_survive_choose_strictly_lower_next_endpoint_tracking_score
+    - if_both_terminate_choose_strictly_lower_score_and_end_the_rollout_as_failed
+    - if_scores_and_termination_are_exactly_equal_choose_ON
+  learned_gate: false
+  manually_selected_endpoints: false
+
+required_decision_trace:
+  - selected_ON_or_OFF
+  - actor_raw_mu_xyz
+  - actor_complete_deterministic_action
+  - current_object_position_and_rotation_error
+  - wrist_tool_relative_pose_and_velocity
+  - reference_object_velocity
+  - ON_and_OFF_next_endpoint_score_and_termination
+  - ON_minus_OFF_score
+  - next_endpoint_contact_as_secondary_diagnostic
+  - first_failure_endpoint
+
+preflight_regression:
+  formal_Replay_exact: true
+  formal_PPO_exact: true
+  source45_translation_prefix_exact: true
+  source50_R_forearm_ty_branch_exact: true
+
+result_interpretation:
+  forty_of_forty: >-
+    oracle selector is sufficient for this window; no chunk commit and no
+    learned-gate training until a separate non-lookahead architecture contract
+    is approved
+  above_Replay_below_forty: >-
+    state-dependent translation suppression extends feasibility but another
+    failure remains and must be attributed
+  at_or_below_Replay: >-
+    the one-step binary translation selector does not establish refinement
+
+frozen_half_LR_candidate:
+  actor_learning_rate: 5.0e-5
+  remains_blocked: true
+
+inputs:
+  formal_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/report.json
+    sha256: d1690633bb3c29c16f92e8114a9f71142a8bde0d141114abd68fda359eb0344b
+  source45_gate_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_source45_state_entry_gate_v1/report.json
+    sha256: 2f8a0ad2bccd5b5c0aacbe1fe5be59e32a56c15d4c39bf498f5965e906e1e64a
+  source45_branch_arrays:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_source45_state_entry_gate_v1/state_entry_branches.npz
+    sha256: 89eae444922260c0c616bdb2bbee8ac2c0ade99de1ee40682a3aa6f4a8aab0ce
+  source50_gate_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_source45_prefix_source50_refinement_gate_v1/report.json
+    sha256: 052dbf4127b2f96227dc865e36dad89c1a983bc0900a634372521b7d1ab45ad9
+  source50_branch_arrays:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_source45_prefix_source50_refinement_gate_v1/source50_refinement_branches.npz
+    sha256: a4f1e235cab2800e34dcfb7a6ca464ae94663ec0c1b4cf71e9828d4c494519e2
+  checkpoint:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/ppo_chunk_20/nn/last_ep_8_rew__5.815153_.pth.gz
+    sha256: 159e7e462b584e10fd62764b82aac3725630088e45ee7720d71cd27bdfe59b97
+  boundary:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/source_boundary.pt.gz
+    sha256: a3646e24af1ba871e5ecc885669508223a5e0f26d3cf29f0482f02678419e337
+  simulator_config:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml
+    sha256: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+  initialization_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/initialization_report.json
+    sha256: 9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a
+  protocol:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/protocol.yaml
+    sha256: e90830ea1971f2238f4de6a54600930ed9b4cb308ada948fb43110a844098ac8
+  objective_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/objective_profile.yaml
+    sha256: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+  observation_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/observation_profile.yaml
+    sha256: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  action_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/action_profile.yaml
+    sha256: 71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4
+  distribution_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/distribution_profile.yaml
+    sha256: 6a4e4bd8f33fa53bfe34f21f822bfa391253cca090892767154320fc9bbfd1b8
+
+artifacts:
+  report: report.json
+  summary: summary.md
+  decision_arrays: binary_translation_oracle_trace.npz

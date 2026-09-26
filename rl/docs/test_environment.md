@@ -18,7 +18,7 @@ PYTHONPATH="$PWD/.env_mjwp313_overlay:$PWD/src:$PWD/scripts:$PWD/external/mink/s
   /data_all/zzx/egoengine/spider/.venv/bin/python -m pytest -q
 ```
 
-On 2026-09-26 this command passed **685 tests and 57 subtests**.
+On 2026-09-26 this command passed **689 tests and 57 subtests**.
 The 19 warnings are known upstream/diagnostic warnings: capsule-mesh MULTICCD
 capacity, PyTorch AMP deprecations, two Trimesh degenerate-volume warnings and
 seven SciPy pickle deprecations.
@@ -62,6 +62,7 @@ runs/taco_pour_source47_semantic_action_subspace_gate_v1/
 runs/taco_pour_source46_state_entry_gate_v1/
 runs/taco_pour_source45_state_entry_gate_v1/
 runs/taco_pour_source45_prefix_source50_refinement_gate_v1/
+runs/taco_pour_binary_translation_oracle_gate_v1/
 ```
 
 The first corrected PPO authorization is consumed. Replay passed the first

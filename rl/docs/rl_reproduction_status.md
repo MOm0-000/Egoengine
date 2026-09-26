@@ -252,5 +252,46 @@ to define one auditable temporal/state-dependent wrist-translation candidate
 without turning the two discovered timestamps into an ad-hoc rule. The
 historical `actor_learning_rate=5e-5` candidate remains blocked.
 
+## Full-window binary translation oracle
+
+The first non-time-hardcoded candidate is a read-only one-step simulator
+oracle. At every source from endpoint 20 onward, the frozen actor is forwarded
+exactly once. The complete PPO action (`ON`) and the same action with only the
+right-wrist translation residual zeroed (`OFF`) are each simulated from the
+same complete physics snapshot with the same post-forward RNN hidden. The
+selector uses only next-endpoint tracking termination and score: prefer the
+sole survivor, otherwise the lower score, with exact ties retaining `ON`.
+Contact, source index and any manually chosen threshold are excluded.
+
+The oracle extends deterministic feasibility from Replay's `30/40` and formal
+PPO's `28/40` to `36/40`, failing at endpoint 57. It automatically selects
+`OFF` at both source 45 and source 50, confirming that the earlier hand-picked
+interventions belong to one state-dependent pattern rather than two isolated
+timestamps.
+
+The pattern is not sparse. The oracle selects `OFF` at 19 of 37 evaluated
+sources:
+
+```text
+27, 31, 35, 36, 37, 38, 42,
+44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55
+```
+
+In particular, every source from 44 through 55 selects `OFF`. Thus the current
+PPO translation branch is harmful over a broad tail region, not merely at
+source 45 and 50, even though `ON` remains useful at other earlier sources.
+
+At source 56 both candidates terminate at endpoint 57 with the exactly equal
+score `1.00463891`. ON/OFF changes the wrist world position by `6.33 mm` and
+hand qpos by L2 `0.00744`, but changes the bowl free-joint qpos only by about
+`1.77e-8` and neither branch has right-hand/tool contact. The new failure is
+therefore not a remaining choice between translation ON and OFF: translation
+has lost task-scale one-step authority over the bowl at that state.
+
+This oracle is a local engineering shield, not an EgoEngine component or a
+deployable policy. It does not complete 40/40, so no learned gate, PPO run,
+chunk acceptance or commit is authorized. The next read-only blocker is
+endpoint-57 failure attribution; the half-LR candidate remains blocked.
+
 Superseded or invalid evidence remains isolated under `TRASH/` and is not part
 of the active decision chain.
