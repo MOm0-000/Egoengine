@@ -117,10 +117,10 @@ def test_artifacts_remain_hash_bound_and_protocol_advances_to_fresh_evidence():
 
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
     assert protocol["blocking_checks"] == [
-        "source57_temporal_hold_insufficient_active_lag_correction_required"
+        "unit_gain_active_lag_correction_insufficient_no_parameter_sweep_authorized"
     ]
     assert protocol["training_ready_scope"] == (
-        "source57_temporal_hold_insufficient_active_lag_correction_required"
+        "unit_gain_active_lag_correction_insufficient_no_parameter_sweep_authorized"
     )
     assert protocol["historical_observation_normalization_misaligned"][
         "active_algorithm_evidence"

@@ -8,7 +8,7 @@ evidence_policy:
   order: [paper, verified_implementation_defect, disclosed_local_proposal]
   paper_page_numbers: one_based_pdf_pages
   copied_defaults_are_author_settings: false
-  current_revision: source57_temporal_hold_insufficient_active_lag_correction_required
+  current_revision: unit_gain_active_lag_correction_insufficient_no_parameter_sweep_authorized
 
 inputs:
   setting: user_approved_gt_oracle_validation_not_full_perception_reproduction
@@ -385,7 +385,7 @@ evaluation:
       right-hand tool contact is already absent. The predeclared evidence gate
       therefore does not authorize the half-learning-rate training candidate.
   postfix_single_actor_pass_half_LR_candidate:
-    status: frozen_blocked_not_selected_after_source57_temporal_hold_gate
+    status: frozen_blocked_not_selected_after_source57_active_lag_gate
     paper_faithful: false
     contract: /data_all/zzx/3.2RL/configs/taco_pour_postfix_single_actor_pass_lr_half_candidate_v1.yaml
     sole_future_change: {actor_learning_rate: {baseline: 0.0001, candidate: 0.00005}}
@@ -740,7 +740,42 @@ evaluation:
     reward_change_authorized: false
     PPO_retraining_authorized: false
     chunk_acceptance_or_commit_authorized: false
-    next_read_only_direction: design_one_predeclared_active_lag_correction_gate_without_axis_or_scale_sweep
+    next_read_only_direction: completed_by_source57_active_lag_correction_gate
+  source57_active_lag_correction_gate:
+    status: completed_read_only_unit_gain_candidate_failed
+    paper_faithful: false
+    classification: local_engineering_active_lag_correction_not_EgoEngine_RL
+    contract: /data_all/zzx/3.2RL/configs/taco_pour_source57_active_lag_correction_gate_v1.yaml
+    output: /data_all/zzx/3.2RL/runs/taco_pour_source57_active_lag_correction_gate_v1
+    report: /data_all/zzx/3.2RL/runs/taco_pour_source57_active_lag_correction_gate_v1/report.json
+    tail_selected_sources44_through56_exactly_reproduced: true
+    formal_and_translation_OFF_anchors_exactly_reproduced: true
+    source57_actor_forward_calls: 1
+    correction:
+      coordinate_frame: world
+      fixed_gain: 1.0
+      residual_scale_m: 0.05
+      source57_tool_position_error_xyz_actual_minus_reference_m: [-0.01456153392791748, 0.04617075249552727, -0.09801501035690308]
+      normalized_delta_before_projection: [0.2912306785583496, -0.9234150499105453, 1.9603002071380615]
+      translation_before_projection: [-0.107322096824646, -0.25023405253887177, 2.598892867565155]
+      translation_after_projection: [-0.107322096824646, -0.25023405253887177, 1.0]
+      projection_changed_axes: [z]
+      non_translation_action_dimensions_unchanged: 33
+    branch_results:
+      formal_source57_PPO: {score58: 1.0227254629135132, position_error_m: 0.11341234296560287, rotation_error_rad: 0.586245059967041, pinky_force: 0.17438175529241562, passed: false}
+      translation_OFF: {score58: 1.023302674293518, position_error_m: 0.1136128231883049, rotation_error_rad: 0.5824333429336548, pinky_force: 18.338611602783203, passed: false}
+      PPO_plus_unit_tool_position_lag_correction: {score58: 1.017898440361023, position_error_m: 0.11264189332723618, rotation_error_rad: 0.5905364155769348, pinky_force: 0.0, passed: false}
+    active_candidate_score_improvement_vs_formal: 0.004827022552490234
+    active_candidate_passes_endpoint58: false
+    best_successful_intervals: 37
+    forty_of_forty: false
+    gain_or_axis_sweep_authorized: false
+    actor_LR_5e_minus_5_unblocked: false
+    learned_gate_training_authorized: false
+    reward_change_authorized: false
+    PPO_retraining_authorized: false
+    chunk_acceptance_or_commit_authorized: false
+    next_read_only_direction: requires_separate_design_decision_no_automatic_gain_axis_or_training_sweep
 
 runtime_contract:
   fail_closed: true
@@ -806,7 +841,7 @@ runtime_contract:
     cpu_commit_endpoint_offset: 20
 
 training_ready: false
-training_ready_scope: source57_temporal_hold_insufficient_active_lag_correction_required
+training_ready_scope: unit_gain_active_lag_correction_insufficient_no_parameter_sweep_authorized
 
 audit_results:
   active_input: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/input_audit.json
@@ -846,6 +881,7 @@ audit_results:
   tail_semantic_suppression_oracle: /data_all/zzx/3.2RL/runs/taco_pour_tail_semantic_suppression_oracle_v1/report.json
   tail_mode_necessity_transition_audit: /data_all/zzx/3.2RL/runs/taco_pour_tail_mode_necessity_transition_audit_v1/report.json
   source57_temporal_hold_gate: /data_all/zzx/3.2RL/runs/taco_pour_source57_temporal_hold_gate_v1/report.json
+  source57_active_lag_correction_gate: /data_all/zzx/3.2RL/runs/taco_pour_source57_active_lag_correction_gate_v1/report.json
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -885,7 +921,7 @@ historical_observation_normalization_misaligned:
     - old_checkpoint_task_performance_as_an_algorithm_baseline
 
 blocking_checks:
-  - source57_temporal_hold_insufficient_active_lag_correction_required
+  - unit_gain_active_lag_correction_insufficient_no_parameter_sweep_authorized
 result_acceptance_blockers:
   - active_corrected_Replay_passes_only_30_of_40_in_second_window
   - postfix_single_actor_pass_PPO_passes_only_28_intervals_before_failure_at_endpoint49
@@ -918,6 +954,9 @@ result_acceptance_blockers:
   - source57_hold_rotation_hold_fingers_hold_both_and_hold_right_hand_all_fail_endpoint58
   - translation_OFF_preserves_strong_pinky_force_but_still_fails_endpoint58
   - temporal_consistency_and_contact_force_alone_are_insufficient
+  - source57_unit_gain_world_translation_lag_correction_improves_score_but_still_fails_endpoint58
+  - source57_z_lag_correction_exceeds_existing_action_support_and_is_projected_to_the_frozen_bound
+  - active_lag_correction_family_not_validated_and_no_gain_or_axis_sweep_is_authorized
   - unpublished_threshold_to_weighted_objective_mapping
   - stable_grasp_and_physical_pour_not_demonstrated
 paper_faithful_run_blockers:

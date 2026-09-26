@@ -7,9 +7,9 @@ import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RUN = ROOT / "runs/taco_pour_source57_temporal_hold_gate_v1"
+RUN = ROOT / "runs/taco_pour_source57_active_lag_correction_gate_v1"
 REPORT = RUN / "report.json"
-CONTRACT = ROOT / "configs/taco_pour_source57_temporal_hold_gate_v1.yaml"
+CONTRACT = ROOT / "configs/taco_pour_source57_active_lag_correction_gate_v1.yaml"
 
 
 def _sha256(path: Path) -> str:
@@ -20,7 +20,7 @@ def _report() -> dict:
     return json.loads(REPORT.read_text())
 
 
-def test_temporal_hold_gate_is_read_only_and_reproduces_the_parent_path():
+def test_active_lag_gate_is_read_only_and_reproduces_the_parent_path():
     report = _report()
     contract = yaml.safe_load(CONTRACT.read_text())
     assert report["status"] == "completed_read_only_gate"
@@ -37,27 +37,41 @@ def test_temporal_hold_gate_is_read_only_and_reproduces_the_parent_path():
         "same_source57_snapshot_and_post_forward_hidden_for_all_candidates": True,
     }
     assert contract["runtime"]["training_allowed"] is False
-    assert contract["runtime"]["learned_gate_training_allowed"] is False
     assert contract["runtime"]["chunk_commit_allowed"] is False
 
 
-def test_all_copied_residuals_are_feasible_and_no_silent_clamp_is_used():
+def test_unit_gain_correction_is_exact_and_only_changes_translation():
     report = _report()
-    branches = report["branches"]
-    assert len(branches) == 6
-    assert all(row["inside_source57_state_feasible_bounds"] for row in branches)
-    assert all(row["executed"] for row in branches)
-    assert report["measurement_boundaries"][
-        "all_copied_actions_checked_against_source57_support"
-    ] is True
-    assert report["measurement_boundaries"]["no_silent_clamp"] is True
-    assert report["measurement_boundaries"]["no_source57_axis_or_scale_sweep"] is True
-    arrays = np.load(RUN / "temporal_hold_branches.npz")
-    assert arrays["feasible"].tolist() == [True] * 6
-    assert arrays["action"].shape == (6, 36)
+    correction = report["active_correction"]
+    np.testing.assert_allclose(
+        correction["normalized_delta_before_projection"],
+        [0.2912306785583496, -0.9234150499105453, 1.9603002071380615],
+        rtol=0.0,
+        atol=0.0,
+    )
+    np.testing.assert_allclose(
+        correction["translation_before_projection"],
+        [-0.107322096824646, -0.25023405253887177, 2.598892867565155],
+        rtol=0.0,
+        atol=0.0,
+    )
+    assert correction["translation_after_projection"] == [
+        -0.107322096824646,
+        -0.25023405253887177,
+        1.0,
+    ]
+    assert correction["projection_changed_axes"] == ["z"]
+    branches = {row["name"]: row for row in report["branches"]}
+    formal = np.asarray(branches["formal_source57_PPO"]["normalized_action"])
+    active = np.asarray(
+        branches["PPO_plus_unit_tool_position_lag_correction"]["normalized_action"]
+    )
+    assert np.array_equal(active[3:], formal[3:])
+    arrays = np.load(RUN / "active_lag_correction_branches.npz")
+    assert arrays["action"].shape == (3, 36)
 
 
-def test_no_hold_branch_passes_and_strong_pinky_force_is_not_sufficient():
+def test_active_correction_improves_score_but_does_not_pass_endpoint58():
     report = _report()
     branches = {row["name"]: row for row in report["branches"]}
     assert {
@@ -66,27 +80,20 @@ def test_no_hold_branch_passes_and_strong_pinky_force_is_not_sufficient():
     } == {
         "formal_source57_PPO": 1.0227254629135132,
         "translation_OFF": 1.023302674293518,
-        "hold_source56_right_wrist_rotation": 1.0225476026535034,
-        "hold_source56_right_fingers": 1.0230097770690918,
-        "hold_source56_right_wrist_rotation_and_fingers": 1.0228244066238403,
-        "hold_source56_entire_right_hand": 1.0232295989990234,
+        "PPO_plus_unit_tool_position_lag_correction": 1.017898440361023,
     }
-    assert all(row["passes_endpoint58"] is False for row in branches.values())
-    assert all(row["continuation"] is None for row in branches.values())
-    assert branches["formal_source57_PPO"]["endpoint58_contact"][
-        "sum_normal_force"
-    ] == 0.17438175529241562
-    assert branches["translation_OFF"]["endpoint58_contact"][
-        "sum_normal_force"
-    ] == 18.338611602783203
-    assert branches["translation_OFF"]["passes_endpoint58"] is False
-    assert report["decision"]["passing_candidates"] == []
-    assert report["decision"]["any_temporal_hold_passes_endpoint58"] is False
+    active = branches["PPO_plus_unit_tool_position_lag_correction"]
+    assert active["outcome"]["position_error_m"] == 0.11264189332723618
+    assert active["outcome"]["rotation_error_rad"] == 0.5905364155769348
+    assert active["endpoint58_contact"]["sum_normal_force"] == 0.0
+    assert active["passes_endpoint58"] is False
+    assert active["continuation"] is None
     assert report["decision"]["best_successful_intervals"] == 37
     assert report["decision"]["forty_of_forty"] is False
+    assert report["decision"]["gain_or_axis_sweep_authorized"] is False
 
 
-def test_protocol_moves_to_active_lag_correction_and_keeps_training_blocked():
+def test_protocol_records_failed_candidate_and_keeps_all_training_blocked():
     report = _report()
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
     half_lr = yaml.safe_load((
@@ -96,20 +103,18 @@ def test_protocol_moves_to_active_lag_correction_and_keeps_training_blocked():
     assert protocol["training_ready"] is False
     assert protocol["training_ready_scope"] == blocker
     assert protocol["blocking_checks"] == [blocker]
-    gate = protocol["evaluation"]["source57_temporal_hold_gate"]
-    assert gate["passing_candidates"] == []
-    assert gate["temporal_hold_switch_sufficient"] is False
-    assert gate["strong_pinky_force_sufficient_for_tracking"] is False
+    gate = protocol["evaluation"]["source57_active_lag_correction_gate"]
+    assert gate["active_candidate_passes_endpoint58"] is False
+    assert gate["gain_or_axis_sweep_authorized"] is False
     assert gate["actor_LR_5e_minus_5_unblocked"] is False
     assert gate["learned_gate_training_authorized"] is False
-    assert gate["reward_change_authorized"] is False
     assert gate["PPO_retraining_authorized"] is False
     assert gate["chunk_acceptance_or_commit_authorized"] is False
     assert half_lr["status"] == (
         "frozen_blocked_not_selected_after_source57_active_lag_gate"
     )
     assert half_lr["latest_state_entry_evidence"][
-        "source57_temporal_hold_report"
+        "source57_active_lag_correction_report"
     ]["sha256"] == _sha256(REPORT)
     assert report["decision"]["PPO_retraining_authorized"] is False
     assert report["decision"]["chunk_acceptance_or_commit_authorized"] is False

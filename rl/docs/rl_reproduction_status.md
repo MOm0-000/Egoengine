@@ -481,5 +481,42 @@ than another suppression, hold, axis sweep or scale sweep. The half-LR
 candidate, learned gate, reward change, PPO retraining, task acceptance and
 chunk commit remain blocked.
 
+## Source-57 active object-lag correction gate
+
+The follow-up keeps the exact selected tail path, frozen actor, objective,
+world-frame action semantics and action support. It introduces one local
+engineering diagnostic only:
+
+```text
+delta_u_xyz = -(tool_position_actual - tool_position_reference) / 0.05
+u_candidate_xyz = project(u_PPO_xyz + delta_u_xyz, feasible_low, feasible_high)
+```
+
+The gain is fixed to one because the expression cancels the measured current
+position lag in the already established residual units. There is no gain
+sweep, per-axis selection or new scale. All other 33 action dimensions remain
+bitwise equal to formal PPO.
+
+At source 57 the measured error is
+`[-0.014562, +0.046171, -0.098015] m`, producing normalized correction
+`[+0.291231, -0.923415, +1.960300]`. After addition to the PPO action, the
+translation request is `[-0.107322, -0.250234, +2.598893]`; only z exceeds the
+frozen support and is projected to `+1`.
+
+```text
+candidate                                  score@58   position     rotation
+formal source57 PPO                        1.022725   0.113412 m   0.586245 rad
+translation OFF                            1.023303   0.113613 m   0.582433 rad
+unit-gain tool-position-lag correction     1.017898   0.112642 m   0.590536 rad
+```
+
+The active correction improves score by `0.004827` versus formal PPO but does
+not cross the strict boundary, and its endpoint-58 right-hand/tool contact
+force is zero. Therefore the result remains `37/40`. This rejects only the
+single predeclared unit-gain correction; it does not prove that no active
+action exists. Consistent with the frozen contract, failure does not authorize
+an automatic gain/axis sweep, the half-LR candidate, learned-gate training,
+reward modification, PPO retraining, task acceptance or chunk commit.
+
 Superseded or invalid evidence remains isolated under `TRASH/` and is not part
 of the active decision chain.

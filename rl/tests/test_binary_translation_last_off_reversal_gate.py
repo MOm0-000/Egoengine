@@ -106,7 +106,7 @@ def test_protocol_moves_to_source56_semantic_attribution_and_keeps_training_bloc
     half_lr = yaml.safe_load((
         ROOT / "configs/taco_pour_postfix_single_actor_pass_lr_half_candidate_v1.yaml"
     ).read_text())
-    blocker = "source57_temporal_hold_insufficient_active_lag_correction_required"
+    blocker = "unit_gain_active_lag_correction_insufficient_no_parameter_sweep_authorized"
     assert protocol["training_ready"] is False
     assert protocol["training_ready_scope"] == blocker
     assert protocol["blocking_checks"] == [blocker]
@@ -129,7 +129,7 @@ def test_protocol_moves_to_source56_semantic_attribution_and_keeps_training_bloc
         "completed_by_source56_semantic_action_gate"
     )
     assert half_lr["status"] == (
-        "frozen_blocked_not_selected_after_source57_temporal_hold_gate"
+        "frozen_blocked_not_selected_after_source57_active_lag_gate"
     )
     assert half_lr["latest_state_entry_evidence"][
         "binary_translation_last_OFF_reversal_report"

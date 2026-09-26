@@ -1,0 +1,107 @@
+schema: taco_pour_source57_active_lag_correction_gate_v1
+status: authorized_read_only_gate
+paper_faithful: false
+classification: local_engineering_active_lag_correction_not_EgoEngine_RL
+purpose: >-
+  Test one predeclared, unit-gain right-wrist world-translation correction for
+  the measured source57 tool-position lag after the temporal-hold family failed.
+
+runtime:
+  backend: CPU_MuJoCo_Warp
+  training_allowed: false
+  optimizer_steps: 0
+  actor_frozen: true
+  critic_frozen: true
+  observation_normalization_frozen: true
+  reward_changed: false
+  objective_changed: false
+  action_scale_changed: false
+  action_bound_changed: false
+  action_distribution_changed: false
+  reference_timing_changed: false
+  action_frame_changed: false
+  PPO_hyperparameters_changed: false
+  actor_learning_rate_5e_minus_5_training_allowed: false
+  learned_gate_training_allowed: false
+  PPO_retraining_allowed: false
+  chunk_acceptance_allowed: false
+  chunk_commit_allowed: false
+
+source_state:
+  source_endpoint: 57
+  exact_tail_oracle_selected_path_required: true
+  parent_sources_reproduced: [44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56]
+  actor_forward_calls: 1
+  same_complete_physics_snapshot_for_all_candidates: true
+  same_pre_forward_observation_and_RNN_hidden: true
+  same_post_forward_RNN_hidden_for_all_physics_branches: true
+
+correction:
+  candidate_name: PPO_plus_unit_tool_position_lag_correction
+  modified_normalized_action_indices: [0, 1, 2]
+  coordinate_frame: world
+  measured_error: source57_actual_tool_position_minus_source57_reference_tool_position
+  normalized_delta_formula: -(actual_minus_reference_m / residual_scale_m)
+  gain: 1.0
+  residual_scale_m: 0.05
+  add_to_formal_PPO_action: true
+  project_only_modified_indices_to_source57_state_feasible_bounds: true
+  other_action_dimensions_unchanged: true
+  gain_sweep_allowed: false
+  axis_sweep_allowed: false
+  extra_candidates_allowed: false
+
+candidates:
+  - formal_source57_PPO
+  - translation_OFF
+  - PPO_plus_unit_tool_position_lag_correction
+
+primary_gate:
+  endpoint58_does_not_terminate: true
+  endpoint58_objective_score_strictly_below: 1.0
+  contact_used_for_pass_fail: false
+  if_passed: restore_branch_then_resume_original_binary_translation_selector_to_endpoint60_or_failure
+
+required_diagnostics:
+  - source57_tool_position_error_xyz
+  - correction_before_and_after_state_feasible_projection
+  - endpoint58_position_error_xyz
+  - endpoint58_position_and_rotation_contributions
+  - endpoint58_pinky_contact_normal_force
+  - endpoint58_tool_freejoint_velocity
+  - first_failure_endpoint_after_continuation
+
+inputs:
+  tail_contract:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_tail_semantic_suppression_oracle_v1.yaml
+    sha256: bd65ff5edc36d2895ec9163542b6db6137372bcdcb4115d45799e6ac496baa1f
+  tail_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_tail_semantic_suppression_oracle_v1/report.json
+    sha256: 5f667a9691f9094657d78fe998c2f9b2599b08785518a44580556f2741cd7f6e
+  tail_arrays:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_tail_semantic_suppression_oracle_v1/tail_semantic_oracle_trace.npz
+    sha256: a2f87114867f051c57e765e60b3aae09c5e45bad1733bb930b8d08ddeef93f21
+  transition_contract:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_tail_mode_necessity_transition_audit_v1.yaml
+    sha256: b48969899ac5b8f5d2fef9dbce67205650beaf742b2f607fac9e1ba1d45531f2
+  transition_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_tail_mode_necessity_transition_audit_v1/report.json
+    sha256: 7ed95e1f7bcb60e38b799878eed6c203d2edee68c5f14161b846a760a3474508
+  temporal_hold_contract:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_source57_temporal_hold_gate_v1.yaml
+    sha256: adff2d726da53b0d6a760000fe96dae3530a1b26acf3b01aafaa520b29f73a4d
+  temporal_hold_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_source57_temporal_hold_gate_v1/report.json
+    sha256: 54bbafbe57b00d9e604c4f5a2f83a519ea37fb43b20b05ea0bb06d510fe20ac2
+
+frozen_decisions:
+  actor_learning_rate_5e_minus_5: blocked
+  learned_gate: blocked
+  reward_change: blocked
+  PPO_retraining: blocked
+  chunk_commit: blocked
+
+artifacts:
+  report: report.json
+  summary: summary.md
+  arrays: active_lag_correction_branches.npz
