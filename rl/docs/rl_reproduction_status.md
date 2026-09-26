@@ -447,5 +447,39 @@ into a state-explainable mode criterion or an active correction for endpoint
 reward modification, PPO retraining, task acceptance and chunk commit remain
 blocked.
 
+## Source-57 temporal-hold attribution
+
+The temporal-hold gate tests the narrower causal question raised by the
+source56-to-57 action changes. From the exact tail-oracle source-57 physics
+state and a single shared actor forward, it evaluates formal PPO, the existing
+translation-OFF anchor, and four actions that replace source-57 values with
+the corresponding source-56 residual for wrist rotation, right fingers, both,
+or the entire right hand. All copied values lie inside the source-57
+state-feasible action interval, and none is silently clamped.
+
+```text
+candidate                                      score@58   pinky normal force
+formal source57 PPO                            1.022725   0.174382
+translation OFF                               1.023303  18.338612
+hold source56 right-wrist rotation             1.022548   0.174349
+hold source56 right fingers                    1.023010   0.174052
+hold source56 rotation + fingers               1.022824   0.173391
+hold source56 entire right hand                1.023230   0.166585
+```
+
+No branch passes endpoint 58. Holding wrist rotation produces only a small
+score improvement, while holding fingers or the whole right hand does not
+help. More decisively, translation OFF maintains over one hundred times the
+formal branch's pinky force but still fails. The endpoint-58 failure therefore
+cannot be explained sufficiently by the source56-to-57 rotation/finger action
+switch or by contact-force collapse alone.
+
+This exhausts the predeclared temporal-hold hypothesis without claiming that
+all possible active actions have been tested. The next candidate must address
+object reference-following lag with one predeclared active correction rather
+than another suppression, hold, axis sweep or scale sweep. The half-LR
+candidate, learned gate, reward change, PPO retraining, task acceptance and
+chunk commit remain blocked.
+
 Superseded or invalid evidence remains isolated under `TRASH/` and is not part
 of the active decision chain.

@@ -18,7 +18,7 @@ PYTHONPATH="$PWD/.env_mjwp313_overlay:$PWD/src:$PWD/scripts:$PWD/external/mink/s
   /data_all/zzx/egoengine/spider/.venv/bin/python -m pytest -q
 ```
 
-On 2026-09-26 this command passed **705 tests and 57 subtests**.
+On 2026-09-26 this command passed **709 tests and 57 subtests**.
 The 19 warnings are known upstream/diagnostic warnings: capsule-mesh MULTICCD
 capacity, PyTorch AMP deprecations, two Trimesh degenerate-volume warnings and
 seven SciPy pickle deprecations.
@@ -67,6 +67,7 @@ runs/taco_pour_binary_translation_last_off_reversal_gate_v1/
 runs/taco_pour_source56_semantic_action_gate_v1/
 runs/taco_pour_tail_semantic_suppression_oracle_v1/
 runs/taco_pour_tail_mode_necessity_transition_audit_v1/
+runs/taco_pour_source57_temporal_hold_gate_v1/
 ```
 
 The first corrected PPO authorization is consumed. Replay passed the first
@@ -131,6 +132,19 @@ From source 57 to 58, y and z absolute errors grow by `4.218 mm` and
 a new position-dominated failure involving reference lag and weakened contact
 transmission, not evidence that a near-tied broad suppression mode is needed.
 All algorithm changes and commit remain blocked.
+
+The source-57 temporal-hold gate reuses that exact tail state and forwards the
+actor once. It compares formal PPO and the existing translation-OFF anchor
+with four candidates that copy source-56 residual values into source-57 wrist
+rotation, fingers, both, or the entire right hand. Every copied action is
+inside the source-57 state-feasible support; no hidden clamp, axis sweep or
+scale sweep is used. None passes endpoint 58. Holding wrist rotation gives the
+best score (`1.02254760`) but remains outside the boundary; holding fingers,
+both, or the entire right hand also fails. Translation OFF preserves a much
+larger pinky normal force (`18.339` versus formal PPO's `0.174`) yet scores
+`1.023303`. Thus neither temporal persistence nor strong contact force is
+sufficient. Active object-lag correction is now the unresolved read-only
+design question; training and commit remain blocked.
 
 The endpoint 44--48 attribution is a no-training replay of the frozen actor.
 It requires exact equality with both saved formal CPU traces before reporting

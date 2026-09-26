@@ -95,7 +95,7 @@ def test_half_lr_candidate_and_protocol_remain_blocked():
     candidate = yaml.safe_load(CANDIDATE.read_text())
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
     assert candidate["status"] == (
-        "frozen_blocked_not_selected_after_tail_mode_transition_audit"
+        "frozen_blocked_not_selected_after_source57_temporal_hold_gate"
     )
     assert candidate["single_change"] == {
         "field": "PPO_actor_learning_rate",
@@ -110,8 +110,8 @@ def test_half_lr_candidate_and_protocol_remain_blocked():
     assert _sha256(Path(evidence["report"]["path"])) == evidence["report"]["sha256"]
     assert protocol["training_ready"] is False
     assert protocol["training_ready_scope"] == (
-        "tail_mode_state_criterion_and_endpoint58_active_correction_unresolved"
+        "source57_temporal_hold_insufficient_active_lag_correction_required"
     )
     assert protocol["blocking_checks"] == [
-        "tail_mode_state_criterion_and_endpoint58_active_correction_unresolved"
+        "source57_temporal_hold_insufficient_active_lag_correction_required"
     ]
