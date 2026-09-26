@@ -18,7 +18,7 @@ PYTHONPATH="$PWD/.env_mjwp313_overlay:$PWD/src:$PWD/external/mink/src" \
   /data_all/zzx/egoengine/spider/.venv/bin/python -m pytest -q
 ```
 
-On 2026-09-26 this command passed **651 tests and 57 subtests**.
+On 2026-09-26 this command passed **656 tests and 57 subtests**.
 The 19 warnings are known upstream/diagnostic warnings: capsule-mesh MULTICCD
 capacity, PyTorch AMP deprecations, two Trimesh degenerate-volume warnings and
 seven SciPy pickle deprecations.
@@ -52,6 +52,8 @@ runs/taco_pour_credit_instrumentation_gate_v1/
 runs/taco_pour_corrected_fresh_ppo_credit_instrumented_v1/
 runs/taco_pour_fresh_ppo_credit_evidence_v1/
 runs/taco_pour_observation_normalization_gate_v1/
+runs/taco_pour_observation_normalization_commit_gate_v1/
+runs/taco_pour_postfix_fresh_ppo_credit_instrumented_v1/
 ```
 
 The first corrected PPO authorization is consumed. Replay passed the first
@@ -165,16 +167,31 @@ explicit operation. The no-learning gate uses four independent GPU worlds, a
 learning rates are zero. Before the first optimizer call and after the full
 dry-run, the maximum `|ratio-1|` is exactly `0.0`; repeated actor outputs,
 log-probabilities and critic outputs are also bitwise unchanged, and neither
-RMS hash moves. The gate performs no task-level training and writes no
-checkpoint or chunk commit.
+RMS hash moves. A second commit-enabled gate runs two complete epochs. Epoch 1
+uses normalization version 0 and commits version 1 only at its tail; epoch 2
+uses version 1 and commits version 2 only at its tail. Both first-update ratios
+are exactly 1, both `before` hashes equal their `frozen_before_commit` hashes,
+and actor/critic weights remain bitwise unchanged. Neither gate performs
+task-level training or writes a checkpoint or chunk commit.
 
 All checkpoints trained under the former likelihood-misaligned path are now
 classified by `configs/taco_pour_ppo_checkpoint_eligibility_v1.yaml` as
 behavioral-audit-only. They cannot be warm-started or used as algorithm
 performance baselines. Their frozen-policy diagnostics remain valid as
 behavior facts, but claims about how valid PPO credit created those policies
-are withdrawn. A new post-fix task PPO has not been run; it requires separate
-authorization, so `training_ready` remains false.
+are withdrawn.
+
+The authorized post-fix fresh PPO starts from the hash-bound CPU endpoint-20
+snapshot with newly initialized actor, critic and optimizers. It uses four GPU
+training worlds, eight epochs and the unchanged 1,280-sample budget, then
+transfers the actor bitwise to the CPU judge. Every epoch uses normalization
+versions 0 through 7 in order; all eight first-update ratios are exactly 1,
+every `before` hash equals `frozen_before_commit`, and the commit chain is
+exact. It is therefore valid post-fix algorithm evidence. The result is still
+a strict failure: Replay first fails at endpoint 51, while PPO first fails at
+endpoint 40 (`20` validation rows including the failed row). No chunk is
+committed, the checkpoint is not authorized for warm start, and cross-run GPU
+performance comparison remains forbidden.
 
 ## Archived invalid performance evidence
 

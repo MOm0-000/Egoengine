@@ -248,6 +248,9 @@ def test_credit_logger_is_training_transparent(tmp_path: Path):
     assert normalization["current_version"] == 1
     assert normalization["epochs"][0]["version_used_for_rollout_and_updates"] == 0
     assert normalization["epochs"][0]["statistics_committed_after_updates"] is True
+    assert normalization["epochs"][0]["before"] == normalization["epochs"][0][
+        "frozen_before_commit"
+    ]
     assert normalization["epochs"][0]["before"] != normalization["epochs"][0]["after"]
     identity = normalization["pre_optimizer_likelihood_identity_checks"]
     assert len(identity) == 1

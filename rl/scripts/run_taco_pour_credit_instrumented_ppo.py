@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""One authorized fresh corrected PPO run with complete credit evidence."""
+"""Run one hash-bound fresh PPO diagnostic with complete credit evidence."""
 
 from __future__ import annotations
 
@@ -18,6 +18,8 @@ import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
+POSTFIX_SCHEMA = "taco_pour_postfix_fresh_ppo_credit_instrumented_v1"
+LEGACY_SCHEMA = "taco_pour_corrected_fresh_ppo_credit_instrumented_v1"
 sys.path[:0] = [
     str(ROOT / "src"),
     str(ROOT / "scripts"),
@@ -179,7 +181,7 @@ def main() -> None:
         raise FileExistsError(args.output_dir)
     contract = yaml.safe_load(args.contract.read_text())
     if (
-        contract.get("schema") != "taco_pour_corrected_fresh_ppo_credit_instrumented_v1"
+        contract.get("schema") not in {LEGACY_SCHEMA, POSTFIX_SCHEMA}
         or contract.get("status") != "authorized_diagnostic_training"
         or contract.get("paper_faithful") is not False
         or contract.get("authorized_output_directory") != str(args.output_dir.resolve())
@@ -206,6 +208,28 @@ def main() -> None:
     gate = json.loads(paths["credit_instrumentation_gate"].read_text())
     if gate.get("status") != "passed" or not all(gate.get("checks", {}).values()):
         raise ValueError("credit instrumentation gate has not passed")
+    if contract["schema"] == POSTFIX_SCHEMA:
+        normalization_gate = json.loads(
+            paths["observation_normalization_commit_gate"].read_text()
+        )
+        if (
+            normalization_gate.get("schema")
+            != "taco_pour_observation_normalization_commit_gate_v1"
+            or normalization_gate.get("status") != "passed"
+            or not all(normalization_gate.get("checks", {}).values())
+            or normalization_gate.get("dry_run", {}).get("epochs") != 2
+            or normalization_gate.get("dry_run", {}).get(
+                "observation_stats_commit_enabled"
+            ) is not True
+        ):
+            raise ValueError("commit-enabled normalization gate has not passed")
+        eligibility = yaml.safe_load(paths["checkpoint_eligibility"].read_text())
+        if eligibility.get("post_fix_checkpoint") != {
+            "exists": False,
+            "fresh_training_required": True,
+            "old_checkpoint_resume_allowed": False,
+        }:
+            raise ValueError("checkpoint eligibility no longer authorizes a fresh start")
     for name, row in contract["implementation"].items():
         path = Path(row["path"])
         if sha256(path) != row["sha256"]:
@@ -333,10 +357,15 @@ def main() -> None:
     analysis = build_credit_analysis(credit_path)
     analysis_path = args.output_dir / "credit_analysis.json"
     analysis_path.write_text(json.dumps(analysis, indent=2) + "\n")
+    post_fix = contract["schema"] == POSTFIX_SCHEMA
     report = {
-        "schema": "taco_pour_corrected_fresh_ppo_credit_instrumented_v1",
-        "status": "completed_diagnostic_not_promotable",
+        "schema": contract["schema"],
+        "status": (
+            "completed_postfix_diagnostic_no_commit"
+            if post_fix else "completed_diagnostic_not_promotable"
+        ),
         "paper_faithful": False,
+        "valid_postfix_algorithm_evidence": post_fix,
         "chunk_commit_written": False,
         "task_success_claimed": False,
         "performance_comparison_to_prior_gpu_run_allowed": False,
@@ -355,6 +384,10 @@ def main() -> None:
         "training_audit": training_audit,
         "credit_analysis": artifact(analysis_path),
         "decision": (
+            "This is valid post-fix algorithm evidence, but this diagnostic run "
+            "commits no chunk and authorizes no checkpoint resume. CPU 40/40 "
+            "remains required for any later formal commit."
+            if post_fix else
             "This run restores historical credit evidence only. It neither commits "
             "a chunk nor authorizes checkpoint resume or a new algorithm change."
         ),

@@ -8,7 +8,7 @@ evidence_policy:
   order: [paper, verified_implementation_defect, disclosed_local_proposal]
   paper_page_numbers: one_based_pdf_pages
   copied_defaults_are_author_settings: false
-  current_revision: frozen_rollout_observation_normalization_gate_passed
+  current_revision: postfix_fresh_PPO_completed_strict_CPU_gate_failed_no_commit
 
 inputs:
   setting: user_approved_gt_oracle_validation_not_full_perception_reproduction
@@ -233,6 +233,7 @@ evaluation:
     status: implementation_blocker_resolved_gate_passed
     contract: /data_all/zzx/3.2RL/configs/taco_pour_frozen_rollout_observation_normalization_v1.yaml
     gate: /data_all/zzx/3.2RL/runs/taco_pour_observation_normalization_gate_v1/report.json
+    commit_enabled_gate: /data_all/zzx/3.2RL/runs/taco_pour_observation_normalization_commit_gate_v1/report.json
     semantics: >-
       Freeze one actor/critic observation-normalization snapshot for rollout
       collection and every PPO likelihood/value recomputation; only after all
@@ -254,8 +255,34 @@ evaluation:
       critic_raw_output_max_abs_difference: 0.0
       actor_and_critic_parameters_bitwise_unchanged: true
       actor_and_critic_RMS_bitwise_unchanged: true
-    post_fix_task_PPO_executed: false
+      commit_enabled_two_epoch_gate_passed: true
+      commit_enabled_versions_used: [0, 1]
+      commit_enabled_final_version: 2
+      commit_enabled_first_ratio_max_abs_error_by_epoch: [0.0, 0.0]
+      RMS_mutation_during_rollout_or_updates: false
+    post_fix_task_PPO_executed: true
     old_checkpoint_resume_allowed: false
+  postfix_fresh_ppo_credit_instrumented:
+    status: completed_valid_algorithm_evidence_strict_CPU_gate_failed_no_commit
+    contract: /data_all/zzx/3.2RL/configs/taco_pour_postfix_fresh_ppo_credit_instrumented_v1.yaml
+    output: /data_all/zzx/3.2RL/runs/taco_pour_postfix_fresh_ppo_credit_instrumented_v1
+    report: /data_all/zzx/3.2RL/runs/taco_pour_postfix_fresh_ppo_credit_instrumented_v1/report.json
+    training: {worlds: 4, epochs: 8, samples: 1280, seed: 0, starts: [20, 20, 20, 20]}
+    fresh_actor_and_critic: true
+    behavioral_audit_checkpoint_loaded: false
+    chunk_commit_forbidden_for_diagnostic: true
+    replay: {validated_intervals_including_failed_step: 31, first_failure_endpoint: 51, committed: false}
+    ppo: {validated_intervals_including_failed_step: 20, first_failure_endpoint: 40, committed: false}
+    observation_normalization:
+      versions_used: [0, 1, 2, 3, 4, 5, 6, 7]
+      final_version: 8
+      first_ratio_max_abs_error_by_epoch: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+      every_epoch_before_equals_frozen_before_commit: true
+      commit_chain_exact: true
+      maximum_critic_value_recompute_error: 0.000000476837158203125
+    checkpoint_resume_allowed: false
+    valid_for_same_run_Replay_comparison: true
+    valid_for_prior_GPU_run_comparison: false
 
 runtime_contract:
   fail_closed: true
@@ -285,13 +312,17 @@ runtime_contract:
     status: resolved_local_engineering_contract_gate_passed
     active_contract: taco_pour_frozen_rollout_observation_normalization_v1
     contract_path: /data_all/zzx/3.2RL/configs/taco_pour_frozen_rollout_observation_normalization_v1.yaml
-    contract_sha256: 9b76b4c519fddb1022e83b1774bac11f021983652b02e17ed65aea5cce777959
+    contract_sha256: 0e8bc46f33b94054d03d2bb525eee85c8b49bab4f0b95a0460aae08ea1773f6c
     gate_report: /data_all/zzx/3.2RL/runs/taco_pour_observation_normalization_gate_v1/report.json
+    commit_enabled_gate_report: /data_all/zzx/3.2RL/runs/taco_pour_observation_normalization_commit_gate_v1/report.json
     frozen_for_rollout_and_all_PPO_updates: true
     deferred_raw_observation_statistics_commit: true
     first_pre_optimizer_ratio_max_abs_error_from_one: 0.0
     full_lr_zero_dry_run_ratio_max_abs_error_from_one: 0.0
-    fresh_post_fix_task_PPO_executed: false
+    commit_enabled_versions_used: [0, 1]
+    commit_enabled_final_version: 2
+    commit_enabled_first_ratio_max_abs_error_by_epoch: [0.0, 0.0]
+    fresh_post_fix_task_PPO_executed: true
   residual_action:
     active_profile: taco_pour_residual_action_scaled_v1
     active_distribution: taco_pour_state_feasible_truncated_gaussian_v1
@@ -317,7 +348,7 @@ runtime_contract:
     cpu_commit_endpoint_offset: 20
 
 training_ready: false
-training_ready_scope: post_fix_fresh_PPO_requires_separate_authorization
+training_ready_scope: postfix_fresh_PPO_failed_20_of_40_no_commit_next_algorithm_decision_required
 
 audit_results:
   active_input: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/input_audit.json
@@ -338,7 +369,9 @@ audit_results:
   corrected_fresh_ppo_credit_instrumented: /data_all/zzx/3.2RL/runs/taco_pour_corrected_fresh_ppo_credit_instrumented_v1/report.json
   fresh_ppo_credit_evidence: /data_all/zzx/3.2RL/runs/taco_pour_fresh_ppo_credit_evidence_v1/report.json
   observation_normalization_likelihood_gate: /data_all/zzx/3.2RL/runs/taco_pour_observation_normalization_gate_v1/report.json
+  observation_normalization_commit_gate: /data_all/zzx/3.2RL/runs/taco_pour_observation_normalization_commit_gate_v1/report.json
   checkpoint_eligibility: /data_all/zzx/3.2RL/configs/taco_pour_ppo_checkpoint_eligibility_v1.yaml
+  postfix_fresh_ppo_credit_instrumented: /data_all/zzx/3.2RL/runs/taco_pour_postfix_fresh_ppo_credit_instrumented_v1/report.json
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -378,10 +411,10 @@ historical_observation_normalization_misaligned:
     - old_checkpoint_task_performance_as_an_algorithm_baseline
 
 blocking_checks:
-  - post_fix_fresh_PPO_requires_separate_authorization
+  - postfix_fresh_PPO_failed_20_of_40_no_commit_next_algorithm_decision_required
 result_acceptance_blockers:
   - active_corrected_Replay_passes_only_30_of_40_in_second_window
-  - no_post_fix_fresh_PPO_result_exists
+  - postfix_fresh_PPO_passes_only_19_intervals_before_failure_at_endpoint40
   - unpublished_threshold_to_weighted_objective_mapping
   - stable_grasp_and_physical_pour_not_demonstrated
 paper_faithful_run_blockers:

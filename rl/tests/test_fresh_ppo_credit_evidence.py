@@ -80,15 +80,16 @@ def test_protocol_records_the_fixed_blocker_without_authorizing_fresh_training()
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
     assert protocol["training_ready"] is False
     assert protocol["training_ready_scope"] == (
-        "post_fix_fresh_PPO_requires_separate_authorization"
+        "postfix_fresh_PPO_failed_20_of_40_no_commit_next_algorithm_decision_required"
     )
     assert protocol["blocking_checks"] == [
-        "post_fix_fresh_PPO_requires_separate_authorization"
+        "postfix_fresh_PPO_failed_20_of_40_no_commit_next_algorithm_decision_required"
     ]
     repair = protocol["runtime_contract"]["observation_normalization"]
     assert repair["status"] == "resolved_local_engineering_contract_gate_passed"
     assert repair["first_pre_optimizer_ratio_max_abs_error_from_one"] == 0.0
     assert repair["full_lr_zero_dry_run_ratio_max_abs_error_from_one"] == 0.0
+    assert repair["fresh_post_fix_task_PPO_executed"] is True
     old = protocol["historical_observation_normalization_misaligned"]
     assert old["active_algorithm_evidence"] is False
     assert old["old_policy_resume_allowed"] is False

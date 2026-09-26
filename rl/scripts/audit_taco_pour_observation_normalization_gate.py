@@ -83,7 +83,13 @@ def main() -> None:
         "--output-dir", type=Path,
         default=ROOT / "runs/taco_pour_observation_normalization_gate_v1",
     )
+    parser.add_argument("--epochs", type=int, default=1)
+    parser.add_argument(
+        "--commit-observation-stats-after-epoch", action="store_true"
+    )
     args = parser.parse_args()
+    if args.epochs < 1:
+        raise ValueError("epochs must be positive")
     if args.output_dir.exists():
         raise FileExistsError(args.output_dir)
 
@@ -233,7 +239,7 @@ def main() -> None:
             num_envs=4,
             horizon_length=40,
             seq_length=4,
-            max_epochs=1,
+            max_epochs=args.epochs,
             learning_rate=0.0,
             device="cuda:0",
             asymmetric_critic=critic_config,
@@ -249,52 +255,63 @@ def main() -> None:
             network_config=_build_network_config(4),
             env=env,
             distribution_spec=spec,
-            commit_observation_stats_after_epoch=False,
+            commit_observation_stats_after_epoch=(
+                args.commit_observation_stats_after_epoch
+            ),
         )
         agent.init_tensors()
         agent.last_mean_rewards = -100500
         agent.obs = agent.env_reset()
         agent.curr_frames = agent.batch_size_envs
-        agent.update_epoch()
         actor_parameters_before = parameter_sha256(agent.model)
         critic_parameters_before = parameter_sha256(agent.asymmetric_critic_net.model)
         normalization_before = agent._normalization_pair()
-        agent.train_epoch()
+        for _ in range(args.epochs):
+            agent.update_epoch()
+            agent.train_epoch()
         normalization_after = agent._normalization_pair()
         actor_parameters_after = parameter_sha256(agent.model)
         critic_parameters_after = parameter_sha256(agent.asymmetric_critic_net.model)
-        final_input = agent.dataset[0]
-        final_distribution = agent.evaluate_ppo_distribution(final_input)
-        final_ratio_error = float((
-            torch.exp(
-                final_input["old_logp_actions"]
-                - final_distribution["neglogp"]
-            ) - 1.0
-        ).abs().max().detach().cpu())
-        critic_raw_after = agent._critic_raw_value(
-            agent.critic_probe_states
-        ).detach()
-        critic_raw_error = maximum_difference(
-            agent.critic_raw_before, critic_raw_after
-        )
         normalization_audit = agent.observation_normalization_audit()
+        if args.commit_observation_stats_after_epoch:
+            final_ratio_error = None
+            critic_raw_error = None
+        else:
+            final_input = agent.dataset[0]
+            final_distribution = agent.evaluate_ppo_distribution(final_input)
+            final_ratio_error = float((
+                torch.exp(
+                    final_input["old_logp_actions"]
+                    - final_distribution["neglogp"]
+                ) - 1.0
+            ).abs().max().detach().cpu())
+            critic_raw_after = agent._critic_raw_value(
+                agent.critic_probe_states
+            ).detach()
+            critic_raw_error = maximum_difference(
+                agent.critic_raw_before, critic_raw_after
+            )
         if agent.writer is not None:
             agent.writer.close()
 
     repeat = agent.repeat_forward
-    checks = {
+    epochs = normalization_audit["epochs"]
+    likelihood_checks = normalization_audit[
+        "pre_optimizer_likelihood_identity_checks"
+    ]
+    critic_checks = normalization_audit[
+        "pre_optimizer_critic_value_identity_checks"
+    ]
+    common_checks = {
         "complete_formal_rollout_has_160_samples": repeat["samples"] == 160,
-        "four_actor_optimizer_calls_executed_at_lr_zero": (
-            agent.actor_update_calls == 4
+        "expected_actor_optimizer_calls_executed_at_lr_zero": (
+            agent.actor_update_calls == 4 * args.epochs
         ),
         "actor_parameters_bitwise_unchanged": (
             actor_parameters_before == actor_parameters_after
         ),
         "critic_parameters_bitwise_unchanged": (
             critic_parameters_before == critic_parameters_after
-        ),
-        "actor_and_critic_observation_rms_unchanged": (
-            normalization_before == normalization_after
         ),
         "repeat_forward_does_not_change_rms": (
             repeat["normalization_before"] == repeat["normalization_after"]
@@ -314,23 +331,70 @@ def main() -> None:
         "ratio_is_one_before_first_optimizer_call": (
             repeat["pre_optimizer_ratio_max_abs_error_from_one"] <= 5.0e-6
         ),
-        "ratio_is_one_after_full_lr_zero_dry_run": final_ratio_error <= 5.0e-6,
-        "critic_raw_output_is_stable_after_lr_zero_dry_run": (
-            critic_raw_error <= 2.0e-5
+        "every_epoch_first_ratio_is_one": (
+            len(likelihood_checks) == args.epochs
+            and all(
+                row["maximum_abs_error_from_one"] <= row["tolerance"]
+                for row in likelihood_checks
+            )
         ),
-        "rollout_critic_value_recomputation_passed": (
-            len(normalization_audit["pre_optimizer_critic_value_identity_checks"])
-            == 1
-            and normalization_audit[
-                "pre_optimizer_critic_value_identity_checks"
-            ][0]["maximum_abs_error"] <= 2.0e-5
-        ),
-        "normalization_version_did_not_advance_in_gate": (
-            normalization_audit["current_version"] == 0
+        "every_epoch_critic_value_recomputation_passed": (
+            len(critic_checks) == args.epochs
+            and all(
+                row["maximum_abs_error"] <= row["tolerance"]
+                for row in critic_checks
+            )
         ),
     }
+    if args.commit_observation_stats_after_epoch:
+        mode_checks = {
+            "normalization_version_advanced_once_per_epoch": (
+                normalization_audit["current_version"] == args.epochs
+            ),
+            "rms_changed_only_at_each_epoch_tail": (
+                len(epochs) == args.epochs
+                and all(
+                    row["statistics_committed_after_updates"] is True
+                    and row["before"] == row["frozen_before_commit"]
+                    and row["frozen_before_commit"] != row["after"]
+                    for row in epochs
+                )
+            ),
+            "next_rollout_uses_previous_committed_version": (
+                all(
+                    epochs[index]["before"] == epochs[index - 1]["after"]
+                    and epochs[index]["version_used_for_rollout_and_updates"]
+                    == index
+                    for index in range(1, len(epochs))
+                )
+                and epochs[0]["version_used_for_rollout_and_updates"] == 0
+            ),
+            "actor_and_critic_rms_changed_after_commits": (
+                normalization_before != normalization_after
+            ),
+        }
+    else:
+        mode_checks = {
+            "actor_and_critic_observation_rms_unchanged": (
+                normalization_before == normalization_after
+            ),
+            "ratio_is_one_after_full_lr_zero_dry_run": (
+                final_ratio_error is not None and final_ratio_error <= 5.0e-6
+            ),
+            "critic_raw_output_is_stable_after_lr_zero_dry_run": (
+                critic_raw_error is not None and critic_raw_error <= 2.0e-5
+            ),
+            "normalization_version_did_not_advance_in_gate": (
+                normalization_audit["current_version"] == 0
+            ),
+        }
+    checks = {**common_checks, **mode_checks}
     report = {
-        "schema": "taco_pour_observation_normalization_likelihood_gate_v1",
+        "schema": (
+            "taco_pour_observation_normalization_commit_gate_v1"
+            if args.commit_observation_stats_after_epoch
+            else "taco_pour_observation_normalization_likelihood_gate_v1"
+        ),
         "status": "passed" if all(checks.values()) else "failed",
         "paper_faithful": False,
         "task_level_training_executed": False,
@@ -354,11 +418,15 @@ def main() -> None:
             "device": "cuda:0",
             "worlds": 4,
             "horizon": 40,
-            "samples": 160,
+            "epochs": args.epochs,
+            "samples_per_epoch": 160,
+            "samples": 160 * args.epochs,
             "actor_learning_rate": 0.0,
             "critic_learning_rate": 0.0,
             "mini_epochs": 4,
-            "observation_stats_commit_enabled": False,
+            "observation_stats_commit_enabled": (
+                args.commit_observation_stats_after_epoch
+            ),
             "distribution_profile": distribution,
         },
         "repeat_forward": repeat,

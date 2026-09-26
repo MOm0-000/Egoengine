@@ -1,0 +1,409 @@
+protocol: egoengine_replay_then_residual_ppo
+source: user_decision_2026_09_06
+scope: collision_and_retarget_then_rewards_then_training
+paper_deviation: MPC omitted; not the full three-mode method or a comparable cost claim
+solver_modes: [replay, rl]
+
+evidence_policy:
+  order: [paper, verified_implementation_defect, disclosed_local_proposal]
+  paper_page_numbers: one_based_pdf_pages
+  copied_defaults_are_author_settings: false
+  current_revision: commit_enabled_normalization_gate_passed_postfix_fresh_PPO_authorized
+
+inputs:
+  setting: user_approved_gt_oracle_validation_not_full_perception_reproduction
+  approved_episodes: ['20230927_027', '20230917_020', '20230926_004', '20231103_071', '20230927_017']
+  active_episode: '20230927_017'
+  active_sequence: '(pour in some, bowl, plate)/20230927_017'
+  active_data_root: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate
+  exact_author_episode: false
+  preserve_source_frames: true
+  select_by_eventual_task_success: false
+  active_scene: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate.xml
+  active_simulator_config: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml
+  active_human_reference: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/human_reference.npz
+  active_robot_reference: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_combined_collision_v1/robot_reference.npz
+  historical_orientation_bug_baseline: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_gt_v1
+
+scene_alignment:
+  source: Appendix A.1-A.3, PDF pp.15-16
+  base_offset_m: 0.6
+  table_height_m: 0.72
+  shared_transform_for_hands_objects_and_camera: true
+  axis_and_vertical_alignment_recipe: not_fully_published
+  original_depth_status: decoded_uint16_scale_4000_all_198_frames
+  measured_support_z_after_current_transform_m: 0.7364971247204383
+  depth_based_realignment: not_applied_spatial_and_temporal_registration_unresolved
+  coordinate_export_algebra_verified: true
+  original_sensor_registration_certified: false
+
+retargeting:
+  source: Section 3.2.1, Eq.1, PDF pp.3-4
+  published_constraints: [joint_limits, self_collision]
+  collision_shapes_and_pairs: not_published
+  active_reference_frames: 198
+  declared_kinematic_model_feasible: true
+  complete_intrahand_geometry_coverage: false
+  active_reference: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_combined_collision_v1/robot_reference.npz
+  hand_object_mink_limit_enabled: false
+  bilateral_index_root_semantic_guards: passed
+  external_runtime_collision_repairs: passed
+
+initialization:
+  source: TACO physical reset procedure not published
+  status: taco_pour_initialization_protocol_v2_candidate_a_accepted
+  active_local_protocol: /data_all/zzx/3.2RL/configs/taco_pour_initialization_protocol_v2.yaml
+  active_candidate_comparison: /data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v2/comparison.json
+  accepted_state_schema: egoengine_replay_rl_initial_state_v1
+  physics_contract_schema: egoengine_replay_rl_physics_v1
+  current_episode_robot_initial_state_audited: true
+  known_initial_hand_table_shell_penetration_m: 0.02190567820896093
+  known_initial_hand_target_shell_penetration_m: 0.015220828116055761
+  initial_native_palm_table_penetration_m: {right: 0.0, left: 0.0019939384586542541}
+  initial_native_all_hand_table_penetration_m: {right: 0.020792859253797925, left: 0.009652994753291399}
+  initial_native_left_palm_thumb_intersection_mm3: 9.253831118302955
+  initial_palm_index_native_penetration: false
+  candidate_comparison:
+    ready: true
+    completed: true
+    protocol_version: taco_pour_initialization_protocol_v2
+    candidate_a_accepted: true
+    candidate_a_report: /data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v2/candidate_a/report.json
+    candidate_b_accepted: false
+    release_physics_steps_executed: 50
+  hand_pose_diagnostic_scope:
+    status: temporary_single_sample_test
+    episode: '20230927_017'
+    part_of_formal_pipeline: false
+    automatic_use_for_new_samples: false
+    cross_sample_generalization: not_established
+  diagnostic_candidate:
+    baseline: historical_orientation_bug_reference_not_current_mano_fk
+    path: /data_all/zzx/3.2RL/runs/taco_pour_initial_hand_v4/initial_hand_candidate.npz
+    declared_state_feasible: true
+    accepted_as_reset: false
+    qvel_selected: false
+    ctrl_selected: false
+    original_reference_modified: false
+
+chunks:
+  control_steps: 20
+  lookahead_chunks: 2
+  commit_chunks: 1
+  restart_from_replay_each_boundary: true
+
+taco:
+  domain_randomization: false
+  human_mimic: false
+  action_smoothness: false
+
+tracking:
+  published_task_example:
+    task: Pour, Bowl, Plate
+    source: Appendix C.2, PDF page 22
+    position_threshold_m: 0.12
+    rotation_threshold_rad: 1.5
+    application: adopted_task_level_example_not_confirmed_author_episode_configuration
+    mapping_to_weighted_boundary: unresolved_do_not_infer_C_or_weights
+  formula: sqrt(lambda_p * position_error_squared + lambda_R * so3_geodesic_error_squared)
+  reward: C_minus_error
+  termination: error_strictly_greater_than_C
+  lambda_p: null
+  lambda_R: null
+  C: null
+  null_reason: numerical values and threshold-to-C mapping not published
+
+contact:
+  formula: simultaneous_thumb_and_other_finger_same_hand_same_object
+  coefficient: null
+  reduction: null
+  null_reason: TACO coefficient not published
+
+lift:
+  formula: lambda_z_times_current_minus_initial_height
+  coefficient: null
+  object_role: null
+  null_reason: active Pour coefficient and object role are not published
+
+evaluation:
+  auxiliary_rewards: false
+  equations: [C.9, C.10, C.11, C.12, C.13]
+  variants: [tool_only, tool_and_target_extension]
+  paper_objective_mapping_resolved: false
+  active_local_proxy: taco_pour_local_normalized_ellipse_v1
+  active_reward_alignment: state_t_plus_1_compared_with_reference_t_plus_1
+  actor_goal_alignment: actor_at_t_sees_reference_t_plus_1
+  next_observation_goal_alignment: returned_state_t_plus_1_sees_reference_t_plus_2
+  corrected_replay:
+    root: /data_all/zzx/3.2RL/runs/taco_pour_corrected_replay_rebase_v1
+    first_window: {start: 0, validated: 40, committed_endpoint: 20}
+    second_window: {start: 20, validated: 30, first_failure_endpoint: 51}
+    second_window_replay_failed: true
+    ppo_fallback_subsequently_executed: true
+  first_corrected_ppo:
+    status: completed_strict_cpu_gate_failed_no_commit
+    report: /data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/report.json
+    analysis: /data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/analysis.json
+    training_start_endpoints: [20, 20, 20, 20]
+    worlds: 4
+    epochs: 8
+    samples: 1280
+    seed: 0
+    tail_curriculum: false
+    old_policy_resume: false
+    replay_validated_intervals: 30
+    replay_first_failure_endpoint: 51
+    ppo_validated_intervals: 27
+    ppo_first_failure_endpoint: 48
+    committed_reference_index: 20
+  reference_timing_action_frame_audit:
+    status: completed_read_only_no_training_no_commit
+    report: /data_all/zzx/3.2RL/runs/taco_pour_reference_timing_action_frame_audit_v1/report.json
+    formal_trace_regression: {replay: 30, ppo: 27, exact: true}
+    active_timing_contract_unchanged: state_t_actor_and_base_ref_t_plus_1_reward_ref_t_plus_1
+    actor_reference_shift_minus_1:
+      paper_status: local_diagnostic_not_author_recovered
+      positive_mu_y_excess_reduction: 0.11544809062326543
+      validated_intervals: 30
+      first_failure_endpoint: 51
+      formal_success: false
+    recurrent_context:
+      hidden_variants_tested: [ppo_path, replay_path, zero, previous_source_ppo]
+      any_variant_removes_source_43_to_47_mu_y_saturation: false
+    translation_frame:
+      current_runtime_frame: world_or_robot_base
+      current_runtime_frame_verified_by_fk: true
+      best_geometric_local_candidate: reference_palm_site
+      candidate_still_points_away_from_desired_bowl_correction_sources_43_to_46: true
+      candidate_full_action_inside_frozen_support: false
+      candidate_closed_loop_executed: false
+  training_credit_assignment_audit:
+    status: completed_read_only_no_training_no_commit
+    report: /data_all/zzx/3.2RL/runs/taco_pour_training_credit_assignment_audit_v1/report.json
+    formal_trace_regression:
+      replay: 30
+      ppo: 27
+      timing_minus_1: 30
+      formal_plus_y_suffixes_exact: true
+    timing_minus_1:
+      classification: suppression_candidate_not_refinement
+      same_failure_endpoint_and_reason_as_replay: true
+      exceeds_replay_boundary: false
+    one_step_world_y_counterfactual:
+      source_endpoints: [43, 44, 45, 46]
+      formal_plus_1_is_suboptimal_at_every_source: true
+      best_action_and_failure_endpoint:
+        43: [-1.0, 50]
+        44: [-1.0, 51]
+        45: [-1.0, 56]
+        46: [-0.75, 51]
+      any_branch_completes_endpoint_60: false
+      zero_y_rescue_failure_endpoints: {44: 49, 45: 51, 46: 49}
+    historical_training_credit:
+      exact_advantage_value_return_available: false
+      final_critic_backfill_allowed: false
+      reason: rollout_reward_critic_value_return_advantage_observation_and_hidden_not_saved
+  corrected_fresh_ppo_credit_instrumented:
+    status: completed_diagnostic_behavioral_audit_only_no_commit
+    report: /data_all/zzx/3.2RL/runs/taco_pour_corrected_fresh_ppo_credit_instrumented_v1/report.json
+    evidence: /data_all/zzx/3.2RL/runs/taco_pour_fresh_ppo_credit_evidence_v1/report.json
+    settings_unchanged: true
+    training: {worlds: 4, epochs: 8, samples: 1280, seed: 0, starts: [20, 20, 20, 20]}
+    replay: {first_failure_endpoint: 51, committed: false}
+    ppo: {first_failure_endpoint: 50, committed: false}
+    rollout_logprob_direct_recompute_max_abs_error: 3.814697265625e-06
+    source_43_to_46_raw_to_normalized_advantage_sign_flip_count: 39
+    first_actor_update:
+      actor_weights_unchanged_during_forward: true
+      only_changed_forward_state:
+        - running_mean_std.count
+        - running_mean_std.running_mean
+        - running_mean_std.running_var
+      fixed_probe_max_mu_y_change_from_normalizer_update: 0.34486889839172363
+      fixed_probe_max_mu_y_change_from_optimizer: 0.10565942525863647
+      ratio_outside_0p8_1p2: {count: 134, total: 160}
+      source_43_to_46_ratio_outside_0p8_1p2: {count: 9, total: 10}
+      ratio_range: [0.0005173733807168901, 19.487037658691406]
+    conclusion: >-
+      Rollout old log-probabilities use the pre-rollout observation normalizer,
+      while the first PPO likelihood pass updates that normalizer before
+      computing new log-probabilities. The old/new ratio therefore compares
+      different observation transforms before any optimizer step.
+  observation_normalization_repair:
+    status: implementation_blocker_resolved_gate_passed
+    contract: /data_all/zzx/3.2RL/configs/taco_pour_frozen_rollout_observation_normalization_v1.yaml
+    gate: /data_all/zzx/3.2RL/runs/taco_pour_observation_normalization_gate_v1/report.json
+    commit_enabled_gate: /data_all/zzx/3.2RL/runs/taco_pour_observation_normalization_commit_gate_v1/report.json
+    semantics: >-
+      Freeze one actor/critic observation-normalization snapshot for rollout
+      collection and every PPO likelihood/value recomputation; only after all
+      optimizer passes update running statistics from that rollout's raw data.
+    gate_scope:
+      worlds: 4
+      horizon: 40
+      samples: 160
+      mini_epochs: 4
+      actor_learning_rate: 0.0
+      critic_learning_rate: 0.0
+      task_level_training_executed: false
+      chunk_commit_written: false
+    results:
+      first_pre_optimizer_ratio_max_abs_error_from_one: 0.0
+      full_lr_zero_dry_run_ratio_max_abs_error_from_one: 0.0
+      repeated_forward_mu_max_abs_difference: 0.0
+      repeated_forward_logprob_max_abs_difference: 0.0
+      critic_raw_output_max_abs_difference: 0.0
+      actor_and_critic_parameters_bitwise_unchanged: true
+      actor_and_critic_RMS_bitwise_unchanged: true
+      commit_enabled_two_epoch_gate_passed: true
+      commit_enabled_versions_used: [0, 1]
+      commit_enabled_final_version: 2
+      commit_enabled_first_ratio_max_abs_error_by_epoch: [0.0, 0.0]
+      RMS_mutation_during_rollout_or_updates: false
+    post_fix_task_PPO_executed: false
+    old_checkpoint_resume_allowed: false
+  postfix_fresh_ppo_credit_instrumented:
+    status: authorized_not_yet_executed
+    contract: /data_all/zzx/3.2RL/configs/taco_pour_postfix_fresh_ppo_credit_instrumented_v1.yaml
+    output: /data_all/zzx/3.2RL/runs/taco_pour_postfix_fresh_ppo_credit_instrumented_v1
+    training: {worlds: 4, epochs: 8, samples: 1280, seed: 0, starts: [20, 20, 20, 20]}
+    fresh_actor_and_critic: true
+    behavioral_audit_checkpoint_loaded: false
+    chunk_commit_forbidden_for_diagnostic: true
+
+runtime_contract:
+  fail_closed: true
+  paper_faithful_run_ready: false
+  active_local_objective_profile: taco_pour_local_normalized_ellipse_v1
+  local_objective_profiles:
+    taco_pour_local_unpublished_v1:
+      objective_ready: true
+      run_ready: true
+      profile_sha256: a3a693808ce1649fb8090c6655f7d6ee045c9bf56ebc75ced14cc3df8cf619c5
+      blocked_by: []
+    taco_pour_local_normalized_ellipse_v1:
+      objective_ready: true
+      run_ready: true
+      profile_sha256: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+      blocked_by: []
+  observation:
+    status: resolved_local_unpublished
+    active_profile: taco_pour_transition_aligned_236d_v1
+    formal_run_ready: true
+    blocked_by: []
+    local_profiles:
+      taco_pour_transition_aligned_236d_v1:
+        run_ready: true
+        profile_sha256: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  observation_normalization:
+    status: resolved_local_engineering_contract_gate_passed
+    active_contract: taco_pour_frozen_rollout_observation_normalization_v1
+    contract_path: /data_all/zzx/3.2RL/configs/taco_pour_frozen_rollout_observation_normalization_v1.yaml
+    contract_sha256: 9b76b4c519fddb1022e83b1774bac11f021983652b02e17ed65aea5cce777959
+    gate_report: /data_all/zzx/3.2RL/runs/taco_pour_observation_normalization_gate_v1/report.json
+    commit_enabled_gate_report: /data_all/zzx/3.2RL/runs/taco_pour_observation_normalization_commit_gate_v1/report.json
+    frozen_for_rollout_and_all_PPO_updates: true
+    deferred_raw_observation_statistics_commit: true
+    first_pre_optimizer_ratio_max_abs_error_from_one: 0.0
+    full_lr_zero_dry_run_ratio_max_abs_error_from_one: 0.0
+    commit_enabled_versions_used: [0, 1]
+    commit_enabled_final_version: 2
+    commit_enabled_first_ratio_max_abs_error_by_epoch: [0.0, 0.0]
+    fresh_post_fix_task_PPO_executed: false
+  residual_action:
+    active_profile: taco_pour_residual_action_scaled_v1
+    active_distribution: taco_pour_state_feasible_truncated_gaussian_v1
+    residual_scale: 0.05
+    mixed_units_acknowledged: true
+    state_dependent_actuator_bounds_enforced_in_policy_distribution: true
+    official_minus1_plus1_hard_clamp_enabled: false
+    normal_ctrlrange_loss_required: 0
+  temporal_provenance:
+    snapshot_schema: egoengine_mjwp_snapshot_v3_reward_aligned
+    training_trace_schema: taco_ppo_training_visitation_v5
+    required_step_fields:
+      - command_reference_endpoint
+      - reward_reference_endpoint
+      - next_observation_goal_reference_endpoint
+  execution_backends:
+    contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
+    training: GPU_MuJoCo_Warp_policy_optimization_only
+    validation: CPU_MuJoCo_Warp_replay_policy_acceptance_and_commit
+    gpu_may_decide_acceptance: false
+    gpu_may_provide_committed_state: false
+    cpu_lookahead_required_steps: 40
+    cpu_commit_endpoint_offset: 20
+
+training_ready: false
+training_ready_scope: postfix_fresh_PPO_diagnostic_authorized_but_not_yet_executed
+
+audit_results:
+  active_input: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/input_audit.json
+  active_initialization: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/initialization_audit.json
+  active_initialization_preflight: /data_all/zzx/3.2RL/runs/taco_pour_initialization_preflight_bilateral_guard_v1/report.json
+  active_initialization_candidate: /data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v2/candidate_a/report.json
+  reward_alignment_gate_used_by_completed_run: /data_all/zzx/3.2RL/runs/taco_pour_reward_alignment_gate_v1/report.json
+  active_corrected_replay: /data_all/zzx/3.2RL/runs/taco_pour_corrected_replay_rebase_v1/tool_only/report.json
+  corrected_ppo_gate_used_by_completed_run: /data_all/zzx/3.2RL/runs/taco_pour_corrected_ppo_gate_v1/report.json
+  completed_corrected_first_ppo: /data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/report.json
+  corrected_endpoint44_48_failure_attribution: /data_all/zzx/3.2RL/runs/corrected_endpoint44_48_failure_attribution_v1/report.json
+  corrected_local_controllability: /data_all/zzx/3.2RL/runs/taco_pour_corrected_local_controllability_v1/report.json
+  corrected_policy_decision_attribution: /data_all/zzx/3.2RL/runs/taco_pour_corrected_policy_decision_attribution_v1/report.json
+  corrected_input_bifurcation_attribution: /data_all/zzx/3.2RL/runs/taco_pour_corrected_input_bifurcation_attribution_v1/report.json
+  reference_timing_action_frame_audit: /data_all/zzx/3.2RL/runs/taco_pour_reference_timing_action_frame_audit_v1/report.json
+  training_credit_assignment_audit: /data_all/zzx/3.2RL/runs/taco_pour_training_credit_assignment_audit_v1/report.json
+  credit_instrumentation_gate: /data_all/zzx/3.2RL/runs/taco_pour_credit_instrumentation_gate_v1/report.json
+  corrected_fresh_ppo_credit_instrumented: /data_all/zzx/3.2RL/runs/taco_pour_corrected_fresh_ppo_credit_instrumented_v1/report.json
+  fresh_ppo_credit_evidence: /data_all/zzx/3.2RL/runs/taco_pour_fresh_ppo_credit_evidence_v1/report.json
+  observation_normalization_likelihood_gate: /data_all/zzx/3.2RL/runs/taco_pour_observation_normalization_gate_v1/report.json
+  observation_normalization_commit_gate: /data_all/zzx/3.2RL/runs/taco_pour_observation_normalization_commit_gate_v1/report.json
+  checkpoint_eligibility: /data_all/zzx/3.2RL/configs/taco_pour_ppo_checkpoint_eligibility_v1.yaml
+  active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
+  active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
+  revalidated_metric_groups: 33
+  revalidated_metric_discrepancies: 0
+  injected_bug_counterexamples_are_actual_bad_pour_data: false
+  new_reset_applied: true
+
+historical_reward_misaligned:
+  active_formal_evidence: false
+  archive: /data_all/zzx/3.2RL/TRASH/historical_reward_misaligned_2026-09-25
+  reason: runtime compared outcome state t_plus_1 against reference t_plus_2
+  old_boundary_resume_allowed: false
+  old_policy_resume_allowed: false
+  performance_claims_withdrawn:
+    - old_Replay_and_PPO_validated_step_counts
+    - endpoint_58_and_endpoint_60_failures
+    - old_tail_curriculum_and_local_response_diagnostics
+    - old_objective_mapping_closed_loop_outcomes
+
+historical_observation_normalization_misaligned:
+  active_algorithm_evidence: false
+  checkpoint_eligibility: /data_all/zzx/3.2RL/configs/taco_pour_ppo_checkpoint_eligibility_v1.yaml
+  reason: PPO old and new likelihoods used different observation-normalization transforms
+  affected_runs:
+    - taco_pour_corrected_first_ppo_v1
+    - taco_pour_corrected_fresh_ppo_credit_instrumented_v1
+  old_policy_resume_allowed: false
+  algorithm_performance_comparison_allowed: false
+  behavioral_audit_allowed: true
+  raw_checkpoint_duplicates_archive: /data_all/zzx/3.2RL/TRASH/ppo_obsnorm_likelihood_misaligned_2026-09-26
+  preserved_behavioral_findings:
+    - frozen_final_actor_counterfactual_behavior
+    - frozen_final_actor_contact_and_controllability_diagnostics
+    - direct_evidence_of_the_observation_normalization_likelihood_defect
+  withdrawn_causal_claims:
+    - PPO_under_a_valid_likelihood_objective_learned_harmful_world_y
+    - old_checkpoint_task_performance_as_an_algorithm_baseline
+
+blocking_checks:
+  - postfix_fresh_PPO_diagnostic_authorized_but_not_yet_executed
+result_acceptance_blockers:
+  - active_corrected_Replay_passes_only_30_of_40_in_second_window
+  - no_post_fix_fresh_PPO_result_exists
+  - unpublished_threshold_to_weighted_objective_mapping
+  - stable_grasp_and_physical_pour_not_demonstrated
+paper_faithful_run_blockers:
+  - unpublished_tracking_contact_and_lift_coefficients
+  - unpublished_exact_actor_observation_encoding
+diagnostic_policy: classify_before_action; demonstrated model defects or invalid reset remain blockers

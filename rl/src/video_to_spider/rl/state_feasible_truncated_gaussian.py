@@ -620,6 +620,7 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
                 self._commit_observation_stats_after_epoch
             ),
             "before": before,
+            "frozen_before_commit": before_commit,
             "after": after,
         }
         self._observation_normalization_history.append(row)

@@ -7,6 +7,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORT = ROOT / "runs/taco_pour_observation_normalization_gate_v1/report.json"
+COMMIT_REPORT = ROOT / "runs/taco_pour_observation_normalization_commit_gate_v1/report.json"
 CONTRACT = ROOT / "configs/taco_pour_frozen_rollout_observation_normalization_v1.yaml"
 ELIGIBILITY = ROOT / "configs/taco_pour_ppo_checkpoint_eligibility_v1.yaml"
 
@@ -51,10 +52,36 @@ def test_observation_normalization_snapshot_is_immutable_during_ppo_passes():
     assert critic["maximum_abs_error"] <= critic["tolerance"]
 
 
+def test_commit_enabled_gate_advances_only_after_each_complete_epoch():
+    report = json.loads(COMMIT_REPORT.read_text())
+    assert report["schema"] == "taco_pour_observation_normalization_commit_gate_v1"
+    assert report["status"] == "passed"
+    assert report["dry_run"]["epochs"] == 2
+    assert report["dry_run"]["samples"] == 320
+    assert report["dry_run"]["observation_stats_commit_enabled"] is True
+    assert all(report["checks"].values())
+    audit = report["normalization"]
+    assert audit["current_version"] == 2
+    assert [
+        row["version_used_for_rollout_and_updates"] for row in audit["epochs"]
+    ] == [0, 1]
+    for row in audit["epochs"]:
+        assert row["statistics_committed_after_updates"] is True
+        assert row["before"] == row["frozen_before_commit"]
+        assert row["frozen_before_commit"] != row["after"]
+    assert audit["epochs"][1]["before"] == audit["epochs"][0]["after"]
+    assert [
+        row["maximum_abs_error_from_one"]
+        for row in audit["pre_optimizer_likelihood_identity_checks"]
+    ] == [0.0, 0.0]
+
+
 def test_contract_binds_gate_and_does_not_authorize_fresh_training():
     contract = yaml.safe_load(CONTRACT.read_text())
     assert contract["gate"]["report_sha256"] == _sha256(REPORT)
+    assert contract["commit_enabled_gate"]["report_sha256"] == _sha256(COMMIT_REPORT)
     assert contract["gate"]["status"] == "passed"
+    assert contract["commit_enabled_gate"]["status"] == "passed"
     assert contract["promotion"]["implementation_blocker_resolved"] is True
     assert contract["promotion"]["fresh_task_level_ppo_authorized_by_this_contract"] is False
     assert contract["promotion"]["old_misaligned_checkpoint_resume_allowed"] is False
@@ -66,11 +93,13 @@ def test_every_pre_fix_checkpoint_is_behavioral_audit_only():
         "eligible_for_warm_start": False,
         "eligible_for_algorithm_comparison": False,
     }
-    assert policy["post_fix_checkpoint"] == {
-        "exists": False,
-        "fresh_training_required": True,
-        "old_checkpoint_resume_allowed": False,
-    }
+    post_fix = policy["post_fix_checkpoint"]
+    assert post_fix["exists"] is True
+    assert post_fix["ppo_obsnorm_likelihood_misaligned"] is False
+    assert post_fix["valid_postfix_algorithm_evidence"] is True
+    assert post_fix["eligible_for_warm_start"] is False
+    assert post_fix["chunk_commit_written"] is False
+    assert post_fix["old_checkpoint_resume_allowed"] is False
     for row in policy["affected_runs"].values():
         assert row["ppo_obsnorm_likelihood_misaligned"] is True
         assert row["eligible_for_warm_start"] is False

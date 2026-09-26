@@ -116,7 +116,10 @@ def test_artifacts_remain_hash_bound_and_protocol_advances_to_fresh_evidence():
             assert f"source_{source}_y_-1.00_commanded_ctrl" in arrays
 
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
-    blocker = "post_fix_fresh_PPO_requires_separate_authorization"
+    blocker = (
+        "postfix_fresh_PPO_failed_20_of_40_no_commit_"
+        "next_algorithm_decision_required"
+    )
     assert protocol["blocking_checks"] == [blocker]
     assert protocol["training_ready_scope"] == blocker
     assert protocol["historical_observation_normalization_misaligned"][
