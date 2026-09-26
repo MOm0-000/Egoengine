@@ -2,89 +2,99 @@
 
 Only reward-aligned evidence is active.
 
-- State transition: source `t`, command `ref[t+1]`, physical outcome `t+1`.
-- Reward and termination: physical state `t+1` versus object reference `ref[t+1]`.
-- Next actor observation: goal `ref[t+2]`, preview command `ctrl[t+3]` after the step.
-- Snapshot schema: `egoengine_mjwp_snapshot_v3_reward_aligned`.
-- Training trace schema: `taco_ppo_training_visitation_v5`.
+- Source state `t` receives command `ref[t+1]` and produces physical state
+  `t+1`.
+- Reward and termination compare state `t+1` with object reference `ref[t+1]`.
+- The next observation uses goal `ref[t+2]`.
+- CPU MuJoCo-Warp is the sole acceptance backend; GPU is training-only.
+- Strict acceptance remains 40/40 intervals. Diagnostic runs cannot commit a
+  chunk.
 
-The corrected Replay chain was rebuilt from accepted endpoint 0. Replay passed the
-first 40-step lookahead and committed a new CPU endpoint-20 boundary. From that
-new boundary, Replay passed 30 intervals and first failed at outcome endpoint 51.
-No PPO was run during this rebase.
+Replay committed the accepted CPU endpoint-20 boundary after passing the first
+lookahead. From that boundary it passes 30 intervals and first fails at outcome
+endpoint 51.
 
-The current local action contract is the state-feasible truncated Gaussian. The
-zero-optimizer 4-world gate starts all worlds from the new endpoint-20 boundary,
-uses exact truncated-normal likelihoods, changes no action through the official
-`[-1,1]` clamp, and loses no requested residual to actuator `ctrlrange`.
+The active local action contract is a state-feasible truncated Gaussian with
+frozen-per-rollout observation normalization. Its likelihood gate proves that
+old/new ratios are exactly one before the first optimizer update, critic values
+are reproducible under the same transform, and RMS changes only after an epoch.
+Historical checkpoints produced by the former reward-index or normalization
+bugs are behavioral-audit-only and may not be resumed.
 
-The one authorized fresh PPO experiment from `[20,20,20,20]` has completed with
-4 worlds, 8 epochs, 1280 samples and seed 0. Replay passed 30/40; PPO passed
-27/40 and failed at endpoint 48. CPU MuJoCo-Warp committed nothing, so the
-formal boundary remains endpoint 20. No further sweep is authorized.
+The first valid post-normalization PPO used four actor mini-epochs and passed
+19 intervals. Its read-only update audit showed optimizer-driven deterministic
+policy extremization rather than RMS-commit drift. A single authorized fresh
+experiment therefore changed only actor mini-epochs from four to one. The
+single-pass run retained four worlds, eight epochs, 1,280 samples, seed 0,
+critic mini-epochs four, learning rate `1e-4`, reward, observation, action
+distribution and CPU acceptance.
 
-The read-only endpoint 44--48 attribution reproduces both formal CPU traces
-exactly. PPO keeps a much smaller rotation error than Replay, but its position
-error grows from 79.61 mm at endpoint 44 to 123.73 mm at endpoint 48. At the
-failure, the position term alone is 1.06307, already outside the unit ellipse;
-the rotation term is only 0.07355. The largest PPO-versus-Replay position
-difference is the bowl y error (+45.83 mm at endpoint 48).
+The single-pass result is:
 
-This is not explained by the auxiliary rewards or actuator `ctrlrange`:
-contact bonus is zero for both modes throughout 44--48, lift reward remains
-below 0.00066, and the largest after-`ctrlrange` residual discrepancy is only
-1.79e-9. It does coincide with residual-support saturation: right wrist y is
-at its local action bound throughout 44--48, z from 45, and x from 47. The
-right index/tool contact present for PPO at 44--46 is absent at 47--48.
+```text
+Replay: 30 successful intervals; failure endpoint 51
+PPO:    28 successful intervals; failure endpoint 49
+```
 
-Training v5 visited endpoints 47 and 48 in all eight epochs (25 and 23 samples,
-respectively). The final CPU endpoint-48 position error and objective score are
-nevertheless outside the complete training-sample ranges at that endpoint.
-This is metric-level evidence only: v5 did not save complete observations,
-physics/solver state, or RNN state, so it cannot prove or disprove visitation
-of the exact final CPU state.
+No chunk was committed. All eight actor updates start with an exact likelihood
+ratio of one. Every optimizer transition still moves the fixed failure-focused
+probes toward greater saturation, while RMS commits have the opposite net
+effect. The largest one-update fixed-probe exact KL is `0.0397362`. Reducing
+actor reuse is therefore a supported contributor, but is not a complete fix.
+Because GPU training is not bitwise deterministic, the historical 19-to-28
+change is the predeclared evidence classification rather than a bitwise causal
+ablation.
 
-The subsequent frozen-state controllability audit rejects the simple
-"positive wrist-y scale is too small" explanation. Removing the first
-`+0.05 m` y residual at sources 44, 45 and 46 reduces endpoint-48 bowl-y error
-by 13.24, 19.43 and 8.57 mm respectively; extending the positive command is
-worse. Zeroing wrist-y residual from each source onward changes the final score
-from 1.06612 to 0.78347, 0.82702 and 0.98475, all passing at endpoint 48.
+## Endpoint 47--49 pretraining gate
 
-At source 47, translation perturbations still move the wrist qpos by roughly
-14--15 mm across the grid. Final bowl-y spans only 0.078 mm for wrist y and
-0.090 mm for wrist z; wrist x has a larger but still weak and non-monotonic
-0.625 mm span. No recorded right fingertip/tool contact is active in those
-branches. The late failure is therefore not a wrist actuator that cannot move;
-local control transmission to the bowl has become very weak. This makes
-increasing y scale the wrong next intervention. The next algorithm decision
-must address the earlier saturated y decision/action parameterization, with
-contact retention treated as a coupled mechanism.
+Before authorizing the next candidate, a frozen CPU audit aligned Replay and
+PPO at sources 46--48 and replaced exactly one complete PPO residual with the
+Replay-equivalent zero residual at source 47 or 48. Each branch then resumed
+the unchanged deterministic actor. The formal Replay and PPO traces and both
+restored PPO suffixes were reproduced exactly before interpreting results.
 
-The follow-up policy-decision attribution shows that formal CPU validation is
-already deterministic: it executes `clip(mu, state_low, state_high)` from the
-truncated distribution, with no stochastic sample and no squash transform.
-Right-wrist-y `mu` rises from 0.498 at source 40 to 0.947 at 42, crosses the
-upper bound at source 43 (1.294), and continues to 2.138 at source 47. Thus the
-harmful positive-y command is a deterministic policy-function decision, not
-evaluation exploration noise.
+```text
+source 47 zero residual:
+  endpoint-49 score change = -0.0255933
+  first failure             = endpoint 49
 
-Setting only one wrist-y action to zero at source 44, 45 or 46, then immediately
-returning to the unmodified policy, gives endpoint-48 scores 0.95594, 0.91712
-and 0.98475. All three pass that endpoint. A within-support 12.5 mm negative-y
-probe still changes endpoint-48 bowl-y by 5.94 mm from source 46, but by only
-0.05 mm from source 47. The formal right-index/tool contact is present at
-source 46 and absent at 47. This local response is non-smooth, so it is not
-called a Jacobian; it nevertheless identifies source 47 as too late for a
-useful wrist-y correction.
+source 48 zero residual:
+  endpoint-49 score change = 0
+  first failure             = endpoint 49
+```
 
-Contact geom, penetration, normal and force evidence comes directly from the
-MJWP contact buffers. CPU `mj_geomDistance` is not used for positive separation
-because it is invalid for the active mesh--SDF pair. The next read-only decision
-must inspect actor inputs, reference timing and action coordinate frame. Reward,
-residual bounds and exploration variance remain frozen.
+At source 47, weakening one action helps but not enough to postpone failure.
+At source 48, zeroing an action with normalized L2 norm `3.4805` changes the
+controlled-hand qpos at endpoint 49 by L2 `0.0276354`, but changes the tool
+free-joint qpos by only `7.90e-9`; right-hand/tool contact is already absent.
+The intervention is therefore real, but too late to affect the bowl.
 
-All old performance, tail-curriculum and objective-mapping results produced with
-the off-by-one reward target are archived under
-`TRASH/historical_reward_misaligned_2026-09-25/`. They are not active performance
-evidence and their actors and boundaries may not be resumed.
+The predeclared gate required both interventions to lower endpoint-49 score
+and at least one to survive endpoint 49. It fails both the source-48 improvement
+condition and the joint survival condition.
+
+## Frozen next candidate
+
+The single-variable local candidate remains recorded as:
+
+```text
+actor_mini_epochs:    1      (unchanged)
+actor_learning_rate:  1e-4 -> 5e-5
+all other settings:   unchanged
+```
+
+The half learning rate was selected before the gate from the observed
+single-update KL and a disclosed local quadratic step-size approximation. It is
+not an EgoEngine author-recovered parameter. Because the endpoint gate failed,
+fresh training is not authorized. No warm start, seed sweep, fallback learning
+rate sweep, diagnostic chunk commit or automatic `2.5e-5` follow-up is allowed.
+
+The active blocker is now:
+
+> The source-47 weaker action gives only partial improvement, while source 48
+> is already physically decoupled from the bowl. The current evidence does not
+> support weaker local residual as a sufficient mitigation of the endpoint-49
+> divergence, so the half-LR candidate remains frozen but blocked.
+
+Superseded or invalid evidence remains isolated under `TRASH/` and is not part
+of the active decision chain.

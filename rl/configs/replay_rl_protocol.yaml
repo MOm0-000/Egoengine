@@ -8,7 +8,7 @@ evidence_policy:
   order: [paper, verified_implementation_defect, disclosed_local_proposal]
   paper_page_numbers: one_based_pdf_pages
   copied_defaults_are_author_settings: false
-  current_revision: postfix_single_actor_pass_completed_strict_CPU_gate_failed_no_commit
+  current_revision: endpoint47_49_gate_failed_half_LR_candidate_frozen_not_authorized
 
 inputs:
   setting: user_approved_gt_oracle_validation_not_full_perception_reproduction
@@ -360,6 +360,40 @@ evaluation:
     checkpoint_resume_allowed: false
     rerun_authorized: false
     chunk_commit_written: false
+  postfix_single_actor_pass_endpoint47_49_gate:
+    status: completed_read_only_gate_candidate_not_authorized
+    paper_faithful: false
+    contract: /data_all/zzx/3.2RL/configs/taco_pour_single_pass_endpoint47_49_gate_v1.yaml
+    output: /data_all/zzx/3.2RL/runs/taco_pour_single_pass_endpoint47_49_gate_v1
+    report: /data_all/zzx/3.2RL/runs/taco_pour_single_pass_endpoint47_49_gate_v1/report.json
+    formal_trace_bitwise_reproduced: {Replay: true, PPO: true}
+    intervention: one_step_full_36d_zero_residual_then_frozen_PPO
+    source_47:
+      endpoint49_score_delta_vs_formal_PPO: -0.025593280792236328
+      first_failure_endpoint: 49
+      survives_endpoint49: false
+    source_48:
+      endpoint49_score_delta_vs_formal_PPO: 0.0
+      first_failure_endpoint: 49
+      survives_endpoint49: false
+      controlled_hand_qpos_l2_vs_formal: 0.027635408121033645
+      tool_freejoint_qpos_l2_vs_formal: 7.90253409579263e-09
+    gate_passed: false
+    interpretation: >-
+      Zeroing source 47 weakens the endpoint-49 score but does not postpone
+      failure. Zeroing source 48 changes the hand but not the bowl because
+      right-hand tool contact is already absent. The predeclared evidence gate
+      therefore does not authorize the half-learning-rate training candidate.
+  postfix_single_actor_pass_half_LR_candidate:
+    status: frozen_but_blocked_by_endpoint47_49_read_only_gate
+    paper_faithful: false
+    contract: /data_all/zzx/3.2RL/configs/taco_pour_postfix_single_actor_pass_lr_half_candidate_v1.yaml
+    sole_future_change: {actor_learning_rate: {baseline: 0.0001, candidate: 0.00005}}
+    actor_mini_epochs: 1
+    fresh_training_authorized: false
+    warm_start_allowed: false
+    seed_or_LR_sweep_allowed: false
+    chunk_commit_allowed: false
 
 runtime_contract:
   fail_closed: true
@@ -425,7 +459,7 @@ runtime_contract:
     cpu_commit_endpoint_offset: 20
 
 training_ready: false
-training_ready_scope: postfix_single_actor_pass_failed_28_of_40_next_algorithm_decision_required
+training_ready_scope: half_LR_candidate_blocked_by_endpoint47_49_read_only_gate_failure
 
 audit_results:
   active_input: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/input_audit.json
@@ -453,6 +487,8 @@ audit_results:
   postfix_single_actor_pass_candidate: /data_all/zzx/3.2RL/configs/taco_pour_postfix_single_actor_pass_candidate_v1.yaml
   postfix_single_actor_pass_diagnostic: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/report.json
   postfix_single_actor_pass_audit: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_audit_v1/report.json
+  postfix_single_actor_pass_endpoint47_49_gate: /data_all/zzx/3.2RL/runs/taco_pour_single_pass_endpoint47_49_gate_v1/report.json
+  postfix_single_actor_pass_half_LR_candidate: /data_all/zzx/3.2RL/configs/taco_pour_postfix_single_actor_pass_lr_half_candidate_v1.yaml
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -492,10 +528,11 @@ historical_observation_normalization_misaligned:
     - old_checkpoint_task_performance_as_an_algorithm_baseline
 
 blocking_checks:
-  - postfix_single_actor_pass_failed_28_of_40_next_algorithm_decision_required
+  - half_LR_candidate_blocked_by_endpoint47_49_read_only_gate_failure
 result_acceptance_blockers:
   - active_corrected_Replay_passes_only_30_of_40_in_second_window
   - postfix_single_actor_pass_PPO_passes_only_28_intervals_before_failure_at_endpoint49
+  - source47_zero_residual_still_fails_endpoint49_and_source48_has_no_tool_effect
   - unpublished_threshold_to_weighted_objective_mapping
   - stable_grasp_and_physical_pour_not_demonstrated
 paper_faithful_run_blockers:

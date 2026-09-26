@@ -1,0 +1,102 @@
+schema: taco_pour_postfix_single_actor_pass_lr_half_candidate_v1
+status: frozen_but_blocked_by_endpoint47_49_read_only_gate
+paper_faithful: false
+purpose: >-
+  Freeze, but do not authorize, the single-variable local reproduction
+  candidate that keeps actor_mini_epochs=1 and halves the actor learning rate
+  from 1e-4 to 5e-5. EgoEngine does not publish either PPO hyperparameter.
+
+single_change:
+  field: PPO_actor_learning_rate
+  baseline: 0.0001
+  candidate: 0.00005
+
+selection_basis:
+  actor_mini_epochs_4_to_1_moved_failure_endpoint: {from: 40, to: 49}
+  single_pass_optimizer_transitions_increasing_focus_saturation: 8
+  single_pass_optimizer_transitions_decreasing_focus_saturation: 0
+  RMS_commit_net_signed_mu_change_toward_final_saturation: -2.1511116162873805
+  maximum_post_optimizer_fixed_probe_exact_KL_mean: 0.039736180923459874
+  local_quadratic_KL_scaling_is_only_an_approximation: true
+  approximate_half_LR_KL: 0.009934045230864968
+  parameter_sweep_used_to_select_candidate: false
+
+unchanged:
+  actor_mini_epochs: 1
+  critic_mini_epochs: 4
+  critic_learning_rate: unchanged
+  training_worlds: 4
+  training_epochs: 8
+  horizon_per_world_per_epoch: 40
+  samples_per_epoch: 160
+  total_samples: 1280
+  reset_endpoints: [20, 20, 20, 20]
+  seed: 0
+  gradient_norm_clip: 1.0
+  KL_early_stop: disabled
+  reward: unchanged
+  objective: taco_pour_local_normalized_ellipse_v1
+  observation: taco_pour_transition_aligned_236d_v1
+  observation_normalization: taco_pour_frozen_rollout_observation_normalization_v1
+  action_distribution: taco_pour_state_feasible_truncated_gaussian_v1
+  residual_scale: 0.05
+  action_bounds: unchanged
+  reference_timing: unchanged
+  action_frame: world
+  CPU_validation_start_endpoint: 20
+  CPU_validation_intervals: 40
+  GPU_may_decide_acceptance: false
+
+pretraining_read_only_gate:
+  contract:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_single_pass_endpoint47_49_gate_v1.yaml
+    sha256: 2fbb7720d2f98047624990efd0c22721803e6ce4a600b349ad5c03d51b9738fd
+  report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_single_pass_endpoint47_49_gate_v1/report.json
+    sha256: 0c126c511bcd45195b73b745c1af1f3ad31f36662416d942c5da216c415d4f98
+  passed: false
+  source_47_zero_residual:
+    endpoint_49_score_delta_vs_formal_PPO: -0.025593280792236328
+    first_failure_endpoint: 49
+    survives_endpoint_49: false
+  source_48_zero_residual:
+    endpoint_49_score_delta_vs_formal_PPO: 0.0
+    first_failure_endpoint: 49
+    survives_endpoint_49: false
+    controlled_hand_qpos_changed: true
+    tool_freejoint_qpos_l2_vs_formal: 7.90253409579263e-09
+    interpretation: >-
+      The zero action was executed and changed the hand state, but the bowl was
+      already locally decoupled after right-hand tool contact was absent.
+  decision: >-
+    The predeclared evidence gate did not support weaker local residual as a
+    sufficient mitigation of the current endpoint-49 divergence. Keep the
+    half-LR candidate frozen for provenance, but do not authorize its training.
+
+evidence:
+  source_run_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/report.json
+    sha256: d1690633bb3c29c16f92e8114a9f71142a8bde0d141114abd68fda359eb0344b
+  source_run_audit:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_audit_v1/report.json
+    sha256: a6cf2486d934f3ec88c2aaae346116f5d43fd2773c4f7249367cc23c7822a2a8
+  counterfactual_arrays:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_single_pass_endpoint47_49_gate_v1/counterfactual_branches.npz
+    sha256: 6104cc9a5c607d9c03b6b6ebd71c78dfc601958586c4ecebc1189d003bf4d53b
+
+execution_gate:
+  fresh_training_authorized: false
+  authorization_consumed: false
+  output_directory_reserved: false
+  old_checkpoint_or_actor_warm_start_allowed: false
+  seed_sweep_allowed: false
+  fallback_learning_rate_sweep_allowed: false
+  automatic_2p5e_5_followup_allowed: false
+  chunk_commit_allowed_for_diagnostic: false
+  promotion_gate_defined: false
+
+predeclared_result_interpretation_if_later_authorized:
+  CPU_40_of_40: candidate_success_only_requires_separate_promotion_gate
+  CPU_above_Replay_30_below_40: strong_support_but_new_failure_requires_attribution
+  CPU_29_or_30: update_size_contributes_but_is_not_sufficient
+  CPU_at_or_below_28: no_automatic_further_LR_reduction

@@ -1,0 +1,3770 @@
+{
+  "schema": "taco_pour_single_pass_endpoint47_49_gate_v1",
+  "status": "completed_read_only_gate",
+  "paper_faithful": false,
+  "training_executed": false,
+  "optimizer_steps": 0,
+  "chunk_commit_written": false,
+  "contract": {
+    "path": "/data_all/zzx/3.2RL/configs/taco_pour_single_pass_endpoint47_49_gate_v1.yaml",
+    "sha256": "2fbb7720d2f98047624990efd0c22721803e6ce4a600b349ad5c03d51b9738fd"
+  },
+  "formal_trace_bitwise_reproduced": {
+    "Replay": true,
+    "PPO": true
+  },
+  "formal_results": {
+    "Replay": {
+      "successful_intervals": 30,
+      "first_failure": {
+        "control_interval": 50,
+        "endpoint": 51,
+        "object_roles": [
+          "tool"
+        ],
+        "reason": "tracking_boundary"
+      }
+    },
+    "PPO": {
+      "successful_intervals": 28,
+      "first_failure": {
+        "control_interval": 48,
+        "endpoint": 49,
+        "object_roles": [
+          "tool"
+        ],
+        "reason": "tracking_boundary"
+      }
+    }
+  },
+  "actuator_contract": {
+    "names": [
+      "R_forearm_tx_position",
+      "R_forearm_ty_position",
+      "R_forearm_tz_position",
+      "R_forearm_roll_position",
+      "R_forearm_pitch_position",
+      "R_forearm_yaw_position",
+      "right_thumb_bend_position",
+      "right_thumb_rota1_position",
+      "right_thumb_rota2_position",
+      "right_index_bend_position",
+      "right_index_joint1_position",
+      "right_index_joint2_position",
+      "right_middle_joint1_position",
+      "right_middle_joint2_position",
+      "right_ring_joint1_position",
+      "right_ring_joint2_position",
+      "right_pinky_joint1_position",
+      "right_pinky_joint2_position",
+      "L_forearm_tx_position",
+      "L_forearm_ty_position",
+      "L_forearm_tz_position",
+      "L_forearm_roll_position",
+      "L_forearm_pitch_position",
+      "L_forearm_yaw_position",
+      "left_thumb_bend_position",
+      "left_thumb_rota1_position",
+      "left_thumb_rota2_position",
+      "left_index_bend_position",
+      "left_index_joint1_position",
+      "left_index_joint2_position",
+      "left_middle_joint1_position",
+      "left_middle_joint2_position",
+      "left_ring_joint1_position",
+      "left_ring_joint2_position",
+      "left_pinky_joint1_position",
+      "left_pinky_joint2_position"
+    ],
+    "units": [
+      "m",
+      "m",
+      "m",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "m",
+      "m",
+      "m",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad"
+    ]
+  },
+  "aligned_source46_48_attribution": {
+    "46": {
+      "Replay": {
+        "state_at_source": {
+          "endpoint": 46,
+          "position_error_m": 0.07406708598136902,
+          "rotation_error_rad": 0.8460164666175842,
+          "objective_score": 0.836107611656189,
+          "ellipse_squared_contributions": {
+            "position": 0.3809675851230217,
+            "rotation": 0.3181083830169342
+          },
+          "tool_position_error_xyz_actual_minus_reference_m": [
+            -0.007377803325653076,
+            0.0644755344837904,
+            -0.03569883108139038
+          ],
+          "contact": {
+            "active": [
+              "right-tool-index",
+              "left-target-pinky"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  true,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  true
+                ]
+              ]
+            ]
+          },
+          "terminated": false
+        },
+        "action_from_source": {
+          "normalized_action": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "named_36d_action": {
+            "right_wrist_translation": {
+              "actuator_names": [
+                "R_forearm_tx_position",
+                "R_forearm_ty_position",
+                "R_forearm_tz_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "right_wrist_rotation": {
+              "actuator_names": [
+                "R_forearm_roll_position",
+                "R_forearm_pitch_position",
+                "R_forearm_yaw_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "right_fingers": {
+              "actuator_names": [
+                "right_thumb_bend_position",
+                "right_thumb_rota1_position",
+                "right_thumb_rota2_position",
+                "right_index_bend_position",
+                "right_index_joint1_position",
+                "right_index_joint2_position",
+                "right_middle_joint1_position",
+                "right_middle_joint2_position",
+                "right_ring_joint1_position",
+                "right_ring_joint2_position",
+                "right_pinky_joint1_position",
+                "right_pinky_joint2_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "left_wrist_translation": {
+              "actuator_names": [
+                "L_forearm_tx_position",
+                "L_forearm_ty_position",
+                "L_forearm_tz_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "left_wrist_rotation": {
+              "actuator_names": [
+                "L_forearm_roll_position",
+                "L_forearm_pitch_position",
+                "L_forearm_yaw_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "left_fingers": {
+              "actuator_names": [
+                "left_thumb_bend_position",
+                "left_thumb_rota1_position",
+                "left_thumb_rota2_position",
+                "left_index_bend_position",
+                "left_index_joint1_position",
+                "left_index_joint2_position",
+                "left_middle_joint1_position",
+                "left_middle_joint2_position",
+                "left_ring_joint1_position",
+                "left_ring_joint2_position",
+                "left_pinky_joint1_position",
+                "left_pinky_joint2_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            }
+          },
+          "unit_bound_count": 0,
+          "state_feasible_bound_count": 0,
+          "requested_residual": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "named_requested_residual": {
+            "right_wrist_translation": {
+              "actuator_names": [
+                "R_forearm_tx_position",
+                "R_forearm_ty_position",
+                "R_forearm_tz_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "right_wrist_rotation": {
+              "actuator_names": [
+                "R_forearm_roll_position",
+                "R_forearm_pitch_position",
+                "R_forearm_yaw_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "right_fingers": {
+              "actuator_names": [
+                "right_thumb_bend_position",
+                "right_thumb_rota1_position",
+                "right_thumb_rota2_position",
+                "right_index_bend_position",
+                "right_index_joint1_position",
+                "right_index_joint2_position",
+                "right_middle_joint1_position",
+                "right_middle_joint2_position",
+                "right_ring_joint1_position",
+                "right_ring_joint2_position",
+                "right_pinky_joint1_position",
+                "right_pinky_joint2_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "left_wrist_translation": {
+              "actuator_names": [
+                "L_forearm_tx_position",
+                "L_forearm_ty_position",
+                "L_forearm_tz_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "left_wrist_rotation": {
+              "actuator_names": [
+                "L_forearm_roll_position",
+                "L_forearm_pitch_position",
+                "L_forearm_yaw_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "left_fingers": {
+              "actuator_names": [
+                "left_thumb_bend_position",
+                "left_thumb_rota1_position",
+                "left_thumb_rota2_position",
+                "left_index_bend_position",
+                "left_index_joint1_position",
+                "left_index_joint2_position",
+                "left_middle_joint1_position",
+                "left_middle_joint2_position",
+                "left_ring_joint1_position",
+                "left_ring_joint2_position",
+                "left_pinky_joint1_position",
+                "left_pinky_joint2_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            }
+          }
+        },
+        "outcome": {
+          "endpoint": 47,
+          "position_error_m": 0.07794640213251114,
+          "rotation_error_rad": 0.8654902577400208,
+          "objective_score": 0.8688158988952637,
+          "ellipse_squared_contributions": {
+            "position": 0.4219195559307734,
+            "rotation": 0.33292150499683887
+          },
+          "tool_position_error_xyz_actual_minus_reference_m": [
+            -0.01164013147354126,
+            0.06365786213427782,
+            -0.04344910383224487
+          ],
+          "contact": {
+            "active": [
+              "left-target-pinky"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  true
+                ]
+              ]
+            ]
+          },
+          "terminated": false
+        }
+      },
+      "PPO": {
+        "state_at_source": {
+          "endpoint": 46,
+          "position_error_m": 0.0829300582408905,
+          "rotation_error_rad": 0.5283080339431763,
+          "objective_score": 0.7756580710411072,
+          "ellipse_squared_contributions": {
+            "position": 0.4775968444331591,
+            "rotation": 0.1240486127684019
+          },
+          "tool_position_error_xyz_actual_minus_reference_m": [
+            -0.008509635925292969,
+            0.07573716901242733,
+            -0.032693445682525635
+          ],
+          "contact": {
+            "active": [
+              "right-tool-index",
+              "left-target-ring"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  true,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  true,
+                  false
+                ]
+              ]
+            ]
+          },
+          "terminated": false
+        },
+        "action_from_source": {
+          "actor_mu": [
+            -0.6783322691917419,
+            1.5465600490570068,
+            0.7257211804389954,
+            0.2788490653038025,
+            0.6080193519592285,
+            0.16204845905303955,
+            -0.4664214253425598,
+            -0.4810797870159149,
+            -0.17203187942504883,
+            1.2325756549835205,
+            -0.21627408266067505,
+            0.049450792372226715,
+            0.24572551250457764,
+            0.07897549867630005,
+            -1.241219401359558,
+            0.22494599223136902,
+            0.1318284273147583,
+            0.9180612564086914,
+            -0.555160641670227,
+            0.2096276730298996,
+            -0.8063107132911682,
+            0.7252941727638245,
+            0.36549708247184753,
+            1.1995015144348145,
+            0.20004267990589142,
+            -0.15296044945716858,
+            -0.09378131479024887,
+            -0.8915255069732666,
+            0.5004602074623108,
+            0.12741149961948395,
+            -0.6777275800704956,
+            0.8955493569374084,
+            0.8572906255722046,
+            -0.5783969759941101,
+            0.38853394985198975,
+            0.4573068916797638
+          ],
+          "actor_sigma": [
+            1.0001556873321533,
+            0.9999759793281555,
+            0.9997642636299133,
+            0.9995960593223572,
+            1.0005096197128296,
+            0.9998703002929688,
+            1.0000191926956177,
+            1.00005042552948,
+            0.9996774196624756,
+            0.9996069669723511,
+            1.0001516342163086,
+            1.0005356073379517,
+            1.0003103017807007,
+            0.9999405145645142,
+            0.9997126460075378,
+            1.0002949237823486,
+            1.0001273155212402,
+            1.0003570318222046,
+            0.9996277093887329,
+            1.000246524810791,
+            1.0002951622009277,
+            0.9994527101516724,
+            0.9998433589935303,
+            0.9998211860656738,
+            0.9997738003730774,
+            0.9997396469116211,
+            1.0004115104675293,
+            0.9994133710861206,
+            1.0001962184906006,
+            1.0005544424057007,
+            1.0001561641693115,
+            0.9998094439506531,
+            0.9997848868370056,
+            1.0000265836715698,
+            0.9999049305915833,
+            1.0000622272491455
+          ],
+          "normalized_action": [
+            -0.6783322691917419,
+            1.0,
+            0.7257211804389954,
+            0.2788490653038025,
+            0.6080193519592285,
+            0.16204845905303955,
+            -0.4664214253425598,
+            -0.4810797870159149,
+            0.0,
+            1.0,
+            -0.21627408266067505,
+            0.049450792372226715,
+            0.24572551250457764,
+            0.07897549867630005,
+            -1.0,
+            0.22494599223136902,
+            0.1318284273147583,
+            0.9180612564086914,
+            -0.555160641670227,
+            0.2096276730298996,
+            -0.8063107132911682,
+            0.7252941727638245,
+            0.36549708247184753,
+            1.0,
+            0.20004267990589142,
+            -0.15296044945716858,
+            0.0,
+            -0.8915255069732666,
+            0.5004602074623108,
+            0.12741149961948395,
+            -0.6777275800704956,
+            0.8955493569374084,
+            0.8572906255722046,
+            -0.5783969759941101,
+            0.38853394985198975,
+            0.4573068916797638
+          ],
+          "named_36d_action": {
+            "right_wrist_translation": {
+              "actuator_names": [
+                "R_forearm_tx_position",
+                "R_forearm_ty_position",
+                "R_forearm_tz_position"
+              ],
+              "values": [
+                -0.6783322691917419,
+                1.0,
+                0.7257211804389954
+              ],
+              "l2": 1.4095410242928677,
+              "max_abs": 1.0
+            },
+            "right_wrist_rotation": {
+              "actuator_names": [
+                "R_forearm_roll_position",
+                "R_forearm_pitch_position",
+                "R_forearm_yaw_position"
+              ],
+              "values": [
+                0.2788490653038025,
+                0.6080193519592285,
+                0.16204845905303955
+              ],
+              "l2": 0.6882616048125808,
+              "max_abs": 0.6080193519592285
+            },
+            "right_fingers": {
+              "actuator_names": [
+                "right_thumb_bend_position",
+                "right_thumb_rota1_position",
+                "right_thumb_rota2_position",
+                "right_index_bend_position",
+                "right_index_joint1_position",
+                "right_index_joint2_position",
+                "right_middle_joint1_position",
+                "right_middle_joint2_position",
+                "right_ring_joint1_position",
+                "right_ring_joint2_position",
+                "right_pinky_joint1_position",
+                "right_pinky_joint2_position"
+              ],
+              "values": [
+                -0.4664214253425598,
+                -0.4810797870159149,
+                0.0,
+                1.0,
+                -0.21627408266067505,
+                0.049450792372226715,
+                0.24572551250457764,
+                0.07897549867630005,
+                -1.0,
+                0.22494599223136902,
+                0.1318284273147583,
+                0.9180612564086914
+              ],
+              "l2": 1.8643070101958987,
+              "max_abs": 1.0
+            },
+            "left_wrist_translation": {
+              "actuator_names": [
+                "L_forearm_tx_position",
+                "L_forearm_ty_position",
+                "L_forearm_tz_position"
+              ],
+              "values": [
+                -0.555160641670227,
+                0.2096276730298996,
+                -0.8063107132911682
+              ],
+              "l2": 1.00114138148802,
+              "max_abs": 0.8063107132911682
+            },
+            "left_wrist_rotation": {
+              "actuator_names": [
+                "L_forearm_roll_position",
+                "L_forearm_pitch_position",
+                "L_forearm_yaw_position"
+              ],
+              "values": [
+                0.7252941727638245,
+                0.36549708247184753,
+                1.0
+              ],
+              "l2": 1.2882700626579013,
+              "max_abs": 1.0
+            },
+            "left_fingers": {
+              "actuator_names": [
+                "left_thumb_bend_position",
+                "left_thumb_rota1_position",
+                "left_thumb_rota2_position",
+                "left_index_bend_position",
+                "left_index_joint1_position",
+                "left_index_joint2_position",
+                "left_middle_joint1_position",
+                "left_middle_joint2_position",
+                "left_ring_joint1_position",
+                "left_ring_joint2_position",
+                "left_pinky_joint1_position",
+                "left_pinky_joint2_position"
+              ],
+              "values": [
+                0.20004267990589142,
+                -0.15296044945716858,
+                0.0,
+                -0.8915255069732666,
+                0.5004602074623108,
+                0.12741149961948395,
+                -0.6777275800704956,
+                0.8955493569374084,
+                0.8572906255722046,
+                -0.5783969759941101,
+                0.38853394985198975,
+                0.4573068916797638
+              ],
+              "l2": 1.9534143537284248,
+              "max_abs": 0.8955493569374084
+            }
+          },
+          "state_feasible_low": [
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            0.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            0.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -2.6572694104788283e-16,
+            -1.0
+          ],
+          "state_feasible_high": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "unit_bound_count": 4,
+          "state_feasible_bound_count": 6,
+          "unit_bound_actuators": [
+            "R_forearm_ty_position",
+            "right_index_bend_position",
+            "right_ring_joint1_position",
+            "L_forearm_yaw_position"
+          ],
+          "state_feasible_bound_actuators": [
+            "R_forearm_ty_position",
+            "right_thumb_rota2_position",
+            "right_index_bend_position",
+            "right_ring_joint1_position",
+            "L_forearm_yaw_position",
+            "left_thumb_rota2_position"
+          ],
+          "requested_residual": [
+            -0.033916592597961426,
+            0.04999999701976776,
+            0.03628605604171753,
+            0.013942480087280273,
+            0.030400961637496948,
+            0.0081024169921875,
+            -0.023321092128753662,
+            -0.02405393123626709,
+            0.0,
+            0.05000000447034836,
+            -0.010813713073730469,
+            0.002472519874572754,
+            0.01228630542755127,
+            0.0039487481117248535,
+            -0.050000011920928955,
+            0.01124727725982666,
+            0.006591439247131348,
+            0.04590308666229248,
+            -0.027758032083511353,
+            0.010481387376785278,
+            -0.04031550884246826,
+            0.036264657974243164,
+            0.018274854868650436,
+            0.04999995231628418,
+            0.01000213623046875,
+            -0.007647991180419922,
+            1.4901161193847656e-08,
+            -0.04457627609372139,
+            0.02502301335334778,
+            0.00637054443359375,
+            -0.0338863730430603,
+            0.04477745294570923,
+            0.04286453127861023,
+            -0.028919875621795654,
+            0.019426697865128503,
+            0.02286529541015625
+          ],
+          "named_requested_residual": {
+            "right_wrist_translation": {
+              "actuator_names": [
+                "R_forearm_tx_position",
+                "R_forearm_ty_position",
+                "R_forearm_tz_position"
+              ],
+              "values": [
+                -0.033916592597961426,
+                0.04999999701976776,
+                0.03628605604171753
+              ],
+              "l2": 0.07047703752638544,
+              "max_abs": 0.04999999701976776
+            },
+            "right_wrist_rotation": {
+              "actuator_names": [
+                "R_forearm_roll_position",
+                "R_forearm_pitch_position",
+                "R_forearm_yaw_position"
+              ],
+              "values": [
+                0.013942480087280273,
+                0.030400961637496948,
+                0.0081024169921875
+              ],
+              "l2": 0.0344130844386849,
+              "max_abs": 0.030400961637496948
+            },
+            "right_fingers": {
+              "actuator_names": [
+                "right_thumb_bend_position",
+                "right_thumb_rota1_position",
+                "right_thumb_rota2_position",
+                "right_index_bend_position",
+                "right_index_joint1_position",
+                "right_index_joint2_position",
+                "right_middle_joint1_position",
+                "right_middle_joint2_position",
+                "right_ring_joint1_position",
+                "right_ring_joint2_position",
+                "right_pinky_joint1_position",
+                "right_pinky_joint2_position"
+              ],
+              "values": [
+                -0.023321092128753662,
+                -0.02405393123626709,
+                0.0,
+                0.05000000447034836,
+                -0.010813713073730469,
+                0.002472519874572754,
+                0.01228630542755127,
+                0.0039487481117248535,
+                -0.050000011920928955,
+                0.01124727725982666,
+                0.006591439247131348,
+                0.04590308666229248
+              ],
+              "l2": 0.09321536313848056,
+              "max_abs": 0.050000011920928955
+            },
+            "left_wrist_translation": {
+              "actuator_names": [
+                "L_forearm_tx_position",
+                "L_forearm_ty_position",
+                "L_forearm_tz_position"
+              ],
+              "values": [
+                -0.027758032083511353,
+                0.010481387376785278,
+                -0.04031550884246826
+              ],
+              "l2": 0.05005704825215542,
+              "max_abs": 0.04031550884246826
+            },
+            "left_wrist_rotation": {
+              "actuator_names": [
+                "L_forearm_roll_position",
+                "L_forearm_pitch_position",
+                "L_forearm_yaw_position"
+              ],
+              "values": [
+                0.036264657974243164,
+                0.018274854868650436,
+                0.04999995231628418
+              ],
+              "l2": 0.06441343780679437,
+              "max_abs": 0.04999995231628418
+            },
+            "left_fingers": {
+              "actuator_names": [
+                "left_thumb_bend_position",
+                "left_thumb_rota1_position",
+                "left_thumb_rota2_position",
+                "left_index_bend_position",
+                "left_index_joint1_position",
+                "left_index_joint2_position",
+                "left_middle_joint1_position",
+                "left_middle_joint2_position",
+                "left_ring_joint1_position",
+                "left_ring_joint2_position",
+                "left_pinky_joint1_position",
+                "left_pinky_joint2_position"
+              ],
+              "values": [
+                0.01000213623046875,
+                -0.007647991180419922,
+                1.4901161193847656e-08,
+                -0.04457627609372139,
+                0.02502301335334778,
+                0.00637054443359375,
+                -0.0338863730430603,
+                0.04477745294570923,
+                0.04286453127861023,
+                -0.028919875621795654,
+                0.019426697865128503,
+                0.02286529541015625
+              ],
+              "l2": 0.09767070218077263,
+              "max_abs": 0.04477745294570923
+            }
+          }
+        },
+        "outcome": {
+          "endpoint": 47,
+          "position_error_m": 0.09515345841646194,
+          "rotation_error_rad": 0.5298885107040405,
+          "objective_score": 0.8680750727653503,
+          "ellipse_squared_contributions": {
+            "position": 0.628762545042594,
+            "rotation": 0.1247919261227316
+          },
+          "tool_position_error_xyz_actual_minus_reference_m": [
+            -0.022595107555389404,
+            0.08517316449433565,
+            -0.03590506315231323
+          ],
+          "contact": {
+            "active": [
+              "right-tool-index",
+              "left-target-ring"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  true,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  true,
+                  false
+                ]
+              ]
+            ]
+          },
+          "terminated": false
+        }
+      },
+      "PPO_minus_Replay_outcome": {
+        "position_error_m": 0.017207056283950806,
+        "rotation_error_rad": -0.3356017470359802,
+        "objective_score": -0.0007408261299133301,
+        "tool_position_error_xyz_m": [
+          -0.010954976081848145,
+          0.02151530236005783,
+          0.007544040679931641
+        ]
+      }
+    },
+    "47": {
+      "Replay": {
+        "state_at_source": {
+          "endpoint": 47,
+          "position_error_m": 0.07794640213251114,
+          "rotation_error_rad": 0.8654902577400208,
+          "objective_score": 0.8688158988952637,
+          "ellipse_squared_contributions": {
+            "position": 0.4219195559307734,
+            "rotation": 0.33292150499683887
+          },
+          "tool_position_error_xyz_actual_minus_reference_m": [
+            -0.01164013147354126,
+            0.06365786213427782,
+            -0.04344910383224487
+          ],
+          "contact": {
+            "active": [
+              "left-target-pinky"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  true
+                ]
+              ]
+            ]
+          },
+          "terminated": false
+        },
+        "action_from_source": {
+          "normalized_action": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "named_36d_action": {
+            "right_wrist_translation": {
+              "actuator_names": [
+                "R_forearm_tx_position",
+                "R_forearm_ty_position",
+                "R_forearm_tz_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "right_wrist_rotation": {
+              "actuator_names": [
+                "R_forearm_roll_position",
+                "R_forearm_pitch_position",
+                "R_forearm_yaw_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "right_fingers": {
+              "actuator_names": [
+                "right_thumb_bend_position",
+                "right_thumb_rota1_position",
+                "right_thumb_rota2_position",
+                "right_index_bend_position",
+                "right_index_joint1_position",
+                "right_index_joint2_position",
+                "right_middle_joint1_position",
+                "right_middle_joint2_position",
+                "right_ring_joint1_position",
+                "right_ring_joint2_position",
+                "right_pinky_joint1_position",
+                "right_pinky_joint2_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "left_wrist_translation": {
+              "actuator_names": [
+                "L_forearm_tx_position",
+                "L_forearm_ty_position",
+                "L_forearm_tz_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "left_wrist_rotation": {
+              "actuator_names": [
+                "L_forearm_roll_position",
+                "L_forearm_pitch_position",
+                "L_forearm_yaw_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "left_fingers": {
+              "actuator_names": [
+                "left_thumb_bend_position",
+                "left_thumb_rota1_position",
+                "left_thumb_rota2_position",
+                "left_index_bend_position",
+                "left_index_joint1_position",
+                "left_index_joint2_position",
+                "left_middle_joint1_position",
+                "left_middle_joint2_position",
+                "left_ring_joint1_position",
+                "left_ring_joint2_position",
+                "left_pinky_joint1_position",
+                "left_pinky_joint2_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            }
+          },
+          "unit_bound_count": 0,
+          "state_feasible_bound_count": 0,
+          "requested_residual": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "named_requested_residual": {
+            "right_wrist_translation": {
+              "actuator_names": [
+                "R_forearm_tx_position",
+                "R_forearm_ty_position",
+                "R_forearm_tz_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "right_wrist_rotation": {
+              "actuator_names": [
+                "R_forearm_roll_position",
+                "R_forearm_pitch_position",
+                "R_forearm_yaw_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "right_fingers": {
+              "actuator_names": [
+                "right_thumb_bend_position",
+                "right_thumb_rota1_position",
+                "right_thumb_rota2_position",
+                "right_index_bend_position",
+                "right_index_joint1_position",
+                "right_index_joint2_position",
+                "right_middle_joint1_position",
+                "right_middle_joint2_position",
+                "right_ring_joint1_position",
+                "right_ring_joint2_position",
+                "right_pinky_joint1_position",
+                "right_pinky_joint2_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "left_wrist_translation": {
+              "actuator_names": [
+                "L_forearm_tx_position",
+                "L_forearm_ty_position",
+                "L_forearm_tz_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "left_wrist_rotation": {
+              "actuator_names": [
+                "L_forearm_roll_position",
+                "L_forearm_pitch_position",
+                "L_forearm_yaw_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "left_fingers": {
+              "actuator_names": [
+                "left_thumb_bend_position",
+                "left_thumb_rota1_position",
+                "left_thumb_rota2_position",
+                "left_index_bend_position",
+                "left_index_joint1_position",
+                "left_index_joint2_position",
+                "left_middle_joint1_position",
+                "left_middle_joint2_position",
+                "left_ring_joint1_position",
+                "left_ring_joint2_position",
+                "left_pinky_joint1_position",
+                "left_pinky_joint2_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            }
+          }
+        },
+        "outcome": {
+          "endpoint": 48,
+          "position_error_m": 0.08122146129608154,
+          "rotation_error_rad": 0.9010717272758484,
+          "objective_score": 0.9049738645553589,
+          "ellipse_squared_contributions": {
+            "position": 0.45811984549103285,
+            "rotation": 0.36085789230928034
+          },
+          "tool_position_error_xyz_actual_minus_reference_m": [
+            -0.012875139713287354,
+            0.06148642208427191,
+            -0.051483750343322754
+          ],
+          "contact": {
+            "active": [
+              "right-tool-index",
+              "left-target-ring",
+              "left-target-pinky"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  true,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  true,
+                  true
+                ]
+              ]
+            ]
+          },
+          "terminated": false
+        }
+      },
+      "PPO": {
+        "state_at_source": {
+          "endpoint": 47,
+          "position_error_m": 0.09515345841646194,
+          "rotation_error_rad": 0.5298885107040405,
+          "objective_score": 0.8680750727653503,
+          "ellipse_squared_contributions": {
+            "position": 0.628762545042594,
+            "rotation": 0.1247919261227316
+          },
+          "tool_position_error_xyz_actual_minus_reference_m": [
+            -0.022595107555389404,
+            0.08517316449433565,
+            -0.03590506315231323
+          ],
+          "contact": {
+            "active": [
+              "right-tool-index",
+              "left-target-ring"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  true,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  true,
+                  false
+                ]
+              ]
+            ]
+          },
+          "terminated": false
+        },
+        "action_from_source": {
+          "actor_mu": [
+            -0.6998188495635986,
+            1.7320570945739746,
+            0.8552383780479431,
+            0.21196988224983215,
+            0.5806030035018921,
+            -0.048120591789484024,
+            -0.3354186713695526,
+            -0.4944068491458893,
+            -0.3303220868110657,
+            1.2087512016296387,
+            -0.35382649302482605,
+            0.1017158105969429,
+            0.22447629272937775,
+            -0.0071067954413592815,
+            -1.2281886339187622,
+            0.29371169209480286,
+            0.210419699549675,
+            0.9445508718490601,
+            -0.4925197660923004,
+            0.1333862692117691,
+            -0.7200002670288086,
+            0.7213327288627625,
+            0.21969759464263916,
+            1.1447949409484863,
+            0.4752961993217468,
+            -0.12180928140878677,
+            -0.03673310950398445,
+            -0.7928826212882996,
+            0.5878423452377319,
+            0.1093074232339859,
+            -0.46758654713630676,
+            0.8042593598365784,
+            1.091168761253357,
+            -0.8789252638816833,
+            0.4065527319908142,
+            0.43781816959381104
+          ],
+          "actor_sigma": [
+            1.0001556873321533,
+            0.9999759793281555,
+            0.9997642636299133,
+            0.9995960593223572,
+            1.0005096197128296,
+            0.9998703002929688,
+            1.0000191926956177,
+            1.00005042552948,
+            0.9996774196624756,
+            0.9996069669723511,
+            1.0001516342163086,
+            1.0005356073379517,
+            1.0003103017807007,
+            0.9999405145645142,
+            0.9997126460075378,
+            1.0002949237823486,
+            1.0001273155212402,
+            1.0003570318222046,
+            0.9996277093887329,
+            1.000246524810791,
+            1.0002951622009277,
+            0.9994527101516724,
+            0.9998433589935303,
+            0.9998211860656738,
+            0.9997738003730774,
+            0.9997396469116211,
+            1.0004115104675293,
+            0.9994133710861206,
+            1.0001962184906006,
+            1.0005544424057007,
+            1.0001561641693115,
+            0.9998094439506531,
+            0.9997848868370056,
+            1.0000265836715698,
+            0.9999049305915833,
+            1.0000622272491455
+          ],
+          "normalized_action": [
+            -0.6998188495635986,
+            1.0,
+            0.8552383780479431,
+            0.21196988224983215,
+            0.5806030035018921,
+            -0.048120591789484024,
+            -0.3354186713695526,
+            -0.4944068491458893,
+            0.0,
+            1.0,
+            -0.35382649302482605,
+            0.1017158105969429,
+            0.22447629272937775,
+            -0.0071067954413592815,
+            -1.0,
+            0.29371169209480286,
+            0.210419699549675,
+            0.9445508718490601,
+            -0.4925197660923004,
+            0.1333862692117691,
+            -0.7200002670288086,
+            0.7213327288627625,
+            0.21969759464263916,
+            1.0,
+            0.4752961993217468,
+            -0.12180928140878677,
+            0.0,
+            -0.7928826212882996,
+            0.5878423452377319,
+            0.1093074232339859,
+            -0.46758654713630676,
+            0.8042593598365784,
+            1.0,
+            -0.8789252638816833,
+            0.4065527319908142,
+            0.43781816959381104
+          ],
+          "named_36d_action": {
+            "right_wrist_translation": {
+              "actuator_names": [
+                "R_forearm_tx_position",
+                "R_forearm_ty_position",
+                "R_forearm_tz_position"
+              ],
+              "values": [
+                -0.6998188495635986,
+                1.0,
+                0.8552383780479431
+              ],
+              "l2": 1.490362071944464,
+              "max_abs": 1.0
+            },
+            "right_wrist_rotation": {
+              "actuator_names": [
+                "R_forearm_roll_position",
+                "R_forearm_pitch_position",
+                "R_forearm_yaw_position"
+              ],
+              "values": [
+                0.21196988224983215,
+                0.5806030035018921,
+                -0.048120591789484024
+              ],
+              "l2": 0.6199569904522377,
+              "max_abs": 0.5806030035018921
+            },
+            "right_fingers": {
+              "actuator_names": [
+                "right_thumb_bend_position",
+                "right_thumb_rota1_position",
+                "right_thumb_rota2_position",
+                "right_index_bend_position",
+                "right_index_joint1_position",
+                "right_index_joint2_position",
+                "right_middle_joint1_position",
+                "right_middle_joint2_position",
+                "right_ring_joint1_position",
+                "right_ring_joint2_position",
+                "right_pinky_joint1_position",
+                "right_pinky_joint2_position"
+              ],
+              "values": [
+                -0.3354186713695526,
+                -0.4944068491458893,
+                0.0,
+                1.0,
+                -0.35382649302482605,
+                0.1017158105969429,
+                0.22447629272937775,
+                -0.0071067954413592815,
+                -1.0,
+                0.29371169209480286,
+                0.210419699549675,
+                0.9445508718490601
+              ],
+              "l2": 1.8882909153408753,
+              "max_abs": 1.0
+            },
+            "left_wrist_translation": {
+              "actuator_names": [
+                "L_forearm_tx_position",
+                "L_forearm_ty_position",
+                "L_forearm_tz_position"
+              ],
+              "values": [
+                -0.4925197660923004,
+                0.1333862692117691,
+                -0.7200002670288086
+              ],
+              "l2": 0.8824783290978904,
+              "max_abs": 0.7200002670288086
+            },
+            "left_wrist_rotation": {
+              "actuator_names": [
+                "L_forearm_roll_position",
+                "L_forearm_pitch_position",
+                "L_forearm_yaw_position"
+              ],
+              "values": [
+                0.7213327288627625,
+                0.21969759464263916,
+                1.0
+              ],
+              "l2": 1.252432808106032,
+              "max_abs": 1.0
+            },
+            "left_fingers": {
+              "actuator_names": [
+                "left_thumb_bend_position",
+                "left_thumb_rota1_position",
+                "left_thumb_rota2_position",
+                "left_index_bend_position",
+                "left_index_joint1_position",
+                "left_index_joint2_position",
+                "left_middle_joint1_position",
+                "left_middle_joint2_position",
+                "left_ring_joint1_position",
+                "left_ring_joint2_position",
+                "left_pinky_joint1_position",
+                "left_pinky_joint2_position"
+              ],
+              "values": [
+                0.4752961993217468,
+                -0.12180928140878677,
+                0.0,
+                -0.7928826212882996,
+                0.5878423452377319,
+                0.1093074232339859,
+                -0.46758654713630676,
+                0.8042593598365784,
+                1.0,
+                -0.8789252638816833,
+                0.4065527319908142,
+                0.43781816959381104
+              ],
+              "l2": 2.054717341837906,
+              "max_abs": 1.0
+            }
+          },
+          "state_feasible_low": [
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            0.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            0.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            0.0,
+            -1.0
+          ],
+          "state_feasible_high": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "unit_bound_count": 5,
+          "state_feasible_bound_count": 7,
+          "unit_bound_actuators": [
+            "R_forearm_ty_position",
+            "right_index_bend_position",
+            "right_ring_joint1_position",
+            "L_forearm_yaw_position",
+            "left_ring_joint1_position"
+          ],
+          "state_feasible_bound_actuators": [
+            "R_forearm_ty_position",
+            "right_thumb_rota2_position",
+            "right_index_bend_position",
+            "right_ring_joint1_position",
+            "L_forearm_yaw_position",
+            "left_thumb_rota2_position",
+            "left_ring_joint1_position"
+          ],
+          "requested_residual": [
+            -0.03499096632003784,
+            0.04999999701976776,
+            0.042761921882629395,
+            0.010598480701446533,
+            0.029030144214630127,
+            -0.002406001091003418,
+            -0.01677095890045166,
+            -0.024720311164855957,
+            0.0,
+            0.05000000447034836,
+            -0.01769132912158966,
+            0.0050858259201049805,
+            0.011223822832107544,
+            -0.0003553628921508789,
+            -0.050000011920928955,
+            0.014685630798339844,
+            0.010520994663238525,
+            0.04722750186920166,
+            -0.0246259868144989,
+            0.0066693127155303955,
+            -0.03600001335144043,
+            0.036066532135009766,
+            0.010984878987073898,
+            0.04999995231628418,
+            0.02376478910446167,
+            -0.006090521812438965,
+            1.4901161193847656e-08,
+            -0.03964413329958916,
+            0.029392119497060776,
+            0.005465388298034668,
+            -0.02337932586669922,
+            0.04021298885345459,
+            0.050000011920928955,
+            -0.043946266174316406,
+            0.02032763697206984,
+            0.021890878677368164
+          ],
+          "named_requested_residual": {
+            "right_wrist_translation": {
+              "actuator_names": [
+                "R_forearm_tx_position",
+                "R_forearm_ty_position",
+                "R_forearm_tz_position"
+              ],
+              "values": [
+                -0.03499096632003784,
+                0.04999999701976776,
+                0.042761921882629395
+              ],
+              "l2": 0.0745181145030046,
+              "max_abs": 0.04999999701976776
+            },
+            "right_wrist_rotation": {
+              "actuator_names": [
+                "R_forearm_roll_position",
+                "R_forearm_pitch_position",
+                "R_forearm_yaw_position"
+              ],
+              "values": [
+                0.010598480701446533,
+                0.029030144214630127,
+                -0.002406001091003418
+              ],
+              "l2": 0.030997837143114795,
+              "max_abs": 0.029030144214630127
+            },
+            "right_fingers": {
+              "actuator_names": [
+                "right_thumb_bend_position",
+                "right_thumb_rota1_position",
+                "right_thumb_rota2_position",
+                "right_index_bend_position",
+                "right_index_joint1_position",
+                "right_index_joint2_position",
+                "right_middle_joint1_position",
+                "right_middle_joint2_position",
+                "right_ring_joint1_position",
+                "right_ring_joint2_position",
+                "right_pinky_joint1_position",
+                "right_pinky_joint2_position"
+              ],
+              "values": [
+                -0.01677095890045166,
+                -0.024720311164855957,
+                0.0,
+                0.05000000447034836,
+                -0.01769132912158966,
+                0.0050858259201049805,
+                0.011223822832107544,
+                -0.0003553628921508789,
+                -0.050000011920928955,
+                0.014685630798339844,
+                0.010520994663238525,
+                0.04722750186920166
+              ],
+              "l2": 0.09441454195323937,
+              "max_abs": 0.050000011920928955
+            },
+            "left_wrist_translation": {
+              "actuator_names": [
+                "L_forearm_tx_position",
+                "L_forearm_ty_position",
+                "L_forearm_tz_position"
+              ],
+              "values": [
+                -0.0246259868144989,
+                0.0066693127155303955,
+                -0.03600001335144043
+              ],
+              "l2": 0.04412391551063095,
+              "max_abs": 0.03600001335144043
+            },
+            "left_wrist_rotation": {
+              "actuator_names": [
+                "L_forearm_roll_position",
+                "L_forearm_pitch_position",
+                "L_forearm_yaw_position"
+              ],
+              "values": [
+                0.036066532135009766,
+                0.010984878987073898,
+                0.04999995231628418
+              ],
+              "l2": 0.06262154212598921,
+              "max_abs": 0.04999995231628418
+            },
+            "left_fingers": {
+              "actuator_names": [
+                "left_thumb_bend_position",
+                "left_thumb_rota1_position",
+                "left_thumb_rota2_position",
+                "left_index_bend_position",
+                "left_index_joint1_position",
+                "left_index_joint2_position",
+                "left_middle_joint1_position",
+                "left_middle_joint2_position",
+                "left_ring_joint1_position",
+                "left_ring_joint2_position",
+                "left_pinky_joint1_position",
+                "left_pinky_joint2_position"
+              ],
+              "values": [
+                0.02376478910446167,
+                -0.006090521812438965,
+                1.4901161193847656e-08,
+                -0.03964413329958916,
+                0.029392119497060776,
+                0.005465388298034668,
+                -0.02337932586669922,
+                0.04021298885345459,
+                0.050000011920928955,
+                -0.043946266174316406,
+                0.02032763697206984,
+                0.021890878677368164
+              ],
+              "l2": 0.10273587672951809,
+              "max_abs": 0.050000011920928955
+            }
+          }
+        },
+        "outcome": {
+          "endpoint": 48,
+          "position_error_m": 0.11071773618459702,
+          "rotation_error_rad": 0.5153717398643494,
+          "objective_score": 0.984544038772583,
+          "ellipse_squared_contributions": {
+            "position": 0.8512789656834739,
+            "rotation": 0.11804801344480292
+          },
+          "tool_position_error_xyz_actual_minus_reference_m": [
+            -0.034915149211883545,
+            0.09572235401719809,
+            -0.043319523334503174
+          ],
+          "contact": {
+            "active": [
+              "left-target-ring"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  true,
+                  false
+                ]
+              ]
+            ]
+          },
+          "terminated": false
+        }
+      },
+      "PPO_minus_Replay_outcome": {
+        "position_error_m": 0.029496274888515472,
+        "rotation_error_rad": -0.385699987411499,
+        "objective_score": 0.07957017421722412,
+        "tool_position_error_xyz_m": [
+          -0.02204000949859619,
+          0.03423593193292618,
+          0.00816422700881958
+        ]
+      }
+    },
+    "48": {
+      "Replay": {
+        "state_at_source": {
+          "endpoint": 48,
+          "position_error_m": 0.08122146129608154,
+          "rotation_error_rad": 0.9010717272758484,
+          "objective_score": 0.9049738645553589,
+          "ellipse_squared_contributions": {
+            "position": 0.45811984549103285,
+            "rotation": 0.36085789230928034
+          },
+          "tool_position_error_xyz_actual_minus_reference_m": [
+            -0.012875139713287354,
+            0.06148642208427191,
+            -0.051483750343322754
+          ],
+          "contact": {
+            "active": [
+              "right-tool-index",
+              "left-target-ring",
+              "left-target-pinky"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  true,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  true,
+                  true
+                ]
+              ]
+            ]
+          },
+          "terminated": false
+        },
+        "action_from_source": {
+          "normalized_action": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "named_36d_action": {
+            "right_wrist_translation": {
+              "actuator_names": [
+                "R_forearm_tx_position",
+                "R_forearm_ty_position",
+                "R_forearm_tz_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "right_wrist_rotation": {
+              "actuator_names": [
+                "R_forearm_roll_position",
+                "R_forearm_pitch_position",
+                "R_forearm_yaw_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "right_fingers": {
+              "actuator_names": [
+                "right_thumb_bend_position",
+                "right_thumb_rota1_position",
+                "right_thumb_rota2_position",
+                "right_index_bend_position",
+                "right_index_joint1_position",
+                "right_index_joint2_position",
+                "right_middle_joint1_position",
+                "right_middle_joint2_position",
+                "right_ring_joint1_position",
+                "right_ring_joint2_position",
+                "right_pinky_joint1_position",
+                "right_pinky_joint2_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "left_wrist_translation": {
+              "actuator_names": [
+                "L_forearm_tx_position",
+                "L_forearm_ty_position",
+                "L_forearm_tz_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "left_wrist_rotation": {
+              "actuator_names": [
+                "L_forearm_roll_position",
+                "L_forearm_pitch_position",
+                "L_forearm_yaw_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "left_fingers": {
+              "actuator_names": [
+                "left_thumb_bend_position",
+                "left_thumb_rota1_position",
+                "left_thumb_rota2_position",
+                "left_index_bend_position",
+                "left_index_joint1_position",
+                "left_index_joint2_position",
+                "left_middle_joint1_position",
+                "left_middle_joint2_position",
+                "left_ring_joint1_position",
+                "left_ring_joint2_position",
+                "left_pinky_joint1_position",
+                "left_pinky_joint2_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            }
+          },
+          "unit_bound_count": 0,
+          "state_feasible_bound_count": 0,
+          "requested_residual": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "named_requested_residual": {
+            "right_wrist_translation": {
+              "actuator_names": [
+                "R_forearm_tx_position",
+                "R_forearm_ty_position",
+                "R_forearm_tz_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "right_wrist_rotation": {
+              "actuator_names": [
+                "R_forearm_roll_position",
+                "R_forearm_pitch_position",
+                "R_forearm_yaw_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "right_fingers": {
+              "actuator_names": [
+                "right_thumb_bend_position",
+                "right_thumb_rota1_position",
+                "right_thumb_rota2_position",
+                "right_index_bend_position",
+                "right_index_joint1_position",
+                "right_index_joint2_position",
+                "right_middle_joint1_position",
+                "right_middle_joint2_position",
+                "right_ring_joint1_position",
+                "right_ring_joint2_position",
+                "right_pinky_joint1_position",
+                "right_pinky_joint2_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "left_wrist_translation": {
+              "actuator_names": [
+                "L_forearm_tx_position",
+                "L_forearm_ty_position",
+                "L_forearm_tz_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "left_wrist_rotation": {
+              "actuator_names": [
+                "L_forearm_roll_position",
+                "L_forearm_pitch_position",
+                "L_forearm_yaw_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            },
+            "left_fingers": {
+              "actuator_names": [
+                "left_thumb_bend_position",
+                "left_thumb_rota1_position",
+                "left_thumb_rota2_position",
+                "left_index_bend_position",
+                "left_index_joint1_position",
+                "left_index_joint2_position",
+                "left_middle_joint1_position",
+                "left_middle_joint2_position",
+                "left_ring_joint1_position",
+                "left_ring_joint2_position",
+                "left_pinky_joint1_position",
+                "left_pinky_joint2_position"
+              ],
+              "values": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "l2": 0.0,
+              "max_abs": 0.0
+            }
+          }
+        },
+        "outcome": {
+          "endpoint": 49,
+          "position_error_m": 0.08683523535728455,
+          "rotation_error_rad": 0.9201596975326538,
+          "objective_score": 0.9486539959907532,
+          "ellipse_squared_contributions": {
+            "position": 0.523635979135764,
+            "rotation": 0.37630838620594886
+          },
+          "tool_position_error_xyz_actual_minus_reference_m": [
+            -0.015073537826538086,
+            0.06171001959592104,
+            -0.05920320749282837
+          ],
+          "contact": {
+            "active": [
+              "left-target-ring",
+              "left-target-pinky"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  true,
+                  true
+                ]
+              ]
+            ]
+          },
+          "terminated": false
+        }
+      },
+      "PPO": {
+        "state_at_source": {
+          "endpoint": 48,
+          "position_error_m": 0.11071773618459702,
+          "rotation_error_rad": 0.5153717398643494,
+          "objective_score": 0.984544038772583,
+          "ellipse_squared_contributions": {
+            "position": 0.8512789656834739,
+            "rotation": 0.11804801344480292
+          },
+          "tool_position_error_xyz_actual_minus_reference_m": [
+            -0.034915149211883545,
+            0.09572235401719809,
+            -0.043319523334503174
+          ],
+          "contact": {
+            "active": [
+              "left-target-ring"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  true,
+                  false
+                ]
+              ]
+            ]
+          },
+          "terminated": false
+        },
+        "action_from_source": {
+          "actor_mu": [
+            -0.7336434721946716,
+            1.8623601198196411,
+            0.8287478685379028,
+            0.18389227986335754,
+            0.547170102596283,
+            -0.1541682928800583,
+            -0.21212360262870789,
+            -0.4782848060131073,
+            -0.42736735939979553,
+            1.2057993412017822,
+            -0.4908718764781952,
+            0.02647552825510502,
+            0.22580699622631073,
+            -0.03177185356616974,
+            -1.1246743202209473,
+            0.27706441283226013,
+            0.2785923480987549,
+            0.9162501096725464,
+            -0.38352492451667786,
+            0.07415737211704254,
+            -0.6137794852256775,
+            0.6687008738517761,
+            0.0023680960293859243,
+            1.0828627347946167,
+            0.6946019530296326,
+            -0.07091941684484482,
+            0.004189054481685162,
+            -0.7155514359474182,
+            0.6478484272956848,
+            0.09595496952533722,
+            -0.2525031566619873,
+            0.6274662613868713,
+            1.2853776216506958,
+            -1.0989094972610474,
+            0.35910454392433167,
+            0.44555386900901794
+          ],
+          "actor_sigma": [
+            1.0001556873321533,
+            0.9999759793281555,
+            0.9997642636299133,
+            0.9995960593223572,
+            1.0005096197128296,
+            0.9998703002929688,
+            1.0000191926956177,
+            1.00005042552948,
+            0.9996774196624756,
+            0.9996069669723511,
+            1.0001516342163086,
+            1.0005356073379517,
+            1.0003103017807007,
+            0.9999405145645142,
+            0.9997126460075378,
+            1.0002949237823486,
+            1.0001273155212402,
+            1.0003570318222046,
+            0.9996277093887329,
+            1.000246524810791,
+            1.0002951622009277,
+            0.9994527101516724,
+            0.9998433589935303,
+            0.9998211860656738,
+            0.9997738003730774,
+            0.9997396469116211,
+            1.0004115104675293,
+            0.9994133710861206,
+            1.0001962184906006,
+            1.0005544424057007,
+            1.0001561641693115,
+            0.9998094439506531,
+            0.9997848868370056,
+            1.0000265836715698,
+            0.9999049305915833,
+            1.0000622272491455
+          ],
+          "normalized_action": [
+            -0.7336434721946716,
+            1.0,
+            0.8287478685379028,
+            0.18389227986335754,
+            0.547170102596283,
+            -0.1541682928800583,
+            -0.21212360262870789,
+            -0.4782848060131073,
+            0.0,
+            1.0,
+            -0.14709192514419556,
+            0.02647552825510502,
+            0.22580699622631073,
+            -0.03177185356616974,
+            -1.0,
+            0.27706441283226013,
+            0.2785923480987549,
+            0.9162501096725464,
+            -0.38352492451667786,
+            0.07415737211704254,
+            -0.6137794852256775,
+            0.6687008738517761,
+            0.0023680960293859243,
+            1.0,
+            0.6946019530296326,
+            -0.07091941684484482,
+            0.004189054481685162,
+            -0.7155514359474182,
+            0.6478484272956848,
+            0.09595496952533722,
+            -0.2525031566619873,
+            0.6274662613868713,
+            1.0,
+            -1.0,
+            0.35910454392433167,
+            0.44555386900901794
+          ],
+          "named_36d_action": {
+            "right_wrist_translation": {
+              "actuator_names": [
+                "R_forearm_tx_position",
+                "R_forearm_ty_position",
+                "R_forearm_tz_position"
+              ],
+              "values": [
+                -0.7336434721946716,
+                1.0,
+                0.8287478685379028
+              ],
+              "l2": 1.4916620843542183,
+              "max_abs": 1.0
+            },
+            "right_wrist_rotation": {
+              "actuator_names": [
+                "R_forearm_roll_position",
+                "R_forearm_pitch_position",
+                "R_forearm_yaw_position"
+              ],
+              "values": [
+                0.18389227986335754,
+                0.547170102596283,
+                -0.1541682928800583
+              ],
+              "l2": 0.5974774927125889,
+              "max_abs": 0.547170102596283
+            },
+            "right_fingers": {
+              "actuator_names": [
+                "right_thumb_bend_position",
+                "right_thumb_rota1_position",
+                "right_thumb_rota2_position",
+                "right_index_bend_position",
+                "right_index_joint1_position",
+                "right_index_joint2_position",
+                "right_middle_joint1_position",
+                "right_middle_joint2_position",
+                "right_ring_joint1_position",
+                "right_ring_joint2_position",
+                "right_pinky_joint1_position",
+                "right_pinky_joint2_position"
+              ],
+              "values": [
+                -0.21212360262870789,
+                -0.4782848060131073,
+                0.0,
+                1.0,
+                -0.14709192514419556,
+                0.02647552825510502,
+                0.22580699622631073,
+                -0.03177185356616974,
+                -1.0,
+                0.27706441283226013,
+                0.2785923480987549,
+                0.9162501096725464
+              ],
+              "l2": 1.828108493900235,
+              "max_abs": 1.0
+            },
+            "left_wrist_translation": {
+              "actuator_names": [
+                "L_forearm_tx_position",
+                "L_forearm_ty_position",
+                "L_forearm_tz_position"
+              ],
+              "values": [
+                -0.38352492451667786,
+                0.07415737211704254,
+                -0.6137794852256775
+              ],
+              "l2": 0.7275410229318527,
+              "max_abs": 0.6137794852256775
+            },
+            "left_wrist_rotation": {
+              "actuator_names": [
+                "L_forearm_roll_position",
+                "L_forearm_pitch_position",
+                "L_forearm_yaw_position"
+              ],
+              "values": [
+                0.6687008738517761,
+                0.0023680960293859243,
+                1.0
+              ],
+              "l2": 1.2029823218023337,
+              "max_abs": 1.0
+            },
+            "left_fingers": {
+              "actuator_names": [
+                "left_thumb_bend_position",
+                "left_thumb_rota1_position",
+                "left_thumb_rota2_position",
+                "left_index_bend_position",
+                "left_index_joint1_position",
+                "left_index_joint2_position",
+                "left_middle_joint1_position",
+                "left_middle_joint2_position",
+                "left_ring_joint1_position",
+                "left_ring_joint2_position",
+                "left_pinky_joint1_position",
+                "left_pinky_joint2_position"
+              ],
+              "values": [
+                0.6946019530296326,
+                -0.07091941684484482,
+                0.004189054481685162,
+                -0.7155514359474182,
+                0.6478484272956848,
+                0.09595496952533722,
+                -0.2525031566619873,
+                0.6274662613868713,
+                1.0,
+                -1.0,
+                0.35910454392433167,
+                0.44555386900901794
+              ],
+              "l2": 2.0526553194307247,
+              "max_abs": 1.0
+            }
+          },
+          "state_feasible_low": [
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            0.0,
+            -1.0,
+            -0.14709192514419556,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.1077163186712369e-08,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            0.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
+            0.0,
+            -1.0
+          ],
+          "state_feasible_high": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "unit_bound_count": 6,
+          "state_feasible_bound_count": 8,
+          "unit_bound_actuators": [
+            "R_forearm_ty_position",
+            "right_index_bend_position",
+            "right_ring_joint1_position",
+            "L_forearm_yaw_position",
+            "left_ring_joint1_position",
+            "left_ring_joint2_position"
+          ],
+          "state_feasible_bound_actuators": [
+            "R_forearm_ty_position",
+            "right_thumb_rota2_position",
+            "right_index_bend_position",
+            "right_index_joint1_position",
+            "right_ring_joint1_position",
+            "L_forearm_yaw_position",
+            "left_ring_joint1_position",
+            "left_ring_joint2_position"
+          ],
+          "requested_residual": [
+            -0.036682188510894775,
+            0.04999999701976776,
+            0.041437387466430664,
+            0.009194612503051758,
+            0.02735850214958191,
+            -0.007708430290222168,
+            -0.010606169700622559,
+            -0.023914217948913574,
+            0.0,
+            0.05000000074505806,
+            -0.00735459616407752,
+            0.0013238191604614258,
+            0.01129034161567688,
+            -0.001588582992553711,
+            -0.04999999701976776,
+            0.013853192329406738,
+            0.013929617968666652,
+            0.04581248760223389,
+            -0.019176244735717773,
+            0.0037078559398651123,
+            -0.030689001083374023,
+            0.03343510627746582,
+            0.00011840462684631348,
+            0.04999995231628418,
+            0.03473007678985596,
+            -0.003545999526977539,
+            0.0002094656229019165,
+            -0.03577757254242897,
+            0.03239242359995842,
+            0.004797697067260742,
+            -0.012625157833099365,
+            0.03137332201004028,
+            0.050000011920928955,
+            -0.050000011920928955,
+            0.01795522682368771,
+            0.02227771282196045
+          ],
+          "named_requested_residual": {
+            "right_wrist_translation": {
+              "actuator_names": [
+                "R_forearm_tx_position",
+                "R_forearm_ty_position",
+                "R_forearm_tz_position"
+              ],
+              "values": [
+                -0.036682188510894775,
+                0.04999999701976776,
+                0.041437387466430664
+              ],
+              "l2": 0.0745831062370609,
+              "max_abs": 0.04999999701976776
+            },
+            "right_wrist_rotation": {
+              "actuator_names": [
+                "R_forearm_roll_position",
+                "R_forearm_pitch_position",
+                "R_forearm_yaw_position"
+              ],
+              "values": [
+                0.009194612503051758,
+                0.02735850214958191,
+                -0.007708430290222168
+              ],
+              "l2": 0.029873875484931114,
+              "max_abs": 0.02735850214958191
+            },
+            "right_fingers": {
+              "actuator_names": [
+                "right_thumb_bend_position",
+                "right_thumb_rota1_position",
+                "right_thumb_rota2_position",
+                "right_index_bend_position",
+                "right_index_joint1_position",
+                "right_index_joint2_position",
+                "right_middle_joint1_position",
+                "right_middle_joint2_position",
+                "right_ring_joint1_position",
+                "right_ring_joint2_position",
+                "right_pinky_joint1_position",
+                "right_pinky_joint2_position"
+              ],
+              "values": [
+                -0.010606169700622559,
+                -0.023914217948913574,
+                0.0,
+                0.05000000074505806,
+                -0.00735459616407752,
+                0.0013238191604614258,
+                0.01129034161567688,
+                -0.001588582992553711,
+                -0.04999999701976776,
+                0.013853192329406738,
+                0.013929617968666652,
+                0.04581248760223389
+              ],
+              "l2": 0.09140540267791444,
+              "max_abs": 0.05000000074505806
+            },
+            "left_wrist_translation": {
+              "actuator_names": [
+                "L_forearm_tx_position",
+                "L_forearm_ty_position",
+                "L_forearm_tz_position"
+              ],
+              "values": [
+                -0.019176244735717773,
+                0.0037078559398651123,
+                -0.030689001083374023
+              ],
+              "l2": 0.03637707169812145,
+              "max_abs": 0.030689001083374023
+            },
+            "left_wrist_rotation": {
+              "actuator_names": [
+                "L_forearm_roll_position",
+                "L_forearm_pitch_position",
+                "L_forearm_yaw_position"
+              ],
+              "values": [
+                0.03343510627746582,
+                0.00011840462684631348,
+                0.04999995231628418
+              ],
+              "l2": 0.06014911124091348,
+              "max_abs": 0.04999995231628418
+            },
+            "left_fingers": {
+              "actuator_names": [
+                "left_thumb_bend_position",
+                "left_thumb_rota1_position",
+                "left_thumb_rota2_position",
+                "left_index_bend_position",
+                "left_index_joint1_position",
+                "left_index_joint2_position",
+                "left_middle_joint1_position",
+                "left_middle_joint2_position",
+                "left_ring_joint1_position",
+                "left_ring_joint2_position",
+                "left_pinky_joint1_position",
+                "left_pinky_joint2_position"
+              ],
+              "values": [
+                0.03473007678985596,
+                -0.003545999526977539,
+                0.0002094656229019165,
+                -0.03577757254242897,
+                0.03239242359995842,
+                0.004797697067260742,
+                -0.012625157833099365,
+                0.03137332201004028,
+                0.050000011920928955,
+                -0.050000011920928955,
+                0.01795522682368771,
+                0.02227771282196045
+              ],
+              "l2": 0.10263277697933125,
+              "max_abs": 0.050000011920928955
+            }
+          }
+        },
+        "outcome": {
+          "endpoint": 49,
+          "position_error_m": 0.12790238857269287,
+          "rotation_error_rad": 0.487457275390625,
+          "objective_score": 1.1142933368682861,
+          "ellipse_squared_contributions": {
+            "position": 1.1360431251805636,
+            "rotation": 0.1056064868138896
+          },
+          "tool_position_error_xyz_actual_minus_reference_m": [
+            -0.04569059610366821,
+            0.10437833983451128,
+            -0.05810809135437012
+          ],
+          "contact": {
+            "active": [
+              "left-target-ring"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  true,
+                  false
+                ]
+              ]
+            ]
+          },
+          "terminated": true
+        }
+      },
+      "PPO_minus_Replay_outcome": {
+        "position_error_m": 0.041067153215408325,
+        "rotation_error_rad": -0.4327024221420288,
+        "objective_score": 0.16563934087753296,
+        "tool_position_error_xyz_m": [
+          -0.030617058277130127,
+          0.04266832023859024,
+          0.001095116138458252
+        ]
+      }
+    }
+  },
+  "counterfactuals": [
+    {
+      "source_endpoint": 47,
+      "intervention": "one_step_full_36d_zero_residual",
+      "replay_action_equivalent": true,
+      "then_resumed_frozen_deterministic_PPO": true,
+      "intervention_step": {
+        "formal_normalized_action_l2": 3.569367962463,
+        "replacement_normalized_action_l2": 0.0,
+        "executed_requested_residual": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.4901161193847656e-08,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0078016535277387e-16,
+          0.0
+        ],
+        "executed_effective_residual_after_ctrlrange": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.311302186279839e-08,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "executed_residual_lost_to_ctrlrange": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.7881393310492655e-09,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0078016535277387e-16,
+          0.0
+        ]
+      },
+      "successful_intervals_from_source": 1,
+      "first_failure_endpoint_or_60": 49,
+      "endpoint_metrics": {
+        "48": {
+          "endpoint": 48,
+          "position_error_m": 0.10982609540224075,
+          "rotation_error_rad": 0.4982773959636688,
+          "objective_score": 0.9736374020576477,
+          "ellipse_squared_contributions": {
+            "position": 0.8376230021737562,
+            "rotation": 0.11034682814592657
+          },
+          "tool_position_error_xyz_actual_minus_reference_m": [
+            -0.033838093280792236,
+            0.0946890851482749,
+            -0.04416710138320923
+          ],
+          "contact": {
+            "active": [
+              "left-target-ring"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  true,
+                  false
+                ]
+              ]
+            ]
+          },
+          "terminated": false
+        },
+        "49": {
+          "endpoint": 49,
+          "position_error_m": 0.12529601156711578,
+          "rotation_error_rad": 0.46246057748794556,
+          "objective_score": 1.0887000560760498,
+          "ellipse_squared_contributions": {
+            "position": 1.0902146190713067,
+            "rotation": 0.09505323810243738
+          },
+          "tool_position_error_xyz_actual_minus_reference_m": [
+            -0.04398167133331299,
+            0.10150920320302248,
+            -0.058826744556427
+          ],
+          "contact": {
+            "active": [
+              "left-target-ring"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  true,
+                  false
+                ]
+              ]
+            ]
+          },
+          "terminated": true
+        }
+      },
+      "endpoint_49_score_delta_vs_formal_PPO": -0.025593280792236328,
+      "endpoint_49_score_strictly_lower_than_formal_PPO": true,
+      "endpoint_49_state_delta_vs_formal_PPO": {
+        "full_qpos_l2": 0.045520197977924955,
+        "controlled_hand_qpos_l2": 0.04116009663357348,
+        "tool_freejoint_qpos_l2": 0.0192487159352292,
+        "target_freejoint_qpos_l2": 0.002724298792208664
+      },
+      "does_not_terminate_earlier_than_formal_PPO": true,
+      "survives_endpoint_49": false,
+      "formal_acceptance_or_commit_allowed": false
+    },
+    {
+      "source_endpoint": 48,
+      "intervention": "one_step_full_36d_zero_residual",
+      "replay_action_equivalent": true,
+      "then_resumed_frozen_deterministic_PPO": true,
+      "intervention_step": {
+        "formal_normalized_action_l2": 3.480501696691612,
+        "replacement_normalized_action_l2": 0.0,
+        "executed_requested_residual": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.4901161193847656e-08,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.5472573499970973e-16,
+          0.0
+        ],
+        "executed_effective_residual_after_ctrlrange": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.311302186279839e-08,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "executed_residual_lost_to_ctrlrange": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.7881393310492655e-09,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.5472573499970973e-16,
+          0.0
+        ]
+      },
+      "successful_intervals_from_source": 0,
+      "first_failure_endpoint_or_60": 49,
+      "endpoint_metrics": {
+        "49": {
+          "endpoint": 49,
+          "position_error_m": 0.12790238857269287,
+          "rotation_error_rad": 0.487457275390625,
+          "objective_score": 1.1142933368682861,
+          "ellipse_squared_contributions": {
+            "position": 1.1360431251805636,
+            "rotation": 0.1056064868138896
+          },
+          "tool_position_error_xyz_actual_minus_reference_m": [
+            -0.04569059610366821,
+            0.10437833983451128,
+            -0.05810809135437012
+          ],
+          "contact": {
+            "active": [
+              "left-target-ring"
+            ],
+            "flags": [
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ]
+              ],
+              [
+                [
+                  false,
+                  false,
+                  false,
+                  false,
+                  false
+                ],
+                [
+                  false,
+                  false,
+                  false,
+                  true,
+                  false
+                ]
+              ]
+            ]
+          },
+          "terminated": true
+        }
+      },
+      "endpoint_49_score_delta_vs_formal_PPO": 0.0,
+      "endpoint_49_score_strictly_lower_than_formal_PPO": false,
+      "endpoint_49_state_delta_vs_formal_PPO": {
+        "full_qpos_l2": 0.028502522284681486,
+        "controlled_hand_qpos_l2": 0.027635408121033645,
+        "tool_freejoint_qpos_l2": 7.90253409579263e-09,
+        "target_freejoint_qpos_l2": 0.00697696170066956
+      },
+      "does_not_terminate_earlier_than_formal_PPO": true,
+      "survives_endpoint_49": false,
+      "formal_acceptance_or_commit_allowed": false
+    }
+  ],
+  "counterfactual_arrays": {
+    "path": "/data_all/zzx/3.2RL/runs/taco_pour_single_pass_endpoint47_49_gate_v1/counterfactual_branches.npz",
+    "sha256": "6104cc9a5c607d9c03b6b6ebd71c78dfc601958586c4ecebc1189d003bf4d53b"
+  },
+  "candidate_evidence_gate": {
+    "predeclared_requirements": {
+      "47": {
+        "suffix_exact": true,
+        "does_not_terminate_earlier": true,
+        "endpoint_49_score_strictly_lower": true,
+        "survives_endpoint_49": false
+      },
+      "48": {
+        "suffix_exact": true,
+        "does_not_terminate_earlier": true,
+        "endpoint_49_score_strictly_lower": false,
+        "survives_endpoint_49": false
+      }
+    },
+    "per_source_requirements_passed": false,
+    "joint_survival_requirement_passed": false,
+    "passed": false,
+    "candidate": {
+      "actor_mini_epochs": 1,
+      "actor_learning_rate_baseline": 0.0001,
+      "actor_learning_rate_candidate": 5e-05
+    },
+    "candidate_may_await_explicit_training_authorization": false,
+    "fresh_training_authorized_by_this_gate": false,
+    "automatic_sweep_allowed": false,
+    "chunk_commit_allowed": false
+  },
+  "interpretation_boundary": {
+    "claim": "A one-step weaker residual intervention mitigates the current endpoint-49 divergence only if the predeclared gate passes.",
+    "not_claimed": [
+      "actor LR 5e-5 is guaranteed to improve training",
+      "the local intervention identifies a smooth physical gradient",
+      "the candidate is an EgoEngine author-recovered parameter"
+    ]
+  }
+}

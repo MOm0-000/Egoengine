@@ -1,0 +1,107 @@
+schema: taco_pour_single_pass_endpoint47_49_gate_v1
+status: authorized_read_only_gate
+paper_faithful: false
+purpose: >-
+  Before authorizing another fresh PPO run, verify that the new single-pass
+  policy's endpoint-48 divergence is locally mitigated when exactly one
+  source-47 or source-48 PPO residual is replaced by the Replay-equivalent
+  zero residual. This gate does not train, tune, accept or commit a chunk.
+
+runtime:
+  backend: CPU_MuJoCo_Warp
+  training_allowed: false
+  optimizer_steps: 0
+  actor_frozen: true
+  critic_frozen: true
+  observation_normalization_frozen: true
+  reward_changed: false
+  objective_changed: false
+  action_bound_changed: false
+  action_distribution_changed: false
+  reference_timing_changed: false
+  action_frame_changed: false
+  PPO_hyperparameters_changed: false
+  chunk_acceptance_allowed: false
+  chunk_commit_allowed: false
+  checkpoint_resume_for_training_allowed: false
+
+aligned_attribution:
+  source_endpoints: [46, 47, 48]
+  state_and_outcome_endpoints: [46, 47, 48, 49]
+  fields:
+    - tool_position_error_xyz
+    - tool_rotation_error
+    - normalized_ellipse_score
+    - contact_flags
+    - named_36d_residual
+    - deterministic_action_saturation
+
+counterfactual:
+  source_endpoints: [47, 48]
+  intervention_control_steps: 1
+  intervention: replace_full_36d_PPO_residual_with_zero
+  replay_equivalence: Replay uses the same reference base command and zero residual
+  continuation: frozen_deterministic_PPO
+  rollout_end_endpoint: 60
+  no_policy_retraining: true
+  no_local_gradient_claim: true
+
+candidate_evidence_gate:
+  per_source_requirements:
+    - restored formal PPO suffix is bitwise identical before intervention
+    - intervention does not terminate earlier than formal PPO
+    - endpoint_49_score_is_strictly_lower_than_formal_PPO
+  joint_requirement: at_least_one_intervention_survives_endpoint_49
+  numeric_improvement_threshold_invented: false
+  passing_effect: candidate_may_be_marked_awaiting_explicit_training_authorization
+  failing_effect: actor_learning_rate_candidate_remains_blocked
+  training_automatically_authorized: false
+
+frozen_next_candidate:
+  sole_future_change: actor_learning_rate
+  baseline: 0.0001
+  candidate: 0.00005
+  actor_mini_epochs: 1
+  approximate_KL_basis:
+    observed_maximum_post_optimizer_fixed_probe_exact_KL_mean: 0.039736180923459874
+    local_quadratic_step_scaling: 0.25
+    approximate_candidate_KL: 0.009934045230864968
+  paper_parameter_recovery_claimed: false
+  fresh_training_authorized: false
+
+inputs:
+  formal_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/report.json
+    sha256: d1690633bb3c29c16f92e8114a9f71142a8bde0d141114abd68fda359eb0344b
+  checkpoint:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/ppo_chunk_20/nn/last_ep_8_rew__5.815153_.pth.gz
+    sha256: 159e7e462b584e10fd62764b82aac3725630088e45ee7720d71cd27bdfe59b97
+  boundary:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/source_boundary.pt.gz
+    sha256: a3646e24af1ba871e5ecc885669508223a5e0f26d3cf29f0482f02678419e337
+  simulator_config:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml
+    sha256: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+  initialization_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/initialization_report.json
+    sha256: 9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a
+  protocol:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/protocol.yaml
+    sha256: e90830ea1971f2238f4de6a54600930ed9b4cb308ada948fb43110a844098ac8
+  objective_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/objective_profile.yaml
+    sha256: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+  observation_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/observation_profile.yaml
+    sha256: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  action_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/action_profile.yaml
+    sha256: 71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4
+  distribution_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/distribution_profile.yaml
+    sha256: 6a4e4bd8f33fa53bfe34f21f822bfa391253cca090892767154320fc9bbfd1b8
+
+artifacts:
+  report: report.json
+  summary: summary.md
+  branches: counterfactual_branches.npz

@@ -18,7 +18,7 @@ PYTHONPATH="$PWD/.env_mjwp313_overlay:$PWD/src:$PWD/scripts:$PWD/external/mink/s
   /data_all/zzx/egoengine/spider/.venv/bin/python -m pytest -q
 ```
 
-On 2026-09-26 this command passed **665 tests and 57 subtests**.
+On 2026-09-26 this command passed **669 tests and 57 subtests**.
 The 19 warnings are known upstream/diagnostic warnings: capsule-mesh MULTICCD
 capacity, PyTorch AMP deprecations, two Trimesh degenerate-volume warnings and
 seven SciPy pickle deprecations.
@@ -57,6 +57,7 @@ runs/taco_pour_postfix_fresh_ppo_credit_instrumented_v1/
 runs/taco_pour_postfix_policy_extremization_audit_v1/
 runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/
 runs/taco_pour_postfix_single_actor_pass_audit_v1/
+runs/taco_pour_single_pass_endpoint47_49_gate_v1/
 ```
 
 The first corrected PPO authorization is consumed. Replay passed the first
@@ -233,6 +234,16 @@ on the fixed source-32--39 probe panel reaches `0.0397362`. Of 32 fixed-seed
 stochastic rollouts, 31 pass endpoint 40 and none finish the 40-step window.
 The single authorization is consumed; no rerun, warm start, sweep or further
 algorithm change is currently authorized.
+
+The subsequent endpoint-47/49 gate is read-only and bitwise reproduces both
+formal CPU traces. Replacing the complete source-47 PPO residual with the
+Replay-equivalent zero residual lowers endpoint-49 score by `0.0255933`, but
+still fails at endpoint 49. The same replacement at source 48 changes the
+controlled hand state while changing the tool free joint by only `7.90e-9` in
+qpos norm; right-hand/tool contact is already absent and the endpoint-49 score
+is unchanged. Neither branch survives endpoint 49, so the predeclared gate
+fails. The `actor_learning_rate: 1e-4 -> 5e-5` candidate is recorded but not
+authorized for training, sweeping, warm start or chunk commit.
 
 ## Archived invalid performance evidence
 

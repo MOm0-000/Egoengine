@@ -116,9 +116,12 @@ def test_artifacts_remain_hash_bound_and_protocol_advances_to_fresh_evidence():
             assert f"source_{source}_y_-1.00_commanded_ctrl" in arrays
 
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
-    blocker = "postfix_single_actor_pass_failed_28_of_40_next_algorithm_decision_required"
-    assert protocol["blocking_checks"] == [blocker]
-    assert protocol["training_ready_scope"] == blocker
+    assert protocol["blocking_checks"] == [
+        "half_LR_candidate_blocked_by_endpoint47_49_read_only_gate_failure"
+    ]
+    assert protocol["training_ready_scope"] == (
+        "half_LR_candidate_blocked_by_endpoint47_49_read_only_gate_failure"
+    )
     assert protocol["historical_observation_normalization_misaligned"][
         "active_algorithm_evidence"
     ] is False
