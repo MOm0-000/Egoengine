@@ -5,9 +5,11 @@ default:
   eligible_for_algorithm_comparison: false
 
 reason: >-
-  Every checkpoint listed below was trained while rollout old likelihoods and
-  PPO recomputed likelihoods used different observation-normalization states.
-  The checkpoints remain useful only for frozen behavioral audits.
+  Every checkpoint under affected_runs was trained while rollout old
+  likelihoods and PPO recomputed likelihoods used different
+  observation-normalization states. The separately listed post-fix checkpoint
+  is valid algorithm evidence but still cannot be resumed because its CPU
+  validation failed and no chunk was committed.
 
 affected_runs:
   taco_pour_corrected_first_ppo_v1:

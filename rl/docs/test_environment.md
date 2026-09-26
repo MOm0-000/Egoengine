@@ -13,12 +13,12 @@ The active Replay→RL chain uses:
 Run the complete suite from the project root with:
 
 ```bash
-PYTHONPATH="$PWD/.env_mjwp313_overlay:$PWD/src:$PWD/external/mink/src" \
+PYTHONPATH="$PWD/.env_mjwp313_overlay:$PWD/src:$PWD/external/mink/src:$PWD/external/human2sim2robot:$PWD/external/spider_compat" \
   OMP_NUM_THREADS=4 \
   /data_all/zzx/egoengine/spider/.venv/bin/python -m pytest -q
 ```
 
-On 2026-09-26 this command passed **656 tests and 57 subtests**.
+On 2026-09-26 this command passed **660 tests and 57 subtests**.
 The 19 warnings are known upstream/diagnostic warnings: capsule-mesh MULTICCD
 capacity, PyTorch AMP deprecations, two Trimesh degenerate-volume warnings and
 seven SciPy pickle deprecations.
@@ -192,6 +192,23 @@ a strict failure: Replay first fails at endpoint 51, while PPO first fails at
 endpoint 40 (`20` validation rows including the failed row). No chunk is
 committed, the checkpoint is not authorized for warm start, and cross-run GPU
 performance comparison remains forbidden.
+
+The read-only post-fix policy-extremization audit reproduces both formal CPU
+traces exactly and reconstructs all 32 actor updates plus eight deferred RMS
+commits from lossless patches. On final-failure probes at sources 34--39, the
+optimizer updates have net signed mean movement `+27.9179` toward the seven
+endpoint-40 saturated directions; 17 optimizer transitions increase the
+focused saturation count and none decrease it. RMS commits have net movement
+`-4.94558`, so the first large global RMS effect does not explain the final
+failure directions. Later passes over one rollout reach mean exact truncated
+KL `0.21234` and an outside-`[0.8,1.2]` ratio fraction of `0.8375`.
+
+Thirty-two fixed-seed stochastic final-policy rollouts are diagnostic only:
+29 reach endpoint 40, 28 pass it, but none pass the complete 40-step window.
+Deterministic CPU validation remains the sole judge. The next frozen candidate
+changes only actor mini-epochs from four to one; it is not authorized to run,
+does not change critic passes, learning rate, reward, action contract or CPU
+acceptance, and cannot warm-start from the failed checkpoint.
 
 ## Archived invalid performance evidence
 

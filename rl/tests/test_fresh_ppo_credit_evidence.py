@@ -79,12 +79,9 @@ def test_evidence_separates_normalizer_state_from_optimizer_update():
 def test_protocol_records_the_fixed_blocker_without_authorizing_fresh_training():
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
     assert protocol["training_ready"] is False
-    assert protocol["training_ready_scope"] == (
-        "postfix_fresh_PPO_failed_20_of_40_no_commit_next_algorithm_decision_required"
-    )
-    assert protocol["blocking_checks"] == [
-        "postfix_fresh_PPO_failed_20_of_40_no_commit_next_algorithm_decision_required"
-    ]
+    blocker = "postfix_single_actor_pass_candidate_requires_separate_training_authorization"
+    assert protocol["training_ready_scope"] == blocker
+    assert protocol["blocking_checks"] == [blocker]
     repair = protocol["runtime_contract"]["observation_normalization"]
     assert repair["status"] == "resolved_local_engineering_contract_gate_passed"
     assert repair["first_pre_optimizer_ratio_max_abs_error_from_one"] == 0.0
@@ -93,3 +90,8 @@ def test_protocol_records_the_fixed_blocker_without_authorizing_fresh_training()
     old = protocol["historical_observation_normalization_misaligned"]
     assert old["active_algorithm_evidence"] is False
     assert old["old_policy_resume_allowed"] is False
+    audit = protocol["evaluation"]["postfix_policy_extremization_audit"]
+    assert audit["formal_CPU_traces_bitwise_reproduced"] is True
+    assert audit["next_single_variable_candidate"]["status"] == (
+        "frozen_not_authorized_to_run"
+    )

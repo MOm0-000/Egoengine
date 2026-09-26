@@ -1,0 +1,67 @@
+schema: taco_pour_postfix_single_actor_pass_candidate_v1
+status: frozen_candidate_not_authorized_to_run
+paper_faithful: false
+purpose: >-
+  Test whether repeated actor passes over one 160-sample rollout drive the
+  post-fix deterministic policy toward broad saturation. This freezes one
+  future single-variable experiment; it does not authorize training.
+
+single_change:
+  field: PPO_actor_mini_epochs
+  baseline: 4
+  candidate: 1
+  actor_updates_per_training_epoch: 1
+  total_actor_updates_over_8_epochs: 8
+
+unchanged:
+  training_worlds: 4
+  training_epochs: 8
+  horizon_per_world_per_epoch: 40
+  samples_per_epoch: 160
+  total_samples: 1280
+  reset_endpoints: [20, 20, 20, 20]
+  seed: 0
+  learning_rate: 0.0001
+  gradient_norm_clip: 1.0
+  KL_early_stop: disabled
+  asymmetric_critic_mini_epochs: 4
+  reward: unchanged
+  objective: taco_pour_local_normalized_ellipse_v1
+  observation: taco_pour_transition_aligned_236d_v1
+  observation_normalization: taco_pour_frozen_rollout_observation_normalization_v1
+  action_distribution: taco_pour_state_feasible_truncated_gaussian_v1
+  residual_scale: 0.05
+  reference_timing: unchanged
+  action_frame: world
+  CPU_validation_start_endpoint: 20
+  CPU_validation_intervals: 40
+  GPU_may_decide_acceptance: false
+
+evidence:
+  report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_policy_extremization_audit_v1/report.json
+    sha256: be896de632c74b7f8c7f4a4c4afb91fc666650c62f0e1f107ec18493175cd5f8
+  findings:
+    optimizer_net_signed_mu_change_toward_final_saturation: 27.917851334437728
+    RMS_commit_net_signed_mu_change_toward_final_saturation: -4.945582751184702
+    optimizer_transitions_increasing_focus_saturation: 17
+    optimizer_transitions_decreasing_focus_saturation: 0
+    maximum_old_to_current_exact_KL_mean: 0.21234022509405198
+    maximum_ratio_outside_0p8_1p2_fraction: 0.8375
+    first_update_ratio_identity_preserved: true
+
+interpretation: >-
+  The failure-focused probes move toward their final saturated directions
+  during optimizer updates, while RMS commits have negative net movement.
+  Later passes over the same rollout exhibit broad likelihood drift. Reducing
+  actor mini-epochs from four to one is the smallest threshold-free test of
+  the multi-pass hypothesis. It does not assert that one pass will succeed.
+
+execution_gate:
+  separately_authorized_fresh_training_required: true
+  warm_start_allowed: false
+  source_checkpoint_resume_allowed: false
+  chunk_commit_allowed_for_diagnostic: false
+  performance_success_claim_requires_CPU_40_of_40: true
+  seed_sweep_allowed: false
+  fallback_hyperparameter_sweep_allowed: false

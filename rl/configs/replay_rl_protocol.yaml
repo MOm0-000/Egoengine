@@ -283,6 +283,39 @@ evaluation:
     checkpoint_resume_allowed: false
     valid_for_same_run_Replay_comparison: true
     valid_for_prior_GPU_run_comparison: false
+  postfix_policy_extremization_audit:
+    status: completed_read_only_single_candidate_frozen_no_training
+    contract: /data_all/zzx/3.2RL/configs/taco_pour_postfix_policy_extremization_audit_v1.yaml
+    report: /data_all/zzx/3.2RL/runs/taco_pour_postfix_policy_extremization_audit_v1/report.json
+    formal_CPU_traces_bitwise_reproduced: true
+    scope: {failure_sources: [34, 35, 36, 37, 38, 39], fixed_probe_sources: [32, 33, 34, 35, 36, 37, 38, 39]}
+    endpoint40:
+      position_error_m: 0.09478072822093964
+      rotation_error_rad: 0.9584488272666931
+      normalized_ellipse_score: 1.015934944152832
+      deterministic_unit_bound_components: 7
+      ctrlrange_loss_max_abs: 0.00000005245208734017126
+      material_ctrlrange_loss: false
+    failure_focus_update_attribution:
+      optimizer_net_signed_mu_change_toward_final_saturation: 27.917851334437728
+      RMS_commit_net_signed_mu_change_toward_final_saturation: -4.945582751184702
+      optimizer_transitions_increasing_saturation: 17
+      optimizer_transitions_decreasing_saturation: 0
+    update_size:
+      maximum_old_to_current_exact_KL_mean: 0.21234022509405198
+      maximum_ratio_outside_0p8_1p2_fraction: 0.8375
+      first_ratio_identity_preserved: true
+    frozen_final_policy_stochastic_diagnostic:
+      seeds: 32
+      reached_endpoint40: 29
+      passed_endpoint40: 28
+      completed_40_step_window: 0
+      formal_acceptance_rule_changed: false
+    next_single_variable_candidate:
+      contract: /data_all/zzx/3.2RL/configs/taco_pour_postfix_single_actor_pass_candidate_v1.yaml
+      status: frozen_not_authorized_to_run
+      change: actor_mini_epochs_4_to_1
+      all_other_algorithm_and_validation_settings_unchanged: true
 
 runtime_contract:
   fail_closed: true
@@ -348,7 +381,7 @@ runtime_contract:
     cpu_commit_endpoint_offset: 20
 
 training_ready: false
-training_ready_scope: postfix_fresh_PPO_failed_20_of_40_no_commit_next_algorithm_decision_required
+training_ready_scope: postfix_single_actor_pass_candidate_requires_separate_training_authorization
 
 audit_results:
   active_input: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/input_audit.json
@@ -372,6 +405,8 @@ audit_results:
   observation_normalization_commit_gate: /data_all/zzx/3.2RL/runs/taco_pour_observation_normalization_commit_gate_v1/report.json
   checkpoint_eligibility: /data_all/zzx/3.2RL/configs/taco_pour_ppo_checkpoint_eligibility_v1.yaml
   postfix_fresh_ppo_credit_instrumented: /data_all/zzx/3.2RL/runs/taco_pour_postfix_fresh_ppo_credit_instrumented_v1/report.json
+  postfix_policy_extremization_audit: /data_all/zzx/3.2RL/runs/taco_pour_postfix_policy_extremization_audit_v1/report.json
+  postfix_single_actor_pass_candidate: /data_all/zzx/3.2RL/configs/taco_pour_postfix_single_actor_pass_candidate_v1.yaml
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -411,7 +446,7 @@ historical_observation_normalization_misaligned:
     - old_checkpoint_task_performance_as_an_algorithm_baseline
 
 blocking_checks:
-  - postfix_fresh_PPO_failed_20_of_40_no_commit_next_algorithm_decision_required
+  - postfix_single_actor_pass_candidate_requires_separate_training_authorization
 result_acceptance_blockers:
   - active_corrected_Replay_passes_only_30_of_40_in_second_window
   - postfix_fresh_PPO_passes_only_19_intervals_before_failure_at_endpoint40
