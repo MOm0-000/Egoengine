@@ -8,7 +8,7 @@ evidence_policy:
   order: [paper, verified_implementation_defect, disclosed_local_proposal]
   paper_page_numbers: one_based_pdf_pages
   copied_defaults_are_author_settings: false
-  current_revision: postfix_fresh_PPO_completed_strict_CPU_gate_failed_no_commit
+  current_revision: postfix_single_actor_pass_completed_strict_CPU_gate_failed_no_commit
 
 inputs:
   setting: user_approved_gt_oracle_validation_not_full_perception_reproduction
@@ -313,9 +313,53 @@ evaluation:
       formal_acceptance_rule_changed: false
     next_single_variable_candidate:
       contract: /data_all/zzx/3.2RL/configs/taco_pour_postfix_single_actor_pass_candidate_v1.yaml
-      status: frozen_not_authorized_to_run
+      status: completed_once_no_rerun_authorized
       change: actor_mini_epochs_4_to_1
       all_other_algorithm_and_validation_settings_unchanged: true
+  postfix_single_actor_pass_diagnostic:
+    status: completed_valid_algorithm_evidence_strict_CPU_gate_failed_no_commit
+    paper_faithful: false
+    paper_deviation: actor_mini_epochs_is_not_published_by_EgoEngine
+    contract: /data_all/zzx/3.2RL/configs/taco_pour_postfix_single_actor_pass_candidate_v1.yaml
+    output: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1
+    report: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/report.json
+    audit: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_audit_v1/report.json
+    sole_change: {actor_mini_epochs: {baseline: 4, candidate: 1}}
+    unchanged_training: {worlds: 4, epochs: 8, samples: 1280, seed: 0, starts: [20, 20, 20, 20]}
+    fresh_actor_critic_optimizer: true
+    old_checkpoint_loaded: false
+    actor_updates: 8
+    critic_mini_epochs: 4
+    replay: {successful_intervals: 30, first_failure_endpoint: 51, committed: false}
+    deterministic_PPO: {successful_intervals: 28, first_failure_endpoint: 49, committed: false}
+    endpoint40:
+      normalized_ellipse_score: 0.5861058235168457
+      deterministic_unit_bound_components: 6
+      materially_worse_than_Replay: false
+    update_contract:
+      first_ratio_max_abs_error_by_epoch: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+      actor_optimizer_updates: 8
+      maximum_post_optimizer_fixed_probe_exact_KL_mean: 0.039736180923459874
+      optimizer_net_signed_mu_change_toward_final_saturation: 13.627201557625085
+      RMS_commit_net_signed_mu_change_toward_final_saturation: -2.1511116162873805
+      optimizer_transitions_increasing_focus_saturation: 8
+      optimizer_transitions_decreasing_focus_saturation: 0
+    frozen_final_policy_stochastic_diagnostic:
+      seeds: 32
+      passed_endpoint40: 31
+      completed_40_step_window: 0
+      result_selection_allowed: false
+    interpretation: >-
+      Reducing actor reuse materially improved deterministic feasibility from
+      the prior valid 19 intervals to 28, so multi-pass extremization was a real
+      contributor. It did not reach same-run Replay or strict 40/40 and is not
+      the only remaining cause.
+    cross_run_causal_limit: >-
+      GPU training is non-deterministic, so 19-to-28 is the predeclared
+      single-variable evidence classification, not a bitwise causal ablation.
+    checkpoint_resume_allowed: false
+    rerun_authorized: false
+    chunk_commit_written: false
 
 runtime_contract:
   fail_closed: true
@@ -381,7 +425,7 @@ runtime_contract:
     cpu_commit_endpoint_offset: 20
 
 training_ready: false
-training_ready_scope: postfix_single_actor_pass_candidate_requires_separate_training_authorization
+training_ready_scope: postfix_single_actor_pass_failed_28_of_40_next_algorithm_decision_required
 
 audit_results:
   active_input: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/input_audit.json
@@ -407,6 +451,8 @@ audit_results:
   postfix_fresh_ppo_credit_instrumented: /data_all/zzx/3.2RL/runs/taco_pour_postfix_fresh_ppo_credit_instrumented_v1/report.json
   postfix_policy_extremization_audit: /data_all/zzx/3.2RL/runs/taco_pour_postfix_policy_extremization_audit_v1/report.json
   postfix_single_actor_pass_candidate: /data_all/zzx/3.2RL/configs/taco_pour_postfix_single_actor_pass_candidate_v1.yaml
+  postfix_single_actor_pass_diagnostic: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/report.json
+  postfix_single_actor_pass_audit: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_audit_v1/report.json
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -446,10 +492,10 @@ historical_observation_normalization_misaligned:
     - old_checkpoint_task_performance_as_an_algorithm_baseline
 
 blocking_checks:
-  - postfix_single_actor_pass_candidate_requires_separate_training_authorization
+  - postfix_single_actor_pass_failed_28_of_40_next_algorithm_decision_required
 result_acceptance_blockers:
   - active_corrected_Replay_passes_only_30_of_40_in_second_window
-  - postfix_fresh_PPO_passes_only_19_intervals_before_failure_at_endpoint40
+  - postfix_single_actor_pass_PPO_passes_only_28_intervals_before_failure_at_endpoint49
   - unpublished_threshold_to_weighted_objective_mapping
   - stable_grasp_and_physical_pour_not_demonstrated
 paper_faithful_run_blockers:

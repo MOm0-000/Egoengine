@@ -70,10 +70,11 @@ def test_update_and_stochastic_audits_report_all_frozen_rows():
     assert stochastic["full_40_step_pass_count"] == 0
 
 
-def test_single_actor_pass_candidate_is_frozen_but_not_authorized():
+def test_single_actor_pass_candidate_was_consumed_once_and_is_fail_closed():
     candidate_path = ROOT / "configs/taco_pour_postfix_single_actor_pass_candidate_v1.yaml"
     candidate = yaml.safe_load(candidate_path.read_text())
-    assert candidate["status"] == "frozen_candidate_not_authorized_to_run"
+    assert candidate["status"] == "completed_single_fresh_diagnostic_training_no_commit"
+    assert candidate["paper_faithful"] is False
     assert candidate["single_change"] == {
         "field": "PPO_actor_mini_epochs",
         "baseline": 4,
@@ -83,6 +84,23 @@ def test_single_actor_pass_candidate_is_frozen_but_not_authorized():
     }
     assert candidate["unchanged"]["learning_rate"] == 0.0001
     assert candidate["unchanged"]["asymmetric_critic_mini_epochs"] == 4
-    assert candidate["execution_gate"]["separately_authorized_fresh_training_required"] is True
+    assert candidate["training"] == {
+        "worlds": 4,
+        "epochs": 8,
+        "horizon_per_world_per_epoch": 40,
+        "samples_per_epoch": 160,
+        "total_samples": 1280,
+        "seed": 0,
+        "fixed_reset_endpoints": [20, 20, 20, 20],
+        "old_actor_or_checkpoint_resume": False,
+        "tail_curriculum": False,
+    }
+    gate = candidate["execution_gate"]
+    assert gate["separately_authorized_fresh_training_required"] is False
+    assert gate["authorization_received"] is True
+    assert gate["authorization_consumed"] is True
+    assert gate["rerun_authorized"] is False
+    assert gate["warm_start_allowed"] is False
+    assert gate["chunk_commit_allowed_for_diagnostic"] is False
     evidence = Path(candidate["evidence"]["report"]["path"])
     assert hashlib.sha256(evidence.read_bytes()).hexdigest() == candidate["evidence"]["report"]["sha256"]

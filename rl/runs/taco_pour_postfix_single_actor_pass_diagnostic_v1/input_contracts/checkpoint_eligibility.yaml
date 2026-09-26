@@ -1,0 +1,61 @@
+schema: taco_ppo_checkpoint_eligibility_v1
+status: active_fail_closed
+default:
+  eligible_for_warm_start: false
+  eligible_for_algorithm_comparison: false
+
+reason: >-
+  Every checkpoint under affected_runs was trained while rollout old
+  likelihoods and PPO recomputed likelihoods used different
+  observation-normalization states. The separately listed post-fix checkpoint
+  is valid algorithm evidence but still cannot be resumed because its CPU
+  validation failed and no chunk was committed.
+
+affected_runs:
+  taco_pour_corrected_first_ppo_v1:
+    ppo_obsnorm_likelihood_misaligned: true
+    eligible_for_warm_start: false
+    eligible_for_algorithm_comparison: false
+    behavioral_audit_only: true
+    retained_compressed_artifact:
+      path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_first_ppo_v1/checkpoint_artifacts/last_ep_8_rew__6.6354837_.pth.gz
+      sha256: 7193da6e2da0e38f41a39edd46569f74da0054455c6388df5a08107413a015eb
+    uncompressed_duplicate_relocated_to_trash:
+      path: /data_all/zzx/3.2RL/TRASH/ppo_obsnorm_likelihood_misaligned_2026-09-26/taco_pour_corrected_first_ppo_v1/last_ep_8_rew__6.6354837_.pth
+      sha256: 51d114580ccce873472f9917180dd376dc6693d4e69d9c6861d08b0fe116ff70
+      repository_tracked: false
+
+  taco_pour_corrected_fresh_ppo_credit_instrumented_v1:
+    ppo_obsnorm_likelihood_misaligned: true
+    eligible_for_warm_start: false
+    eligible_for_algorithm_comparison: false
+    behavioral_audit_only: true
+    uncompressed_duplicate_relocated_to_trash:
+      path: /data_all/zzx/3.2RL/TRASH/ppo_obsnorm_likelihood_misaligned_2026-09-26/taco_pour_corrected_fresh_ppo_credit_instrumented_v1/last_ep_8_rew__6.2799215_.pth
+      sha256: b470c5620cf3b1818c013f09d180795cc8bfcecdf05d6db97cfa9207557f734b
+      repository_tracked: false
+    retained_credit_evidence:
+      initial_actor_state:
+        path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_fresh_ppo_credit_instrumented_v1/credit_audit/initial_actor_state.pt.gz
+        sha256: 3b8e6b80795b1ce6e2134cb3cb3148b3196ea0fc64c6f7d0df40df24f438fa2c
+        behavioral_audit_only: true
+      final_actor_state:
+        path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_fresh_ppo_credit_instrumented_v1/credit_audit/final_actor_state.pt.gz
+        sha256: 443a1542744350252c41da01e0dc70877f467aa30c28bb45107798a951f655c9
+        behavioral_audit_only: true
+
+post_fix_checkpoint:
+  exists: true
+  run: taco_pour_postfix_fresh_ppo_credit_instrumented_v1
+  ppo_obsnorm_likelihood_misaligned: false
+  valid_postfix_algorithm_evidence: true
+  eligible_for_same_run_Replay_comparison: true
+  eligible_for_prior_GPU_run_comparison: false
+  eligible_for_warm_start: false
+  chunk_commit_written: false
+  CPU_validation: {validated_intervals: 20, first_failure_endpoint: 40}
+  retained_compressed_artifact:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_fresh_ppo_credit_instrumented_v1/checkpoint_artifacts/last_ep_8_rew__5.789554_.pth.gz
+    sha256: 044bd57759f16732db32185fb47a5e0f2cfaa56aa10d84c3db44cc640473e38d
+    gzip_payload_sha256: 124e4129c7b03beb95cf8ad9c0c3dbb5249dc0ef786de3fab56a0b76b0072e46
+  old_checkpoint_resume_allowed: false

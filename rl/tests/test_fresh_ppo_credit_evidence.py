@@ -76,10 +76,10 @@ def test_evidence_separates_normalizer_state_from_optimizer_update():
     ) < 4e-6
 
 
-def test_protocol_records_the_fixed_blocker_without_authorizing_fresh_training():
+def test_protocol_records_the_consumed_single_pass_result_without_authorizing_more_training():
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
     assert protocol["training_ready"] is False
-    blocker = "postfix_single_actor_pass_candidate_requires_separate_training_authorization"
+    blocker = "postfix_single_actor_pass_failed_28_of_40_next_algorithm_decision_required"
     assert protocol["training_ready_scope"] == blocker
     assert protocol["blocking_checks"] == [blocker]
     repair = protocol["runtime_contract"]["observation_normalization"]
@@ -93,5 +93,5 @@ def test_protocol_records_the_fixed_blocker_without_authorizing_fresh_training()
     audit = protocol["evaluation"]["postfix_policy_extremization_audit"]
     assert audit["formal_CPU_traces_bitwise_reproduced"] is True
     assert audit["next_single_variable_candidate"]["status"] == (
-        "frozen_not_authorized_to_run"
+        "completed_once_no_rerun_authorized"
     )

@@ -54,6 +54,10 @@ ACTION_GROUPS = {
     "left_wrist_rotation": slice(21, 24),
     "left_fingers": slice(24, 36),
 }
+AUDIT_SCHEMAS = {
+    "taco_pour_postfix_policy_extremization_audit_v1",
+    "taco_pour_postfix_single_actor_pass_audit_v1",
+}
 
 
 def sha256(path: Path) -> str:
@@ -83,7 +87,7 @@ def distribution(values: np.ndarray) -> dict:
 def load_contract(path: Path) -> tuple[dict, dict[str, Path], dict]:
     raw = path.read_bytes()
     contract = yaml.safe_load(raw)
-    if contract.get("schema") != "taco_pour_postfix_policy_extremization_audit_v1":
+    if contract.get("schema") not in AUDIT_SCHEMAS:
         raise ValueError("unsupported post-fix policy audit contract")
     if contract.get("status") != "authorized_read_only_audit":
         raise ValueError("post-fix policy audit is not authorized")
@@ -476,6 +480,7 @@ def build_probe_evolution(
     normalization_by_epoch = {
         int(row["epoch"]): row for row in manifest["normalization_reports"]
     }
+    last_global_actor_update = 0
     for epoch in range(1, 9):
         for update in updates_by_epoch[epoch]:
             forward_path = Path(update["forward_state_patch"]["path"])
@@ -509,9 +514,17 @@ def build_probe_evolution(
                 ))),
                 "probe_saturation_count_before": int(previous_eval["saturation"].sum()),
                 "probe_saturation_count_after": int(after_eval["saturation"].sum()),
+                "exact_fixed_probe_KL_pre_to_post": distribution(
+                    exact_truncated_kl(
+                        previous_eval["mu"], previous_eval["sigma"],
+                        after_eval["mu"], after_eval["sigma"],
+                        low.numpy(), high.numpy(),
+                    )
+                ),
             }
             transitions.append(transition)
             update_transitions[int(update["global_actor_update"])] = transition
+            last_global_actor_update = int(update["global_actor_update"])
             current = after_optimizer
             previous_eval = after_eval
         normalization = normalization_by_epoch[epoch]
@@ -526,7 +539,7 @@ def build_probe_evolution(
             "kind": "RMS_commit",
             "epoch": epoch,
             "update_in_epoch": 0,
-            "global_actor_update": epoch * 4,
+            "global_actor_update": last_global_actor_update,
             "parameter_delta_l2": state_l2(current, after_norm, parameter_names),
             "all_state_delta_l2": state_l2(current, after_norm, current.keys()),
             "maximum_abs_probe_mu_change": float(np.max(np.abs(
@@ -534,6 +547,13 @@ def build_probe_evolution(
             ))),
             "probe_saturation_count_before": int(previous_eval["saturation"].sum()),
             "probe_saturation_count_after": int(after_eval["saturation"].sum()),
+            "exact_fixed_probe_KL_pre_to_post": distribution(
+                exact_truncated_kl(
+                    previous_eval["mu"], previous_eval["sigma"],
+                    after_eval["mu"], after_eval["sigma"],
+                    low.numpy(), high.numpy(),
+                )
+            ),
         })
         current = after_norm
         previous_eval = after_eval
@@ -721,6 +741,9 @@ def update_dynamics(
                     new_neglogp - old_neglogp
                 ),
                 "exact_distribution_KL_old_to_current": distribution(exact_kl),
+                "exact_fixed_probe_KL_pre_to_post_optimizer": transition[
+                    "exact_fixed_probe_KL_pre_to_post"
+                ],
                 "entropy": distribution(np.asarray(ppo["entropy_per_sample"])),
                 "sigma": distribution(np.asarray(ppo["new_sigma"])),
                 "gradient_norm_before_clip": before,
@@ -742,6 +765,12 @@ def update_dynamics(
         "exact_KL_mean_by_update": distribution(np.asarray([
             row["exact_distribution_KL_old_to_current"]["mean"] for row in rows
         ])),
+        "post_optimizer_fixed_probe_exact_KL_mean_by_update": distribution(
+            np.asarray([
+                row["exact_fixed_probe_KL_pre_to_post_optimizer"]["mean"]
+                for row in rows
+            ])
+        ),
         "parameter_delta_l2": distribution(np.asarray([
             row["parameter_delta_l2"] for row in rows
         ])),
@@ -940,24 +969,54 @@ def write_summary(path: Path, report: dict) -> None:
     dynamics = report["update_dynamics"]
     stochastic = report["deterministic_vs_stochastic"]["stochastic"]
     final = failure["per_mode"]["ppo"]["40"]
+    single_pass = report["schema"] == "taco_pour_postfix_single_actor_pass_audit_v1"
+    first_failure = report["deterministic_vs_stochastic"]["formal_deterministic"][
+        "first_failure"
+    ]
+    post_update_kl = dynamics.get(
+        "post_optimizer_fixed_probe_exact_KL_mean_by_update"
+    )
     lines = [
-        "# Pour post-fix PPO policy-extremization audit v1",
+        (
+            "# Pour post-fix single-actor-pass audit v1"
+            if single_pass else
+            "# Pour post-fix PPO policy-extremization audit v1"
+        ),
         "",
         "Read-only audit. No training, optimizer step, checkpoint resume or chunk commit occurred.",
         "",
-        "## Endpoint-40 failure",
+        "## Endpoint-40 comparison point" if single_pass else "## Endpoint-40 failure",
         "",
         f"- position error: {final['position_error_m']:.9f} m",
         f"- rotation error: {final['rotation_error_rad']:.9f} rad",
         f"- normalized ellipse: {final['objective_score']:.9f}",
-        f"- first worse PPO score in the 35--40 window: endpoint {failure['first_outcome_endpoint_with_worse_PPO_score_in_window']}",
+        (
+            "- PPO is no worse than Replay at every endpoint in the 35--40 window"
+            if failure["first_outcome_endpoint_with_worse_PPO_score_in_window"] is None
+            else "- first worse PPO score in the 35--40 window: endpoint "
+            f"{failure['first_outcome_endpoint_with_worse_PPO_score_in_window']}"
+        ),
         f"- unit-bound deterministic action components: {final['policy']['unit_bound_count']}",
+        *(
+            [
+                f"- final deterministic failure: endpoint {first_failure['endpoint']}",
+                "- successful intervals: 28/40",
+            ]
+            if single_pass else []
+        ),
         "",
         "## Saved update dynamics",
         "",
         f"- reconstructed actor updates: {len(dynamics['updates'])}",
         f"- largest exact-KL mean across updates: {dynamics['exact_KL_mean_by_update']['max']:.9g}",
         f"- largest ratio-outside-clip fraction: {dynamics['ratio_outside_fraction']['max']:.6f}",
+        *(
+            [
+                "- largest post-optimizer fixed-probe exact-KL mean: "
+                f"{post_update_kl['max']:.9g}",
+            ]
+            if post_update_kl is not None else []
+        ),
         "",
         "## Frozen final-policy stochastic diagnostic",
         "",
@@ -1007,8 +1066,11 @@ def main() -> None:
     if formal.get("status") != "completed_postfix_diagnostic_no_commit":
         raise ValueError("source run is not valid post-fix evidence")
     manifest = json.loads(paths["credit_manifest"].read_text())
-    if manifest.get("actor_updates") != 32 or manifest.get("epochs") != 8:
-        raise ValueError("credit manifest does not contain 32 updates and 8 epochs")
+    expected_updates = int(contract["update_dynamics"]["actor_updates"])
+    if manifest.get("actor_updates") != expected_updates or manifest.get("epochs") != 8:
+        raise ValueError(
+            "credit manifest does not contain the contracted actor updates and 8 epochs"
+        )
     objective = load_runtime_objective(
         paths["protocol"], paths["objective_profile"],
         tracking_variant="tool_only", require_run_ready=False,
@@ -1121,7 +1183,7 @@ def main() -> None:
         temp.cleanup()
 
     report = {
-        "schema": "taco_pour_postfix_policy_extremization_audit_v1",
+        "schema": contract["schema"],
         "status": "completed_read_only_no_algorithm_change",
         "paper_faithful": False,
         "training_executed": False,

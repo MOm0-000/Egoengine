@@ -1,0 +1,4874 @@
+{
+  "schema": "taco_corrected_fresh_ppo_credit_instrumentation_v2",
+  "status": "completed",
+  "paper_faithful": false,
+  "worlds": 4,
+  "horizon": 40,
+  "epochs": 8,
+  "actor_updates": 8,
+  "right_wrist_y_action_index": 1,
+  "initial_actor": {
+    "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/initial_actor_state.pt.gz",
+    "artifact_sha256": "3b8e6b80795b1ce6e2134cb3cb3148b3196ea0fc64c6f7d0df40df24f438fa2c",
+    "uncompressed_sha256": "bf108c159bc25718f430f0ad94d3a384aba107c1d1920e8991c5c7d4688c315c",
+    "model_state_sha256": "90952c63eea114643ef30b320c64cf64c4cafd0c0e8a4522412ecf62b0a73b33",
+    "bytes": 24321355
+  },
+  "final_actor": {
+    "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/final_actor_state.pt.gz",
+    "artifact_sha256": "e2b4d18c4f0c749c0d1cd55cc5de85950ed8a2e00f9cb3f0b6a7a0f830141ada",
+    "uncompressed_sha256": "48d67981d03c259498222b4d16922e95a844a9a9404a2b5439bae79e421b3ffd",
+    "model_state_sha256": "b70edbe38f65c83d230927daf9b383aa0c4d572e28db1407c7ca8e9f6a163709",
+    "bytes": 24661810
+  },
+  "exact_intermediate_actor_reconstruction": "initial state plus ordered lossless XOR forward-state, optimizer-state, and deferred normalization-state patches",
+  "epoch_reports": [
+    {
+      "epoch": 1,
+      "samples": 160,
+      "actor_updates": 1,
+      "credit_rows": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/epoch_0001_credit_rows.npz",
+        "sha256": "09c9431c6c9f15332733e43cc76cf0d2151f56f8ebcf4ff3649613b7ad3a7f14"
+      },
+      "wrist_y_preupdate_bins": [
+        {
+          "interval": [
+            -1.0,
+            -0.5
+          ],
+          "count": 56,
+          "mean_reward": 0.2390913963317871,
+          "mean_return": 1.6971991062164307,
+          "mean_value": -0.033439356833696365,
+          "mean_raw_advantage": 1.7306385040283203,
+          "mean_normalized_advantage": 0.0739065483212471,
+          "termination_outcome_counts": {
+            "-1": 19,
+            "40": 12,
+            "53": 15,
+            "55": 10
+          }
+        },
+        {
+          "interval": [
+            -0.5,
+            0.0
+          ],
+          "count": 49,
+          "mean_reward": 0.21869342029094696,
+          "mean_return": 1.5116071701049805,
+          "mean_value": -0.05227683112025261,
+          "mean_raw_advantage": 1.563883900642395,
+          "mean_normalized_advantage": -0.06011515110731125,
+          "termination_outcome_counts": {
+            "-1": 17,
+            "40": 13,
+            "53": 9,
+            "55": 10
+          }
+        },
+        {
+          "interval": [
+            0.0,
+            0.5
+          ],
+          "count": 34,
+          "mean_reward": 0.2122669517993927,
+          "mean_return": 1.4239754676818848,
+          "mean_value": -0.061764225363731384,
+          "mean_raw_advantage": 1.4857395887374878,
+          "mean_normalized_advantage": -0.12292027473449707,
+          "termination_outcome_counts": {
+            "-1": 9,
+            "40": 9,
+            "53": 7,
+            "55": 9
+          }
+        },
+        {
+          "interval": [
+            0.5,
+            1.0
+          ],
+          "count": 21,
+          "mean_reward": 0.27594277262687683,
+          "mean_return": 1.783033847808838,
+          "mean_value": -0.03257451578974724,
+          "mean_raw_advantage": 1.8156083822250366,
+          "mean_normalized_advantage": 0.1421976387500763,
+          "termination_outcome_counts": {
+            "-1": 7,
+            "40": 6,
+            "53": 2,
+            "55": 6
+          }
+        }
+      ],
+      "actor_state_sha256_after_epoch": "1219bf55d26f0b367df09c57de5156de91af47d7411d8e8ae50972b7ec6b2de7",
+      "observation_normalization": {
+        "epoch": 1,
+        "version_used_for_rollout_and_updates": 0,
+        "statistics_committed_after_updates": true,
+        "before": {
+          "actor": {
+            "enabled": true,
+            "version": 0,
+            "state_sha256": "96e383e792b441223b3301ef5b6da2d7bdea5ffca5cb2e512a3c25aee0510eec",
+            "count": 1.0,
+            "mean_sha256": "15e48fc7fc31a5079e993cbd78eaf8d4f8e7391f8b1e4627206ed5005f69ba07",
+            "variance_sha256": "ea6a5bf0c59d309c3fb277307000c562daf11cdf4073988c30637ffd5a05bbac"
+          },
+          "critic": {
+            "enabled": true,
+            "version": 0,
+            "state_sha256": "797484074432318b2da962454b5d65366cae553e4897792724d6f40ef4aef441",
+            "count": 1.0,
+            "mean_sha256": "e70bdab0235b92f59f56823a1dc5ed738f79684f69da942e732cde1ac9ce279d",
+            "variance_sha256": "4d6ac33bae779c52ec39baed7218d78f0d9d1cc48d9729cce5c4892be238dfb9"
+          }
+        },
+        "frozen_before_commit": {
+          "actor": {
+            "enabled": true,
+            "version": 0,
+            "state_sha256": "96e383e792b441223b3301ef5b6da2d7bdea5ffca5cb2e512a3c25aee0510eec",
+            "count": 1.0,
+            "mean_sha256": "15e48fc7fc31a5079e993cbd78eaf8d4f8e7391f8b1e4627206ed5005f69ba07",
+            "variance_sha256": "ea6a5bf0c59d309c3fb277307000c562daf11cdf4073988c30637ffd5a05bbac"
+          },
+          "critic": {
+            "enabled": true,
+            "version": 0,
+            "state_sha256": "797484074432318b2da962454b5d65366cae553e4897792724d6f40ef4aef441",
+            "count": 1.0,
+            "mean_sha256": "e70bdab0235b92f59f56823a1dc5ed738f79684f69da942e732cde1ac9ce279d",
+            "variance_sha256": "4d6ac33bae779c52ec39baed7218d78f0d9d1cc48d9729cce5c4892be238dfb9"
+          }
+        },
+        "after": {
+          "actor": {
+            "enabled": true,
+            "version": 1,
+            "state_sha256": "b4723d7261b2dbce85954cd3420e81b34d4d56846cddbc17fd6fb7a060c4e6ec",
+            "count": 161.0,
+            "mean_sha256": "44560a533034d4db6e30299488db7f555682d2c023db7af3f9487ce7989e1383",
+            "variance_sha256": "496c0ebe10f74fb2cf73f46d2732cf74e01330e62a29041a1a92005b69e65ef9"
+          },
+          "critic": {
+            "enabled": true,
+            "version": 1,
+            "state_sha256": "4d6ff3c306a0ff4e40552daa065ba7399080dd3635d274bd91629c5d146f5b8e",
+            "count": 161.0,
+            "mean_sha256": "bb17bb3c6b55ed7a7b74e521830a065cfbf9a3d662d3151d8e26a603147780df",
+            "variance_sha256": "251a2e6bbf8cc5c6307a87a489f7b4ddd6f6af56abd1303e9007a8996cd90266"
+          }
+        },
+        "actor_state_patch": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0001_normalization_state_patch.npz",
+          "sha256": "7f77a73144ea8bdd23b992fa14aa1793abcdb9a26ee2255deaab5d46c5d466c5",
+          "bytes": 34577,
+          "before_model_state_sha256": "5e96b17e37067b02a037120b442631561029a7ea2f84f1ba37db7fb82a886092",
+          "after_model_state_sha256": "1219bf55d26f0b367df09c57de5156de91af47d7411d8e8ae50972b7ec6b2de7"
+        }
+      }
+    },
+    {
+      "epoch": 2,
+      "samples": 160,
+      "actor_updates": 1,
+      "credit_rows": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/epoch_0002_credit_rows.npz",
+        "sha256": "207ef3bf935f5de73157fdccce03fbd8bf1ddedb84e529cd87bcd7d545f748d8"
+      },
+      "wrist_y_preupdate_bins": [
+        {
+          "interval": [
+            -1.0,
+            -0.5
+          ],
+          "count": 38,
+          "mean_reward": 0.22598008811473846,
+          "mean_return": 1.8835601806640625,
+          "mean_value": 0.8058709502220154,
+          "mean_raw_advantage": 1.077689290046692,
+          "mean_normalized_advantage": 0.09727659821510315,
+          "termination_outcome_counts": {
+            "-1": 16,
+            "36": 1,
+            "40": 5,
+            "42": 1,
+            "50": 7,
+            "51": 7,
+            "52": 1
+          }
+        },
+        {
+          "interval": [
+            -0.5,
+            0.0
+          ],
+          "count": 52,
+          "mean_reward": 0.22323153913021088,
+          "mean_return": 2.0424158573150635,
+          "mean_value": 0.7708176374435425,
+          "mean_raw_advantage": 1.2715981006622314,
+          "mean_normalized_advantage": 0.23592406511306763,
+          "termination_outcome_counts": {
+            "-1": 20,
+            "24": 1,
+            "36": 2,
+            "40": 5,
+            "42": 1,
+            "50": 7,
+            "51": 9,
+            "52": 7
+          }
+        },
+        {
+          "interval": [
+            0.0,
+            0.5
+          ],
+          "count": 33,
+          "mean_reward": 0.15119528770446777,
+          "mean_return": 1.177262306213379,
+          "mean_value": 0.761673092842102,
+          "mean_raw_advantage": 0.41558918356895447,
+          "mean_normalized_advantage": -0.37613433599472046,
+          "termination_outcome_counts": {
+            "-1": 8,
+            "36": 4,
+            "40": 6,
+            "50": 6,
+            "51": 6,
+            "52": 3
+          }
+        },
+        {
+          "interval": [
+            0.5,
+            1.0
+          ],
+          "count": 37,
+          "mean_reward": 0.19406937062740326,
+          "mean_return": 1.5577739477157593,
+          "mean_value": 0.7504013776779175,
+          "mean_raw_advantage": 0.8073728084564209,
+          "mean_normalized_advantage": -0.09600358456373215,
+          "termination_outcome_counts": {
+            "-1": 13,
+            "24": 3,
+            "36": 2,
+            "40": 4,
+            "50": 5,
+            "51": 9,
+            "52": 1
+          }
+        }
+      ],
+      "actor_state_sha256_after_epoch": "bd1a5780b74cda953f84db6cb3827c4167a125043548be39e1fabee6c8b70714",
+      "observation_normalization": {
+        "epoch": 2,
+        "version_used_for_rollout_and_updates": 1,
+        "statistics_committed_after_updates": true,
+        "before": {
+          "actor": {
+            "enabled": true,
+            "version": 1,
+            "state_sha256": "b4723d7261b2dbce85954cd3420e81b34d4d56846cddbc17fd6fb7a060c4e6ec",
+            "count": 161.0,
+            "mean_sha256": "44560a533034d4db6e30299488db7f555682d2c023db7af3f9487ce7989e1383",
+            "variance_sha256": "496c0ebe10f74fb2cf73f46d2732cf74e01330e62a29041a1a92005b69e65ef9"
+          },
+          "critic": {
+            "enabled": true,
+            "version": 1,
+            "state_sha256": "4d6ff3c306a0ff4e40552daa065ba7399080dd3635d274bd91629c5d146f5b8e",
+            "count": 161.0,
+            "mean_sha256": "bb17bb3c6b55ed7a7b74e521830a065cfbf9a3d662d3151d8e26a603147780df",
+            "variance_sha256": "251a2e6bbf8cc5c6307a87a489f7b4ddd6f6af56abd1303e9007a8996cd90266"
+          }
+        },
+        "frozen_before_commit": {
+          "actor": {
+            "enabled": true,
+            "version": 1,
+            "state_sha256": "b4723d7261b2dbce85954cd3420e81b34d4d56846cddbc17fd6fb7a060c4e6ec",
+            "count": 161.0,
+            "mean_sha256": "44560a533034d4db6e30299488db7f555682d2c023db7af3f9487ce7989e1383",
+            "variance_sha256": "496c0ebe10f74fb2cf73f46d2732cf74e01330e62a29041a1a92005b69e65ef9"
+          },
+          "critic": {
+            "enabled": true,
+            "version": 1,
+            "state_sha256": "4d6ff3c306a0ff4e40552daa065ba7399080dd3635d274bd91629c5d146f5b8e",
+            "count": 161.0,
+            "mean_sha256": "bb17bb3c6b55ed7a7b74e521830a065cfbf9a3d662d3151d8e26a603147780df",
+            "variance_sha256": "251a2e6bbf8cc5c6307a87a489f7b4ddd6f6af56abd1303e9007a8996cd90266"
+          }
+        },
+        "after": {
+          "actor": {
+            "enabled": true,
+            "version": 2,
+            "state_sha256": "d672fab4d238ed5bd4fadad8102051c1c0a19aa3844f6ab5900907537ea5b59e",
+            "count": 321.0,
+            "mean_sha256": "295ca8890c5c94137e455c934db5bd103a2168b2e756536bd6d17ebd3874721c",
+            "variance_sha256": "87924116d2bf20d17f9d208acfb75c9280e9839aa2e504dde36a121761322e54"
+          },
+          "critic": {
+            "enabled": true,
+            "version": 2,
+            "state_sha256": "66a7922df2a1e31c739e9d22b6cd64ca3aaf95606f26fd828306af8226a115ef",
+            "count": 321.0,
+            "mean_sha256": "12ce46b829be81e8e2fcac0f5d5dc87066c0bb3ebbc9579c06e227da300e1788",
+            "variance_sha256": "e17a73d219214b83b4489360e76030be84e245e28b1db089cde720f3c81171d2"
+          }
+        },
+        "actor_state_patch": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0002_normalization_state_patch.npz",
+          "sha256": "0e2252d128b7287c75d285fac2c00b25caac143368982a1e2b18c16905ac14eb",
+          "bytes": 34768,
+          "before_model_state_sha256": "16bb7f07fe508853e5710b5ee71e52c171a12d66ca0eed4572aa726b440b4bc8",
+          "after_model_state_sha256": "bd1a5780b74cda953f84db6cb3827c4167a125043548be39e1fabee6c8b70714"
+        }
+      }
+    },
+    {
+      "epoch": 3,
+      "samples": 160,
+      "actor_updates": 1,
+      "credit_rows": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/epoch_0003_credit_rows.npz",
+        "sha256": "b53ccfed2fc76d87a9295a0aa4866d5ef37fbcfd17952666296a2e5a73d38276"
+      },
+      "wrist_y_preupdate_bins": [
+        {
+          "interval": [
+            -1.0,
+            -0.5
+          ],
+          "count": 39,
+          "mean_reward": 0.2938423752784729,
+          "mean_return": 3.0020675659179688,
+          "mean_value": 1.0588796138763428,
+          "mean_raw_advantage": 1.943187952041626,
+          "mean_normalized_advantage": 0.29063519835472107,
+          "termination_outcome_counts": {
+            "-1": 12,
+            "40": 4,
+            "42": 1,
+            "47": 9,
+            "51": 1,
+            "55": 7,
+            "56": 5
+          }
+        },
+        {
+          "interval": [
+            -0.5,
+            0.0
+          ],
+          "count": 49,
+          "mean_reward": 0.2544540762901306,
+          "mean_return": 2.4494051933288574,
+          "mean_value": 0.9842311143875122,
+          "mean_raw_advantage": 1.4651739597320557,
+          "mean_normalized_advantage": 0.01791769079864025,
+          "termination_outcome_counts": {
+            "-1": 14,
+            "40": 2,
+            "42": 2,
+            "47": 8,
+            "51": 3,
+            "55": 13,
+            "56": 7
+          }
+        },
+        {
+          "interval": [
+            0.0,
+            0.5
+          ],
+          "count": 50,
+          "mean_reward": 0.2845611572265625,
+          "mean_return": 2.3622806072235107,
+          "mean_value": 0.9975280165672302,
+          "mean_raw_advantage": 1.3647525310516357,
+          "mean_normalized_advantage": -0.03937491029500961,
+          "termination_outcome_counts": {
+            "-1": 15,
+            "40": 8,
+            "42": 1,
+            "47": 8,
+            "51": 1,
+            "55": 12,
+            "56": 5
+          }
+        },
+        {
+          "interval": [
+            0.5,
+            1.0
+          ],
+          "count": 22,
+          "mean_reward": 0.2138005644083023,
+          "mean_return": 1.5100337266921997,
+          "mean_value": 0.8924245238304138,
+          "mean_raw_advantage": 0.6176092624664307,
+          "mean_normalized_advantage": -0.4656365215778351,
+          "termination_outcome_counts": {
+            "-1": 5,
+            "40": 6,
+            "47": 2,
+            "51": 2,
+            "55": 3,
+            "56": 4
+          }
+        }
+      ],
+      "actor_state_sha256_after_epoch": "90abc71ee43c6345b353747f3d536cf5c84cabf68e0e43f8df4bf52ea4cdf002",
+      "observation_normalization": {
+        "epoch": 3,
+        "version_used_for_rollout_and_updates": 2,
+        "statistics_committed_after_updates": true,
+        "before": {
+          "actor": {
+            "enabled": true,
+            "version": 2,
+            "state_sha256": "d672fab4d238ed5bd4fadad8102051c1c0a19aa3844f6ab5900907537ea5b59e",
+            "count": 321.0,
+            "mean_sha256": "295ca8890c5c94137e455c934db5bd103a2168b2e756536bd6d17ebd3874721c",
+            "variance_sha256": "87924116d2bf20d17f9d208acfb75c9280e9839aa2e504dde36a121761322e54"
+          },
+          "critic": {
+            "enabled": true,
+            "version": 2,
+            "state_sha256": "66a7922df2a1e31c739e9d22b6cd64ca3aaf95606f26fd828306af8226a115ef",
+            "count": 321.0,
+            "mean_sha256": "12ce46b829be81e8e2fcac0f5d5dc87066c0bb3ebbc9579c06e227da300e1788",
+            "variance_sha256": "e17a73d219214b83b4489360e76030be84e245e28b1db089cde720f3c81171d2"
+          }
+        },
+        "frozen_before_commit": {
+          "actor": {
+            "enabled": true,
+            "version": 2,
+            "state_sha256": "d672fab4d238ed5bd4fadad8102051c1c0a19aa3844f6ab5900907537ea5b59e",
+            "count": 321.0,
+            "mean_sha256": "295ca8890c5c94137e455c934db5bd103a2168b2e756536bd6d17ebd3874721c",
+            "variance_sha256": "87924116d2bf20d17f9d208acfb75c9280e9839aa2e504dde36a121761322e54"
+          },
+          "critic": {
+            "enabled": true,
+            "version": 2,
+            "state_sha256": "66a7922df2a1e31c739e9d22b6cd64ca3aaf95606f26fd828306af8226a115ef",
+            "count": 321.0,
+            "mean_sha256": "12ce46b829be81e8e2fcac0f5d5dc87066c0bb3ebbc9579c06e227da300e1788",
+            "variance_sha256": "e17a73d219214b83b4489360e76030be84e245e28b1db089cde720f3c81171d2"
+          }
+        },
+        "after": {
+          "actor": {
+            "enabled": true,
+            "version": 3,
+            "state_sha256": "a69df10a35c6273c8bd57a4de3b68ca01f8b8cc1e53209ef1f2c98db3e956e70",
+            "count": 481.0,
+            "mean_sha256": "e72ba2d729e27c17063a76302e8b65f1dd2e48b9afedccb0aae9900ffc2722e9",
+            "variance_sha256": "9d1433cd33e45a776bb8a711b44f3d2829d7067a0ecce5cb61aee233e2555a0a"
+          },
+          "critic": {
+            "enabled": true,
+            "version": 3,
+            "state_sha256": "5f0c1f86529f318e21670f130489f0e09978ee7113373cd19fa0601d0a54a7d4",
+            "count": 481.0,
+            "mean_sha256": "07d5e11d48865e583915d6a95b2f3797e059cdfdd6dfa354b6f5133a39511b5a",
+            "variance_sha256": "d81f609e15d5e9f6b54fc57c1348792ae6aae3ff0144a9a101946825f6006dec"
+          }
+        },
+        "actor_state_patch": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0003_normalization_state_patch.npz",
+          "sha256": "436dee4f59021d4809536014c91f51f91c717c89f141fdd84e9a870ecc84e51a",
+          "bytes": 34777,
+          "before_model_state_sha256": "56e835e08bc6d13fe05f76512bf1088c34459521017c286b715898e52e2266c4",
+          "after_model_state_sha256": "90abc71ee43c6345b353747f3d536cf5c84cabf68e0e43f8df4bf52ea4cdf002"
+        }
+      }
+    },
+    {
+      "epoch": 4,
+      "samples": 160,
+      "actor_updates": 1,
+      "credit_rows": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/epoch_0004_credit_rows.npz",
+        "sha256": "b6e1c92bc1baa5df5fdc3581fb90435fc784d5235823828b2a527eccfb26b49f"
+      },
+      "wrist_y_preupdate_bins": [
+        {
+          "interval": [
+            -1.0,
+            -0.5
+          ],
+          "count": 39,
+          "mean_reward": 0.2396395206451416,
+          "mean_return": 1.9227181673049927,
+          "mean_value": 1.2674028873443604,
+          "mean_raw_advantage": 0.6553152203559875,
+          "mean_normalized_advantage": 0.13410185277462006,
+          "termination_outcome_counts": {
+            "-1": 11,
+            "41": 6,
+            "42": 7,
+            "43": 4,
+            "46": 3,
+            "49": 2,
+            "50": 6
+          }
+        },
+        {
+          "interval": [
+            -0.5,
+            0.0
+          ],
+          "count": 46,
+          "mean_reward": 0.2404661774635315,
+          "mean_return": 2.0071380138397217,
+          "mean_value": 1.358444094657898,
+          "mean_raw_advantage": 0.6486939191818237,
+          "mean_normalized_advantage": 0.1287182718515396,
+          "termination_outcome_counts": {
+            "-1": 11,
+            "41": 10,
+            "42": 4,
+            "43": 6,
+            "46": 3,
+            "49": 3,
+            "50": 9
+          }
+        },
+        {
+          "interval": [
+            0.0,
+            0.5
+          ],
+          "count": 42,
+          "mean_reward": 0.20129138231277466,
+          "mean_return": 1.6849836111068726,
+          "mean_value": 1.2739307880401611,
+          "mean_raw_advantage": 0.4110528528690338,
+          "mean_normalized_advantage": -0.06449879705905914,
+          "termination_outcome_counts": {
+            "-1": 6,
+            "41": 8,
+            "42": 6,
+            "43": 6,
+            "46": 4,
+            "49": 2,
+            "50": 10
+          }
+        },
+        {
+          "interval": [
+            0.5,
+            1.0
+          ],
+          "count": 33,
+          "mean_reward": 0.16942156851291656,
+          "mean_return": 1.4168195724487305,
+          "mean_value": 1.241075873374939,
+          "mean_raw_advantage": 0.17574365437030792,
+          "mean_normalized_advantage": -0.25581997632980347,
+          "termination_outcome_counts": {
+            "-1": 6,
+            "41": 5,
+            "42": 5,
+            "43": 7,
+            "46": 3,
+            "49": 3,
+            "50": 4
+          }
+        }
+      ],
+      "actor_state_sha256_after_epoch": "a3ed1e3b1c4d18d2d7006713f653dd4bd7a9e90e661d3fd6246ddf43d4e0fd1c",
+      "observation_normalization": {
+        "epoch": 4,
+        "version_used_for_rollout_and_updates": 3,
+        "statistics_committed_after_updates": true,
+        "before": {
+          "actor": {
+            "enabled": true,
+            "version": 3,
+            "state_sha256": "a69df10a35c6273c8bd57a4de3b68ca01f8b8cc1e53209ef1f2c98db3e956e70",
+            "count": 481.0,
+            "mean_sha256": "e72ba2d729e27c17063a76302e8b65f1dd2e48b9afedccb0aae9900ffc2722e9",
+            "variance_sha256": "9d1433cd33e45a776bb8a711b44f3d2829d7067a0ecce5cb61aee233e2555a0a"
+          },
+          "critic": {
+            "enabled": true,
+            "version": 3,
+            "state_sha256": "5f0c1f86529f318e21670f130489f0e09978ee7113373cd19fa0601d0a54a7d4",
+            "count": 481.0,
+            "mean_sha256": "07d5e11d48865e583915d6a95b2f3797e059cdfdd6dfa354b6f5133a39511b5a",
+            "variance_sha256": "d81f609e15d5e9f6b54fc57c1348792ae6aae3ff0144a9a101946825f6006dec"
+          }
+        },
+        "frozen_before_commit": {
+          "actor": {
+            "enabled": true,
+            "version": 3,
+            "state_sha256": "a69df10a35c6273c8bd57a4de3b68ca01f8b8cc1e53209ef1f2c98db3e956e70",
+            "count": 481.0,
+            "mean_sha256": "e72ba2d729e27c17063a76302e8b65f1dd2e48b9afedccb0aae9900ffc2722e9",
+            "variance_sha256": "9d1433cd33e45a776bb8a711b44f3d2829d7067a0ecce5cb61aee233e2555a0a"
+          },
+          "critic": {
+            "enabled": true,
+            "version": 3,
+            "state_sha256": "5f0c1f86529f318e21670f130489f0e09978ee7113373cd19fa0601d0a54a7d4",
+            "count": 481.0,
+            "mean_sha256": "07d5e11d48865e583915d6a95b2f3797e059cdfdd6dfa354b6f5133a39511b5a",
+            "variance_sha256": "d81f609e15d5e9f6b54fc57c1348792ae6aae3ff0144a9a101946825f6006dec"
+          }
+        },
+        "after": {
+          "actor": {
+            "enabled": true,
+            "version": 4,
+            "state_sha256": "148e68856095d7b15753e814a048e09349e2e1b3f9c485f1656a1409522e55a8",
+            "count": 641.0,
+            "mean_sha256": "10553a7f96920ca33f151d95dc5f9fd6969842e4e6e26693dd210d4d57a1c916",
+            "variance_sha256": "b5754b547ae7ceb49a54b34767accad6ac0c430858a246ae4d961e4f4bd7013f"
+          },
+          "critic": {
+            "enabled": true,
+            "version": 4,
+            "state_sha256": "c044d99baedccc9d3d505975eb45e7d180befec49f6fda95661bf96c68dc0763",
+            "count": 641.0,
+            "mean_sha256": "fa7bc673000bbdf57bbba423cc65c3dba20a89806a5e8a5de3f298e0d2550a49",
+            "variance_sha256": "91c15ac2470e40f7c9445f8366ccbc7bd6d6669539d496c171e722869d21aebc"
+          }
+        },
+        "actor_state_patch": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0004_normalization_state_patch.npz",
+          "sha256": "e3d36e5743350bf980f6e48580c7e6e4f48b868a5039bc84bf35546fed44c017",
+          "bytes": 34761,
+          "before_model_state_sha256": "1d01d809f1c9ef8c628c83d22d0ee2833bf8acd90204b2229f21afb4d687b0ff",
+          "after_model_state_sha256": "a3ed1e3b1c4d18d2d7006713f653dd4bd7a9e90e661d3fd6246ddf43d4e0fd1c"
+        }
+      }
+    },
+    {
+      "epoch": 5,
+      "samples": 160,
+      "actor_updates": 1,
+      "credit_rows": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/epoch_0005_credit_rows.npz",
+        "sha256": "52a53f2f9790a51ebd68618a9e47ecca64de3c768c8bd43a6b0cb1440e16c7ca"
+      },
+      "wrist_y_preupdate_bins": [
+        {
+          "interval": [
+            -1.0,
+            -0.5
+          ],
+          "count": 57,
+          "mean_reward": 0.2452760487794876,
+          "mean_return": 2.209979772567749,
+          "mean_value": 1.3698784112930298,
+          "mean_raw_advantage": 0.8401011228561401,
+          "mean_normalized_advantage": 0.1736670881509781,
+          "termination_outcome_counts": {
+            "-1": 18,
+            "38": 5,
+            "41": 6,
+            "42": 10,
+            "43": 8,
+            "49": 4,
+            "50": 6
+          }
+        },
+        {
+          "interval": [
+            -0.5,
+            0.0
+          ],
+          "count": 34,
+          "mean_reward": 0.21032528579235077,
+          "mean_return": 1.7993139028549194,
+          "mean_value": 1.2689714431762695,
+          "mean_raw_advantage": 0.5303422808647156,
+          "mean_normalized_advantage": -0.0936298668384552,
+          "termination_outcome_counts": {
+            "-1": 8,
+            "38": 5,
+            "41": 3,
+            "42": 6,
+            "43": 3,
+            "49": 5,
+            "50": 4
+          }
+        },
+        {
+          "interval": [
+            0.0,
+            0.5
+          ],
+          "count": 38,
+          "mean_reward": 0.2125082015991211,
+          "mean_return": 1.9107633829116821,
+          "mean_value": 1.3063104152679443,
+          "mean_raw_advantage": 0.6044528484344482,
+          "mean_normalized_advantage": -0.029678426682949066,
+          "termination_outcome_counts": {
+            "-1": 15,
+            "38": 4,
+            "41": 1,
+            "42": 3,
+            "43": 5,
+            "49": 4,
+            "50": 6
+          }
+        },
+        {
+          "interval": [
+            0.5,
+            1.0
+          ],
+          "count": 31,
+          "mean_reward": 0.19471053779125214,
+          "mean_return": 1.7398591041564941,
+          "mean_value": 1.3099004030227661,
+          "mean_raw_advantage": 0.42995861172676086,
+          "mean_normalized_advantage": -0.18025286495685577,
+          "termination_outcome_counts": {
+            "-1": 10,
+            "38": 4,
+            "41": 3,
+            "42": 3,
+            "43": 1,
+            "49": 5,
+            "50": 5
+          }
+        }
+      ],
+      "actor_state_sha256_after_epoch": "ff8a9f93690ff676811ce1ec2496b259ffdf102a04b4c486b061d9c8662b098e",
+      "observation_normalization": {
+        "epoch": 5,
+        "version_used_for_rollout_and_updates": 4,
+        "statistics_committed_after_updates": true,
+        "before": {
+          "actor": {
+            "enabled": true,
+            "version": 4,
+            "state_sha256": "148e68856095d7b15753e814a048e09349e2e1b3f9c485f1656a1409522e55a8",
+            "count": 641.0,
+            "mean_sha256": "10553a7f96920ca33f151d95dc5f9fd6969842e4e6e26693dd210d4d57a1c916",
+            "variance_sha256": "b5754b547ae7ceb49a54b34767accad6ac0c430858a246ae4d961e4f4bd7013f"
+          },
+          "critic": {
+            "enabled": true,
+            "version": 4,
+            "state_sha256": "c044d99baedccc9d3d505975eb45e7d180befec49f6fda95661bf96c68dc0763",
+            "count": 641.0,
+            "mean_sha256": "fa7bc673000bbdf57bbba423cc65c3dba20a89806a5e8a5de3f298e0d2550a49",
+            "variance_sha256": "91c15ac2470e40f7c9445f8366ccbc7bd6d6669539d496c171e722869d21aebc"
+          }
+        },
+        "frozen_before_commit": {
+          "actor": {
+            "enabled": true,
+            "version": 4,
+            "state_sha256": "148e68856095d7b15753e814a048e09349e2e1b3f9c485f1656a1409522e55a8",
+            "count": 641.0,
+            "mean_sha256": "10553a7f96920ca33f151d95dc5f9fd6969842e4e6e26693dd210d4d57a1c916",
+            "variance_sha256": "b5754b547ae7ceb49a54b34767accad6ac0c430858a246ae4d961e4f4bd7013f"
+          },
+          "critic": {
+            "enabled": true,
+            "version": 4,
+            "state_sha256": "c044d99baedccc9d3d505975eb45e7d180befec49f6fda95661bf96c68dc0763",
+            "count": 641.0,
+            "mean_sha256": "fa7bc673000bbdf57bbba423cc65c3dba20a89806a5e8a5de3f298e0d2550a49",
+            "variance_sha256": "91c15ac2470e40f7c9445f8366ccbc7bd6d6669539d496c171e722869d21aebc"
+          }
+        },
+        "after": {
+          "actor": {
+            "enabled": true,
+            "version": 5,
+            "state_sha256": "1efbbfaa42a9fee4345a265ae5e4e70666118cd22003ff6ecbb8b679ebbdf865",
+            "count": 801.0,
+            "mean_sha256": "d8aea3e934bf06d389b34ff258b0232442d04f02a84b2323749c4f9f99ee9425",
+            "variance_sha256": "6f614f4c818f3f293829caa17d092b4a2644955e4fbd8bcf7ec21abd5d62a1fc"
+          },
+          "critic": {
+            "enabled": true,
+            "version": 5,
+            "state_sha256": "6b49eb393a8570f18671f52974769a79933301133581549b1334198384fec7d8",
+            "count": 801.0,
+            "mean_sha256": "a9a0c6c6461c05daabb70a05d067ffd96c002124dbf81669d08dfee1f6e07fd2",
+            "variance_sha256": "b871f1709fe46efbb6a6a9a4f42fea6c68292f30c6ccaea5571be3c9edd0bc90"
+          }
+        },
+        "actor_state_patch": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0005_normalization_state_patch.npz",
+          "sha256": "9ef191d4331c98a5010d764885ebeaeada73a6e189ced13323cc62447306a1e3",
+          "bytes": 34749,
+          "before_model_state_sha256": "db5141207ae423d864315c45489656fdfaf03a323edf087deb4c99c37f3bf700",
+          "after_model_state_sha256": "ff8a9f93690ff676811ce1ec2496b259ffdf102a04b4c486b061d9c8662b098e"
+        }
+      }
+    },
+    {
+      "epoch": 6,
+      "samples": 160,
+      "actor_updates": 1,
+      "credit_rows": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/epoch_0006_credit_rows.npz",
+        "sha256": "7769738f925a7380ab3ed665a6ec3e0050615ce01a91dd0bd923aa598880e614"
+      },
+      "wrist_y_preupdate_bins": [
+        {
+          "interval": [
+            -1.0,
+            -0.5
+          ],
+          "count": 48,
+          "mean_reward": 0.2693850100040436,
+          "mean_return": 2.5031795501708984,
+          "mean_value": 1.520185112953186,
+          "mean_raw_advantage": 0.9829943776130676,
+          "mean_normalized_advantage": 0.2775777280330658,
+          "termination_outcome_counts": {
+            "-1": 23,
+            "38": 8,
+            "41": 6,
+            "44": 1,
+            "48": 3,
+            "50": 7
+          }
+        },
+        {
+          "interval": [
+            -0.5,
+            0.0
+          ],
+          "count": 39,
+          "mean_reward": 0.2621411085128784,
+          "mean_return": 2.5395655632019043,
+          "mean_value": 1.5171726942062378,
+          "mean_raw_advantage": 1.0223928689956665,
+          "mean_normalized_advantage": 0.3107788562774658,
+          "termination_outcome_counts": {
+            "-1": 20,
+            "38": 2,
+            "41": 4,
+            "48": 4,
+            "50": 9
+          }
+        },
+        {
+          "interval": [
+            0.0,
+            0.5
+          ],
+          "count": 40,
+          "mean_reward": 0.18461653590202332,
+          "mean_return": 1.8006365299224854,
+          "mean_value": 1.3519164323806763,
+          "mean_raw_advantage": 0.44872015714645386,
+          "mean_normalized_advantage": -0.1726560890674591,
+          "termination_outcome_counts": {
+            "-1": 17,
+            "38": 3,
+            "41": 4,
+            "44": 2,
+            "48": 6,
+            "50": 8
+          }
+        },
+        {
+          "interval": [
+            0.5,
+            1.0
+          ],
+          "count": 33,
+          "mean_reward": 0.17793159186840057,
+          "mean_return": 1.3697983026504517,
+          "mean_value": 1.3828041553497314,
+          "mean_raw_advantage": -0.013005954213440418,
+          "mean_normalized_advantage": -0.5617534518241882,
+          "termination_outcome_counts": {
+            "-1": 6,
+            "38": 4,
+            "41": 7,
+            "44": 4,
+            "48": 6,
+            "50": 6
+          }
+        }
+      ],
+      "actor_state_sha256_after_epoch": "81353e11cf0aa132a171693f376db62b046ac6367111df01dfbf8d0942fd3bf3",
+      "observation_normalization": {
+        "epoch": 6,
+        "version_used_for_rollout_and_updates": 5,
+        "statistics_committed_after_updates": true,
+        "before": {
+          "actor": {
+            "enabled": true,
+            "version": 5,
+            "state_sha256": "1efbbfaa42a9fee4345a265ae5e4e70666118cd22003ff6ecbb8b679ebbdf865",
+            "count": 801.0,
+            "mean_sha256": "d8aea3e934bf06d389b34ff258b0232442d04f02a84b2323749c4f9f99ee9425",
+            "variance_sha256": "6f614f4c818f3f293829caa17d092b4a2644955e4fbd8bcf7ec21abd5d62a1fc"
+          },
+          "critic": {
+            "enabled": true,
+            "version": 5,
+            "state_sha256": "6b49eb393a8570f18671f52974769a79933301133581549b1334198384fec7d8",
+            "count": 801.0,
+            "mean_sha256": "a9a0c6c6461c05daabb70a05d067ffd96c002124dbf81669d08dfee1f6e07fd2",
+            "variance_sha256": "b871f1709fe46efbb6a6a9a4f42fea6c68292f30c6ccaea5571be3c9edd0bc90"
+          }
+        },
+        "frozen_before_commit": {
+          "actor": {
+            "enabled": true,
+            "version": 5,
+            "state_sha256": "1efbbfaa42a9fee4345a265ae5e4e70666118cd22003ff6ecbb8b679ebbdf865",
+            "count": 801.0,
+            "mean_sha256": "d8aea3e934bf06d389b34ff258b0232442d04f02a84b2323749c4f9f99ee9425",
+            "variance_sha256": "6f614f4c818f3f293829caa17d092b4a2644955e4fbd8bcf7ec21abd5d62a1fc"
+          },
+          "critic": {
+            "enabled": true,
+            "version": 5,
+            "state_sha256": "6b49eb393a8570f18671f52974769a79933301133581549b1334198384fec7d8",
+            "count": 801.0,
+            "mean_sha256": "a9a0c6c6461c05daabb70a05d067ffd96c002124dbf81669d08dfee1f6e07fd2",
+            "variance_sha256": "b871f1709fe46efbb6a6a9a4f42fea6c68292f30c6ccaea5571be3c9edd0bc90"
+          }
+        },
+        "after": {
+          "actor": {
+            "enabled": true,
+            "version": 6,
+            "state_sha256": "7ad812cda4283b4f5012691471c72d3b5ade0fb90aba70a1e0789330b9adb356",
+            "count": 961.0,
+            "mean_sha256": "39a74b558c77ee57b3147c52370722945b1bbb12fb13927634c3e6c7ecf014ad",
+            "variance_sha256": "f5e2180aefe32e233ca083e5f748c6496b6b7477092453b2a88e71001f3fd4d2"
+          },
+          "critic": {
+            "enabled": true,
+            "version": 6,
+            "state_sha256": "2e6165093c06fcc83f5721f97dcd4d3e6c9a1902b6f0c8b8b3294fdd17ca8354",
+            "count": 961.0,
+            "mean_sha256": "c8effd281c6928e5ceffbcf9c706d759de34ac84d272d630367801ad1f6cb680",
+            "variance_sha256": "fb5ac02e019254c0ccef95352de4da46b63c809c975f87d44fc7fdd0a1c3d4b9"
+          }
+        },
+        "actor_state_patch": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0006_normalization_state_patch.npz",
+          "sha256": "71620b01aaa5b1921b9dff0620250d41cac75a8a9266e1a2f7c6333df22beb7d",
+          "bytes": 34729,
+          "before_model_state_sha256": "4c4c660c44ef98436ff5cc91648c0861f3a9154d5b65a92bb8b6e32a853cd499",
+          "after_model_state_sha256": "81353e11cf0aa132a171693f376db62b046ac6367111df01dfbf8d0942fd3bf3"
+        }
+      }
+    },
+    {
+      "epoch": 7,
+      "samples": 160,
+      "actor_updates": 1,
+      "credit_rows": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/epoch_0007_credit_rows.npz",
+        "sha256": "e43a3cadbde55322de3bd6535ffa976e29202888a23dde699a4b177b27b92b20"
+      },
+      "wrist_y_preupdate_bins": [
+        {
+          "interval": [
+            -1.0,
+            -0.5
+          ],
+          "count": 37,
+          "mean_reward": 0.280991792678833,
+          "mean_return": 3.04978609085083,
+          "mean_value": 1.6187609434127808,
+          "mean_raw_advantage": 1.4310253858566284,
+          "mean_normalized_advantage": 0.3623186945915222,
+          "termination_outcome_counts": {
+            "-1": 5,
+            "41": 7,
+            "47": 1,
+            "48": 3,
+            "49": 6,
+            "50": 6,
+            "51": 9
+          }
+        },
+        {
+          "interval": [
+            -0.5,
+            0.0
+          ],
+          "count": 40,
+          "mean_reward": 0.2697153687477112,
+          "mean_return": 2.5454726219177246,
+          "mean_value": 1.5717518329620361,
+          "mean_raw_advantage": 0.9737208485603333,
+          "mean_normalized_advantage": 0.05847422033548355,
+          "termination_outcome_counts": {
+            "-1": 11,
+            "41": 5,
+            "48": 6,
+            "49": 12,
+            "50": 4,
+            "51": 2
+          }
+        },
+        {
+          "interval": [
+            0.0,
+            0.5
+          ],
+          "count": 45,
+          "mean_reward": 0.26139330863952637,
+          "mean_return": 2.4695444107055664,
+          "mean_value": 1.4515782594680786,
+          "mean_raw_advantage": 1.0179660320281982,
+          "mean_normalized_advantage": 0.08787171542644501,
+          "termination_outcome_counts": {
+            "-1": 9,
+            "41": 5,
+            "48": 5,
+            "49": 9,
+            "50": 11,
+            "51": 6
+          }
+        },
+        {
+          "interval": [
+            0.5,
+            1.0
+          ],
+          "count": 38,
+          "mean_reward": 0.185272216796875,
+          "mean_return": 1.3349167108535767,
+          "mean_value": 1.2294187545776367,
+          "mean_raw_advantage": 0.10549797862768173,
+          "mean_normalized_advantage": -0.518394410610199,
+          "termination_outcome_counts": {
+            "-1": 7,
+            "41": 4,
+            "47": 5,
+            "48": 5,
+            "49": 2,
+            "50": 9,
+            "51": 6
+          }
+        }
+      ],
+      "actor_state_sha256_after_epoch": "a7f9a241044cecf03d1f7fe89cbefee12dea925fe837e9ec4422b03f4c15a38c",
+      "observation_normalization": {
+        "epoch": 7,
+        "version_used_for_rollout_and_updates": 6,
+        "statistics_committed_after_updates": true,
+        "before": {
+          "actor": {
+            "enabled": true,
+            "version": 6,
+            "state_sha256": "7ad812cda4283b4f5012691471c72d3b5ade0fb90aba70a1e0789330b9adb356",
+            "count": 961.0,
+            "mean_sha256": "39a74b558c77ee57b3147c52370722945b1bbb12fb13927634c3e6c7ecf014ad",
+            "variance_sha256": "f5e2180aefe32e233ca083e5f748c6496b6b7477092453b2a88e71001f3fd4d2"
+          },
+          "critic": {
+            "enabled": true,
+            "version": 6,
+            "state_sha256": "2e6165093c06fcc83f5721f97dcd4d3e6c9a1902b6f0c8b8b3294fdd17ca8354",
+            "count": 961.0,
+            "mean_sha256": "c8effd281c6928e5ceffbcf9c706d759de34ac84d272d630367801ad1f6cb680",
+            "variance_sha256": "fb5ac02e019254c0ccef95352de4da46b63c809c975f87d44fc7fdd0a1c3d4b9"
+          }
+        },
+        "frozen_before_commit": {
+          "actor": {
+            "enabled": true,
+            "version": 6,
+            "state_sha256": "7ad812cda4283b4f5012691471c72d3b5ade0fb90aba70a1e0789330b9adb356",
+            "count": 961.0,
+            "mean_sha256": "39a74b558c77ee57b3147c52370722945b1bbb12fb13927634c3e6c7ecf014ad",
+            "variance_sha256": "f5e2180aefe32e233ca083e5f748c6496b6b7477092453b2a88e71001f3fd4d2"
+          },
+          "critic": {
+            "enabled": true,
+            "version": 6,
+            "state_sha256": "2e6165093c06fcc83f5721f97dcd4d3e6c9a1902b6f0c8b8b3294fdd17ca8354",
+            "count": 961.0,
+            "mean_sha256": "c8effd281c6928e5ceffbcf9c706d759de34ac84d272d630367801ad1f6cb680",
+            "variance_sha256": "fb5ac02e019254c0ccef95352de4da46b63c809c975f87d44fc7fdd0a1c3d4b9"
+          }
+        },
+        "after": {
+          "actor": {
+            "enabled": true,
+            "version": 7,
+            "state_sha256": "2f4bf4b377d1e663f15cdaec28204b2c9fe932205e4da44bad880d5350c166e2",
+            "count": 1121.0,
+            "mean_sha256": "2829cffe6d10e0cbd5abd41cc5e3a230371fe4d8eac76d5a829f210ac3ecfac2",
+            "variance_sha256": "9d8120c8fcceec2806eb981c96c3d215848f83352c317fe19130ad2ecd75e625"
+          },
+          "critic": {
+            "enabled": true,
+            "version": 7,
+            "state_sha256": "35bc7217b4f2cac56428ce192c239c6d94e768b9519ee52666d80266cf7f2b19",
+            "count": 1121.0,
+            "mean_sha256": "a677024d370c81b396f315b82f63ae81696ccebc5cc676456d471bc8ff8169b2",
+            "variance_sha256": "78a25763cf7e91f94054dfb1d0e7f36657fd327d30cb96766d287b9ff6a21a29"
+          }
+        },
+        "actor_state_patch": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0007_normalization_state_patch.npz",
+          "sha256": "ae1d1741d9559ebfc0739333d76fbdcc576839016b223446ed35a82c0c7d1a9a",
+          "bytes": 34726,
+          "before_model_state_sha256": "8dd7fb1a504561708c740d9e879f33e70464dd67a14cdbe09831142a8f174413",
+          "after_model_state_sha256": "a7f9a241044cecf03d1f7fe89cbefee12dea925fe837e9ec4422b03f4c15a38c"
+        }
+      }
+    },
+    {
+      "epoch": 8,
+      "samples": 160,
+      "actor_updates": 1,
+      "credit_rows": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/epoch_0008_credit_rows.npz",
+        "sha256": "0ca6faaca1d0c531e1c9d8eccb48028b4128908f84f32d22c6e3b69c7e0ff7d0"
+      },
+      "wrist_y_preupdate_bins": [
+        {
+          "interval": [
+            -1.0,
+            -0.5
+          ],
+          "count": 61,
+          "mean_reward": 0.2661980390548706,
+          "mean_return": 2.847414970397949,
+          "mean_value": 1.5652015209197998,
+          "mean_raw_advantage": 1.2822133302688599,
+          "mean_normalized_advantage": 0.1849251240491867,
+          "termination_outcome_counts": {
+            "-1": 11,
+            "39": 9,
+            "41": 13,
+            "42": 9,
+            "47": 6,
+            "58": 13
+          }
+        },
+        {
+          "interval": [
+            -0.5,
+            0.0
+          ],
+          "count": 39,
+          "mean_reward": 0.2728383243083954,
+          "mean_return": 2.6202821731567383,
+          "mean_value": 1.5398600101470947,
+          "mean_raw_advantage": 1.0804219245910645,
+          "mean_normalized_advantage": 0.06805960834026337,
+          "termination_outcome_counts": {
+            "-1": 6,
+            "39": 5,
+            "41": 5,
+            "42": 8,
+            "47": 5,
+            "58": 10
+          }
+        },
+        {
+          "interval": [
+            0.0,
+            0.5
+          ],
+          "count": 37,
+          "mean_reward": 0.2469276785850525,
+          "mean_return": 2.261568069458008,
+          "mean_value": 1.525361180305481,
+          "mean_raw_advantage": 0.7362066507339478,
+          "mean_normalized_advantage": -0.13128915429115295,
+          "termination_outcome_counts": {
+            "-1": 6,
+            "38": 1,
+            "39": 3,
+            "41": 9,
+            "42": 4,
+            "47": 6,
+            "58": 8
+          }
+        },
+        {
+          "interval": [
+            0.5,
+            1.0
+          ],
+          "count": 23,
+          "mean_reward": 0.23232011497020721,
+          "mean_return": 1.6551841497421265,
+          "mean_value": 1.373731017112732,
+          "mean_raw_advantage": 0.28145337104797363,
+          "mean_normalized_advantage": -0.3946549892425537,
+          "termination_outcome_counts": {
+            "-1": 3,
+            "39": 2,
+            "41": 5,
+            "42": 1,
+            "47": 5,
+            "58": 7
+          }
+        }
+      ],
+      "actor_state_sha256_after_epoch": "b70edbe38f65c83d230927daf9b383aa0c4d572e28db1407c7ca8e9f6a163709",
+      "observation_normalization": {
+        "epoch": 8,
+        "version_used_for_rollout_and_updates": 7,
+        "statistics_committed_after_updates": true,
+        "before": {
+          "actor": {
+            "enabled": true,
+            "version": 7,
+            "state_sha256": "2f4bf4b377d1e663f15cdaec28204b2c9fe932205e4da44bad880d5350c166e2",
+            "count": 1121.0,
+            "mean_sha256": "2829cffe6d10e0cbd5abd41cc5e3a230371fe4d8eac76d5a829f210ac3ecfac2",
+            "variance_sha256": "9d8120c8fcceec2806eb981c96c3d215848f83352c317fe19130ad2ecd75e625"
+          },
+          "critic": {
+            "enabled": true,
+            "version": 7,
+            "state_sha256": "35bc7217b4f2cac56428ce192c239c6d94e768b9519ee52666d80266cf7f2b19",
+            "count": 1121.0,
+            "mean_sha256": "a677024d370c81b396f315b82f63ae81696ccebc5cc676456d471bc8ff8169b2",
+            "variance_sha256": "78a25763cf7e91f94054dfb1d0e7f36657fd327d30cb96766d287b9ff6a21a29"
+          }
+        },
+        "frozen_before_commit": {
+          "actor": {
+            "enabled": true,
+            "version": 7,
+            "state_sha256": "2f4bf4b377d1e663f15cdaec28204b2c9fe932205e4da44bad880d5350c166e2",
+            "count": 1121.0,
+            "mean_sha256": "2829cffe6d10e0cbd5abd41cc5e3a230371fe4d8eac76d5a829f210ac3ecfac2",
+            "variance_sha256": "9d8120c8fcceec2806eb981c96c3d215848f83352c317fe19130ad2ecd75e625"
+          },
+          "critic": {
+            "enabled": true,
+            "version": 7,
+            "state_sha256": "35bc7217b4f2cac56428ce192c239c6d94e768b9519ee52666d80266cf7f2b19",
+            "count": 1121.0,
+            "mean_sha256": "a677024d370c81b396f315b82f63ae81696ccebc5cc676456d471bc8ff8169b2",
+            "variance_sha256": "78a25763cf7e91f94054dfb1d0e7f36657fd327d30cb96766d287b9ff6a21a29"
+          }
+        },
+        "after": {
+          "actor": {
+            "enabled": true,
+            "version": 8,
+            "state_sha256": "e8958dafd0a22895995b2f977ad45e97b946a1dff35da2005f8d5f77809a3ec4",
+            "count": 1281.0,
+            "mean_sha256": "3e53e3fcd59a7ac886d842f3d09cedccd4ab618104fb33516ddfb916e0626287",
+            "variance_sha256": "94fb7166a42980412c7c586a14149ba93deb4b0adcc3009a923e1340571cb7d3"
+          },
+          "critic": {
+            "enabled": true,
+            "version": 8,
+            "state_sha256": "767a9ff43c81e3dc1b37d58209b35c1c69ee5960340893c9fcf2505b07e83f66",
+            "count": 1281.0,
+            "mean_sha256": "18d99d6bbe8eeed0f3c90aa8f3903a95879f44cb5dac9860b0ff98fda1807c3a",
+            "variance_sha256": "82ed292cd38ef5d17442fb521c0fb02ec078c695e4ee47e325aee288c7f92a84"
+          }
+        },
+        "actor_state_patch": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0008_normalization_state_patch.npz",
+          "sha256": "d2511208dbe93725d9ab5ddb43692acc294000708a31ff4a0eea0f1054e42393",
+          "bytes": 34712,
+          "before_model_state_sha256": "ee93eed87cc49ee97cb62240bab4c32bf240a81eb4419a5707f6329197e1d84d",
+          "after_model_state_sha256": "b70edbe38f65c83d230927daf9b383aa0c4d572e28db1407c7ca8e9f6a163709"
+        }
+      }
+    }
+  ],
+  "update_reports": [
+    {
+      "epoch": 1,
+      "update_in_epoch": 1,
+      "global_actor_update": 1,
+      "minibatch_index": 0,
+      "sample_count": 160,
+      "sample_ids_sha256": "d42b0eea355ba1f885b24207024ef8377881da0a5804326be4dea05cf4cbbe4d",
+      "actor_loss": 7.748604247126423e-08,
+      "critic_loss": 2.5425941944122314,
+      "entropy": 21.577768325805664,
+      "total_loss": 5.085188388824463,
+      "gradient_norm_before_clip": 82.20220184326172,
+      "ratio": {
+        "min": 1.0,
+        "mean": 1.0,
+        "max": 1.0
+      },
+      "forward_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0001_update_01_forward_state_patch.npz",
+        "sha256": "bc9715e628e7252bd36c59b87d5cbb42f3c42a9c4621806c811c812ff79a1dba",
+        "bytes": 31401,
+        "before_model_state_sha256": "90952c63eea114643ef30b320c64cf64c4cafd0c0e8a4522412ecf62b0a73b33",
+        "after_model_state_sha256": "90952c63eea114643ef30b320c64cf64c4cafd0c0e8a4522412ecf62b0a73b33"
+      },
+      "optimizer_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0001_update_01_optimizer_state_patch.npz",
+        "sha256": "45e612d4c1c50647b80a2110252e991d2ef29c064daa6ba26467125d0eaa72a1",
+        "bytes": 20477561,
+        "before_model_state_sha256": "90952c63eea114643ef30b320c64cf64c4cafd0c0e8a4522412ecf62b0a73b33",
+        "after_model_state_sha256": "5e96b17e37067b02a037120b442631561029a7ea2f84f1ba37db7fb82a886092"
+      },
+      "row_artifact": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/epoch_0001_update_01_ppo_rows.npz",
+        "sha256": "052d55d91520930f46b419df04f867ac338da13f298a87e994edc25fab8dfe7b"
+      },
+      "probe": {
+        "epoch": 1,
+        "global_actor_update": 1,
+        "stage": "after_actor_update_1",
+        "labels": [
+          "ppo_source_42",
+          "ppo_source_43",
+          "ppo_source_44",
+          "ppo_source_45",
+          "ppo_source_46",
+          "ppo_source_47",
+          "replay_source_42",
+          "replay_source_43",
+          "replay_source_44",
+          "replay_source_45",
+          "replay_source_46",
+          "replay_source_47",
+          "zero_hidden_ppo_source_42",
+          "zero_hidden_ppo_source_43",
+          "zero_hidden_ppo_source_44",
+          "zero_hidden_ppo_source_45",
+          "zero_hidden_ppo_source_46",
+          "zero_hidden_ppo_source_47"
+        ],
+        "mu_y": [
+          -0.046948980540037155,
+          0.024644121527671814,
+          0.27218151092529297,
+          0.5940482020378113,
+          0.8651993870735168,
+          1.0343869924545288,
+          -0.27464786171913147,
+          -0.134858176112175,
+          0.1903316229581833,
+          0.5481349229812622,
+          0.8531281352043152,
+          1.0144915580749512,
+          -0.5466451644897461,
+          -0.5363707542419434,
+          -0.3385171890258789,
+          0.006209263112396002,
+          0.2690050005912781,
+          0.38989919424057007
+        ],
+        "sigma_y": [
+          1.000100016593933,
+          1.000100016593933,
+          1.000100016593933,
+          1.000100016593933,
+          1.000100016593933,
+          1.000100016593933,
+          1.000100016593933,
+          1.000100016593933,
+          1.000100016593933,
+          1.000100016593933,
+          1.000100016593933,
+          1.000100016593933,
+          1.000100016593933,
+          1.000100016593933,
+          1.000100016593933,
+          1.000100016593933,
+          1.000100016593933,
+          1.000100016593933
+        ],
+        "deterministic_action_y": [
+          -0.046948980540037155,
+          0.024644121527671814,
+          0.27218151092529297,
+          0.5940482020378113,
+          0.8651993870735168,
+          1.0,
+          -0.27464786171913147,
+          -0.134858176112175,
+          0.1903316229581833,
+          0.5481349229812622,
+          0.8531281352043152,
+          1.0,
+          -0.5466451644897461,
+          -0.5363707542419434,
+          -0.3385171890258789,
+          0.006209263112396002,
+          0.2690050005912781,
+          0.38989919424057007
+        ],
+        "normalization_preclip_z_y_sensitive_inputs": null
+      }
+    },
+    {
+      "epoch": 2,
+      "update_in_epoch": 1,
+      "global_actor_update": 2,
+      "minibatch_index": 0,
+      "sample_count": 160,
+      "sample_ids_sha256": "d42b0eea355ba1f885b24207024ef8377881da0a5804326be4dea05cf4cbbe4d",
+      "actor_loss": 2.9802322387695312e-08,
+      "critic_loss": 1.642572283744812,
+      "entropy": 21.862632751464844,
+      "total_loss": 3.285144567489624,
+      "gradient_norm_before_clip": 21.34986686706543,
+      "ratio": {
+        "min": 1.0,
+        "mean": 1.0,
+        "max": 1.0
+      },
+      "forward_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0002_update_01_forward_state_patch.npz",
+        "sha256": "bc9715e628e7252bd36c59b87d5cbb42f3c42a9c4621806c811c812ff79a1dba",
+        "bytes": 31401,
+        "before_model_state_sha256": "1219bf55d26f0b367df09c57de5156de91af47d7411d8e8ae50972b7ec6b2de7",
+        "after_model_state_sha256": "1219bf55d26f0b367df09c57de5156de91af47d7411d8e8ae50972b7ec6b2de7"
+      },
+      "optimizer_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0002_update_01_optimizer_state_patch.npz",
+        "sha256": "49c0f2a96a8b970387fb8680de77906ca4b1f66405ecb3bf135514d9e53d55e6",
+        "bytes": 20866600,
+        "before_model_state_sha256": "1219bf55d26f0b367df09c57de5156de91af47d7411d8e8ae50972b7ec6b2de7",
+        "after_model_state_sha256": "16bb7f07fe508853e5710b5ee71e52c171a12d66ca0eed4572aa726b440b4bc8"
+      },
+      "row_artifact": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/epoch_0002_update_01_ppo_rows.npz",
+        "sha256": "35f79d60bbb86911b0f6a3e61b32ce177fe17dd56fa2a15fe5b6f21f70d7b6df"
+      },
+      "probe": {
+        "epoch": 2,
+        "global_actor_update": 2,
+        "stage": "after_actor_update_1",
+        "labels": [
+          "ppo_source_42",
+          "ppo_source_43",
+          "ppo_source_44",
+          "ppo_source_45",
+          "ppo_source_46",
+          "ppo_source_47",
+          "replay_source_42",
+          "replay_source_43",
+          "replay_source_44",
+          "replay_source_45",
+          "replay_source_46",
+          "replay_source_47",
+          "zero_hidden_ppo_source_42",
+          "zero_hidden_ppo_source_43",
+          "zero_hidden_ppo_source_44",
+          "zero_hidden_ppo_source_45",
+          "zero_hidden_ppo_source_46",
+          "zero_hidden_ppo_source_47"
+        ],
+        "mu_y": [
+          0.2122167944908142,
+          0.346588134765625,
+          0.5964131951332092,
+          0.9159743189811707,
+          1.175635814666748,
+          1.349058747291565,
+          0.008047271519899368,
+          0.263403058052063,
+          0.5449560284614563,
+          0.9010130167007446,
+          1.1481653451919556,
+          1.3244949579238892,
+          -0.11164462566375732,
+          0.03840518370270729,
+          0.2737780213356018,
+          0.63432776927948,
+          0.9357647895812988,
+          1.1460140943527222
+        ],
+        "sigma_y": [
+          1.000199556350708,
+          1.000199556350708,
+          1.000199556350708,
+          1.000199556350708,
+          1.000199556350708,
+          1.000199556350708,
+          1.000199556350708,
+          1.000199556350708,
+          1.000199556350708,
+          1.000199556350708,
+          1.000199556350708,
+          1.000199556350708,
+          1.000199556350708,
+          1.000199556350708,
+          1.000199556350708,
+          1.000199556350708,
+          1.000199556350708,
+          1.000199556350708
+        ],
+        "deterministic_action_y": [
+          0.2122167944908142,
+          0.346588134765625,
+          0.5964131951332092,
+          0.9159743189811707,
+          1.0,
+          1.0,
+          0.008047271519899368,
+          0.263403058052063,
+          0.5449560284614563,
+          0.9010130167007446,
+          1.0,
+          1.0,
+          -0.11164462566375732,
+          0.03840518370270729,
+          0.2737780213356018,
+          0.63432776927948,
+          0.9357647895812988,
+          1.0
+        ],
+        "normalization_preclip_z_y_sensitive_inputs": null
+      }
+    },
+    {
+      "epoch": 3,
+      "update_in_epoch": 1,
+      "global_actor_update": 3,
+      "minibatch_index": 0,
+      "sample_count": 160,
+      "sample_ids_sha256": "d42b0eea355ba1f885b24207024ef8377881da0a5804326be4dea05cf4cbbe4d",
+      "actor_loss": 4.7683716530855236e-08,
+      "critic_loss": 2.37788462638855,
+      "entropy": 21.6573486328125,
+      "total_loss": 4.7557692527771,
+      "gradient_norm_before_clip": 43.59906005859375,
+      "ratio": {
+        "min": 1.0,
+        "mean": 1.0,
+        "max": 1.0
+      },
+      "forward_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0003_update_01_forward_state_patch.npz",
+        "sha256": "bc9715e628e7252bd36c59b87d5cbb42f3c42a9c4621806c811c812ff79a1dba",
+        "bytes": 31401,
+        "before_model_state_sha256": "bd1a5780b74cda953f84db6cb3827c4167a125043548be39e1fabee6c8b70714",
+        "after_model_state_sha256": "bd1a5780b74cda953f84db6cb3827c4167a125043548be39e1fabee6c8b70714"
+      },
+      "optimizer_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0003_update_01_optimizer_state_patch.npz",
+        "sha256": "de608d9bbfc0b949c0ce0ee8378075c1b52f37550695797af213d4af41e16f42",
+        "bytes": 20620745,
+        "before_model_state_sha256": "bd1a5780b74cda953f84db6cb3827c4167a125043548be39e1fabee6c8b70714",
+        "after_model_state_sha256": "56e835e08bc6d13fe05f76512bf1088c34459521017c286b715898e52e2266c4"
+      },
+      "row_artifact": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/epoch_0003_update_01_ppo_rows.npz",
+        "sha256": "e909de65dec237a8fb750f78cd5135f1c331f9310824b5eed45a71133390cb24"
+      },
+      "probe": {
+        "epoch": 3,
+        "global_actor_update": 3,
+        "stage": "after_actor_update_1",
+        "labels": [
+          "ppo_source_42",
+          "ppo_source_43",
+          "ppo_source_44",
+          "ppo_source_45",
+          "ppo_source_46",
+          "ppo_source_47",
+          "replay_source_42",
+          "replay_source_43",
+          "replay_source_44",
+          "replay_source_45",
+          "replay_source_46",
+          "replay_source_47",
+          "zero_hidden_ppo_source_42",
+          "zero_hidden_ppo_source_43",
+          "zero_hidden_ppo_source_44",
+          "zero_hidden_ppo_source_45",
+          "zero_hidden_ppo_source_46",
+          "zero_hidden_ppo_source_47"
+        ],
+        "mu_y": [
+          0.2860088646411896,
+          0.4462762773036957,
+          0.7238038778305054,
+          1.065504550933838,
+          1.3251093626022339,
+          1.4867279529571533,
+          0.10244610160589218,
+          0.3869294226169586,
+          0.6938796639442444,
+          1.0625321865081787,
+          1.3099966049194336,
+          1.4756077527999878,
+          0.019056670367717743,
+          0.21455059945583344,
+          0.5000345706939697,
+          0.8920602202415466,
+          1.192884922027588,
+          1.3834587335586548
+        ],
+        "sigma_y": [
+          1.0002267360687256,
+          1.0002267360687256,
+          1.0002267360687256,
+          1.0002267360687256,
+          1.0002267360687256,
+          1.0002267360687256,
+          1.0002267360687256,
+          1.0002267360687256,
+          1.0002267360687256,
+          1.0002267360687256,
+          1.0002267360687256,
+          1.0002267360687256,
+          1.0002267360687256,
+          1.0002267360687256,
+          1.0002267360687256,
+          1.0002267360687256,
+          1.0002267360687256,
+          1.0002267360687256
+        ],
+        "deterministic_action_y": [
+          0.2860088646411896,
+          0.4462762773036957,
+          0.7238038778305054,
+          1.0,
+          1.0,
+          1.0,
+          0.10244610160589218,
+          0.3869294226169586,
+          0.6938796639442444,
+          1.0,
+          1.0,
+          1.0,
+          0.019056670367717743,
+          0.21455059945583344,
+          0.5000345706939697,
+          0.8920602202415466,
+          1.0,
+          1.0
+        ],
+        "normalization_preclip_z_y_sensitive_inputs": null
+      }
+    },
+    {
+      "epoch": 4,
+      "update_in_epoch": 1,
+      "global_actor_update": 4,
+      "minibatch_index": 0,
+      "sample_count": 160,
+      "sample_ids_sha256": "d42b0eea355ba1f885b24207024ef8377881da0a5804326be4dea05cf4cbbe4d",
+      "actor_loss": -1.1920929132713809e-08,
+      "critic_loss": 0.9698871970176697,
+      "entropy": 21.549772262573242,
+      "total_loss": 1.9397743940353394,
+      "gradient_norm_before_clip": 39.870819091796875,
+      "ratio": {
+        "min": 1.0,
+        "mean": 1.0,
+        "max": 1.0
+      },
+      "forward_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0004_update_01_forward_state_patch.npz",
+        "sha256": "bc9715e628e7252bd36c59b87d5cbb42f3c42a9c4621806c811c812ff79a1dba",
+        "bytes": 31401,
+        "before_model_state_sha256": "90abc71ee43c6345b353747f3d536cf5c84cabf68e0e43f8df4bf52ea4cdf002",
+        "after_model_state_sha256": "90abc71ee43c6345b353747f3d536cf5c84cabf68e0e43f8df4bf52ea4cdf002"
+      },
+      "optimizer_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0004_update_01_optimizer_state_patch.npz",
+        "sha256": "4339875ec374e6807694872598c1d1070f2c7f54561df65f7310919ba3711732",
+        "bytes": 20585915,
+        "before_model_state_sha256": "90abc71ee43c6345b353747f3d536cf5c84cabf68e0e43f8df4bf52ea4cdf002",
+        "after_model_state_sha256": "1d01d809f1c9ef8c628c83d22d0ee2833bf8acd90204b2229f21afb4d687b0ff"
+      },
+      "row_artifact": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/epoch_0004_update_01_ppo_rows.npz",
+        "sha256": "dca43e6eba582f21b5c29e76d83d54fc5c38fd2660e59891a2ddf85fb194b31e"
+      },
+      "probe": {
+        "epoch": 4,
+        "global_actor_update": 4,
+        "stage": "after_actor_update_1",
+        "labels": [
+          "ppo_source_42",
+          "ppo_source_43",
+          "ppo_source_44",
+          "ppo_source_45",
+          "ppo_source_46",
+          "ppo_source_47",
+          "replay_source_42",
+          "replay_source_43",
+          "replay_source_44",
+          "replay_source_45",
+          "replay_source_46",
+          "replay_source_47",
+          "zero_hidden_ppo_source_42",
+          "zero_hidden_ppo_source_43",
+          "zero_hidden_ppo_source_44",
+          "zero_hidden_ppo_source_45",
+          "zero_hidden_ppo_source_46",
+          "zero_hidden_ppo_source_47"
+        ],
+        "mu_y": [
+          0.32884910702705383,
+          0.504210352897644,
+          0.7999808192253113,
+          1.1609950065612793,
+          1.4268584251403809,
+          1.5880612134933472,
+          0.16491568088531494,
+          0.4636375308036804,
+          0.7920844554901123,
+          1.1695317029953003,
+          1.4269955158233643,
+          1.5917891263961792,
+          0.08869893848896027,
+          0.3104475438594818,
+          0.627539336681366,
+          1.051186203956604,
+          1.362156867980957,
+          1.5502902269363403
+        ],
+        "sigma_y": [
+          1.0002063512802124,
+          1.0002063512802124,
+          1.0002063512802124,
+          1.0002063512802124,
+          1.0002063512802124,
+          1.0002063512802124,
+          1.0002063512802124,
+          1.0002063512802124,
+          1.0002063512802124,
+          1.0002063512802124,
+          1.0002063512802124,
+          1.0002063512802124,
+          1.0002063512802124,
+          1.0002063512802124,
+          1.0002063512802124,
+          1.0002063512802124,
+          1.0002063512802124,
+          1.0002063512802124
+        ],
+        "deterministic_action_y": [
+          0.32884910702705383,
+          0.504210352897644,
+          0.7999808192253113,
+          1.0,
+          1.0,
+          1.0,
+          0.16491568088531494,
+          0.4636375308036804,
+          0.7920844554901123,
+          1.0,
+          1.0,
+          1.0,
+          0.08869893848896027,
+          0.3104475438594818,
+          0.627539336681366,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "normalization_preclip_z_y_sensitive_inputs": null
+      }
+    },
+    {
+      "epoch": 5,
+      "update_in_epoch": 1,
+      "global_actor_update": 5,
+      "minibatch_index": 0,
+      "sample_count": 160,
+      "sample_ids_sha256": "d42b0eea355ba1f885b24207024ef8377881da0a5804326be4dea05cf4cbbe4d",
+      "actor_loss": 6.258488127741657e-08,
+      "critic_loss": 0.888111412525177,
+      "entropy": 21.59579849243164,
+      "total_loss": 1.7762229442596436,
+      "gradient_norm_before_clip": 19.625263214111328,
+      "ratio": {
+        "min": 1.0,
+        "mean": 1.0,
+        "max": 1.0
+      },
+      "forward_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0005_update_01_forward_state_patch.npz",
+        "sha256": "bc9715e628e7252bd36c59b87d5cbb42f3c42a9c4621806c811c812ff79a1dba",
+        "bytes": 31401,
+        "before_model_state_sha256": "a3ed1e3b1c4d18d2d7006713f653dd4bd7a9e90e661d3fd6246ddf43d4e0fd1c",
+        "after_model_state_sha256": "a3ed1e3b1c4d18d2d7006713f653dd4bd7a9e90e661d3fd6246ddf43d4e0fd1c"
+      },
+      "optimizer_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0005_update_01_optimizer_state_patch.npz",
+        "sha256": "d9329e2f8e1f265adde2b3f577655f2cd22df19557a4e82e587a73e9c6bc3c04",
+        "bytes": 20320456,
+        "before_model_state_sha256": "a3ed1e3b1c4d18d2d7006713f653dd4bd7a9e90e661d3fd6246ddf43d4e0fd1c",
+        "after_model_state_sha256": "db5141207ae423d864315c45489656fdfaf03a323edf087deb4c99c37f3bf700"
+      },
+      "row_artifact": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/epoch_0005_update_01_ppo_rows.npz",
+        "sha256": "f11a429269d1144b25796600357e0b9974ed4cbba627e4150f7fadd797c19a15"
+      },
+      "probe": {
+        "epoch": 5,
+        "global_actor_update": 5,
+        "stage": "after_actor_update_1",
+        "labels": [
+          "ppo_source_42",
+          "ppo_source_43",
+          "ppo_source_44",
+          "ppo_source_45",
+          "ppo_source_46",
+          "ppo_source_47",
+          "replay_source_42",
+          "replay_source_43",
+          "replay_source_44",
+          "replay_source_45",
+          "replay_source_46",
+          "replay_source_47",
+          "zero_hidden_ppo_source_42",
+          "zero_hidden_ppo_source_43",
+          "zero_hidden_ppo_source_44",
+          "zero_hidden_ppo_source_45",
+          "zero_hidden_ppo_source_46",
+          "zero_hidden_ppo_source_47"
+        ],
+        "mu_y": [
+          0.4080301821231842,
+          0.604416012763977,
+          0.9264029860496521,
+          1.3007429838180542,
+          1.560828685760498,
+          1.7081873416900635,
+          0.26511484384536743,
+          0.5841299891471863,
+          0.9295359253883362,
+          1.3144322633743286,
+          1.5655298233032227,
+          1.718001127243042,
+          0.2047668993473053,
+          0.46059340238571167,
+          0.8221085667610168,
+          1.2583305835723877,
+          1.5536723136901855,
+          1.7161682844161987
+        ],
+        "sigma_y": [
+          1.0001494884490967,
+          1.0001494884490967,
+          1.0001494884490967,
+          1.0001494884490967,
+          1.0001494884490967,
+          1.0001494884490967,
+          1.0001494884490967,
+          1.0001494884490967,
+          1.0001494884490967,
+          1.0001494884490967,
+          1.0001494884490967,
+          1.0001494884490967,
+          1.0001494884490967,
+          1.0001494884490967,
+          1.0001494884490967,
+          1.0001494884490967,
+          1.0001494884490967,
+          1.0001494884490967
+        ],
+        "deterministic_action_y": [
+          0.4080301821231842,
+          0.604416012763977,
+          0.9264029860496521,
+          1.0,
+          1.0,
+          1.0,
+          0.26511484384536743,
+          0.5841299891471863,
+          0.9295359253883362,
+          1.0,
+          1.0,
+          1.0,
+          0.2047668993473053,
+          0.46059340238571167,
+          0.8221085667610168,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "normalization_preclip_z_y_sensitive_inputs": null
+      }
+    },
+    {
+      "epoch": 6,
+      "update_in_epoch": 1,
+      "global_actor_update": 6,
+      "minibatch_index": 0,
+      "sample_count": 160,
+      "sample_ids_sha256": "d42b0eea355ba1f885b24207024ef8377881da0a5804326be4dea05cf4cbbe4d",
+      "actor_loss": 5.9604645663569045e-09,
+      "critic_loss": 1.0754839181900024,
+      "entropy": 21.30426025390625,
+      "total_loss": 2.150967836380005,
+      "gradient_norm_before_clip": 28.41604995727539,
+      "ratio": {
+        "min": 1.0,
+        "mean": 1.0,
+        "max": 1.0
+      },
+      "forward_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0006_update_01_forward_state_patch.npz",
+        "sha256": "bc9715e628e7252bd36c59b87d5cbb42f3c42a9c4621806c811c812ff79a1dba",
+        "bytes": 31401,
+        "before_model_state_sha256": "ff8a9f93690ff676811ce1ec2496b259ffdf102a04b4c486b061d9c8662b098e",
+        "after_model_state_sha256": "ff8a9f93690ff676811ce1ec2496b259ffdf102a04b4c486b061d9c8662b098e"
+      },
+      "optimizer_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0006_update_01_optimizer_state_patch.npz",
+        "sha256": "7ba65cc317cb1f35de57b670f1b9126deb9098b6f6ac513bdfef55d7399bb842",
+        "bytes": 20106791,
+        "before_model_state_sha256": "ff8a9f93690ff676811ce1ec2496b259ffdf102a04b4c486b061d9c8662b098e",
+        "after_model_state_sha256": "4c4c660c44ef98436ff5cc91648c0861f3a9154d5b65a92bb8b6e32a853cd499"
+      },
+      "row_artifact": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/epoch_0006_update_01_ppo_rows.npz",
+        "sha256": "0d9f53d16f1216959ba69571f2c12703fac05f24a3ca72636e5a331ddb35f4ac"
+      },
+      "probe": {
+        "epoch": 6,
+        "global_actor_update": 6,
+        "stage": "after_actor_update_1",
+        "labels": [
+          "ppo_source_42",
+          "ppo_source_43",
+          "ppo_source_44",
+          "ppo_source_45",
+          "ppo_source_46",
+          "ppo_source_47",
+          "replay_source_42",
+          "replay_source_43",
+          "replay_source_44",
+          "replay_source_45",
+          "replay_source_46",
+          "replay_source_47",
+          "zero_hidden_ppo_source_42",
+          "zero_hidden_ppo_source_43",
+          "zero_hidden_ppo_source_44",
+          "zero_hidden_ppo_source_45",
+          "zero_hidden_ppo_source_46",
+          "zero_hidden_ppo_source_47"
+        ],
+        "mu_y": [
+          0.45848870277404785,
+          0.6711447834968567,
+          1.0107426643371582,
+          1.3944406509399414,
+          1.6515414714813232,
+          1.7933429479599,
+          0.32982826232910156,
+          0.6631436347961426,
+          1.0197340250015259,
+          1.410987377166748,
+          1.658854603767395,
+          1.8052114248275757,
+          0.29000163078308105,
+          0.5696890354156494,
+          0.9561582207679749,
+          1.399113655090332,
+          1.6840932369232178,
+          1.8362518548965454
+        ],
+        "sigma_y": [
+          1.0001013278961182,
+          1.0001013278961182,
+          1.0001013278961182,
+          1.0001013278961182,
+          1.0001013278961182,
+          1.0001013278961182,
+          1.0001013278961182,
+          1.0001013278961182,
+          1.0001013278961182,
+          1.0001013278961182,
+          1.0001013278961182,
+          1.0001013278961182,
+          1.0001013278961182,
+          1.0001013278961182,
+          1.0001013278961182,
+          1.0001013278961182,
+          1.0001013278961182,
+          1.0001013278961182
+        ],
+        "deterministic_action_y": [
+          0.45848870277404785,
+          0.6711447834968567,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.32982826232910156,
+          0.6631436347961426,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.29000163078308105,
+          0.5696890354156494,
+          0.9561582207679749,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "normalization_preclip_z_y_sensitive_inputs": null
+      }
+    },
+    {
+      "epoch": 7,
+      "update_in_epoch": 1,
+      "global_actor_update": 7,
+      "minibatch_index": 0,
+      "sample_count": 160,
+      "sample_ids_sha256": "d42b0eea355ba1f885b24207024ef8377881da0a5804326be4dea05cf4cbbe4d",
+      "actor_loss": -4.470348535789981e-09,
+      "critic_loss": 1.662356972694397,
+      "entropy": 21.223140716552734,
+      "total_loss": 3.324713945388794,
+      "gradient_norm_before_clip": 28.452314376831055,
+      "ratio": {
+        "min": 1.0,
+        "mean": 1.0,
+        "max": 1.0
+      },
+      "forward_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0007_update_01_forward_state_patch.npz",
+        "sha256": "bc9715e628e7252bd36c59b87d5cbb42f3c42a9c4621806c811c812ff79a1dba",
+        "bytes": 31401,
+        "before_model_state_sha256": "81353e11cf0aa132a171693f376db62b046ac6367111df01dfbf8d0942fd3bf3",
+        "after_model_state_sha256": "81353e11cf0aa132a171693f376db62b046ac6367111df01dfbf8d0942fd3bf3"
+      },
+      "optimizer_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0007_update_01_optimizer_state_patch.npz",
+        "sha256": "543138b767e32731f345003bda9abc1bd6aaf46b154733fb13f655c2e5a2d21f",
+        "bytes": 20064703,
+        "before_model_state_sha256": "81353e11cf0aa132a171693f376db62b046ac6367111df01dfbf8d0942fd3bf3",
+        "after_model_state_sha256": "8dd7fb1a504561708c740d9e879f33e70464dd67a14cdbe09831142a8f174413"
+      },
+      "row_artifact": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/epoch_0007_update_01_ppo_rows.npz",
+        "sha256": "185a86fb1be270c8d1b55b341d0de4cfda1d5b678702ac441193a9499159ca11"
+      },
+      "probe": {
+        "epoch": 7,
+        "global_actor_update": 7,
+        "stage": "after_actor_update_1",
+        "labels": [
+          "ppo_source_42",
+          "ppo_source_43",
+          "ppo_source_44",
+          "ppo_source_45",
+          "ppo_source_46",
+          "ppo_source_47",
+          "replay_source_42",
+          "replay_source_43",
+          "replay_source_44",
+          "replay_source_45",
+          "replay_source_46",
+          "replay_source_47",
+          "zero_hidden_ppo_source_42",
+          "zero_hidden_ppo_source_43",
+          "zero_hidden_ppo_source_44",
+          "zero_hidden_ppo_source_45",
+          "zero_hidden_ppo_source_46",
+          "zero_hidden_ppo_source_47"
+        ],
+        "mu_y": [
+          0.4935038685798645,
+          0.7260616421699524,
+          1.0883963108062744,
+          1.4860501289367676,
+          1.7429598569869995,
+          1.8780903816223145,
+          0.37869328260421753,
+          0.7304959297180176,
+          1.1046710014343262,
+          1.5062129497528076,
+          1.7542399168014526,
+          1.8946232795715332,
+          0.3549027442932129,
+          0.6636303067207336,
+          1.082181692123413,
+          1.5370895862579346,
+          1.8135960102081299,
+          1.9502124786376953
+        ],
+        "sigma_y": [
+          1.0000452995300293,
+          1.0000452995300293,
+          1.0000452995300293,
+          1.0000452995300293,
+          1.0000452995300293,
+          1.0000452995300293,
+          1.0000452995300293,
+          1.0000452995300293,
+          1.0000452995300293,
+          1.0000452995300293,
+          1.0000452995300293,
+          1.0000452995300293,
+          1.0000452995300293,
+          1.0000452995300293,
+          1.0000452995300293,
+          1.0000452995300293,
+          1.0000452995300293,
+          1.0000452995300293
+        ],
+        "deterministic_action_y": [
+          0.4935038685798645,
+          0.7260616421699524,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.37869328260421753,
+          0.7304959297180176,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.3549027442932129,
+          0.6636303067207336,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "normalization_preclip_z_y_sensitive_inputs": null
+      }
+    },
+    {
+      "epoch": 8,
+      "update_in_epoch": 1,
+      "global_actor_update": 8,
+      "minibatch_index": 0,
+      "sample_count": 160,
+      "sample_ids_sha256": "d42b0eea355ba1f885b24207024ef8377881da0a5804326be4dea05cf4cbbe4d",
+      "actor_loss": 5.364418242947977e-08,
+      "critic_loss": 2.088346242904663,
+      "entropy": 21.038572311401367,
+      "total_loss": 4.176692485809326,
+      "gradient_norm_before_clip": 17.248981475830078,
+      "ratio": {
+        "min": 1.0,
+        "mean": 1.0,
+        "max": 1.0
+      },
+      "forward_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0008_update_01_forward_state_patch.npz",
+        "sha256": "bc9715e628e7252bd36c59b87d5cbb42f3c42a9c4621806c811c812ff79a1dba",
+        "bytes": 31401,
+        "before_model_state_sha256": "a7f9a241044cecf03d1f7fe89cbefee12dea925fe837e9ec4422b03f4c15a38c",
+        "after_model_state_sha256": "a7f9a241044cecf03d1f7fe89cbefee12dea925fe837e9ec4422b03f4c15a38c"
+      },
+      "optimizer_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0008_update_01_optimizer_state_patch.npz",
+        "sha256": "998ad0c201271b55bd9850edd49c0ea0725c6e3ceac6e1fc25007f105d97d3e1",
+        "bytes": 20164729,
+        "before_model_state_sha256": "a7f9a241044cecf03d1f7fe89cbefee12dea925fe837e9ec4422b03f4c15a38c",
+        "after_model_state_sha256": "ee93eed87cc49ee97cb62240bab4c32bf240a81eb4419a5707f6329197e1d84d"
+      },
+      "row_artifact": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/epoch_0008_update_01_ppo_rows.npz",
+        "sha256": "1acca890c732d105359083fa9c07db5466661ca2e84e56ca5b5b3b78bf0d865c"
+      },
+      "probe": {
+        "epoch": 8,
+        "global_actor_update": 8,
+        "stage": "after_actor_update_1",
+        "labels": [
+          "ppo_source_42",
+          "ppo_source_43",
+          "ppo_source_44",
+          "ppo_source_45",
+          "ppo_source_46",
+          "ppo_source_47",
+          "replay_source_42",
+          "replay_source_43",
+          "replay_source_44",
+          "replay_source_45",
+          "replay_source_46",
+          "replay_source_47",
+          "zero_hidden_ppo_source_42",
+          "zero_hidden_ppo_source_43",
+          "zero_hidden_ppo_source_44",
+          "zero_hidden_ppo_source_45",
+          "zero_hidden_ppo_source_46",
+          "zero_hidden_ppo_source_47"
+        ],
+        "mu_y": [
+          0.5124966502189636,
+          0.7571131587028503,
+          1.1356836557388306,
+          1.549454927444458,
+          1.8130693435668945,
+          1.950214147567749,
+          0.4171352684497833,
+          0.7847630977630615,
+          1.1720019578933716,
+          1.586410403251648,
+          1.8377394676208496,
+          1.9770890474319458,
+          0.375712126493454,
+          0.7039932012557983,
+          1.1507341861724854,
+          1.6314462423324585,
+          1.9151402711868286,
+          2.051823854446411
+        ],
+        "sigma_y": [
+          0.9999759793281555,
+          0.9999759793281555,
+          0.9999759793281555,
+          0.9999759793281555,
+          0.9999759793281555,
+          0.9999759793281555,
+          0.9999759793281555,
+          0.9999759793281555,
+          0.9999759793281555,
+          0.9999759793281555,
+          0.9999759793281555,
+          0.9999759793281555,
+          0.9999759793281555,
+          0.9999759793281555,
+          0.9999759793281555,
+          0.9999759793281555,
+          0.9999759793281555,
+          0.9999759793281555
+        ],
+        "deterministic_action_y": [
+          0.5124966502189636,
+          0.7571131587028503,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.4171352684497833,
+          0.7847630977630615,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.375712126493454,
+          0.7039932012557983,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "normalization_preclip_z_y_sensitive_inputs": null
+      }
+    }
+  ],
+  "probe_reports": [
+    {
+      "epoch": 1,
+      "global_actor_update": 0,
+      "stage": "epoch_start",
+      "labels": [
+        "ppo_source_42",
+        "ppo_source_43",
+        "ppo_source_44",
+        "ppo_source_45",
+        "ppo_source_46",
+        "ppo_source_47",
+        "replay_source_42",
+        "replay_source_43",
+        "replay_source_44",
+        "replay_source_45",
+        "replay_source_46",
+        "replay_source_47",
+        "zero_hidden_ppo_source_42",
+        "zero_hidden_ppo_source_43",
+        "zero_hidden_ppo_source_44",
+        "zero_hidden_ppo_source_45",
+        "zero_hidden_ppo_source_46",
+        "zero_hidden_ppo_source_47"
+      ],
+      "mu_y": [
+        -0.14855638146400452,
+        -0.0908857136964798,
+        0.1373576819896698,
+        0.4509155750274658,
+        0.7250455617904663,
+        0.9009597897529602,
+        -0.37985214591026306,
+        -0.2519688904285431,
+        0.05412513017654419,
+        0.4071650803089142,
+        0.7148577570915222,
+        0.8827559947967529,
+        -0.7308262586593628,
+        -0.748295247554779,
+        -0.5786242485046387,
+        -0.22765523195266724,
+        0.04831730201840401,
+        0.1785561740398407
+      ],
+      "sigma_y": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "deterministic_action_y": [
+        -0.14855638146400452,
+        -0.0908857136964798,
+        0.1373576819896698,
+        0.4509155750274658,
+        0.7250455617904663,
+        0.9009597897529602,
+        -0.37985214591026306,
+        -0.2519688904285431,
+        0.05412513017654419,
+        0.4071650803089142,
+        0.7148577570915222,
+        0.8827559947967529,
+        -0.7308262586593628,
+        -0.748295247554779,
+        -0.5786242485046387,
+        -0.22765523195266724,
+        0.04831730201840401,
+        0.1785561740398407
+      ],
+      "normalization_preclip_z_y_sensitive_inputs": null
+    },
+    {
+      "epoch": 1,
+      "global_actor_update": 1,
+      "stage": "after_actor_update_1",
+      "labels": [
+        "ppo_source_42",
+        "ppo_source_43",
+        "ppo_source_44",
+        "ppo_source_45",
+        "ppo_source_46",
+        "ppo_source_47",
+        "replay_source_42",
+        "replay_source_43",
+        "replay_source_44",
+        "replay_source_45",
+        "replay_source_46",
+        "replay_source_47",
+        "zero_hidden_ppo_source_42",
+        "zero_hidden_ppo_source_43",
+        "zero_hidden_ppo_source_44",
+        "zero_hidden_ppo_source_45",
+        "zero_hidden_ppo_source_46",
+        "zero_hidden_ppo_source_47"
+      ],
+      "mu_y": [
+        -0.046948980540037155,
+        0.024644121527671814,
+        0.27218151092529297,
+        0.5940482020378113,
+        0.8651993870735168,
+        1.0343869924545288,
+        -0.27464786171913147,
+        -0.134858176112175,
+        0.1903316229581833,
+        0.5481349229812622,
+        0.8531281352043152,
+        1.0144915580749512,
+        -0.5466451644897461,
+        -0.5363707542419434,
+        -0.3385171890258789,
+        0.006209263112396002,
+        0.2690050005912781,
+        0.38989919424057007
+      ],
+      "sigma_y": [
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933
+      ],
+      "deterministic_action_y": [
+        -0.046948980540037155,
+        0.024644121527671814,
+        0.27218151092529297,
+        0.5940482020378113,
+        0.8651993870735168,
+        1.0,
+        -0.27464786171913147,
+        -0.134858176112175,
+        0.1903316229581833,
+        0.5481349229812622,
+        0.8531281352043152,
+        1.0,
+        -0.5466451644897461,
+        -0.5363707542419434,
+        -0.3385171890258789,
+        0.006209263112396002,
+        0.2690050005912781,
+        0.38989919424057007
+      ],
+      "normalization_preclip_z_y_sensitive_inputs": null
+    },
+    {
+      "epoch": 1,
+      "global_actor_update": 1,
+      "stage": "epoch_end",
+      "labels": [
+        "ppo_source_42",
+        "ppo_source_43",
+        "ppo_source_44",
+        "ppo_source_45",
+        "ppo_source_46",
+        "ppo_source_47",
+        "replay_source_42",
+        "replay_source_43",
+        "replay_source_44",
+        "replay_source_45",
+        "replay_source_46",
+        "replay_source_47",
+        "zero_hidden_ppo_source_42",
+        "zero_hidden_ppo_source_43",
+        "zero_hidden_ppo_source_44",
+        "zero_hidden_ppo_source_45",
+        "zero_hidden_ppo_source_46",
+        "zero_hidden_ppo_source_47"
+      ],
+      "mu_y": [
+        0.11749060451984406,
+        0.2525867223739624,
+        0.5004216432571411,
+        0.8184683918952942,
+        1.084354043006897,
+        1.269019603729248,
+        -0.10478869825601578,
+        0.15279683470726013,
+        0.432898610830307,
+        0.7965491414070129,
+        1.0512137413024902,
+        1.2403837442398071,
+        -0.25201302766799927,
+        -0.10030007362365723,
+        0.13385720551013947,
+        0.4958374798297882,
+        0.8074568510055542,
+        1.0354695320129395
+      ],
+      "sigma_y": [
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933
+      ],
+      "deterministic_action_y": [
+        0.11749060451984406,
+        0.2525867223739624,
+        0.5004216432571411,
+        0.8184683918952942,
+        1.0,
+        1.0,
+        -0.10478869825601578,
+        0.15279683470726013,
+        0.432898610830307,
+        0.7965491414070129,
+        1.0,
+        1.0,
+        -0.25201302766799927,
+        -0.10030007362365723,
+        0.13385720551013947,
+        0.4958374798297882,
+        0.8074568510055542,
+        1.0
+      ],
+      "normalization_preclip_z_y_sensitive_inputs": null
+    },
+    {
+      "epoch": 2,
+      "global_actor_update": 1,
+      "stage": "epoch_start",
+      "labels": [
+        "ppo_source_42",
+        "ppo_source_43",
+        "ppo_source_44",
+        "ppo_source_45",
+        "ppo_source_46",
+        "ppo_source_47",
+        "replay_source_42",
+        "replay_source_43",
+        "replay_source_44",
+        "replay_source_45",
+        "replay_source_46",
+        "replay_source_47",
+        "zero_hidden_ppo_source_42",
+        "zero_hidden_ppo_source_43",
+        "zero_hidden_ppo_source_44",
+        "zero_hidden_ppo_source_45",
+        "zero_hidden_ppo_source_46",
+        "zero_hidden_ppo_source_47"
+      ],
+      "mu_y": [
+        0.11749060451984406,
+        0.2525867223739624,
+        0.5004216432571411,
+        0.8184683918952942,
+        1.084354043006897,
+        1.269019603729248,
+        -0.10478869825601578,
+        0.15279683470726013,
+        0.432898610830307,
+        0.7965491414070129,
+        1.0512137413024902,
+        1.2403837442398071,
+        -0.25201302766799927,
+        -0.10030007362365723,
+        0.13385720551013947,
+        0.4958374798297882,
+        0.8074568510055542,
+        1.0354695320129395
+      ],
+      "sigma_y": [
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933,
+        1.000100016593933
+      ],
+      "deterministic_action_y": [
+        0.11749060451984406,
+        0.2525867223739624,
+        0.5004216432571411,
+        0.8184683918952942,
+        1.0,
+        1.0,
+        -0.10478869825601578,
+        0.15279683470726013,
+        0.432898610830307,
+        0.7965491414070129,
+        1.0,
+        1.0,
+        -0.25201302766799927,
+        -0.10030007362365723,
+        0.13385720551013947,
+        0.4958374798297882,
+        0.8074568510055542,
+        1.0
+      ],
+      "normalization_preclip_z_y_sensitive_inputs": null
+    },
+    {
+      "epoch": 2,
+      "global_actor_update": 2,
+      "stage": "after_actor_update_1",
+      "labels": [
+        "ppo_source_42",
+        "ppo_source_43",
+        "ppo_source_44",
+        "ppo_source_45",
+        "ppo_source_46",
+        "ppo_source_47",
+        "replay_source_42",
+        "replay_source_43",
+        "replay_source_44",
+        "replay_source_45",
+        "replay_source_46",
+        "replay_source_47",
+        "zero_hidden_ppo_source_42",
+        "zero_hidden_ppo_source_43",
+        "zero_hidden_ppo_source_44",
+        "zero_hidden_ppo_source_45",
+        "zero_hidden_ppo_source_46",
+        "zero_hidden_ppo_source_47"
+      ],
+      "mu_y": [
+        0.2122167944908142,
+        0.346588134765625,
+        0.5964131951332092,
+        0.9159743189811707,
+        1.175635814666748,
+        1.349058747291565,
+        0.008047271519899368,
+        0.263403058052063,
+        0.5449560284614563,
+        0.9010130167007446,
+        1.1481653451919556,
+        1.3244949579238892,
+        -0.11164462566375732,
+        0.03840518370270729,
+        0.2737780213356018,
+        0.63432776927948,
+        0.9357647895812988,
+        1.1460140943527222
+      ],
+      "sigma_y": [
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708
+      ],
+      "deterministic_action_y": [
+        0.2122167944908142,
+        0.346588134765625,
+        0.5964131951332092,
+        0.9159743189811707,
+        1.0,
+        1.0,
+        0.008047271519899368,
+        0.263403058052063,
+        0.5449560284614563,
+        0.9010130167007446,
+        1.0,
+        1.0,
+        -0.11164462566375732,
+        0.03840518370270729,
+        0.2737780213356018,
+        0.63432776927948,
+        0.9357647895812988,
+        1.0
+      ],
+      "normalization_preclip_z_y_sensitive_inputs": null
+    },
+    {
+      "epoch": 2,
+      "global_actor_update": 2,
+      "stage": "epoch_end",
+      "labels": [
+        "ppo_source_42",
+        "ppo_source_43",
+        "ppo_source_44",
+        "ppo_source_45",
+        "ppo_source_46",
+        "ppo_source_47",
+        "replay_source_42",
+        "replay_source_43",
+        "replay_source_44",
+        "replay_source_45",
+        "replay_source_46",
+        "replay_source_47",
+        "zero_hidden_ppo_source_42",
+        "zero_hidden_ppo_source_43",
+        "zero_hidden_ppo_source_44",
+        "zero_hidden_ppo_source_45",
+        "zero_hidden_ppo_source_46",
+        "zero_hidden_ppo_source_47"
+      ],
+      "mu_y": [
+        0.21106751263141632,
+        0.354474812746048,
+        0.6111769080162048,
+        0.9369946718215942,
+        1.1947718858718872,
+        1.3622342348098755,
+        0.01291913166642189,
+        0.28102418780326843,
+        0.5669107437133789,
+        0.9266272783279419,
+        1.172680139541626,
+        1.345379114151001,
+        -0.09731709212064743,
+        0.07084028422832489,
+        0.3238411545753479,
+        0.6985012292861938,
+        0.9998759031295776,
+        1.201106309890747
+      ],
+      "sigma_y": [
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708
+      ],
+      "deterministic_action_y": [
+        0.21106751263141632,
+        0.354474812746048,
+        0.6111769080162048,
+        0.9369946718215942,
+        1.0,
+        1.0,
+        0.01291913166642189,
+        0.28102418780326843,
+        0.5669107437133789,
+        0.9266272783279419,
+        1.0,
+        1.0,
+        -0.09731709212064743,
+        0.07084028422832489,
+        0.3238411545753479,
+        0.6985012292861938,
+        0.9998759031295776,
+        1.0
+      ],
+      "normalization_preclip_z_y_sensitive_inputs": null
+    },
+    {
+      "epoch": 3,
+      "global_actor_update": 2,
+      "stage": "epoch_start",
+      "labels": [
+        "ppo_source_42",
+        "ppo_source_43",
+        "ppo_source_44",
+        "ppo_source_45",
+        "ppo_source_46",
+        "ppo_source_47",
+        "replay_source_42",
+        "replay_source_43",
+        "replay_source_44",
+        "replay_source_45",
+        "replay_source_46",
+        "replay_source_47",
+        "zero_hidden_ppo_source_42",
+        "zero_hidden_ppo_source_43",
+        "zero_hidden_ppo_source_44",
+        "zero_hidden_ppo_source_45",
+        "zero_hidden_ppo_source_46",
+        "zero_hidden_ppo_source_47"
+      ],
+      "mu_y": [
+        0.21106751263141632,
+        0.354474812746048,
+        0.6111769080162048,
+        0.9369946718215942,
+        1.1947718858718872,
+        1.3622342348098755,
+        0.01291913166642189,
+        0.28102418780326843,
+        0.5669107437133789,
+        0.9266272783279419,
+        1.172680139541626,
+        1.345379114151001,
+        -0.09731709212064743,
+        0.07084028422832489,
+        0.3238411545753479,
+        0.6985012292861938,
+        0.9998759031295776,
+        1.201106309890747
+      ],
+      "sigma_y": [
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708,
+        1.000199556350708
+      ],
+      "deterministic_action_y": [
+        0.21106751263141632,
+        0.354474812746048,
+        0.6111769080162048,
+        0.9369946718215942,
+        1.0,
+        1.0,
+        0.01291913166642189,
+        0.28102418780326843,
+        0.5669107437133789,
+        0.9266272783279419,
+        1.0,
+        1.0,
+        -0.09731709212064743,
+        0.07084028422832489,
+        0.3238411545753479,
+        0.6985012292861938,
+        0.9998759031295776,
+        1.0
+      ],
+      "normalization_preclip_z_y_sensitive_inputs": null
+    },
+    {
+      "epoch": 3,
+      "global_actor_update": 3,
+      "stage": "after_actor_update_1",
+      "labels": [
+        "ppo_source_42",
+        "ppo_source_43",
+        "ppo_source_44",
+        "ppo_source_45",
+        "ppo_source_46",
+        "ppo_source_47",
+        "replay_source_42",
+        "replay_source_43",
+        "replay_source_44",
+        "replay_source_45",
+        "replay_source_46",
+        "replay_source_47",
+        "zero_hidden_ppo_source_42",
+        "zero_hidden_ppo_source_43",
+        "zero_hidden_ppo_source_44",
+        "zero_hidden_ppo_source_45",
+        "zero_hidden_ppo_source_46",
+        "zero_hidden_ppo_source_47"
+      ],
+      "mu_y": [
+        0.2860088646411896,
+        0.4462762773036957,
+        0.7238038778305054,
+        1.065504550933838,
+        1.3251093626022339,
+        1.4867279529571533,
+        0.10244610160589218,
+        0.3869294226169586,
+        0.6938796639442444,
+        1.0625321865081787,
+        1.3099966049194336,
+        1.4756077527999878,
+        0.019056670367717743,
+        0.21455059945583344,
+        0.5000345706939697,
+        0.8920602202415466,
+        1.192884922027588,
+        1.3834587335586548
+      ],
+      "sigma_y": [
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256
+      ],
+      "deterministic_action_y": [
+        0.2860088646411896,
+        0.4462762773036957,
+        0.7238038778305054,
+        1.0,
+        1.0,
+        1.0,
+        0.10244610160589218,
+        0.3869294226169586,
+        0.6938796639442444,
+        1.0,
+        1.0,
+        1.0,
+        0.019056670367717743,
+        0.21455059945583344,
+        0.5000345706939697,
+        0.8920602202415466,
+        1.0,
+        1.0
+      ],
+      "normalization_preclip_z_y_sensitive_inputs": null
+    },
+    {
+      "epoch": 3,
+      "global_actor_update": 3,
+      "stage": "epoch_end",
+      "labels": [
+        "ppo_source_42",
+        "ppo_source_43",
+        "ppo_source_44",
+        "ppo_source_45",
+        "ppo_source_46",
+        "ppo_source_47",
+        "replay_source_42",
+        "replay_source_43",
+        "replay_source_44",
+        "replay_source_45",
+        "replay_source_46",
+        "replay_source_47",
+        "zero_hidden_ppo_source_42",
+        "zero_hidden_ppo_source_43",
+        "zero_hidden_ppo_source_44",
+        "zero_hidden_ppo_source_45",
+        "zero_hidden_ppo_source_46",
+        "zero_hidden_ppo_source_47"
+      ],
+      "mu_y": [
+        0.27854445576667786,
+        0.4365723133087158,
+        0.7109816670417786,
+        1.0547070503234863,
+        1.316894769668579,
+        1.4811753034591675,
+        0.10115929692983627,
+        0.38521382212638855,
+        0.6925153732299805,
+        1.0596246719360352,
+        1.3124886751174927,
+        1.4808552265167236,
+        0.016602925956249237,
+        0.20929153263568878,
+        0.4900914132595062,
+        0.8903014063835144,
+        1.1975717544555664,
+        1.3911300897598267
+      ],
+      "sigma_y": [
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256
+      ],
+      "deterministic_action_y": [
+        0.27854445576667786,
+        0.4365723133087158,
+        0.7109816670417786,
+        1.0,
+        1.0,
+        1.0,
+        0.10115929692983627,
+        0.38521382212638855,
+        0.6925153732299805,
+        1.0,
+        1.0,
+        1.0,
+        0.016602925956249237,
+        0.20929153263568878,
+        0.4900914132595062,
+        0.8903014063835144,
+        1.0,
+        1.0
+      ],
+      "normalization_preclip_z_y_sensitive_inputs": null
+    },
+    {
+      "epoch": 4,
+      "global_actor_update": 3,
+      "stage": "epoch_start",
+      "labels": [
+        "ppo_source_42",
+        "ppo_source_43",
+        "ppo_source_44",
+        "ppo_source_45",
+        "ppo_source_46",
+        "ppo_source_47",
+        "replay_source_42",
+        "replay_source_43",
+        "replay_source_44",
+        "replay_source_45",
+        "replay_source_46",
+        "replay_source_47",
+        "zero_hidden_ppo_source_42",
+        "zero_hidden_ppo_source_43",
+        "zero_hidden_ppo_source_44",
+        "zero_hidden_ppo_source_45",
+        "zero_hidden_ppo_source_46",
+        "zero_hidden_ppo_source_47"
+      ],
+      "mu_y": [
+        0.27854445576667786,
+        0.4365723133087158,
+        0.7109816670417786,
+        1.0547070503234863,
+        1.316894769668579,
+        1.4811753034591675,
+        0.10115929692983627,
+        0.38521382212638855,
+        0.6925153732299805,
+        1.0596246719360352,
+        1.3124886751174927,
+        1.4808552265167236,
+        0.016602925956249237,
+        0.20929153263568878,
+        0.4900914132595062,
+        0.8903014063835144,
+        1.1975717544555664,
+        1.3911300897598267
+      ],
+      "sigma_y": [
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256,
+        1.0002267360687256
+      ],
+      "deterministic_action_y": [
+        0.27854445576667786,
+        0.4365723133087158,
+        0.7109816670417786,
+        1.0,
+        1.0,
+        1.0,
+        0.10115929692983627,
+        0.38521382212638855,
+        0.6925153732299805,
+        1.0,
+        1.0,
+        1.0,
+        0.016602925956249237,
+        0.20929153263568878,
+        0.4900914132595062,
+        0.8903014063835144,
+        1.0,
+        1.0
+      ],
+      "normalization_preclip_z_y_sensitive_inputs": null
+    },
+    {
+      "epoch": 4,
+      "global_actor_update": 4,
+      "stage": "after_actor_update_1",
+      "labels": [
+        "ppo_source_42",
+        "ppo_source_43",
+        "ppo_source_44",
+        "ppo_source_45",
+        "ppo_source_46",
+        "ppo_source_47",
+        "replay_source_42",
+        "replay_source_43",
+        "replay_source_44",
+        "replay_source_45",
+        "replay_source_46",
+        "replay_source_47",
+        "zero_hidden_ppo_source_42",
+        "zero_hidden_ppo_source_43",
+        "zero_hidden_ppo_source_44",
+        "zero_hidden_ppo_source_45",
+        "zero_hidden_ppo_source_46",
+        "zero_hidden_ppo_source_47"
+      ],
+      "mu_y": [
+        0.32884910702705383,
+        0.504210352897644,
+        0.7999808192253113,
+        1.1609950065612793,
+        1.4268584251403809,
+        1.5880612134933472,
+        0.16491568088531494,
+        0.4636375308036804,
+        0.7920844554901123,
+        1.1695317029953003,
+        1.4269955158233643,
+        1.5917891263961792,
+        0.08869893848896027,
+        0.3104475438594818,
+        0.627539336681366,
+        1.051186203956604,
+        1.362156867980957,
+        1.5502902269363403
+      ],
+      "sigma_y": [
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124
+      ],
+      "deterministic_action_y": [
+        0.32884910702705383,
+        0.504210352897644,
+        0.7999808192253113,
+        1.0,
+        1.0,
+        1.0,
+        0.16491568088531494,
+        0.4636375308036804,
+        0.7920844554901123,
+        1.0,
+        1.0,
+        1.0,
+        0.08869893848896027,
+        0.3104475438594818,
+        0.627539336681366,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "normalization_preclip_z_y_sensitive_inputs": null
+    },
+    {
+      "epoch": 4,
+      "global_actor_update": 4,
+      "stage": "epoch_end",
+      "labels": [
+        "ppo_source_42",
+        "ppo_source_43",
+        "ppo_source_44",
+        "ppo_source_45",
+        "ppo_source_46",
+        "ppo_source_47",
+        "replay_source_42",
+        "replay_source_43",
+        "replay_source_44",
+        "replay_source_45",
+        "replay_source_46",
+        "replay_source_47",
+        "zero_hidden_ppo_source_42",
+        "zero_hidden_ppo_source_43",
+        "zero_hidden_ppo_source_44",
+        "zero_hidden_ppo_source_45",
+        "zero_hidden_ppo_source_46",
+        "zero_hidden_ppo_source_47"
+      ],
+      "mu_y": [
+        0.3399568796157837,
+        0.5228383541107178,
+        0.8261247873306274,
+        1.1855664253234863,
+        1.4435369968414307,
+        1.5953826904296875,
+        0.18356624245643616,
+        0.48924118280410767,
+        0.8193476796150208,
+        1.1953856945037842,
+        1.4466031789779663,
+        1.6042176485061646,
+        0.10893015563488007,
+        0.34362104535102844,
+        0.6749983429908752,
+        1.092590093612671,
+        1.3869609832763672,
+        1.5571414232254028
+      ],
+      "sigma_y": [
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124
+      ],
+      "deterministic_action_y": [
+        0.3399568796157837,
+        0.5228383541107178,
+        0.8261247873306274,
+        1.0,
+        1.0,
+        1.0,
+        0.18356624245643616,
+        0.48924118280410767,
+        0.8193476796150208,
+        1.0,
+        1.0,
+        1.0,
+        0.10893015563488007,
+        0.34362104535102844,
+        0.6749983429908752,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "normalization_preclip_z_y_sensitive_inputs": null
+    },
+    {
+      "epoch": 5,
+      "global_actor_update": 4,
+      "stage": "epoch_start",
+      "labels": [
+        "ppo_source_42",
+        "ppo_source_43",
+        "ppo_source_44",
+        "ppo_source_45",
+        "ppo_source_46",
+        "ppo_source_47",
+        "replay_source_42",
+        "replay_source_43",
+        "replay_source_44",
+        "replay_source_45",
+        "replay_source_46",
+        "replay_source_47",
+        "zero_hidden_ppo_source_42",
+        "zero_hidden_ppo_source_43",
+        "zero_hidden_ppo_source_44",
+        "zero_hidden_ppo_source_45",
+        "zero_hidden_ppo_source_46",
+        "zero_hidden_ppo_source_47"
+      ],
+      "mu_y": [
+        0.3399568796157837,
+        0.5228383541107178,
+        0.8261247873306274,
+        1.1855664253234863,
+        1.4435369968414307,
+        1.5953826904296875,
+        0.18356624245643616,
+        0.48924118280410767,
+        0.8193476796150208,
+        1.1953856945037842,
+        1.4466031789779663,
+        1.6042176485061646,
+        0.10893015563488007,
+        0.34362104535102844,
+        0.6749983429908752,
+        1.092590093612671,
+        1.3869609832763672,
+        1.5571414232254028
+      ],
+      "sigma_y": [
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124,
+        1.0002063512802124
+      ],
+      "deterministic_action_y": [
+        0.3399568796157837,
+        0.5228383541107178,
+        0.8261247873306274,
+        1.0,
+        1.0,
+        1.0,
+        0.18356624245643616,
+        0.48924118280410767,
+        0.8193476796150208,
+        1.0,
+        1.0,
+        1.0,
+        0.10893015563488007,
+        0.34362104535102844,
+        0.6749983429908752,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "normalization_preclip_z_y_sensitive_inputs": null
+    },
+    {
+      "epoch": 5,
+      "global_actor_update": 5,
+      "stage": "after_actor_update_1",
+      "labels": [
+        "ppo_source_42",
+        "ppo_source_43",
+        "ppo_source_44",
+        "ppo_source_45",
+        "ppo_source_46",
+        "ppo_source_47",
+        "replay_source_42",
+        "replay_source_43",
+        "replay_source_44",
+        "replay_source_45",
+        "replay_source_46",
+        "replay_source_47",
+        "zero_hidden_ppo_source_42",
+        "zero_hidden_ppo_source_43",
+        "zero_hidden_ppo_source_44",
+        "zero_hidden_ppo_source_45",
+        "zero_hidden_ppo_source_46",
+        "zero_hidden_ppo_source_47"
+      ],
+      "mu_y": [
+        0.4080301821231842,
+        0.604416012763977,
+        0.9264029860496521,
+        1.3007429838180542,
+        1.560828685760498,
+        1.7081873416900635,
+        0.26511484384536743,
+        0.5841299891471863,
+        0.9295359253883362,
+        1.3144322633743286,
+        1.5655298233032227,
+        1.718001127243042,
+        0.2047668993473053,
+        0.46059340238571167,
+        0.8221085667610168,
+        1.2583305835723877,
+        1.5536723136901855,
+        1.7161682844161987
+      ],
+      "sigma_y": [
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967
+      ],
+      "deterministic_action_y": [
+        0.4080301821231842,
+        0.604416012763977,
+        0.9264029860496521,
+        1.0,
+        1.0,
+        1.0,
+        0.26511484384536743,
+        0.5841299891471863,
+        0.9295359253883362,
+        1.0,
+        1.0,
+        1.0,
+        0.2047668993473053,
+        0.46059340238571167,
+        0.8221085667610168,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "normalization_preclip_z_y_sensitive_inputs": null
+    },
+    {
+      "epoch": 5,
+      "global_actor_update": 5,
+      "stage": "epoch_end",
+      "labels": [
+        "ppo_source_42",
+        "ppo_source_43",
+        "ppo_source_44",
+        "ppo_source_45",
+        "ppo_source_46",
+        "ppo_source_47",
+        "replay_source_42",
+        "replay_source_43",
+        "replay_source_44",
+        "replay_source_45",
+        "replay_source_46",
+        "replay_source_47",
+        "zero_hidden_ppo_source_42",
+        "zero_hidden_ppo_source_43",
+        "zero_hidden_ppo_source_44",
+        "zero_hidden_ppo_source_45",
+        "zero_hidden_ppo_source_46",
+        "zero_hidden_ppo_source_47"
+      ],
+      "mu_y": [
+        0.4181799292564392,
+        0.6196871399879456,
+        0.9448926448822021,
+        1.316500186920166,
+        1.570077657699585,
+        1.7121938467025757,
+        0.28021541237831116,
+        0.6017656326293945,
+        0.9465084075927734,
+        1.3290929794311523,
+        1.5752719640731812,
+        1.723178505897522,
+        0.22400395572185516,
+        0.48643025755882263,
+        0.8506515622138977,
+        1.2788660526275635,
+        1.5614392757415771,
+        1.715725064277649
+      ],
+      "sigma_y": [
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967
+      ],
+      "deterministic_action_y": [
+        0.4181799292564392,
+        0.6196871399879456,
+        0.9448926448822021,
+        1.0,
+        1.0,
+        1.0,
+        0.28021541237831116,
+        0.6017656326293945,
+        0.9465084075927734,
+        1.0,
+        1.0,
+        1.0,
+        0.22400395572185516,
+        0.48643025755882263,
+        0.8506515622138977,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "normalization_preclip_z_y_sensitive_inputs": null
+    },
+    {
+      "epoch": 6,
+      "global_actor_update": 5,
+      "stage": "epoch_start",
+      "labels": [
+        "ppo_source_42",
+        "ppo_source_43",
+        "ppo_source_44",
+        "ppo_source_45",
+        "ppo_source_46",
+        "ppo_source_47",
+        "replay_source_42",
+        "replay_source_43",
+        "replay_source_44",
+        "replay_source_45",
+        "replay_source_46",
+        "replay_source_47",
+        "zero_hidden_ppo_source_42",
+        "zero_hidden_ppo_source_43",
+        "zero_hidden_ppo_source_44",
+        "zero_hidden_ppo_source_45",
+        "zero_hidden_ppo_source_46",
+        "zero_hidden_ppo_source_47"
+      ],
+      "mu_y": [
+        0.4181799292564392,
+        0.6196871399879456,
+        0.9448926448822021,
+        1.316500186920166,
+        1.570077657699585,
+        1.7121938467025757,
+        0.28021541237831116,
+        0.6017656326293945,
+        0.9465084075927734,
+        1.3290929794311523,
+        1.5752719640731812,
+        1.723178505897522,
+        0.22400395572185516,
+        0.48643025755882263,
+        0.8506515622138977,
+        1.2788660526275635,
+        1.5614392757415771,
+        1.715725064277649
+      ],
+      "sigma_y": [
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967,
+        1.0001494884490967
+      ],
+      "deterministic_action_y": [
+        0.4181799292564392,
+        0.6196871399879456,
+        0.9448926448822021,
+        1.0,
+        1.0,
+        1.0,
+        0.28021541237831116,
+        0.6017656326293945,
+        0.9465084075927734,
+        1.0,
+        1.0,
+        1.0,
+        0.22400395572185516,
+        0.48643025755882263,
+        0.8506515622138977,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "normalization_preclip_z_y_sensitive_inputs": null
+    },
+    {
+      "epoch": 6,
+      "global_actor_update": 6,
+      "stage": "after_actor_update_1",
+      "labels": [
+        "ppo_source_42",
+        "ppo_source_43",
+        "ppo_source_44",
+        "ppo_source_45",
+        "ppo_source_46",
+        "ppo_source_47",
+        "replay_source_42",
+        "replay_source_43",
+        "replay_source_44",
+        "replay_source_45",
+        "replay_source_46",
+        "replay_source_47",
+        "zero_hidden_ppo_source_42",
+        "zero_hidden_ppo_source_43",
+        "zero_hidden_ppo_source_44",
+        "zero_hidden_ppo_source_45",
+        "zero_hidden_ppo_source_46",
+        "zero_hidden_ppo_source_47"
+      ],
+      "mu_y": [
+        0.45848870277404785,
+        0.6711447834968567,
+        1.0107426643371582,
+        1.3944406509399414,
+        1.6515414714813232,
+        1.7933429479599,
+        0.32982826232910156,
+        0.6631436347961426,
+        1.0197340250015259,
+        1.410987377166748,
+        1.658854603767395,
+        1.8052114248275757,
+        0.29000163078308105,
+        0.5696890354156494,
+        0.9561582207679749,
+        1.399113655090332,
+        1.6840932369232178,
+        1.8362518548965454
+      ],
+      "sigma_y": [
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182
+      ],
+      "deterministic_action_y": [
+        0.45848870277404785,
+        0.6711447834968567,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.32982826232910156,
+        0.6631436347961426,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.29000163078308105,
+        0.5696890354156494,
+        0.9561582207679749,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "normalization_preclip_z_y_sensitive_inputs": null
+    },
+    {
+      "epoch": 6,
+      "global_actor_update": 6,
+      "stage": "epoch_end",
+      "labels": [
+        "ppo_source_42",
+        "ppo_source_43",
+        "ppo_source_44",
+        "ppo_source_45",
+        "ppo_source_46",
+        "ppo_source_47",
+        "replay_source_42",
+        "replay_source_43",
+        "replay_source_44",
+        "replay_source_45",
+        "replay_source_46",
+        "replay_source_47",
+        "zero_hidden_ppo_source_42",
+        "zero_hidden_ppo_source_43",
+        "zero_hidden_ppo_source_44",
+        "zero_hidden_ppo_source_45",
+        "zero_hidden_ppo_source_46",
+        "zero_hidden_ppo_source_47"
+      ],
+      "mu_y": [
+        0.4666275084018707,
+        0.684326171875,
+        1.0279090404510498,
+        1.4103484153747559,
+        1.6618454456329346,
+        1.7974014282226562,
+        0.3425517976284027,
+        0.679327130317688,
+        1.0367614030838013,
+        1.4269770383834839,
+        1.6708295345306396,
+        1.8122735023498535,
+        0.30834248661994934,
+        0.5949335098266602,
+        0.9857961535453796,
+        1.4228440523147583,
+        1.6956579685211182,
+        1.836085557937622
+      ],
+      "sigma_y": [
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182
+      ],
+      "deterministic_action_y": [
+        0.4666275084018707,
+        0.684326171875,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.3425517976284027,
+        0.679327130317688,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.30834248661994934,
+        0.5949335098266602,
+        0.9857961535453796,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "normalization_preclip_z_y_sensitive_inputs": null
+    },
+    {
+      "epoch": 7,
+      "global_actor_update": 6,
+      "stage": "epoch_start",
+      "labels": [
+        "ppo_source_42",
+        "ppo_source_43",
+        "ppo_source_44",
+        "ppo_source_45",
+        "ppo_source_46",
+        "ppo_source_47",
+        "replay_source_42",
+        "replay_source_43",
+        "replay_source_44",
+        "replay_source_45",
+        "replay_source_46",
+        "replay_source_47",
+        "zero_hidden_ppo_source_42",
+        "zero_hidden_ppo_source_43",
+        "zero_hidden_ppo_source_44",
+        "zero_hidden_ppo_source_45",
+        "zero_hidden_ppo_source_46",
+        "zero_hidden_ppo_source_47"
+      ],
+      "mu_y": [
+        0.4666275084018707,
+        0.684326171875,
+        1.0279090404510498,
+        1.4103484153747559,
+        1.6618454456329346,
+        1.7974014282226562,
+        0.3425517976284027,
+        0.679327130317688,
+        1.0367614030838013,
+        1.4269770383834839,
+        1.6708295345306396,
+        1.8122735023498535,
+        0.30834248661994934,
+        0.5949335098266602,
+        0.9857961535453796,
+        1.4228440523147583,
+        1.6956579685211182,
+        1.836085557937622
+      ],
+      "sigma_y": [
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182,
+        1.0001013278961182
+      ],
+      "deterministic_action_y": [
+        0.4666275084018707,
+        0.684326171875,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.3425517976284027,
+        0.679327130317688,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.30834248661994934,
+        0.5949335098266602,
+        0.9857961535453796,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "normalization_preclip_z_y_sensitive_inputs": null
+    },
+    {
+      "epoch": 7,
+      "global_actor_update": 7,
+      "stage": "after_actor_update_1",
+      "labels": [
+        "ppo_source_42",
+        "ppo_source_43",
+        "ppo_source_44",
+        "ppo_source_45",
+        "ppo_source_46",
+        "ppo_source_47",
+        "replay_source_42",
+        "replay_source_43",
+        "replay_source_44",
+        "replay_source_45",
+        "replay_source_46",
+        "replay_source_47",
+        "zero_hidden_ppo_source_42",
+        "zero_hidden_ppo_source_43",
+        "zero_hidden_ppo_source_44",
+        "zero_hidden_ppo_source_45",
+        "zero_hidden_ppo_source_46",
+        "zero_hidden_ppo_source_47"
+      ],
+      "mu_y": [
+        0.4935038685798645,
+        0.7260616421699524,
+        1.0883963108062744,
+        1.4860501289367676,
+        1.7429598569869995,
+        1.8780903816223145,
+        0.37869328260421753,
+        0.7304959297180176,
+        1.1046710014343262,
+        1.5062129497528076,
+        1.7542399168014526,
+        1.8946232795715332,
+        0.3549027442932129,
+        0.6636303067207336,
+        1.082181692123413,
+        1.5370895862579346,
+        1.8135960102081299,
+        1.9502124786376953
+      ],
+      "sigma_y": [
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293
+      ],
+      "deterministic_action_y": [
+        0.4935038685798645,
+        0.7260616421699524,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.37869328260421753,
+        0.7304959297180176,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.3549027442932129,
+        0.6636303067207336,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "normalization_preclip_z_y_sensitive_inputs": null
+    },
+    {
+      "epoch": 7,
+      "global_actor_update": 7,
+      "stage": "epoch_end",
+      "labels": [
+        "ppo_source_42",
+        "ppo_source_43",
+        "ppo_source_44",
+        "ppo_source_45",
+        "ppo_source_46",
+        "ppo_source_47",
+        "replay_source_42",
+        "replay_source_43",
+        "replay_source_44",
+        "replay_source_45",
+        "replay_source_46",
+        "replay_source_47",
+        "zero_hidden_ppo_source_42",
+        "zero_hidden_ppo_source_43",
+        "zero_hidden_ppo_source_44",
+        "zero_hidden_ppo_source_45",
+        "zero_hidden_ppo_source_46",
+        "zero_hidden_ppo_source_47"
+      ],
+      "mu_y": [
+        0.47612813115119934,
+        0.7097659707069397,
+        1.074697494506836,
+        1.4769529104232788,
+        1.7358378171920776,
+        1.8716410398483276,
+        0.36824122071266174,
+        0.7216880917549133,
+        1.0973206758499146,
+        1.5017439126968384,
+        1.7513902187347412,
+        1.8911242485046387,
+        0.3192324936389923,
+        0.6296499371528625,
+        1.054997205734253,
+        1.5217769145965576,
+        1.8018418550491333,
+        1.93926203250885
+      ],
+      "sigma_y": [
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293
+      ],
+      "deterministic_action_y": [
+        0.47612813115119934,
+        0.7097659707069397,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.36824122071266174,
+        0.7216880917549133,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.3192324936389923,
+        0.6296499371528625,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "normalization_preclip_z_y_sensitive_inputs": null
+    },
+    {
+      "epoch": 8,
+      "global_actor_update": 7,
+      "stage": "epoch_start",
+      "labels": [
+        "ppo_source_42",
+        "ppo_source_43",
+        "ppo_source_44",
+        "ppo_source_45",
+        "ppo_source_46",
+        "ppo_source_47",
+        "replay_source_42",
+        "replay_source_43",
+        "replay_source_44",
+        "replay_source_45",
+        "replay_source_46",
+        "replay_source_47",
+        "zero_hidden_ppo_source_42",
+        "zero_hidden_ppo_source_43",
+        "zero_hidden_ppo_source_44",
+        "zero_hidden_ppo_source_45",
+        "zero_hidden_ppo_source_46",
+        "zero_hidden_ppo_source_47"
+      ],
+      "mu_y": [
+        0.47612813115119934,
+        0.7097659707069397,
+        1.074697494506836,
+        1.4769529104232788,
+        1.7358378171920776,
+        1.8716410398483276,
+        0.36824122071266174,
+        0.7216880917549133,
+        1.0973206758499146,
+        1.5017439126968384,
+        1.7513902187347412,
+        1.8911242485046387,
+        0.3192324936389923,
+        0.6296499371528625,
+        1.054997205734253,
+        1.5217769145965576,
+        1.8018418550491333,
+        1.93926203250885
+      ],
+      "sigma_y": [
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293,
+        1.0000452995300293
+      ],
+      "deterministic_action_y": [
+        0.47612813115119934,
+        0.7097659707069397,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.36824122071266174,
+        0.7216880917549133,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.3192324936389923,
+        0.6296499371528625,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "normalization_preclip_z_y_sensitive_inputs": null
+    },
+    {
+      "epoch": 8,
+      "global_actor_update": 8,
+      "stage": "after_actor_update_1",
+      "labels": [
+        "ppo_source_42",
+        "ppo_source_43",
+        "ppo_source_44",
+        "ppo_source_45",
+        "ppo_source_46",
+        "ppo_source_47",
+        "replay_source_42",
+        "replay_source_43",
+        "replay_source_44",
+        "replay_source_45",
+        "replay_source_46",
+        "replay_source_47",
+        "zero_hidden_ppo_source_42",
+        "zero_hidden_ppo_source_43",
+        "zero_hidden_ppo_source_44",
+        "zero_hidden_ppo_source_45",
+        "zero_hidden_ppo_source_46",
+        "zero_hidden_ppo_source_47"
+      ],
+      "mu_y": [
+        0.5124966502189636,
+        0.7571131587028503,
+        1.1356836557388306,
+        1.549454927444458,
+        1.8130693435668945,
+        1.950214147567749,
+        0.4171352684497833,
+        0.7847630977630615,
+        1.1720019578933716,
+        1.586410403251648,
+        1.8377394676208496,
+        1.9770890474319458,
+        0.375712126493454,
+        0.7039932012557983,
+        1.1507341861724854,
+        1.6314462423324585,
+        1.9151402711868286,
+        2.051823854446411
+      ],
+      "sigma_y": [
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555
+      ],
+      "deterministic_action_y": [
+        0.5124966502189636,
+        0.7571131587028503,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.4171352684497833,
+        0.7847630977630615,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.375712126493454,
+        0.7039932012557983,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "normalization_preclip_z_y_sensitive_inputs": null
+    },
+    {
+      "epoch": 8,
+      "global_actor_update": 8,
+      "stage": "epoch_end",
+      "labels": [
+        "ppo_source_42",
+        "ppo_source_43",
+        "ppo_source_44",
+        "ppo_source_45",
+        "ppo_source_46",
+        "ppo_source_47",
+        "replay_source_42",
+        "replay_source_43",
+        "replay_source_44",
+        "replay_source_45",
+        "replay_source_46",
+        "replay_source_47",
+        "zero_hidden_ppo_source_42",
+        "zero_hidden_ppo_source_43",
+        "zero_hidden_ppo_source_44",
+        "zero_hidden_ppo_source_45",
+        "zero_hidden_ppo_source_46",
+        "zero_hidden_ppo_source_47"
+      ],
+      "mu_y": [
+        0.5193720459938049,
+        0.7642015814781189,
+        1.1429630517959595,
+        1.555101990699768,
+        1.8166813850402832,
+        1.9541704654693604,
+        0.42764681577682495,
+        0.79412442445755,
+        1.180022120475769,
+        1.5916386842727661,
+        1.8427118062973022,
+        1.9832357168197632,
+        0.3931434154510498,
+        0.7207145094871521,
+        1.1653540134429932,
+        1.6409188508987427,
+        1.920612096786499,
+        2.0582735538482666
+      ],
+      "sigma_y": [
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555,
+        0.9999759793281555
+      ],
+      "deterministic_action_y": [
+        0.5193720459938049,
+        0.7642015814781189,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.42764681577682495,
+        0.79412442445755,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.3931434154510498,
+        0.7207145094871521,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "normalization_preclip_z_y_sensitive_inputs": null
+    }
+  ],
+  "normalization_reports": [
+    {
+      "epoch": 1,
+      "version_used_for_rollout_and_updates": 0,
+      "statistics_committed_after_updates": true,
+      "before": {
+        "actor": {
+          "enabled": true,
+          "version": 0,
+          "state_sha256": "96e383e792b441223b3301ef5b6da2d7bdea5ffca5cb2e512a3c25aee0510eec",
+          "count": 1.0,
+          "mean_sha256": "15e48fc7fc31a5079e993cbd78eaf8d4f8e7391f8b1e4627206ed5005f69ba07",
+          "variance_sha256": "ea6a5bf0c59d309c3fb277307000c562daf11cdf4073988c30637ffd5a05bbac"
+        },
+        "critic": {
+          "enabled": true,
+          "version": 0,
+          "state_sha256": "797484074432318b2da962454b5d65366cae553e4897792724d6f40ef4aef441",
+          "count": 1.0,
+          "mean_sha256": "e70bdab0235b92f59f56823a1dc5ed738f79684f69da942e732cde1ac9ce279d",
+          "variance_sha256": "4d6ac33bae779c52ec39baed7218d78f0d9d1cc48d9729cce5c4892be238dfb9"
+        }
+      },
+      "frozen_before_commit": {
+        "actor": {
+          "enabled": true,
+          "version": 0,
+          "state_sha256": "96e383e792b441223b3301ef5b6da2d7bdea5ffca5cb2e512a3c25aee0510eec",
+          "count": 1.0,
+          "mean_sha256": "15e48fc7fc31a5079e993cbd78eaf8d4f8e7391f8b1e4627206ed5005f69ba07",
+          "variance_sha256": "ea6a5bf0c59d309c3fb277307000c562daf11cdf4073988c30637ffd5a05bbac"
+        },
+        "critic": {
+          "enabled": true,
+          "version": 0,
+          "state_sha256": "797484074432318b2da962454b5d65366cae553e4897792724d6f40ef4aef441",
+          "count": 1.0,
+          "mean_sha256": "e70bdab0235b92f59f56823a1dc5ed738f79684f69da942e732cde1ac9ce279d",
+          "variance_sha256": "4d6ac33bae779c52ec39baed7218d78f0d9d1cc48d9729cce5c4892be238dfb9"
+        }
+      },
+      "after": {
+        "actor": {
+          "enabled": true,
+          "version": 1,
+          "state_sha256": "b4723d7261b2dbce85954cd3420e81b34d4d56846cddbc17fd6fb7a060c4e6ec",
+          "count": 161.0,
+          "mean_sha256": "44560a533034d4db6e30299488db7f555682d2c023db7af3f9487ce7989e1383",
+          "variance_sha256": "496c0ebe10f74fb2cf73f46d2732cf74e01330e62a29041a1a92005b69e65ef9"
+        },
+        "critic": {
+          "enabled": true,
+          "version": 1,
+          "state_sha256": "4d6ff3c306a0ff4e40552daa065ba7399080dd3635d274bd91629c5d146f5b8e",
+          "count": 161.0,
+          "mean_sha256": "bb17bb3c6b55ed7a7b74e521830a065cfbf9a3d662d3151d8e26a603147780df",
+          "variance_sha256": "251a2e6bbf8cc5c6307a87a489f7b4ddd6f6af56abd1303e9007a8996cd90266"
+        }
+      },
+      "actor_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0001_normalization_state_patch.npz",
+        "sha256": "7f77a73144ea8bdd23b992fa14aa1793abcdb9a26ee2255deaab5d46c5d466c5",
+        "bytes": 34577,
+        "before_model_state_sha256": "5e96b17e37067b02a037120b442631561029a7ea2f84f1ba37db7fb82a886092",
+        "after_model_state_sha256": "1219bf55d26f0b367df09c57de5156de91af47d7411d8e8ae50972b7ec6b2de7"
+      }
+    },
+    {
+      "epoch": 2,
+      "version_used_for_rollout_and_updates": 1,
+      "statistics_committed_after_updates": true,
+      "before": {
+        "actor": {
+          "enabled": true,
+          "version": 1,
+          "state_sha256": "b4723d7261b2dbce85954cd3420e81b34d4d56846cddbc17fd6fb7a060c4e6ec",
+          "count": 161.0,
+          "mean_sha256": "44560a533034d4db6e30299488db7f555682d2c023db7af3f9487ce7989e1383",
+          "variance_sha256": "496c0ebe10f74fb2cf73f46d2732cf74e01330e62a29041a1a92005b69e65ef9"
+        },
+        "critic": {
+          "enabled": true,
+          "version": 1,
+          "state_sha256": "4d6ff3c306a0ff4e40552daa065ba7399080dd3635d274bd91629c5d146f5b8e",
+          "count": 161.0,
+          "mean_sha256": "bb17bb3c6b55ed7a7b74e521830a065cfbf9a3d662d3151d8e26a603147780df",
+          "variance_sha256": "251a2e6bbf8cc5c6307a87a489f7b4ddd6f6af56abd1303e9007a8996cd90266"
+        }
+      },
+      "frozen_before_commit": {
+        "actor": {
+          "enabled": true,
+          "version": 1,
+          "state_sha256": "b4723d7261b2dbce85954cd3420e81b34d4d56846cddbc17fd6fb7a060c4e6ec",
+          "count": 161.0,
+          "mean_sha256": "44560a533034d4db6e30299488db7f555682d2c023db7af3f9487ce7989e1383",
+          "variance_sha256": "496c0ebe10f74fb2cf73f46d2732cf74e01330e62a29041a1a92005b69e65ef9"
+        },
+        "critic": {
+          "enabled": true,
+          "version": 1,
+          "state_sha256": "4d6ff3c306a0ff4e40552daa065ba7399080dd3635d274bd91629c5d146f5b8e",
+          "count": 161.0,
+          "mean_sha256": "bb17bb3c6b55ed7a7b74e521830a065cfbf9a3d662d3151d8e26a603147780df",
+          "variance_sha256": "251a2e6bbf8cc5c6307a87a489f7b4ddd6f6af56abd1303e9007a8996cd90266"
+        }
+      },
+      "after": {
+        "actor": {
+          "enabled": true,
+          "version": 2,
+          "state_sha256": "d672fab4d238ed5bd4fadad8102051c1c0a19aa3844f6ab5900907537ea5b59e",
+          "count": 321.0,
+          "mean_sha256": "295ca8890c5c94137e455c934db5bd103a2168b2e756536bd6d17ebd3874721c",
+          "variance_sha256": "87924116d2bf20d17f9d208acfb75c9280e9839aa2e504dde36a121761322e54"
+        },
+        "critic": {
+          "enabled": true,
+          "version": 2,
+          "state_sha256": "66a7922df2a1e31c739e9d22b6cd64ca3aaf95606f26fd828306af8226a115ef",
+          "count": 321.0,
+          "mean_sha256": "12ce46b829be81e8e2fcac0f5d5dc87066c0bb3ebbc9579c06e227da300e1788",
+          "variance_sha256": "e17a73d219214b83b4489360e76030be84e245e28b1db089cde720f3c81171d2"
+        }
+      },
+      "actor_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0002_normalization_state_patch.npz",
+        "sha256": "0e2252d128b7287c75d285fac2c00b25caac143368982a1e2b18c16905ac14eb",
+        "bytes": 34768,
+        "before_model_state_sha256": "16bb7f07fe508853e5710b5ee71e52c171a12d66ca0eed4572aa726b440b4bc8",
+        "after_model_state_sha256": "bd1a5780b74cda953f84db6cb3827c4167a125043548be39e1fabee6c8b70714"
+      }
+    },
+    {
+      "epoch": 3,
+      "version_used_for_rollout_and_updates": 2,
+      "statistics_committed_after_updates": true,
+      "before": {
+        "actor": {
+          "enabled": true,
+          "version": 2,
+          "state_sha256": "d672fab4d238ed5bd4fadad8102051c1c0a19aa3844f6ab5900907537ea5b59e",
+          "count": 321.0,
+          "mean_sha256": "295ca8890c5c94137e455c934db5bd103a2168b2e756536bd6d17ebd3874721c",
+          "variance_sha256": "87924116d2bf20d17f9d208acfb75c9280e9839aa2e504dde36a121761322e54"
+        },
+        "critic": {
+          "enabled": true,
+          "version": 2,
+          "state_sha256": "66a7922df2a1e31c739e9d22b6cd64ca3aaf95606f26fd828306af8226a115ef",
+          "count": 321.0,
+          "mean_sha256": "12ce46b829be81e8e2fcac0f5d5dc87066c0bb3ebbc9579c06e227da300e1788",
+          "variance_sha256": "e17a73d219214b83b4489360e76030be84e245e28b1db089cde720f3c81171d2"
+        }
+      },
+      "frozen_before_commit": {
+        "actor": {
+          "enabled": true,
+          "version": 2,
+          "state_sha256": "d672fab4d238ed5bd4fadad8102051c1c0a19aa3844f6ab5900907537ea5b59e",
+          "count": 321.0,
+          "mean_sha256": "295ca8890c5c94137e455c934db5bd103a2168b2e756536bd6d17ebd3874721c",
+          "variance_sha256": "87924116d2bf20d17f9d208acfb75c9280e9839aa2e504dde36a121761322e54"
+        },
+        "critic": {
+          "enabled": true,
+          "version": 2,
+          "state_sha256": "66a7922df2a1e31c739e9d22b6cd64ca3aaf95606f26fd828306af8226a115ef",
+          "count": 321.0,
+          "mean_sha256": "12ce46b829be81e8e2fcac0f5d5dc87066c0bb3ebbc9579c06e227da300e1788",
+          "variance_sha256": "e17a73d219214b83b4489360e76030be84e245e28b1db089cde720f3c81171d2"
+        }
+      },
+      "after": {
+        "actor": {
+          "enabled": true,
+          "version": 3,
+          "state_sha256": "a69df10a35c6273c8bd57a4de3b68ca01f8b8cc1e53209ef1f2c98db3e956e70",
+          "count": 481.0,
+          "mean_sha256": "e72ba2d729e27c17063a76302e8b65f1dd2e48b9afedccb0aae9900ffc2722e9",
+          "variance_sha256": "9d1433cd33e45a776bb8a711b44f3d2829d7067a0ecce5cb61aee233e2555a0a"
+        },
+        "critic": {
+          "enabled": true,
+          "version": 3,
+          "state_sha256": "5f0c1f86529f318e21670f130489f0e09978ee7113373cd19fa0601d0a54a7d4",
+          "count": 481.0,
+          "mean_sha256": "07d5e11d48865e583915d6a95b2f3797e059cdfdd6dfa354b6f5133a39511b5a",
+          "variance_sha256": "d81f609e15d5e9f6b54fc57c1348792ae6aae3ff0144a9a101946825f6006dec"
+        }
+      },
+      "actor_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0003_normalization_state_patch.npz",
+        "sha256": "436dee4f59021d4809536014c91f51f91c717c89f141fdd84e9a870ecc84e51a",
+        "bytes": 34777,
+        "before_model_state_sha256": "56e835e08bc6d13fe05f76512bf1088c34459521017c286b715898e52e2266c4",
+        "after_model_state_sha256": "90abc71ee43c6345b353747f3d536cf5c84cabf68e0e43f8df4bf52ea4cdf002"
+      }
+    },
+    {
+      "epoch": 4,
+      "version_used_for_rollout_and_updates": 3,
+      "statistics_committed_after_updates": true,
+      "before": {
+        "actor": {
+          "enabled": true,
+          "version": 3,
+          "state_sha256": "a69df10a35c6273c8bd57a4de3b68ca01f8b8cc1e53209ef1f2c98db3e956e70",
+          "count": 481.0,
+          "mean_sha256": "e72ba2d729e27c17063a76302e8b65f1dd2e48b9afedccb0aae9900ffc2722e9",
+          "variance_sha256": "9d1433cd33e45a776bb8a711b44f3d2829d7067a0ecce5cb61aee233e2555a0a"
+        },
+        "critic": {
+          "enabled": true,
+          "version": 3,
+          "state_sha256": "5f0c1f86529f318e21670f130489f0e09978ee7113373cd19fa0601d0a54a7d4",
+          "count": 481.0,
+          "mean_sha256": "07d5e11d48865e583915d6a95b2f3797e059cdfdd6dfa354b6f5133a39511b5a",
+          "variance_sha256": "d81f609e15d5e9f6b54fc57c1348792ae6aae3ff0144a9a101946825f6006dec"
+        }
+      },
+      "frozen_before_commit": {
+        "actor": {
+          "enabled": true,
+          "version": 3,
+          "state_sha256": "a69df10a35c6273c8bd57a4de3b68ca01f8b8cc1e53209ef1f2c98db3e956e70",
+          "count": 481.0,
+          "mean_sha256": "e72ba2d729e27c17063a76302e8b65f1dd2e48b9afedccb0aae9900ffc2722e9",
+          "variance_sha256": "9d1433cd33e45a776bb8a711b44f3d2829d7067a0ecce5cb61aee233e2555a0a"
+        },
+        "critic": {
+          "enabled": true,
+          "version": 3,
+          "state_sha256": "5f0c1f86529f318e21670f130489f0e09978ee7113373cd19fa0601d0a54a7d4",
+          "count": 481.0,
+          "mean_sha256": "07d5e11d48865e583915d6a95b2f3797e059cdfdd6dfa354b6f5133a39511b5a",
+          "variance_sha256": "d81f609e15d5e9f6b54fc57c1348792ae6aae3ff0144a9a101946825f6006dec"
+        }
+      },
+      "after": {
+        "actor": {
+          "enabled": true,
+          "version": 4,
+          "state_sha256": "148e68856095d7b15753e814a048e09349e2e1b3f9c485f1656a1409522e55a8",
+          "count": 641.0,
+          "mean_sha256": "10553a7f96920ca33f151d95dc5f9fd6969842e4e6e26693dd210d4d57a1c916",
+          "variance_sha256": "b5754b547ae7ceb49a54b34767accad6ac0c430858a246ae4d961e4f4bd7013f"
+        },
+        "critic": {
+          "enabled": true,
+          "version": 4,
+          "state_sha256": "c044d99baedccc9d3d505975eb45e7d180befec49f6fda95661bf96c68dc0763",
+          "count": 641.0,
+          "mean_sha256": "fa7bc673000bbdf57bbba423cc65c3dba20a89806a5e8a5de3f298e0d2550a49",
+          "variance_sha256": "91c15ac2470e40f7c9445f8366ccbc7bd6d6669539d496c171e722869d21aebc"
+        }
+      },
+      "actor_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0004_normalization_state_patch.npz",
+        "sha256": "e3d36e5743350bf980f6e48580c7e6e4f48b868a5039bc84bf35546fed44c017",
+        "bytes": 34761,
+        "before_model_state_sha256": "1d01d809f1c9ef8c628c83d22d0ee2833bf8acd90204b2229f21afb4d687b0ff",
+        "after_model_state_sha256": "a3ed1e3b1c4d18d2d7006713f653dd4bd7a9e90e661d3fd6246ddf43d4e0fd1c"
+      }
+    },
+    {
+      "epoch": 5,
+      "version_used_for_rollout_and_updates": 4,
+      "statistics_committed_after_updates": true,
+      "before": {
+        "actor": {
+          "enabled": true,
+          "version": 4,
+          "state_sha256": "148e68856095d7b15753e814a048e09349e2e1b3f9c485f1656a1409522e55a8",
+          "count": 641.0,
+          "mean_sha256": "10553a7f96920ca33f151d95dc5f9fd6969842e4e6e26693dd210d4d57a1c916",
+          "variance_sha256": "b5754b547ae7ceb49a54b34767accad6ac0c430858a246ae4d961e4f4bd7013f"
+        },
+        "critic": {
+          "enabled": true,
+          "version": 4,
+          "state_sha256": "c044d99baedccc9d3d505975eb45e7d180befec49f6fda95661bf96c68dc0763",
+          "count": 641.0,
+          "mean_sha256": "fa7bc673000bbdf57bbba423cc65c3dba20a89806a5e8a5de3f298e0d2550a49",
+          "variance_sha256": "91c15ac2470e40f7c9445f8366ccbc7bd6d6669539d496c171e722869d21aebc"
+        }
+      },
+      "frozen_before_commit": {
+        "actor": {
+          "enabled": true,
+          "version": 4,
+          "state_sha256": "148e68856095d7b15753e814a048e09349e2e1b3f9c485f1656a1409522e55a8",
+          "count": 641.0,
+          "mean_sha256": "10553a7f96920ca33f151d95dc5f9fd6969842e4e6e26693dd210d4d57a1c916",
+          "variance_sha256": "b5754b547ae7ceb49a54b34767accad6ac0c430858a246ae4d961e4f4bd7013f"
+        },
+        "critic": {
+          "enabled": true,
+          "version": 4,
+          "state_sha256": "c044d99baedccc9d3d505975eb45e7d180befec49f6fda95661bf96c68dc0763",
+          "count": 641.0,
+          "mean_sha256": "fa7bc673000bbdf57bbba423cc65c3dba20a89806a5e8a5de3f298e0d2550a49",
+          "variance_sha256": "91c15ac2470e40f7c9445f8366ccbc7bd6d6669539d496c171e722869d21aebc"
+        }
+      },
+      "after": {
+        "actor": {
+          "enabled": true,
+          "version": 5,
+          "state_sha256": "1efbbfaa42a9fee4345a265ae5e4e70666118cd22003ff6ecbb8b679ebbdf865",
+          "count": 801.0,
+          "mean_sha256": "d8aea3e934bf06d389b34ff258b0232442d04f02a84b2323749c4f9f99ee9425",
+          "variance_sha256": "6f614f4c818f3f293829caa17d092b4a2644955e4fbd8bcf7ec21abd5d62a1fc"
+        },
+        "critic": {
+          "enabled": true,
+          "version": 5,
+          "state_sha256": "6b49eb393a8570f18671f52974769a79933301133581549b1334198384fec7d8",
+          "count": 801.0,
+          "mean_sha256": "a9a0c6c6461c05daabb70a05d067ffd96c002124dbf81669d08dfee1f6e07fd2",
+          "variance_sha256": "b871f1709fe46efbb6a6a9a4f42fea6c68292f30c6ccaea5571be3c9edd0bc90"
+        }
+      },
+      "actor_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0005_normalization_state_patch.npz",
+        "sha256": "9ef191d4331c98a5010d764885ebeaeada73a6e189ced13323cc62447306a1e3",
+        "bytes": 34749,
+        "before_model_state_sha256": "db5141207ae423d864315c45489656fdfaf03a323edf087deb4c99c37f3bf700",
+        "after_model_state_sha256": "ff8a9f93690ff676811ce1ec2496b259ffdf102a04b4c486b061d9c8662b098e"
+      }
+    },
+    {
+      "epoch": 6,
+      "version_used_for_rollout_and_updates": 5,
+      "statistics_committed_after_updates": true,
+      "before": {
+        "actor": {
+          "enabled": true,
+          "version": 5,
+          "state_sha256": "1efbbfaa42a9fee4345a265ae5e4e70666118cd22003ff6ecbb8b679ebbdf865",
+          "count": 801.0,
+          "mean_sha256": "d8aea3e934bf06d389b34ff258b0232442d04f02a84b2323749c4f9f99ee9425",
+          "variance_sha256": "6f614f4c818f3f293829caa17d092b4a2644955e4fbd8bcf7ec21abd5d62a1fc"
+        },
+        "critic": {
+          "enabled": true,
+          "version": 5,
+          "state_sha256": "6b49eb393a8570f18671f52974769a79933301133581549b1334198384fec7d8",
+          "count": 801.0,
+          "mean_sha256": "a9a0c6c6461c05daabb70a05d067ffd96c002124dbf81669d08dfee1f6e07fd2",
+          "variance_sha256": "b871f1709fe46efbb6a6a9a4f42fea6c68292f30c6ccaea5571be3c9edd0bc90"
+        }
+      },
+      "frozen_before_commit": {
+        "actor": {
+          "enabled": true,
+          "version": 5,
+          "state_sha256": "1efbbfaa42a9fee4345a265ae5e4e70666118cd22003ff6ecbb8b679ebbdf865",
+          "count": 801.0,
+          "mean_sha256": "d8aea3e934bf06d389b34ff258b0232442d04f02a84b2323749c4f9f99ee9425",
+          "variance_sha256": "6f614f4c818f3f293829caa17d092b4a2644955e4fbd8bcf7ec21abd5d62a1fc"
+        },
+        "critic": {
+          "enabled": true,
+          "version": 5,
+          "state_sha256": "6b49eb393a8570f18671f52974769a79933301133581549b1334198384fec7d8",
+          "count": 801.0,
+          "mean_sha256": "a9a0c6c6461c05daabb70a05d067ffd96c002124dbf81669d08dfee1f6e07fd2",
+          "variance_sha256": "b871f1709fe46efbb6a6a9a4f42fea6c68292f30c6ccaea5571be3c9edd0bc90"
+        }
+      },
+      "after": {
+        "actor": {
+          "enabled": true,
+          "version": 6,
+          "state_sha256": "7ad812cda4283b4f5012691471c72d3b5ade0fb90aba70a1e0789330b9adb356",
+          "count": 961.0,
+          "mean_sha256": "39a74b558c77ee57b3147c52370722945b1bbb12fb13927634c3e6c7ecf014ad",
+          "variance_sha256": "f5e2180aefe32e233ca083e5f748c6496b6b7477092453b2a88e71001f3fd4d2"
+        },
+        "critic": {
+          "enabled": true,
+          "version": 6,
+          "state_sha256": "2e6165093c06fcc83f5721f97dcd4d3e6c9a1902b6f0c8b8b3294fdd17ca8354",
+          "count": 961.0,
+          "mean_sha256": "c8effd281c6928e5ceffbcf9c706d759de34ac84d272d630367801ad1f6cb680",
+          "variance_sha256": "fb5ac02e019254c0ccef95352de4da46b63c809c975f87d44fc7fdd0a1c3d4b9"
+        }
+      },
+      "actor_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0006_normalization_state_patch.npz",
+        "sha256": "71620b01aaa5b1921b9dff0620250d41cac75a8a9266e1a2f7c6333df22beb7d",
+        "bytes": 34729,
+        "before_model_state_sha256": "4c4c660c44ef98436ff5cc91648c0861f3a9154d5b65a92bb8b6e32a853cd499",
+        "after_model_state_sha256": "81353e11cf0aa132a171693f376db62b046ac6367111df01dfbf8d0942fd3bf3"
+      }
+    },
+    {
+      "epoch": 7,
+      "version_used_for_rollout_and_updates": 6,
+      "statistics_committed_after_updates": true,
+      "before": {
+        "actor": {
+          "enabled": true,
+          "version": 6,
+          "state_sha256": "7ad812cda4283b4f5012691471c72d3b5ade0fb90aba70a1e0789330b9adb356",
+          "count": 961.0,
+          "mean_sha256": "39a74b558c77ee57b3147c52370722945b1bbb12fb13927634c3e6c7ecf014ad",
+          "variance_sha256": "f5e2180aefe32e233ca083e5f748c6496b6b7477092453b2a88e71001f3fd4d2"
+        },
+        "critic": {
+          "enabled": true,
+          "version": 6,
+          "state_sha256": "2e6165093c06fcc83f5721f97dcd4d3e6c9a1902b6f0c8b8b3294fdd17ca8354",
+          "count": 961.0,
+          "mean_sha256": "c8effd281c6928e5ceffbcf9c706d759de34ac84d272d630367801ad1f6cb680",
+          "variance_sha256": "fb5ac02e019254c0ccef95352de4da46b63c809c975f87d44fc7fdd0a1c3d4b9"
+        }
+      },
+      "frozen_before_commit": {
+        "actor": {
+          "enabled": true,
+          "version": 6,
+          "state_sha256": "7ad812cda4283b4f5012691471c72d3b5ade0fb90aba70a1e0789330b9adb356",
+          "count": 961.0,
+          "mean_sha256": "39a74b558c77ee57b3147c52370722945b1bbb12fb13927634c3e6c7ecf014ad",
+          "variance_sha256": "f5e2180aefe32e233ca083e5f748c6496b6b7477092453b2a88e71001f3fd4d2"
+        },
+        "critic": {
+          "enabled": true,
+          "version": 6,
+          "state_sha256": "2e6165093c06fcc83f5721f97dcd4d3e6c9a1902b6f0c8b8b3294fdd17ca8354",
+          "count": 961.0,
+          "mean_sha256": "c8effd281c6928e5ceffbcf9c706d759de34ac84d272d630367801ad1f6cb680",
+          "variance_sha256": "fb5ac02e019254c0ccef95352de4da46b63c809c975f87d44fc7fdd0a1c3d4b9"
+        }
+      },
+      "after": {
+        "actor": {
+          "enabled": true,
+          "version": 7,
+          "state_sha256": "2f4bf4b377d1e663f15cdaec28204b2c9fe932205e4da44bad880d5350c166e2",
+          "count": 1121.0,
+          "mean_sha256": "2829cffe6d10e0cbd5abd41cc5e3a230371fe4d8eac76d5a829f210ac3ecfac2",
+          "variance_sha256": "9d8120c8fcceec2806eb981c96c3d215848f83352c317fe19130ad2ecd75e625"
+        },
+        "critic": {
+          "enabled": true,
+          "version": 7,
+          "state_sha256": "35bc7217b4f2cac56428ce192c239c6d94e768b9519ee52666d80266cf7f2b19",
+          "count": 1121.0,
+          "mean_sha256": "a677024d370c81b396f315b82f63ae81696ccebc5cc676456d471bc8ff8169b2",
+          "variance_sha256": "78a25763cf7e91f94054dfb1d0e7f36657fd327d30cb96766d287b9ff6a21a29"
+        }
+      },
+      "actor_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0007_normalization_state_patch.npz",
+        "sha256": "ae1d1741d9559ebfc0739333d76fbdcc576839016b223446ed35a82c0c7d1a9a",
+        "bytes": 34726,
+        "before_model_state_sha256": "8dd7fb1a504561708c740d9e879f33e70464dd67a14cdbe09831142a8f174413",
+        "after_model_state_sha256": "a7f9a241044cecf03d1f7fe89cbefee12dea925fe837e9ec4422b03f4c15a38c"
+      }
+    },
+    {
+      "epoch": 8,
+      "version_used_for_rollout_and_updates": 7,
+      "statistics_committed_after_updates": true,
+      "before": {
+        "actor": {
+          "enabled": true,
+          "version": 7,
+          "state_sha256": "2f4bf4b377d1e663f15cdaec28204b2c9fe932205e4da44bad880d5350c166e2",
+          "count": 1121.0,
+          "mean_sha256": "2829cffe6d10e0cbd5abd41cc5e3a230371fe4d8eac76d5a829f210ac3ecfac2",
+          "variance_sha256": "9d8120c8fcceec2806eb981c96c3d215848f83352c317fe19130ad2ecd75e625"
+        },
+        "critic": {
+          "enabled": true,
+          "version": 7,
+          "state_sha256": "35bc7217b4f2cac56428ce192c239c6d94e768b9519ee52666d80266cf7f2b19",
+          "count": 1121.0,
+          "mean_sha256": "a677024d370c81b396f315b82f63ae81696ccebc5cc676456d471bc8ff8169b2",
+          "variance_sha256": "78a25763cf7e91f94054dfb1d0e7f36657fd327d30cb96766d287b9ff6a21a29"
+        }
+      },
+      "frozen_before_commit": {
+        "actor": {
+          "enabled": true,
+          "version": 7,
+          "state_sha256": "2f4bf4b377d1e663f15cdaec28204b2c9fe932205e4da44bad880d5350c166e2",
+          "count": 1121.0,
+          "mean_sha256": "2829cffe6d10e0cbd5abd41cc5e3a230371fe4d8eac76d5a829f210ac3ecfac2",
+          "variance_sha256": "9d8120c8fcceec2806eb981c96c3d215848f83352c317fe19130ad2ecd75e625"
+        },
+        "critic": {
+          "enabled": true,
+          "version": 7,
+          "state_sha256": "35bc7217b4f2cac56428ce192c239c6d94e768b9519ee52666d80266cf7f2b19",
+          "count": 1121.0,
+          "mean_sha256": "a677024d370c81b396f315b82f63ae81696ccebc5cc676456d471bc8ff8169b2",
+          "variance_sha256": "78a25763cf7e91f94054dfb1d0e7f36657fd327d30cb96766d287b9ff6a21a29"
+        }
+      },
+      "after": {
+        "actor": {
+          "enabled": true,
+          "version": 8,
+          "state_sha256": "e8958dafd0a22895995b2f977ad45e97b946a1dff35da2005f8d5f77809a3ec4",
+          "count": 1281.0,
+          "mean_sha256": "3e53e3fcd59a7ac886d842f3d09cedccd4ab618104fb33516ddfb916e0626287",
+          "variance_sha256": "94fb7166a42980412c7c586a14149ba93deb4b0adcc3009a923e1340571cb7d3"
+        },
+        "critic": {
+          "enabled": true,
+          "version": 8,
+          "state_sha256": "767a9ff43c81e3dc1b37d58209b35c1c69ee5960340893c9fcf2505b07e83f66",
+          "count": 1281.0,
+          "mean_sha256": "18d99d6bbe8eeed0f3c90aa8f3903a95879f44cb5dac9860b0ff98fda1807c3a",
+          "variance_sha256": "82ed292cd38ef5d17442fb521c0fb02ec078c695e4ee47e325aee288c7f92a84"
+        }
+      },
+      "actor_state_patch": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/credit_audit/actor_state_patches/epoch_0008_normalization_state_patch.npz",
+        "sha256": "d2511208dbe93725d9ab5ddb43692acc294000708a31ff4a0eea0f1054e42393",
+        "bytes": 34712,
+        "before_model_state_sha256": "ee93eed87cc49ee97cb62240bab4c32bf240a81eb4419a5707f6329197e1d84d",
+        "after_model_state_sha256": "b70edbe38f65c83d230927daf9b383aa0c4d572e28db1407c7ca8e9f6a163709"
+      }
+    }
+  ]
+}

@@ -328,6 +328,7 @@ def train_chunk_ppo(
     action_distribution_spec=None,
     credit_audit_dir=None,
     credit_probe_panel=None,
+    actor_mini_epochs=4,
 ):
     """Reuse the existing official trainer; reset every rollout to this boundary.
 
@@ -365,14 +366,15 @@ def train_chunk_ppo(
 
     env = backend.env
     env.set_chunk_reset(start=start, end=end)
-    if horizon < 4 or horizon % 4 or epochs < 1:
+    if horizon < 4 or horizon % 4 or epochs < 1 or actor_mini_epochs < 1:
         raise ValueError("positive epochs and horizon divisible by recurrent sequence length 4 required")
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     training_worlds = int(env.num_envs)
     config = _build_ppo_config(num_envs=training_worlds, horizon_length=horizon, seq_length=4,
         max_epochs=epochs, learning_rate=1e-4, device=str(env.ego_cfg.device),
-        asymmetric_critic=_build_asymmetric_critic_config(training_worlds * horizon))
+        asymmetric_critic=_build_asymmetric_critic_config(training_worlds * horizon),
+        actor_mini_epochs=actor_mini_epochs)
     if action_distribution_spec is not None:
         config = replace(config, clip_actions=False)
     agent = agent_class(experiment_dir=output, ppo_config=config,
@@ -460,6 +462,7 @@ def train_chunk_ppo(
         learning_rate=1e-4,
         device="cpu",
         asymmetric_critic=None,
+        actor_mini_epochs=actor_mini_epochs,
     )
     if action_distribution_spec is not None:
         cpu_config = replace(cpu_config, clip_actions=False)

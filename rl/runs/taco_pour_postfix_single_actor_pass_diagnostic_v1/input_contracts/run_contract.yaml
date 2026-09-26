@@ -1,0 +1,159 @@
+schema: taco_pour_postfix_single_actor_pass_candidate_v1
+status: authorized_single_fresh_diagnostic_training
+paper_faithful: false
+purpose: >-
+  Run the one user-authorized local reproduction experiment testing whether
+  repeated actor reuse over one 160-sample rollout drives deterministic policy
+  extremization. This is not a recovered EgoEngine PPO hyperparameter.
+authorized_output_directory: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1
+
+single_change:
+  field: PPO_actor_mini_epochs
+  baseline: 4
+  candidate: 1
+  actor_updates_per_training_epoch: 1
+  total_actor_updates_over_8_epochs: 8
+
+unchanged:
+  training_worlds: 4
+  training_epochs: 8
+  horizon_per_world_per_epoch: 40
+  samples_per_epoch: 160
+  total_samples: 1280
+  reset_endpoints: [20, 20, 20, 20]
+  seed: 0
+  learning_rate: 0.0001
+  gradient_norm_clip: 1.0
+  KL_early_stop: disabled
+  asymmetric_critic_mini_epochs: 4
+  reward: unchanged
+  objective: taco_pour_local_normalized_ellipse_v1
+  observation: taco_pour_transition_aligned_236d_v1
+  observation_normalization: taco_pour_frozen_rollout_observation_normalization_v1
+  action_distribution: taco_pour_state_feasible_truncated_gaussian_v1
+  residual_scale: 0.05
+  reference_timing: unchanged
+  action_frame: world
+  CPU_validation_start_endpoint: 20
+  CPU_validation_intervals: 40
+  GPU_may_decide_acceptance: false
+
+training:
+  worlds: 4
+  epochs: 8
+  horizon_per_world_per_epoch: 40
+  samples_per_epoch: 160
+  total_samples: 1280
+  seed: 0
+  fixed_reset_endpoints: [20, 20, 20, 20]
+  old_actor_or_checkpoint_resume: false
+  tail_curriculum: false
+
+inputs:
+  simulator_config:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml
+    sha256: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+  initialization_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v2/candidate_a/report.json
+    sha256: 9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a
+  protocol:
+    path: /data_all/zzx/3.2RL/configs/replay_rl_protocol.yaml
+    sha256: e90830ea1971f2238f4de6a54600930ed9b4cb308ada948fb43110a844098ac8
+  objective_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_local_normalized_ellipse_v1.yaml
+    sha256: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+  observation_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_observation_local_236d_v1.yaml
+    sha256: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  action_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_residual_action_scaled_v1.yaml
+    sha256: 71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4
+  distribution_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_state_feasible_truncated_gaussian_v1.yaml
+    sha256: 6a4e4bd8f33fa53bfe34f21f822bfa391253cca090892767154320fc9bbfd1b8
+  source_boundary:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_replay_rebase_v1/tool_only/committed_boundary_endpoint_20.pt.gz
+    sha256: a3646e24af1ba871e5ecc885669508223a5e0f26d3cf29f0482f02678419e337
+  credit_instrumentation_gate:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_credit_instrumentation_gate_v1/report.json
+    sha256: 4d71287014f684fbc695935aab54e492427a679fde3e93fbc4f7aea643f609a3
+  observation_normalization_contract:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_frozen_rollout_observation_normalization_v1.yaml
+    sha256: 0e8bc46f33b94054d03d2bb525eee85c8b49bab4f0b95a0460aae08ea1773f6c
+  observation_normalization_commit_gate:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_observation_normalization_commit_gate_v1/report.json
+    sha256: ba5d690e900e7712be53ab273328eaee31419177e3e85d0597dcfc18f003f74a
+  checkpoint_eligibility:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_ppo_checkpoint_eligibility_v1.yaml
+    sha256: db1c31e775b0f3d2fe28f54116c0dc680c3b3ec390fd56b4e26669981b16a442
+  fixed_probe_panel:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_input_bifurcation_attribution_v1/observations_and_actor_outputs.npz
+    sha256: 8552b8cab3c7ee1d9e0f0fad283fcc6cd7edc1f77e2dca01325a963b5f8e5d7b
+  prior_credit_inventory:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_training_credit_assignment_audit_v1/report.json
+    sha256: 3f9629533b8a30fb942d596448d0277a2c0cbda60a3d72476d63bf9eecf8ec65
+
+implementation:
+  credit_audit:
+    path: /data_all/zzx/3.2RL/src/video_to_spider/rl/credit_audit.py
+    sha256: fdd6f5e3959412b64862d215c1190d826c3dbb4ab6d2565f0e2f60ff16cee523
+  state_feasible_distribution:
+    path: /data_all/zzx/3.2RL/src/video_to_spider/rl/state_feasible_truncated_gaussian.py
+    sha256: 57f4464960f7d8c492e5debfef93b3a5f1012db9d5ae9222edade9eaeaa99105
+  ppo_chunk_adapter:
+    path: /data_all/zzx/3.2RL/src/video_to_spider/rl/replay_rl.py
+    sha256: 1098a01071946a3cfc815c3f8ddd027aadabf6397111d16ff8bfd1d2a5248146
+  running_mean_std:
+    path: /data_all/zzx/3.2RL/external/human2sim2robot/human2sim2robot/ppo/utils/running_mean_std.py
+    sha256: 923f39b11c954b96697be40a9066bb5c916404e41a018ee9bc8958cdf2179784
+  model_observation_interface:
+    path: /data_all/zzx/3.2RL/external/human2sim2robot/human2sim2robot/ppo/utils/models.py
+    sha256: 591bd77e36a482e57edd78aae1f3d22098573c1bea59cbe0fe71ca95832c26fc
+  mjwp_environment:
+    path: /data_all/zzx/3.2RL/src/video_to_spider/rl/mjwp_env.py
+    sha256: dde2bec6fb298b127ca6d3275b2b5e38d3a4cd5204144ea25603c610dac912a9
+  training_trace:
+    path: /data_all/zzx/3.2RL/src/video_to_spider/rl/training_trace.py
+    sha256: f74e451fc8bd356bc0ee0338b2e5c4166d175e14c1ea7cf557ec3baf2ef03bc5
+  official_ppo_agent:
+    path: /data_all/zzx/3.2RL/external/human2sim2robot/human2sim2robot/ppo/ppo_agent.py
+    sha256: b41f1c088d8ad4e261b9c5338f90a7f0ae910b7453ab348532312b3d87bc4c30
+  official_asymmetric_critic:
+    path: /data_all/zzx/3.2RL/external/human2sim2robot/human2sim2robot/ppo/utils/asymmetric_critic.py
+    sha256: d492992808cd948a6b22c5488b4a57ae48c2c5361a507504a81fa16b08cc1eec
+  ppo_config_builder:
+    path: /data_all/zzx/3.2RL/scripts/run_mjwp_ppo.py
+    sha256: 4b887e5e4f493fdc5a6541f3c1c811ec65a4e2cbab9f974cc1627e0d54048b84
+  run_script:
+    path: /data_all/zzx/3.2RL/scripts/run_taco_pour_credit_instrumented_ppo.py
+    sha256: 14aac2a8c3c1b1f20737edfd79ebd37861b754f7039b4a7f0840ea447c9c92f6
+
+evidence:
+  report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_policy_extremization_audit_v1/report.json
+    sha256: be896de632c74b7f8c7f4a4c4afb91fc666650c62f0e1f107ec18493175cd5f8
+  findings:
+    optimizer_net_signed_mu_change_toward_final_saturation: 27.917851334437728
+    RMS_commit_net_signed_mu_change_toward_final_saturation: -4.945582751184702
+    optimizer_transitions_increasing_focus_saturation: 17
+    optimizer_transitions_decreasing_focus_saturation: 0
+    maximum_old_to_current_exact_KL_mean: 0.21234022509405198
+    maximum_ratio_outside_0p8_1p2_fraction: 0.8375
+    first_update_ratio_identity_preserved: true
+
+interpretation: >-
+  The failure-focused probes move toward their final saturated directions
+  during optimizer updates, while RMS commits have negative net movement.
+  Later passes over the same rollout exhibit broad likelihood drift. Reducing
+  actor mini-epochs from four to one is the smallest threshold-free test of
+  the multi-pass hypothesis. It does not assert that one pass will succeed.
+
+execution_gate:
+  separately_authorized_fresh_training_required: false
+  authorization_received: true
+  warm_start_allowed: false
+  source_checkpoint_resume_allowed: false
+  chunk_commit_allowed_for_diagnostic: false
+  performance_success_claim_requires_CPU_40_of_40: true
+  seed_sweep_allowed: false
+  fallback_hyperparameter_sweep_allowed: false

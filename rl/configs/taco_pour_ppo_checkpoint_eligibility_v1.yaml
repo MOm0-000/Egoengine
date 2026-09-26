@@ -7,9 +7,9 @@ default:
 reason: >-
   Every checkpoint under affected_runs was trained while rollout old
   likelihoods and PPO recomputed likelihoods used different
-  observation-normalization states. The separately listed post-fix checkpoint
-  is valid algorithm evidence but still cannot be resumed because its CPU
-  validation failed and no chunk was committed.
+  observation-normalization states. The separately listed post-fix checkpoints
+  are valid algorithm evidence but still cannot be resumed because their CPU
+  validations failed and no chunk was committed.
 
 affected_runs:
   taco_pour_corrected_first_ppo_v1:
@@ -58,4 +58,24 @@ post_fix_checkpoint:
     path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_fresh_ppo_credit_instrumented_v1/checkpoint_artifacts/last_ep_8_rew__5.789554_.pth.gz
     sha256: 044bd57759f16732db32185fb47a5e0f2cfaa56aa10d84c3db44cc640473e38d
     gzip_payload_sha256: 124e4129c7b03beb95cf8ad9c0c3dbb5249dc0ef786de3fab56a0b76b0072e46
+  old_checkpoint_resume_allowed: false
+
+single_actor_pass_checkpoint:
+  exists: true
+  run: taco_pour_postfix_single_actor_pass_diagnostic_v1
+  paper_faithful: false
+  valid_postfix_algorithm_evidence: true
+  sole_algorithm_change: {actor_mini_epochs: {from: 4, to: 1}}
+  eligible_for_same_run_Replay_comparison: true
+  eligible_for_prior_independent_GPU_run_performance_comparison: false
+  eligible_for_warm_start: false
+  chunk_commit_written: false
+  CPU_validation:
+    successful_intervals: 28
+    attempted_intervals_including_failure: 29
+    first_failure_endpoint: 49
+  retained_compressed_artifact:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/ppo_chunk_20/nn/last_ep_8_rew__5.815153_.pth.gz
+    sha256: 159e7e462b584e10fd62764b82aac3725630088e45ee7720d71cd27bdfe59b97
+    gzip_payload_sha256: c855c49561589ca39599ea0e26b4439262e9b10652df6932b23aa4d33b8cecf5
   old_checkpoint_resume_allowed: false

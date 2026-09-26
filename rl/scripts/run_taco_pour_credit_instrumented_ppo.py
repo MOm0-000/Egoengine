@@ -19,6 +19,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 POSTFIX_SCHEMA = "taco_pour_postfix_fresh_ppo_credit_instrumented_v1"
+SINGLE_PASS_SCHEMA = "taco_pour_postfix_single_actor_pass_candidate_v1"
 LEGACY_SCHEMA = "taco_pour_corrected_fresh_ppo_credit_instrumented_v1"
 sys.path[:0] = [
     str(ROOT / "src"),
@@ -180,9 +181,15 @@ def main() -> None:
     if args.output_dir.exists():
         raise FileExistsError(args.output_dir)
     contract = yaml.safe_load(args.contract.read_text())
+    schema = contract.get("schema")
+    expected_status = (
+        "authorized_single_fresh_diagnostic_training"
+        if schema == SINGLE_PASS_SCHEMA
+        else "authorized_diagnostic_training"
+    )
     if (
-        contract.get("schema") not in {LEGACY_SCHEMA, POSTFIX_SCHEMA}
-        or contract.get("status") != "authorized_diagnostic_training"
+        schema not in {LEGACY_SCHEMA, POSTFIX_SCHEMA, SINGLE_PASS_SCHEMA}
+        or contract.get("status") != expected_status
         or contract.get("paper_faithful") is not False
         or contract.get("authorized_output_directory") != str(args.output_dir.resolve())
     ):
@@ -208,7 +215,7 @@ def main() -> None:
     gate = json.loads(paths["credit_instrumentation_gate"].read_text())
     if gate.get("status") != "passed" or not all(gate.get("checks", {}).values()):
         raise ValueError("credit instrumentation gate has not passed")
-    if contract["schema"] == POSTFIX_SCHEMA:
+    if schema in {POSTFIX_SCHEMA, SINGLE_PASS_SCHEMA}:
         normalization_gate = json.loads(
             paths["observation_normalization_commit_gate"].read_text()
         )
@@ -224,12 +231,20 @@ def main() -> None:
         ):
             raise ValueError("commit-enabled normalization gate has not passed")
         eligibility = yaml.safe_load(paths["checkpoint_eligibility"].read_text())
-        if eligibility.get("post_fix_checkpoint") != {
-            "exists": False,
-            "fresh_training_required": True,
-            "old_checkpoint_resume_allowed": False,
-        }:
-            raise ValueError("checkpoint eligibility no longer authorizes a fresh start")
+        post_fix_checkpoint = eligibility.get("post_fix_checkpoint", {})
+        if schema == POSTFIX_SCHEMA:
+            if post_fix_checkpoint != {
+                "exists": False,
+                "fresh_training_required": True,
+                "old_checkpoint_resume_allowed": False,
+            }:
+                raise ValueError("checkpoint eligibility no longer authorizes a fresh start")
+        elif (
+            post_fix_checkpoint.get("exists") is not True
+            or post_fix_checkpoint.get("eligible_for_warm_start") is not False
+            or post_fix_checkpoint.get("old_checkpoint_resume_allowed") is not False
+        ):
+            raise ValueError("single-pass candidate must not resume the old checkpoint")
     for name, row in contract["implementation"].items():
         path = Path(row["path"])
         if sha256(path) != row["sha256"]:
@@ -330,6 +345,15 @@ def main() -> None:
     validation_backend.verify_restored_snapshot(source)
 
     probe_panel = load_fixed_probe_panel(paths["fixed_probe_panel"])
+    actor_mini_epochs = 1 if schema == SINGLE_PASS_SCHEMA else 4
+    if schema == SINGLE_PASS_SCHEMA and contract.get("single_change") != {
+        "field": "PPO_actor_mini_epochs",
+        "baseline": 4,
+        "candidate": 1,
+        "actor_updates_per_training_epoch": 1,
+        "total_actor_updates_over_8_epochs": 8,
+    }:
+        raise ValueError("single-pass candidate changed more than actor mini-epochs")
     policy = train_chunk_ppo(
         training_backend,
         20,
@@ -342,6 +366,7 @@ def main() -> None:
         action_distribution_spec=spec,
         credit_audit_dir=args.output_dir / "credit_audit",
         credit_probe_panel=probe_panel,
+        actor_mini_epochs=actor_mini_epochs,
     )
     validation_backend.restore(source)
     validation_backend.verify_restored_snapshot(source)
@@ -357,7 +382,7 @@ def main() -> None:
     analysis = build_credit_analysis(credit_path)
     analysis_path = args.output_dir / "credit_analysis.json"
     analysis_path.write_text(json.dumps(analysis, indent=2) + "\n")
-    post_fix = contract["schema"] == POSTFIX_SCHEMA
+    post_fix = schema in {POSTFIX_SCHEMA, SINGLE_PASS_SCHEMA}
     report = {
         "schema": contract["schema"],
         "status": (
@@ -370,6 +395,8 @@ def main() -> None:
         "task_success_claimed": False,
         "performance_comparison_to_prior_gpu_run_allowed": False,
         "training": training,
+        "actor_mini_epochs": actor_mini_epochs,
+        "critic_mini_epochs": 4,
         "objective": objective.as_report(),
         "residual_action": residual_report,
         "action_distribution": distribution_report,

@@ -1,0 +1,403 @@
+{
+  "schema": "taco_ppo_training_visitation_v5",
+  "status": "complete",
+  "logging_semantics": {
+    "endpoint_alignment": "transition t->t+1 commands ctrl[t+1], scores physical state[t+1] against ref[t+1], and exposes ref[t+2] to the next actor observation except for reference-tail clipping",
+    "sampled_action_preclamp": "stochastic action sampled from the PPO policy distribution before the official [-1,1] clamp; this is not actor mean mu",
+    "sampled_action_clamped": "the same sampled action after the official [-1,1] clamp",
+    "actor_mu": "mean of the Gaussian PPO policy distribution used to draw the recorded sample",
+    "actor_sigma": "strictly-positive standard deviation (exp(logstd), not variance) of the Gaussian PPO policy distribution used to draw the recorded sample",
+    "reference_ctrl": "full residual-action control target at transition t->t+1 before the policy residual and before actuator ctrlrange",
+    "requested_residual": "full action-space signed control-target offset after local scale and formal safety clip, before actuator ctrlrange",
+    "effective_residual_after_ctrlrange": "full action-space signed control-target offset remaining after the model's enabled actuator ctrlrange clamp; not realized qpos motion",
+    "residual_lost_to_ctrlrange": "signed requested minus effective control-target residual",
+    "legacy_v2_applied_residual": "historical v2 right_wrist_applied_residual equals requested_residual for its recorded six dimensions; v2 artifacts remain immutable",
+    "actor_distribution_parameters": "mu and sigma are passively captured from the same official get_action_values result as the sampled action; no extra actor forward pass is performed",
+    "contact_summary": "control-endpoint hand-object finger flags; not substep collision topology",
+    "write_timing": "rollout samples are held in memory and written only at the next epoch boundary or after training completes"
+  },
+  "incomplete_step_discarded": false,
+  "action_contract": {
+    "dimensions": 36,
+    "actuator_names": [
+      "R_forearm_tx_position",
+      "R_forearm_ty_position",
+      "R_forearm_tz_position",
+      "R_forearm_roll_position",
+      "R_forearm_pitch_position",
+      "R_forearm_yaw_position",
+      "right_thumb_bend_position",
+      "right_thumb_rota1_position",
+      "right_thumb_rota2_position",
+      "right_index_bend_position",
+      "right_index_joint1_position",
+      "right_index_joint2_position",
+      "right_middle_joint1_position",
+      "right_middle_joint2_position",
+      "right_ring_joint1_position",
+      "right_ring_joint2_position",
+      "right_pinky_joint1_position",
+      "right_pinky_joint2_position",
+      "L_forearm_tx_position",
+      "L_forearm_ty_position",
+      "L_forearm_tz_position",
+      "L_forearm_roll_position",
+      "L_forearm_pitch_position",
+      "L_forearm_yaw_position",
+      "left_thumb_bend_position",
+      "left_thumb_rota1_position",
+      "left_thumb_rota2_position",
+      "left_index_bend_position",
+      "left_index_joint1_position",
+      "left_index_joint2_position",
+      "left_middle_joint1_position",
+      "left_middle_joint2_position",
+      "left_ring_joint1_position",
+      "left_ring_joint2_position",
+      "left_pinky_joint1_position",
+      "left_pinky_joint2_position"
+    ],
+    "coordinate_units": [
+      "m",
+      "m",
+      "m",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "m",
+      "m",
+      "m",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad"
+    ],
+    "residual_scale": 0.05,
+    "residual_clip": 0.05,
+    "ctrlrange": {
+      "control_clamping_enabled": true,
+      "model_disableflags": 0,
+      "ctrllimited": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "ctrlrange": [
+        [
+          -5.0,
+          5.0
+        ],
+        [
+          -5.0,
+          5.0
+        ],
+        [
+          -5.0,
+          5.0
+        ],
+        [
+          -6.2,
+          6.2
+        ],
+        [
+          -6.2,
+          6.2
+        ],
+        [
+          -6.2,
+          6.2
+        ],
+        [
+          0.0,
+          1.83
+        ],
+        [
+          -1.05,
+          1.57
+        ],
+        [
+          -0.175,
+          1.83
+        ],
+        [
+          -0.175,
+          0.175
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.94
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          -5.0,
+          5.0
+        ],
+        [
+          -5.0,
+          5.0
+        ],
+        [
+          -5.0,
+          5.0
+        ],
+        [
+          -6.2,
+          6.2
+        ],
+        [
+          -6.2,
+          6.2
+        ],
+        [
+          -6.2,
+          6.2
+        ],
+        [
+          0.0,
+          1.83
+        ],
+        [
+          -1.05,
+          1.57
+        ],
+        [
+          -0.17,
+          1.83
+        ],
+        [
+          -0.175,
+          0.175
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ]
+      ]
+    }
+  },
+  "object_roles": [
+    "tool",
+    "target"
+  ],
+  "hand_roles": [
+    "right",
+    "left"
+  ],
+  "epochs": [
+    {
+      "epoch": 1,
+      "frame_at_start": 0,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/ppo_chunk_20/training_visitation/epoch_0001_visits.npz",
+        "sha256": "7e169c13c8a27dfd6ea7eb35cc9cd77e5ba250af3a04f5f79394c928b111f644"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/ppo_chunk_20/training_visitation/epoch_0001_summary.json",
+        "sha256": "ffd04b68a3b0109aa70d269f2a94abc24cfdcef59d88f175de2dfcc698e11806"
+      }
+    },
+    {
+      "epoch": 2,
+      "frame_at_start": 160,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/ppo_chunk_20/training_visitation/epoch_0002_visits.npz",
+        "sha256": "c437bcb0d8f34e3a947afb2cf28962747123e8f16b02fbe7f0bc635e3f6d4ec3"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/ppo_chunk_20/training_visitation/epoch_0002_summary.json",
+        "sha256": "0370b76e5f73e9287471ff7359f04993fdbc7abecb89d5ff4cda363626bfde4c"
+      }
+    },
+    {
+      "epoch": 3,
+      "frame_at_start": 320,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/ppo_chunk_20/training_visitation/epoch_0003_visits.npz",
+        "sha256": "6147cb5ad7cf5836965623d99c114cbb8621da96da25fed06372f00b4f9749f7"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/ppo_chunk_20/training_visitation/epoch_0003_summary.json",
+        "sha256": "d1cf614e2f7cbc3805726472be883ba9aa95d02e65563c84f2341d11331ea338"
+      }
+    },
+    {
+      "epoch": 4,
+      "frame_at_start": 480,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/ppo_chunk_20/training_visitation/epoch_0004_visits.npz",
+        "sha256": "c9107d6e235d052cfe053a8c4a5963687aacfa72a944f7085481d9ce131094b8"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/ppo_chunk_20/training_visitation/epoch_0004_summary.json",
+        "sha256": "168bf268ffa0dadc02996eec542726ab6202f96b3d6c47473646039b9b6a7e5a"
+      }
+    },
+    {
+      "epoch": 5,
+      "frame_at_start": 640,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/ppo_chunk_20/training_visitation/epoch_0005_visits.npz",
+        "sha256": "e791342a55fd0d7396a156cbd69f5544efd979879c2a789927f11e69f26f6e99"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/ppo_chunk_20/training_visitation/epoch_0005_summary.json",
+        "sha256": "096e3fb6ecf437880362a491ab71cc7999f84fcaba80b945a9b9c0ac1b60c262"
+      }
+    },
+    {
+      "epoch": 6,
+      "frame_at_start": 800,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/ppo_chunk_20/training_visitation/epoch_0006_visits.npz",
+        "sha256": "51c9a54fac8292da9538b5bced94bb86528b628f5b389801fc261f8c40360b8b"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/ppo_chunk_20/training_visitation/epoch_0006_summary.json",
+        "sha256": "e75d7b9f5a0913ec858827cb84d1083245f6ec81e220ff8ec8dd736ffb558538"
+      }
+    },
+    {
+      "epoch": 7,
+      "frame_at_start": 960,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/ppo_chunk_20/training_visitation/epoch_0007_visits.npz",
+        "sha256": "07f2ebe322392df56a6673a2c6577d2f405c87f2a1a3f0aee2155859da6df310"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/ppo_chunk_20/training_visitation/epoch_0007_summary.json",
+        "sha256": "b2f02236e9f32b127ac00ac9f9e45888ecaab5f22631b38d9e2ed8974ada6c84"
+      }
+    },
+    {
+      "epoch": 8,
+      "frame_at_start": 1120,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/ppo_chunk_20/training_visitation/epoch_0008_visits.npz",
+        "sha256": "7a0abc9ba3d54104d870fa5b3a1b4e7b4f41241415f299c379246c6d8cc3e057"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/ppo_chunk_20/training_visitation/epoch_0008_summary.json",
+        "sha256": "0056ec6f0c05b9eefb084ffa05e2048356458770746a46ad6e90d4545867f401"
+      }
+    }
+  ]
+}

@@ -213,7 +213,10 @@ def _build_ppo_config(
     learning_rate: float,
     device: str,
     asymmetric_critic: AsymmetricCriticConfig | None,
+    actor_mini_epochs: int = 4,
 ) -> PpoConfig:
+    if actor_mini_epochs < 1:
+        raise ValueError("actor_mini_epochs must be positive")
     batch_size = num_envs * horizon_length
     minibatch_size = batch_size
     return PpoConfig(
@@ -228,7 +231,7 @@ def _build_ppo_config(
         gamma=0.998,
         tau=0.95,
         reward_shaper=RewardsShaperParams(scale_value=1.0),
-        mini_epochs=4,
+        mini_epochs=actor_mini_epochs,
         e_clip=0.2,
         multi_gpu=False,
         device=device,

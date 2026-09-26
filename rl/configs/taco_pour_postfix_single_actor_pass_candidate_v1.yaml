@@ -1,10 +1,11 @@
 schema: taco_pour_postfix_single_actor_pass_candidate_v1
-status: frozen_candidate_not_authorized_to_run
+status: completed_single_fresh_diagnostic_training_no_commit
 paper_faithful: false
 purpose: >-
-  Test whether repeated actor passes over one 160-sample rollout drive the
-  post-fix deterministic policy toward broad saturation. This freezes one
-  future single-variable experiment; it does not authorize training.
+  Run the one user-authorized local reproduction experiment testing whether
+  repeated actor reuse over one 160-sample rollout drives deterministic policy
+  extremization. This is not a recovered EgoEngine PPO hyperparameter.
+authorized_output_directory: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1
 
 single_change:
   field: PPO_actor_mini_epochs
@@ -37,6 +38,96 @@ unchanged:
   CPU_validation_intervals: 40
   GPU_may_decide_acceptance: false
 
+training:
+  worlds: 4
+  epochs: 8
+  horizon_per_world_per_epoch: 40
+  samples_per_epoch: 160
+  total_samples: 1280
+  seed: 0
+  fixed_reset_endpoints: [20, 20, 20, 20]
+  old_actor_or_checkpoint_resume: false
+  tail_curriculum: false
+
+inputs:
+  simulator_config:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/simulator_config.yaml
+    sha256: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+  initialization_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/initialization_report.json
+    sha256: 9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a
+  protocol:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/protocol.yaml
+    sha256: e90830ea1971f2238f4de6a54600930ed9b4cb308ada948fb43110a844098ac8
+  objective_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/objective_profile.yaml
+    sha256: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+  observation_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/observation_profile.yaml
+    sha256: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  action_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/action_profile.yaml
+    sha256: 71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4
+  distribution_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/distribution_profile.yaml
+    sha256: 6a4e4bd8f33fa53bfe34f21f822bfa391253cca090892767154320fc9bbfd1b8
+  source_boundary:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/source_boundary.pt.gz
+    sha256: a3646e24af1ba871e5ecc885669508223a5e0f26d3cf29f0482f02678419e337
+  credit_instrumentation_gate:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/credit_instrumentation_gate.json
+    sha256: 4d71287014f684fbc695935aab54e492427a679fde3e93fbc4f7aea643f609a3
+  observation_normalization_contract:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/observation_normalization_contract.yaml
+    sha256: 0e8bc46f33b94054d03d2bb525eee85c8b49bab4f0b95a0460aae08ea1773f6c
+  observation_normalization_commit_gate:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/observation_normalization_commit_gate.json
+    sha256: ba5d690e900e7712be53ab273328eaee31419177e3e85d0597dcfc18f003f74a
+  checkpoint_eligibility:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/checkpoint_eligibility.yaml
+    sha256: db1c31e775b0f3d2fe28f54116c0dc680c3b3ec390fd56b4e26669981b16a442
+  fixed_probe_panel:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/fixed_probe_panel.npz
+    sha256: 8552b8cab3c7ee1d9e0f0fad283fcc6cd7edc1f77e2dca01325a963b5f8e5d7b
+  prior_credit_inventory:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/prior_credit_inventory.json
+    sha256: 3f9629533b8a30fb942d596448d0277a2c0cbda60a3d72476d63bf9eecf8ec65
+
+implementation:
+  credit_audit:
+    path: /data_all/zzx/3.2RL/src/video_to_spider/rl/credit_audit.py
+    sha256: fdd6f5e3959412b64862d215c1190d826c3dbb4ab6d2565f0e2f60ff16cee523
+  state_feasible_distribution:
+    path: /data_all/zzx/3.2RL/src/video_to_spider/rl/state_feasible_truncated_gaussian.py
+    sha256: 57f4464960f7d8c492e5debfef93b3a5f1012db9d5ae9222edade9eaeaa99105
+  ppo_chunk_adapter:
+    path: /data_all/zzx/3.2RL/src/video_to_spider/rl/replay_rl.py
+    sha256: 1098a01071946a3cfc815c3f8ddd027aadabf6397111d16ff8bfd1d2a5248146
+  running_mean_std:
+    path: /data_all/zzx/3.2RL/external/human2sim2robot/human2sim2robot/ppo/utils/running_mean_std.py
+    sha256: 923f39b11c954b96697be40a9066bb5c916404e41a018ee9bc8958cdf2179784
+  model_observation_interface:
+    path: /data_all/zzx/3.2RL/external/human2sim2robot/human2sim2robot/ppo/utils/models.py
+    sha256: 591bd77e36a482e57edd78aae1f3d22098573c1bea59cbe0fe71ca95832c26fc
+  mjwp_environment:
+    path: /data_all/zzx/3.2RL/src/video_to_spider/rl/mjwp_env.py
+    sha256: dde2bec6fb298b127ca6d3275b2b5e38d3a4cd5204144ea25603c610dac912a9
+  training_trace:
+    path: /data_all/zzx/3.2RL/src/video_to_spider/rl/training_trace.py
+    sha256: f74e451fc8bd356bc0ee0338b2e5c4166d175e14c1ea7cf557ec3baf2ef03bc5
+  official_ppo_agent:
+    path: /data_all/zzx/3.2RL/external/human2sim2robot/human2sim2robot/ppo/ppo_agent.py
+    sha256: b41f1c088d8ad4e261b9c5338f90a7f0ae910b7453ab348532312b3d87bc4c30
+  official_asymmetric_critic:
+    path: /data_all/zzx/3.2RL/external/human2sim2robot/human2sim2robot/ppo/utils/asymmetric_critic.py
+    sha256: d492992808cd948a6b22c5488b4a57ae48c2c5361a507504a81fa16b08cc1eec
+  ppo_config_builder:
+    path: /data_all/zzx/3.2RL/scripts/run_mjwp_ppo.py
+    sha256: 4b887e5e4f493fdc5a6541f3c1c811ec65a4e2cbab9f974cc1627e0d54048b84
+  run_script:
+    path: /data_all/zzx/3.2RL/scripts/run_taco_pour_credit_instrumented_ppo.py
+    sha256: 14aac2a8c3c1b1f20737edfd79ebd37861b754f7039b4a7f0840ea447c9c92f6
+
 evidence:
   report:
     path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_policy_extremization_audit_v1/report.json
@@ -58,10 +149,33 @@ interpretation: >-
   the multi-pass hypothesis. It does not assert that one pass will succeed.
 
 execution_gate:
-  separately_authorized_fresh_training_required: true
+  separately_authorized_fresh_training_required: false
+  authorization_received: true
+  authorization_consumed: true
+  rerun_authorized: false
   warm_start_allowed: false
   source_checkpoint_resume_allowed: false
   chunk_commit_allowed_for_diagnostic: false
   performance_success_claim_requires_CPU_40_of_40: true
   seed_sweep_allowed: false
   fallback_hyperparameter_sweep_allowed: false
+
+result:
+  formal_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/report.json
+    sha256: d1690633bb3c29c16f92e8114a9f71142a8bde0d141114abd68fda359eb0344b
+  read_only_audit:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_audit_v1/report.json
+    sha256: a6cf2486d934f3ec88c2aaae346116f5d43fd2773c4f7249367cc23c7822a2a8
+  replay: {successful_intervals: 30, first_failure_endpoint: 51}
+  deterministic_PPO: {successful_intervals: 28, first_failure_endpoint: 49}
+  chunk_commit_written: false
+  checkpoint_warm_start_allowed: false
+  interpretation: >-
+    One actor pass materially improves over the prior valid four-pass PPO
+    result of 19 successful intervals, but remains below same-run Replay and
+    fails strict 40/40. Excess actor reuse was a real contributor, not the only
+    remaining cause.
+  cross_run_causal_limit: >-
+    Because GPU training is non-deterministic, the 19-to-28 comparison follows
+    the predeclared interpretation rule but is not a bitwise causal ablation.

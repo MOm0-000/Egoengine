@@ -13,12 +13,12 @@ The active Replay→RL chain uses:
 Run the complete suite from the project root with:
 
 ```bash
-PYTHONPATH="$PWD/.env_mjwp313_overlay:$PWD/src:$PWD/external/mink/src:$PWD/external/human2sim2robot:$PWD/external/spider_compat" \
+PYTHONPATH="$PWD/.env_mjwp313_overlay:$PWD/src:$PWD/scripts:$PWD/external/mink/src:$PWD/external/human2sim2robot:$PWD/external/spider_compat" \
   OMP_NUM_THREADS=4 \
   /data_all/zzx/egoengine/spider/.venv/bin/python -m pytest -q
 ```
 
-On 2026-09-26 this command passed **660 tests and 57 subtests**.
+On 2026-09-26 this command passed **665 tests and 57 subtests**.
 The 19 warnings are known upstream/diagnostic warnings: capsule-mesh MULTICCD
 capacity, PyTorch AMP deprecations, two Trimesh degenerate-volume warnings and
 seven SciPy pickle deprecations.
@@ -54,6 +54,9 @@ runs/taco_pour_fresh_ppo_credit_evidence_v1/
 runs/taco_pour_observation_normalization_gate_v1/
 runs/taco_pour_observation_normalization_commit_gate_v1/
 runs/taco_pour_postfix_fresh_ppo_credit_instrumented_v1/
+runs/taco_pour_postfix_policy_extremization_audit_v1/
+runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/
+runs/taco_pour_postfix_single_actor_pass_audit_v1/
 ```
 
 The first corrected PPO authorization is consumed. Replay passed the first
@@ -205,10 +208,31 @@ KL `0.21234` and an outside-`[0.8,1.2]` ratio fraction of `0.8375`.
 
 Thirty-two fixed-seed stochastic final-policy rollouts are diagnostic only:
 29 reach endpoint 40, 28 pass it, but none pass the complete 40-step window.
-Deterministic CPU validation remains the sole judge. The next frozen candidate
-changes only actor mini-epochs from four to one; it is not authorized to run,
-does not change critic passes, learning rate, reward, action contract or CPU
-acceptance, and cannot warm-start from the failed checkpoint.
+Deterministic CPU validation remains the sole judge.
+
+The one authorized single-variable follow-up changed only actor mini-epochs
+from four to one. It used a fresh actor, critic and optimizer, kept the critic
+at four mini-epochs, and retained the same four worlds, eight epochs, 1,280
+samples, seed, reward, action distribution and CPU acceptance rule. All eight
+first-update ratios are exactly 1. Replay again passes 30 intervals and fails
+at endpoint 51. The deterministic PPO passes 28 intervals and fails at
+endpoint 49, so it materially improves over the valid four-pass PPO's 19
+intervals but remains below Replay and strict 40/40. No chunk is committed and
+the retained compressed checkpoint is ineligible for warm start.
+Because the two actors came from separate non-deterministic GPU trainings, the
+19-to-28 change is the predeclared single-variable evidence classification,
+not a bitwise causal ablation.
+
+The matching read-only audit shows that PPO is no worse than Replay through
+endpoint 47 and first becomes worse at endpoint 48. It restores right-hand
+tool contact over endpoints 37--40 and scores 0.586106 at endpoint 40. All
+eight optimizer transitions still increase the failure-focused saturation
+count; their net signed movement toward the final saturated directions is
+`+13.6272`, while RMS commits contribute `-2.15111`. Post-optimizer exact KL
+on the fixed source-32--39 probe panel reaches `0.0397362`. Of 32 fixed-seed
+stochastic rollouts, 31 pass endpoint 40 and none finish the 40-step window.
+The single authorization is consumed; no rerun, warm start, sweep or further
+algorithm change is currently authorized.
 
 ## Archived invalid performance evidence
 
