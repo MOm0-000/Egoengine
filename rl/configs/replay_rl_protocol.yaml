@@ -8,7 +8,7 @@ evidence_policy:
   order: [paper, verified_implementation_defect, disclosed_local_proposal]
   paper_page_numbers: one_based_pdf_pages
   copied_defaults_are_author_settings: false
-  current_revision: source46_state_entry_gate_failed_source45_attribution_required
+  current_revision: source45_gate_passed_right_wrist_translation_candidate_decision_required
 
 inputs:
   setting: user_approved_gt_oracle_validation_not_full_perception_reproduction
@@ -385,7 +385,7 @@ evaluation:
       right-hand tool contact is already absent. The predeclared evidence gate
       therefore does not authorize the half-learning-rate training candidate.
   postfix_single_actor_pass_half_LR_candidate:
-    status: frozen_but_blocked_by_endpoint47_49_read_only_gate
+    status: frozen_blocked_not_selected_after_source45_state_entry_gate
     paper_faithful: false
     contract: /data_all/zzx/3.2RL/configs/taco_pour_postfix_single_actor_pass_lr_half_candidate_v1.yaml
     sole_future_change: {actor_learning_rate: {baseline: 0.0001, candidate: 0.00005}}
@@ -418,7 +418,7 @@ evaluation:
     new_training_authorized: false
     next_read_only_direction: source46_state_entry_attribution
   source46_state_entry_gate:
-    status: completed_read_only_gate_no_branch_passed
+    status: completed_joint_gate_no_branch_passed_tracking_rescue_present
     paper_faithful: false
     contract: /data_all/zzx/3.2RL/configs/taco_pour_source46_state_entry_gate_v1.yaml
     output: /data_all/zzx/3.2RL/runs/taco_pour_source46_state_entry_gate_v1
@@ -433,9 +433,33 @@ evaluation:
       zero_full_36d_residual: {contact_at_48: true, endpoint49_score: 1.0445936918258667, failure_endpoint: 49}
     passing_branches: []
     gate_passed: false
+    source46_still_controls_tracking_feasibility: true
+    contact_at_48_is_necessary_for_short_horizon_feasibility: false
+    contact_at_48_is_sufficient_for_short_horizon_feasibility: false
     new_training_authorized: false
     half_LR_candidate_unblocked: false
-    next_read_only_direction: source45_state_entry_attribution
+    next_read_only_direction: completed_by_source45_state_entry_gate
+  source45_state_entry_gate:
+    status: completed_read_only_primary_gate_passed_no_training_authorized
+    paper_faithful: false
+    contract: /data_all/zzx/3.2RL/configs/taco_pour_source45_state_entry_gate_v1.yaml
+    output: /data_all/zzx/3.2RL/runs/taco_pour_source45_state_entry_gate_v1
+    report: /data_all/zzx/3.2RL/runs/taco_pour_source45_state_entry_gate_v1/report.json
+    formal_traces_source45_suffix_and_source46_actor_bitwise_reproduced: true
+    primary_gate: survive_endpoint50_under_original_object_tracking_boundary
+    contact_is_secondary_not_acceptance: true
+    branch_results:
+      zero_R_forearm_ty_residual_only: {endpoint50_survives: false, endpoint50_score: 1.0591870546340942, failure_endpoint: 50}
+      zero_right_wrist_translation: {endpoint50_survives: true, endpoint50_score: 0.9937561750411987, failure_endpoint: 51}
+      zero_complete_right_wrist: {endpoint50_survives: true, endpoint50_score: 0.9861631989479065, failure_endpoint: 51}
+      zero_entire_right_hand_residual: {endpoint50_survives: false, endpoint50_score: 1.0342196226119995, failure_endpoint: 50}
+      zero_full_36d_residual: {endpoint50_survives: false, endpoint50_score: 1.0388888120651245, failure_endpoint: 50}
+    passing_branches: [zero_right_wrist_translation, zero_complete_right_wrist]
+    narrowest_passing_branch: zero_right_wrist_translation
+    source46_actor_mu_y_reduced_by_passing_branches: false
+    next_candidate_direction: right_wrist_translation_temporal_scale_or_gating
+    new_training_authorized: false
+    half_LR_candidate_unblocked: false
 
 runtime_contract:
   fail_closed: true
@@ -501,7 +525,7 @@ runtime_contract:
     cpu_commit_endpoint_offset: 20
 
 training_ready: false
-training_ready_scope: source46_state_entry_gate_failed_source45_attribution_required
+training_ready_scope: source45_gate_passed_right_wrist_translation_candidate_decision_required
 
 audit_results:
   active_input: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/input_audit.json
@@ -533,6 +557,7 @@ audit_results:
   postfix_single_actor_pass_half_LR_candidate: /data_all/zzx/3.2RL/configs/taco_pour_postfix_single_actor_pass_lr_half_candidate_v1.yaml
   source47_semantic_action_subspace_gate: /data_all/zzx/3.2RL/runs/taco_pour_source47_semantic_action_subspace_gate_v1/report.json
   source46_state_entry_gate: /data_all/zzx/3.2RL/runs/taco_pour_source46_state_entry_gate_v1/report.json
+  source45_state_entry_gate: /data_all/zzx/3.2RL/runs/taco_pour_source45_state_entry_gate_v1/report.json
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -572,13 +597,15 @@ historical_observation_normalization_misaligned:
     - old_checkpoint_task_performance_as_an_algorithm_baseline
 
 blocking_checks:
-  - source46_state_entry_gate_failed_source45_attribution_required
+  - source45_gate_passed_right_wrist_translation_candidate_decision_required
 result_acceptance_blockers:
   - active_corrected_Replay_passes_only_30_of_40_in_second_window
   - postfix_single_actor_pass_PPO_passes_only_28_intervals_before_failure_at_endpoint49
   - source47_zero_residual_still_fails_endpoint49_and_source48_has_no_tool_effect
   - no_source47_semantic_action_subspace_preserves_contact_or_survives_endpoint49
-  - no_source46_state_entry_branch_both_reacquires_contact_at_endpoint48_and_survives_endpoint49
+  - source46_wrist_weakening_rescues_endpoint49_but_not_endpoint50
+  - endpoint48_contact_is_neither_necessary_nor_sufficient_for_short_horizon_tracking_feasibility
+  - source45_translation_or_wrist_suppression_survives_endpoint50_but_fails_endpoint51
   - unpublished_threshold_to_weighted_objective_mapping
   - stable_grasp_and_physical_pour_not_demonstrated
 paper_faithful_run_blockers:

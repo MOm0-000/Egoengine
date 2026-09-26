@@ -1,5 +1,5 @@
 schema: taco_pour_postfix_single_actor_pass_lr_half_candidate_v1
-status: frozen_but_blocked_by_endpoint47_49_read_only_gate
+status: frozen_blocked_not_selected_after_source45_state_entry_gate
 paper_faithful: false
 purpose: >-
   Freeze, but do not authorize, the single-variable local reproduction
@@ -72,6 +72,23 @@ pretraining_read_only_gate:
     The predeclared evidence gate did not support weaker local residual as a
     sufficient mitigation of the current endpoint-49 divergence. Keep the
     half-LR candidate frozen for provenance, but do not authorize its training.
+
+latest_state_entry_evidence:
+  source46_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_source46_state_entry_gate_v1/report.json
+    sha256: dc95af1df505636850ca432d26d0c4437ffe673e79ed9feb687e61deeae8241d
+  source45_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_source45_state_entry_gate_v1/report.json
+    sha256: 2f8a0ad2bccd5b5c0aacbe1fe5be59e32a56c15d4c39bf498f5965e906e1e64a
+  source45_primary_gate_passed_by:
+    - zero_right_wrist_translation
+    - zero_complete_right_wrist
+  source45_narrowest_passing_branch: zero_right_wrist_translation
+  half_LR_selected_for_next_experiment: false
+  interpretation: >-
+    The strongest new evidence points to the timing or state-dependent gating
+    of the right-wrist translation subspace, not a global actor learning-rate
+    change. This historical half-LR candidate remains frozen and unauthorized.
 
 evidence:
   source_run_report:

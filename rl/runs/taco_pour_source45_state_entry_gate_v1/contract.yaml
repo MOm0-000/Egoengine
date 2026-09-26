@@ -1,0 +1,145 @@
+schema: taco_pour_source45_state_entry_gate_v1
+status: authorized_read_only_gate
+paper_faithful: false
+purpose: >-
+  Test whether one predeclared source-45 residual intervention lets the frozen
+  policy survive endpoint 50. Contact is recorded as a transmission diagnostic
+  but is not an acceptance condition.
+
+runtime:
+  backend: CPU_MuJoCo_Warp
+  training_allowed: false
+  optimizer_steps: 0
+  actor_frozen: true
+  critic_frozen: true
+  observation_normalization_frozen: true
+  reward_changed: false
+  objective_changed: false
+  action_scale_changed: false
+  action_bound_changed: false
+  action_distribution_changed: false
+  reference_timing_changed: false
+  action_frame_changed: false
+  PPO_hyperparameters_changed: false
+  chunk_acceptance_allowed: false
+  chunk_commit_allowed: false
+  checkpoint_resume_for_training_allowed: false
+
+source:
+  endpoint: 45
+  formal_state_and_RNN_hidden_required: true
+  restored_formal_suffix_must_be_bitwise_exact: true
+
+branches:
+  - name: zero_R_forearm_ty_residual_only
+    zero_normalized_action_indices: [1]
+  - name: zero_right_wrist_translation
+    zero_normalized_action_indices: [0, 1, 2]
+  - name: zero_complete_right_wrist
+    zero_normalized_action_indices: [0, 1, 2, 3, 4, 5]
+  - name: zero_entire_right_hand_residual
+    zero_normalized_action_indices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+  - name: zero_full_36d_residual
+    zero_normalized_action_indices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35]
+intervention_control_steps: 1
+continuation: frozen_deterministic_PPO
+rollout_end_endpoint: 60
+individual_actuator_sweep_allowed: false
+scale_sweep_allowed: false
+multi_step_intervention_allowed: false
+
+primary_passing_condition:
+  rule: branch_survives_endpoint_50_under_original_object_tracking_boundary
+  required:
+    - endpoint_49_exists_and_is_not_terminated
+    - endpoint_50_exists_and_is_not_terminated
+  contact_required: false
+  training_automatically_authorized: false
+  chunk_acceptance_automatically_authorized: false
+
+secondary_contact_diagnostic:
+  endpoints: [46, 47, 48, 49, 50]
+  record: [finger_role, hand_and_tool_geom_names,
+    penetration_or_contact_distance_m, contact_normal_world, normal_force,
+    fingertip_positions_in_tool_frame,
+    wrist_tool_relative_linear_and_angular_velocity]
+  affects_gate_pass_fail: false
+  interpretation: >-
+    Source-46 evidence shows that endpoint-48 contact is neither necessary nor
+    sufficient for short-horizon object-tracking feasibility.
+  positive_surface_gap_method: none
+  mj_geomDistance_positive_gap_forbidden: true
+
+source46_actor_effect:
+  compare: counterfactual_source46_minus_formal_source46
+  record_full_36d: [actor_mu, deterministic_action, state_feasible_low,
+    state_feasible_high]
+  highlighted_groups:
+    R_forearm_ty: [1]
+    right_wrist_translation: [0, 1, 2]
+    right_fingers: [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+  purpose: distinguish_physical_state_entry_from_closed_loop_policy_change
+
+tracking_diagnostic:
+  endpoints: [46, 47, 48, 49, 50]
+  record: [position_error_xyz, position_error_norm, rotation_error,
+    position_ellipse_contribution, rotation_ellipse_contribution]
+  position_rotation_tradeoff_is_not_collapsed: true
+
+candidate_precedence_if_multiple_pass:
+  - zero_R_forearm_ty_residual_only
+  - zero_right_wrist_translation
+  - zero_complete_right_wrist
+  - zero_entire_right_hand_residual
+  - zero_full_36d_residual
+candidate_direction_if_passed:
+  zero_R_forearm_ty_residual_only: right_wrist_y_temporal_scale_or_gating
+  zero_right_wrist_translation: right_wrist_translation_temporal_scale_or_gating
+  zero_complete_right_wrist: right_wrist_pose_residual
+  zero_entire_right_hand_residual: broader_right_hand_state_entry_coupling
+  zero_full_36d_residual: bilateral_or_target_state_entry_coupling
+decision_if_all_fail: source44_state_entry_and_44_to_47_earliest_rescue_range_summary_required
+
+frozen_half_LR_candidate:
+  actor_learning_rate: 5.0e-5
+  remains_blocked: true
+
+inputs:
+  formal_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/report.json
+    sha256: d1690633bb3c29c16f92e8114a9f71142a8bde0d141114abd68fda359eb0344b
+  source46_gate_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_source46_state_entry_gate_v1/report.json
+    sha256: dc95af1df505636850ca432d26d0c4437ffe673e79ed9feb687e61deeae8241d
+  checkpoint:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/ppo_chunk_20/nn/last_ep_8_rew__5.815153_.pth.gz
+    sha256: 159e7e462b584e10fd62764b82aac3725630088e45ee7720d71cd27bdfe59b97
+  boundary:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/source_boundary.pt.gz
+    sha256: a3646e24af1ba871e5ecc885669508223a5e0f26d3cf29f0482f02678419e337
+  simulator_config:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml
+    sha256: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+  initialization_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/initialization_report.json
+    sha256: 9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a
+  protocol:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/protocol.yaml
+    sha256: e90830ea1971f2238f4de6a54600930ed9b4cb308ada948fb43110a844098ac8
+  objective_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/objective_profile.yaml
+    sha256: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+  observation_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/observation_profile.yaml
+    sha256: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  action_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/action_profile.yaml
+    sha256: 71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4
+  distribution_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/distribution_profile.yaml
+    sha256: 6a4e4bd8f33fa53bfe34f21f822bfa391253cca090892767154320fc9bbfd1b8
+
+artifacts:
+  report: report.json
+  summary: summary.md
+  branch_arrays: state_entry_branches.npz

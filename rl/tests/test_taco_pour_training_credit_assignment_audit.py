@@ -117,10 +117,10 @@ def test_artifacts_remain_hash_bound_and_protocol_advances_to_fresh_evidence():
 
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
     assert protocol["blocking_checks"] == [
-        "source46_state_entry_gate_failed_source45_attribution_required"
+        "source45_gate_passed_right_wrist_translation_candidate_decision_required"
     ]
     assert protocol["training_ready_scope"] == (
-        "source46_state_entry_gate_failed_source45_attribution_required"
+        "source45_gate_passed_right_wrist_translation_candidate_decision_required"
     )
     assert protocol["historical_observation_normalization_misaligned"][
         "active_algorithm_evidence"

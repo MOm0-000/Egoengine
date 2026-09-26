@@ -154,19 +154,61 @@ has no right-hand/tool contact there and reacquires index contact at endpoint
 48. The actual gate requires a live endpoint-48 contact, survival through
 endpoint 49, and a lower endpoint-49 score than formal PPO.
 
-The result exposes a tradeoff rather than an admissible repair. Suppressing
-wrist motion improves feasibility and postpones failure, but does not restore
-live transmission at endpoint 48. Suppressing the complete right hand or all
-36 residuals restores index contact, but position/rotation tracking still
-crosses the local ellipse at endpoint 49. Endpoint-47 comparisons report
+The result exposes a tradeoff rather than an admissible repair under that
+joint gate. Source 46 is not too late to affect task feasibility: suppressing
+wrist motion makes endpoint 49 feasible and postpones failure to endpoint 50,
+but does not restore live transmission at endpoint 48. Suppressing the
+complete right hand or all 36 residuals restores index contact, but
+position/rotation tracking still crosses the local ellipse at endpoint 49.
+Therefore endpoint-48 contact is neither necessary nor sufficient for this
+short-horizon tracking feasibility. Endpoint-47 comparisons report
 position, angle, velocity and fingertip distances separately; they do not mix
 metres and radians into a synthetic success distance, and no unreliable
 positive mesh gap is computed.
 
-Therefore all five predeclared branches fail. No reward, action scale,
-learning rate or training setting changes; no chunk is accepted or committed.
-The `actor_learning_rate=5e-5` candidate remains blocked, and the next
-read-only state-entry attribution moves to source 45.
+All five branches fail the earlier contact-plus-feasibility joint condition,
+not all forms of task control. No reward, action scale, learning rate or
+training setting changes; no chunk is accepted or committed. The
+`actor_learning_rate=5e-5` candidate remains blocked, and the next read-only
+state-entry attribution moves to source 45.
+
+## Source-45 state-entry gate
+
+The source-45 audit repeats exactly the same five one-step interventions and
+then resumes the frozen actor. Its primary gate is deliberately task-centric:
+endpoint 49 and endpoint 50 must both remain inside the existing object
+tracking boundary. Contact over endpoints 46--50 is retained as a detailed
+mechanistic diagnostic, but does not decide pass or fail.
+
+```text
+branch                                score@50  survives 50  first failure
+zero R_forearm_ty only                1.059187  no           endpoint 50
+zero right-wrist translation          0.993756  yes          endpoint 51
+zero complete right wrist             0.986163  yes          endpoint 51
+zero complete right hand              1.034220  no           endpoint 50
+zero all 36 residuals                 1.038889  no           endpoint 50
+```
+
+Right-wrist translation is the narrowest passing subspace. Zeroing only the y
+component is insufficient, while additionally zeroing wrist rotation is not
+required. The translation-only branch has no live right-hand/tool contact at
+endpoints 46--50 and still passes endpoint 50, further confirming that contact
+is not a short-horizon success criterion.
+
+The improvement is primarily a state-entry effect rather than self-correction
+of the previously saturated y decision. At source 46, the translation-only
+branch changes the full deterministic action by L2 `0.29738`, including wrist
+x/z and fingers, but `R_forearm_ty` remains clipped at `+1`; its raw mean rises
+from `1.54656` to `1.60884` instead of falling. The complete-wrist branch shows
+the same qualitative result: y remains clipped at `+1` and its raw mean rises
+slightly to `1.55688`.
+
+Both passing branches subsequently fail at endpoint 51, so this is not a
+40/40 success and no chunk is committed. The half-LR candidate is no longer
+the selected next direction. The evidence now points to a separately designed
+single-variable right-wrist-translation temporal or state-dependent gating
+candidate; its exact rule and promotion contract remain unresolved, and no
+new training is authorized yet.
 
 Superseded or invalid evidence remains isolated under `TRASH/` and is not part
 of the active decision chain.

@@ -106,7 +106,7 @@ def test_protocol_moves_to_source45_and_keeps_half_lr_blocked():
     half_lr = yaml.safe_load((
         ROOT / "configs/taco_pour_postfix_single_actor_pass_lr_half_candidate_v1.yaml"
     ).read_text())
-    blocker = "source46_state_entry_gate_failed_source45_attribution_required"
+    blocker = "source45_gate_passed_right_wrist_translation_candidate_decision_required"
     assert report["decision"]["passing_branches"] == []
     assert report["decision"]["gate_passed"] is False
     assert report["decision"]["actor_LR_5e_minus_5_unblocked"] is False
@@ -120,5 +120,5 @@ def test_protocol_moves_to_source45_and_keeps_half_lr_blocked():
     assert gate["passing_branches"] == []
     assert gate["new_training_authorized"] is False
     assert gate["half_LR_candidate_unblocked"] is False
-    assert gate["next_read_only_direction"] == "source45_state_entry_attribution"
+    assert gate["next_read_only_direction"] == "completed_by_source45_state_entry_gate"
     assert half_lr["execution_gate"]["fresh_training_authorized"] is False
