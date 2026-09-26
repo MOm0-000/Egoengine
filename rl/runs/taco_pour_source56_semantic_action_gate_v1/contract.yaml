@@ -1,0 +1,138 @@
+schema: taco_pour_source56_semantic_action_gate_v1
+status: authorized_read_only_gate
+paper_faithful: false
+classification: local_engineering_semantic_action_attribution_not_EgoEngine_RL
+purpose: >-
+  Determine whether suppressing one predeclared semantic action subspace at
+  the exact source-56 state created by the source-55 ON reversal restores
+  endpoint-57 feasibility.
+
+runtime:
+  backend: CPU_MuJoCo_Warp
+  training_allowed: false
+  optimizer_steps: 0
+  actor_frozen: true
+  critic_frozen: true
+  observation_normalization_frozen: true
+  reward_changed: false
+  objective_changed: false
+  action_scale_changed: false
+  action_bound_changed: false
+  action_distribution_changed: false
+  reference_timing_changed: false
+  action_frame_changed: false
+  PPO_hyperparameters_changed: false
+  learned_gate_training_allowed: false
+  actor_learning_rate_5e_minus_5_training_allowed: false
+  chunk_acceptance_allowed: false
+  chunk_commit_allowed: false
+  checkpoint_resume_for_training_allowed: false
+
+source_state:
+  source_endpoint: 56
+  construction:
+    - reproduce_binary_translation_oracle_from_endpoint_20
+    - at_source_55_force_complete_PPO_translation_ON_for_one_step
+    - capture_exact_source_56_complete_physics_state_and_pre_forward_RNN_hidden
+  source55_branch_arrays_must_be_bitwise_exact: true
+  actor_forward_calls_at_source56: 1
+  same_pre_step_snapshot_and_post_forward_hidden_for_all_candidates: true
+
+anchors:
+  - name: complete_PPO_translation_ON
+    zero_normalized_action_indices: []
+  - name: translation_OFF
+    zero_normalized_action_indices: [0, 1, 2]
+
+branches:
+  - name: zero_right_wrist_rotation
+    zero_normalized_action_indices: [3, 4, 5]
+  - name: zero_right_fingers
+    zero_normalized_action_indices: [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+  - name: zero_complete_right_wrist
+    zero_normalized_action_indices: [0, 1, 2, 3, 4, 5]
+  - name: zero_entire_right_hand
+    zero_normalized_action_indices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+  - name: zero_full_36d_residual
+    zero_normalized_action_indices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35]
+
+intervention:
+  control_steps: 1
+  source_endpoint: 56
+  individual_actuator_sweep_allowed: false
+  scale_sweep_allowed: false
+  additional_action_subspaces_allowed: false
+  contact_used_for_pass_fail: false
+
+passing_condition:
+  all_required:
+    - endpoint_57_does_not_terminate
+    - endpoint_57_objective_score_strictly_below_1
+  if_passed: resume_same_binary_translation_oracle_from_source_57_to_endpoint_60_or_failure
+  contact_required: false
+  training_automatically_authorized: false
+  chunk_acceptance_automatically_authorized: false
+
+required_diagnostics:
+  - endpoint57_position_error_xyz_m
+  - endpoint57_position_error_m
+  - endpoint57_rotation_error_rad
+  - endpoint57_position_and_rotation_ellipse_contributions
+  - endpoint57_right_hand_tool_contact
+  - first_failure_endpoint_after_binary_oracle_continuation
+
+decision_if_any_pass: >-
+  source56_semantic_action_subspace_can_restore_endpoint57_requires_new_failure_attribution
+decision_if_all_fail: >-
+  source56_semantic_action_suppression_insufficient_failure_attribution_must_move_earlier
+
+frozen_candidates:
+  learned_translation_gate: blocked
+  actor_learning_rate_5e_minus_5: blocked
+  reward_change: blocked
+
+inputs:
+  last_OFF_reversal_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_binary_translation_last_off_reversal_gate_v1/report.json
+    sha256: eac4c70828bc1d430da129d67a7489c7a42bdd5de2a2557a1cdf1a3dcc8a3fa7
+  last_OFF_reversal_arrays:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_binary_translation_last_off_reversal_gate_v1/last_off_reversal_branches.npz
+    sha256: c56405a5ca8f44fc489c102dd142a7679fa2ecc4473d086ffd83222b44b0a374
+  baseline_oracle_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_binary_translation_oracle_gate_v1/report.json
+    sha256: 396754a62be72190bc87db1a55d57af28bc77acf082f539e1eb668a0c161b9b4
+  baseline_oracle_arrays:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_binary_translation_oracle_gate_v1/binary_translation_oracle_trace.npz
+    sha256: 3e967c534c14bcec491af736fa613c4f643f11ea5765f5824064678944e72144
+  checkpoint:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/ppo_chunk_20/nn/last_ep_8_rew__5.815153_.pth.gz
+    sha256: 159e7e462b584e10fd62764b82aac3725630088e45ee7720d71cd27bdfe59b97
+  boundary:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/source_boundary.pt.gz
+    sha256: a3646e24af1ba871e5ecc885669508223a5e0f26d3cf29f0482f02678419e337
+  simulator_config:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml
+    sha256: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+  initialization_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/initialization_report.json
+    sha256: 9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a
+  protocol:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/protocol.yaml
+    sha256: e90830ea1971f2238f4de6a54600930ed9b4cb308ada948fb43110a844098ac8
+  objective_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/objective_profile.yaml
+    sha256: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+  observation_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/observation_profile.yaml
+    sha256: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  action_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/action_profile.yaml
+    sha256: 71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4
+  distribution_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/distribution_profile.yaml
+    sha256: 6a4e4bd8f33fa53bfe34f21f822bfa391253cca090892767154320fc9bbfd1b8
+
+artifacts:
+  report: report.json
+  summary: summary.md
+  branch_arrays: source56_semantic_branches.npz

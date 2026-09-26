@@ -103,7 +103,7 @@ def test_protocol_moves_to_candidate_design_without_authorizing_training():
     half_lr = yaml.safe_load((
         ROOT / "configs/taco_pour_postfix_single_actor_pass_lr_half_candidate_v1.yaml"
     ).read_text())
-    blocker = "final_OFF_reversal_does_not_restore_endpoint57_source56_semantic_authority_attribution_required"
+    blocker = "source56_semantic_action_suppression_insufficient_failure_attribution_must_move_earlier"
     assert report["decision"]["new_training_authorized"] is False
     assert report["decision"]["actor_LR_5e_minus_5_unblocked"] is False
     assert protocol["training_ready"] is False
@@ -117,7 +117,7 @@ def test_protocol_moves_to_candidate_design_without_authorizing_training():
     assert gate["contact_is_secondary_not_acceptance"] is True
     assert gate["new_training_authorized"] is False
     assert half_lr["status"] == (
-        "frozen_blocked_not_selected_after_last_OFF_reversal_gate"
+        "frozen_blocked_not_selected_after_source56_semantic_gate"
     )
     assert half_lr["latest_state_entry_evidence"][
         "half_LR_selected_for_next_experiment"

@@ -330,5 +330,35 @@ state into feasibility. The next read-only direction is semantic source-56
 action attribution from that source-55-reversal state. Learned-gate training,
 the half-LR PPO candidate, task acceptance and chunk commit remain blocked.
 
+## Source-56 semantic action attribution
+
+The next gate reconstructs the complete source-55-ON branch and verifies its
+saved arrays bitwise before capturing source 56. The actor is forwarded once;
+all candidates share the same complete physics snapshot and post-forward RNN
+hidden. Complete translation ON and translation OFF are regression anchors,
+not new branches. Five predeclared semantic suppressions are then evaluated:
+
+```text
+candidate                         score@57   position²   rotation²   contact
+complete PPO translation ON       1.004050   0.824477    0.183640    pinky
+translation OFF                   1.003057   0.822521    0.183602    none
+zero right-wrist rotation         1.004225   0.824656    0.183813    pinky
+zero right fingers                1.004103   0.824523    0.183700    pinky
+zero complete right wrist         1.003056   0.822520    0.183602    none
+zero entire right hand            1.003057   0.822521    0.183602    none
+zero all 36 residuals             1.003056   0.822519    0.183602    none
+```
+
+Every candidate strictly fails endpoint 57, so no branch reaches the binary
+oracle continuation. The failure remains position dominated across the whole
+declared semantic set. Pinky contact survives in some branches but does not
+make tracking feasible, while broader suppression collapses almost exactly to
+the translation-OFF anchor. This rules out source-56 selection among these
+semantic action groups as a sufficient repair; it does not claim that every
+possible source-56 action has been mathematically exhausted.
+
+Failure attribution must now move earlier than source 56. The learned gate,
+half-LR PPO, reward change, task acceptance and chunk commit remain blocked.
+
 Superseded or invalid evidence remains isolated under `TRASH/` and is not part
 of the active decision chain.

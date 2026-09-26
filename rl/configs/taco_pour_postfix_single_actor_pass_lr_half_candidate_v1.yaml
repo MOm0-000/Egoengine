@@ -1,5 +1,5 @@
 schema: taco_pour_postfix_single_actor_pass_lr_half_candidate_v1
-status: frozen_blocked_not_selected_after_last_OFF_reversal_gate
+status: frozen_blocked_not_selected_after_source56_semantic_gate
 paper_faithful: false
 purpose: >-
   Freeze, but do not authorize, the single-variable local reproduction
@@ -100,6 +100,11 @@ latest_state_entry_evidence:
     sha256: eac4c70828bc1d430da129d67a7489c7a42bdd5de2a2557a1cdf1a3dcc8a3fa7
   last_OFF_reversal_passing_branches: []
   source55_reversal_changes_source56_tool_pose_and_contact_but_not_feasibility: true
+  source56_semantic_action_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_source56_semantic_action_gate_v1/report.json
+    sha256: 34f0110632e98fc2ee632a26e9c07441eb214aa482e6180f25dd59338ef3614e
+  source56_passing_semantic_branches: []
+  source56_semantic_action_selection_exhausted: true
   half_LR_selected_for_next_experiment: false
   interpretation: >-
     A one-step binary translation oracle extends the frozen actor to 36/40.
@@ -108,9 +113,11 @@ latest_state_entry_evidence:
     source-56 bowl pose and contact but still cannot make endpoint 57
     feasible. Position and rotation are reported separately; no mixed
     position-plus-quaternion norm is interpreted as a metric distance. The
-    next work is semantic source-56 action attribution, not a global actor
-    learning-rate change. This historical candidate remains frozen and
-    unauthorized.
+    source-56 semantic action attribution then shows that zeroing rotation,
+    fingers, the complete wrist, the entire right hand or all 36 residuals
+    still fails endpoint 57. Failure attribution must move earlier, rather
+    than changing the global actor learning rate. This historical candidate
+    remains frozen and unauthorized.
 
 evidence:
   source_run_report:

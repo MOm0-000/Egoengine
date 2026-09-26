@@ -99,7 +99,7 @@ def test_protocol_moves_to_source46_without_unblocking_half_lr():
     half_lr = yaml.safe_load((
         ROOT / "configs/taco_pour_postfix_single_actor_pass_lr_half_candidate_v1.yaml"
     ).read_text())
-    blocker = "final_OFF_reversal_does_not_restore_endpoint57_source56_semantic_authority_attribution_required"
+    blocker = "source56_semantic_action_suppression_insufficient_failure_attribution_must_move_earlier"
     assert protocol["training_ready"] is False
     assert protocol["training_ready_scope"] == blocker
     assert protocol["blocking_checks"] == [blocker]
@@ -110,5 +110,5 @@ def test_protocol_moves_to_source46_without_unblocking_half_lr():
     assert gate["next_read_only_direction"] == "source46_state_entry_attribution"
     assert half_lr["execution_gate"]["fresh_training_authorized"] is False
     assert half_lr["status"] == (
-        "frozen_blocked_not_selected_after_last_OFF_reversal_gate"
+        "frozen_blocked_not_selected_after_source56_semantic_gate"
     )

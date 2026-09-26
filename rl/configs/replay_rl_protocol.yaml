@@ -8,7 +8,7 @@ evidence_policy:
   order: [paper, verified_implementation_defect, disclosed_local_proposal]
   paper_page_numbers: one_based_pdf_pages
   copied_defaults_are_author_settings: false
-  current_revision: final_OFF_reversal_does_not_restore_endpoint57_source56_semantic_authority_attribution_required
+  current_revision: source56_semantic_action_suppression_insufficient_failure_attribution_must_move_earlier
 
 inputs:
   setting: user_approved_gt_oracle_validation_not_full_perception_reproduction
@@ -385,7 +385,7 @@ evaluation:
       right-hand tool contact is already absent. The predeclared evidence gate
       therefore does not authorize the half-learning-rate training candidate.
   postfix_single_actor_pass_half_LR_candidate:
-    status: frozen_blocked_not_selected_after_last_OFF_reversal_gate
+    status: frozen_blocked_not_selected_after_source56_semantic_gate
     paper_faithful: false
     contract: /data_all/zzx/3.2RL/configs/taco_pour_postfix_single_actor_pass_lr_half_candidate_v1.yaml
     sole_future_change: {actor_learning_rate: {baseline: 0.0001, candidate: 0.00005}}
@@ -589,7 +589,35 @@ evaluation:
     new_PPO_training_authorized: false
     half_LR_candidate_unblocked: false
     chunk_acceptance_or_commit_authorized: false
-    next_read_only_direction: source56_semantic_action_attribution_from_source55_reversal_state
+    next_read_only_direction: completed_by_source56_semantic_action_gate
+  source56_semantic_action_gate:
+    status: completed_read_only_no_semantic_branch_passed
+    paper_faithful: false
+    classification: local_engineering_semantic_action_attribution_not_EgoEngine_RL
+    contract: /data_all/zzx/3.2RL/configs/taco_pour_source56_semantic_action_gate_v1.yaml
+    output: /data_all/zzx/3.2RL/runs/taco_pour_source56_semantic_action_gate_v1
+    report: /data_all/zzx/3.2RL/runs/taco_pour_source56_semantic_action_gate_v1/report.json
+    baseline_oracle_and_source55_ON_reversal_arrays_bitwise_reproduced: true
+    source56_actor_forward_calls: 1
+    contact_used_for_pass_fail: false
+    anchors:
+      complete_PPO_translation_ON: {score57: 1.0040502548217773, position_contribution: 0.8244771195641142, rotation_contribution: 0.18363998526780279, contact_fingers: [pinky], passed: false}
+      translation_OFF: {score57: 1.0030568838119507, position_contribution: 0.822520776335345, rotation_contribution: 0.1836024907636471, contact_fingers: [], passed: false}
+    branches:
+      zero_right_wrist_rotation: {score57: 1.004225492477417, position_contribution: 0.8246561810759667, rotation_contribution: 0.1838127955034139, contact_fingers: [pinky], passed: false}
+      zero_right_fingers: {score57: 1.0041028261184692, position_contribution: 0.8245226724120894, rotation_contribution: 0.18369996399952981, contact_fingers: [pinky], passed: false}
+      zero_complete_right_wrist: {score57: 1.0030564069747925, position_contribution: 0.8225197627631674, rotation_contribution: 0.1836024907636471, contact_fingers: [], passed: false}
+      zero_entire_right_hand: {score57: 1.0030568838119507, position_contribution: 0.822520776335345, rotation_contribution: 0.18360235455081092, contact_fingers: [], passed: false}
+      zero_full_36d_residual: {score57: 1.0030559301376343, position_contribution: 0.8225194249059137, rotation_contribution: 0.18360180969997153, contact_fingers: [], passed: false}
+    passing_semantic_branches: []
+    failure_is_position_dominated: true
+    source56_action_subspace_selection_exhausted: true
+    learned_gate_training_authorized: false
+    new_PPO_training_authorized: false
+    half_LR_candidate_unblocked: false
+    reward_change_authorized: false
+    chunk_acceptance_or_commit_authorized: false
+    next_read_only_direction: move_failure_attribution_earlier_than_source56
 
 runtime_contract:
   fail_closed: true
@@ -655,7 +683,7 @@ runtime_contract:
     cpu_commit_endpoint_offset: 20
 
 training_ready: false
-training_ready_scope: final_OFF_reversal_does_not_restore_endpoint57_source56_semantic_authority_attribution_required
+training_ready_scope: source56_semantic_action_suppression_insufficient_failure_attribution_must_move_earlier
 
 audit_results:
   active_input: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/input_audit.json
@@ -691,6 +719,7 @@ audit_results:
   source45_prefix_source50_refinement_gate: /data_all/zzx/3.2RL/runs/taco_pour_source45_prefix_source50_refinement_gate_v1/report.json
   binary_translation_oracle_gate: /data_all/zzx/3.2RL/runs/taco_pour_binary_translation_oracle_gate_v1/report.json
   binary_translation_last_OFF_reversal_gate: /data_all/zzx/3.2RL/runs/taco_pour_binary_translation_last_off_reversal_gate_v1/report.json
+  source56_semantic_action_gate: /data_all/zzx/3.2RL/runs/taco_pour_source56_semantic_action_gate_v1/report.json
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -730,7 +759,7 @@ historical_observation_normalization_misaligned:
     - old_checkpoint_task_performance_as_an_algorithm_baseline
 
 blocking_checks:
-  - final_OFF_reversal_does_not_restore_endpoint57_source56_semantic_authority_attribution_required
+  - source56_semantic_action_suppression_insufficient_failure_attribution_must_move_earlier
 result_acceptance_blockers:
   - active_corrected_Replay_passes_only_30_of_40_in_second_window
   - postfix_single_actor_pass_PPO_passes_only_28_intervals_before_failure_at_endpoint49
@@ -748,6 +777,9 @@ result_acceptance_blockers:
   - source54_ON_reversal_fails_early_at_endpoint56
   - source55_ON_reversal_restores_source56_authority_but_both_translation_choices_fail_endpoint57
   - one_step_oracle_myopia_not_supported_by_the_predeclared_last_OFF_reversal_gate
+  - source56_zero_rotation_zero_fingers_zero_wrist_zero_right_hand_and_full36_all_fail_endpoint57
+  - source56_failure_remains_position_dominated_across_all_semantic_branches
+  - source56_semantic_action_subspace_selection_exhausted_at_the_predeclared_resolution
   - unpublished_threshold_to_weighted_objective_mapping
   - stable_grasp_and_physical_pour_not_demonstrated
 paper_faithful_run_blockers:

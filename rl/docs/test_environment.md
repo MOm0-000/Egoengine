@@ -18,7 +18,7 @@ PYTHONPATH="$PWD/.env_mjwp313_overlay:$PWD/src:$PWD/scripts:$PWD/external/mink/s
   /data_all/zzx/egoengine/spider/.venv/bin/python -m pytest -q
 ```
 
-On 2026-09-26 this command passed **693 tests and 57 subtests**.
+On 2026-09-26 this command passed **697 tests and 57 subtests**.
 The 19 warnings are known upstream/diagnostic warnings: capsule-mesh MULTICCD
 capacity, PyTorch AMP deprecations, two Trimesh degenerate-volume warnings and
 seven SciPy pickle deprecations.
@@ -64,6 +64,7 @@ runs/taco_pour_source45_state_entry_gate_v1/
 runs/taco_pour_source45_prefix_source50_refinement_gate_v1/
 runs/taco_pour_binary_translation_oracle_gate_v1/
 runs/taco_pour_binary_translation_last_off_reversal_gate_v1/
+runs/taco_pour_source56_semantic_action_gate_v1/
 ```
 
 The first corrected PPO authorization is consumed. Replay passed the first
@@ -83,6 +84,18 @@ endpoint 57. Thus the primary gate does not support a last-decision
 greedy-myopia explanation. It also does not support either extreme claim that
 source 56 has exactly no influence or that useful task-scale authority has
 been restored. Training, learned-gate fitting and chunk commit remain blocked.
+
+The source-56 semantic gate starts from the exact state produced by forcing
+source 55 ON. It uses one shared actor forward and compares the two existing
+translation anchors with five predeclared semantic suppressions: wrist
+rotation, right fingers, complete right wrist, complete right hand and all 36
+residuals. Every candidate remains at `36/40` and fails endpoint 57. Scores
+range only from `1.00305593` to `1.00422549`; position contributes about
+`0.8225--0.8247` of the squared ellipse while rotation contributes about
+`0.1836--0.1838`. Contact is diagnostic only: rotation/finger suppression can
+retain pinky contact and still fails. Source-56 semantic subspace selection is
+therefore exhausted at the declared resolution, and attribution must move to
+an earlier state. No training or commit is authorized.
 
 The endpoint 44--48 attribution is a no-training replay of the frozen actor.
 It requires exact equality with both saved formal CPU traces before reporting
