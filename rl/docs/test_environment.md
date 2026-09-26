@@ -18,8 +18,8 @@ PYTHONPATH="$PWD/.env_mjwp313_overlay:$PWD/src:$PWD/external/mink/src" \
   /data_all/zzx/egoengine/spider/.venv/bin/python -m pytest -q
 ```
 
-On 2026-09-25 this command passed **638 tests and 57 subtests**.
-The 17 warnings are known upstream/diagnostic warnings: capsule-mesh MULTICCD
+On 2026-09-26 this command passed **651 tests and 57 subtests**.
+The 19 warnings are known upstream/diagnostic warnings: capsule-mesh MULTICCD
 capacity, PyTorch AMP deprecations, two Trimesh degenerate-volume warnings and
 seven SciPy pickle deprecations.
 
@@ -51,6 +51,7 @@ runs/taco_pour_training_credit_assignment_audit_v1/
 runs/taco_pour_credit_instrumentation_gate_v1/
 runs/taco_pour_corrected_fresh_ppo_credit_instrumented_v1/
 runs/taco_pour_fresh_ppo_credit_evidence_v1/
+runs/taco_pour_observation_normalization_gate_v1/
 ```
 
 The first corrected PPO authorization is consumed. Replay passed the first
@@ -126,7 +127,7 @@ raw and normalized advantages, all 32 actor updates and a lossless actor-state
 patch chain. It is explicitly non-promotable and commits no chunk: Replay
 fails at endpoint 51 and the fresh actor fails at endpoint 50.
 
-The recovered credit evidence reveals a concrete likelihood-contract defect.
+The recovered credit evidence revealed a concrete likelihood-contract defect.
 On the first mini-epoch the actor weights are still unchanged, but the input
 running mean/variance is updated before recomputing the PPO likelihood. That
 normalizer-only change moves 134/160 old/new likelihood ratios outside the
@@ -144,10 +145,36 @@ Global advantage normalization is also material but is not labeled a bug by
 itself. Across the fresh run, 39 source-43--46 samples change advantage sign;
 in epoch 1 all ten tail actions are negative wrist-y, while eight have positive
 raw advantage but negative normalized advantage. This is direct historical
-credit evidence, not a final-checkpoint backfill. The active training blocker
-is now the inconsistent observation-normalizer state used by PPO old/new
-likelihoods; no further task PPO run is authorized until that contract is
-fixed and passes a no-training likelihood gate.
+credit evidence, not a final-checkpoint backfill.
+
+That implementation blocker is now repaired by the local frozen-rollout
+normalization contract:
+
+```text
+freeze actor/critic RMS snapshot
+        -> collect one rollout
+        -> recompute every PPO likelihood and critic value with that snapshot
+        -> finish all actor/critic optimizer passes
+        -> update RMS explicitly from the rollout's raw observations
+        -> next rollout uses the new RMS version
+```
+
+Normalization forward calls are pure and statistics mutation is a separate
+explicit operation. The no-learning gate uses four independent GPU worlds, a
+40-step horizon, 160 samples and all four PPO mini-epochs. Actor and critic
+learning rates are zero. Before the first optimizer call and after the full
+dry-run, the maximum `|ratio-1|` is exactly `0.0`; repeated actor outputs,
+log-probabilities and critic outputs are also bitwise unchanged, and neither
+RMS hash moves. The gate performs no task-level training and writes no
+checkpoint or chunk commit.
+
+All checkpoints trained under the former likelihood-misaligned path are now
+classified by `configs/taco_pour_ppo_checkpoint_eligibility_v1.yaml` as
+behavioral-audit-only. They cannot be warm-started or used as algorithm
+performance baselines. Their frozen-policy diagnostics remain valid as
+behavior facts, but claims about how valid PPO credit created those policies
+are withdrawn. A new post-fix task PPO has not been run; it requires separate
+authorization, so `training_ready` remains false.
 
 ## Archived invalid performance evidence
 
@@ -161,6 +188,17 @@ TRASH/historical_reward_misaligned_2026-09-25/
 That archive must not be used to resume a boundary, warm-start an actor, or
 compare task performance. Its README records the exact reason and scope. The
 old files remain recoverable only as bug history.
+
+Uncompressed duplicate checkpoint files from the observation-normalization
+defect are isolated under:
+
+```text
+TRASH/ppo_obsnorm_likelihood_misaligned_2026-09-26/
+```
+
+The hash-bound compressed artifact required to reproduce read-only behavioral
+audits remains in its evidence directory, but its eligibility contract marks
+it fail-closed for resume and algorithm comparison.
 
 ## Other environments
 

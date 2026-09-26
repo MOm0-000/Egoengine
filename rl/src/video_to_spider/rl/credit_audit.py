@@ -24,7 +24,7 @@ from .state_feasible_truncated_gaussian import (
 )
 
 
-SCHEMA = "taco_corrected_fresh_ppo_credit_instrumentation_v1"
+SCHEMA = "taco_corrected_fresh_ppo_credit_instrumentation_v2"
 
 
 def load_fixed_probe_panel(path: Path) -> dict[str, Any]:
@@ -228,6 +228,7 @@ class CreditAuditRecorder:
         self.dataset: dict[str, np.ndarray] | None = None
         self.update_reports: list[dict[str, Any]] = []
         self.probe_reports: list[dict[str, Any]] = []
+        self.normalization_reports: list[dict[str, Any]] = []
         self.epoch_reports: list[dict[str, Any]] = []
         self.initial_actor: dict[str, Any] | None = None
         self._initial_state: dict[str, torch.Tensor] | None = None
@@ -499,6 +500,24 @@ class CreditAuditRecorder:
                 "after_model_state_sha256": after_sha256,
             }, sort_keys=True) + "\n")
 
+    def normalization_update(
+        self,
+        *,
+        report: dict[str, Any],
+        before_actor: dict[str, torch.Tensor],
+        after_actor: dict[str, torch.Tensor],
+    ) -> None:
+        if model_state_sha256(before_actor) != model_state_sha256(self._last_state):
+            raise RuntimeError(
+                "normalization patch does not begin at the latest actor state"
+            )
+        path = self.patch_dir / f"epoch_{self.epoch:04d}_normalization_state_patch.npz"
+        patch = write_xor_patch(path, before_actor, after_actor)
+        self._last_state = after_actor
+        row = dict(report)
+        row["actor_state_patch"] = patch
+        self.normalization_reports.append(row)
+
     def finalize_epoch(self, agent: Any) -> None:
         if len(self.rollout_steps) != self.horizon:
             raise RuntimeError("credit audit did not receive the complete rollout")
@@ -561,6 +580,7 @@ class CreditAuditRecorder:
             },
             "wrist_y_preupdate_bins": bin_rows,
             "actor_state_sha256_after_epoch": model_state_sha256(agent.model.state_dict()),
+            "observation_normalization": self.normalization_reports[-1],
         }
         path = self.output_dir / f"epoch_{self.epoch:04d}_summary.json"
         path.write_text(json.dumps(epoch_report, indent=2) + "\n")
@@ -587,11 +607,13 @@ class CreditAuditRecorder:
             "initial_actor": self.initial_actor,
             "final_actor": final,
             "exact_intermediate_actor_reconstruction": (
-                "initial state plus ordered lossless XOR forward-state and optimizer-state patches"
+                "initial state plus ordered lossless XOR forward-state, optimizer-state, "
+                "and deferred normalization-state patches"
             ),
             "epoch_reports": self.epoch_reports,
             "update_reports": self.update_reports,
             "probe_reports": self.probe_reports,
+            "normalization_reports": self.normalization_reports,
         }
         path = self.output_dir / "manifest.json"
         path.write_text(json.dumps(manifest, indent=2) + "\n")
@@ -629,6 +651,9 @@ class CreditInstrumentedTruncatedGaussianPpoAgent(
 
     def _observe_actor_forward(self, **kwargs) -> None:
         self.credit_audit.actor_forward(**kwargs)
+
+    def _observe_observation_normalization_update(self, **kwargs) -> None:
+        self.credit_audit.normalization_update(**kwargs)
 
     def get_action_values(self, obs) -> dict:
         result = super().get_action_values(obs)
@@ -682,14 +707,16 @@ class CreditInstrumentedTruncatedGaussianPpoAgent(
 
     def train_asymmetric_critic(self) -> float:
         critic = self.asymmetric_critic_net
-        critic.train()
         loss = 0.0
         for mini_epoch in range(self.cfg.mini_epochs):
             if self.cfg.freeze_critic:
                 break
             for index in range(len(critic.dataset)):
+                critic.train()
+                if critic.cfg.normalize_input:
+                    critic.model.running_mean_std.eval()
                 before = model_state_sha256(critic.model.state_dict())
-                value = critic.train_critic(critic.dataset[index])
+                value = critic.calc_gradients(critic.dataset[index]).item()
                 after = model_state_sha256(critic.model.state_dict())
                 self.credit_audit.critic_update(
                     mini_epoch=mini_epoch,
@@ -698,8 +725,6 @@ class CreditInstrumentedTruncatedGaussianPpoAgent(
                     after_sha256=after,
                 )
                 loss += value
-            if self.cfg.normalize_input:
-                critic.model.running_mean_std.eval()
         average = loss / (self.cfg.mini_epochs * critic.num_minibatches)
         critic.epoch_num += 1
         critic.lr, _ = critic.scheduler.update(critic.lr, 0, critic.epoch_num, 0, 0)
@@ -738,6 +763,7 @@ class CreditInstrumentedTruncatedGaussianPpoAgent(
         current = self.evaluate_ppo_distribution(input_dict)
         after_forward = cpu_state(self.model.state_dict())
         ratio = torch.exp(old_neglogp - current["neglogp"])
+        self._validate_first_update_ratio(ratio)
         clipped_ratio = torch.clamp(
             ratio, 1.0 - self.cfg.e_clip, 1.0 + self.cfg.e_clip
         )

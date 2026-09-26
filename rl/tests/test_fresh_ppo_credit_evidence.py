@@ -76,12 +76,19 @@ def test_evidence_separates_normalizer_state_from_optimizer_update():
     ) < 4e-6
 
 
-def test_protocol_blocks_more_training_on_likelihood_normalizer_mismatch():
+def test_protocol_records_the_fixed_blocker_without_authorizing_fresh_training():
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
     assert protocol["training_ready"] is False
     assert protocol["training_ready_scope"] == (
-        "ppo_old_new_likelihood_uses_different_observation_normalization_statistics"
+        "post_fix_fresh_PPO_requires_separate_authorization"
     )
     assert protocol["blocking_checks"] == [
-        "ppo_old_new_likelihood_uses_different_observation_normalization_statistics"
+        "post_fix_fresh_PPO_requires_separate_authorization"
     ]
+    repair = protocol["runtime_contract"]["observation_normalization"]
+    assert repair["status"] == "resolved_local_engineering_contract_gate_passed"
+    assert repair["first_pre_optimizer_ratio_max_abs_error_from_one"] == 0.0
+    assert repair["full_lr_zero_dry_run_ratio_max_abs_error_from_one"] == 0.0
+    old = protocol["historical_observation_normalization_misaligned"]
+    assert old["active_algorithm_evidence"] is False
+    assert old["old_policy_resume_allowed"] is False

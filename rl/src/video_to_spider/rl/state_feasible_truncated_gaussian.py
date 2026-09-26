@@ -24,6 +24,38 @@ class TruncatedGaussianActionSpec:
     optimizer_training_authorized: bool
 
 
+def _tensor_sha256(tensor: torch.Tensor) -> str:
+    value = tensor.detach().cpu().contiguous()
+    digest = hashlib.sha256()
+    digest.update(str(value.dtype).encode())
+    digest.update(np.asarray(value.shape, dtype=np.int64).tobytes())
+    digest.update(value.numpy().tobytes())
+    return digest.hexdigest()
+
+
+def observation_normalizer_report(model: Any, *, version: int) -> dict[str, Any]:
+    """Return a compact identity for the observation transform in use."""
+    if not getattr(model, "normalize_input", False):
+        return {"enabled": False, "version": int(version)}
+    normalizer = model.running_mean_std
+    state = normalizer.state_dict()
+    digest = hashlib.sha256()
+    for name in sorted(state):
+        value = state[name].detach().cpu().contiguous()
+        digest.update(name.encode())
+        digest.update(str(value.dtype).encode())
+        digest.update(np.asarray(value.shape, dtype=np.int64).tobytes())
+        digest.update(value.numpy().tobytes())
+    return {
+        "enabled": True,
+        "version": int(version),
+        "state_sha256": digest.hexdigest(),
+        "count": float(normalizer.count.detach().cpu()),
+        "mean_sha256": _tensor_sha256(normalizer.running_mean),
+        "variance_sha256": _tensor_sha256(normalizer.running_var),
+    }
+
+
 def load_truncated_gaussian_profile(
     path: str | Path,
 ) -> tuple[TruncatedGaussianActionSpec, dict[str, Any]]:
@@ -282,7 +314,13 @@ def deterministic_truncated_action(
 class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
     """PPO candidate with bounds stored in rollouts and correct truncated likelihood."""
 
-    def __init__(self, *args, distribution_spec: TruncatedGaussianActionSpec, **kwargs):
+    def __init__(
+        self,
+        *args,
+        distribution_spec: TruncatedGaussianActionSpec,
+        commit_observation_stats_after_epoch: bool = True,
+        **kwargs,
+    ):
         self.distribution_spec = distribution_spec
         super().__init__(*args, **kwargs)
         if self.cfg.clip_actions:
@@ -293,6 +331,74 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
             reference_snap_tolerance=distribution_spec.reference_snap_tolerance
         )
         self._training_trace_distribution = None
+        self._commit_observation_stats_after_epoch = bool(
+            commit_observation_stats_after_epoch
+        )
+        if (
+            not self._commit_observation_stats_after_epoch
+            and float(self.cfg.learning_rate) != 0.0
+        ):
+            raise ValueError(
+                "observation-stat commit may be disabled only for an lr=0 gate"
+            )
+        self._observation_normalization_version = 0
+        self._observation_normalization_history: list[dict[str, Any]] = []
+        self._likelihood_identity_checks: list[dict[str, Any]] = []
+        self._critic_value_identity_checks: list[dict[str, Any]] = []
+        self._actor_updates_in_epoch = 0
+        self._rollout_actor_observations_for_rms = None
+        self._rollout_critic_observations_for_rms = None
+
+    def _normalization_pair(self) -> dict[str, Any]:
+        result = {
+            "actor": observation_normalizer_report(
+                self.model, version=self._observation_normalization_version
+            )
+        }
+        if self.has_asymmetric_critic:
+            result["critic"] = observation_normalizer_report(
+                self.asymmetric_critic_net.model,
+                version=self._observation_normalization_version,
+            )
+        return result
+
+    def observation_normalization_audit(self) -> dict[str, Any]:
+        return {
+            "schema": "frozen_rollout_observation_normalization_v1",
+            "semantics": (
+                "one frozen actor/critic observation transform is used for rollout "
+                "collection and every PPO likelihood/value recomputation; raw rollout "
+                "observations update statistics only after all optimizer passes"
+            ),
+            "current_version": self._observation_normalization_version,
+            "current": self._normalization_pair(),
+            "epochs": list(self._observation_normalization_history),
+            "pre_optimizer_likelihood_identity_checks": list(
+                self._likelihood_identity_checks
+            ),
+            "pre_optimizer_critic_value_identity_checks": list(
+                self._critic_value_identity_checks
+            ),
+        }
+
+    def _validate_first_update_ratio(self, ratio: torch.Tensor) -> None:
+        if self._actor_updates_in_epoch != 0:
+            self._actor_updates_in_epoch += 1
+            return
+        maximum_error = float((ratio.detach() - 1.0).abs().max().cpu())
+        row = {
+            "epoch": int(self.epoch_num),
+            "samples": int(ratio.numel()),
+            "maximum_abs_error_from_one": maximum_error,
+            "tolerance": 5.0e-6,
+        }
+        self._likelihood_identity_checks.append(row)
+        self._actor_updates_in_epoch += 1
+        if maximum_error > row["tolerance"]:
+            raise RuntimeError(
+                "old/new likelihood ratio differs before the first optimizer "
+                f"update: max |ratio-1|={maximum_error:.9g}"
+            )
 
     def init_tensors(self) -> None:
         super().init_tensors()
@@ -307,7 +413,7 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
         self.model.eval()
         rnn_input = self.rnn_states
         input_dict = {
-            "obs": self.model.norm_obs(processed),
+            "obs": self.model.norm_obs(processed, update_stats=False),
             "rnn_states": rnn_input,
         }
         with torch.no_grad():
@@ -402,9 +508,134 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
         return result
 
     def prepare_dataset(self, batch_dict) -> None:
+        actor_observations = self._preproc_obs(batch_dict["obses"])
+        if not torch.is_tensor(actor_observations):
+            raise TypeError("frozen normalization contract requires tensor observations")
+        self._rollout_actor_observations_for_rms = (
+            actor_observations.detach().clone()
+        )
+        if self.has_asymmetric_critic:
+            critic_observations = self.asymmetric_critic_net._preproc_obs(
+                batch_dict["states"]
+            )
+            if not torch.is_tensor(critic_observations):
+                raise TypeError("critic normalization requires tensor states")
+            self._rollout_critic_observations_for_rms = (
+                critic_observations.detach().clone()
+            )
+            critic = self.asymmetric_critic_net
+            if critic.is_rnn:
+                raise ValueError(
+                    "critic value identity gate currently requires the formal MLP critic"
+                )
+            critic.eval()
+            with torch.no_grad():
+                recomputed = critic.model({
+                    "obs": critic_observations,
+                    "actions": batch_dict["actions"],
+                    "rnn_states": None,
+                    "is_train": False,
+                    "update_obs_stats": False,
+                })["values"]
+            stored = batch_dict["values"]
+            maximum_error = float((recomputed - stored).abs().max().cpu())
+            check = {
+                "epoch": int(self.epoch_num),
+                "samples": int(stored.shape[0]),
+                "maximum_abs_error": maximum_error,
+                "tolerance": 2.0e-5,
+            }
+            self._critic_value_identity_checks.append(check)
+            if maximum_error > check["tolerance"]:
+                raise RuntimeError(
+                    "critic value changed before its first optimizer update: "
+                    f"max error={maximum_error:.9g}"
+                )
         super().prepare_dataset(batch_dict)
         self.dataset.values_dict["action_lows"] = batch_dict["action_lows"]
         self.dataset.values_dict["action_highs"] = batch_dict["action_highs"]
+
+    def train_asymmetric_critic(self) -> float:
+        """Train critic weights while keeping its input transform immutable."""
+        critic = self.asymmetric_critic_net
+        loss = 0.0
+        for _ in range(critic.cfg.mini_epochs):
+            if self.cfg.freeze_critic:
+                break
+            for index in range(len(critic.dataset)):
+                critic.train()
+                if critic.cfg.normalize_input:
+                    critic.model.running_mean_std.eval()
+                loss += critic.calc_gradients(critic.dataset[index]).item()
+        average = loss / (critic.cfg.mini_epochs * critic.num_minibatches)
+        critic.epoch_num += 1
+        critic.lr, _ = critic.scheduler.update(
+            critic.lr, 0, critic.epoch_num, 0, 0
+        )
+        critic.update_lr(critic.lr)
+        critic.frame += critic.batch_size
+        if critic.writer is not None:
+            critic.writer.add_scalar("losses/cval_loss", average, critic.frame)
+            critic.writer.add_scalar("info/cval_lr", critic.lr, critic.frame)
+        return average
+
+    def train_epoch(self):
+        """Use one immutable observation transform for a whole PPO epoch."""
+        self._actor_updates_in_epoch = 0
+        before = self._normalization_pair()
+        result = super().train_epoch()
+        before_commit = self._normalization_pair()
+        if before_commit != before:
+            raise RuntimeError(
+                "observation normalizer changed during rollout or PPO update"
+            )
+        observer = getattr(
+            self, "_observe_observation_normalization_update", None
+        )
+        before_actor_state = None
+        if observer is not None:
+            before_actor_state = {
+                name: value.detach().cpu().contiguous().clone()
+                for name, value in self.model.state_dict().items()
+            }
+        if self._commit_observation_stats_after_epoch:
+            if self._rollout_actor_observations_for_rms is None:
+                raise RuntimeError("actor rollout observations were not retained")
+            self.model.update_obs_stats(self._rollout_actor_observations_for_rms)
+            if self.has_asymmetric_critic:
+                if self._rollout_critic_observations_for_rms is None:
+                    raise RuntimeError("critic rollout states were not retained")
+                self.asymmetric_critic_net.model.update_obs_stats(
+                    self._rollout_critic_observations_for_rms
+                )
+            self._observation_normalization_version += 1
+        after = self._normalization_pair()
+        row = {
+            "epoch": int(self.epoch_num),
+            "version_used_for_rollout_and_updates": int(
+                self._observation_normalization_version
+                - int(self._commit_observation_stats_after_epoch)
+            ),
+            "statistics_committed_after_updates": (
+                self._commit_observation_stats_after_epoch
+            ),
+            "before": before,
+            "after": after,
+        }
+        self._observation_normalization_history.append(row)
+        if observer is not None:
+            after_actor_state = {
+                name: value.detach().cpu().contiguous().clone()
+                for name, value in self.model.state_dict().items()
+            }
+            observer(
+                report=row,
+                before_actor=before_actor_state,
+                after_actor=after_actor_state,
+            )
+        self._rollout_actor_observations_for_rms = None
+        self._rollout_critic_observations_for_rms = None
+        return result
 
     def recompute_truncated_neglogp(
         self,
@@ -446,12 +677,11 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
                 "exact rollout likelihood requires the frozen full 4-world batch"
             )
         blocks = horizon // sequence
-        # Match the official PPO normalization contract: the first mini-epoch
-        # updates running statistics once from the complete rollout batch; later
-        # mini-epochs use the frozen statistics.  Normalizing one time step at a
-        # time would produce a different policy and silently change this
-        # controlled experiment.
-        normalized_obs = self.model.norm_obs(obs)
+        # Use the exact transform frozen before rollout collection. Statistics
+        # are committed explicitly only after every PPO mini-epoch completes.
+        # Normalizing one time step at a time under mutable statistics would
+        # silently evaluate a different policy.
+        normalized_obs = self.model.norm_obs(obs, update_stats=False)
         obs_by_world = normalized_obs.reshape(
             worlds, horizon, *normalized_obs.shape[1:]
         )
@@ -551,6 +781,7 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
         returns = input_dict["returns"]
         current = self.evaluate_ppo_distribution(input_dict)
         ratio = torch.exp(old_neglogp - current["neglogp"])
+        self._validate_first_update_ratio(ratio)
         clipped_ratio = torch.clamp(
             ratio, 1.0 - self.cfg.e_clip, 1.0 + self.cfg.e_clip
         )

@@ -1,0 +1,47 @@
+schema: taco_observation_normalization_contract_v1
+contract_id: taco_pour_frozen_rollout_observation_normalization_v1
+status: engineering_contract_gate_passed
+paper_faithful: false
+provenance: >-
+  Local implementation repair. EgoEngine does not publish its observation
+  running-statistics update schedule.
+
+semantics:
+  normalization_forward_is_pure: true
+  statistics_update_is_explicit: true
+  rollout:
+    actor_and_critic_snapshot: frozen_at_rollout_start
+    raw_observations_retained_for_deferred_update: true
+  ppo_update:
+    actor_likelihood_snapshot: same_as_rollout
+    critic_value_snapshot: same_as_rollout
+    all_mini_epochs_use_same_snapshot: true
+  after_all_actor_and_critic_updates:
+    update_statistics_from: current_rollout_raw_observations
+    advance_version_once: true
+  next_rollout:
+    uses_committed_next_version: true
+
+fail_closed:
+  first_actor_update_max_abs_ratio_error_from_one: 0.000005
+  first_critic_value_max_abs_recompute_error: 0.00002
+  normalizer_may_change_during_rollout_or_ppo_updates: false
+  actor_or_critic_forward_may_implicitly_update_statistics: false
+
+gate:
+  report: /data_all/zzx/3.2RL/runs/taco_pour_observation_normalization_gate_v1/report.json
+  report_sha256: 300621509172d191b0b34a5274a5b1d0e4b16123b62b85123fe00e0d8f3cbb6b
+  status: passed
+  worlds: 4
+  horizon: 40
+  samples: 160
+  mini_epochs: 4
+  actor_learning_rate: 0.0
+  critic_learning_rate: 0.0
+  task_level_training_executed: false
+  chunk_commit_written: false
+
+promotion:
+  implementation_blocker_resolved: true
+  fresh_task_level_ppo_authorized_by_this_contract: false
+  old_misaligned_checkpoint_resume_allowed: false

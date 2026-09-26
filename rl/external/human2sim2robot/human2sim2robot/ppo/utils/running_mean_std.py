@@ -66,23 +66,11 @@ class RunningMeanStd(nn.Module):
         input: torch.Tensor,
         denorm: bool = False,
         mask: Optional[torch.Tensor] = None,
+        update_stats: Optional[bool] = None,
     ) -> torch.Tensor:
-        if self.training:
-            if mask is not None:
-                mean, var = torch_ext.get_mean_std_with_masks(input, mask)
-            else:
-                mean = input.mean(self.axis)  # along channel axis
-                var = input.var(self.axis)
-            self.running_mean, self.running_var, self.count = (
-                self._update_mean_var_count_from_moments(
-                    self.running_mean,
-                    self.running_var,
-                    self.count,
-                    mean,
-                    var,
-                    input.size()[0],
-                )
-            )
+        should_update = self.training if update_stats is None else bool(update_stats)
+        if should_update:
+            self.update(input, mask=mask)
 
         # Change shape
         if self.per_channel:
@@ -128,6 +116,29 @@ class RunningMeanStd(nn.Module):
                 y = torch.clamp(y, min=-5.0, max=5.0)
         return y
 
+    @torch.no_grad()
+    def update(
+        self,
+        input: torch.Tensor,
+        mask: Optional[torch.Tensor] = None,
+    ) -> None:
+        """Update statistics explicitly without coupling mutation to inference."""
+        if mask is not None:
+            mean, var = torch_ext.get_mean_std_with_masks(input, mask)
+        else:
+            mean = input.mean(self.axis)
+            var = input.var(self.axis)
+        self.running_mean, self.running_var, self.count = (
+            self._update_mean_var_count_from_moments(
+                self.running_mean,
+                self.running_var,
+                self.count,
+                mean,
+                var,
+                input.size()[0],
+            )
+        )
+
 
 class RunningMeanStdObs(nn.Module):
     def __init__(
@@ -150,6 +161,17 @@ class RunningMeanStdObs(nn.Module):
         self,
         input: Dict[str, torch.Tensor],
         denorm: bool = False,
+        update_stats: Optional[bool] = None,
     ) -> Dict[str, torch.Tensor]:
-        res = {k: self.running_mean_std[k](v, denorm) for k, v in input.items()}
+        res = {
+            k: self.running_mean_std[k](
+                v, denorm, update_stats=update_stats
+            )
+            for k, v in input.items()
+        }
         return res
+
+    @torch.no_grad()
+    def update(self, input: Dict[str, torch.Tensor]) -> None:
+        for key, value in input.items():
+            self.running_mean_std[key].update(value)

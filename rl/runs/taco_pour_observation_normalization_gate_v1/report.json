@@ -1,0 +1,243 @@
+{
+  "schema": "taco_pour_observation_normalization_likelihood_gate_v1",
+  "status": "passed",
+  "paper_faithful": false,
+  "task_level_training_executed": false,
+  "chunk_commit_written": false,
+  "checkpoint_written": false,
+  "purpose": "Verify that rollout old likelihoods and every PPO recomputation use one immutable actor/critic observation-normalization snapshot.",
+  "inputs": {
+    "simulator_config": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml",
+      "sha256": "0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6"
+    },
+    "initialization_report": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v2/candidate_a/report.json",
+      "sha256": "9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a"
+    },
+    "protocol": {
+      "path": "/data_all/zzx/3.2RL/configs/replay_rl_protocol.yaml",
+      "sha256": "de0d4c43756de2465a6210738fb7a2e647c445c6bff388f5007717007a2f01e1"
+    },
+    "objective_profile": {
+      "path": "/data_all/zzx/3.2RL/configs/taco_pour_local_normalized_ellipse_v1.yaml",
+      "sha256": "8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9"
+    },
+    "observation_profile": {
+      "path": "/data_all/zzx/3.2RL/configs/taco_pour_observation_local_236d_v1.yaml",
+      "sha256": "8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7"
+    },
+    "action_profile": {
+      "path": "/data_all/zzx/3.2RL/configs/taco_pour_residual_action_scaled_v1.yaml",
+      "sha256": "71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4"
+    },
+    "distribution_profile": {
+      "path": "/data_all/zzx/3.2RL/configs/taco_pour_state_feasible_truncated_gaussian_v1.yaml",
+      "sha256": "6a4e4bd8f33fa53bfe34f21f822bfa391253cca090892767154320fc9bbfd1b8"
+    },
+    "source_boundary": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_replay_rebase_v1/tool_only/committed_boundary_endpoint_20.pt.gz",
+      "sha256": "a3646e24af1ba871e5ecc885669508223a5e0f26d3cf29f0482f02678419e337"
+    }
+  },
+  "dry_run": {
+    "device": "cuda:0",
+    "worlds": 4,
+    "horizon": 40,
+    "samples": 160,
+    "actor_learning_rate": 0.0,
+    "critic_learning_rate": 0.0,
+    "mini_epochs": 4,
+    "observation_stats_commit_enabled": false,
+    "distribution_profile": {
+      "profile_id": "taco_pour_state_feasible_truncated_gaussian_v1",
+      "profile_path": "/data_all/zzx/3.2RL/configs/taco_pour_state_feasible_truncated_gaussian_v1.yaml",
+      "profile_sha256": "6a4e4bd8f33fa53bfe34f21f822bfa391253cca090892767154320fc9bbfd1b8",
+      "status": "engineering_candidate_gate_only",
+      "paper_faithful": false,
+      "distribution": {
+        "kind": "independent_state_truncated_normal",
+        "base_actor_outputs": [
+          "mu",
+          "sigma"
+        ],
+        "residual_scale": 0.05,
+        "residual_scale_changed": false,
+        "reference_snap_tolerance": 2e-07,
+        "minimum_normalization_mass": 1e-12,
+        "normalized_bounds": {
+          "low": "max(-1, (ctrl_low - snapped_reference_ctrl) / 0.05)",
+          "high": "min(+1, (ctrl_high - snapped_reference_ctrl) / 0.05)"
+        },
+        "stochastic_action": "inverse_CDF_sample_from_Normal_mu_sigma_truncated_to_low_high",
+        "deterministic_action": "clip_mu_to_state_bounds",
+        "official_minus1_plus1_clamp_enabled": false,
+        "actuator_ctrlrange_retained_as_final_safety_backstop": true,
+        "rollout_buffer_fields": [
+          "action_lows",
+          "action_highs"
+        ],
+        "PPO_log_probability": "truncated_Normal_with_state_bound_normalizer",
+        "entropy": "exact_independent_truncated_Normal_entropy",
+        "scheduler_KL": "same_action_same_bounds_sample_estimate"
+      },
+      "promotion": {
+        "optimizer_training_authorized": false,
+        "task_level_PPO_authorized": false,
+        "chunk_commit_authorized": false,
+        "required_before_authorization": [
+          "offline_v4_1280_state_gate",
+          "finite_log_probability_and_gradient_gate",
+          "exact_same_policy_ratio_gate",
+          "four_world_zero_optimizer_integration_gate"
+        ]
+      }
+    }
+  },
+  "repeat_forward": {
+    "normalization_before": {
+      "actor": {
+        "enabled": true,
+        "version": 0,
+        "state_sha256": "96e383e792b441223b3301ef5b6da2d7bdea5ffca5cb2e512a3c25aee0510eec",
+        "count": 1.0,
+        "mean_sha256": "15e48fc7fc31a5079e993cbd78eaf8d4f8e7391f8b1e4627206ed5005f69ba07",
+        "variance_sha256": "ea6a5bf0c59d309c3fb277307000c562daf11cdf4073988c30637ffd5a05bbac"
+      },
+      "critic": {
+        "enabled": true,
+        "version": 0,
+        "state_sha256": "797484074432318b2da962454b5d65366cae553e4897792724d6f40ef4aef441",
+        "count": 1.0,
+        "mean_sha256": "e70bdab0235b92f59f56823a1dc5ed738f79684f69da942e732cde1ac9ce279d",
+        "variance_sha256": "4d6ac33bae779c52ec39baed7218d78f0d9d1cc48d9729cce5c4892be238dfb9"
+      }
+    },
+    "normalization_after": {
+      "actor": {
+        "enabled": true,
+        "version": 0,
+        "state_sha256": "96e383e792b441223b3301ef5b6da2d7bdea5ffca5cb2e512a3c25aee0510eec",
+        "count": 1.0,
+        "mean_sha256": "15e48fc7fc31a5079e993cbd78eaf8d4f8e7391f8b1e4627206ed5005f69ba07",
+        "variance_sha256": "ea6a5bf0c59d309c3fb277307000c562daf11cdf4073988c30637ffd5a05bbac"
+      },
+      "critic": {
+        "enabled": true,
+        "version": 0,
+        "state_sha256": "797484074432318b2da962454b5d65366cae553e4897792724d6f40ef4aef441",
+        "count": 1.0,
+        "mean_sha256": "e70bdab0235b92f59f56823a1dc5ed738f79684f69da942e732cde1ac9ce279d",
+        "variance_sha256": "4d6ac33bae779c52ec39baed7218d78f0d9d1cc48d9729cce5c4892be238dfb9"
+      }
+    },
+    "mu_max_abs_difference": 0.0,
+    "sigma_max_abs_difference": 0.0,
+    "neglogp_max_abs_difference": 0.0,
+    "value_max_abs_difference": 0.0,
+    "pre_optimizer_ratio_max_abs_error_from_one": 0.0,
+    "samples": 160
+  },
+  "final_ratio_max_abs_error_from_one": 0.0,
+  "critic_raw_output_max_abs_error": 0.0,
+  "normalization": {
+    "schema": "frozen_rollout_observation_normalization_v1",
+    "semantics": "one frozen actor/critic observation transform is used for rollout collection and every PPO likelihood/value recomputation; raw rollout observations update statistics only after all optimizer passes",
+    "current_version": 0,
+    "current": {
+      "actor": {
+        "enabled": true,
+        "version": 0,
+        "state_sha256": "96e383e792b441223b3301ef5b6da2d7bdea5ffca5cb2e512a3c25aee0510eec",
+        "count": 1.0,
+        "mean_sha256": "15e48fc7fc31a5079e993cbd78eaf8d4f8e7391f8b1e4627206ed5005f69ba07",
+        "variance_sha256": "ea6a5bf0c59d309c3fb277307000c562daf11cdf4073988c30637ffd5a05bbac"
+      },
+      "critic": {
+        "enabled": true,
+        "version": 0,
+        "state_sha256": "797484074432318b2da962454b5d65366cae553e4897792724d6f40ef4aef441",
+        "count": 1.0,
+        "mean_sha256": "e70bdab0235b92f59f56823a1dc5ed738f79684f69da942e732cde1ac9ce279d",
+        "variance_sha256": "4d6ac33bae779c52ec39baed7218d78f0d9d1cc48d9729cce5c4892be238dfb9"
+      }
+    },
+    "epochs": [
+      {
+        "epoch": 1,
+        "version_used_for_rollout_and_updates": 0,
+        "statistics_committed_after_updates": false,
+        "before": {
+          "actor": {
+            "enabled": true,
+            "version": 0,
+            "state_sha256": "96e383e792b441223b3301ef5b6da2d7bdea5ffca5cb2e512a3c25aee0510eec",
+            "count": 1.0,
+            "mean_sha256": "15e48fc7fc31a5079e993cbd78eaf8d4f8e7391f8b1e4627206ed5005f69ba07",
+            "variance_sha256": "ea6a5bf0c59d309c3fb277307000c562daf11cdf4073988c30637ffd5a05bbac"
+          },
+          "critic": {
+            "enabled": true,
+            "version": 0,
+            "state_sha256": "797484074432318b2da962454b5d65366cae553e4897792724d6f40ef4aef441",
+            "count": 1.0,
+            "mean_sha256": "e70bdab0235b92f59f56823a1dc5ed738f79684f69da942e732cde1ac9ce279d",
+            "variance_sha256": "4d6ac33bae779c52ec39baed7218d78f0d9d1cc48d9729cce5c4892be238dfb9"
+          }
+        },
+        "after": {
+          "actor": {
+            "enabled": true,
+            "version": 0,
+            "state_sha256": "96e383e792b441223b3301ef5b6da2d7bdea5ffca5cb2e512a3c25aee0510eec",
+            "count": 1.0,
+            "mean_sha256": "15e48fc7fc31a5079e993cbd78eaf8d4f8e7391f8b1e4627206ed5005f69ba07",
+            "variance_sha256": "ea6a5bf0c59d309c3fb277307000c562daf11cdf4073988c30637ffd5a05bbac"
+          },
+          "critic": {
+            "enabled": true,
+            "version": 0,
+            "state_sha256": "797484074432318b2da962454b5d65366cae553e4897792724d6f40ef4aef441",
+            "count": 1.0,
+            "mean_sha256": "e70bdab0235b92f59f56823a1dc5ed738f79684f69da942e732cde1ac9ce279d",
+            "variance_sha256": "4d6ac33bae779c52ec39baed7218d78f0d9d1cc48d9729cce5c4892be238dfb9"
+          }
+        }
+      }
+    ],
+    "pre_optimizer_likelihood_identity_checks": [
+      {
+        "epoch": 1,
+        "samples": 160,
+        "maximum_abs_error_from_one": 0.0,
+        "tolerance": 5e-06
+      }
+    ],
+    "pre_optimizer_critic_value_identity_checks": [
+      {
+        "epoch": 1,
+        "samples": 160,
+        "maximum_abs_error": 2.60770320892334e-07,
+        "tolerance": 2e-05
+      }
+    ]
+  },
+  "checks": {
+    "complete_formal_rollout_has_160_samples": true,
+    "four_actor_optimizer_calls_executed_at_lr_zero": true,
+    "actor_parameters_bitwise_unchanged": true,
+    "critic_parameters_bitwise_unchanged": true,
+    "actor_and_critic_observation_rms_unchanged": true,
+    "repeat_forward_does_not_change_rms": true,
+    "repeat_forward_mu_is_bitwise_stable": true,
+    "repeat_forward_sigma_is_bitwise_stable": true,
+    "repeat_forward_logprob_is_bitwise_stable": true,
+    "repeat_forward_value_is_bitwise_stable": true,
+    "ratio_is_one_before_first_optimizer_call": true,
+    "ratio_is_one_after_full_lr_zero_dry_run": true,
+    "critic_raw_output_is_stable_after_lr_zero_dry_run": true,
+    "rollout_critic_value_recomputation_passed": true,
+    "normalization_version_did_not_advance_in_gate": true
+  },
+  "decision": "The implementation gate passed; this no-training report does not itself authorize a fresh task-level PPO."
+}

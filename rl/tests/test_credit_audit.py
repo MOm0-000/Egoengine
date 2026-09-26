@@ -19,6 +19,7 @@ from video_to_spider.rl.state_feasible_truncated_gaussian import (
     StateFeasibleTruncatedGaussianPpoAgent,
     TruncatedGaussianActionSpec,
 )
+from human2sim2robot.ppo.utils.running_mean_std import RunningMeanStd
 from run_mjwp_ppo import (
     _build_asymmetric_critic_config,
     _build_network_config,
@@ -65,6 +66,19 @@ def test_future_termination_endpoint_is_per_world():
     ])
     actual = _termination_outcomes(endpoints, dones, worlds=2, horizon=4)
     assert actual.tolist() == [23, 23, 23, -1, -1, -1, -1, -1]
+
+
+def test_observation_normalization_is_pure_until_explicit_update():
+    normalizer = RunningMeanStd((3,))
+    normalizer.train()
+    observations = torch.tensor([[1.0, 2.0, 3.0], [3.0, 4.0, 5.0]])
+    before = copy.deepcopy(normalizer.state_dict())
+    first = normalizer(observations, update_stats=False)
+    second = normalizer(observations, update_stats=False)
+    assert torch.equal(first, second)
+    assert _equal(before, normalizer.state_dict())
+    normalizer.update(observations)
+    assert not _equal(before, normalizer.state_dict())
 
 
 class _DeterministicAuditEnv:
@@ -202,6 +216,7 @@ def _training_result(tmp_path: Path, instrumented: bool):
         "python_rng": random.getstate(),
         "numpy_rng": np.random.get_state(),
         "torch_rng": torch.get_rng_state().clone(),
+        "normalization": agent.observation_normalization_audit(),
         "audit": audit,
     }
     agent.writer.close()
@@ -229,3 +244,14 @@ def test_credit_logger_is_training_transparent(tmp_path: Path):
     ):
         assert _equal(baseline[name], audited[name]), name
     assert audited["audit"]["actor_updates"] == 4
+    normalization = audited["normalization"]
+    assert normalization["current_version"] == 1
+    assert normalization["epochs"][0]["version_used_for_rollout_and_updates"] == 0
+    assert normalization["epochs"][0]["statistics_committed_after_updates"] is True
+    assert normalization["epochs"][0]["before"] != normalization["epochs"][0]["after"]
+    identity = normalization["pre_optimizer_likelihood_identity_checks"]
+    assert len(identity) == 1
+    assert identity[0]["maximum_abs_error_from_one"] <= identity[0]["tolerance"]
+    critic = normalization["pre_optimizer_critic_value_identity_checks"]
+    assert len(critic) == 1
+    assert critic[0]["maximum_abs_error"] <= critic[0]["tolerance"]

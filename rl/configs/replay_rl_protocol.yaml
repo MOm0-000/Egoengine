@@ -8,7 +8,7 @@ evidence_policy:
   order: [paper, verified_implementation_defect, disclosed_local_proposal]
   paper_page_numbers: one_based_pdf_pages
   copied_defaults_are_author_settings: false
-  current_revision: fresh_credit_audit_found_observation_normalizer_likelihood_mismatch
+  current_revision: frozen_rollout_observation_normalization_gate_passed
 
 inputs:
   setting: user_approved_gt_oracle_validation_not_full_perception_reproduction
@@ -204,7 +204,7 @@ evaluation:
       final_critic_backfill_allowed: false
       reason: rollout_reward_critic_value_return_advantage_observation_and_hidden_not_saved
   corrected_fresh_ppo_credit_instrumented:
-    status: completed_diagnostic_not_promotable_no_commit
+    status: completed_diagnostic_behavioral_audit_only_no_commit
     report: /data_all/zzx/3.2RL/runs/taco_pour_corrected_fresh_ppo_credit_instrumented_v1/report.json
     evidence: /data_all/zzx/3.2RL/runs/taco_pour_fresh_ppo_credit_evidence_v1/report.json
     settings_unchanged: true
@@ -229,6 +229,33 @@ evaluation:
       while the first PPO likelihood pass updates that normalizer before
       computing new log-probabilities. The old/new ratio therefore compares
       different observation transforms before any optimizer step.
+  observation_normalization_repair:
+    status: implementation_blocker_resolved_gate_passed
+    contract: /data_all/zzx/3.2RL/configs/taco_pour_frozen_rollout_observation_normalization_v1.yaml
+    gate: /data_all/zzx/3.2RL/runs/taco_pour_observation_normalization_gate_v1/report.json
+    semantics: >-
+      Freeze one actor/critic observation-normalization snapshot for rollout
+      collection and every PPO likelihood/value recomputation; only after all
+      optimizer passes update running statistics from that rollout's raw data.
+    gate_scope:
+      worlds: 4
+      horizon: 40
+      samples: 160
+      mini_epochs: 4
+      actor_learning_rate: 0.0
+      critic_learning_rate: 0.0
+      task_level_training_executed: false
+      chunk_commit_written: false
+    results:
+      first_pre_optimizer_ratio_max_abs_error_from_one: 0.0
+      full_lr_zero_dry_run_ratio_max_abs_error_from_one: 0.0
+      repeated_forward_mu_max_abs_difference: 0.0
+      repeated_forward_logprob_max_abs_difference: 0.0
+      critic_raw_output_max_abs_difference: 0.0
+      actor_and_critic_parameters_bitwise_unchanged: true
+      actor_and_critic_RMS_bitwise_unchanged: true
+    post_fix_task_PPO_executed: false
+    old_checkpoint_resume_allowed: false
 
 runtime_contract:
   fail_closed: true
@@ -254,6 +281,17 @@ runtime_contract:
       taco_pour_transition_aligned_236d_v1:
         run_ready: true
         profile_sha256: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  observation_normalization:
+    status: resolved_local_engineering_contract_gate_passed
+    active_contract: taco_pour_frozen_rollout_observation_normalization_v1
+    contract_path: /data_all/zzx/3.2RL/configs/taco_pour_frozen_rollout_observation_normalization_v1.yaml
+    contract_sha256: 9b76b4c519fddb1022e83b1774bac11f021983652b02e17ed65aea5cce777959
+    gate_report: /data_all/zzx/3.2RL/runs/taco_pour_observation_normalization_gate_v1/report.json
+    frozen_for_rollout_and_all_PPO_updates: true
+    deferred_raw_observation_statistics_commit: true
+    first_pre_optimizer_ratio_max_abs_error_from_one: 0.0
+    full_lr_zero_dry_run_ratio_max_abs_error_from_one: 0.0
+    fresh_post_fix_task_PPO_executed: false
   residual_action:
     active_profile: taco_pour_residual_action_scaled_v1
     active_distribution: taco_pour_state_feasible_truncated_gaussian_v1
@@ -279,7 +317,7 @@ runtime_contract:
     cpu_commit_endpoint_offset: 20
 
 training_ready: false
-training_ready_scope: ppo_old_new_likelihood_uses_different_observation_normalization_statistics
+training_ready_scope: post_fix_fresh_PPO_requires_separate_authorization
 
 audit_results:
   active_input: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/input_audit.json
@@ -299,6 +337,8 @@ audit_results:
   credit_instrumentation_gate: /data_all/zzx/3.2RL/runs/taco_pour_credit_instrumentation_gate_v1/report.json
   corrected_fresh_ppo_credit_instrumented: /data_all/zzx/3.2RL/runs/taco_pour_corrected_fresh_ppo_credit_instrumented_v1/report.json
   fresh_ppo_credit_evidence: /data_all/zzx/3.2RL/runs/taco_pour_fresh_ppo_credit_evidence_v1/report.json
+  observation_normalization_likelihood_gate: /data_all/zzx/3.2RL/runs/taco_pour_observation_normalization_gate_v1/report.json
+  checkpoint_eligibility: /data_all/zzx/3.2RL/configs/taco_pour_ppo_checkpoint_eligibility_v1.yaml
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -318,26 +358,30 @@ historical_reward_misaligned:
     - old_tail_curriculum_and_local_response_diagnostics
     - old_objective_mapping_closed_loop_outcomes
 
+historical_observation_normalization_misaligned:
+  active_algorithm_evidence: false
+  checkpoint_eligibility: /data_all/zzx/3.2RL/configs/taco_pour_ppo_checkpoint_eligibility_v1.yaml
+  reason: PPO old and new likelihoods used different observation-normalization transforms
+  affected_runs:
+    - taco_pour_corrected_first_ppo_v1
+    - taco_pour_corrected_fresh_ppo_credit_instrumented_v1
+  old_policy_resume_allowed: false
+  algorithm_performance_comparison_allowed: false
+  behavioral_audit_allowed: true
+  raw_checkpoint_duplicates_archive: /data_all/zzx/3.2RL/TRASH/ppo_obsnorm_likelihood_misaligned_2026-09-26
+  preserved_behavioral_findings:
+    - frozen_final_actor_counterfactual_behavior
+    - frozen_final_actor_contact_and_controllability_diagnostics
+    - direct_evidence_of_the_observation_normalization_likelihood_defect
+  withdrawn_causal_claims:
+    - PPO_under_a_valid_likelihood_objective_learned_harmful_world_y
+    - old_checkpoint_task_performance_as_an_algorithm_baseline
+
 blocking_checks:
-  - ppo_old_new_likelihood_uses_different_observation_normalization_statistics
+  - post_fix_fresh_PPO_requires_separate_authorization
 result_acceptance_blockers:
-  - corrected_first_PPO_passed_only_27_of_40_and_committed_nothing
-  - corrected_PPO_endpoint48_position_term_alone_exceeds_local_ellipse_boundary
-  - deterministic_actor_mu_exceeds_wrist_y_support_on_both_PPO_and_Replay_states_from_source43_through47
-  - successful_single_zero_y_intervention_does_not_make_later_actor_mu_self_correct
-  - wrist_y_control_transmission_collapses_between_source46_and47_with_contact_loss
-  - actor_reference_shift_minus1_is_a_material_local_diagnostic_but_still_fails_30_of_40
-  - recurrent_hidden_substitution_does_not_remove_source43_to47_wrist_y_saturation
-  - reference_palm_translation_is_less_anti_aligned_but_still_anti_aligned_and_violates_frozen_action_support
-  - exact_reference_timing_and_Cartesian_residual_frame_are_not_published
-  - timing_minus1_matches_replay_failure_boundary_and_is_suppression_not_refinement
-  - zero_y_single_step_rescues_do_not_pass_endpoint51_or_complete_the_window
-  - all_eight_non_plus1_grid_actions_outperform_formal_plus1_at_sources43_to46
-  - historical_rollout_advantage_value_return_and_recurrent_context_were_not_logged
-  - fresh_credit_run_failed_endpoint50_and_committed_nothing
-  - first_PPO_update_changes_input_normalizer_before_new_logprob_and_moves_134_of_160_ratios_outside_clip
-  - first_normalizer_update_moves_fixed_probe_mu_y_more_than_the_first_optimizer_step
-  - source43_to46_has_39_raw_to_normalized_advantage_sign_flips_across_fresh_rollouts
+  - active_corrected_Replay_passes_only_30_of_40_in_second_window
+  - no_post_fix_fresh_PPO_result_exists
   - unpublished_threshold_to_weighted_objective_mapping
   - stable_grasp_and_physical_pour_not_demonstrated
 paper_faithful_run_blockers:

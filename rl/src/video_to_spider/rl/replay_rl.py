@@ -416,6 +416,11 @@ def train_chunk_ppo(
         and hasattr(env, "state_feasible_action_audit")
         else None
     )
+    observation_normalization_audit = (
+        agent.observation_normalization_audit()
+        if hasattr(agent, "observation_normalization_audit")
+        else None
+    )
     checkpoints = []
     for checkpoint in sorted((output / "nn").glob("*.pth")):
         checkpoints.append({
@@ -439,6 +444,7 @@ def train_chunk_ppo(
             "credit_audit": credit_audit,
             "tail_curriculum": curriculum_audit,
             "state_feasible_action": state_feasible_action_audit,
+            "observation_normalization": observation_normalization_audit,
         })
 
     if str(validation_env.ego_cfg.device) != "cpu":
@@ -498,4 +504,5 @@ def train_chunk_ppo(
         "credit_audit": credit_audit,
         "tail_curriculum": curriculum_audit,
         "state_feasible_action": state_feasible_action_audit,
+        "observation_normalization": observation_normalization_audit,
     }, temporary_directory)

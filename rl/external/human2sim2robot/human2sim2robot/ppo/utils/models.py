@@ -44,13 +44,17 @@ class BaseModel(nn.Module):
     def get_default_rnn_state(self):
         return self.a2c_network.get_default_rnn_state()
 
-    def norm_obs(self, observation):
+    def norm_obs(self, observation, *, update_stats=None):
         with torch.no_grad():
             return (
-                self.running_mean_std(observation)
+                self.running_mean_std(observation, update_stats=update_stats)
                 if self.normalize_input
                 else observation
             )
+
+    def update_obs_stats(self, observation):
+        if self.normalize_input:
+            self.running_mean_std.update(observation)
 
     def denorm_value(self, value):
         with torch.no_grad():
@@ -65,7 +69,10 @@ class ModelA2CContinuousLogStd(BaseModel):
     def forward(self, input_dict):
         is_train = input_dict.get("is_train", True)
         prev_actions = input_dict.get("prev_actions", None)
-        input_dict["obs"] = self.norm_obs(input_dict["obs"])
+        input_dict["obs"] = self.norm_obs(
+            input_dict["obs"],
+            update_stats=input_dict.get("update_obs_stats"),
+        )
         mu, logstd, value, states = self.a2c_network(input_dict)
         sigma = torch.exp(logstd)
         distr = torch.distributions.Normal(mu, sigma, validate_args=False)
@@ -106,7 +113,10 @@ class ModelAsymmetricCritic(BaseModel):
     def forward(self, input_dict):
         is_train = input_dict.get("is_train", True)
         _prev_actions = input_dict.get("prev_actions", None)
-        input_dict["obs"] = self.norm_obs(input_dict["obs"])
+        input_dict["obs"] = self.norm_obs(
+            input_dict["obs"],
+            update_stats=input_dict.get("update_obs_stats"),
+        )
         value, states = self.a2c_network(input_dict)
         if not is_train:
             value = self.denorm_value(value)

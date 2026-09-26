@@ -116,12 +116,12 @@ def test_artifacts_remain_hash_bound_and_protocol_advances_to_fresh_evidence():
             assert f"source_{source}_y_-1.00_commanded_ctrl" in arrays
 
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
-    blocker = (
-        "ppo_old_new_likelihood_uses_different_observation_"
-        "normalization_statistics"
-    )
+    blocker = "post_fix_fresh_PPO_requires_separate_authorization"
     assert protocol["blocking_checks"] == [blocker]
     assert protocol["training_ready_scope"] == blocker
+    assert protocol["historical_observation_normalization_misaligned"][
+        "active_algorithm_evidence"
+    ] is False
     assert Path(protocol["audit_results"]["training_credit_assignment_audit"]).parts[-3:] == (
         "runs", "taco_pour_training_credit_assignment_audit_v1", "report.json"
     )
