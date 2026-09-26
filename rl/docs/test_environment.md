@@ -18,7 +18,7 @@ PYTHONPATH="$PWD/.env_mjwp313_overlay:$PWD/src:$PWD/scripts:$PWD/external/mink/s
   /data_all/zzx/egoengine/spider/.venv/bin/python -m pytest -q
 ```
 
-On 2026-09-26 this command passed **689 tests and 57 subtests**.
+On 2026-09-26 this command passed **693 tests and 57 subtests**.
 The 19 warnings are known upstream/diagnostic warnings: capsule-mesh MULTICCD
 capacity, PyTorch AMP deprecations, two Trimesh degenerate-volume warnings and
 seven SciPy pickle deprecations.
@@ -63,6 +63,7 @@ runs/taco_pour_source46_state_entry_gate_v1/
 runs/taco_pour_source45_state_entry_gate_v1/
 runs/taco_pour_source45_prefix_source50_refinement_gate_v1/
 runs/taco_pour_binary_translation_oracle_gate_v1/
+runs/taco_pour_binary_translation_last_off_reversal_gate_v1/
 ```
 
 The first corrected PPO authorization is consumed. Replay passed the first
@@ -70,6 +71,18 @@ The first corrected PPO authorization is consumed. Replay passed the first
 lookahead Replay passed 30 intervals and PPO passed 27; neither passed 40/40,
 so no new boundary was committed and formal training is closed pending a new
 algorithm decision.
+
+The last-OFF reversal gate reproduces the 36/40 binary-translation oracle
+decision arrays bitwise, then forces source 52, 53, 54 or 55 from OFF to ON
+for one step before resuming the same one-step oracle. None survives endpoint
+57: the four branches fail at endpoints 55, 55, 56 and 57 respectively. The
+source-55 reversal does produce a measurable but small source-56 bowl response:
+ON/OFF differ by `0.171 mm` in position and `0.00440 rad` in orientation, and
+the ON branch makes pinky--bowl contact. Both source-56 choices still fail
+endpoint 57. Thus the primary gate does not support a last-decision
+greedy-myopia explanation. It also does not support either extreme claim that
+source 56 has exactly no influence or that useful task-scale authority has
+been restored. Training, learned-gate fitting and chunk commit remain blocked.
 
 The endpoint 44--48 attribution is a no-training replay of the frozen actor.
 It requires exact equality with both saved formal CPU traces before reporting

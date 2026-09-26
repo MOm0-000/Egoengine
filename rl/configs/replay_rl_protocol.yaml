@@ -8,7 +8,7 @@ evidence_policy:
   order: [paper, verified_implementation_defect, disclosed_local_proposal]
   paper_page_numbers: one_based_pdf_pages
   copied_defaults_are_author_settings: false
-  current_revision: binary_translation_oracle_36_of_40_endpoint57_failure_attribution_required
+  current_revision: final_OFF_reversal_does_not_restore_endpoint57_source56_semantic_authority_attribution_required
 
 inputs:
   setting: user_approved_gt_oracle_validation_not_full_perception_reproduction
@@ -385,7 +385,7 @@ evaluation:
       right-hand tool contact is already absent. The predeclared evidence gate
       therefore does not authorize the half-learning-rate training candidate.
   postfix_single_actor_pass_half_LR_candidate:
-    status: frozen_blocked_not_selected_after_binary_translation_oracle_gate
+    status: frozen_blocked_not_selected_after_last_OFF_reversal_gate
     paper_faithful: false
     contract: /data_all/zzx/3.2RL/configs/taco_pour_postfix_single_actor_pass_lr_half_candidate_v1.yaml
     sole_future_change: {actor_learning_rate: {baseline: 0.0001, candidate: 0.00005}}
@@ -549,7 +549,47 @@ evaluation:
     new_PPO_training_authorized: false
     half_LR_candidate_unblocked: false
     chunk_acceptance_or_commit_authorized: false
-    next_read_only_direction: endpoint57_failure_attribution
+    next_read_only_direction: completed_by_last_OFF_reversal_gate
+  binary_translation_last_OFF_reversal_gate:
+    status: completed_read_only_no_branch_survives_endpoint57
+    paper_faithful: false
+    classification: local_engineering_oracle_myopia_audit_not_EgoEngine_RL
+    contract: /data_all/zzx/3.2RL/configs/taco_pour_binary_translation_last_off_reversal_gate_v1.yaml
+    output: /data_all/zzx/3.2RL/runs/taco_pour_binary_translation_last_off_reversal_gate_v1
+    report: /data_all/zzx/3.2RL/runs/taco_pour_binary_translation_last_off_reversal_gate_v1/report.json
+    baseline_decision_arrays_bitwise_reproduced: true
+    forced_sources: [52, 53, 54, 55]
+    branches:
+      force_source52_ON: {successful_intervals: 34, first_failure_endpoint: 55, survives_endpoint57: false}
+      force_source53_ON: {successful_intervals: 34, first_failure_endpoint: 55, survives_endpoint57: false}
+      force_source54_ON: {successful_intervals: 35, first_failure_endpoint: 56, survives_endpoint57: false}
+      force_source55_ON: {successful_intervals: 36, first_failure_endpoint: 57, survives_endpoint57: false}
+    any_branch_survives_endpoint57: false
+    one_step_greedy_myopia_supported_by_primary_gate: false
+    source55_reversal:
+      immediate_ON_minus_OFF_score_cost: 0.000409543514251709
+      reaches_source56: true
+      source56_ON_OFF_tool_position_l2_m: 0.00017124311813405613
+      source56_ON_OFF_tool_rotation_distance_rad: 0.004397958873654247
+      legacy_mixed_position_quaternion_norm_interpreted_as_metric: false
+      source56_ON_contact_fingers: [pinky]
+      source56_OFF_contact_fingers: []
+      source56_ON_score: 1.0040502548217773
+      source56_OFF_score: 1.0030568838119507
+      both_source56_candidates_terminate_at_endpoint57: true
+      interpretation: >-
+        Reversing the last OFF decision produces a measurable but small bowl
+        response and an ON-branch pinky contact at source 56, but neither
+        source-56 translation choice restores endpoint-57 feasibility. The
+        response is 0.171 mm in position and 0.00440 rad in orientation; the
+        old mixed position-plus-quaternion L2 is not interpreted as metres.
+        It is therefore too strong to say either that source 56 has no
+        influence or that useful task-scale authority has been restored.
+    learned_gate_training_authorized: false
+    new_PPO_training_authorized: false
+    half_LR_candidate_unblocked: false
+    chunk_acceptance_or_commit_authorized: false
+    next_read_only_direction: source56_semantic_action_attribution_from_source55_reversal_state
 
 runtime_contract:
   fail_closed: true
@@ -615,7 +655,7 @@ runtime_contract:
     cpu_commit_endpoint_offset: 20
 
 training_ready: false
-training_ready_scope: binary_translation_oracle_36_of_40_endpoint57_failure_attribution_required
+training_ready_scope: final_OFF_reversal_does_not_restore_endpoint57_source56_semantic_authority_attribution_required
 
 audit_results:
   active_input: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/input_audit.json
@@ -650,6 +690,7 @@ audit_results:
   source45_state_entry_gate: /data_all/zzx/3.2RL/runs/taco_pour_source45_state_entry_gate_v1/report.json
   source45_prefix_source50_refinement_gate: /data_all/zzx/3.2RL/runs/taco_pour_source45_prefix_source50_refinement_gate_v1/report.json
   binary_translation_oracle_gate: /data_all/zzx/3.2RL/runs/taco_pour_binary_translation_oracle_gate_v1/report.json
+  binary_translation_last_OFF_reversal_gate: /data_all/zzx/3.2RL/runs/taco_pour_binary_translation_last_off_reversal_gate_v1/report.json
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -689,7 +730,7 @@ historical_observation_normalization_misaligned:
     - old_checkpoint_task_performance_as_an_algorithm_baseline
 
 blocking_checks:
-  - binary_translation_oracle_36_of_40_endpoint57_failure_attribution_required
+  - final_OFF_reversal_does_not_restore_endpoint57_source56_semantic_authority_attribution_required
 result_acceptance_blockers:
   - active_corrected_Replay_passes_only_30_of_40_in_second_window
   - postfix_single_actor_pass_PPO_passes_only_28_intervals_before_failure_at_endpoint49
@@ -703,6 +744,10 @@ result_acceptance_blockers:
   - binary_translation_oracle_extends_to_36_of_40_but_fails_endpoint57
   - binary_translation_oracle_selects_OFF_for_19_of_37_sources_not_a_sparse_gate
   - endpoint57_translation_ON_OFF_has_no_task_scale_tool_effect
+  - source52_or_53_ON_reversal_fails_early_at_endpoint55
+  - source54_ON_reversal_fails_early_at_endpoint56
+  - source55_ON_reversal_restores_source56_authority_but_both_translation_choices_fail_endpoint57
+  - one_step_oracle_myopia_not_supported_by_the_predeclared_last_OFF_reversal_gate
   - unpublished_threshold_to_weighted_objective_mapping
   - stable_grasp_and_physical_pour_not_demonstrated
 paper_faithful_run_blockers:

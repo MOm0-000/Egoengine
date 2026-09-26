@@ -95,7 +95,7 @@ def test_half_lr_candidate_and_protocol_remain_blocked():
     candidate = yaml.safe_load(CANDIDATE.read_text())
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
     assert candidate["status"] == (
-        "frozen_blocked_not_selected_after_binary_translation_oracle_gate"
+        "frozen_blocked_not_selected_after_last_OFF_reversal_gate"
     )
     assert candidate["single_change"] == {
         "field": "PPO_actor_learning_rate",
@@ -110,8 +110,8 @@ def test_half_lr_candidate_and_protocol_remain_blocked():
     assert _sha256(Path(evidence["report"]["path"])) == evidence["report"]["sha256"]
     assert protocol["training_ready"] is False
     assert protocol["training_ready_scope"] == (
-        "binary_translation_oracle_36_of_40_endpoint57_failure_attribution_required"
+        "final_OFF_reversal_does_not_restore_endpoint57_source56_semantic_authority_attribution_required"
     )
     assert protocol["blocking_checks"] == [
-        "binary_translation_oracle_36_of_40_endpoint57_failure_attribution_required"
+        "final_OFF_reversal_does_not_restore_endpoint57_source56_semantic_authority_attribution_required"
     ]

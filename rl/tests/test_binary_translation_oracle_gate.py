@@ -114,7 +114,7 @@ def test_protocol_moves_to_endpoint57_attribution_and_keeps_training_blocked():
     half_lr = yaml.safe_load((
         ROOT / "configs/taco_pour_postfix_single_actor_pass_lr_half_candidate_v1.yaml"
     ).read_text())
-    blocker = "binary_translation_oracle_36_of_40_endpoint57_failure_attribution_required"
+    blocker = "final_OFF_reversal_does_not_restore_endpoint57_source56_semantic_authority_attribution_required"
     assert protocol["training_ready"] is False
     assert protocol["training_ready_scope"] == blocker
     assert protocol["blocking_checks"] == [blocker]
@@ -126,9 +126,9 @@ def test_protocol_moves_to_endpoint57_attribution_and_keeps_training_blocked():
     assert gate["sparse_gate_supported"] is False
     assert gate["new_PPO_training_authorized"] is False
     assert gate["chunk_acceptance_or_commit_authorized"] is False
-    assert gate["next_read_only_direction"] == "endpoint57_failure_attribution"
+    assert gate["next_read_only_direction"] == "completed_by_last_OFF_reversal_gate"
     assert half_lr["status"] == (
-        "frozen_blocked_not_selected_after_binary_translation_oracle_gate"
+        "frozen_blocked_not_selected_after_last_OFF_reversal_gate"
     )
     assert half_lr["latest_state_entry_evidence"][
         "binary_translation_oracle_report"

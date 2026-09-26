@@ -293,5 +293,42 @@ deployable policy. It does not complete 40/40, so no learned gate, PPO run,
 chunk acceptance or commit is authorized. The next read-only blocker is
 endpoint-57 failure attribution; the half-LR candidate remains blocked.
 
+## Final-OFF reversal gate
+
+The endpoint-57 follow-up tests whether the one-step oracle sacrificed future
+controllability when it selected OFF at sources 52--55. Each branch starts
+from the exact saved baseline physics snapshot and pre-forward RNN hidden,
+forces exactly that source back to the complete PPO translation-ON action for
+one control interval, then resumes the unchanged one-step oracle. The original
+36/40 oracle decision arrays are reproduced bitwise before any branch runs.
+
+```text
+forced ON source  successful intervals  first failure
+52                34                    endpoint 55
+53                34                    endpoint 55
+54                35                    endpoint 56
+55                36                    endpoint 57
+```
+
+No reversal survives endpoint 57. The earlier reversals are actively worse,
+not delayed-benefit choices hidden by the one-step score. Source 55 is more
+subtle: its immediate ON score is only `0.00040954` worse than OFF, and that
+changed state reaches source 56 with a measurable but small bowl response. At
+source 56, ON versus OFF changes bowl position by `0.171 mm` and orientation
+by `0.00440 rad`; the ON outcome creates a pinky--bowl contact while OFF has
+none. The old full free-joint qpos L2 mixes metres with quaternion components
+and is therefore retained only as a legacy diagnostic, never interpreted as a
+metric distance. Both candidates terminate at endpoint 57, with scores
+`1.004050` and `1.003057` respectively.
+
+Therefore the predeclared primary gate does not support the claim that a final
+greedy OFF decision caused the endpoint-57 failure. It would also be wrong to
+retain the stronger baseline description that source 56 categorically lacks
+influence. At the same time, this small response is not evidence of useful
+task-scale authority. The binary translation subspace cannot turn the changed
+state into feasibility. The next read-only direction is semantic source-56
+action attribution from that source-55-reversal state. Learned-gate training,
+the half-LR PPO candidate, task acceptance and chunk commit remain blocked.
+
 Superseded or invalid evidence remains isolated under `TRASH/` and is not part
 of the active decision chain.

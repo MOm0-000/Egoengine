@@ -1,5 +1,5 @@
 schema: taco_pour_postfix_single_actor_pass_lr_half_candidate_v1
-status: frozen_blocked_not_selected_after_binary_translation_oracle_gate
+status: frozen_blocked_not_selected_after_last_OFF_reversal_gate
 paper_faithful: false
 purpose: >-
   Freeze, but do not authorize, the single-variable local reproduction
@@ -95,13 +95,22 @@ latest_state_entry_evidence:
   binary_translation_oracle_successful_intervals: 36
   binary_translation_oracle_OFF_count: 19
   binary_translation_oracle_first_failure_endpoint: 57
+  binary_translation_last_OFF_reversal_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_binary_translation_last_off_reversal_gate_v1/report.json
+    sha256: eac4c70828bc1d430da129d67a7489c7a42bdd5de2a2557a1cdf1a3dcc8a3fa7
+  last_OFF_reversal_passing_branches: []
+  source55_reversal_changes_source56_tool_pose_and_contact_but_not_feasibility: true
   half_LR_selected_for_next_experiment: false
   interpretation: >-
-    A one-step binary translation oracle extends the frozen actor to 36/40 but
-    selects OFF for 19 of 37 evaluated sources and loses task-scale translation
-    authority at endpoint 57. The next work is failure attribution, not a
-    global actor learning-rate change. This historical candidate remains
-    frozen and unauthorized.
+    A one-step binary translation oracle extends the frozen actor to 36/40.
+    Reversing each final OFF decision separately does not survive endpoint 57:
+    the earlier reversals fail even sooner, while source 55 changes the
+    source-56 bowl pose and contact but still cannot make endpoint 57
+    feasible. Position and rotation are reported separately; no mixed
+    position-plus-quaternion norm is interpreted as a metric distance. The
+    next work is semantic source-56 action attribution, not a global actor
+    learning-rate change. This historical candidate remains frozen and
+    unauthorized.
 
 evidence:
   source_run_report:
