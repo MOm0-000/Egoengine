@@ -210,5 +210,47 @@ single-variable right-wrist-translation temporal or state-dependent gating
 candidate; its exact rule and promotion contract remain unresolved, and no
 new training is authorized yet.
 
+## Source-45 suppression / source-50 refinement gate
+
+The follow-up audit fixes `zero right-wrist translation` at source 45 as the
+validated prefix, reproduces its six saved endpoint arrays bitwise, and then
+captures the exact source-50 physics state plus pre-forward RNN hidden. It also
+reproduces formal Replay, formal PPO and the restored source-50 suffix before
+interpreting any counterfactual.
+
+The source-45 prefix and Replay both cross the tracking boundary at endpoint
+51, but they are not in the same measured physical basin. At that endpoint the
+tool origins differ by `32.90 mm`; Replay's squared ellipse contributions are
+`0.6442` position and `0.4055` rotation, whereas the prefix has `0.9304`
+position and `0.1088` rotation. Thus the matching failure endpoint means only
+that both hit the same formal boundary, not that the prefix has literally
+restored the Replay trajectory or failure mechanism.
+
+From the exact prefix source-50 state, every predeclared one-step suppression
+crosses endpoint 51 with a score below both the prefix baseline (`1.019423`)
+and same-run Replay (`1.024568`):
+
+```text
+branch                                score@51  first failure
+zero R_forearm_ty only                0.994728  endpoint 52
+zero right-wrist translation          0.992012  endpoint 53
+zero complete right wrist             0.992012  endpoint 53
+zero complete right hand              0.992012  endpoint 53
+zero all 36 residuals                 0.992012  endpoint 53
+```
+
+The narrowest passing intervention is the single `R_forearm_ty` component.
+This establishes a two-stage counterfactual path that exceeds Replay's
+endpoint-51 boundary: source-45 translation suppression improves entry, then
+source-50 y suppression crosses the boundary. It does **not** establish that
+the learned deterministic actor performs refinement; both improvements are
+time-local suppressions of its output, and even the best branches still fail
+by endpoint 53 rather than completing 40/40.
+
+Consequently no training or chunk commit is authorized. The next blocker is
+to define one auditable temporal/state-dependent wrist-translation candidate
+without turning the two discovered timestamps into an ad-hoc rule. The
+historical `actor_learning_rate=5e-5` candidate remains blocked.
+
 Superseded or invalid evidence remains isolated under `TRASH/` and is not part
 of the active decision chain.

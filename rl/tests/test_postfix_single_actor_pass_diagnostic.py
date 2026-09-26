@@ -81,7 +81,7 @@ def test_protocol_records_failure_and_requires_a_new_decision():
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
     assert protocol["training_ready"] is False
     assert protocol["training_ready_scope"] == (
-        "source45_gate_passed_right_wrist_translation_candidate_decision_required"
+        "source50_two_stage_gate_passed_temporal_wrist_translation_candidate_design_required"
     )
     run = protocol["evaluation"]["postfix_single_actor_pass_diagnostic"]
     assert run["sole_change"] == {"actor_mini_epochs": {"baseline": 4, "candidate": 1}}

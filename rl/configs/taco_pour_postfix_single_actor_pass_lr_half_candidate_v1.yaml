@@ -1,5 +1,5 @@
 schema: taco_pour_postfix_single_actor_pass_lr_half_candidate_v1
-status: frozen_blocked_not_selected_after_source45_state_entry_gate
+status: frozen_blocked_not_selected_after_source50_refinement_gate
 paper_faithful: false
 purpose: >-
   Freeze, but do not authorize, the single-variable local reproduction
@@ -84,11 +84,17 @@ latest_state_entry_evidence:
     - zero_right_wrist_translation
     - zero_complete_right_wrist
   source45_narrowest_passing_branch: zero_right_wrist_translation
+  source50_refinement_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_source45_prefix_source50_refinement_gate_v1/report.json
+    sha256: 052dbf4127b2f96227dc865e36dad89c1a983bc0900a634372521b7d1ab45ad9
+  source50_all_predeclared_branches_cross_Replay_endpoint51: true
+  source50_narrowest_passing_branch: zero_R_forearm_ty_residual_only
   half_LR_selected_for_next_experiment: false
   interpretation: >-
-    The strongest new evidence points to the timing or state-dependent gating
-    of the right-wrist translation subspace, not a global actor learning-rate
-    change. This historical half-LR candidate remains frozen and unauthorized.
+    The strongest evidence now points to two time-local, state-dependent wrist
+    suppressions: source-45 translation suppression establishes the prefix and
+    source-50 R_forearm_ty suppression crosses the Replay failure boundary.
+    This historical half-LR candidate remains frozen and unauthorized.
 
 evidence:
   source_run_report:

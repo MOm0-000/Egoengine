@@ -1,0 +1,137 @@
+schema: taco_pour_source45_prefix_source50_refinement_gate_v1
+status: authorized_read_only_gate
+paper_faithful: false
+purpose: >-
+  Determine whether the validated source-45 right-wrist-translation suppression
+  only restores the Replay basin, or can be followed by a one-step source-50
+  semantic residual intervention that survives the Replay failure boundary.
+
+runtime:
+  backend: CPU_MuJoCo_Warp
+  training_allowed: false
+  optimizer_steps: 0
+  actor_frozen: true
+  critic_frozen: true
+  observation_normalization_frozen: true
+  reward_changed: false
+  objective_changed: false
+  action_scale_changed: false
+  action_bound_changed: false
+  action_distribution_changed: false
+  reference_timing_changed: false
+  action_frame_changed: false
+  PPO_hyperparameters_changed: false
+  chunk_acceptance_allowed: false
+  chunk_commit_allowed: false
+  checkpoint_resume_for_training_allowed: false
+
+validated_prefix:
+  source_endpoint: 45
+  intervention_control_steps: 1
+  zero_normalized_action_indices: [0, 1, 2]
+  semantic_group: right_wrist_translation
+  continuation: frozen_deterministic_PPO
+  exact_regression_required: true
+  exact_regression_artifact: source45_branch_arrays
+
+suppression_or_refinement_comparison:
+  endpoints: [46, 47, 48, 49, 50, 51]
+  modes: [Replay, source45_translation_suppression_prefix]
+  record:
+    - position_error_xyz
+    - position_error_norm
+    - rotation_error
+    - position_ellipse_contribution
+    - rotation_ellipse_contribution
+    - bowl_freejoint_velocity
+    - right_wrist_tool_relative_pose
+    - right_wrist_tool_relative_velocity
+    - full_36d_actor_action
+    - right_hand_tool_contact
+  mixed_unit_combined_distance_forbidden: true
+  contact_affects_classification: false
+
+source50:
+  endpoint: 50
+  exact_prefix_state_and_RNN_hidden_required: true
+  restored_prefix_suffix_must_be_bitwise_exact: true
+
+branches:
+  - name: zero_R_forearm_ty_residual_only
+    zero_normalized_action_indices: [1]
+  - name: zero_right_wrist_translation
+    zero_normalized_action_indices: [0, 1, 2]
+  - name: zero_complete_right_wrist
+    zero_normalized_action_indices: [0, 1, 2, 3, 4, 5]
+  - name: zero_entire_right_hand_residual
+    zero_normalized_action_indices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+  - name: zero_full_36d_residual
+    zero_normalized_action_indices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35]
+intervention_control_steps: 1
+continuation: frozen_deterministic_PPO
+rollout_end_endpoint: 60
+individual_actuator_sweep_allowed: false
+scale_sweep_allowed: false
+multi_step_intervention_allowed: false
+
+primary_passing_condition:
+  rule: >-
+    endpoint_51_survives_and_score_is_strictly_below_both_the_prefix_baseline
+    _and_same_run_Replay
+  required:
+    - endpoint_51_exists_and_is_not_terminated
+    - endpoint_51_score_below_prefix_baseline
+    - endpoint_51_score_below_same_run_Replay
+  contact_required: false
+  training_automatically_authorized: false
+  chunk_acceptance_automatically_authorized: false
+
+decision_if_any_pass: 'two_stage_source45_suppression_then_source50_refinement_evidence_requires_separate_temporal_state_dependent_candidate_design'
+decision_if_all_fail: 'source45_translation_is_suppression_only_endpoint51_refinement_requirement_required'
+
+frozen_half_LR_candidate:
+  actor_learning_rate: 5.0e-5
+  remains_blocked: true
+
+inputs:
+  formal_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/report.json
+    sha256: d1690633bb3c29c16f92e8114a9f71142a8bde0d141114abd68fda359eb0344b
+  source45_gate_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_source45_state_entry_gate_v1/report.json
+    sha256: 2f8a0ad2bccd5b5c0aacbe1fe5be59e32a56c15d4c39bf498f5965e906e1e64a
+  source45_branch_arrays:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_source45_state_entry_gate_v1/state_entry_branches.npz
+    sha256: 89eae444922260c0c616bdb2bbee8ac2c0ade99de1ee40682a3aa6f4a8aab0ce
+  checkpoint:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/ppo_chunk_20/nn/last_ep_8_rew__5.815153_.pth.gz
+    sha256: 159e7e462b584e10fd62764b82aac3725630088e45ee7720d71cd27bdfe59b97
+  boundary:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/source_boundary.pt.gz
+    sha256: a3646e24af1ba871e5ecc885669508223a5e0f26d3cf29f0482f02678419e337
+  simulator_config:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml
+    sha256: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+  initialization_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/initialization_report.json
+    sha256: 9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a
+  protocol:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/protocol.yaml
+    sha256: e90830ea1971f2238f4de6a54600930ed9b4cb308ada948fb43110a844098ac8
+  objective_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/objective_profile.yaml
+    sha256: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+  observation_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/observation_profile.yaml
+    sha256: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  action_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/action_profile.yaml
+    sha256: 71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4
+  distribution_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/distribution_profile.yaml
+    sha256: 6a4e4bd8f33fa53bfe34f21f822bfa391253cca090892767154320fc9bbfd1b8
+
+artifacts:
+  report: report.json
+  summary: summary.md
+  branch_arrays: source50_refinement_branches.npz

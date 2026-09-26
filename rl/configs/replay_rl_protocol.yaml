@@ -8,7 +8,7 @@ evidence_policy:
   order: [paper, verified_implementation_defect, disclosed_local_proposal]
   paper_page_numbers: one_based_pdf_pages
   copied_defaults_are_author_settings: false
-  current_revision: source45_gate_passed_right_wrist_translation_candidate_decision_required
+  current_revision: source50_two_stage_gate_passed_temporal_wrist_translation_candidate_design_required
 
 inputs:
   setting: user_approved_gt_oracle_validation_not_full_perception_reproduction
@@ -385,7 +385,7 @@ evaluation:
       right-hand tool contact is already absent. The predeclared evidence gate
       therefore does not authorize the half-learning-rate training candidate.
   postfix_single_actor_pass_half_LR_candidate:
-    status: frozen_blocked_not_selected_after_source45_state_entry_gate
+    status: frozen_blocked_not_selected_after_source50_refinement_gate
     paper_faithful: false
     contract: /data_all/zzx/3.2RL/configs/taco_pour_postfix_single_actor_pass_lr_half_candidate_v1.yaml
     sole_future_change: {actor_learning_rate: {baseline: 0.0001, candidate: 0.00005}}
@@ -460,6 +460,50 @@ evaluation:
     next_candidate_direction: right_wrist_translation_temporal_scale_or_gating
     new_training_authorized: false
     half_LR_candidate_unblocked: false
+  source45_prefix_source50_refinement_gate:
+    status: completed_read_only_primary_gate_passed_no_training_authorized
+    paper_faithful: false
+    contract: /data_all/zzx/3.2RL/configs/taco_pour_source45_prefix_source50_refinement_gate_v1.yaml
+    output: /data_all/zzx/3.2RL/runs/taco_pour_source45_prefix_source50_refinement_gate_v1
+    report: /data_all/zzx/3.2RL/runs/taco_pour_source45_prefix_source50_refinement_gate_v1/report.json
+    formal_Replay_and_PPO_bitwise_reproduced: true
+    source45_translation_prefix_arrays_bitwise_reproduced: true
+    restored_source50_suffix_and_actor_action_exact: true
+    prefix_vs_Replay:
+      both_fail_endpoint: 51
+      both_failure_reason: tracking_boundary
+      same_physical_basin_or_failure_mechanism_established: false
+      Replay_endpoint51_score: 1.02456796169281
+      prefix_endpoint51_score: 1.0194225311279297
+      Replay_endpoint51_ellipse_squared: {position: 0.6442332555849586, rotation: 0.40550625793356687}
+      prefix_endpoint51_ellipse_squared: {position: 0.9303857905024812, rotation: 0.10883657053727962}
+      endpoint51_tool_position_separation_m: 0.032897932479413076
+    primary_gate: >-
+      survive endpoint 51 and score strictly below both the source45 prefix
+      baseline and same-run Replay
+    contact_is_secondary_not_acceptance: true
+    branch_results:
+      zero_R_forearm_ty_residual_only: {endpoint51_score: 0.9947279095649719, failure_endpoint: 52, passed: true}
+      zero_right_wrist_translation: {endpoint51_score: 0.9920123219490051, failure_endpoint: 53, passed: true}
+      zero_complete_right_wrist: {endpoint51_score: 0.9920122623443604, failure_endpoint: 53, passed: true}
+      zero_entire_right_hand_residual: {endpoint51_score: 0.9920122623443604, failure_endpoint: 53, passed: true}
+      zero_full_36d_residual: {endpoint51_score: 0.9920122623443604, failure_endpoint: 53, passed: true}
+    passing_branches:
+      - zero_R_forearm_ty_residual_only
+      - zero_right_wrist_translation
+      - zero_complete_right_wrist
+      - zero_entire_right_hand_residual
+      - zero_full_36d_residual
+    narrowest_passing_branch: zero_R_forearm_ty_residual_only
+    learned_PPO_refinement_proven: false
+    interpretation: >-
+      The frozen trajectory crosses the Replay endpoint-51 failure boundary
+      only after source-45 translation suppression and a second time-local
+      source-50 suppression. This supports a temporal/state-dependent gating
+      candidate, not a claim that the learned deterministic PPO actor already
+      performs refinement.
+    new_training_authorized: false
+    half_LR_candidate_unblocked: false
 
 runtime_contract:
   fail_closed: true
@@ -525,7 +569,7 @@ runtime_contract:
     cpu_commit_endpoint_offset: 20
 
 training_ready: false
-training_ready_scope: source45_gate_passed_right_wrist_translation_candidate_decision_required
+training_ready_scope: source50_two_stage_gate_passed_temporal_wrist_translation_candidate_design_required
 
 audit_results:
   active_input: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/input_audit.json
@@ -558,6 +602,7 @@ audit_results:
   source47_semantic_action_subspace_gate: /data_all/zzx/3.2RL/runs/taco_pour_source47_semantic_action_subspace_gate_v1/report.json
   source46_state_entry_gate: /data_all/zzx/3.2RL/runs/taco_pour_source46_state_entry_gate_v1/report.json
   source45_state_entry_gate: /data_all/zzx/3.2RL/runs/taco_pour_source45_state_entry_gate_v1/report.json
+  source45_prefix_source50_refinement_gate: /data_all/zzx/3.2RL/runs/taco_pour_source45_prefix_source50_refinement_gate_v1/report.json
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -597,7 +642,7 @@ historical_observation_normalization_misaligned:
     - old_checkpoint_task_performance_as_an_algorithm_baseline
 
 blocking_checks:
-  - source45_gate_passed_right_wrist_translation_candidate_decision_required
+  - source50_two_stage_gate_passed_temporal_wrist_translation_candidate_design_required
 result_acceptance_blockers:
   - active_corrected_Replay_passes_only_30_of_40_in_second_window
   - postfix_single_actor_pass_PPO_passes_only_28_intervals_before_failure_at_endpoint49
@@ -606,6 +651,8 @@ result_acceptance_blockers:
   - source46_wrist_weakening_rescues_endpoint49_but_not_endpoint50
   - endpoint48_contact_is_neither_necessary_nor_sufficient_for_short_horizon_tracking_feasibility
   - source45_translation_or_wrist_suppression_survives_endpoint50_but_fails_endpoint51
+  - two_stage_time_local_suppression_exceeds_Replay_endpoint51_but_fails_by_endpoint53
+  - learned_deterministic_PPO_refinement_beyond_Replay_not_demonstrated
   - unpublished_threshold_to_weighted_objective_mapping
   - stable_grasp_and_physical_pour_not_demonstrated
 paper_faithful_run_blockers:
