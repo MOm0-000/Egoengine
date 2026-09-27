@@ -11,6 +11,10 @@ ROOT = Path(__file__).resolve().parents[1]
 RUN = ROOT / "runs/taco_pour_low_level_contact_controllability_gate_L_v1"
 CONTRACT = ROOT / "configs/taco_pour_low_level_contact_controllability_gate_L_v1.yaml"
 BLOCKER = "physics_reference_and_XHand_contact_actuator_model_review_required"
+FINAL_BLOCKER = (
+    "blocked_pending_unpublished_simulator_contact_actuation_object_physics_"
+    "and_objective_details"
+)
 
 
 def _sha256(path: Path) -> str:
@@ -141,9 +145,11 @@ def test_gate_L_closes_controller_search_and_protocol_moves_to_physics_review():
 
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
     assert protocol["training_ready"] is False
-    assert protocol["training_ready_scope"] == BLOCKER
-    assert protocol["blocking_checks"] == [BLOCKER]
-    assert protocol["evidence_policy"]["current_revision"] == BLOCKER
+    assert protocol["training_ready_scope"] == FINAL_BLOCKER
+    assert protocol["blocking_checks"] == [FINAL_BLOCKER]
+    assert protocol["evidence_policy"]["current_revision"] == (
+        "final_simulator_contract_adjudication_gate_Q_closed_backend_dependent"
+    )
     gate = protocol["evaluation"]["low_level_contact_controllability_gate_L"]
     assert gate["L0_effort_limited_joint_impedance"]["feasible_anchors"] == 0
     assert gate["L1_force_aware_impedance"]["feasible_anchors"] == 0

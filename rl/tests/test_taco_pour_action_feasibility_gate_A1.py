@@ -94,7 +94,10 @@ def test_gate_A_is_closed_and_protocol_moves_to_low_level_controllability():
     report = _report()
     decision = report["decision"]
     historical_blocker = "low_level_impedance_or_force_aware_contact_controllability_required"
-    current_blocker = "physics_reference_and_XHand_contact_actuator_model_review_required"
+    current_blocker = (
+        "blocked_pending_unpublished_simulator_contact_actuation_object_physics_"
+        "and_objective_details"
+    )
     assert decision["Gate_A_closed"] is True
     assert decision["finite_search_failure_is_mathematical_infeasibility_proof"] is False
     assert decision["gate_B_observation_sufficiency_read_only_allowed"] is False
@@ -114,7 +117,9 @@ def test_gate_A_is_closed_and_protocol_moves_to_low_level_controllability():
     assert protocol["training_ready"] is False
     assert protocol["training_ready_scope"] == current_blocker
     assert protocol["blocking_checks"] == [current_blocker]
-    assert protocol["evidence_policy"]["current_revision"] == current_blocker
+    assert protocol["evidence_policy"]["current_revision"] == (
+        "final_simulator_contract_adjudication_gate_Q_closed_backend_dependent"
+    )
     gate = protocol["evaluation"]["action_feasibility_gate_A1"]
     assert gate["gate_A_closed"] is True
     assert gate["structured_object_motion_feedback"]["feasible_candidates"] == 0

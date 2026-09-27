@@ -117,10 +117,12 @@ def test_artifacts_remain_hash_bound_and_protocol_advances_to_fresh_evidence():
 
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
     assert protocol["blocking_checks"] == [
-        "physics_reference_and_XHand_contact_actuator_model_review_required"
+        "blocked_pending_unpublished_simulator_contact_actuation_object_physics_"
+        "and_objective_details"
     ]
     assert protocol["training_ready_scope"] == (
-        "physics_reference_and_XHand_contact_actuator_model_review_required"
+        "blocked_pending_unpublished_simulator_contact_actuation_object_physics_"
+        "and_objective_details"
     )
     assert protocol["historical_observation_normalization_misaligned"][
         "active_algorithm_evidence"

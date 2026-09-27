@@ -106,7 +106,7 @@ def test_protocol_moves_to_source45_and_keeps_half_lr_blocked():
     half_lr = yaml.safe_load((
         ROOT / "configs/taco_pour_postfix_single_actor_pass_lr_half_candidate_v1.yaml"
     ).read_text())
-    blocker = "physics_reference_and_XHand_contact_actuator_model_review_required"
+    blocker = "blocked_pending_unpublished_simulator_contact_actuation_object_physics_and_objective_details"
     assert report["decision"]["passing_branches"] == []
     assert report["decision"]["gate_passed"] is False
     assert report["decision"]["actor_LR_5e_minus_5_unblocked"] is False

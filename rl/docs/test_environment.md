@@ -18,7 +18,7 @@ PYTHONPATH="$PWD/.env_mjwp313_overlay:$PWD/src:$PWD/scripts:$PWD/external/mink/s
   /data_all/zzx/egoengine/spider/.venv/bin/python -m pytest -q
 ```
 
-On 2026-09-27 this command passed **731 tests and 57 subtests**.
+On 2026-09-27 this command passed **742 tests and 57 subtests**.
 The 19 warnings are known upstream/diagnostic warnings: capsule-mesh MULTICCD
 capacity, PyTorch AMP deprecations, two Trimesh degenerate-volume warnings and
 seven SciPy pickle deprecations.
@@ -75,6 +75,7 @@ runs/taco_pour_action_feasibility_reference_object_frame_v1/
 runs/taco_pour_action_feasibility_gate_A1_v1/
 runs/taco_pour_low_level_contact_controllability_gate_L_v1/
 runs/taco_pour_physics_reference_validity_gate_P_v1/
+runs/taco_pour_simulator_contract_adjudication_gate_Q_v1/
 ```
 
 The first corrected PPO authorization is consumed. Replay passed the first
@@ -438,6 +439,37 @@ finite 16-sided contact-wrench LP is infeasible at endpoints 48, 55, 59, and
 diagnostics, not global impossibility proofs. Gate B/C, PPO retraining, task
 parameter tuning, and chunk commit remain blocked; P5 remains dependent on
 external author information about the unpublished objective contract.
+
+Gate Q is the final finite physics/simulator adjudication and supersedes Gate
+P's incomplete P4 wrench result. Q1 observes the unchanged formal unlimited
+position actuators directly over 400 physics substeps on each of Replay,
+single-pass PPO and the tail-oracle path. In sources 44--59, respectively
+3486, 3530 and 3526 of 5760 actuator samples exceed declared URDF effort; all
+exceedances are on finger actuators and peak ratios are 267--286. The measured
+MJWP actuator force agrees with the compiled affine `Kp/Kd` law within
+`3.3e-4 N`, so this is intrinsic formal-model demand rather than Gate L's
+effort clip.
+
+Q2 compares exactly three predeclared collision representations at the same
+source45/50/57 states: current mixed (`3009` pairs), convex-only (`3005`) and
+external-exact/SDF-only (`1537`). None passes all three native-MuJoCo/CPU-MJWP
+ten-substep parity probes or matches the source45 live pair set on all ten
+substeps. The exact/SDF-only variant removes the finite duplicate visual-patch
+rows (`20 -> 0`) but still fails parity, so no collision/backend contract is
+selected and the backend dependence is explicit.
+
+Q3 uses native MuJoCo inverse dynamics with the inverse constraint force added
+back to recover the free-body smooth demand, both hands, every compiled
+hand--tool surface sample reachable under the residual box, live passive
+tool--target/floor contacts, `0.5 mm / 5 degree` unique-patch clustering, and
+the compiled pyramidal `condim/friction` semantics. It finds 89--95 unique hand
+patches (356--380 pyramid rays) per endpoint and all endpoints 44--60 feasible
+under declared effort. Thus Gate P P4 is withdrawn as an active blocker; it
+was a finite right-hand-only, artificial 16-sided approximation. This positive
+Q3 result does not reopen Gate B/C because Q2 failed. Gate Q is closed and no
+additional physics/parity gate, PPO retraining, parameter sweep or chunk commit
+is authorized. Exact EgoEngine reproduction is classified as blocked pending
+unpublished simulator/contact/actuation/object-physics and objective details.
 
 ## Archived invalid performance evidence
 

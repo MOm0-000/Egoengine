@@ -1,0 +1,181 @@
+schema: taco_pour_simulator_contract_adjudication_gate_Q_v1
+status: authorized_final_finite_simulator_contract_adjudication
+paper_faithful: false
+classification: local_engineering_simulator_contract_adjudication_not_author_parameter_recovery
+purpose: >-
+  Distinguish intrinsic formal-actuator demand from clipping-induced divergence,
+  determine whether one predeclared collision representation yields an acceptable
+  native-MuJoCo/CPU-MJWP contract, and re-evaluate reference wrench feasibility
+  using the complete unique contact graph. Gate Q is the final physics gate.
+
+runtime:
+  training_allowed: false
+  optimizer_updates_policy: false
+  new_controller_allowed: false
+  action_or_controller_search_allowed: false
+  mass_friction_effort_gain_axis_frame_or_source_sweep_allowed: false
+  reward_objective_reference_or_actuator_change_allowed: false
+  chunk_acceptance_allowed: false
+  chunk_commit_allowed: false
+  order: [Q1, Q2, Q3]
+
+Q1_formal_actuator_demand:
+  backend: CPU_MuJoCo_Warp
+  actuator_model: unmodified_formal_unlimited_affine_position_actuator
+  paths:
+    - Replay_zero_residual
+    - frozen_single_pass_PPO
+    - frozen_binary_prefix_plus_tail_semantic_oracle
+  endpoints: [20, 60]
+  focus_endpoints: [44, 60]
+  physics_substeps_per_control_interval: 10
+  record:
+    - compiled_actuator_force
+    - position_component_Kp_times_ctrl_minus_q
+    - damping_component_minus_Kd_times_qdot
+    - requested_sum
+    - requested_and_compiled_force_over_declared_URDF_effort
+  continuation_after_local_tracking_termination: diagnostic_only
+  effort_or_policy_change_allowed: false
+
+Q2_collision_backend_contract:
+  sources: [45, 50, 57]
+  physics_substeps: 10
+  variants:
+    current_mixed:
+      keep_current_contact_pairs: true
+    convex_only:
+      remove_pairs_containing_external_exact_geom: true
+    external_exact_SDF_only:
+      remove_hand_object_pairs_not_containing_external_exact_geom: true
+  frozen_across_variants:
+    - mass
+    - friction
+    - actuators
+    - qpos
+    - qvel
+    - ctrl
+    - qacc_warmstart
+  parity_conditions_identical_to_Gate_P: true
+  duplicate_patch_thresholds_identical_to_Gate_P: true
+  freeze_condition:
+    - source45_exact_live_hand_tool_pair_set_matches_all_substeps
+    - all_three_sources_pass_Gate_P_parity
+    - visual_surface_patch_duplicate_count_is_lower_than_current_mixed
+  if_no_variant_passes: acknowledge_backend_dependent_physics_and_stop_parity_search
+
+Q3_complete_contact_reference_wrench:
+  endpoints: [44, 60]
+  geometry_backend: native_MuJoCo_on_Q2_selected_variant_or_current_mixed_if_none_selected
+  required_wrench: MuJoCo_inverse_dynamics_free_joint_generalized_force
+  hand_candidates:
+    sides: [right, left]
+    samples: all_declared_fingertip_palm_and_collision_geom_surface_samples
+    residual_reachability: first_order_point_Jacobian_box_support
+  passive_candidates:
+    - tool_target_contacts_present_at_reference_geometry
+    - tool_floor_contacts_present_at_reference_geometry
+  unique_patch_clustering:
+    maximum_contact_point_separation_m: 0.0005
+    maximum_contact_normal_angle_deg: 5.0
+    keep_distinct_counterpart_bodies: true
+  compiled_contact_semantics:
+    cone: must_match_compiled_MuJoCo_option
+    condim: per_contact
+    friction: per_contact_or_explicit_pair
+    artificial_16_sided_cone_forbidden: true
+  constraints:
+    - nonnegative_pyramidal_contact_coefficients
+    - both_hands_abs_J_transpose_f_le_declared_effort_limits
+    - passive_tool_target_and_tool_floor_contacts_have_no_hand_effort_cost
+  physics_parameter_sweep_allowed: false
+
+decision:
+  reopen_Gate_B_C_only_if:
+    - Q2_freezes_one_unique_collision_backend_contract
+    - Q3_all_endpoints_feasible_under_current_formal_physics
+  otherwise:
+    exact_EgoEngine_reproduction_status: blocked_pending_unpublished_simulator_contact_actuation_object_physics_and_objective_details
+    inspired_engineering_reproduction_requires_separate_future_authorization: true
+
+stopping_rule:
+  Gate_Q_is_final_physics_gate: true
+  additional_physics_gate_allowed: false
+  additional_backend_parity_search_allowed: false
+  additional_source_action_controller_or_contact_sweep_allowed: false
+  Gate_B_C_allowed_before_Q2_and_Q3_positive: false
+  PPO_retraining_allowed: false
+  actor_learning_rate_5e_minus_5_allowed: false
+  learned_gate_allowed: false
+  reward_change_allowed: false
+  chunk_commit_allowed: false
+
+inputs:
+  Gate_P_contract:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_physics_reference_validity_gate_P_v1.yaml
+    sha256: ba0697c3b1050a8a0253259d29d0932b30e263f177c1c9479de9ce6cea5956df
+  Gate_P_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_physics_reference_validity_gate_P_v1/report.json
+    sha256: bc7fddef4e963025acc8ef18fe0c19e6e511b55bb8235785171ad75a92f9cf65
+  Gate_P_states:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_physics_reference_validity_gate_P_v1/exact_states_and_contacts.npz
+    sha256: 5cb590b3650957e0a4f76cdbbd2a2f8b875125e4dd212af80eb2f2e7d29e2587
+  tail_contract:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_tail_semantic_suppression_oracle_v1.yaml
+    sha256: bd65ff5edc36d2895ec9163542b6db6137372bcdcb4115d45799e6ac496baa1f
+  tail_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_tail_semantic_suppression_oracle_v1/report.json
+    sha256: 5f667a9691f9094657d78fe998c2f9b2599b08785518a44580556f2741cd7f6e
+  binary_oracle_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_binary_translation_oracle_gate_v1/report.json
+    sha256: 396754a62be72190bc87db1a55d57af28bc77acf082f539e1eb668a0c161b9b4
+  formal_scene:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate.xml
+    sha256: deb35689ce385aa30f361ddd1907f54bdbd4f55d4fd98a22409b68a9a691a215
+  formal_simulator_config:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml
+    sha256: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+  robot_reference:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_combined_collision_v1/robot_reference.npz
+    sha256: cf99b9846a63617ddd5e439e086708c80a1e9b43f614df63168ffb3236a7685c
+  checkpoint:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/ppo_chunk_20/nn/last_ep_8_rew__5.815153_.pth.gz
+    sha256: 159e7e462b584e10fd62764b82aac3725630088e45ee7720d71cd27bdfe59b97
+  boundary:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/source_boundary.pt.gz
+    sha256: a3646e24af1ba871e5ecc885669508223a5e0f26d3cf29f0482f02678419e337
+  protocol:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/protocol.yaml
+    sha256: e90830ea1971f2238f4de6a54600930ed9b4cb308ada948fb43110a844098ac8
+  objective_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/objective_profile.yaml
+    sha256: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+  observation_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/observation_profile.yaml
+    sha256: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  action_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/action_profile.yaml
+    sha256: 71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4
+  distribution_profile:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_postfix_single_actor_pass_diagnostic_v1/input_contracts/distribution_profile.yaml
+    sha256: 6a4e4bd8f33fa53bfe34f21f822bfa391253cca090892767154320fc9bbfd1b8
+  right_XHand_URDF:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_spider_mink_experiment_v2/vendor/spider/assets/robots/xhand/xhand_right_6dof.urdf
+    sha256: 2dd40519138afc0bddce0c84e2cb5311e19677bd15ea4f71d2a153b68cd2e14e
+  left_XHand_URDF:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_spider_mink_experiment_v2/vendor/spider/assets/robots/xhand/xhand_left_6dof.urdf
+    sha256: 5f892c6d7fdac10ea0aefd3a7c7fc8c8a7079a4482cb4105b6087d2104402207
+  bowl_visual_mesh:
+    path: /data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/visual.obj
+    sha256: 35c52d853b85aa521eeadda78abb2bd370975611c8c35cd9a9d4c96746d8418c
+
+artifacts:
+  collision_variant_current_mixed: collision_variant_current_mixed.xml
+  collision_variant_convex_only: collision_variant_convex_only.xml
+  collision_variant_external_exact_SDF_only: collision_variant_external_exact_SDF_only.xml
+  Q1_arrays: Q1_formal_actuator_demand.npz
+  Q1_heatmap: Q1_formal_actuator_demand_heatmap.png
+  Q2_arrays: Q2_collision_backend_parity.npz
+  Q3_arrays: Q3_complete_contact_reference_wrench.npz
+  report: report.json
+  summary: summary.md

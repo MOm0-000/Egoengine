@@ -81,7 +81,8 @@ def test_protocol_records_failure_and_requires_a_new_decision():
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
     assert protocol["training_ready"] is False
     assert protocol["training_ready_scope"] == (
-        "physics_reference_and_XHand_contact_actuator_model_review_required"
+        "blocked_pending_unpublished_simulator_contact_actuation_object_physics_"
+        "and_objective_details"
     )
     run = protocol["evaluation"]["postfix_single_actor_pass_diagnostic"]
     assert run["sole_change"] == {"actor_mini_epochs": {"baseline": 4, "candidate": 1}}

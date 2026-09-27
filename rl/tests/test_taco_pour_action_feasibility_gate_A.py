@@ -134,11 +134,13 @@ def test_protocol_and_half_lr_candidate_record_the_gate_A_classification():
     half_lr = yaml.safe_load((
         ROOT / "configs/taco_pour_postfix_single_actor_pass_lr_half_candidate_v1.yaml"
     ).read_text())
-    blocker = "physics_reference_and_XHand_contact_actuator_model_review_required"
+    blocker = "blocked_pending_unpublished_simulator_contact_actuation_object_physics_and_objective_details"
     assert protocol["training_ready"] is False
     assert protocol["training_ready_scope"] == blocker
     assert protocol["blocking_checks"] == [blocker]
-    assert protocol["evidence_policy"]["current_revision"] == blocker
+    assert protocol["evidence_policy"]["current_revision"] == (
+        "final_simulator_contract_adjudication_gate_Q_closed_backend_dependent"
+    )
     gate = protocol["evaluation"]["action_feasibility_reference_object_frame_gate"]
     assert gate["feasible_sequences"] == 0
     assert gate["additional_frame_or_scale_search_authorized"] is False

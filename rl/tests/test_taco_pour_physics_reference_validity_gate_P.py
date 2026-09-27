@@ -10,6 +10,10 @@ ROOT = Path(__file__).resolve().parents[1]
 RUN = ROOT / "runs/taco_pour_physics_reference_validity_gate_P_v1"
 CONTRACT = ROOT / "configs/taco_pour_physics_reference_validity_gate_P_v1.yaml"
 BLOCKER = "physics_reference_and_XHand_contact_actuator_model_review_required"
+FINAL_BLOCKER = (
+    "blocked_pending_unpublished_simulator_contact_actuation_object_physics_"
+    "and_objective_details"
+)
 
 
 def _sha256(path: Path) -> str:
@@ -104,8 +108,10 @@ def test_gate_P_arrays_hashes_and_protocol_are_reconstructible():
 
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
     assert protocol["training_ready"] is False
-    assert protocol["training_ready_scope"] == BLOCKER
-    assert protocol["blocking_checks"] == [BLOCKER]
+    # Gate P remains immutable historical evidence, while the later final Gate Q
+    # owns the repository-wide blocker after superseding P4's finite contact graph.
+    assert protocol["training_ready_scope"] == FINAL_BLOCKER
+    assert protocol["blocking_checks"] == [FINAL_BLOCKER]
     gate = protocol["evaluation"]["physics_reference_validity_gate_P"]
     assert gate["structural_issues"] == report["decision"]["structural_issues"]
     assert gate["Gate_B_C_allowed"] is False

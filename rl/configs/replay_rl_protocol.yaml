@@ -8,7 +8,7 @@ evidence_policy:
   order: [paper, verified_implementation_defect, disclosed_local_proposal]
   paper_page_numbers: one_based_pdf_pages
   copied_defaults_are_author_settings: false
-  current_revision: physics_reference_and_XHand_contact_actuator_model_review_required
+  current_revision: final_simulator_contract_adjudication_gate_Q_closed_backend_dependent
 
 inputs:
   setting: user_approved_gt_oracle_validation_not_full_perception_reproduction
@@ -983,6 +983,64 @@ evaluation:
     chunk_commit_authorized: false
     P5_status: external_author_information_required
     next_blocker: physics_reference_and_XHand_contact_actuator_model_review_required
+  simulator_contract_adjudication_gate_Q:
+    status: completed_final_finite_simulator_contract_adjudication_closed
+    paper_faithful: false
+    classification: local_engineering_simulator_contract_adjudication_not_author_parameter_recovery
+    contract: /data_all/zzx/3.2RL/configs/taco_pour_simulator_contract_adjudication_gate_Q_v1.yaml
+    output: /data_all/zzx/3.2RL/runs/taco_pour_simulator_contract_adjudication_gate_Q_v1
+    report: /data_all/zzx/3.2RL/runs/taco_pour_simulator_contract_adjudication_gate_Q_v1/report.json
+    order: [Q1, Q2, Q3]
+    Q1:
+      actuator_model_changed: false
+      focus_sources: [44, 59]
+      physics_substeps_per_path: 400
+      Replay_zero_residual:
+        first_failure_endpoint: 51
+        actual_force_samples_over_declared_URDF_effort: 3486
+        focus_force_samples: 5760
+        maximum_actual_to_effort_ratio: 267.06607818603516
+      frozen_single_pass_PPO:
+        first_failure_endpoint: 49
+        actual_force_samples_over_declared_URDF_effort: 3530
+        focus_force_samples: 5760
+        maximum_actual_to_effort_ratio: 278.0171775817871
+      frozen_binary_prefix_plus_tail_semantic_oracle:
+        first_failure_endpoint: 58
+        actual_force_samples_over_declared_URDF_effort: 3526
+        focus_force_samples: 5760
+        maximum_actual_to_effort_ratio: 285.6385040283203
+      all_observed_exceedances_are_finger_actuators: true
+    Q2:
+      predeclared_variants: [current_mixed, convex_only, external_exact_SDF_only]
+      current_mixed_pair_count: 3009
+      convex_only_pair_count: 3005
+      external_exact_SDF_only_pair_count: 1537
+      current_mixed_visual_patch_duplicate_rows: 20
+      convex_only_visual_patch_duplicate_rows: 20
+      external_exact_SDF_only_visual_patch_duplicate_rows: 0
+      variants_passing_all_three_source_parity: []
+      variants_matching_source45_live_pair_set_all_substeps: []
+      uniquely_frozen_collision_backend_contract: null
+      backend_dependent_physics_acknowledged: true
+    Q3:
+      endpoints: [44, 60]
+      required_wrench: mj_inverse_free_body_smooth_demand_qfrc_inverse_plus_qfrc_constraint
+      compiled_contact_cone: pyramidal
+      artificial_16_sided_cone_used: false
+      bilateral_unique_hand_patch_candidates_per_endpoint_min: 89
+      bilateral_unique_hand_patch_candidates_per_endpoint_max: 95
+      passive_tool_target_or_floor_contacts_at_reference_geometry: 0
+      all_contact_cones_feasible_without_effort_limits: true
+      all_endpoints_feasible_with_declared_effort_limits: true
+      infeasible_endpoints: []
+      Gate_P_P4_finite_16_side_result_superseded: true
+    Gate_Q_is_final_physics_gate: true
+    Gate_B_C_reopened: false
+    PPO_retraining_authorized: false
+    chunk_commit_authorized: false
+    additional_physics_or_backend_parity_gate_authorized: false
+    exact_reproduction_status: blocked_pending_unpublished_simulator_contact_actuation_object_physics_and_objective_details
 
 runtime_contract:
   fail_closed: true
@@ -1048,7 +1106,7 @@ runtime_contract:
     cpu_commit_endpoint_offset: 20
 
 training_ready: false
-training_ready_scope: physics_reference_and_XHand_contact_actuator_model_review_required
+training_ready_scope: blocked_pending_unpublished_simulator_contact_actuation_object_physics_and_objective_details
 
 audit_results:
   active_input: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/input_audit.json
@@ -1095,6 +1153,7 @@ audit_results:
   action_feasibility_gate_A1: /data_all/zzx/3.2RL/runs/taco_pour_action_feasibility_gate_A1_v1/report.json
   low_level_contact_controllability_gate_L: /data_all/zzx/3.2RL/runs/taco_pour_low_level_contact_controllability_gate_L_v1/report.json
   physics_reference_validity_gate_P: /data_all/zzx/3.2RL/runs/taco_pour_physics_reference_validity_gate_P_v1/report.json
+  simulator_contract_adjudication_gate_Q: /data_all/zzx/3.2RL/runs/taco_pour_simulator_contract_adjudication_gate_Q_v1/report.json
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -1134,13 +1193,19 @@ historical_observation_normalization_misaligned:
     - old_checkpoint_task_performance_as_an_algorithm_baseline
 
 blocking_checks:
-  - physics_reference_and_XHand_contact_actuator_model_review_required
+  - blocked_pending_unpublished_simulator_contact_actuation_object_physics_and_objective_details
 result_acceptance_blockers:
   - Gate_P_P1_declared_effort_saturation_in_678_of_1080_formal_and_683_of_1080_feedback_requests
   - Gate_P_P2_source57_two_pinky_constraints_resolve_to_one_visual_surface_patch
   - Gate_P_P0_native_MuJoCo_and_MJWP_finite_parity_fails_at_all_three_predeclared_sources
-  - Gate_P_P4_finite_reference_wrench_LP_is_infeasible_at_endpoints_48_55_59_60
+  - Gate_P_P4_finite_16_side_right_hand_only_result_is_superseded_by_Gate_Q_Q3
   - Gate_P_closes_without_authorizing_Gate_B_Gate_C_PPO_retraining_or_chunk_commit
+  - Gate_Q_Q1_formal_unlimited_position_actuator_exceeds_declared_URDF_finger_effort_on_all_three_fixed_paths
+  - Gate_Q_Q2_no_predeclared_collision_representation_passes_source45_50_57_native_MuJoCo_CPU_MJWP_parity
+  - Gate_Q_Q2_no_collision_backend_contract_is_frozen_and_backend_dependence_is_acknowledged
+  - Gate_Q_Q3_complete_unique_bilateral_contact_graph_is_feasible_at_all_endpoints_and_withdraws_P4_as_an_active_blocker
+  - Gate_Q_is_the_final_physics_gate_and_closes_without_authorizing_Gate_B_Gate_C_PPO_retraining_or_chunk_commit
+  - exact_reproduction_is_blocked_pending_unpublished_simulator_contact_actuation_object_physics_and_objective_details
   - active_corrected_Replay_passes_only_30_of_40_in_second_window
   - postfix_single_actor_pass_PPO_passes_only_28_intervals_before_failure_at_endpoint49
   - source47_zero_residual_still_fails_endpoint49_and_source48_has_no_tool_effect
@@ -1168,7 +1233,6 @@ result_acceptance_blockers:
   - Gate_L_L0_has_zero_feasible_anchors
   - Gate_L_L1_has_zero_feasible_anchors
   - Gate_L_closed_without_demonstrated_source57_low_level_contact_controllability
-  - physics_reference_and_XHand_contact_actuator_model_review_required
   - selected_tail_modes_include_wrist_right_hand_and_full36_suppression_not_only_translation
   - deployable_nonlookahead_gate_and_active_correction_not_demonstrated
   - broader_tail_winner_names_include_near_ties_and_are_not_valid_learned_gate_labels
