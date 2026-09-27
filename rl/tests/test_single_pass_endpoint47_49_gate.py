@@ -110,8 +110,8 @@ def test_half_lr_candidate_and_protocol_remain_blocked():
     assert _sha256(Path(evidence["report"]["path"])) == evidence["report"]["sha256"]
     assert protocol["training_ready"] is False
     assert protocol["training_ready_scope"] == (
-        "low_level_impedance_or_force_aware_contact_controllability_required"
+        "physics_reference_and_XHand_contact_actuator_model_review_required"
     )
     assert protocol["blocking_checks"] == [
-        "low_level_impedance_or_force_aware_contact_controllability_required"
+        "physics_reference_and_XHand_contact_actuator_model_review_required"
     ]

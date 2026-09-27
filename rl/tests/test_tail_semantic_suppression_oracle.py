@@ -123,7 +123,7 @@ def test_protocol_keeps_training_and_commit_blocked_after_source56_recovery():
     half_lr = yaml.safe_load((
         ROOT / "configs/taco_pour_postfix_single_actor_pass_lr_half_candidate_v1.yaml"
     ).read_text())
-    blocker = "low_level_impedance_or_force_aware_contact_controllability_required"
+    blocker = "physics_reference_and_XHand_contact_actuator_model_review_required"
     assert protocol["training_ready"] is False
     assert protocol["training_ready_scope"] == blocker
     assert protocol["blocking_checks"] == [blocker]

@@ -8,7 +8,7 @@ evidence_policy:
   order: [paper, verified_implementation_defect, disclosed_local_proposal]
   paper_page_numbers: one_based_pdf_pages
   copied_defaults_are_author_settings: false
-  current_revision: low_level_impedance_or_force_aware_contact_controllability_required
+  current_revision: physics_reference_and_XHand_contact_actuator_model_review_required
 
 inputs:
   setting: user_approved_gt_oracle_validation_not_full_perception_reproduction
@@ -897,6 +897,42 @@ evaluation:
     PPO_retraining_authorized: false
     chunk_acceptance_or_commit_authorized: false
     next_blocker: low_level_impedance_or_force_aware_contact_controllability_required
+  low_level_contact_controllability_gate_L:
+    status: completed_finite_read_only_gate_L_closed
+    paper_faithful: false
+    classification: local_engineering_low_level_contact_controllability_not_EgoEngine_parameter_recovery
+    contract: /data_all/zzx/3.2RL/configs/taco_pour_low_level_contact_controllability_gate_L_v1.yaml
+    output: /data_all/zzx/3.2RL/runs/taco_pour_low_level_contact_controllability_gate_L_v1
+    report: /data_all/zzx/3.2RL/runs/taco_pour_low_level_contact_controllability_gate_L_v1/report.json
+    source_state: exact_tail_source57_snapshot
+    high_level_anchor_search_executed: false
+    free_space_equivalence:
+      symmetric_small_step_rollouts: 72
+      effort_saturation_count: 0
+      maximum_qpos_difference: 5.960464477539063e-08
+      maximum_qvel_difference: 4.032626748085022e-07
+      passed: true
+    L0_effort_limited_joint_impedance:
+      formal_PPO_scores: [1.0248640775680542, 1.0675162076950073, 1.109575867652893]
+      gate_A1_feedback_scores: [1.0176074504852295, 1.049155354499817, 1.0826141834259033]
+      feasible_anchors: 0
+    L1_force_aware_impedance:
+      executed_after_L0_failed: true
+      source57_pinky_force_target_N: 10.689228266477585
+      centered_probe_abs_dFn_dxn_N_per_m: 72.73908704519272
+      probe_identifiable: true
+      formal_PPO_scores: [1.0383347272872925, 1.1346522569656372, 1.1964021921157837]
+      gate_A1_feedback_scores: [1.0266213417053223, 1.0595113039016724, 1.093111276626587]
+      feasible_anchors: 0
+    finite_negative_result_is_mathematical_infeasibility_proof: false
+    additional_controller_gain_contact_force_axis_frame_or_per_source_sweep_authorized: false
+    Gate_B_C_D_allowed: false
+    actor_LR_5e_minus_5_unblocked: false
+    learned_gate_authorized: false
+    reward_change_authorized: false
+    PPO_retraining_authorized: false
+    chunk_acceptance_or_commit_authorized: false
+    next_blocker: physics_reference_and_XHand_contact_actuator_model_review_required
 
 runtime_contract:
   fail_closed: true
@@ -962,7 +998,7 @@ runtime_contract:
     cpu_commit_endpoint_offset: 20
 
 training_ready: false
-training_ready_scope: low_level_impedance_or_force_aware_contact_controllability_required
+training_ready_scope: physics_reference_and_XHand_contact_actuator_model_review_required
 
 audit_results:
   active_input: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/input_audit.json
@@ -1007,6 +1043,7 @@ audit_results:
   action_feasibility_minimum_rho_gate: /data_all/zzx/3.2RL/runs/taco_pour_action_feasibility_minimum_rho_v1/report.json
   action_feasibility_reference_object_frame_gate: /data_all/zzx/3.2RL/runs/taco_pour_action_feasibility_reference_object_frame_v1/report.json
   action_feasibility_gate_A1: /data_all/zzx/3.2RL/runs/taco_pour_action_feasibility_gate_A1_v1/report.json
+  low_level_contact_controllability_gate_L: /data_all/zzx/3.2RL/runs/taco_pour_low_level_contact_controllability_gate_L_v1/report.json
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -1046,7 +1083,7 @@ historical_observation_normalization_misaligned:
     - old_checkpoint_task_performance_as_an_algorithm_baseline
 
 blocking_checks:
-  - low_level_impedance_or_force_aware_contact_controllability_required
+  - physics_reference_and_XHand_contact_actuator_model_review_required
 result_acceptance_blockers:
   - active_corrected_Replay_passes_only_30_of_40_in_second_window
   - postfix_single_actor_pass_PPO_passes_only_28_intervals_before_failure_at_endpoint49
@@ -1072,7 +1109,10 @@ result_acceptance_blockers:
   - gate_A1_current_support_surrogate_QP_fails_exact_endpoint58_validation
   - gate_A1_structured_position_velocity_feedback_has_zero_of_192_feasible_candidates
   - gate_A_closed_without_demonstrated_source57_three_step_feasibility
-  - low_level_impedance_or_force_aware_contact_controllability_required
+  - Gate_L_L0_has_zero_feasible_anchors
+  - Gate_L_L1_has_zero_feasible_anchors
+  - Gate_L_closed_without_demonstrated_source57_low_level_contact_controllability
+  - physics_reference_and_XHand_contact_actuator_model_review_required
   - selected_tail_modes_include_wrist_right_hand_and_full36_suppression_not_only_translation
   - deployable_nonlookahead_gate_and_active_correction_not_demonstrated
   - broader_tail_winner_names_include_near_ties_and_are_not_valid_learned_gate_labels

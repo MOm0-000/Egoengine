@@ -18,7 +18,7 @@ PYTHONPATH="$PWD/.env_mjwp313_overlay:$PWD/src:$PWD/scripts:$PWD/external/mink/s
   /data_all/zzx/egoengine/spider/.venv/bin/python -m pytest -q
 ```
 
-On 2026-09-27 this command passed **725 tests and 57 subtests**.
+On 2026-09-27 this command passed **731 tests and 57 subtests**.
 The 19 warnings are known upstream/diagnostic warnings: capsule-mesh MULTICCD
 capacity, PyTorch AMP deprecations, two Trimesh degenerate-volume warnings and
 seven SciPy pickle deprecations.
@@ -73,6 +73,7 @@ runs/taco_pour_action_feasibility_cem_v1/
 runs/taco_pour_action_feasibility_minimum_rho_v1/
 runs/taco_pour_action_feasibility_reference_object_frame_v1/
 runs/taco_pour_action_feasibility_gate_A1_v1/
+runs/taco_pour_low_level_contact_controllability_gate_L_v1/
 ```
 
 The first corrected PPO authorization is consumed. Replay passed the first
@@ -403,6 +404,22 @@ feedback audit finds `0/192` feasible candidates; its best three scores are
 resolution. Gate B/C/D, PPO training and chunk commit remain blocked; the next
 required investigation is low-level impedance or force-aware contact
 controllability.
+
+Gate L closes that finite low-level-controller question without training or
+task tuning. A 72-rollout free-space audit verifies that the explicit,
+URDF-effort-limited joint-coordinate impedance layer matches the formal
+affine position-actuator response (`5.96e-8` maximum qpos difference and
+`4.03e-7` maximum qvel difference) without effort saturation. Under the exact
+source57 state and two fixed high-level command sequences, L0 has zero
+three-step-feasible anchors. Conditional L1 freezes the measured `10.6892 N`
+pinky force target and derives its single force gain from one symmetric
+contact-normal probe; it also has zero feasible anchors and is worse than L0.
+All applied force/torque commands remain within the URDF effort limits. This
+finite negative result is not a mathematical infeasibility proof, but Gate L
+is closed: no further source57 gain, force-target, axis, frame or per-source
+controller sweep is authorized. Gate B/C/D and PPO retraining remain closed;
+the active blocker is a physics, reference-trajectory and XHand
+contact/actuator-model review.
 
 ## Archived invalid performance evidence
 

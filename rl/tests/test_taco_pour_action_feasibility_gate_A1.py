@@ -93,7 +93,8 @@ def test_structured_feedback_has_no_three_step_feasible_candidate():
 def test_gate_A_is_closed_and_protocol_moves_to_low_level_controllability():
     report = _report()
     decision = report["decision"]
-    blocker = "low_level_impedance_or_force_aware_contact_controllability_required"
+    historical_blocker = "low_level_impedance_or_force_aware_contact_controllability_required"
+    current_blocker = "physics_reference_and_XHand_contact_actuator_model_review_required"
     assert decision["Gate_A_closed"] is True
     assert decision["finite_search_failure_is_mathematical_infeasibility_proof"] is False
     assert decision["gate_B_observation_sufficiency_read_only_allowed"] is False
@@ -104,20 +105,20 @@ def test_gate_A_is_closed_and_protocol_moves_to_low_level_controllability():
     assert decision["actor_LR_5e_minus_5_unblocked"] is False
     assert decision["PPO_retraining_authorized"] is False
     assert decision["chunk_acceptance_or_commit_authorized"] is False
-    assert decision["next_blocker"] == blocker
+    assert decision["next_blocker"] == historical_blocker
 
     protocol = yaml.safe_load((ROOT / "configs/replay_rl_protocol.yaml").read_text())
     half_lr = yaml.safe_load((
         ROOT / "configs/taco_pour_postfix_single_actor_pass_lr_half_candidate_v1.yaml"
     ).read_text())
     assert protocol["training_ready"] is False
-    assert protocol["training_ready_scope"] == blocker
-    assert protocol["blocking_checks"] == [blocker]
-    assert protocol["evidence_policy"]["current_revision"] == blocker
+    assert protocol["training_ready_scope"] == current_blocker
+    assert protocol["blocking_checks"] == [current_blocker]
+    assert protocol["evidence_policy"]["current_revision"] == current_blocker
     gate = protocol["evaluation"]["action_feasibility_gate_A1"]
     assert gate["gate_A_closed"] is True
     assert gate["structured_object_motion_feedback"]["feasible_candidates"] == 0
-    assert gate["next_blocker"] == blocker
+    assert gate["next_blocker"] == historical_blocker
     assert half_lr["status"] == (
         "frozen_blocked_after_gate_A1_closed_negative_at_declared_resolution"
     )
