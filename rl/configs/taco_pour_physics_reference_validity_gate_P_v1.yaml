@@ -1,0 +1,180 @@
+schema: taco_pour_physics_reference_validity_gate_P_v1
+status: authorized_finite_read_only_gate_P
+paper_faithful: false
+classification: local_engineering_physics_reference_and_actuation_validity_audit
+purpose: >-
+  Determine whether the active Pour control problem has a trustworthy backend,
+  contact manifold, effort envelope, contact-reachable robot reference, and
+  dynamically feasible object reference before any further RL architecture work.
+
+runtime:
+  training_allowed: false
+  optimizer_updates_policy: false
+  source57_action_or_controller_counterfactual_allowed: false
+  model_parameter_mutation_allowed: false
+  mass_friction_effort_sweep_allowed: false
+  reward_or_objective_change_allowed: false
+  chunk_acceptance_allowed: false
+  chunk_commit_allowed: false
+  order: [P1, P2, P0, P3, P4]
+
+P1_actuation_saturation:
+  source: Gate_L_L0_saved_requested_effort
+  anchors: [formal_frozen_PPO, gate_A1_best_position_velocity_feedback]
+  denominator_requests_per_anchor: 1080
+  groups:
+    - right_wrist_translation
+    - right_wrist_rotation
+    - right_thumb
+    - right_index
+    - right_middle
+    - right_ring
+    - right_pinky
+    - left_wrist_translation
+    - left_wrist_rotation
+    - left_thumb
+    - left_index
+    - left_middle
+    - left_ring
+    - left_pinky
+  pinky_contact_force_bound:
+    state: exact_tail_source57
+    contact_constraints: right_pinky_to_right_object_9_and_23
+    equation: max_alpha_subject_to_abs_J_transpose_alpha_n_le_effort_limit
+    report_finger_only_and_wrist_plus_finger_bounds: true
+
+P2_contact_manifold:
+  sources: [56, 57, 58]
+  exact_fields: [contact_position, contact_normal, penetration, constraint_force]
+  object_frame_required: true
+  exact_visual_mesh_nearest_surface_required: true
+  convex_parts: [9, 23]
+  same_surface_patch_diagnostic:
+    maximum_contact_point_separation_m: 0.0005
+    maximum_contact_normal_angle_deg: 5.0
+    maximum_visual_projection_distance_m: 0.0005
+    maximum_cross_part_surface_distance_m: 0.0005
+  friction_change_allowed: false
+
+P0_native_MJWP_parity:
+  sources: [45, 50, 57]
+  state_provenance: exact_tail_semantic_oracle_path
+  control: frozen_deterministic_PPO_command_from_same_observation_and_hidden
+  physics_substeps: 10
+  same_XML_qpos_qvel_ctrl_qacc_warmstart_required: true
+  recorded_fields:
+    - bowl_pose_and_qvel
+    - hand_qpos_and_qvel
+    - actuator_force
+    - constraint_force
+    - contact_geom_pair_position_normal_penetration_normal_and_tangent_force
+  parity_conditions:
+    exact_live_hand_tool_geom_pair_set_per_substep: true
+    same_endpoint_proxy_feasibility: true
+    maximum_bowl_position_difference_m: 0.0005
+    maximum_bowl_rotation_difference_rad: 0.008726646259971648
+    maximum_hand_qpos_difference: 0.001
+    maximum_qvel_difference: 0.05
+
+P3_reference_contact_reachability:
+  endpoints: [20, 60]
+  exact_bowl_visual_mesh: true
+  hand_samples:
+    - five_right_fingertip_sites
+    - right_palm_site
+    - right_hand_collision_geom_surface_samples
+  positive_gap_source: exact_mesh_nearest_surface_not_mj_geomDistance
+  residual_authority:
+    method: first_order_point_Jacobian_box_support
+    residual_scale: 0.05
+    actuator_ctrlrange_is_hard: true
+  report_predicates:
+    any_right_finger_contact_reachable: true
+    thumb_plus_non_thumb_contact_reachable: true
+  no_physics_rollout: true
+
+P4_reference_wrench_feasibility:
+  endpoints: [44, 60]
+  required_acceleration: centered_difference_of_reference_pose_velocity
+  object_wrench: current_mass_inertia_gravity_and_required_acceleration
+  contact_candidates: P3_contact_reachable_right_hand_samples
+  friction_cone_sides: 16
+  constraints:
+    - polyhedral_friction_cone
+    - abs_J_transpose_f_le_declared_effort_limits
+  current_model_binary_feasibility_required: true
+  critical_values:
+    - maximum_feasible_mass_multiplier
+    - minimum_required_friction_coefficient
+    - minimum_required_effort_multiplier
+  parameter_mutation_or_task_tuning_allowed: false
+
+P5_objective_contract:
+  status: external_author_information_required
+  local_parameter_recovery_experiment_allowed: false
+  retained_statement: >-
+    interval counts and failures use the disclosed local normalized-ellipse proxy
+    and are not claims about the unpublished author lambda_p, lambda_R, and C.
+
+stopping_rule:
+  Gate_P_closes_after_P1_P2_P0_P3_P4: true
+  further_source57_action_controller_gain_force_axis_frame_or_per_source_search_allowed: false
+  Gate_B_allowed_only_if_P0_through_P4_show_no_structural_issue: true
+  Gate_C_allowed_only_if_P0_through_P4_show_no_structural_issue: true
+  PPO_retraining_allowed: false
+  actor_learning_rate_5e_minus_5_allowed: false
+  learned_gate_allowed: false
+  reward_change_allowed: false
+  chunk_commit_allowed: false
+
+inputs:
+  Gate_L_contract:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_low_level_contact_controllability_gate_L_v1.yaml
+    sha256: 46c78d16e839fc1561b6f637dbc8e48464da55a66ba03e809672bc89eb263f87
+  Gate_L_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_low_level_contact_controllability_gate_L_v1/report.json
+    sha256: 8c2d3812f5a92a7f818af41052b859f7b80659c6d10b080476505a87f58a3cef
+  Gate_L_rollouts:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_low_level_contact_controllability_gate_L_v1/gate_L_rollouts.npz
+    sha256: 148264b99ffb52761181877fc7189f0bd435c00bb5ed4ae4982a4e9f064fe830
+  tail_contract:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_tail_semantic_suppression_oracle_v1.yaml
+    sha256: bd65ff5edc36d2895ec9163542b6db6137372bcdcb4115d45799e6ac496baa1f
+  tail_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_tail_semantic_suppression_oracle_v1/report.json
+    sha256: 5f667a9691f9094657d78fe998c2f9b2599b08785518a44580556f2741cd7f6e
+  formal_scene:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate.xml
+    sha256: deb35689ce385aa30f361ddd1907f54bdbd4f55d4fd98a22409b68a9a691a215
+  formal_simulator_config:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml
+    sha256: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+  robot_reference:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_combined_collision_v1/robot_reference.npz
+    sha256: cf99b9846a63617ddd5e439e086708c80a1e9b43f614df63168ffb3236a7685c
+  right_XHand_URDF:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_spider_mink_experiment_v2/vendor/spider/assets/robots/xhand/xhand_right_6dof.urdf
+    sha256: 2dd40519138afc0bddce0c84e2cb5311e19677bd15ea4f71d2a153b68cd2e14e
+  left_XHand_URDF:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_spider_mink_experiment_v2/vendor/spider/assets/robots/xhand/xhand_left_6dof.urdf
+    sha256: 5f892c6d7fdac10ea0aefd3a7c7fc8c8a7079a4482cb4105b6087d2104402207
+  bowl_visual_mesh:
+    path: /data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/visual.obj
+    sha256: 35c52d853b85aa521eeadda78abb2bd370975611c8c35cd9a9d4c96746d8418c
+  bowl_convex_part_9:
+    path: /data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/9.obj
+    sha256: 235f81ddd87b43a680f94008230358c1b05050a6c4cda63c2e4a0bac57af75c3
+  bowl_convex_part_23:
+    path: /data_all/zzx/3.2RL/models/taco_xhand/assets/objects/022/convex_m/23.obj
+    sha256: 5ef40a494d85a2f557e653c481e14f72452422154872969c7c08e8656e98414f
+
+artifacts:
+  exact_states_and_contacts: exact_states_and_contacts.npz
+  P1_saturation: P1_actuation_saturation.npz
+  P1_saturation_heatmap: P1_actuation_saturation_heatmap.png
+  P2_geometry: P2_contact_manifold.npz
+  P0_parity: P0_native_MJWP_parity.npz
+  P3_reachability: P3_reference_contact_reachability.npz
+  P4_wrench: P4_reference_wrench_feasibility.npz
+  report: report.json
+  summary: summary.md

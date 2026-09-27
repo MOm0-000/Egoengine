@@ -74,6 +74,7 @@ runs/taco_pour_action_feasibility_minimum_rho_v1/
 runs/taco_pour_action_feasibility_reference_object_frame_v1/
 runs/taco_pour_action_feasibility_gate_A1_v1/
 runs/taco_pour_low_level_contact_controllability_gate_L_v1/
+runs/taco_pour_physics_reference_validity_gate_P_v1/
 ```
 
 The first corrected PPO authorization is consumed. Replay passed the first
@@ -420,6 +421,23 @@ is closed: no further source57 gain, force-target, axis, frame or per-source
 controller sweep is authorized. Gate B/C/D and PPO retraining remain closed;
 the active blocker is a physics, reference-trajectory and XHand
 contact/actuator-model review.
+
+Gate P performs that review in the frozen order P1, P2, P0, P3, P4 and then
+closes. P1 finds that the formal and feedback Gate-L anchors exceed the
+declared URDF finger effort limits in 678/1080 and 683/1080 substep-actuator
+requests, respectively; the measured source57 two-row normal force remains
+below the finite finger Jacobian bound. P2 resolves the two source57 pinky
+constraints on convex parts 9 and 23 to the same visual surface patch, so their
+summed force is not retained as a unique physical force target. P0 finds that
+native MuJoCo and CPU MuJoCo-Warp do not meet the predeclared ten-substep
+parity contract at sources 45, 50, or 57; source45 also changes the live
+hand-tool geom family. P3 finds finite first-order right-finger and
+thumb-plus-non-thumb reachability at every reference endpoint 20--60. P4's
+finite 16-sided contact-wrench LP is infeasible at endpoints 48, 55, 59, and
+60 under the current declared effort/friction model. These are finite
+diagnostics, not global impossibility proofs. Gate B/C, PPO retraining, task
+parameter tuning, and chunk commit remain blocked; P5 remains dependent on
+external author information about the unpublished objective contract.
 
 ## Archived invalid performance evidence
 

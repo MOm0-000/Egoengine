@@ -933,6 +933,56 @@ evaluation:
     PPO_retraining_authorized: false
     chunk_acceptance_or_commit_authorized: false
     next_blocker: physics_reference_and_XHand_contact_actuator_model_review_required
+  physics_reference_validity_gate_P:
+    status: completed_finite_read_only_gate_P_closed
+    paper_faithful: false
+    classification: local_engineering_physics_reference_and_actuation_validity_audit
+    contract: /data_all/zzx/3.2RL/configs/taco_pour_physics_reference_validity_gate_P_v1.yaml
+    output: /data_all/zzx/3.2RL/runs/taco_pour_physics_reference_validity_gate_P_v1
+    report: /data_all/zzx/3.2RL/runs/taco_pour_physics_reference_validity_gate_P_v1/report.json
+    order: [P1, P2, P0, P3, P4]
+    P1:
+      formal_effort_requests_over_declared_limit: 678
+      formal_effort_request_count: 1080
+      feedback_effort_requests_over_declared_limit: 683
+      feedback_effort_request_count: 1080
+      saturation_is_confined_to_finger_actuators: true
+      source57_measured_two_constraint_normal_force_sum_N: 5.344611614942551
+      finite_finger_only_Jacobian_bound_N: 41.472550753723155
+    P2:
+      source57_two_pinky_constraints_resolve_to_same_visual_surface_patch: true
+      contact_point_separation_m: 0.00034350547683191637
+      contact_normal_angle_deg: 2.0075465781817767
+      convex_part_positive_volume_overlap: false
+      summed_constraint_force_is_a_unique_physical_force_target: false
+    P0:
+      predeclared_sources: [45, 50, 57]
+      finite_parity_passed_sources: 0
+      source50_exact_hand_tool_pair_set_match_all_substeps: true
+      source57_exact_hand_tool_pair_set_match_all_substeps: true
+      source45_exact_hand_tool_pair_set_match_all_substeps: false
+      source45_maximum_bowl_position_difference_m: 0.0034181354010915524
+      source57_maximum_bowl_position_difference_m: 0.00035231710046522706
+    P3:
+      endpoints: [20, 60]
+      endpoints_without_any_reachable_right_finger_sample: []
+      endpoints_without_reachable_thumb_plus_non_thumb_samples: []
+      finite_first_order_sampling_is_global_IK_proof: false
+    P4:
+      endpoints: [44, 60]
+      friction_cone_sides: 16
+      finite_LP_infeasible_endpoints: [48, 55, 59, 60]
+      finite_contact_model_is_global_dynamic_infeasibility_proof: false
+    structural_issues:
+      - P1_declared_effort_saturation
+      - P2_convex_decomposition_duplicate_contact_patch
+      - P0_native_MJWP_backend_parity_failure
+      - P4_reference_wrench_infeasible_under_finite_contact_model
+    Gate_B_C_allowed: false
+    PPO_retraining_authorized: false
+    chunk_commit_authorized: false
+    P5_status: external_author_information_required
+    next_blocker: physics_reference_and_XHand_contact_actuator_model_review_required
 
 runtime_contract:
   fail_closed: true
@@ -1044,6 +1094,7 @@ audit_results:
   action_feasibility_reference_object_frame_gate: /data_all/zzx/3.2RL/runs/taco_pour_action_feasibility_reference_object_frame_v1/report.json
   action_feasibility_gate_A1: /data_all/zzx/3.2RL/runs/taco_pour_action_feasibility_gate_A1_v1/report.json
   low_level_contact_controllability_gate_L: /data_all/zzx/3.2RL/runs/taco_pour_low_level_contact_controllability_gate_L_v1/report.json
+  physics_reference_validity_gate_P: /data_all/zzx/3.2RL/runs/taco_pour_physics_reference_validity_gate_P_v1/report.json
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -1085,6 +1136,11 @@ historical_observation_normalization_misaligned:
 blocking_checks:
   - physics_reference_and_XHand_contact_actuator_model_review_required
 result_acceptance_blockers:
+  - Gate_P_P1_declared_effort_saturation_in_678_of_1080_formal_and_683_of_1080_feedback_requests
+  - Gate_P_P2_source57_two_pinky_constraints_resolve_to_one_visual_surface_patch
+  - Gate_P_P0_native_MuJoCo_and_MJWP_finite_parity_fails_at_all_three_predeclared_sources
+  - Gate_P_P4_finite_reference_wrench_LP_is_infeasible_at_endpoints_48_55_59_60
+  - Gate_P_closes_without_authorizing_Gate_B_Gate_C_PPO_retraining_or_chunk_commit
   - active_corrected_Replay_passes_only_30_of_40_in_second_window
   - postfix_single_actor_pass_PPO_passes_only_28_intervals_before_failure_at_endpoint49
   - source47_zero_residual_still_fails_endpoint49_and_source48_has_no_tool_effect
