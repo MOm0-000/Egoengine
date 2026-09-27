@@ -1,0 +1,65 @@
+{
+  "schema": "taco_pour_replay_preserving_candidate_B_step0_gate_v2",
+  "status": "passed_training_may_start",
+  "paper_faithful": false,
+  "backend": "CPU_MuJoCo_Warp",
+  "optimizer_updates": 0,
+  "simulation_physics_steps_for_training": 0,
+  "initialization": {
+    "changed_network_state_keys": [
+      "sigma",
+      "mu.weight"
+    ],
+    "mean_weight_sha256": "bb55302ebd16a3dc9398cbc98941a8dd9180eb486057595912e64a2bb9ebfb69",
+    "mean_bias_sha256": "5b29a4a45c1dd5bfef83841d658cdca5edbfc7577ac098b8c4cbb01bd5b6ae87",
+    "mean_weight_max_abs": 0.0,
+    "mean_bias_max_abs": 0.0,
+    "initial_sigma_min": 0.25,
+    "initial_sigma_max": 0.25,
+    "sigma_multiplier": 0.25,
+    "sigma_remains_learnable": true
+  },
+  "replay": {
+    "successful_intervals": 30,
+    "first_failure_endpoint": 51,
+    "forty_of_forty": false,
+    "endpoint40_score": 0.6679563522338867,
+    "endpoint50_score": 0.9944888353347778,
+    "endpoint60_score": 1.2191834449768066
+  },
+  "candidate_B_step0": {
+    "successful_intervals": 30,
+    "first_failure_endpoint": 51,
+    "forty_of_forty": false,
+    "endpoint40_score": 0.6679563522338867,
+    "endpoint50_score": 0.9944888353347778,
+    "endpoint60_score": 1.2191834449768066
+  },
+  "checks": {
+    "mean_residual_within_tolerance": true,
+    "deterministic_action_within_tolerance": true,
+    "deterministic_command_bitwise_equals_formal_Replay": true,
+    "candidate_qpos_bitwise_equals_formal_Replay": true,
+    "candidate_qvel_bitwise_equals_formal_Replay": true,
+    "tracking_score_bitwise_equals_formal_Replay": true,
+    "termination_sequence_equals_formal_Replay": true,
+    "contact_flags_equal_formal_Replay": true,
+    "formal_Replay_is_30_of_40_fail51": true,
+    "candidate_B_step0_is_30_of_40_fail51": true
+  },
+  "maximum_abs_actor_mu": 0.0,
+  "maximum_abs_deterministic_action": 0.0,
+  "maximum_abs_command_difference": 0.0,
+  "command_rows_differing": 0,
+  "first_differing_command_endpoint": null,
+  "maximum_abs_qpos_difference": 0.0,
+  "maximum_abs_qvel_difference": 0.0,
+  "mechanism": "The repaired action contract always executes the original formal reference plus residual. Bound construction may preserve but never worsen a machine-scale baseline ctrlrange violation; it cannot alter the executed base command.",
+  "trajectory": {
+    "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v2/candidate_B/seed_0/step0_trajectory.npz",
+    "sha256": "625161255c954d45f8e672734eba14fec9dc9b0aa2e70d616d48854151ac806e",
+    "bytes": 46018
+  },
+  "training_A_or_B_started": false,
+  "chunk_commit_written": false
+}

@@ -112,7 +112,7 @@ def normalized_action_bounds_numpy(
     residual_scale: float,
     reference_snap_tolerance: float,
 ) -> tuple[np.ndarray, np.ndarray, dict[str, Any]]:
-    """Derive normalized bounds, snapping only tolerance-level reference errors."""
+    """Derive bounds that preserve, but never worsen, a baseline violation."""
     reference = np.asarray(reference_ctrl, np.float64)
     limited = np.asarray(ctrllimited, bool)
     ranges = np.asarray(ctrlrange, np.float64)
@@ -129,39 +129,33 @@ def normalized_action_bounds_numpy(
             f"reference exceeds ctrlrange by {maximum:.9g}, above the "
             f"{reference_snap_tolerance:.9g} tolerance"
         )
-    lower_f32 = ranges[:, 0].astype(np.float32)
-    upper_f32 = ranges[:, 1].astype(np.float32)
-    lower_f32 = np.where(
-        lower_f32.astype(np.float64) < ranges[:, 0],
-        np.nextafter(lower_f32, np.float32(np.inf)),
-        lower_f32,
-    )
-    upper_f32 = np.where(
-        upper_f32.astype(np.float64) > ranges[:, 1],
-        np.nextafter(upper_f32, np.float32(-np.inf)),
-        upper_f32,
-    )
-    snapped = reference.astype(np.float32)
-    snapped[:, limited] = np.clip(
-        snapped[:, limited], lower_f32[limited], upper_f32[limited]
-    )
+    formal = reference.astype(np.float32)
+    formal64 = formal.astype(np.float64)
+    below_f32 = np.where(limited, np.maximum(ranges[:, 0] - formal64, 0.0), 0.0)
+    above_f32 = np.where(limited, np.maximum(formal64 - ranges[:, 1], 0.0), 0.0)
+    allowed_lower = np.where(below_f32 > 0.0, formal64, ranges[:, 0])
+    allowed_upper = np.where(above_f32 > 0.0, formal64, ranges[:, 1])
     scale_f32 = np.float32(residual_scale)
     low = np.full(reference.shape, -1.0, np.float32)
     high = np.full(reference.shape, 1.0, np.float32)
     low[:, limited] = np.maximum(
         np.float32(-1.0),
-        (lower_f32[limited] - snapped[:, limited]) / scale_f32,
+        ((allowed_lower[:, limited] - formal64[:, limited]) / residual_scale).astype(
+            np.float32
+        ),
     )
     high[:, limited] = np.minimum(
         np.float32(1.0),
-        (upper_f32[limited] - snapped[:, limited]) / scale_f32,
+        ((allowed_upper[:, limited] - formal64[:, limited]) / residual_scale).astype(
+            np.float32
+        ),
     )
     inward_adjustment_count = 0
-    for _ in range(4):
-        requested_low = (snapped + scale_f32 * low).astype(np.float64)
-        requested_high = (snapped + scale_f32 * high).astype(np.float64)
-        low_outside = limited & (requested_low < ranges[:, 0])
-        high_outside = limited & (requested_high > ranges[:, 1])
+    for _ in range(64):
+        requested_low = (formal + scale_f32 * low).astype(np.float64)
+        requested_high = (formal + scale_f32 * high).astype(np.float64)
+        low_outside = limited & (requested_low < allowed_lower)
+        high_outside = limited & (requested_high > allowed_upper)
         if not (low_outside.any() or high_outside.any()):
             break
         inward_adjustment_count += int(low_outside.sum() + high_outside.sum())
@@ -179,9 +173,14 @@ def normalized_action_bounds_numpy(
         raise RuntimeError("could not construct float32-safe action bounds")
     if np.any(low > high):
         raise ValueError("normalized action interval is empty")
+    if np.any((low > 0.0) | (high < 0.0)):
+        raise RuntimeError("zero residual is outside baseline-preserving support")
     return low.astype(np.float64), high.astype(np.float64), {
         "reference_snap_tolerance": reference_snap_tolerance,
-        "snapped_component_count": int((violation > 0.0).sum()),
+        "execution_reference": "formal_reference_ctrl_unmodified",
+        "bounds_semantics": "do_not_worsen_baseline_ctrlrange_violation",
+        "baseline_violating_component_count": int((violation > 0.0).sum()),
+        "snapped_component_count": 0,
         "maximum_reference_violation": maximum,
         "float32_inward_bound_adjustment_count": inward_adjustment_count,
         "empty_interval_count": int((low > high).sum()),
@@ -664,6 +663,12 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
         low = input_dict["action_lows"]
         high = input_dict["action_highs"]
         obs = self._preproc_obs(input_dict["obs"])
+        # Rollout collection uses eval mode, so likelihood recomputation must
+        # use the same module mode. Eval mode does not disable autograd; the PPO
+        # surrogate still differentiates through this forward. Restore the
+        # caller's mode before returning.
+        model_was_training = self.model.training
+        self.model.eval()
         if not self.is_rnn:
             raise ValueError("the frozen truncated-Gaussian candidate requires the RNN actor")
         worlds = int(self.cfg.num_actors)
@@ -762,7 +767,7 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
             mu, sigma, low, high,
             minimum_mass=self.distribution_spec.minimum_normalization_mass,
         ).sum(dim=-1)
-        return {
+        result = {
             "neglogp": neglogp,
             "entropy": entropy,
             "mu": mu,
@@ -770,6 +775,9 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
             "values": values,
             "rnn_states": last_states,
         }
+        if model_was_training:
+            self.model.train()
+        return result
 
     def train_actor_critic(self, input_dict):
         if not self.distribution_spec.optimizer_training_authorized:

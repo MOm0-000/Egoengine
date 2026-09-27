@@ -1,0 +1,52 @@
+schema: taco_state_feasible_action_distribution_v1
+profile_id: taco_pour_baseline_preserving_truncated_gaussian_v2
+status: engineering_candidate_gate_only
+paper_faithful: false
+provenance: >-
+  Local engineering repair of the v1 state-feasible distribution. EgoEngine
+  does not publish this action distribution. The repair restores the defining
+  residual identity: zero residual executes the original formal reference
+  command bitwise, while state-dependent bounds may preserve but never worsen
+  a machine-scale ctrlrange violation already present in that reference.
+
+distribution:
+  kind: independent_state_truncated_normal
+  base_actor_outputs: [mu, sigma]
+  residual_scale: 0.05
+  residual_scale_changed: false
+  reference_snap_tolerance: 0.0000002
+  execution_reference: formal_reference_ctrl_unmodified
+  bound_construction_reference: formal_reference_ctrl_with_baseline_violation_accounting
+  minimum_normalization_mass: 0.000000000001
+  normalized_bounds:
+    semantics: do_not_worsen_baseline_ctrlrange_violation
+    zero_residual_in_every_support: true
+    low: maximum_negative_action_whose_raw_command_does_not_worsen_baseline_violation
+    high: maximum_positive_action_whose_raw_command_does_not_worsen_baseline_violation
+  stochastic_action: inverse_CDF_sample_from_Normal_mu_sigma_truncated_to_low_high
+  deterministic_action: clip_mu_to_state_bounds
+  official_minus1_plus1_clamp_enabled: false
+  actuator_ctrlrange_retained_as_final_safety_backstop: true
+  rollout_buffer_fields: [action_lows, action_highs]
+  PPO_log_probability: truncated_Normal_with_state_bound_normalizer
+  entropy: exact_independent_truncated_Normal_entropy
+  scheduler_KL: same_action_same_bounds_sample_estimate
+
+frozen_unchanged:
+  - objective
+  - reward
+  - observation
+  - actor_and_critic_architecture
+  - residual_scale
+  - CPU_acceptance_start_and_40_of_40_rule
+
+promotion:
+  optimizer_training_authorized: false
+  task_level_PPO_authorized: false
+  chunk_commit_authorized: false
+  required_before_authorization:
+    - bitwise_zero_residual_identity_for_all_reference_rows
+    - zero_inside_every_state_dependent_support
+    - bounds_do_not_worsen_baseline_ctrlrange_violation
+    - exact_endpoint20_to60_Replay_equivalence
+

@@ -426,8 +426,6 @@ class MJWPVectorEnv:
         # ctrl[k] is the saved endpoint-k position target. Use row t+1 to
         # advance from reference endpoint t to endpoint t+1.
         reference_ctrls = self._reference_ctrls(self.time_indices, offset=1)
-        if self._state_feasible_action_contract is not None:
-            reference_ctrls, _ = self._snap_state_feasible_reference(reference_ctrls)
         delta = torch.as_tensor(actions, dtype=torch.float32, device=str(self.ego_cfg.device))
         full_ctrl = self._apply_residual(reference_ctrls, delta)
         for substep in range(max(int(self.ego_cfg.ctrl_steps), 1)):
@@ -544,7 +542,12 @@ class MJWPVectorEnv:
     def enable_state_feasible_action_contract(
         self, *, reference_snap_tolerance: float
     ) -> None:
-        """Enable the local truncated-Gaussian reference/bounds contract."""
+        """Enable baseline-preserving bounds for the truncated Gaussian.
+
+        The tolerance may repair the reference only while constructing action
+        support.  The executed base command is always the original formal
+        reference, so a zero residual is bitwise identical to Replay.
+        """
         if self._state_feasible_action_contract is not None:
             raise RuntimeError("state-feasible action contract is already enabled")
         tolerance = float(reference_snap_tolerance)
@@ -589,6 +592,8 @@ class MJWPVectorEnv:
             "upper": upper,
             "safe_lower_f32": safe_lower,
             "safe_upper_f32": safe_upper,
+            "bound_calls": 0,
+            "baseline_violating_component_count": 0,
             "snap_calls": 0,
             "snapped_component_count": 0,
             "maximum_reference_violation": 0.0,
@@ -597,6 +602,11 @@ class MJWPVectorEnv:
     def _snap_state_feasible_reference(
         self, reference_ctrls: torch.Tensor
     ) -> tuple[torch.Tensor, dict[str, Any]]:
+        """Legacy diagnostic helper; never use this to form executed control.
+
+        Historical audit scripts call this private method to reconstruct the
+        former action contract.  Runtime execution and current bounds do not.
+        """
         contract = self._state_feasible_action_contract
         if contract is None:
             raise RuntimeError("state-feasible action contract is not enabled")
@@ -638,13 +648,54 @@ class MJWPVectorEnv:
             "maximum_reference_violation": maximum,
         }
 
+    def _reference_for_action_bound_construction(
+        self, reference_ctrls: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, dict[str, Any]]:
+        """Return formal reference and a non-worsening raw-command interval.
+
+        A machine-scale baseline violation is retained only on the side where
+        it already exists.  This makes zero action legal without expanding the
+        opposite actuator boundary and without modifying the executed base.
+        """
+        contract = self._state_feasible_action_contract
+        if contract is None:
+            raise RuntimeError("state-feasible action contract is not enabled")
+        controlled_f32 = reference_ctrls[:, contract["indices"]]
+        controlled = controlled_f32.to(torch.float64)
+        limited = contract["limited"]
+        lower = contract["lower"]
+        upper = contract["upper"]
+        below = torch.where(limited, torch.clamp_min(lower - controlled, 0.0), 0.0)
+        above = torch.where(limited, torch.clamp_min(controlled - upper, 0.0), 0.0)
+        violation = torch.maximum(below, above)
+        maximum = float(violation.max().item())
+        tolerance = contract["reference_snap_tolerance"]
+        if maximum > tolerance:
+            raise ValueError(
+                f"reference control exceeds ctrlrange by {maximum:.9g}, above "
+                f"the {tolerance:.9g} fail-closed tolerance"
+            )
+        allowed_lower = torch.where(below > 0.0, controlled, lower)
+        allowed_upper = torch.where(above > 0.0, controlled, upper)
+        count = int((violation > 0.0).sum().item())
+        contract["bound_calls"] += 1
+        contract["baseline_violating_component_count"] += count
+        contract["maximum_reference_violation"] = max(
+            contract["maximum_reference_violation"], maximum
+        )
+        return controlled_f32, allowed_lower, allowed_upper, {
+            "baseline_violating_component_count": count,
+            "maximum_reference_violation": maximum,
+        }
+
     def current_normalized_action_bounds(self) -> tuple[torch.Tensor, torch.Tensor]:
-        """Return the exact normalized residual support for the current transition."""
+        """Return support that cannot worsen the formal base's violation."""
         reference = self._reference_ctrls(self.time_indices, offset=1)
-        reference, _ = self._snap_state_feasible_reference(reference)
         contract = self._state_feasible_action_contract
         assert contract is not None
-        controlled_f32 = reference[:, contract["indices"]]
+        controlled_f32, allowed_lower, allowed_upper, _ = (
+            self._reference_for_action_bound_construction(reference)
+        )
         low_f32 = torch.full_like(controlled_f32, -1.0)
         high_f32 = torch.full_like(controlled_f32, 1.0)
         limited = contract["limited"]
@@ -655,31 +706,31 @@ class MJWPVectorEnv:
         low_f32[:, limited] = torch.maximum(
             low_f32[:, limited],
             (
-                contract["safe_lower_f32"][limited]
-                - controlled_f32[:, limited]
-            ) / scale_f32,
+                allowed_lower[:, limited]
+                - controlled_f32[:, limited].to(torch.float64)
+            ).div(scale).to(torch.float32),
         )
         high_f32[:, limited] = torch.minimum(
             high_f32[:, limited],
             (
-                contract["safe_upper_f32"][limited]
-                - controlled_f32[:, limited]
-            ) / scale_f32,
+                allowed_upper[:, limited]
+                - controlled_f32[:, limited].to(torch.float64)
+            ).div(scale).to(torch.float32),
         )
         positive_inf = torch.full_like(low_f32, float("inf"))
         negative_inf = torch.full_like(high_f32, float("-inf"))
         # Bounds are consumed as float32 and the environment applies the
         # residual in float32. Move a rounded endpoint inward until that exact
         # execution path stays inside the original float64 MJCF ctrlrange.
-        for _ in range(4):
+        for _ in range(64):
             requested_low = (
                 controlled_f32 + scale_f32 * low_f32
             ).to(torch.float64)
             requested_high = (
                 controlled_f32 + scale_f32 * high_f32
             ).to(torch.float64)
-            low_outside = limited & (requested_low < contract["lower"])
-            high_outside = limited & (requested_high > contract["upper"])
+            low_outside = limited & (requested_low < allowed_lower)
+            high_outside = limited & (requested_high > allowed_upper)
             if not bool((low_outside | high_outside).any().item()):
                 break
             low_f32 = torch.where(
@@ -692,6 +743,8 @@ class MJWPVectorEnv:
             raise RuntimeError("could not construct float32-safe action bounds")
         if bool((low_f32 > high_f32).any().item()):
             raise ValueError("state-feasible normalized action interval is empty")
+        if bool(((low_f32 > 0.0) | (high_f32 < 0.0)).any().item()):
+            raise RuntimeError("zero residual is outside baseline-preserving support")
         return low_f32, high_f32
 
     def state_feasible_action_audit(self) -> dict[str, Any] | None:
@@ -700,6 +753,12 @@ class MJWPVectorEnv:
             return None
         return {
             "reference_snap_tolerance": contract["reference_snap_tolerance"],
+            "execution_reference": "formal_reference_ctrl_unmodified",
+            "bounds_semantics": "do_not_worsen_baseline_ctrlrange_violation",
+            "bound_calls": contract["bound_calls"],
+            "baseline_violating_component_count": contract[
+                "baseline_violating_component_count"
+            ],
             "snap_calls": contract["snap_calls"],
             "snapped_component_count": contract["snapped_component_count"],
             "maximum_reference_violation": contract["maximum_reference_violation"],
@@ -1445,8 +1504,6 @@ class IndependentMJWPTrainingEnv:
             reference_rows = []
             for world in self.worlds:
                 row = world._reference_ctrls(world.time_indices, offset=1)
-                if world._state_feasible_action_contract is not None:
-                    row, _ = world._snap_state_feasible_reference(row)
                 reference_rows.append(row.detach().cpu().numpy())
             reference_ctrl = np.concatenate(reference_rows, axis=0)
             requested_ctrl = reference_ctrl.copy()

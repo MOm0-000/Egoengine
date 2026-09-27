@@ -1077,62 +1077,6 @@ evaluation:
     checkpoint_written: false
     chunk_commit_written: false
     next_action: stop_without_training_A_or_B
-  algorithmic_reproduction_training_benchmark_v2:
-    status: training_halted_fail_closed_pre_optimizer_likelihood_identity_epoch4
-    paper_faithful: false
-    classification: local_algorithmic_reproduction_after_replay_identity_fix
-    contract: /data_all/zzx/3.2RL/configs/taco_pour_algorithmic_reproduction_training_v2.yaml
-    output: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v2
-    report: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v2/candidate_B/seed_0/report.json
-    comparison: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v2/comparison.json
-    v1_evidence_immutable: true
-    v1_failure_cause: state_feasible_reference_snap_broke_zero_residual_identity
-    residual_execution_identity: original_formal_reference_plus_residual
-    bound_semantics: baseline_preserving_nonworsening_ctrlrange_violation
-    Replay: {successful_intervals: 30, first_failure_endpoint: 51}
-    candidate_B_step0:
-      successful_intervals: 30
-      first_failure_endpoint: 51
-      maximum_abs_actor_mu: 0.0
-      maximum_abs_deterministic_action: 0.0
-      maximum_abs_command_difference: 0.0
-      maximum_abs_qpos_difference: 0.0
-      maximum_abs_qvel_difference: 0.0
-      all_exact_identity_checks_passed: true
-    checkpoint_infrastructure:
-      report: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_checkpoint_roundtrip_v2/report.json
-      real_fresh_agent: true
-      all_declared_fields_roundtrip_exact: true
-      optimizer_updates: 0
-      eligible_for_warm_start: false
-    seed0_training:
-      status: Candidate_A_halted_before_epoch4_optimizer_Candidate_B_not_started
-      candidates: [A, B]
-      milestones_physics_steps: [0, 99200, 500800, 1000000]
-      Candidate_A_completed_epochs: 3
-      Candidate_A_completed_actor_updates: 3
-      Candidate_A_completed_physics_steps: 4800
-      failed_epoch: 4
-      failed_epoch_optimizer_updates: 0
-      likelihood_identity_tolerance: 5.0e-6
-      likelihood_identity_observed_max_abs_ratio_error: 5.7220458984375e-6
-      immediately_repeated_diagnostic_ratio_error: 0.0
-      rejected_workaround: autograd_likelihood_warmup_did_not_eliminate_failure
-      raw_incomplete_run_archive: /data_all/zzx/3.2RL/TRASH/algorithmic_training_v2_candidate_A_failclosed_likelihood_identity_final_20260927
-      Candidate_A_report: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v2/candidate_A/seed_0/report.json
-      Candidate_B_training_started: false
-      conditional_multiseed_started: false
-      performance_evidence_eligible: false
-      next_action: blocked_pending_a_new_explicitly_authorized_likelihood_identity_fix
-      chunk_commit_allowed: false
-    historical_RL_vs_Replay_comparison_caveat: >-
-      Historical state-feasible PPO rollouts executed snapped reference plus
-      residual, while formal Replay executed the unsnapped formal reference.
-      Their absolute PPO-versus-Replay performance is therefore not a strict
-      same-base-command algorithm comparison. Same-contract PPO comparisons,
-      reward-timing and observation-normalization defect evidence, policy
-      extremization, and within-trajectory behavioral interventions remain
-      valid for their stated scopes.
 
 runtime_contract:
   fail_closed: true
@@ -1175,7 +1119,7 @@ runtime_contract:
     fresh_post_fix_task_PPO_executed: true
   residual_action:
     active_profile: taco_pour_residual_action_scaled_v1
-    active_distribution: taco_pour_baseline_preserving_truncated_gaussian_v2
+    active_distribution: taco_pour_state_feasible_truncated_gaussian_v1
     residual_scale: 0.05
     mixed_units_acknowledged: true
     state_dependent_actuator_bounds_enforced_in_policy_distribution: true
@@ -1247,8 +1191,6 @@ audit_results:
   physics_reference_validity_gate_P: /data_all/zzx/3.2RL/runs/taco_pour_physics_reference_validity_gate_P_v1/report.json
   simulator_contract_adjudication_gate_Q: /data_all/zzx/3.2RL/runs/taco_pour_simulator_contract_adjudication_gate_Q_v1/report.json
   algorithmic_reproduction_training_B0: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v1/candidate_B/seed_0/report.json
-  algorithmic_reproduction_training_B0_v2: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v2/candidate_B/seed_0/report.json
-  algorithmic_checkpoint_roundtrip_v2: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_checkpoint_roundtrip_v2/report.json
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33

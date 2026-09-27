@@ -1,0 +1,175 @@
+schema: taco_pour_algorithmic_reproduction_training_benchmark_v2
+status: authorized_staged_B0_then_A_B_training
+paper_faithful: false
+classification: local_algorithmic_reproduction_after_replay_identity_fix
+purpose: >-
+  Repair and verify the defining residual identity before testing whether the
+  current single-pass residual PPO was undertrained and whether zero-residual
+  initialization with conservative exploration improves over Replay. This
+  contract supersedes Gate Q only for the declared local A/B benchmark and does
+  not reopen any physics or source-level gate.
+
+v1_failure_cause: state_feasible_reference_snap_broke_zero_residual_identity
+v1_evidence_immutable: true
+
+runtime:
+  order: [infrastructure_gate, candidate_B_step0_gate, candidate_A_seed0, candidate_B_seed0, conditional_multiseed]
+  CPU_MuJoCo_Warp_is_only_training_backend: true
+  CPU_MuJoCo_Warp_is_only_validation_backend: true
+  native_MuJoCo_acceptance_allowed: false
+  physics_contact_backend_or_source_audit_allowed: false
+  chunk_commit_allowed: false
+  old_checkpoint_warm_start_allowed: false
+  automatic_candidate_C_allowed: false
+
+frozen_task:
+  episode: '20230927_017'
+  boundary_endpoint: 20
+  validation_sources: [20, 59]
+  validation_endpoints: [21, 60]
+  validation_intervals: 40
+  timing:
+    action_at_source_t_uses_reference: t_plus_1
+    reward_for_state_t_plus_1_uses_reference: t_plus_1
+  collision_scene: current_mixed_formal_scene
+  actuator: current_unlimited_affine_position_actuator
+  objective: taco_pour_local_normalized_ellipse_v1
+  residual_scale: 0.05
+  action_frame: world_or_base
+  action_distribution: taco_pour_baseline_preserving_truncated_gaussian_v2
+  residual_execution_identity: original_formal_reference_plus_residual
+  action_bound_contract: baseline_preserving_nonworsening_ctrlrange_violation
+  observation: taco_pour_transition_aligned_236d_v1
+  observation_dimension: 236
+  observation_RMS: frozen_across_rollout_and_optimizer_then_committed_once
+  actor_mini_epochs: 1
+  critic_mini_epochs: 4
+  actor_learning_rate: 0.0001
+  actor_learning_rate_5e_minus_5_allowed: false
+
+candidates:
+  A:
+    name: current_single_pass_PPO_baseline
+    fresh_actor_critic_optimizers: true
+    seed0_only_initially: true
+    initialization: current_formal_random_initialization
+  B:
+    name: replay_preserving_residual_PPO
+    fresh_actor_critic_optimizers: true
+    seed0_only_initially: true
+    mean_head_weight: 0.0
+    mean_head_bias: 0.0
+    initial_sigma_multiplier_vs_current: 0.25
+    all_non_mean_network_parameters_use_current_initialization: true
+    sigma_remains_learnable: true
+    step0_gate:
+      mean_max_abs_tolerance: 1.0e-7
+      deterministic_action_max_abs_tolerance: 1.0e-7
+      deterministic_command_must_equal_formal_Replay: true
+      successful_intervals: 30
+      first_failure_endpoint: 51
+      failure_action: stop_without_training_A_or_B
+
+training_budget:
+  worlds: 4
+  horizon_control_intervals_per_world: 40
+  physics_steps_per_control_interval: 10
+  physics_steps_per_epoch: 1600
+  control_intervals_per_epoch: 160
+  seed0_milestones:
+    ckpt_100k:
+      target_physics_steps: 100000
+      declared_nearest_epoch: 62
+      actual_physics_steps: 99200
+      actual_control_intervals: 9920
+    ckpt_500k:
+      target_physics_steps: 500000
+      declared_nearest_epoch: 313
+      actual_physics_steps: 500800
+      actual_control_intervals: 50080
+    ckpt_1m:
+      target_physics_steps: 1000000
+      declared_nearest_epoch: 625
+      actual_physics_steps: 1000000
+      actual_control_intervals: 100000
+  checkpoint_payload_required:
+    - actor
+    - critic
+    - actor_optimizer
+    - critic_optimizer
+    - observation_RMS
+    - normalization_version
+    - simulation_physics_steps
+    - simulation_control_intervals
+    - Python_NumPy_Torch_RNG_states
+    - frozen_config_hashes
+  conditional_multiseed:
+    trigger: candidate_seed0_ckpt_1m_validated_intervals_gt_30
+    additional_seeds: [1, 2]
+    budget_each_physics_steps: 1000000
+
+validation:
+  deterministic_truncated_mode: true
+  frozen_RMS: true
+  stop_count_at_first_violation: true
+  diagnostic_full_trajectory_copy_allowed: true
+  formal_success_requires: 40_of_40
+  benchmark_refinement_requires_intervals_gt: 30
+  meaningful_refinement_requires_intervals_at_least: 35
+  checkpoint_validation_does_not_change_training_configuration: true
+  baselines:
+    Replay: {successful_intervals: 30, first_failure_endpoint: 51}
+    historical_single_pass_diagnostic: {successful_intervals: 28, first_failure_endpoint: 49}
+
+quality_gates:
+  first_actor_ratio_max_abs_error_from_one_tolerance: 5.0e-6
+  critic_recompute_tolerance: 2.0e-5
+  observation_RMS_mutation_during_optimizer_forbidden: true
+  nonfinite_update_forbidden: true
+  checkpoint_roundtrip_validation_must_reproduce: true
+  record_each_actor_update:
+    - exact_old_to_new_truncated_policy_KL
+    - clip_fraction
+    - ratio_min_max
+    - ratio_outside_0p8_1p2_fraction
+    - actor_mean_saturation_fraction
+    - action_residual_RMS
+    - gradient_norm
+
+inputs:
+  simulator_config:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml
+    sha256: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+  initialization_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v2/candidate_a/report.json
+    sha256: 9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a
+  protocol_at_authorization:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_algorithmic_reproduction_training_v2_protocol_snapshot.yaml
+    sha256: d8e9bf1f99562b0578b5b5ee87dc985467b18744288aa29932744ee4a1ff45e2
+  objective_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_local_normalized_ellipse_v1.yaml
+    sha256: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+  observation_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_observation_local_236d_v1.yaml
+    sha256: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  action_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_residual_action_scaled_v1.yaml
+    sha256: 71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4
+  distribution_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_baseline_preserving_truncated_gaussian_v2.yaml
+    sha256: 3187a0b50ad79a682a2f7754f4749e07e1c024d313fd23d3a72721b94da60604
+  source_boundary:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_replay_rebase_v1/tool_only/committed_boundary_endpoint_20.pt.gz
+    sha256: a3646e24af1ba871e5ecc885669508223a5e0f26d3cf29f0482f02678419e337
+  Gate_Q_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_simulator_contract_adjudication_gate_Q_v1/report.json
+    sha256: 1d476267981f18de4c10bfb99e764a4a7f34731525e5afd3f45a4de244adcb96
+
+implementation_contract:
+  state_feasible_distribution_sha256: a1bc7d290e1236424dc3b6cdc1904479d6db9007b29e0bc60a8611a65fab3573
+  MJWP_environment_sha256: cc4cb86b73bdd1ef671ed06d185192119199cda2d037ce7685a5abe8cd5b856a
+  official_PPO_agent_sha256: b41f1c088d8ad4e261b9c5338f90a7f0ae910b7453ab348532312b3d87bc4c30
+  PPO_config_builder_sha256: 4b887e5e4f493fdc5a6541f3c1c811ec65a4e2cbab9f974cc1627e0d54048b84
+  benchmark_runner_sha256: 2b590432e73c3446c9d7bc59d7203c1a2ab98763a3066f62856536d8af82bbee
+
+output_directory: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v2

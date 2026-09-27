@@ -39,7 +39,7 @@ def test_profile_is_gate_only_and_keeps_scale():
     assert report["distribution"]["official_minus1_plus1_clamp_enabled"] is False
 
 
-def test_bounds_snap_only_numeric_reference_error_and_fail_closed():
+def test_bounds_preserve_baseline_numeric_error_and_fail_closed():
     reference = np.array([[0.2, -0.1700000018]], np.float64)
     low, high, audit = normalized_action_bounds_numpy(
         reference,
@@ -50,7 +50,12 @@ def test_bounds_snap_only_numeric_reference_error_and_fail_closed():
     )
     np.testing.assert_allclose(low, [[-1.0, 0.0]], atol=0.0)
     np.testing.assert_allclose(high, [[1.0, 1.0]], atol=0.0)
-    assert audit["snapped_component_count"] == 1
+    assert audit["baseline_violating_component_count"] == 1
+    assert audit["snapped_component_count"] == 0
+    assert audit["execution_reference"] == "formal_reference_ctrl_unmodified"
+    assert audit["bounds_semantics"] == (
+        "do_not_worsen_baseline_ctrlrange_violation"
+    )
     assert audit["maximum_reference_violation"] < 2e-7
     with pytest.raises(ValueError, match="above the"):
         normalized_action_bounds_numpy(
