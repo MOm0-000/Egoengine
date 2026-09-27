@@ -18,8 +18,10 @@ sys.path[:0] = [
 ]
 
 from video_to_spider.rl.state_feasible_truncated_gaussian import (
+    LikelihoodIdentityGateSpec,
     deterministic_truncated_action,
     load_truncated_gaussian_profile,
+    numerical_likelihood_identity_report,
     normalized_action_bounds_numpy,
     sample_truncated_normal,
     truncated_normal_entropy,
@@ -105,6 +107,54 @@ def test_deterministic_mode_preserves_zero_at_one_sided_boundary():
     high = torch.tensor([[1.0, 0.0, 0.5]])
     action = deterministic_truncated_action(mu, low, high)
     torch.testing.assert_close(action, torch.tensor([[0.0, 0.0, 0.25]]))
+
+
+def test_ulp_aware_likelihood_gate_accepts_v2_rounding_but_not_semantic_drift():
+    gate = LikelihoodIdentityGateSpec.float32_ulp_aware_v1()
+    epsilon = torch.finfo(torch.float32).eps
+    assert gate.mu_atol == 8 * epsilon
+    assert gate.sigma_atol == 8 * epsilon
+    assert gate.ratio_atol == 128 * epsilon
+    old_mu = torch.zeros((160, 36), dtype=torch.float32)
+    current_mu = old_mu.clone()
+    current_mu.reshape(-1)[:5204] += 5 * epsilon
+    old_sigma = torch.ones_like(old_mu)
+    current_sigma = old_sigma.clone()
+    old_neglogp = torch.zeros(160, dtype=torch.float32)
+    current_neglogp = old_neglogp.clone()
+    current_neglogp[:56] = torch.log(torch.tensor(1.0 + 48 * epsilon))
+    ratio = torch.exp(old_neglogp - current_neglogp)
+    report = numerical_likelihood_identity_report(
+        old_mu=old_mu,
+        current_mu=current_mu,
+        old_sigma=old_sigma,
+        current_sigma=current_sigma,
+        old_neglogp=old_neglogp,
+        current_neglogp=current_neglogp,
+        ratio=ratio,
+        gate=gate,
+    )
+    assert report["number_of_different_mu_elements"] == 5204
+    assert report["number_of_different_sigma_elements"] == 0
+    assert report["samples_with_nonzero_logprob_difference"] == 56
+    assert report["policy_output_numerical_equivalence_passed"] is True
+    assert report["semantic_identity_hard_fail"] is False
+
+    bad_neglogp = old_neglogp.clone()
+    bad_neglogp[0] = torch.log(torch.tensor(1.001))
+    bad_ratio = torch.exp(old_neglogp - bad_neglogp)
+    bad = numerical_likelihood_identity_report(
+        old_mu=old_mu,
+        current_mu=old_mu,
+        old_sigma=old_sigma,
+        current_sigma=old_sigma,
+        old_neglogp=old_neglogp,
+        current_neglogp=bad_neglogp,
+        ratio=bad_ratio,
+        gate=gate,
+    )
+    assert bad["policy_output_numerical_equivalence_passed"] is False
+    assert bad["semantic_identity_hard_fail"] is True
 
 
 def test_corrected_integration_evidence_is_zero_optimizer_and_exact():

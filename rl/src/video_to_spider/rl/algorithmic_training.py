@@ -115,6 +115,7 @@ class AlgorithmicBenchmarkPpoAgent(StateFeasibleTruncatedGaussianPpoAgent):
         self._gradient_norm_before_clip = float("nan")
         self._gradient_norm_after_clip = float("nan")
         self._latest_distribution_evaluation: dict[str, torch.Tensor] | None = None
+        self._training_reward_mean = float("nan")
 
     def evaluate_ppo_distribution(self, input_dict):
         result = super().evaluate_ppo_distribution(input_dict)
@@ -129,6 +130,14 @@ class AlgorithmicBenchmarkPpoAgent(StateFeasibleTruncatedGaussianPpoAgent):
         raw_advantage = (batch_dict["returns"] - batch_dict["values"]).sum(dim=1)
         values = batch_dict["values"].detach().cpu().numpy()
         returns = batch_dict["returns"].detach().cpu().numpy()
+        # The official recurrent rollout return intentionally omits rewards
+        # from ``batch_dict`` after GAE construction. Read the already-filled
+        # experience-buffer tensor without changing or reinserting it into the
+        # optimizer dataset.
+        rollout_rewards = self.experience_buffer.tensor_dict["rewards"]
+        self._training_reward_mean = float(
+            rollout_rewards.detach().float().mean().cpu()
+        )
         super().prepare_dataset(batch_dict)
         normalized = self.dataset.values_dict["advantages"].detach().cpu().numpy()
         self._credit_arrays = {
@@ -173,7 +182,7 @@ class AlgorithmicBenchmarkPpoAgent(StateFeasibleTruncatedGaussianPpoAgent):
         try:
             result = super().train_actor_critic(input_dict)
         except RuntimeError as error:
-            if "likelihood ratio differs before the first optimizer update" not in str(error):
+            if "pre-optimizer likelihood identity gate failed" not in str(error):
                 raise
             failed = self._latest_distribution_evaluation
             if failed is None:
@@ -224,6 +233,9 @@ class AlgorithmicBenchmarkPpoAgent(StateFeasibleTruncatedGaussianPpoAgent):
         row = {
             "epoch": int(self.epoch_num),
             "global_actor_update": len(self.update_reports) + 1,
+            "pre_optimizer_identity": dict(
+                self._likelihood_identity_checks[-1]
+            ),
             "pre_optimizer_ratio_identity_max_abs_error": float(
                 self._likelihood_identity_checks[-1]["maximum_abs_error_from_one"]
             ),
@@ -246,6 +258,7 @@ class AlgorithmicBenchmarkPpoAgent(StateFeasibleTruncatedGaussianPpoAgent):
             "deterministic_effective_residual_RMS": float(
                 residual.square().mean().sqrt().cpu()
             ),
+            "training_reward_mean": self._training_reward_mean,
         }
         if not np.isfinite(np.asarray([
             row["gradient_norm_before_clip"], row["parameter_delta_l2"],

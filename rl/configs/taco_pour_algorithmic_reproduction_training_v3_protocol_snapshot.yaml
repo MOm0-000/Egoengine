@@ -1125,62 +1125,6 @@ evaluation:
       performance_evidence_eligible: false
       next_action: blocked_pending_a_new_explicitly_authorized_likelihood_identity_fix
       chunk_commit_allowed: false
-  algorithmic_reproduction_training_benchmark_v3:
-    status: halted_quality_gate_failure_before_100k
-    paper_faithful: false
-    classification: local_algorithmic_reproduction_after_replay_identity_and_numeric_likelihood_gate_fix
-    contract: /data_all/zzx/3.2RL/configs/taco_pour_algorithmic_reproduction_training_v3.yaml
-    output: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v3
-    Candidate_A_report: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v3/candidate_A/seed_0/report.json
-    comparison: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v3/comparison.json
-    checkpoint_roundtrip: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_checkpoint_roundtrip_v3/report.json
-    v1_evidence_immutable: true
-    v2_evidence_immutable: true
-    v2_resume_allowed: false
-    v2_numeric_reclassification:
-      report: /data_all/zzx/3.2RL/runs/taco_pour_likelihood_identity_numeric_reclassification_v3/report.json
-      numerical_C_D_passed: true
-      full_A_B_C_D_replayed: false
-      v2_training_status_changed: false
-    Replay: {successful_intervals: 30, first_failure_endpoint: 51}
-    candidate_B_step0:
-      successful_intervals: 30
-      first_failure_endpoint: 51
-      all_exact_identity_checks_passed: true
-    checkpoint_infrastructure:
-      real_fresh_agent: true
-      all_declared_fields_roundtrip_exact: true
-      optimizer_updates: 0
-      eligible_for_warm_start: false
-    ULP_aware_gate:
-      float32_mu_atol: 9.5367431640625e-7
-      float32_sigma_atol: 9.5367431640625e-7
-      float32_ratio_atol: 1.52587890625e-5
-      semantic_identity_hard_fail: 1.0e-4
-      actor_parameter_hash_exact_required: true
-      actor_RMS_and_normalization_version_exact_required: true
-    seed0_training:
-      Candidate_A_completed_epochs: 31
-      Candidate_A_completed_actor_updates: 31
-      Candidate_A_completed_physics_steps: 51200
-      failed_epoch: 32
-      failed_epoch_optimizer_updates: 0
-      failure_classification: float32_numerical_envelope_exceeded
-      actor_parameter_hash_equal: true
-      actor_RMS_hash_equal: true
-      normalization_version_equal: true
-      observed_max_abs_mu_difference: 1.1920928955078125e-6
-      observed_max_abs_sigma_difference: 0.0
-      observed_max_abs_ratio_error: 3.814697265625e-6
-      semantic_identity_hard_fail: false
-      milestone_100k_reached: false
-      deterministic_milestone_validation_executed: false
-      Candidate_B_training_started: false
-      conditional_multiseed_started: false
-      raw_incomplete_run_archive: /data_all/zzx/3.2RL/TRASH/algorithmic_training_v3_candidate_A_failclosed_numeric_gate_epoch32_20260928
-      quality_gate_dynamic_relaxation_applied: false
-      next_action: blocked_pending_new_explicit_authorization
-      chunk_commit_allowed: false
     historical_RL_vs_Replay_comparison_caveat: >-
       Historical state-feasible PPO rollouts executed snapped reference plus
       residual, while formal Replay executed the unsnapped formal reference.
@@ -1305,10 +1249,6 @@ audit_results:
   algorithmic_reproduction_training_B0: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v1/candidate_B/seed_0/report.json
   algorithmic_reproduction_training_B0_v2: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v2/candidate_B/seed_0/report.json
   algorithmic_checkpoint_roundtrip_v2: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_checkpoint_roundtrip_v2/report.json
-  algorithmic_reproduction_training_B0_v3: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v3/candidate_B/seed_0/report.json
-  algorithmic_reproduction_training_candidate_A_v3: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v3/candidate_A/seed_0/report.json
-  algorithmic_likelihood_numeric_reclassification_v3: /data_all/zzx/3.2RL/runs/taco_pour_likelihood_identity_numeric_reclassification_v3/report.json
-  algorithmic_checkpoint_roundtrip_v3: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_checkpoint_roundtrip_v3/report.json
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -1363,8 +1303,6 @@ result_acceptance_blockers:
   - local_algorithmic_benchmark_exception_does_not_supersede_the_Gate_Q_exact_reproduction_blocker
   - algorithmic_benchmark_candidate_B_zero_step_fails_to_preserve_formal_Replay_21_of_40_vs_30_of_40
   - algorithmic_benchmark_A_and_B_training_forbidden_after_candidate_B_step0_gate_failure
-  - algorithmic_benchmark_v3_Candidate_A_exceeds_frozen_8epsilon_mu_identity_gate_before_epoch32_optimizer
-  - algorithmic_benchmark_v3_stops_at_51200_physics_before_100k_and_Candidate_B_training_is_not_started
   - exact_reproduction_is_blocked_pending_unpublished_simulator_contact_actuation_object_physics_and_objective_details
   - active_corrected_Replay_passes_only_30_of_40_in_second_window
   - postfix_single_actor_pass_PPO_passes_only_28_intervals_before_failure_at_endpoint49

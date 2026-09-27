@@ -20,7 +20,9 @@ from torch import nn
 
 from .state_feasible_truncated_gaussian import (
     StateFeasibleTruncatedGaussianPpoAgent,
+    _module_parameter_sha256,
     deterministic_truncated_action,
+    observation_normalizer_report,
 )
 
 
@@ -759,11 +761,27 @@ class CreditInstrumentedTruncatedGaussianPpoAgent(
         old_neglogp = input_dict["old_logp_actions"]
         advantage = input_dict["advantages"]
         returns = input_dict["returns"]
+        pre_recompute_actor_parameter_hash = _module_parameter_sha256(self.model)
+        pre_recompute_actor_normalizer = observation_normalizer_report(
+            self.model, version=self._observation_normalization_version
+        )
+        pre_recompute_normalization_version = int(
+            self._observation_normalization_version
+        )
         before_forward = cpu_state(self.model.state_dict())
         current = self.evaluate_ppo_distribution(input_dict)
         after_forward = cpu_state(self.model.state_dict())
         ratio = torch.exp(old_neglogp - current["neglogp"])
-        self._validate_first_update_ratio(ratio)
+        self._validate_first_update_identity(
+            input_dict=input_dict,
+            current=current,
+            ratio=ratio,
+            pre_recompute_actor_parameter_hash=pre_recompute_actor_parameter_hash,
+            pre_recompute_actor_normalizer=pre_recompute_actor_normalizer,
+            pre_recompute_normalization_version=(
+                pre_recompute_normalization_version
+            ),
+        )
         clipped_ratio = torch.clamp(
             ratio, 1.0 - self.cfg.e_clip, 1.0 + self.cfg.e_clip
         )

@@ -24,6 +24,43 @@ class TruncatedGaussianActionSpec:
     optimizer_training_authorized: bool
 
 
+@dataclass(frozen=True)
+class LikelihoodIdentityGateSpec:
+    """Numerical envelope for one frozen-policy likelihood recomputation."""
+
+    mu_atol: float
+    sigma_atol: float
+    ratio_atol: float
+    semantic_identity_hard_fail: float
+
+    @classmethod
+    def float32_ulp_aware_v1(cls) -> "LikelihoodIdentityGateSpec":
+        epsilon = float(torch.finfo(torch.float32).eps)
+        return cls(
+            mu_atol=8.0 * epsilon,
+            sigma_atol=8.0 * epsilon,
+            ratio_atol=128.0 * epsilon,
+            semantic_identity_hard_fail=1.0e-4,
+        )
+
+    def validate(self) -> None:
+        epsilon = float(torch.finfo(torch.float32).eps)
+        expected = (8.0 * epsilon, 8.0 * epsilon, 128.0 * epsilon, 1.0e-4)
+        observed = (
+            float(self.mu_atol),
+            float(self.sigma_atol),
+            float(self.ratio_atol),
+            float(self.semantic_identity_hard_fail),
+        )
+        if observed != expected:
+            raise ValueError(
+                "likelihood identity gate must be frozen to 8/8/128 float32 "
+                f"eps and semantic hard fail 1e-4, got {observed}"
+            )
+        if not self.ratio_atol < self.semantic_identity_hard_fail < 0.2:
+            raise ValueError("likelihood identity tolerances are not strictly nested")
+
+
 def _tensor_sha256(tensor: torch.Tensor) -> str:
     value = tensor.detach().cpu().contiguous()
     digest = hashlib.sha256()
@@ -31,6 +68,91 @@ def _tensor_sha256(tensor: torch.Tensor) -> str:
     digest.update(np.asarray(value.shape, dtype=np.int64).tobytes())
     digest.update(value.numpy().tobytes())
     return digest.hexdigest()
+
+
+def _module_parameter_sha256(module: torch.nn.Module) -> str:
+    digest = hashlib.sha256()
+    for name, value in sorted(module.named_parameters()):
+        tensor = value.detach().cpu().contiguous()
+        digest.update(name.encode())
+        digest.update(str(tensor.dtype).encode())
+        digest.update(np.asarray(tensor.shape, dtype=np.int64).tobytes())
+        digest.update(tensor.numpy().tobytes())
+    return digest.hexdigest()
+
+
+def numerical_likelihood_identity_report(
+    *,
+    old_mu: torch.Tensor,
+    current_mu: torch.Tensor,
+    old_sigma: torch.Tensor,
+    current_sigma: torch.Tensor,
+    old_neglogp: torch.Tensor,
+    current_neglogp: torch.Tensor,
+    ratio: torch.Tensor,
+    gate: LikelihoodIdentityGateSpec,
+) -> dict[str, Any]:
+    """Classify float32 rollout/autograd output differences without mutation."""
+
+    gate.validate()
+    pairs = (
+        ("mu", old_mu, current_mu),
+        ("sigma", old_sigma, current_sigma),
+        ("logprob", old_neglogp, current_neglogp),
+    )
+    for name, old, current in pairs:
+        if old.shape != current.shape:
+            raise ValueError(f"old/current {name} shapes differ")
+        if not bool(torch.isfinite(old).all() and torch.isfinite(current).all()):
+            raise ValueError(f"old/current {name} contains nonfinite values")
+    if not bool(torch.isfinite(ratio).all()):
+        raise ValueError("likelihood ratio contains nonfinite values")
+    mu_difference = (current_mu.detach() - old_mu.detach()).abs()
+    sigma_difference = (current_sigma.detach() - old_sigma.detach()).abs()
+    logprob_difference = (
+        current_neglogp.detach() - old_neglogp.detach()
+    ).abs()
+    ratio_detached = ratio.detach()
+    ratio_error = (ratio_detached - 1.0).abs()
+    max_mu = float(mu_difference.max().cpu())
+    max_sigma = float(sigma_difference.max().cpu())
+    max_logprob = float(logprob_difference.max().cpu())
+    max_ratio = float(ratio_error.max().cpu())
+    numerical = (
+        max_mu <= gate.mu_atol
+        and max_sigma <= gate.sigma_atol
+        and max_ratio <= gate.ratio_atol
+    )
+    return {
+        "max_abs_mu_difference": max_mu,
+        "max_abs_sigma_difference": max_sigma,
+        "max_abs_logprob_difference": max_logprob,
+        "number_of_different_mu_elements": int(
+            torch.count_nonzero(current_mu.detach() != old_mu.detach()).cpu()
+        ),
+        "number_of_different_sigma_elements": int(
+            torch.count_nonzero(current_sigma.detach() != old_sigma.detach()).cpu()
+        ),
+        "samples_with_nonzero_logprob_difference": int(
+            torch.count_nonzero(
+                current_neglogp.detach() != old_neglogp.detach()
+            ).cpu()
+        ),
+        "ratio_min": float(ratio_detached.min().cpu()),
+        "ratio_max": float(ratio_detached.max().cpu()),
+        "ratio_max_abs_error_from_one": max_ratio,
+        "maximum_abs_error_from_one": max_ratio,
+        "mu_tolerance": float(gate.mu_atol),
+        "sigma_tolerance": float(gate.sigma_atol),
+        "ratio_tolerance": float(gate.ratio_atol),
+        "semantic_identity_hard_fail_threshold": float(
+            gate.semantic_identity_hard_fail
+        ),
+        "policy_output_numerical_equivalence_passed": bool(numerical),
+        "semantic_identity_hard_fail": bool(
+            max_ratio > gate.semantic_identity_hard_fail
+        ),
+    }
 
 
 def observation_normalizer_report(model: Any, *, version: int) -> dict[str, Any]:
@@ -317,10 +439,17 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
         self,
         *args,
         distribution_spec: TruncatedGaussianActionSpec,
+        likelihood_identity_gate: LikelihoodIdentityGateSpec | None = None,
         commit_observation_stats_after_epoch: bool = True,
         **kwargs,
     ):
         self.distribution_spec = distribution_spec
+        self.likelihood_identity_gate = (
+            LikelihoodIdentityGateSpec.float32_ulp_aware_v1()
+            if likelihood_identity_gate is None
+            else likelihood_identity_gate
+        )
+        self.likelihood_identity_gate.validate()
         super().__init__(*args, **kwargs)
         if self.cfg.clip_actions:
             raise ValueError("official [-1,1] action clamp must be disabled")
@@ -347,6 +476,9 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
         self._actor_updates_in_epoch = 0
         self._rollout_actor_observations_for_rms = None
         self._rollout_critic_observations_for_rms = None
+        self._rollout_actor_parameter_hash: str | None = None
+        self._rollout_actor_normalizer: dict[str, Any] | None = None
+        self._rollout_normalization_version: int | None = None
 
     def _normalization_pair(self) -> dict[str, Any]:
         result = {
@@ -380,23 +512,88 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
             ),
         }
 
-    def _validate_first_update_ratio(self, ratio: torch.Tensor) -> None:
+    def _validate_first_update_identity(
+        self,
+        *,
+        input_dict: dict[str, torch.Tensor],
+        current: dict[str, torch.Tensor],
+        ratio: torch.Tensor,
+        pre_recompute_actor_parameter_hash: str,
+        pre_recompute_actor_normalizer: dict[str, Any],
+        pre_recompute_normalization_version: int,
+    ) -> None:
         if self._actor_updates_in_epoch != 0:
             self._actor_updates_in_epoch += 1
             return
-        maximum_error = float((ratio.detach() - 1.0).abs().max().cpu())
+        if (
+            self._rollout_actor_parameter_hash is None
+            or self._rollout_actor_normalizer is None
+            or self._rollout_normalization_version is None
+        ):
+            raise RuntimeError("rollout identity was not captured before PPO recompute")
+        actor_parameter_hash_equal = (
+            pre_recompute_actor_parameter_hash
+            == self._rollout_actor_parameter_hash
+        )
+        actor_rms_hash_equal = (
+            pre_recompute_actor_normalizer == self._rollout_actor_normalizer
+        )
+        normalization_version_equal = (
+            int(pre_recompute_normalization_version)
+            == int(self._rollout_normalization_version)
+        )
+        numerical = numerical_likelihood_identity_report(
+            old_mu=input_dict["mu"],
+            current_mu=current["mu"],
+            old_sigma=input_dict["sigma"],
+            current_sigma=current["sigma"],
+            old_neglogp=input_dict["old_logp_actions"],
+            current_neglogp=current["neglogp"],
+            ratio=ratio,
+            gate=self.likelihood_identity_gate,
+        )
+        passed = (
+            actor_parameter_hash_equal
+            and actor_rms_hash_equal
+            and normalization_version_equal
+            and numerical["policy_output_numerical_equivalence_passed"]
+        )
+        if numerical["semantic_identity_hard_fail"]:
+            classification = "semantic_implementation_identity_defect"
+        elif not (
+            actor_parameter_hash_equal
+            and actor_rms_hash_equal
+            and normalization_version_equal
+        ):
+            classification = "frozen_policy_state_identity_defect"
+        elif not numerical["policy_output_numerical_equivalence_passed"]:
+            classification = "float32_numerical_envelope_exceeded"
+        else:
+            classification = "float32_numerical_equivalence_pass"
         row = {
             "epoch": int(self.epoch_num),
             "samples": int(ratio.numel()),
-            "maximum_abs_error_from_one": maximum_error,
-            "tolerance": 5.0e-6,
+            "actor_parameter_hash_equal": actor_parameter_hash_equal,
+            "actor_RMS_hash_equal": actor_rms_hash_equal,
+            "normalization_version_equal": normalization_version_equal,
+            **numerical,
+            "tolerance": float(self.likelihood_identity_gate.ratio_atol),
+            "numerical_identity_passed": bool(passed),
+            "classification": classification,
         }
         self._likelihood_identity_checks.append(row)
         self._actor_updates_in_epoch += 1
-        if maximum_error > row["tolerance"]:
+        if not passed:
             raise RuntimeError(
-                "old/new likelihood ratio differs before the first optimizer "
-                f"update: max |ratio-1|={maximum_error:.9g}"
+                "pre-optimizer likelihood identity gate failed: "
+                f"classification={classification}, "
+                "actor_hash_equal="
+                f"{actor_parameter_hash_equal}, RMS_hash_equal={actor_rms_hash_equal}, "
+                f"normalization_version_equal={normalization_version_equal}, "
+                "max_mu="
+                f"{numerical['max_abs_mu_difference']:.9g}, max_sigma="
+                f"{numerical['max_abs_sigma_difference']:.9g}, max_ratio="
+                f"{numerical['ratio_max_abs_error_from_one']:.9g}"
             )
 
     def init_tensors(self) -> None:
@@ -507,6 +704,13 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
         return result
 
     def prepare_dataset(self, batch_dict) -> None:
+        self._rollout_actor_parameter_hash = _module_parameter_sha256(self.model)
+        self._rollout_actor_normalizer = observation_normalizer_report(
+            self.model, version=self._observation_normalization_version
+        )
+        self._rollout_normalization_version = int(
+            self._observation_normalization_version
+        )
         actor_observations = self._preproc_obs(batch_dict["obses"])
         if not torch.is_tensor(actor_observations):
             raise TypeError("frozen normalization contract requires tensor observations")
@@ -581,6 +785,9 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
     def train_epoch(self):
         """Use one immutable observation transform for a whole PPO epoch."""
         self._actor_updates_in_epoch = 0
+        self._rollout_actor_parameter_hash = None
+        self._rollout_actor_normalizer = None
+        self._rollout_normalization_version = None
         before = self._normalization_pair()
         result = super().train_epoch()
         before_commit = self._normalization_pair()
@@ -635,6 +842,9 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
             )
         self._rollout_actor_observations_for_rms = None
         self._rollout_critic_observations_for_rms = None
+        self._rollout_actor_parameter_hash = None
+        self._rollout_actor_normalizer = None
+        self._rollout_normalization_version = None
         return result
 
     def recompute_truncated_neglogp(
@@ -788,9 +998,23 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
         old_neglogp = input_dict["old_logp_actions"]
         advantage = input_dict["advantages"]
         returns = input_dict["returns"]
+        pre_recompute_actor_parameter_hash = _module_parameter_sha256(self.model)
+        pre_recompute_actor_normalizer = observation_normalizer_report(
+            self.model, version=self._observation_normalization_version
+        )
+        pre_recompute_normalization_version = int(
+            self._observation_normalization_version
+        )
         current = self.evaluate_ppo_distribution(input_dict)
         ratio = torch.exp(old_neglogp - current["neglogp"])
-        self._validate_first_update_ratio(ratio)
+        self._validate_first_update_identity(
+            input_dict=input_dict,
+            current=current,
+            ratio=ratio,
+            pre_recompute_actor_parameter_hash=pre_recompute_actor_parameter_hash,
+            pre_recompute_actor_normalizer=pre_recompute_actor_normalizer,
+            pre_recompute_normalization_version=pre_recompute_normalization_version,
+        )
         clipped_ratio = torch.clamp(
             ratio, 1.0 - self.cfg.e_clip, 1.0 + self.cfg.e_clip
         )
