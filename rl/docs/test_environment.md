@@ -18,7 +18,7 @@ PYTHONPATH="$PWD/.env_mjwp313_overlay:$PWD/src:$PWD/scripts:$PWD/external/mink/s
   /data_all/zzx/egoengine/spider/.venv/bin/python -m pytest -q
 ```
 
-On 2026-09-27 this command passed **742 tests and 57 subtests**.
+On 2026-09-27 this command passed **748 tests and 57 subtests**.
 The 19 warnings are known upstream/diagnostic warnings: capsule-mesh MULTICCD
 capacity, PyTorch AMP deprecations, two Trimesh degenerate-volume warnings and
 seven SciPy pickle deprecations.
@@ -76,6 +76,7 @@ runs/taco_pour_action_feasibility_gate_A1_v1/
 runs/taco_pour_low_level_contact_controllability_gate_L_v1/
 runs/taco_pour_physics_reference_validity_gate_P_v1/
 runs/taco_pour_simulator_contract_adjudication_gate_Q_v1/
+runs/taco_pour_algorithmic_reproduction_training_v1/
 ```
 
 The first corrected PPO authorization is consumed. Replay passed the first
@@ -470,6 +471,18 @@ Q3 result does not reopen Gate B/C because Q2 failed. Gate Q is closed and no
 additional physics/parity gate, PPO retraining, parameter sweep or chunk commit
 is authorized. Exact EgoEngine reproduction is classified as blocked pending
 unpublished simulator/contact/actuation/object-physics and objective details.
+
+The separately authorized local Algorithmic Reproduction Training Benchmark v1
+does not supersede that exact-reproduction classification. Its mandatory
+Candidate-B zero-step gate ran before any optimizer update. Formal Replay
+reproduced `30/40` with first failure at endpoint 51, while the nominally
+Replay-preserving zero-mean/zero-action Candidate B reached only `21/40` and
+failed at endpoint 42. The state-feasible distribution's declared reference
+snap changed 32 control rows by at most `1.1920929e-7`; contact dynamics then
+amplified the difference. Per the frozen contract, neither Candidate A nor B
+was trained, no checkpoint was produced, and no chunk was committed. The
+informal preflight TensorBoard skeleton is isolated under
+`TRASH/taco_algorithmic_B0_informal_preflight_2026-09-27/` and is not evidence.
 
 ## Archived invalid performance evidence
 

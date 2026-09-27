@@ -1041,6 +1041,42 @@ evaluation:
     chunk_commit_authorized: false
     additional_physics_or_backend_parity_gate_authorized: false
     exact_reproduction_status: blocked_pending_unpublished_simulator_contact_actuation_object_physics_and_objective_details
+  algorithmic_reproduction_training_benchmark_v1:
+    status: B0_failed_training_forbidden
+    paper_faithful: false
+    classification: local_engineering_not_exact_reproduction
+    contract: /data_all/zzx/3.2RL/configs/taco_pour_algorithmic_reproduction_training_v1.yaml
+    output: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v1
+    report: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v1/candidate_B/seed_0/report.json
+    comparison: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v1/comparison.json
+    Gate_Q_exact_reproduction_blocker_superseded: false
+    local_benchmark_exception_authorized: true
+    CPU_MuJoCo_Warp_only: true
+    Candidate_B_contract:
+      actor_mean_head_zero: true
+      initial_sigma_multiplier: 0.25
+      deterministic_command_must_equal_formal_Replay: true
+      failure_action: stop_without_training_A_or_B
+    Replay: {successful_intervals: 30, first_failure_endpoint: 51}
+    candidate_B_step0:
+      successful_intervals: 21
+      first_failure_endpoint: 42
+      maximum_abs_actor_mu: 0.0
+      maximum_abs_deterministic_action: 0.0
+      maximum_abs_command_difference: 1.1920928955078125e-7
+    mechanism: >-
+      The state-feasible truncated-Gaussian agent's declared reference snap
+      changes 32 of 40 base-command rows by at most one float32-scale unit even
+      when actor mean and deterministic residual are exactly zero. Contact
+      dynamics amplify that difference, so Candidate B does not preserve Replay.
+    optimizer_updates: 0
+    simulation_physics_steps_for_training: 0
+    training_started: false
+    Candidate_A_started: false
+    Candidate_B_training_started: false
+    checkpoint_written: false
+    chunk_commit_written: false
+    next_action: stop_without_training_A_or_B
 
 runtime_contract:
   fail_closed: true
@@ -1154,6 +1190,7 @@ audit_results:
   low_level_contact_controllability_gate_L: /data_all/zzx/3.2RL/runs/taco_pour_low_level_contact_controllability_gate_L_v1/report.json
   physics_reference_validity_gate_P: /data_all/zzx/3.2RL/runs/taco_pour_physics_reference_validity_gate_P_v1/report.json
   simulator_contract_adjudication_gate_Q: /data_all/zzx/3.2RL/runs/taco_pour_simulator_contract_adjudication_gate_Q_v1/report.json
+  algorithmic_reproduction_training_B0: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v1/candidate_B/seed_0/report.json
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -1205,6 +1242,9 @@ result_acceptance_blockers:
   - Gate_Q_Q2_no_collision_backend_contract_is_frozen_and_backend_dependence_is_acknowledged
   - Gate_Q_Q3_complete_unique_bilateral_contact_graph_is_feasible_at_all_endpoints_and_withdraws_P4_as_an_active_blocker
   - Gate_Q_is_the_final_physics_gate_and_closes_without_authorizing_Gate_B_Gate_C_PPO_retraining_or_chunk_commit
+  - local_algorithmic_benchmark_exception_does_not_supersede_the_Gate_Q_exact_reproduction_blocker
+  - algorithmic_benchmark_candidate_B_zero_step_fails_to_preserve_formal_Replay_21_of_40_vs_30_of_40
+  - algorithmic_benchmark_A_and_B_training_forbidden_after_candidate_B_step0_gate_failure
   - exact_reproduction_is_blocked_pending_unpublished_simulator_contact_actuation_object_physics_and_objective_details
   - active_corrected_Replay_passes_only_30_of_40_in_second_window
   - postfix_single_actor_pass_PPO_passes_only_28_intervals_before_failure_at_endpoint49
