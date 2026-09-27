@@ -558,11 +558,34 @@ actuator `ctrlrange` would be rejected rather than silently projected; all 240
 candidates were valid, but none was feasible. The best scores were
 `[0.999085, 1.010003, 1.031495]`.
 
-Thus Gate A has not demonstrated source-57 feasibility under current world
-support, world-translation support through `rho=3`, or the single declared
-reference-object-frame parameterization. This does not establish mathematical
-infeasibility and does not authorize more frame/scale searching. The active
-blocker is a separate design decision for an active corrective action
-parameterization. Observation Gate B, representability Gate C, fresh-PPO Gate
-D, the half-LR candidate, learned-gate training, reward changes, task
-acceptance and chunk commit all remain blocked.
+Gate A1 then used the existing source-57 candidate data for a final local
+controllability test. It replayed all 240 current-support and 512 `rho<=3`
+first actions with their original execution semantics; all saved first-step
+scores reproduced bitwise as float32. Because the parent archive stored `rho`
+as float32 while execution used float64, the original 512 float64 values were
+regenerated from the hash-bound seeds, CEM ranking and update rule. All 512
+round back to the archived float32 values.
+
+Separate affine response surrogates were informative on held-out final CEM
+iterations. For current support, position RMSE was `0.000293 m` versus a
+`0.000952 m` train-mean baseline, and velocity RMSE was `0.01830 m/s` versus
+`0.04223 m/s`. The `rho<=3` model obtained `0.000256 m` versus `0.000647 m`
+and `0.01243 m/s` versus `0.02272 m/s`. These are local predictive models, not
+physical Jacobians.
+
+The single box-constrained QP action from the current-support surrogate was
+then checked in the real simulator. Its predicted endpoint-58 position error
+was `0.109081 m`, but exact replay scored `1.017894` and failed. Per the frozen
+contract, Gate A1 then tested exactly one structured alternative: a shared
+two-scalar closed-loop position/velocity feedback law over sources 57--59.
+None of 192 candidates made all three endpoints feasible. The best gains were
+`kp=1.0`, `kv=0.0330068 s`, with scores
+`[1.017566, 1.048995, 1.080272]`.
+
+Gate A is therefore closed at its declared finite resolution. This remains a
+negative engineering result, not a mathematical proof that no 36-D action or
+feedback law can work. No additional axis/gain/frame/rho/per-source Gate-A
+search is authorized. Observation Gate B, representability Gate C, fresh-PPO
+Gate D, the half-LR candidate, learned suppression-gate training, reward
+changes, task acceptance and chunk commit remain blocked. The active blocker
+is now low-level impedance or force-aware contact controllability.

@@ -18,7 +18,7 @@ PYTHONPATH="$PWD/.env_mjwp313_overlay:$PWD/src:$PWD/scripts:$PWD/external/mink/s
   /data_all/zzx/egoengine/spider/.venv/bin/python -m pytest -q
 ```
 
-On 2026-09-27 this command passed **719 tests and 57 subtests**.
+On 2026-09-27 this command passed **725 tests and 57 subtests**.
 The 19 warnings are known upstream/diagnostic warnings: capsule-mesh MULTICCD
 capacity, PyTorch AMP deprecations, two Trimesh degenerate-volume warnings and
 seven SciPy pickle deprecations.
@@ -72,6 +72,7 @@ runs/taco_pour_source57_active_lag_correction_gate_v1/
 runs/taco_pour_action_feasibility_cem_v1/
 runs/taco_pour_action_feasibility_minimum_rho_v1/
 runs/taco_pour_action_feasibility_reference_object_frame_v1/
+runs/taco_pour_action_feasibility_gate_A1_v1/
 ```
 
 The first corrected PPO authorization is consumed. Replay passed the first
@@ -384,13 +385,24 @@ finds `0/512` feasible candidates for a constant world-translation multiplier
 `[0.9932946, 1.0009767, 1.0196047]`. The result is not a mathematical
 infeasibility proof and does not authorize a larger bound.
 
-The final declared Gate-A frame comparison interprets only right-wrist
+The declared Gate-A frame comparison interprets only right-wrist
 translation in the command-endpoint reference-tool frame, rotates it into the
 world command, and keeps the `0.05 m` local component scale. All 240 candidates
 respect actuator bounds, but none makes endpoints 58--60 all feasible; the
 best scores are `[0.9990851, 1.0100034, 1.0314951]`. All three best sequences
-are bitwise repeatable on CPU. Gate B/C/D, PPO training and chunk commit remain
-blocked pending a separately designed active corrective parameterization.
+are bitwise repeatable on CPU.
+
+Gate A1 closes the action-space gate. It replays 240 current-support and 512
+`rho<=3` saved first actions, and regenerates the latter's original float64
+`rho` values from the hash-bound parent CEM provenance before execution. Both
+local affine response models beat their held-out train-mean baselines. The one
+current-support surrogate-QP action nevertheless fails exact endpoint 58 at
+`1.0178940`. A final two-parameter closed-loop object position/velocity
+feedback audit finds `0/192` feasible candidates; its best three scores are
+`[1.0175656, 1.0489953, 1.0802718]`. Gate A is closed at this declared finite
+resolution. Gate B/C/D, PPO training and chunk commit remain blocked; the next
+required investigation is low-level impedance or force-aware contact
+controllability.
 
 ## Archived invalid performance evidence
 

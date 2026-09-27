@@ -8,7 +8,7 @@ evidence_policy:
   order: [paper, verified_implementation_defect, disclosed_local_proposal]
   paper_page_numbers: one_based_pdf_pages
   copied_defaults_are_author_settings: false
-  current_revision: gate_A_active_corrective_parameterization_decision_required
+  current_revision: low_level_impedance_or_force_aware_contact_controllability_required
 
 inputs:
   setting: user_approved_gt_oracle_validation_not_full_perception_reproduction
@@ -385,7 +385,7 @@ evaluation:
       right-hand tool contact is already absent. The predeclared evidence gate
       therefore does not authorize the half-learning-rate training candidate.
   postfix_single_actor_pass_half_LR_candidate:
-    status: frozen_blocked_not_selected_after_gate_A_action_feasibility_classification
+    status: frozen_blocked_after_gate_A1_closed_negative_at_declared_resolution
     paper_faithful: false
     contract: /data_all/zzx/3.2RL/configs/taco_pour_postfix_single_actor_pass_lr_half_candidate_v1.yaml
     sole_future_change: {actor_learning_rate: {baseline: 0.0001, candidate: 0.00005}}
@@ -846,7 +846,57 @@ evaluation:
     reward_change_authorized: false
     PPO_retraining_authorized: false
     chunk_acceptance_or_commit_authorized: false
-    next_read_only_direction: requires_separate_active_corrective_parameterization_design
+    next_read_only_direction: completed_by_action_feasibility_gate_A1
+  action_feasibility_gate_A1:
+    status: completed_final_read_only_gate_A_negative_at_declared_resolution
+    paper_faithful: false
+    classification: local_engineering_controllability_and_structured_feedback_not_EgoEngine_RL
+    contract: /data_all/zzx/3.2RL/configs/taco_pour_action_feasibility_gate_A1_v1.yaml
+    output: /data_all/zzx/3.2RL/runs/taco_pour_action_feasibility_gate_A1_v1
+    report: /data_all/zzx/3.2RL/runs/taco_pour_action_feasibility_gate_A1_v1/report.json
+    source_endpoint: 57
+    existing_first_actions_replayed: {current_support: 240, rho_le_3: 512}
+    saved_first_step_scores_bitwise_reproduced_as_float32: true
+    parent_float64_rho_exactly_regenerated_from_hash_bound_CEM_provenance: true
+    current_support_surrogate:
+      held_out_rows: 48
+      position_RMSE: 0.00029268150837009796
+      position_train_mean_baseline_RMSE: 0.0009516930313558052
+      velocity_RMSE: 0.018304648573433346
+      velocity_train_mean_baseline_RMSE: 0.042228257663900155
+      informative: true
+    rho_le_3_surrogate:
+      held_out_rows: 64
+      position_RMSE: 0.00025573706412536606
+      position_train_mean_baseline_RMSE: 0.0006473829619449705
+      velocity_RMSE: 0.012425115375520074
+      velocity_train_mean_baseline_RMSE: 0.022722234710100753
+      informative: true
+    current_support_QP:
+      exact_validation_actions: 1
+      predicted_position_error_m: 0.10908050654658302
+      exact_endpoint58_score: 1.0178940296173096
+      exact_endpoint58_passed: false
+    structured_object_motion_feedback:
+      equation: delta_p_obj = kp * position_error + kv * velocity_error
+      shared_scalar_gain_candidates: 192
+      current_support_only: true
+      feasible_candidates: 0
+      best_kp: 1.0
+      best_kv_seconds: 0.03300682384120368
+      best_scores: [1.0175656080245972, 1.0489952564239502, 1.08027184009552]
+    gate_A_closed: true
+    finite_negative_result_is_mathematical_infeasibility_proof: false
+    additional_axis_gain_frame_rho_or_per_source_search_authorized: false
+    gate_B_observation_sufficiency_allowed: false
+    gate_C_policy_representability_allowed: false
+    gate_D_fresh_PPO_allowed: false
+    actor_LR_5e_minus_5_unblocked: false
+    pure_learned_suppression_gate_training_authorized: false
+    reward_change_authorized: false
+    PPO_retraining_authorized: false
+    chunk_acceptance_or_commit_authorized: false
+    next_blocker: low_level_impedance_or_force_aware_contact_controllability_required
 
 runtime_contract:
   fail_closed: true
@@ -912,7 +962,7 @@ runtime_contract:
     cpu_commit_endpoint_offset: 20
 
 training_ready: false
-training_ready_scope: gate_A_active_corrective_parameterization_decision_required
+training_ready_scope: low_level_impedance_or_force_aware_contact_controllability_required
 
 audit_results:
   active_input: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/input_audit.json
@@ -956,6 +1006,7 @@ audit_results:
   action_feasibility_gate_A0: /data_all/zzx/3.2RL/runs/taco_pour_action_feasibility_cem_v1/report.json
   action_feasibility_minimum_rho_gate: /data_all/zzx/3.2RL/runs/taco_pour_action_feasibility_minimum_rho_v1/report.json
   action_feasibility_reference_object_frame_gate: /data_all/zzx/3.2RL/runs/taco_pour_action_feasibility_reference_object_frame_v1/report.json
+  action_feasibility_gate_A1: /data_all/zzx/3.2RL/runs/taco_pour_action_feasibility_gate_A1_v1/report.json
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -995,7 +1046,7 @@ historical_observation_normalization_misaligned:
     - old_checkpoint_task_performance_as_an_algorithm_baseline
 
 blocking_checks:
-  - gate_A_active_corrective_parameterization_decision_required
+  - low_level_impedance_or_force_aware_contact_controllability_required
 result_acceptance_blockers:
   - active_corrected_Replay_passes_only_30_of_40_in_second_window
   - postfix_single_actor_pass_PPO_passes_only_28_intervals_before_failure_at_endpoint49
@@ -1018,6 +1069,10 @@ result_acceptance_blockers:
   - source56_semantic_action_subspace_selection_exhausted_at_the_predeclared_resolution
   - tail_semantic_oracle_recovers_endpoint57_but_fails_endpoint58
   - tail_semantic_oracle_reaches_only_37_of_40
+  - gate_A1_current_support_surrogate_QP_fails_exact_endpoint58_validation
+  - gate_A1_structured_position_velocity_feedback_has_zero_of_192_feasible_candidates
+  - gate_A_closed_without_demonstrated_source57_three_step_feasibility
+  - low_level_impedance_or_force_aware_contact_controllability_required
   - selected_tail_modes_include_wrist_right_hand_and_full36_suppression_not_only_translation
   - deployable_nonlookahead_gate_and_active_correction_not_demonstrated
   - broader_tail_winner_names_include_near_ties_and_are_not_valid_learned_gate_labels

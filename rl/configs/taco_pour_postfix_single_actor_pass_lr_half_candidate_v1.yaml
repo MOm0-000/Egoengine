@@ -1,5 +1,5 @@
 schema: taco_pour_postfix_single_actor_pass_lr_half_candidate_v1
-status: frozen_blocked_not_selected_after_gate_A_action_feasibility_classification
+status: frozen_blocked_after_gate_A1_closed_negative_at_declared_resolution
 paper_faithful: false
 purpose: >-
   Freeze, but do not authorize, the single-variable local reproduction
@@ -144,6 +144,13 @@ latest_state_entry_evidence:
     path: /data_all/zzx/3.2RL/runs/taco_pour_action_feasibility_reference_object_frame_v1/report.json
     sha256: 8cfe2a0fa8f6cefa0e067fe1df42fd1cddbe58bfbee8e1f3b051c55923a835c5
   action_feasibility_reference_object_frame_feasible_candidates: 0
+  action_feasibility_gate_A1_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_action_feasibility_gate_A1_v1/report.json
+    sha256: 2b5c49e927ca54b202f5519f097ace3e875e02c42b470049e0c5e090cd6c900e
+  action_feasibility_gate_A1_QP_exact_endpoint58_passed: false
+  action_feasibility_gate_A1_structured_feedback_feasible_candidates: 0
+  action_feasibility_gate_A1_closed: true
+  next_blocker: low_level_impedance_or_force_aware_contact_controllability_required
   gate_B_observation_sufficiency_allowed: false
   gate_C_policy_representability_allowed: false
   gate_D_fresh_PPO_allowed: false
@@ -172,10 +179,14 @@ latest_state_entry_evidence:
     the existing state-feasible action bound. No gain or axis sweep is
     authorized. Gate A subsequently found no source57 three-step solution in
     the finite current-support, rho<=3 world-translation, or reference-object-
-    frame CEM candidate sets. These negative finite searches are not proofs of
-    mathematical infeasibility, but they require a separate active-corrective-
-    parameterization design before Gate B, Gate C or Gate D. This historical
-    LR candidate remains frozen and unauthorized.
+    frame CEM candidate sets. Gate A1 then fit informative held-out local
+    response surrogates from the saved actions, but its one current-support QP
+    action still failed exact endpoint-58 replay. The sole declared two-scalar
+    position/velocity feedback controller produced zero feasible candidates
+    out of 192. These negative finite tests are not proofs of mathematical
+    infeasibility, but Gate A is closed at the declared resolution and the next
+    blocker is low-level impedance or force-aware contact controllability.
+    This historical LR candidate remains frozen and unauthorized.
 
 evidence:
   source_run_report:
