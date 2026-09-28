@@ -1,0 +1,1379 @@
+{
+  "schema": "taco_pour_algorithmic_reproduction_training_candidate_v4",
+  "status": "completed_seed_robustness_100k_no_chunk_commit",
+  "classification": "local_algorithmic_reproduction_after_canonical_old_policy_likelihood_fix",
+  "paper_faithful": false,
+  "candidate": "A",
+  "seed": 2,
+  "backend": "CPU_MuJoCo_Warp_training_and_validation",
+  "fresh_actor_critic_optimizers_RMS": true,
+  "warm_start_used": false,
+  "initialization": {
+    "type": "fresh_formal_random_initialization",
+    "seed": 2
+  },
+  "pretraining_validation": {
+    "schema": "taco_pour_v4_seed_robustness_pretraining_validation",
+    "candidate": "A",
+    "seed": 2,
+    "optimizer_updates": 0,
+    "simulation_physics_steps_for_training": 0,
+    "summary": {
+      "successful_intervals": 29,
+      "first_failure_endpoint": 50,
+      "forty_of_forty": false,
+      "beats_Replay": false,
+      "meaningful_refinement": false,
+      "endpoint40_score": 0.8845897912979126,
+      "endpoint50_score": 1.0151573419570923,
+      "endpoint60_score": 1.2643283605575562
+    },
+    "checks": {
+      "deterministic_validation_saved_before_optimizer": true,
+      "is_40_interval_endpoint20_to60_rollout": true
+    },
+    "all_checks_passed": true,
+    "trajectory": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/pretraining_validation/trajectory.npz",
+      "sha256": "5c96da72afb9cd3c49baa454ae003b5f6227fa04d77f994e3110030804999755",
+      "bytes": 33369
+    }
+  },
+  "training": {
+    "worlds": 4,
+    "epochs": 62,
+    "actor_updates": 62,
+    "critic_updates": 248,
+    "simulation_physics_steps": 99200,
+    "simulation_control_intervals": 9920,
+    "wall_seconds": 1123.628915309906,
+    "actor_learning_rate": 0.0001,
+    "actor_mini_epochs": 1,
+    "critic_mini_epochs": 4,
+    "target_milestone": "100k"
+  },
+  "residual_action": {
+    "profile_id": "taco_pour_residual_action_scaled_v1",
+    "status": "resolved_local_unpublished",
+    "paper_faithful": false,
+    "provenance": "One controlled local repair of the diagnosed normalized-action unit mismatch. The existing +/-0.05 rad safety limit is retained; only the normalized output mapping changes. EgoEngine does not publish this residual scale.",
+    "profile_path": "/data_all/zzx/3.2RL/configs/taco_pour_residual_action_scaled_v1.yaml",
+    "profile_sha256": "71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4",
+    "policy_output_range": [
+      -1.0,
+      1.0
+    ],
+    "mapping_kind": "linear_scaled_candidate",
+    "residual_scale": 0.05,
+    "residual_clip_rad": 0.05,
+    "equation": "delta_a = clip(0.05 * u, -0.05, +0.05) rad",
+    "author_recovered_scale": false,
+    "controlled_experiment": {
+      "epochs": 8,
+      "seed": 0,
+      "endpoint_boundary": 20,
+      "lookahead_control_intervals": 40,
+      "ppo_horizon": 40,
+      "learning_rate": 0.0001,
+      "objective_profile_sha256": "8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9",
+      "observation_profile_sha256": "8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7",
+      "backend_contract_sha256": "c567ad04dabe1bfc1ff3c8f9ee81db52f9f71d181cd80d56de47c2b237ad65b0",
+      "simulator_config_sha256": "0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6",
+      "initialization_report_sha256": "9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a",
+      "reference_endpoint20_state": "Bitwise-equal to the CPU endpoint-20 boundary used by the frozen checkpoint validation; serialized artifact bytes may differ while all 362 state entries agree.",
+      "unchanged": [
+        "objective",
+        "contact_and_lift_coefficients",
+        "observation",
+        "network",
+        "learning_rate",
+        "PPO_hyperparameters",
+        "training_seed",
+        "CPU_acceptance"
+      ]
+    }
+  },
+  "action_distribution": {
+    "profile_id": "taco_pour_baseline_preserving_truncated_gaussian_v2",
+    "profile_path": "/data_all/zzx/3.2RL/configs/taco_pour_baseline_preserving_truncated_gaussian_v2.yaml",
+    "profile_sha256": "3187a0b50ad79a682a2f7754f4749e07e1c024d313fd23d3a72721b94da60604",
+    "status": "engineering_candidate_gate_only",
+    "paper_faithful": false,
+    "distribution": {
+      "kind": "independent_state_truncated_normal",
+      "base_actor_outputs": [
+        "mu",
+        "sigma"
+      ],
+      "residual_scale": 0.05,
+      "residual_scale_changed": false,
+      "reference_snap_tolerance": 2e-07,
+      "execution_reference": "formal_reference_ctrl_unmodified",
+      "bound_construction_reference": "formal_reference_ctrl_with_baseline_violation_accounting",
+      "minimum_normalization_mass": 1e-12,
+      "normalized_bounds": {
+        "semantics": "do_not_worsen_baseline_ctrlrange_violation",
+        "zero_residual_in_every_support": true,
+        "low": "maximum_negative_action_whose_raw_command_does_not_worsen_baseline_violation",
+        "high": "maximum_positive_action_whose_raw_command_does_not_worsen_baseline_violation"
+      },
+      "stochastic_action": "inverse_CDF_sample_from_Normal_mu_sigma_truncated_to_low_high",
+      "deterministic_action": "clip_mu_to_state_bounds",
+      "official_minus1_plus1_clamp_enabled": false,
+      "actuator_ctrlrange_retained_as_final_safety_backstop": true,
+      "rollout_buffer_fields": [
+        "action_lows",
+        "action_highs"
+      ],
+      "PPO_log_probability": "truncated_Normal_with_state_bound_normalizer",
+      "entropy": "exact_independent_truncated_Normal_entropy",
+      "scheduler_KL": "same_action_same_bounds_sample_estimate"
+    },
+    "promotion": {
+      "optimizer_training_authorized": false,
+      "task_level_PPO_authorized": false,
+      "chunk_commit_authorized": false,
+      "required_before_authorization": [
+        "bitwise_zero_residual_identity_for_all_reference_rows",
+        "zero_inside_every_state_dependent_support",
+        "bounds_do_not_worsen_baseline_ctrlrange_violation",
+        "exact_endpoint20_to60_Replay_equivalence"
+      ]
+    }
+  },
+  "checkpoints": {
+    "0": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/checkpoints/epoch_0000.pt.gz",
+      "artifact_sha256": "c8078e8fe47631056cc1b78f62c9451d6cfbf88ef214b68146757904233178aa",
+      "uncompressed_sha256": "c1df28824c17f76dcb56efe0cfdd1bce42cdb6bf5e0a11978dd21b9182d0ee6f",
+      "bytes": 26995802,
+      "payload_roundtrip_exact": true,
+      "checkpoint_validation_passed": true
+    },
+    "62": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/checkpoints/epoch_0062.pt.gz",
+      "artifact_sha256": "c780c5956782d7ff504524f57dfed6831c81bb910d8a332e57377d0a278e72ec",
+      "uncompressed_sha256": "733de767d5d01682e2840dc58bcbe61fa631a2d57e29096ffd99e81b8043eeee",
+      "bytes": 81357796,
+      "payload_roundtrip_exact": true,
+      "checkpoint_validation_passed": true
+    }
+  },
+  "validations": {
+    "0": {
+      "epoch": 0,
+      "simulation_physics_steps": 0,
+      "summary": {
+        "successful_intervals": 29,
+        "first_failure_endpoint": 50,
+        "forty_of_forty": false,
+        "beats_Replay": false,
+        "meaningful_refinement": false,
+        "endpoint40_score": 0.8845897912979126,
+        "endpoint50_score": 1.0151573419570923,
+        "endpoint60_score": 1.2643283605575562
+      },
+      "trajectory": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/validations/epoch_0000.npz",
+        "sha256": "7a683bb0ce430e005f373efcc106302d75c687b19ae38b69d858088f9d31f388",
+        "bytes": 12989
+      },
+      "checkpoint": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/checkpoints/epoch_0000.pt.gz",
+        "artifact_sha256": "c8078e8fe47631056cc1b78f62c9451d6cfbf88ef214b68146757904233178aa",
+        "uncompressed_sha256": "c1df28824c17f76dcb56efe0cfdd1bce42cdb6bf5e0a11978dd21b9182d0ee6f",
+        "bytes": 26995802,
+        "payload_roundtrip_exact": true,
+        "checkpoint_validation_passed": true
+      },
+      "chunk_commit_written": false
+    },
+    "62": {
+      "epoch": 62,
+      "simulation_physics_steps": 99200,
+      "summary": {
+        "successful_intervals": 36,
+        "first_failure_endpoint": 57,
+        "forty_of_forty": false,
+        "beats_Replay": true,
+        "meaningful_refinement": true,
+        "endpoint40_score": 0.66825270652771,
+        "endpoint50_score": 0.7571350336074829,
+        "endpoint60_score": 1.135213851928711
+      },
+      "trajectory": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/validations/epoch_0062.npz",
+        "sha256": "2e025590e4eb2a315d9f2428d1fd03bd9fee8658c491ef8a780c5f44a2a949f9",
+        "bytes": 10639
+      },
+      "checkpoint": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/checkpoints/epoch_0062.pt.gz",
+        "artifact_sha256": "c780c5956782d7ff504524f57dfed6831c81bb910d8a332e57377d0a278e72ec",
+        "uncompressed_sha256": "733de767d5d01682e2840dc58bcbe61fa631a2d57e29096ffd99e81b8043eeee",
+        "bytes": 81357796,
+        "payload_roundtrip_exact": true,
+        "checkpoint_validation_passed": true
+      },
+      "chunk_commit_written": false
+    }
+  },
+  "learning_curve": {
+    "0": {
+      "epochs": 0,
+      "actor_updates": 0,
+      "mean_post_update_KL": null,
+      "max_post_update_KL": null,
+      "mean_ratio_outside_0p8_1p2_fraction": null,
+      "mean_deterministic_action_bound_fraction": null,
+      "mean_deterministic_effective_residual_RMS": null,
+      "mean_training_reward": null,
+      "maximum_rollout_to_canonical_ratio_error": null,
+      "maximum_canonical_optimizer_ratio_identity_error": null
+    },
+    "62": {
+      "epochs": 62,
+      "actor_updates": 62,
+      "mean_post_update_KL": 0.013461513622089246,
+      "max_post_update_KL": 0.10860736460787526,
+      "mean_ratio_outside_0p8_1p2_fraction": 0.2300403221480308,
+      "mean_deterministic_action_bound_fraction": 0.3957241265283477,
+      "mean_deterministic_effective_residual_RMS": 0.035445243901302735,
+      "mean_training_reward": 0.29633327621606087,
+      "maximum_rollout_to_canonical_ratio_error": 7.62939453125e-06,
+      "maximum_canonical_optimizer_ratio_identity_error": 0.0,
+      "all_pre_optimizer_identity_checks_passed": true
+    }
+  },
+  "training_visitation": {
+    "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/manifest.json",
+    "sha256": "f1bab3931f086d179d0d67adf137e21f8a37458da3e8c7756c3cab8f3e00c686",
+    "schema": "taco_ppo_training_visitation_v5",
+    "status": "complete",
+    "logging_semantics": {
+      "endpoint_alignment": "transition t->t+1 commands ctrl[t+1], scores physical state[t+1] against ref[t+1], and exposes ref[t+2] to the next actor observation except for reference-tail clipping",
+      "sampled_action_preclamp": "stochastic action sampled from the PPO policy distribution before the official [-1,1] clamp; this is not actor mean mu",
+      "sampled_action_clamped": "the same sampled action after the official [-1,1] clamp",
+      "actor_mu": "mean of the Gaussian PPO policy distribution used to draw the recorded sample",
+      "actor_sigma": "strictly-positive standard deviation (exp(logstd), not variance) of the Gaussian PPO policy distribution used to draw the recorded sample",
+      "reference_ctrl": "full residual-action control target at transition t->t+1 before the policy residual and before actuator ctrlrange",
+      "requested_residual": "full action-space signed control-target offset after local scale and formal safety clip, before actuator ctrlrange",
+      "effective_residual_after_ctrlrange": "full action-space signed control-target offset remaining after the model's enabled actuator ctrlrange clamp; not realized qpos motion",
+      "residual_lost_to_ctrlrange": "signed requested minus effective control-target residual",
+      "legacy_v2_applied_residual": "historical v2 right_wrist_applied_residual equals requested_residual for its recorded six dimensions; v2 artifacts remain immutable",
+      "actor_distribution_parameters": "mu and sigma are passively captured from the same official get_action_values result as the sampled action; no extra actor forward pass is performed",
+      "contact_summary": "control-endpoint hand-object finger flags; not substep collision topology",
+      "write_timing": "rollout samples are held in memory and written only at the next epoch boundary or after training completes"
+    },
+    "incomplete_step_discarded": false,
+    "action_contract": {
+      "dimensions": 36,
+      "actuator_names": [
+        "R_forearm_tx_position",
+        "R_forearm_ty_position",
+        "R_forearm_tz_position",
+        "R_forearm_roll_position",
+        "R_forearm_pitch_position",
+        "R_forearm_yaw_position",
+        "right_thumb_bend_position",
+        "right_thumb_rota1_position",
+        "right_thumb_rota2_position",
+        "right_index_bend_position",
+        "right_index_joint1_position",
+        "right_index_joint2_position",
+        "right_middle_joint1_position",
+        "right_middle_joint2_position",
+        "right_ring_joint1_position",
+        "right_ring_joint2_position",
+        "right_pinky_joint1_position",
+        "right_pinky_joint2_position",
+        "L_forearm_tx_position",
+        "L_forearm_ty_position",
+        "L_forearm_tz_position",
+        "L_forearm_roll_position",
+        "L_forearm_pitch_position",
+        "L_forearm_yaw_position",
+        "left_thumb_bend_position",
+        "left_thumb_rota1_position",
+        "left_thumb_rota2_position",
+        "left_index_bend_position",
+        "left_index_joint1_position",
+        "left_index_joint2_position",
+        "left_middle_joint1_position",
+        "left_middle_joint2_position",
+        "left_ring_joint1_position",
+        "left_ring_joint2_position",
+        "left_pinky_joint1_position",
+        "left_pinky_joint2_position"
+      ],
+      "coordinate_units": [
+        "m",
+        "m",
+        "m",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "m",
+        "m",
+        "m",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad"
+      ],
+      "residual_scale": 0.05,
+      "residual_clip": 0.05,
+      "ctrlrange": {
+        "control_clamping_enabled": true,
+        "model_disableflags": 0,
+        "ctrllimited": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "ctrlrange": [
+          [
+            -5.0,
+            5.0
+          ],
+          [
+            -5.0,
+            5.0
+          ],
+          [
+            -5.0,
+            5.0
+          ],
+          [
+            -6.2,
+            6.2
+          ],
+          [
+            -6.2,
+            6.2
+          ],
+          [
+            -6.2,
+            6.2
+          ],
+          [
+            0.0,
+            1.83
+          ],
+          [
+            -1.05,
+            1.57
+          ],
+          [
+            -0.175,
+            1.83
+          ],
+          [
+            -0.175,
+            0.175
+          ],
+          [
+            0.0,
+            1.92
+          ],
+          [
+            0.0,
+            1.92
+          ],
+          [
+            0.0,
+            1.92
+          ],
+          [
+            0.0,
+            1.94
+          ],
+          [
+            0.0,
+            1.92
+          ],
+          [
+            0.0,
+            1.92
+          ],
+          [
+            0.0,
+            1.92
+          ],
+          [
+            0.0,
+            1.92
+          ],
+          [
+            -5.0,
+            5.0
+          ],
+          [
+            -5.0,
+            5.0
+          ],
+          [
+            -5.0,
+            5.0
+          ],
+          [
+            -6.2,
+            6.2
+          ],
+          [
+            -6.2,
+            6.2
+          ],
+          [
+            -6.2,
+            6.2
+          ],
+          [
+            0.0,
+            1.83
+          ],
+          [
+            -1.05,
+            1.57
+          ],
+          [
+            -0.17,
+            1.83
+          ],
+          [
+            -0.175,
+            0.175
+          ],
+          [
+            0.0,
+            1.92
+          ],
+          [
+            0.0,
+            1.92
+          ],
+          [
+            0.0,
+            1.92
+          ],
+          [
+            0.0,
+            1.92
+          ],
+          [
+            0.0,
+            1.92
+          ],
+          [
+            0.0,
+            1.92
+          ],
+          [
+            0.0,
+            1.92
+          ],
+          [
+            0.0,
+            1.92
+          ]
+        ]
+      }
+    },
+    "object_roles": [
+      "tool",
+      "target"
+    ],
+    "hand_roles": [
+      "right",
+      "left"
+    ],
+    "epochs": [
+      {
+        "epoch": 1,
+        "frame_at_start": 0,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0001_visits.npz",
+          "sha256": "91be420493aa16c99d762ec7b784775b7dc6132863e54b7e1e31a050f24d1ae6"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0001_summary.json",
+          "sha256": "6aa5f00325f18cae94b27268e1174196b25bb8f12943282428bfa46dd1eda72b"
+        }
+      },
+      {
+        "epoch": 2,
+        "frame_at_start": 160,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0002_visits.npz",
+          "sha256": "db55dbf9801befade2b56bdbfcd36afb53867bbc560d8840896a035cf76d321b"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0002_summary.json",
+          "sha256": "fbc34b0ee4f88180d54ec8266fed940e2530f8d3d993a08ebb943bc91f1bcb4c"
+        }
+      },
+      {
+        "epoch": 3,
+        "frame_at_start": 320,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0003_visits.npz",
+          "sha256": "86ac1d9c4f84ef632d1c61c905a03ee4b646ad6395fe13e3d4bcc93ad30ad5a4"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0003_summary.json",
+          "sha256": "53665c4e151c896b02e52f2d90ed1a23a959c8f8606b429332e9cc25a496fecd"
+        }
+      },
+      {
+        "epoch": 4,
+        "frame_at_start": 480,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0004_visits.npz",
+          "sha256": "f5f77c4f8c70be9abf4689f41150cd8ef409b06493941bea1e700a700d190cee"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0004_summary.json",
+          "sha256": "b99e7acfcdd0965fcf52a1b8ecb399dbde6cf7381826378ba977091c30d46413"
+        }
+      },
+      {
+        "epoch": 5,
+        "frame_at_start": 640,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0005_visits.npz",
+          "sha256": "bd2995d4aa335e3ad7a83d4a5c9f4f0bb1643a5d036818d42606f95a241e6ccf"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0005_summary.json",
+          "sha256": "ed8cbfda54f89076796c47024a3ffb8ade4cc036b74a2368d7f082402c623177"
+        }
+      },
+      {
+        "epoch": 6,
+        "frame_at_start": 800,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0006_visits.npz",
+          "sha256": "da07b95481ea0be1da1c4b7e2af19adc0e6b6708ec8e5fc2e2e8af2c94071779"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0006_summary.json",
+          "sha256": "ec7bac9bd3696e6960e270bf0c3848271f84c771c6030253c385580b6978df2d"
+        }
+      },
+      {
+        "epoch": 7,
+        "frame_at_start": 960,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0007_visits.npz",
+          "sha256": "8cd5c737b6c3eb80f201a66c1034d6fd6e88ba4cb56e2b532ea9ed64cd4b453d"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0007_summary.json",
+          "sha256": "2abf93713213a3fe58c881eb05130d537988a24bba28e8de55bd62e68452baa7"
+        }
+      },
+      {
+        "epoch": 8,
+        "frame_at_start": 1120,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0008_visits.npz",
+          "sha256": "8c1451c852bdfb5cdaa43eb8fe55e94b0534c35e3207730b9a763f26ee610aed"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0008_summary.json",
+          "sha256": "fdfa89d53aa64ed29b8959da12f9a757faa1567efbf1b5b1f354ce31ac0ec821"
+        }
+      },
+      {
+        "epoch": 9,
+        "frame_at_start": 1280,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0009_visits.npz",
+          "sha256": "4e1f993014e7eafbacdbe099c6cdec0f6864e2cdc7b0042a46efe0f9752d5c49"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0009_summary.json",
+          "sha256": "7f02591b0f1e50068ceee2f0d08c6fc96244ad1639e234374047d3caa091bf96"
+        }
+      },
+      {
+        "epoch": 10,
+        "frame_at_start": 1440,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0010_visits.npz",
+          "sha256": "2f8d08864801d6a94363876f07d8a0be2a9abe904c8f73fd6b15e0dbf89e77bc"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0010_summary.json",
+          "sha256": "0f8c3126fa6874dac7d0c39c4b267a5ea9b29022c80e902dc016f58beb0e44a4"
+        }
+      },
+      {
+        "epoch": 11,
+        "frame_at_start": 1600,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0011_visits.npz",
+          "sha256": "5b63ebb02069c9a64506b90932b6b31e2b0a7652799df6dabf17315e070be9ca"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0011_summary.json",
+          "sha256": "3409adfcc810edc9e0973a482f4c0ae7961a39815b3af904bee2795fb51141a1"
+        }
+      },
+      {
+        "epoch": 12,
+        "frame_at_start": 1760,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0012_visits.npz",
+          "sha256": "ed558295a3f58fe81ec1dc12bd8cccc503fe4f4d62ecca55fa31bff2ee68374f"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0012_summary.json",
+          "sha256": "a1d4cca9d136545536753d0a8dc687cef9850278ee5b6b7a31c22bd2d3609f9a"
+        }
+      },
+      {
+        "epoch": 13,
+        "frame_at_start": 1920,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0013_visits.npz",
+          "sha256": "348e9e66e217a589210704f870431942734300badbbd37a6edf679a35d79c912"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0013_summary.json",
+          "sha256": "175dfd98bbc54084464142a8517617380af31ca082b05ccaef18645d0799a533"
+        }
+      },
+      {
+        "epoch": 14,
+        "frame_at_start": 2080,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0014_visits.npz",
+          "sha256": "c5e6bf89a6942b4a2bb45fc28bf78ffa9a36943c40a40f46a820836eddbbe6a8"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0014_summary.json",
+          "sha256": "f63de5410571bdfac11d2c1f0afdf953b90754b36a3033e4d057e499152ef84c"
+        }
+      },
+      {
+        "epoch": 15,
+        "frame_at_start": 2240,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0015_visits.npz",
+          "sha256": "76091b96cef948c8c3ffc852671a5d3f4ffcef1e536ac9f805899221dc8d4a33"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0015_summary.json",
+          "sha256": "de2adefb9394f7131282ed799c3ace52fb6d346355bd0edfd88f971341e0015a"
+        }
+      },
+      {
+        "epoch": 16,
+        "frame_at_start": 2400,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0016_visits.npz",
+          "sha256": "29f6aab80d7af199c7d3d65fc9b7e081435f2e333a8d66fb31018f52c45765c0"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0016_summary.json",
+          "sha256": "63dd1ef75a67735979e1d065da6653952460b4ef65315e281981fed6ae58f130"
+        }
+      },
+      {
+        "epoch": 17,
+        "frame_at_start": 2560,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0017_visits.npz",
+          "sha256": "d86368499ee9ee63596f4579b38f202f4b54983d31979abe67d995e4149db045"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0017_summary.json",
+          "sha256": "d0eebc10ff9e9556dbdbe12a838661452859f2d69807bb0a7f674708ad846389"
+        }
+      },
+      {
+        "epoch": 18,
+        "frame_at_start": 2720,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0018_visits.npz",
+          "sha256": "f5b3128f6343cde68a3dce4fc2d2c19128ce667e2a33568a574063356396386b"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0018_summary.json",
+          "sha256": "d463f5b281717490a882f5c242ea6d02a18f934e5963eb20e6f535117dc0be44"
+        }
+      },
+      {
+        "epoch": 19,
+        "frame_at_start": 2880,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0019_visits.npz",
+          "sha256": "80f70fc034dad0fef2497b87860777422f26519f6be1bf6d1b700bb34848442a"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0019_summary.json",
+          "sha256": "68c23f036619e23790ba225967eb73b79051138778c371e16310dd6c909a8e68"
+        }
+      },
+      {
+        "epoch": 20,
+        "frame_at_start": 3040,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0020_visits.npz",
+          "sha256": "9ff3fc03dbca8a5f323be8c44042764a10718262efbeca82d72234865d8d400b"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0020_summary.json",
+          "sha256": "e19d76be3bbaaad54c09241ffe7b8b1ae77ddbe67caeec8c19cbb6a198a2c97d"
+        }
+      },
+      {
+        "epoch": 21,
+        "frame_at_start": 3200,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0021_visits.npz",
+          "sha256": "de56b25ff5b6e83af9e5b3ba1de5ef5d7e4fccb82826ca594b1badf6adfbcf8a"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0021_summary.json",
+          "sha256": "c10e603ea3815792287f51554e4204f9e5ad13c8f88342563515e8fc8541f4ea"
+        }
+      },
+      {
+        "epoch": 22,
+        "frame_at_start": 3360,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0022_visits.npz",
+          "sha256": "79b536fc96a836d57b161c128dcd3804f62d2646840b5f23c0d12a22d5686d17"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0022_summary.json",
+          "sha256": "64e04d3f259fa16dccf72a56169e13e95d7847c839760e5b599c278725a437df"
+        }
+      },
+      {
+        "epoch": 23,
+        "frame_at_start": 3520,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0023_visits.npz",
+          "sha256": "46ef1aad89315f3a3fe155907d3683c73a3e42136abd69009a9c6d8be2abff63"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0023_summary.json",
+          "sha256": "35f2b76972c64ba97cfe736463838ed67a8383a9ed6c7d49c049f56c86f5a53c"
+        }
+      },
+      {
+        "epoch": 24,
+        "frame_at_start": 3680,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0024_visits.npz",
+          "sha256": "8477f4d8e8ee7111c29443f86b245a346f2083f9db7b5253d3088deb24ef4df6"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0024_summary.json",
+          "sha256": "0b409a20aae978dd0fd1eb1d718c07f95d778d6ae93e0c4e25930fe0777ad432"
+        }
+      },
+      {
+        "epoch": 25,
+        "frame_at_start": 3840,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0025_visits.npz",
+          "sha256": "20661a2abe91387e12c9f12a073457b2bc61e83351fa998682fa412464b935e6"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0025_summary.json",
+          "sha256": "7890ea5a41eb69dce87c4985e68f3d9d4c6822c82c9b059bf19bb92300f0311f"
+        }
+      },
+      {
+        "epoch": 26,
+        "frame_at_start": 4000,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0026_visits.npz",
+          "sha256": "a5bc1aba05919c4842e3a6ccfaaf08056b38c90da50f9d7eefc9c9309517d654"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0026_summary.json",
+          "sha256": "75a187be96f27ed316d3fac706be938edfbbc4fcfd38910bcccbda42040732cf"
+        }
+      },
+      {
+        "epoch": 27,
+        "frame_at_start": 4160,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0027_visits.npz",
+          "sha256": "4e0631596aae0b3a3d1967b2526dec294f5d915ae65922516f4f2e22f8aa18a9"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0027_summary.json",
+          "sha256": "7b71ae744083c3961f8cfed094212be3f9f1d23f3060dd6262f379c6400e9f8c"
+        }
+      },
+      {
+        "epoch": 28,
+        "frame_at_start": 4320,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0028_visits.npz",
+          "sha256": "09929c200719d710180bae5755f631bbae26f25730550af602d0aeaceafb8036"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0028_summary.json",
+          "sha256": "528d46eef987208162faafdcae210effe35db6504daadb50232e903b55e41a72"
+        }
+      },
+      {
+        "epoch": 29,
+        "frame_at_start": 4480,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0029_visits.npz",
+          "sha256": "ec5aae95531873b330ae3c3f5276dc23236787fc3f3cfa4ae0bd02b42eda497f"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0029_summary.json",
+          "sha256": "51aaf7aefe03b0ba346c957b224654a787c50e620338f99e86be385b13265a13"
+        }
+      },
+      {
+        "epoch": 30,
+        "frame_at_start": 4640,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0030_visits.npz",
+          "sha256": "a383aa9bab486347d6e6ae8b634043a3cc3b0b78b5b6a5c21a1f7651f753d542"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0030_summary.json",
+          "sha256": "303599f7b99f7171ad4af23d04b0189f34fc26c057de187a32e35f3308c4d39c"
+        }
+      },
+      {
+        "epoch": 31,
+        "frame_at_start": 4800,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0031_visits.npz",
+          "sha256": "4294d43f335393f8e079c38df254eb72dfd131cda6331736995d9791a61017c9"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0031_summary.json",
+          "sha256": "00f34898a0904792478f65fddcaccf03ed75e3a7497aabbf000d1c1e2537c010"
+        }
+      },
+      {
+        "epoch": 32,
+        "frame_at_start": 4960,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0032_visits.npz",
+          "sha256": "746d53b74cf84e095a065791867c826e91878518a1a1c5dd3873010e8a915c29"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0032_summary.json",
+          "sha256": "2e5c92a23fda09030be73cab59ccb3df02e013aaf6a683e80ca6220c6d841959"
+        }
+      },
+      {
+        "epoch": 33,
+        "frame_at_start": 5120,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0033_visits.npz",
+          "sha256": "739d98c3a16652ea7afa781aaa8720c2cf658965307b27273bb8d5a4133bae4b"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0033_summary.json",
+          "sha256": "b4449105019247bc7227999120e65cf24760ea1b4465af4cddb7923641a9601c"
+        }
+      },
+      {
+        "epoch": 34,
+        "frame_at_start": 5280,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0034_visits.npz",
+          "sha256": "5c760b65880b6ee57ca2adffac75b747f2a83482447ac933a98a401b7ff8f823"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0034_summary.json",
+          "sha256": "a663223300afa431cd1ff83390da8d043bcadcc1e29b030b29c0bfcac8ebcaaf"
+        }
+      },
+      {
+        "epoch": 35,
+        "frame_at_start": 5440,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0035_visits.npz",
+          "sha256": "f33056dfee5a1f1c046771b9be5ea0d96bcf936a91620cc364239b3b048cdccd"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0035_summary.json",
+          "sha256": "ec0d0f304189cf543be17711d37320280aa113084e92ac58806544eb4d7d5a91"
+        }
+      },
+      {
+        "epoch": 36,
+        "frame_at_start": 5600,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0036_visits.npz",
+          "sha256": "ce155cd239d00c0b56d6f3749f30c47fb5506da14a5505da42241acacb256838"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0036_summary.json",
+          "sha256": "79a2cff7595e0e9a9eb69812e2ddd346418c54189d50115dd687afaca39c918f"
+        }
+      },
+      {
+        "epoch": 37,
+        "frame_at_start": 5760,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0037_visits.npz",
+          "sha256": "a85c9ce6a8c17cbff40d7e55d07bbd1ab24c86474a46a91b569ea7e056e390f7"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0037_summary.json",
+          "sha256": "b9603ed0c6404be8bb65b5e2e90e25f7fd1a2e2a77a1e087975ab347d9c61962"
+        }
+      },
+      {
+        "epoch": 38,
+        "frame_at_start": 5920,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0038_visits.npz",
+          "sha256": "19881bc2764f3584a5c02a3069f1923a68e09b40f3bb7e369512c3b28ce03e5f"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0038_summary.json",
+          "sha256": "7fadc90f4017006c150e85b0df43ca0b9c302b5c2920af9a7be7d9cd00248912"
+        }
+      },
+      {
+        "epoch": 39,
+        "frame_at_start": 6080,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0039_visits.npz",
+          "sha256": "afeda004212707495ef3d81ebd2a4024ca52c24a7d94f50a316b60f1258d2199"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0039_summary.json",
+          "sha256": "f889d011835791eb00bdb46824fff4cfa83e7a67aedfc0877f3e52479bda5bb1"
+        }
+      },
+      {
+        "epoch": 40,
+        "frame_at_start": 6240,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0040_visits.npz",
+          "sha256": "4f6922b1dae6b7d028820e5d6be32a9ed49237d6f46dc54a3e0c71574b228794"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0040_summary.json",
+          "sha256": "78d2e1b51a81d9473fdd21c9d3b27d2a61e1ab27bebea86c6a6fe3e7a9040d0f"
+        }
+      },
+      {
+        "epoch": 41,
+        "frame_at_start": 6400,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0041_visits.npz",
+          "sha256": "41ce0ccce089ed717895cab28d8bc7a70ee07e13887f30539e27108bb36b112f"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0041_summary.json",
+          "sha256": "f4355387e9666ec268d00425ee4225a632e14b1fbccbb15daf3f3bfb9abd0ac4"
+        }
+      },
+      {
+        "epoch": 42,
+        "frame_at_start": 6560,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0042_visits.npz",
+          "sha256": "abfe63038c332b2ec46c7531949d011e84c6a7e72dd0471f2ab744b4b713f97f"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0042_summary.json",
+          "sha256": "6fad277913901708cadff1d361a053fc9dade6e8ba2b0f54ec8cec2d13bfdd45"
+        }
+      },
+      {
+        "epoch": 43,
+        "frame_at_start": 6720,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0043_visits.npz",
+          "sha256": "6b16ce5b7c58043c0c01d15c7d2e08f67f87b54212e53e566cfcc53fbe118f31"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0043_summary.json",
+          "sha256": "f6302de1f14a0bc10341e22bbce7408df828ef4fac0559a1f2d109f6fa6532f4"
+        }
+      },
+      {
+        "epoch": 44,
+        "frame_at_start": 6880,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0044_visits.npz",
+          "sha256": "465791144f914c86a555c78cabec299f61029637eff482827a7fd3aa1528d6d4"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0044_summary.json",
+          "sha256": "b7c074fc84dc67d3062bd0bc11866a62241a6eaefc0d53fd6cd4784261064d0f"
+        }
+      },
+      {
+        "epoch": 45,
+        "frame_at_start": 7040,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0045_visits.npz",
+          "sha256": "7bb9b569d668df3310a8453a3cc6a194b3f1131eb000a0a802f1a3a678de7def"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0045_summary.json",
+          "sha256": "4f73eabe5454e18f6a334ba4d4e001dfd6eb19fad3113e6dfd53374be1f53eb8"
+        }
+      },
+      {
+        "epoch": 46,
+        "frame_at_start": 7200,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0046_visits.npz",
+          "sha256": "fbde7347f3f18ad48b03428add36568ee8dcbf0a87c3cef765c74551a8310179"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0046_summary.json",
+          "sha256": "b05762fb5ea72837a1f1724b8708760ce356901791b537fc9ee43926f7d59e26"
+        }
+      },
+      {
+        "epoch": 47,
+        "frame_at_start": 7360,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0047_visits.npz",
+          "sha256": "12b92d4f9f38fbec7356eda4738409ec18aec0af78fdc30e645462735adae2d7"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0047_summary.json",
+          "sha256": "21607e96abe55198cb538bb7ed3a5a3ad4e60274f14f149e4639313dc1782334"
+        }
+      },
+      {
+        "epoch": 48,
+        "frame_at_start": 7520,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0048_visits.npz",
+          "sha256": "4caab3442017561f16abd177d03fc142dc22354c722386edf4c1dfd4f3f10f94"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0048_summary.json",
+          "sha256": "b7cf6953e48230fe4f2036dbfa1013001fca0ee018ac3a38bbcb3327e5b3cf43"
+        }
+      },
+      {
+        "epoch": 49,
+        "frame_at_start": 7680,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0049_visits.npz",
+          "sha256": "f1c99487e6cd94540777dea4aae325ac7cfa3d986e5aa7700f179dc423bec9c9"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0049_summary.json",
+          "sha256": "3afc75ebfa9ad8efda7d933cca66065991bd095a7ca2f897cd496e754c8953eb"
+        }
+      },
+      {
+        "epoch": 50,
+        "frame_at_start": 7840,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0050_visits.npz",
+          "sha256": "ae3facdd682d731730f6a412f755af5843c19466b1b67e213c8a6e883531e3e5"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0050_summary.json",
+          "sha256": "fe350ed67d3cea3bf0ee41e57de8f882737191c7a957f7a0236636c41acb2082"
+        }
+      },
+      {
+        "epoch": 51,
+        "frame_at_start": 8000,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0051_visits.npz",
+          "sha256": "b3be12722ce8a2cda86ad5c4124ff1bf999e7e32cc759a4eba951dc4048a94ec"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0051_summary.json",
+          "sha256": "8aecd98f4ee992cc0bcd63ff3483be1ba4617f086966d47518b0047e96d4ff98"
+        }
+      },
+      {
+        "epoch": 52,
+        "frame_at_start": 8160,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0052_visits.npz",
+          "sha256": "4167205c156e7857d8db5556aa4112a64af43659add112d4604fa1f0f0cf7e96"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0052_summary.json",
+          "sha256": "3c037c7ff10ffcc4b9a17d69c952df58312792b6dc8f8c59b7d0b5094f2874f5"
+        }
+      },
+      {
+        "epoch": 53,
+        "frame_at_start": 8320,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0053_visits.npz",
+          "sha256": "b626e71237aadd4a0568fa7a5d26d9403d017dbf5fda82203d264b628d016b3a"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0053_summary.json",
+          "sha256": "cea2f402d11bfe71c04227427c50a339a7bb85fc9d9d58d1d87e5f21f95b5677"
+        }
+      },
+      {
+        "epoch": 54,
+        "frame_at_start": 8480,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0054_visits.npz",
+          "sha256": "54995737e05f8c4fcfb0ba19554823e0a439d140f8fad85ba38cd441ce75ea40"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0054_summary.json",
+          "sha256": "ed61da140b57abe9a70aaf12d1375dc66e6a4babec3012850c3c983110f9f9dd"
+        }
+      },
+      {
+        "epoch": 55,
+        "frame_at_start": 8640,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0055_visits.npz",
+          "sha256": "284d48db0cbef0c9e6c878dc76c16201c762f6eb8bc18a7c10a9a3fdbc5ecbe5"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0055_summary.json",
+          "sha256": "d37e24478f0fdf0c78fdabc9f7584357c4193f3cf4659330f54cdb137e41dec8"
+        }
+      },
+      {
+        "epoch": 56,
+        "frame_at_start": 8800,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0056_visits.npz",
+          "sha256": "50af6c872727db4a5710b4ba87108222702f84c66373bae5744f22d0dad834e4"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0056_summary.json",
+          "sha256": "b02c328086bcf1f751f3b202aad58bcf15d684049f76e8a649673f0ff15542ed"
+        }
+      },
+      {
+        "epoch": 57,
+        "frame_at_start": 8960,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0057_visits.npz",
+          "sha256": "857a2fcde38038b8d7eaa256fdd9248dbb643932bf18e923af48cf0f8d21ae1a"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0057_summary.json",
+          "sha256": "255dd0b74f083756c7570363e1895d7b5fe747897b08bbdde53a32b94a30ca0a"
+        }
+      },
+      {
+        "epoch": 58,
+        "frame_at_start": 9120,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0058_visits.npz",
+          "sha256": "e0859e5c5d323ee2d01b7a247ceb382acb80b9e5aae40a2dfaee760d4c39d424"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0058_summary.json",
+          "sha256": "20143c9a40b7c97d6693d50c34e63c8764cbd643960a14ab001050e9b7218c27"
+        }
+      },
+      {
+        "epoch": 59,
+        "frame_at_start": 9280,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0059_visits.npz",
+          "sha256": "66809c5372955c5f88705d7de24577686029077392875b488ae7c83784d36950"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0059_summary.json",
+          "sha256": "afe683039c13cc783b81244928f2f8eb7ed1cf4d4f05a3cc18adf12e22136b2a"
+        }
+      },
+      {
+        "epoch": 60,
+        "frame_at_start": 9440,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0060_visits.npz",
+          "sha256": "c45eb6fdd49bf89ac16900e44f06281e8ce476828c7566b59fac80d1a43457cb"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0060_summary.json",
+          "sha256": "6a30cb108a417d9f56af2c957a71c4d8ca776a46b988837af4342b44a8e4b4e5"
+        }
+      },
+      {
+        "epoch": 61,
+        "frame_at_start": 9600,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0061_visits.npz",
+          "sha256": "41791cb5a16535b2f2560ab2f07b0c865c63a5da16c811aaf9929e040d32c3e6"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0061_summary.json",
+          "sha256": "6b68164260a3abc4732617fe12502a734758bd63543fbb1a88c6e40810497c8e"
+        }
+      },
+      {
+        "epoch": 62,
+        "frame_at_start": 9760,
+        "sample_count": 160,
+        "visits": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0062_visits.npz",
+          "sha256": "7cb4c4cf097389bd162d4996d43681bf3cde60ef34524ee374f91f9f25c605df"
+        },
+        "summary": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/training_visitation/epoch_0062_summary.json",
+          "sha256": "169fb9f697377df57667ca267d6d725984f9b3ae041dc177f32aff3face1f51d"
+        }
+      }
+    ]
+  },
+  "update_audit": {
+    "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_A/seed_2/100k/update_audit/manifest.json",
+    "sha256": "7982bd144eb2a2fd89981f2c440f37be09c6f8785f407caea13e64d4a9dcea75",
+    "schema": "taco_pour_algorithmic_training_update_audit_v1",
+    "epochs": 62,
+    "actor_updates": 62
+  },
+  "B0_report": {
+    "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/candidate_B/seed_0/report.json",
+    "sha256": "0922db219f8501a01b0bd9adfc4d66d35a755846a09c6a946e03736fa251d23e",
+    "bytes": 3485
+  },
+  "checkpoint_infrastructure_gate": {
+    "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_checkpoint_roundtrip_v4/report.json",
+    "sha256": "9e1ff430be71aa28c9ad1ae865361f575bdb83ce306a4c1f9b37555bd63f6775",
+    "bytes": 1566
+  },
+  "chunk_commit_written": false,
+  "seed_robustness_extension": {
+    "authorized": true,
+    "new_seed": 2,
+    "fixed_100k_budget": true,
+    "no_warm_start": true,
+    "no_chunk_commit": true
+  }
+}

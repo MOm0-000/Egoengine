@@ -1192,7 +1192,7 @@ evaluation:
       extremization, and within-trajectory behavioral interventions remain
       valid for their stated scopes.
   algorithmic_reproduction_training_benchmark_v4:
-    status: seed0_100k_B_then_A_completed_no_chunk_commit
+    status: seed_robustness_100k_completed_no_chunk_commit
     active_algorithmic_evidence: true
     paper_faithful: false
     classification: local_algorithmic_reproduction_after_canonical_old_policy_likelihood_fix
@@ -1232,6 +1232,52 @@ evaluation:
       best_candidate: B
       best_candidate_beats_Replay: true
       best_candidate_meaningful_refinement: true
+      strict_40_of_40_success: false
+    seed_robustness_100k:
+      status: completed_no_chunk_commit
+      contract: /data_all/zzx/3.2RL/configs/taco_pour_algorithmic_seed_robustness_v4.yaml
+      comparison: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/seed_robustness_100k/comparison.json
+      summary: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/seed_robustness_100k/summary.md
+      seed0_rerun: false
+      new_seeds: [1, 2]
+      new_runs: [B1, B2, A1, A2]
+      physics_steps_per_new_run: 99200
+      actor_updates_per_new_run: 62
+      candidate_B:
+        seed0: {step0: 30, at_100k: 36, delta: 6, first_failure_endpoint: 57}
+        seed1: {step0: 30, at_100k: 29, delta: -1, first_failure_endpoint: 50}
+        seed2: {step0: 30, at_100k: 37, delta: 7, first_failure_endpoint: 58}
+        seeds_beating_Replay_at_100k: [0, 2]
+        seeds_improving_from_own_step0: [0, 2]
+        median_step0: 30
+        median_100k: 36
+        median_delta: 6
+        all_seeds_improved: false
+      candidate_A:
+        seed0: {step0: 36, at_100k: 29, delta: -7, first_failure_endpoint: 50}
+        seed1: {step0: 30, at_100k: 23, delta: -7, first_failure_endpoint: 44}
+        seed2: {step0: 29, at_100k: 36, delta: 7, first_failure_endpoint: 57}
+        seeds_beating_Replay_at_100k: [2]
+        seeds_improving_from_own_step0: [2]
+        median_step0: 30
+        median_100k: 29
+        median_delta: -7
+        all_seeds_improved: false
+      prefrozen_decision: case_2_B_partial_seed_improvement
+      interpretation: >-
+        Candidate B improves and beats Replay for seeds 0 and 2, but seed 1
+        regresses by one interval. Candidate A regresses for seeds 0 and 1
+        and improves for seed 2. The seed-0 positive result is therefore not
+        a seed-robust result, and initialization alone is not sufficient to
+        explain the observed learning outcome.
+      automatic_500k_execution_allowed: false
+      next_authorization: none_pending_seed_sensitivity_review
+      significance_test_executed: false
+      hyperparameter_change_executed: false
+      intermediate_checkpoint_selection_executed: false
+      all_new_run_canonical_identity_gates_passed: true
+      all_new_run_checkpoint_roundtrips_exact: true
+      all_candidate_B_step0_Replay_identity_checks_passed: true
       strict_40_of_40_success: false
     later_milestones_executed: false
     chunk_commit_written: false
@@ -1359,6 +1405,9 @@ audit_results:
   algorithmic_reproduction_training_candidate_A_v4: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/candidate_A/seed_0/report.json
   algorithmic_reproduction_training_comparison_v4: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/comparison.json
   algorithmic_checkpoint_roundtrip_v4: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_checkpoint_roundtrip_v4/report.json
+  algorithmic_seed_robustness_contract_v4: /data_all/zzx/3.2RL/configs/taco_pour_algorithmic_seed_robustness_v4.yaml
+  algorithmic_seed_robustness_comparison_v4: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/seed_robustness_100k/comparison.json
+  algorithmic_seed_robustness_summary_v4: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/seed_robustness_100k/summary.md
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -1411,20 +1460,18 @@ result_acceptance_blockers:
   - Gate_Q_Q3_complete_unique_bilateral_contact_graph_is_feasible_at_all_endpoints_and_withdraws_P4_as_an_active_blocker
   - Gate_Q_is_the_final_physics_gate_and_closes_without_authorizing_Gate_B_Gate_C_PPO_retraining_or_chunk_commit
   - local_algorithmic_benchmark_exception_does_not_supersede_the_Gate_Q_exact_reproduction_blocker
-  - algorithmic_benchmark_candidate_B_zero_step_fails_to_preserve_formal_Replay_21_of_40_vs_30_of_40
-  - algorithmic_benchmark_A_and_B_training_forbidden_after_candidate_B_step0_gate_failure
-  - algorithmic_benchmark_v3_Candidate_A_exceeds_frozen_8epsilon_mu_identity_gate_before_epoch32_optimizer
-  - algorithmic_benchmark_v3_stops_at_51200_physics_before_100k_and_Candidate_B_training_is_not_started
   - exact_reproduction_is_blocked_pending_unpublished_simulator_contact_actuation_object_physics_and_objective_details
   - active_corrected_Replay_passes_only_30_of_40_in_second_window
-  - postfix_single_actor_pass_PPO_passes_only_28_intervals_before_failure_at_endpoint49
+  - algorithmic_benchmark_v4_seed_robustness_Candidate_B_improves_on_only_2_of_3_seeds
+  - algorithmic_benchmark_v4_Candidate_A_improves_on_only_1_of_3_seeds
+  - algorithmic_benchmark_v4_no_candidate_seed_reaches_strict_40_of_40
+  - algorithmic_benchmark_v4_500k_is_not_authorized_pending_seed_sensitivity_review
   - source47_zero_residual_still_fails_endpoint49_and_source48_has_no_tool_effect
   - no_source47_semantic_action_subspace_preserves_contact_or_survives_endpoint49
   - source46_wrist_weakening_rescues_endpoint49_but_not_endpoint50
   - endpoint48_contact_is_neither_necessary_nor_sufficient_for_short_horizon_tracking_feasibility
   - source45_translation_or_wrist_suppression_survives_endpoint50_but_fails_endpoint51
   - two_stage_time_local_suppression_exceeds_Replay_endpoint51_but_fails_by_endpoint53
-  - learned_deterministic_PPO_refinement_beyond_Replay_not_demonstrated
   - binary_translation_oracle_extends_to_36_of_40_but_fails_endpoint57
   - binary_translation_oracle_selects_OFF_for_19_of_37_sources_not_a_sparse_gate
   - endpoint57_translation_ON_OFF_has_no_task_scale_tool_effect

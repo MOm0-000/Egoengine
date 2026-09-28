@@ -61,7 +61,7 @@ def test_v4_is_the_active_algorithmic_evidence():
         "algorithmic_reproduction_training_benchmark_v4"
     )
     assert v4["active_algorithmic_evidence"] is True
-    assert v4["status"] == "seed0_100k_B_then_A_completed_no_chunk_commit"
+    assert v4["status"] == "seed_robustness_100k_completed_no_chunk_commit"
     assert v4["canonical_old_policy_gate"]["all_124_actor_updates_passed"] is True
     assert v4["seed0_100k"]["candidate_B"] == {
         "successful_intervals": 36,
