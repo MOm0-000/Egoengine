@@ -159,12 +159,15 @@ def test_materialized_v5_comparison_is_consistent_when_present():
     ] == pytest.approx(8.46822612e-13)
 
 
-def test_v5_is_active_evidence_but_does_not_authorize_follow_on():
+def test_v5_is_preserved_historical_evidence_but_superseded_by_v6():
     protocol = yaml.safe_load(PROTOCOL.read_text())
     row = protocol["evaluation"][
         "algorithmic_reproduction_training_benchmark_v5"
     ]
-    assert row["active_algorithmic_evidence"] is True
+    assert row["active_algorithmic_evidence"] is False
+    assert row["superseded_as_active_evidence_by"] == (
+        "algorithmic_reproduction_training_benchmark_v6"
+    )
     assert row["prefrozen_classification"] == {
         "C1_mean_regularization_fixes_structural_instability": False,
         "C2_numerical_stability_fixed_but_performance_drifts": {

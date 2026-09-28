@@ -52,7 +52,7 @@ def test_v4_contract_freezes_canonical_policy_and_original_learning_settings():
     assert [row["epoch"] for row in milestones] == [62, 313, 625]
 
 
-def test_v4_is_immutable_and_superseded_by_v5_algorithmic_evidence():
+def test_v4_is_immutable_and_v5_is_superseded_by_v6_algorithmic_evidence():
     protocol = yaml.safe_load(PROTOCOL.read_text())
     v3 = protocol["evaluation"]["algorithmic_reproduction_training_benchmark_v3"]
     v4 = protocol["evaluation"]["algorithmic_reproduction_training_benchmark_v4"]
@@ -65,7 +65,10 @@ def test_v4_is_immutable_and_superseded_by_v5_algorithmic_evidence():
     assert v4["superseded_as_active_evidence_by"] == (
         "algorithmic_reproduction_training_benchmark_v5"
     )
-    assert v5["active_algorithmic_evidence"] is True
+    assert v5["active_algorithmic_evidence"] is False
+    assert v5["superseded_as_active_evidence_by"] == (
+        "algorithmic_reproduction_training_benchmark_v6"
+    )
     assert v5["prefrozen_classification"][
         "C3_mass_floor_still_occurs"
     ] is True

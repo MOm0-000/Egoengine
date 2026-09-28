@@ -1344,7 +1344,8 @@ evaluation:
     chunk_commit_written: false
   algorithmic_reproduction_training_benchmark_v5:
     status: candidate_C_triggers_prefrozen_C3_mass_floor_recurrence_no_chunk_commit
-    active_algorithmic_evidence: true
+    active_algorithmic_evidence: false
+    superseded_as_active_evidence_by: algorithmic_reproduction_training_benchmark_v6
     paper_faithful: false
     classification: local_algorithmic_reproduction_H2S2R_LSTM_mean_regularization_ablation
     contract: /data_all/zzx/3.2RL/configs/taco_pour_algorithmic_reproduction_training_v5.yaml
@@ -1423,6 +1424,96 @@ evaluation:
     regularization_coefficient_sweep_allowed: false
     linear_LR_follow_on_automatically_authorized: false
     strict_40_of_40_success: false
+    chunk_commit_written: false
+  algorithmic_reproduction_training_benchmark_v6:
+    status: candidate_D_completes_fixed_400k_all_three_seeds_no_chunk_commit
+    active_algorithmic_evidence: true
+    paper_faithful: false
+    classification: local_algorithmic_reproduction_support_anchored_bounded_mean_ablation
+    contract: /data_all/zzx/3.2RL/configs/taco_pour_algorithmic_reproduction_training_v6.yaml
+    distribution_profile: /data_all/zzx/3.2RL/configs/taco_pour_support_anchored_bounded_mean_truncated_gaussian_v1.yaml
+    output: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v6
+    comparison: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v6/comparison.json
+    summary: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v6/summary.md
+    only_algorithm_change_from_candidate_B:
+      network_output: raw_location_latent_eta
+      distribution_mean: support_anchored_bounded_mean
+      equation: mu_i_is_high_i_tanh_eta_i_for_nonnegative_eta_else_minus_low_i_tanh_eta_i
+      bounds_loss_coef: 0.0
+      lr_schedule: null
+    fresh_actor_critic_optimizers_RMS: true
+    warm_start_used: false
+    all_seed_step0_Replay_identity_checks_passed: true
+    Replay: {successful_intervals: 30, first_failure_endpoint: 51}
+    likelihood_gate:
+      semantic_identity_exact_for_all_completed_updates: true
+      canonical_optimizer_ratio_max_error: 0.0
+      maximum_rollout_to_canonical_ratio_error: 4.0531158447265625e-6
+      semantic_hard_fail_threshold: 1.0e-4
+    fixed_milestone_medians:
+      at_0: 30
+      at_100k: 35
+      at_200k: 31
+      at_300p8k: 35
+      at_400k: 33
+    seed0:
+      status: completed_fixed_400k_no_chunk_commit
+      fixed_milestones:
+        at_0: {successful_intervals: 30, first_failure_endpoint: 51}
+        at_100k: {successful_intervals: 37, first_failure_endpoint: 58}
+        at_200k: {successful_intervals: 31, first_failure_endpoint: 52}
+        at_300p8k: {successful_intervals: 39, first_failure_endpoint: 60}
+        at_400k: {successful_intervals: 31, first_failure_endpoint: 52}
+      observed_minimum_truncated_normalization_mass: 0.4999666991406251
+      maximum_bounded_mu_outside_support_count: 0
+      report: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v6/training/candidate_D/seed_0/report.json
+    seed1:
+      status: completed_fixed_400k_no_chunk_commit
+      fixed_milestones:
+        at_0: {successful_intervals: 30, first_failure_endpoint: 51}
+        at_100k: {successful_intervals: 34, first_failure_endpoint: 55}
+        at_200k: {successful_intervals: 31, first_failure_endpoint: 52}
+        at_300p8k: {successful_intervals: 35, first_failure_endpoint: 56}
+        at_400k: {successful_intervals: 36, first_failure_endpoint: 57}
+      observed_minimum_truncated_normalization_mass: 0.499965943376135
+      maximum_bounded_mu_outside_support_count: 0
+      report: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v6/training/candidate_D/seed_1/report.json
+    seed2:
+      status: completed_fixed_400k_no_chunk_commit
+      fixed_milestones:
+        at_0: {successful_intervals: 30, first_failure_endpoint: 51}
+        at_100k: {successful_intervals: 35, first_failure_endpoint: 56}
+        at_200k: {successful_intervals: 40, first_failure_endpoint: null}
+        at_300p8k: {successful_intervals: 34, first_failure_endpoint: 55}
+        at_400k: {successful_intervals: 33, first_failure_endpoint: 54}
+      observed_minimum_truncated_normalization_mass: 0.4999667011958949
+      maximum_bounded_mu_outside_support_count: 0
+      report: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v6/training/candidate_D/seed_2/report.json
+    prefrozen_classification:
+      D1_raw_mean_support_collapse_mechanism_solved: true
+      D2_structurally_stable_and_task_learning_useful: true
+      D3_structurally_stable_but_performance_drifts: false
+      D4_bounded_mean_but_mass_floor_occurs: false
+      D5_strict_task_success:
+        triggered: true
+        events: [{seed: 2, epoch: 125, physics_steps: 200000}]
+        seed_robust: false
+    interpretation: >-
+      The support-anchored bounded mean removes the diagnosed unconstrained-mean
+      failure mechanism: all three fresh seeds complete 400k, the bounded mean
+      remains inside the state-dependent support on every update, and the
+      truncated normalization mass stays near or above 0.5 rather than
+      collapsing toward the unchanged 1e-12 floor. Candidate D is therefore the
+      active local baseline and produces useful task learning at 400k (31, 36,
+      and 33 intervals, all above Replay). Performance remains nonmonotonic: a
+      single fixed seed-2 milestone reaches strict 40/40 at 200k and later
+      regresses, so strict success is not seed-robust and no intermediate
+      checkpoint selection or chunk commit is authorized.
+    active_local_baseline: true
+    learning_rate_schedule_automatically_authorized: false
+    state_bounded_squashed_distribution_automatically_authorized: false
+    intermediate_checkpoint_selected: false
+    seed_robust_strict_success: false
     chunk_commit_written: false
 
 runtime_contract:
@@ -1563,6 +1654,13 @@ audit_results:
   algorithmic_candidate_C_seed0_report_v5: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_0/report.json
   algorithmic_candidate_C_seed1_report_v5: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_1/report.json
   algorithmic_candidate_C_seed2_failure_v5: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_2/failure_report.json
+  algorithmic_candidate_D_contract_v6: /data_all/zzx/3.2RL/configs/taco_pour_algorithmic_reproduction_training_v6.yaml
+  algorithmic_candidate_D_distribution_profile_v6: /data_all/zzx/3.2RL/configs/taco_pour_support_anchored_bounded_mean_truncated_gaussian_v1.yaml
+  algorithmic_candidate_D_comparison_v6: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v6/comparison.json
+  algorithmic_candidate_D_summary_v6: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v6/summary.md
+  algorithmic_candidate_D_seed0_report_v6: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v6/training/candidate_D/seed_0/report.json
+  algorithmic_candidate_D_seed1_report_v6: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v6/training/candidate_D/seed_1/report.json
+  algorithmic_candidate_D_seed2_report_v6: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v6/training/candidate_D/seed_2/report.json
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -1627,7 +1725,11 @@ result_acceptance_blockers:
   - algorithmic_benchmark_v5_C3_is_triggered_and_C1_C4_are_false
   - algorithmic_benchmark_v5_seed0_and_seed1_complete_400k_without_strict_40_of_40_success
   - algorithmic_benchmark_v5_no_regularization_coefficient_sweep_linear_LR_follow_on_or_chunk_commit_is_authorized
-  - unconstrained_raw_mu_state_truncated_Normal_requires_a_bounded_policy_parameterization_decision
+  - algorithmic_benchmark_v6_D1_and_D2_are_triggered_and_D3_D4_are_false
+  - algorithmic_benchmark_v6_all_three_seeds_complete_400k_with_bounded_mean_inside_support_and_no_mass_floor_failure
+  - algorithmic_benchmark_v6_seed2_reaches_40_of_40_only_at_the_fixed_200k_milestone_and_regresses_afterward
+  - algorithmic_benchmark_v6_strict_success_is_not_seed_robust_and_intermediate_checkpoint_selection_is_forbidden
+  - algorithmic_benchmark_v6_no_automatic_LR_schedule_squashed_distribution_500k_extension_or_chunk_commit_is_authorized
   - source47_zero_residual_still_fails_endpoint49_and_source48_has_no_tool_effect
   - no_source47_semantic_action_subspace_preserves_contact_or_survives_endpoint49
   - source46_wrist_weakening_rescues_endpoint49_but_not_endpoint50
