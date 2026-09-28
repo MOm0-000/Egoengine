@@ -1,0 +1,561 @@
+{
+  "schema": "taco_pour_algorithmic_candidate_B_500k_comparison_v4",
+  "status": "fixed_budget_extension_failed_closed_no_automatic_follow_on",
+  "paper_faithful": false,
+  "candidate": "B",
+  "Replay_successful_intervals": 30,
+  "seed0_was_not_rerun_at_100k": true,
+  "Candidate_A_continued": false,
+  "seeds": {
+    "0": {
+      "seed": 0,
+      "status": "failed_closed_before_fixed_500k_budget",
+      "step0_successful_intervals": 30,
+      "step0_first_failure_endpoint": 51,
+      "source_100k_successful_intervals": 36,
+      "final_500k_successful_intervals": null,
+      "delta_100k_to_500k": null,
+      "delta_step0_to_500k": null,
+      "failure_report": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/B_budget_extension_500k/seed_0/failure_report.json",
+        "sha256": "3964b41e260bd9d8726a98966df4dff411f19d0af6f6ea54721b7ba96f34b075",
+        "bytes": 26936
+      },
+      "failure": {
+        "type": "ValueError",
+        "message": "truncated-Gaussian normalization mass 6.48980869e-13 is below the 1e-12 fail-closed threshold",
+        "site": "state_feasible_truncated_gaussian._distribution_terms",
+        "normalization_mass": 6.48980869e-13,
+        "frozen_failclosed_threshold": 1e-12
+      },
+      "learning_curve": {
+        "100k": {
+          "epoch": 62,
+          "budget_label": "100k",
+          "physics_steps": 99200,
+          "successful_intervals": 36,
+          "first_failure_endpoint": 57,
+          "forty_of_forty": false,
+          "beats_Replay": true,
+          "meaningful_refinement": true,
+          "endpoint40": {
+            "score": 0.663641631603241,
+            "position_error_m": 0.06955201923847198,
+            "rotation_error_rad": 0.484859436750412,
+            "position_squared_contribution": 0.3359363458436651,
+            "rotation_squared_contribution": 0.10448385484707856
+          },
+          "endpoint50": {
+            "score": 0.9026376605033875,
+            "position_error_m": 0.09689763933420181,
+            "rotation_error_rad": 0.6050975918769836,
+            "position_squared_contribution": 0.6520244797597954,
+            "rotation_squared_contribution": 0.16273026475347763
+          },
+          "endpoint60": {
+            "score": 1.1279590129852295,
+            "position_error_m": 0.13235266506671906,
+            "rotation_error_rad": 0.3543855547904968,
+            "position_squared_contribution": 1.2164741632127163,
+            "rotation_squared_contribution": 0.05581738730851922
+          },
+          "first_failure": {
+            "score": 1.0250753164291382,
+            "position_error_m": 0.12018264830112457,
+            "rotation_error_rad": 0.3277182877063751,
+            "position_squared_contribution": 1.0030464550466531,
+            "rotation_squared_contribution": 0.04773301159875487
+          },
+          "final_sigma": {
+            "minimum": 0.2496062070131302,
+            "mean": 0.2500429008569982,
+            "maximum": 0.25053784251213074
+          },
+          "validation_residual_RMS": 0.02251392789185047,
+          "validation_action_bound_fraction": 0.017361111111111112,
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/B_budget_extension_500k/seed_0/precontinuation_validation/epoch_0062.npz",
+            "sha256": "7327be9599f8cb92a2312540e595186834dfa7994875d662fa7986d0cac12f6b",
+            "bytes": 13053
+          },
+          "checkpoint": null,
+          "training_metrics": null
+        },
+        "200k": {
+          "epoch": 125,
+          "budget_label": "200k",
+          "physics_steps": 200000,
+          "successful_intervals": 30,
+          "first_failure_endpoint": 51,
+          "forty_of_forty": false,
+          "beats_Replay": false,
+          "meaningful_refinement": false,
+          "endpoint40": {
+            "score": 0.5959186553955078,
+            "position_error_m": 0.06999580562114716,
+            "rotation_error_rad": 0.18298788368701935,
+            "position_squared_contribution": 0.3402370003162095,
+            "rotation_squared_contribution": 0.014882029145001831
+          },
+          "endpoint50": {
+            "score": 0.926846981048584,
+            "position_error_m": 0.10258223861455917,
+            "rotation_error_rad": 0.537229061126709,
+            "position_squared_contribution": 0.7307719221648858,
+            "rotation_squared_contribution": 0.12827336183070454
+          },
+          "endpoint60": {
+            "score": 1.9281679391860962,
+            "position_error_m": 0.19304801523685455,
+            "rotation_error_rad": 1.5943865776062012,
+            "position_squared_contribution": 2.5880233463117244,
+            "rotation_squared_contribution": 1.12980824837814
+          },
+          "first_failure": {
+            "score": 1.0785775184631348,
+            "position_error_m": 0.11630284786224365,
+            "rotation_error_rad": 0.7099287509918213,
+            "position_squared_contribution": 0.939330029226958,
+            "rotation_squared_contribution": 0.22399948065991443
+          },
+          "final_sigma": {
+            "minimum": 0.24953366816043854,
+            "mean": 0.24999068594641155,
+            "maximum": 0.25050655007362366
+          },
+          "validation_residual_RMS": 0.03154289234250038,
+          "validation_action_bound_fraction": 0.2076388888888889,
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/B_budget_extension_500k/seed_0/validations/epoch_0125.npz",
+            "sha256": "59a44aa3837eea6ec94f031e6d9a9364c645f88f02b9136b8842f1c9c834d1dc",
+            "bytes": 12337
+          },
+          "checkpoint": null,
+          "training_metrics": null
+        }
+      },
+      "last_completed_actor_update_epoch": 161,
+      "physics_steps_at_exception": 259200
+    },
+    "1": {
+      "seed": 1,
+      "status": "failed_closed_before_fixed_500k_budget",
+      "step0_successful_intervals": 30,
+      "step0_first_failure_endpoint": 51,
+      "source_100k_successful_intervals": 29,
+      "final_500k_successful_intervals": null,
+      "delta_100k_to_500k": null,
+      "delta_step0_to_500k": null,
+      "failure_report": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/B_budget_extension_500k/seed_1/failure_report.json",
+        "sha256": "2430d21ce443ed154e1a46567da17ff5d80893ee9297e8df2b619725c5dd1437",
+        "bytes": 35675
+      },
+      "failure": {
+        "type": "RuntimeError",
+        "message": "canonical old-policy gate failed: classification=rollout_canonical_likelihood_mismatch, semantic identity all true, rollout_ratio_error=1.62124634e-05, canonical_ratio_error=0",
+        "site": "_validate_canonical_first_update_identity",
+        "rollout_ratio_error": 1.62124634e-05,
+        "frozen_ratio_tolerance": 1.52587890625e-05,
+        "canonical_ratio_error": 0.0
+      },
+      "learning_curve": {
+        "100k": {
+          "epoch": 62,
+          "budget_label": "100k",
+          "physics_steps": 99200,
+          "successful_intervals": 29,
+          "first_failure_endpoint": 50,
+          "forty_of_forty": false,
+          "beats_Replay": false,
+          "meaningful_refinement": false,
+          "endpoint40": {
+            "score": 0.7022714018821716,
+            "position_error_m": 0.08006742596626282,
+            "rotation_error_rad": 0.3286033868789673,
+            "position_squared_contribution": 0.445193937559929,
+            "rotation_squared_contribution": 0.047991193719256996
+          },
+          "endpoint50": {
+            "score": 1.0433932542800903,
+            "position_error_m": 0.1146821603178978,
+            "rotation_error_rad": 0.6280975341796875,
+            "position_squared_contribution": 0.9133331871652787,
+            "rotation_squared_contribution": 0.17533622775226831
+          },
+          "endpoint60": {
+            "score": 1.3050769567489624,
+            "position_error_m": 0.1487324833869934,
+            "rotation_error_rad": 0.6130226254463196,
+            "position_squared_contribution": 1.5362049732265468,
+            "rotation_squared_contribution": 0.16702077302626606
+          },
+          "first_failure": {
+            "score": 1.0433932542800903,
+            "position_error_m": 0.1146821603178978,
+            "rotation_error_rad": 0.6280975341796875,
+            "position_squared_contribution": 0.9133331871652787,
+            "rotation_squared_contribution": 0.17533622775226831
+          },
+          "final_sigma": {
+            "minimum": 0.2494153082370758,
+            "mean": 0.24999795109033585,
+            "maximum": 0.25046807527542114
+          },
+          "validation_residual_RMS": 0.017427843064069748,
+          "validation_action_bound_fraction": 0.004861111111111111,
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/B_budget_extension_500k/seed_1/precontinuation_validation/epoch_0062.npz",
+            "sha256": "a8e7170bcdbd87fa09b6138e6ecda953fcb8ff3a6aa0aa82b7c48942cc182c9f",
+            "bytes": 13161
+          },
+          "checkpoint": null,
+          "training_metrics": null
+        },
+        "200k": {
+          "epoch": 125,
+          "budget_label": "200k",
+          "physics_steps": 200000,
+          "successful_intervals": 34,
+          "first_failure_endpoint": 55,
+          "forty_of_forty": false,
+          "beats_Replay": true,
+          "meaningful_refinement": false,
+          "endpoint40": {
+            "score": 0.7118798494338989,
+            "position_error_m": 0.07502849400043488,
+            "rotation_error_rad": 0.5105534195899963,
+            "position_squared_contribution": 0.3909218688870342,
+            "rotation_squared_contribution": 0.11585101966890615
+          },
+          "endpoint50": {
+            "score": 0.8050470352172852,
+            "position_error_m": 0.09105280786752701,
+            "rotation_error_rad": 0.403507262468338,
+            "position_squared_contribution": 0.575737070872277,
+            "rotation_squared_contribution": 0.07236360482875209
+          },
+          "endpoint60": {
+            "score": 1.1860615015029907,
+            "position_error_m": 0.13507182896137238,
+            "rotation_error_rad": 0.5607872009277344,
+            "position_squared_contribution": 1.2669721513173775,
+            "rotation_squared_contribution": 0.13976990432193917
+          },
+          "first_failure": {
+            "score": 1.0539658069610596,
+            "position_error_m": 0.11631310731172562,
+            "rotation_error_rad": 0.6209133267402649,
+            "position_squared_contribution": 0.939495759202014,
+            "rotation_squared_contribution": 0.17134815969940576
+          },
+          "final_sigma": {
+            "minimum": 0.2491280436515808,
+            "mean": 0.24996902131372029,
+            "maximum": 0.2507137656211853
+          },
+          "validation_residual_RMS": 0.024712678963712868,
+          "validation_action_bound_fraction": 0.04097222222222222,
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/B_budget_extension_500k/seed_1/validations/epoch_0125.npz",
+            "sha256": "351b859b181e3224dacf87037fa132a51c27efef58d83e3d83fa41d26022fe48",
+            "bytes": 13100
+          },
+          "checkpoint": null,
+          "training_metrics": null
+        },
+        "300k": {
+          "epoch": 188,
+          "budget_label": "300k",
+          "physics_steps": 300800,
+          "successful_intervals": 33,
+          "first_failure_endpoint": 54,
+          "forty_of_forty": false,
+          "beats_Replay": true,
+          "meaningful_refinement": false,
+          "endpoint40": {
+            "score": 0.7195164561271667,
+            "position_error_m": 0.07579224556684494,
+            "rotation_error_rad": 0.5169731378555298,
+            "position_squared_contribution": 0.3989211450045088,
+            "rotation_squared_contribution": 0.11878276678408561
+          },
+          "endpoint50": {
+            "score": 0.9211904406547546,
+            "position_error_m": 0.09107241034507751,
+            "rotation_error_rad": 0.7831765413284302,
+            "position_squared_contribution": 0.5759849948654293,
+            "rotation_squared_contribution": 0.2726068866165166
+          },
+          "endpoint60": {
+            "score": 1.1763882637023926,
+            "position_error_m": 0.12836076319217682,
+            "rotation_error_rad": 0.7343705296516418,
+            "position_squared_contribution": 1.1442003838387567,
+            "rotation_squared_contribution": 0.2396889221425924
+          },
+          "first_failure": {
+            "score": 1.0144553184509277,
+            "position_error_m": 0.10477227717638016,
+            "rotation_error_rad": 0.7748076319694519,
+            "position_squared_contribution": 0.7623076433836272,
+            "rotation_squared_contribution": 0.26681194069249314
+          },
+          "final_sigma": {
+            "minimum": 0.2488619089126587,
+            "mean": 0.24994525810082754,
+            "maximum": 0.2511276304721832
+          },
+          "validation_residual_RMS": 0.029119219888599022,
+          "validation_action_bound_fraction": 0.13333333333333333,
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/B_budget_extension_500k/seed_1/validations/epoch_0188.npz",
+            "sha256": "b1362180d5077ecd124b7c2f9b56ae6ed4bb46dca6837197f4d20c02b3eb03e6",
+            "bytes": 12731
+          },
+          "checkpoint": null,
+          "training_metrics": null
+        }
+      },
+      "last_completed_actor_update_epoch": 194,
+      "physics_steps_at_exception": 312000
+    },
+    "2": {
+      "seed": 2,
+      "status": "failed_closed_before_fixed_500k_budget",
+      "step0_successful_intervals": 30,
+      "step0_first_failure_endpoint": 51,
+      "source_100k_successful_intervals": 37,
+      "final_500k_successful_intervals": null,
+      "delta_100k_to_500k": null,
+      "delta_step0_to_500k": null,
+      "failure_report": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/B_budget_extension_500k/seed_2/failure_report.json",
+        "sha256": "1d56c7e75779225a3ec54cd182b697efa9e001d98271afe640cdd09802d82ee2",
+        "bytes": 34997
+      },
+      "failure": {
+        "type": "ValueError",
+        "message": "truncated-Gaussian normalization mass 6.6346928e-13 is below the 1e-12 fail-closed threshold",
+        "site": "state_feasible_truncated_gaussian._distribution_terms",
+        "normalization_mass": 6.6346928e-13,
+        "frozen_failclosed_threshold": 1e-12
+      },
+      "learning_curve": {
+        "100k": {
+          "epoch": 62,
+          "budget_label": "100k",
+          "physics_steps": 99200,
+          "successful_intervals": 37,
+          "first_failure_endpoint": 58,
+          "forty_of_forty": false,
+          "beats_Replay": true,
+          "meaningful_refinement": true,
+          "endpoint40": {
+            "score": 0.6101911664009094,
+            "position_error_m": 0.06777285039424896,
+            "rotation_error_rad": 0.3465093672275543,
+            "position_squared_contribution": 0.3189693924000869,
+            "rotation_squared_contribution": 0.053363885145084486
+          },
+          "endpoint50": {
+            "score": 0.7982098460197449,
+            "position_error_m": 0.08419687300920486,
+            "rotation_error_rad": 0.5708665251731873,
+            "position_squared_contribution": 0.49229954337001197,
+            "rotation_squared_contribution": 0.14483937313924855
+          },
+          "endpoint60": {
+            "score": 1.095314383506775,
+            "position_error_m": 0.12466662377119064,
+            "rotation_error_rad": 0.5205333232879639,
+            "position_squared_contribution": 1.0792893807296944,
+            "rotation_squared_contribution": 0.12042441806809419
+          },
+          "first_failure": {
+            "score": 1.0133250951766968,
+            "position_error_m": 0.11391445249319077,
+            "rotation_error_rad": 0.5317742228507996,
+            "position_squared_contribution": 0.901146006029404,
+            "rotation_squared_contribution": 0.12568169959492081
+          },
+          "final_sigma": {
+            "minimum": 0.24953331053256989,
+            "mean": 0.2499941794408692,
+            "maximum": 0.25045016407966614
+          },
+          "validation_residual_RMS": 0.020989445969462395,
+          "validation_action_bound_fraction": 0.013194444444444444,
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/B_budget_extension_500k/seed_2/precontinuation_validation/epoch_0062.npz",
+            "sha256": "86e0d0e71218d899ddab64f422865b11135efb87f41dbb03aa8c025a13086564",
+            "bytes": 13126
+          },
+          "checkpoint": null,
+          "training_metrics": null
+        },
+        "200k": {
+          "epoch": 125,
+          "budget_label": "200k",
+          "physics_steps": 200000,
+          "successful_intervals": 32,
+          "first_failure_endpoint": 53,
+          "forty_of_forty": false,
+          "beats_Replay": true,
+          "meaningful_refinement": false,
+          "endpoint40": {
+            "score": 0.5892466306686401,
+            "position_error_m": 0.06916297972202301,
+            "rotation_error_rad": 0.1838519275188446,
+            "position_squared_contribution": 0.33218873361312273,
+            "rotation_squared_contribution": 0.015022902778841996
+          },
+          "endpoint50": {
+            "score": 0.7726186513900757,
+            "position_error_m": 0.08879813551902771,
+            "rotation_error_rad": 0.3332653343677521,
+            "position_squared_contribution": 0.5475770049760842,
+            "rotation_squared_contribution": 0.04936257026277759
+          },
+          "endpoint60": {
+            "score": 1.1768187284469604,
+            "position_error_m": 0.1305420845746994,
+            "rotation_error_rad": 0.6733033657073975,
+            "position_squared_contribution": 1.1834191559102758,
+            "rotation_squared_contribution": 0.20148329878795976
+          },
+          "first_failure": {
+            "score": 1.0551949739456177,
+            "position_error_m": 0.11156363785266876,
+            "rotation_error_rad": 0.7486487627029419,
+            "position_squared_contribution": 0.8643364785362102,
+            "rotation_squared_contribution": 0.2490999866207315
+          },
+          "final_sigma": {
+            "minimum": 0.24942214787006378,
+            "mean": 0.24999113587869537,
+            "maximum": 0.25062569975852966
+          },
+          "validation_residual_RMS": 0.02985596815809505,
+          "validation_action_bound_fraction": 0.14305555555555555,
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/B_budget_extension_500k/seed_2/validations/epoch_0125.npz",
+            "sha256": "5b628b79d0ee54255eafbdb63ae8159b4df957aa56215bbb378b58262df75e8f",
+            "bytes": 12618
+          },
+          "checkpoint": null,
+          "training_metrics": null
+        },
+        "300k": {
+          "epoch": 188,
+          "budget_label": "300k",
+          "physics_steps": 300800,
+          "successful_intervals": 35,
+          "first_failure_endpoint": 56,
+          "forty_of_forty": false,
+          "beats_Replay": true,
+          "meaningful_refinement": true,
+          "endpoint40": {
+            "score": 0.5824393630027771,
+            "position_error_m": 0.06824787706136703,
+            "rotation_error_rad": 0.18842282891273499,
+            "position_squared_contribution": 0.3234564391238521,
+            "rotation_squared_contribution": 0.015779183313545685
+          },
+          "endpoint50": {
+            "score": 0.735166072845459,
+            "position_error_m": 0.0836358517408371,
+            "rotation_error_rad": 0.3508470952510834,
+            "position_squared_contribution": 0.48576081225106144,
+            "rotation_squared_contribution": 0.0547083041093879
+          },
+          "endpoint60": {
+            "score": 1.4976271390914917,
+            "position_error_m": 0.17686261236667633,
+            "rotation_error_rad": 0.39866769313812256,
+            "position_squared_contribution": 2.17224886480314,
+            "rotation_squared_contribution": 0.07063819091203212
+          },
+          "first_failure": {
+            "score": 1.0783774852752686,
+            "position_error_m": 0.12531964480876923,
+            "rotation_error_rad": 0.40325185656547546,
+            "position_squared_contribution": 1.0906259288191722,
+            "rotation_squared_contribution": 0.07227202658822347
+          },
+          "final_sigma": {
+            "minimum": 0.2491050660610199,
+            "mean": 0.2499583007560836,
+            "maximum": 0.2508361339569092
+          },
+          "validation_residual_RMS": 0.034109921809754695,
+          "validation_action_bound_fraction": 0.25555555555555554,
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/B_budget_extension_500k/seed_2/validations/epoch_0188.npz",
+            "sha256": "352e628878c9598b51ee427377545cd6399a69fb168cae52c6f6fa79fc709686",
+            "bytes": 12197
+          },
+          "checkpoint": null,
+          "training_metrics": null
+        }
+      },
+      "last_completed_actor_update_epoch": 191,
+      "physics_steps_at_exception": 307080
+    }
+  },
+  "aggregate": {
+    "successful_intervals_at_100k": [
+      36,
+      29,
+      37
+    ],
+    "successful_intervals_at_500k": [],
+    "completed_500k_seeds": [],
+    "failed_closed_before_500k_seeds": [
+      0,
+      1,
+      2
+    ],
+    "fixed_budget_three_seed_classification_evaluable": false,
+    "median_successful_intervals_at_step0": 30.0,
+    "median_successful_intervals_at_100k": 36.0,
+    "median_successful_intervals_at_500k": null,
+    "median_delta_100k_to_500k": null,
+    "seeds_beating_Replay_at_500k": [],
+    "seeds_beating_Replay_at_500k_count": 0,
+    "seeds_improving_from_own_100k": [],
+    "seeds_improving_from_own_100k_count": 0,
+    "strict_success_seeds": []
+  },
+  "prefrozen_classifications": {
+    "B500_1_budget_resolves_seed_sensitivity": {
+      "triggered": false,
+      "evaluable": false,
+      "condition": "all_3_seeds_gt_30_and_median_at_least_35"
+    },
+    "B500_2_partial_robustness_remains": {
+      "triggered": false,
+      "evaluable": false,
+      "condition": "at_least_2_of_3_gt_30_and_at_least_1_seed_le_30"
+    },
+    "B500_3_overtraining_or_policy_drift": {
+      "triggered": false,
+      "evaluable": false,
+      "condition": "median_500k_le_median_100k_which_is_36"
+    },
+    "B500_4_strict_success_exists": {
+      "triggered": false,
+      "evaluable": false,
+      "condition": "any_seed_is_40_of_40",
+      "strict_success_seeds": [],
+      "seed_robust_strict_success": false
+    }
+  },
+  "interpretation": "All three fixed Candidate-B continuations failed closed before 500k: two crossed the frozen truncated-Gaussian normalization-mass floor and one crossed the frozen rollout-to-canonical likelihood tolerance. Seed sensitivity is not resolved, no intermediate milestone is a fallback, and no automatic 1M continuation is authorized.",
+  "automatic_1m_authorized": false,
+  "automatic_1m_executed": false,
+  "intermediate_checkpoint_selected": false,
+  "chunk_commit_authorized": false,
+  "chunk_commit_written": false,
+  "next_step_requires_separate_authorization": true
+}

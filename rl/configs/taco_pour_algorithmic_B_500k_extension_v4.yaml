@@ -1,0 +1,167 @@
+schema: taco_pour_algorithmic_candidate_B_500k_extension_v4
+status: authorized_candidate_B_500k_continuation
+paper_faithful: false
+classification: local_fixed_budget_extension_of_candidate_B_v4
+purpose: >-
+  Continue the three verified Candidate-B 100k trajectories in place to the
+  same fixed 500k budget. This isolates training-budget sensitivity without
+  changing the policy, optimizer, reward, observation, action, distribution,
+  simulator, seed-specific settings, or physics contract.
+
+candidate_B_500k_extension:
+  candidate: B
+  seeds: [0, 1, 2]
+  source_epoch: 62
+  source_physics_steps: 99200
+  source_control_intervals: 9920
+  target_epoch: 313
+  target_physics_steps: 500800
+  target_control_intervals: 50080
+  additional_actor_updates_per_seed: 251
+  additional_physics_steps_per_seed: 401600
+  candidate_A_continuation_allowed: false
+  fresh_restart_allowed: false
+  cross_run_warm_start_allowed: false
+  seed_specific_settings_allowed: false
+  intermediate_checkpoint_selection_allowed: false
+  fallback_sweep_allowed: false
+  automatic_1m_allowed: false
+  chunk_commit_allowed: false
+
+candidate_A_stop_record:
+  continued_to_500k: false
+  median_delta_at_100k: -7
+  seeds_beating_Replay_at_100k: [2]
+  seeds_beating_Replay_count: 1
+  total_seeds: 3
+  interpretation: >-
+    Candidate A remains a 100k comparison. Its architecture is not declared
+    mathematically invalid, but continuing it cannot answer whether Candidate
+    B seed 1 is slow or remains unstable at a larger fixed budget.
+
+frozen_contracts:
+  base_v4:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_algorithmic_reproduction_training_v4.yaml
+    sha256: 5b3b34f0bca0ca407053864b269a73a782cdc6cb285b5e48b45a3f662ffe0ab4
+  seed_robustness_v4:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_algorithmic_seed_robustness_v4.yaml
+    sha256: f0c317f14e2428ce4191835d3c3cc452d273f9e3ef1b2d516e224663fb61aa4d
+  seed_robustness_comparison:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/seed_robustness_100k/comparison.json
+    sha256: 1073820125b49976dbaf6114f1c4bed0726cb4e5b0be09a679829f925570c21e
+
+source_100k:
+  seed0:
+    expected_successful_intervals: 36
+    expected_first_failure_endpoint: 57
+    report:
+      path: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_B/seed_0/100k/report.json
+      sha256: 198b88337614ec1abe74216e6de69705ad773490603cd01e60aacfeb384b2a4a
+    checkpoint:
+      path: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_B/seed_0/100k/checkpoints/epoch_0062.pt.gz
+      sha256: 9e024763a28951bef91d7b50e9783f34d6696feaae2440e78cbfc4748afbbbc8
+    validation:
+      path: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_B/seed_0/100k/validations/epoch_0062.npz
+      sha256: 7327be9599f8cb92a2312540e595186834dfa7994875d662fa7986d0cac12f6b
+  seed1:
+    expected_successful_intervals: 29
+    expected_first_failure_endpoint: 50
+    report:
+      path: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_B/seed_1/100k/report.json
+      sha256: 48e01755b31635431fb659792843aa2be8c213c7f1d4e949fc4234b29de665d4
+    checkpoint:
+      path: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_B/seed_1/100k/checkpoints/epoch_0062.pt.gz
+      sha256: 71cc576302b9404126704ad4c8d9a31afce8b852749558e27ce144f45c99bcde
+    validation:
+      path: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_B/seed_1/100k/validations/epoch_0062.npz
+      sha256: a8e7170bcdbd87fa09b6138e6ecda953fcb8ff3a6aa0aa82b7c48942cc182c9f
+  seed2:
+    expected_successful_intervals: 37
+    expected_first_failure_endpoint: 58
+    report:
+      path: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_B/seed_2/100k/report.json
+      sha256: a6254f002704a335ab786eade1b45b73532d81ea3b937f69c422709a9316a807
+    checkpoint:
+      path: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_B/seed_2/100k/checkpoints/epoch_0062.pt.gz
+      sha256: 5887601bd5f91572abcb7dd3368ba7744d8919d9e0e292850a56d14f8be9907a
+    validation:
+      path: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/training/candidate_B/seed_2/100k/validations/epoch_0062.npz
+      sha256: 86e0d0e71218d899ddab64f422865b11135efb87f41dbb03aa8c025a13086564
+
+fixed_milestones:
+  - {name: 100k, epoch: 62, physics_steps: 99200, control_intervals: 9920}
+  - {name: 200k, epoch: 125, physics_steps: 200000, control_intervals: 20000}
+  - {name: 300k, epoch: 188, physics_steps: 300800, control_intervals: 30080}
+  - {name: 400k, epoch: 250, physics_steps: 400000, control_intervals: 40000}
+  - {name: 500k, epoch: 313, physics_steps: 500800, control_intervals: 50080}
+
+frozen_training_settings:
+  backend: CPU_MuJoCo_Warp
+  worlds: 4
+  horizon_control_intervals: 40
+  physics_steps_per_control_interval: 10
+  actor_mini_epochs: 1
+  critic_mini_epochs: 4
+  actor_learning_rate: 0.0001
+  residual_scale: 0.05
+  observation_dimension: 236
+  observation_RMS: frozen_across_rollout_and_optimizer_then_committed_once
+  action_distribution: taco_pour_baseline_preserving_truncated_gaussian_v2
+  canonical_old_policy_snapshot: true
+  position_actuator: formal_unlimited_affine
+  scene: current_mixed_formal_scene
+
+forbidden_changes:
+  - actor_or_critic_learning_rate
+  - KL_penalty_or_target_KL
+  - adaptive_learning_rate
+  - gradient_norm
+  - sigma_override
+  - reward_or_objective
+  - observation
+  - network
+  - action_distribution_or_residual_scale
+  - Candidate_C
+  - physics_or_contact
+  - source57_counterfactual
+  - seed_specific_settings
+
+validation:
+  source_checkpoint_must_roundtrip_exact: true
+  source_checkpoint_runtime_restore_fields_must_be_exact: true
+  source_100k_validation_all_arrays_must_be_bitwise_exact: true
+  fixed_milestone_checkpoint_roundtrip_required: true
+  deterministic_endpoint20_to60_validation_required: true
+  formal_success_requires: 40_of_40
+  Replay_successful_intervals: 30
+  intermediate_checkpoint_selection_allowed: false
+  chunk_commit_requires_separate_authorization: true
+
+prefrozen_classification:
+  B500_1:
+    condition: all_3_seeds_gt_30_and_median_at_least_35
+    interpretation: budget_resolves_seed_sensitivity
+    automatic_1m_allowed: false
+  B500_2:
+    condition: exactly_or_at_least_2_of_3_gt_30_and_at_least_1_seed_le_30
+    interpretation: partial_robustness_remains
+    automatic_1m_allowed: false
+  B500_3:
+    condition: median_500k_le_median_100k_which_is_36
+    interpretation: overtraining_or_policy_drift
+    automatic_1m_allowed: false
+  B500_4:
+    condition: any_seed_is_40_of_40
+    interpretation: strict_success_exists
+    chunk_commit_allowed: false
+    seed_robust_strict_success_requires: at_least_2_of_3_seeds_40_of_40
+
+implementation_contract:
+  state_feasible_distribution_sha256: e14caea5ae45058cbedf7311f20a657f9fa6dd83942d33ae7d4b9485c521c0fa
+  MJWP_environment_sha256: cc4cb86b73bdd1ef671ed06d185192119199cda2d037ce7685a5abe8cd5b856a
+  official_PPO_agent_sha256: b41f1c088d8ad4e261b9c5338f90a7f0ae910b7453ab348532312b3d87bc4c30
+  PPO_config_builder_sha256: 4b887e5e4f493fdc5a6541f3c1c811ec65a4e2cbab9f974cc1627e0d54048b84
+  algorithmic_training_sha256: 903fac349ad1b2b026c2c9b73383073e4c9e1b88f5c988aaf122e54283c66c65
+  continuation_runner_sha256: 37a380a1b33e6626b339398a7b117e214a7b4ef6c6d1163a80ff6f3d591a957e
+
+output_directory: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/B_budget_extension_500k

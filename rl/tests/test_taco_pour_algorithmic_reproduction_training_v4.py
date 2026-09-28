@@ -61,7 +61,9 @@ def test_v4_is_the_active_algorithmic_evidence():
         "algorithmic_reproduction_training_benchmark_v4"
     )
     assert v4["active_algorithmic_evidence"] is True
-    assert v4["status"] == "seed_robustness_100k_completed_no_chunk_commit"
+    assert v4["status"] == (
+        "candidate_B_fixed_500k_extension_failed_closed_all_three_seeds_no_chunk_commit"
+    )
     assert v4["canonical_old_policy_gate"]["all_124_actor_updates_passed"] is True
     assert v4["seed0_100k"]["candidate_B"] == {
         "successful_intervals": 36,
@@ -71,6 +73,16 @@ def test_v4_is_the_active_algorithmic_evidence():
         "successful_intervals": 29,
         "first_failure_endpoint": 50,
     }
+    extension = v4["candidate_B_fixed_500k_extension"]
+    assert extension["status"] == "failed_closed_all_three_seeds_before_500k"
+    assert extension["complete_500k_trajectories"] == 0
+    assert extension["fixed_500k_three_seed_classification_evaluable"] is False
+    assert extension["intermediate_checkpoint_selected"] is False
+    assert extension["algorithmic_failclosed_retry_executed"] is False
+    assert extension["provenance_contamination_restart_executed"] is True
+    assert extension["tolerance_relaxation_executed"] is False
+    assert extension["automatic_1m_authorized"] is False
+    assert extension["chunk_commit_written"] is False
     assert v4["chunk_commit_written"] is False
 
 
