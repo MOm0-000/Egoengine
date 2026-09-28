@@ -1,0 +1,105 @@
+{
+  "epoch": 250,
+  "samples": 160,
+  "actor_updates": 1,
+  "observation_normalization_version_used": 249,
+  "observation_normalization_version_after_commit": 250,
+  "credit": {
+    "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_1/update_audit/epoch_0250_credit.npz",
+    "sha256": "851d6dba8e381d7537b8377909a8cef0c3d3695c6993aecb98e07c73c30526ff"
+  },
+  "update": {
+    "epoch": 250,
+    "global_actor_update": 250,
+    "pre_optimizer_identity": {
+      "epoch": 250,
+      "samples": 160,
+      "semantic_state_identity": {
+        "actor_parameter_hash_equal": true,
+        "actor_RMS_hash_equal": true,
+        "normalization_version_equal": true,
+        "observations_equal": true,
+        "dones_equal": true,
+        "actions_equal": true,
+        "action_low_equal": true,
+        "action_high_equal": true,
+        "RNN_start_states_equal": true
+      },
+      "semantic_state_identity_passed": true,
+      "rollout_vs_canonical": {
+        "max_abs_mu_difference": 3.5762786865234375e-07,
+        "max_abs_sigma_difference": 0.0,
+        "max_abs_logprob_difference": 4.76837158203125e-06,
+        "mu_element_difference_count": 3070,
+        "sigma_element_difference_count": 0,
+        "ratio_min": 0.999995231628418,
+        "ratio_max": 1.0000038146972656,
+        "max_abs_ratio_minus_one": 4.76837158203125e-06,
+        "ratio_tolerance": 1.52587890625e-05,
+        "likelihood_equivalence_passed": true,
+        "mu_sigma_are_diagnostic_only": true,
+        "likelihood_equivalence_is_diagnostic_only": true,
+        "semantic_hard_fail_passed": true
+      },
+      "canonical_optimizer_identity": {
+        "ratio_min": 1.0,
+        "ratio_max": 1.0,
+        "max_abs_ratio_minus_one": 0.0,
+        "ratio_tolerance": 1.1920928955078125e-07,
+        "ratio_bitwise_equal_one": true,
+        "passed": true
+      },
+      "semantic_identity_hard_fail_threshold": 0.0001,
+      "semantic_identity_hard_fail": false,
+      "passed": true,
+      "classification": "canonical_old_policy_identity_pass",
+      "maximum_abs_error_from_one": 0.0,
+      "ratio_max_abs_error_from_one": 4.76837158203125e-06,
+      "numerical_identity_passed": true,
+      "v5_gate_semantics": "semantic fields exact; canonical optimizer ratio bitwise one; rollout/canonical likelihood diagnostic unless above 1e-4"
+    },
+    "pre_optimizer_ratio_identity_max_abs_error": 0.0,
+    "post_optimizer_ratio": {
+      "min": 0.33866313099861145,
+      "mean": 1.0303669551387429,
+      "p50": 0.988667219877243,
+      "p95": 1.7409043312072752,
+      "max": 2.1708149909973145
+    },
+    "post_optimizer_ratio_outside_0p8_1p2_fraction": 0.5,
+    "surrogate_changed_by_clip_fraction": 0.5,
+    "exact_old_to_new_truncated_policy_KL": {
+      "min": 0.03378104319449177,
+      "mean": 0.053446570562600194,
+      "p50": 0.05026838468213857,
+      "p95": 0.07969808952712833,
+      "max": 0.08806826791475875
+    },
+    "entropy_pre_optimizer": -16.6231632232666,
+    "sigma_post_optimizer": {
+      "min": 0.24889858067035675,
+      "mean": 0.24989788855115572,
+      "p50": 0.24991536140441895,
+      "p95": 0.2506296634674072,
+      "max": 0.2507595121860504
+    },
+    "gradient_norm_before_clip": 53.78563690185547,
+    "gradient_norm_after_clip": 1.0,
+    "parameter_delta_l2": 0.0615230076556916,
+    "deterministic_action_bound_fraction": 0.31909722089767456,
+    "deterministic_effective_residual_RMS": 0.03547636419534683,
+    "training_reward_mean": 0.365212082862854,
+    "minimum_truncated_normalization_mass": 1.6501268795821034e-07,
+    "p01_truncated_normalization_mass": 1.4504707645102145e-06,
+    "median_truncated_normalization_mass": 0.8203470415865897,
+    "raw_mu_outside_support_fraction": 0.3190972222222222,
+    "maximum_support_violation_in_sigma": 5.10544018229358,
+    "p95_support_violation_in_sigma": 2.0052982924869474,
+    "actor_mean_regularization": {
+      "type": "regularisation",
+      "coefficient": 0.005,
+      "unscaled_mean_sum_squared_mu": 24.879451751708984,
+      "scaled_loss_contribution": 0.12439725875854492
+    }
+  }
+}

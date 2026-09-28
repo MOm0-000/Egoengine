@@ -1,0 +1,1259 @@
+{
+  "schema": "taco_pour_algorithmic_candidate_C_comparison_v5",
+  "status": "candidate_C_failed_closed_before_complete_fixed_budget",
+  "paper_faithful": false,
+  "classification": "local_algorithmic_reproduction_H2S2R_LSTM_mean_regularization_ablation",
+  "candidate": "C",
+  "Replay_successful_intervals": 30,
+  "only_algorithm_change_from_B": {
+    "bounds_loss_coef": 0.005,
+    "bound_loss_type": "regularisation",
+    "linear_LR_enabled": false
+  },
+  "seeds": {
+    "0": {
+      "seed": 0,
+      "status": "completed_fixed_400k_no_chunk_commit",
+      "step0_successful_intervals": 30,
+      "step0_first_failure_endpoint": 51,
+      "completed_actor_updates": 250,
+      "observed_minimum_truncated_normalization_mass": 6.787170825361954e-11,
+      "learning_curve": {
+        "0": {
+          "epoch": 0,
+          "budget_label": "0",
+          "physics_steps": 0,
+          "successful_intervals": 30,
+          "first_failure_endpoint": 51,
+          "forty_of_forty": false,
+          "beats_Replay": false,
+          "meaningful_refinement": false,
+          "endpoint40": {
+            "score": 0.6679563522338867,
+            "position_error_m": 0.0759785920381546,
+            "rotation_error_rad": 0.31918832659721375,
+            "position_squared_contribution": 0.4008851700069674,
+            "rotation_squared_contribution": 0.04528052792707982
+          },
+          "endpoint50": {
+            "score": 0.9944888353347778,
+            "position_error_m": 0.0913563072681427,
+            "rotation_error_rad": 0.9597967267036438,
+            "position_squared_contribution": 0.5795815887271738,
+            "rotation_squared_contribution": 0.4094265584849018
+          },
+          "endpoint60": {
+            "score": 1.2191834449768066,
+            "position_error_m": 0.13064369559288025,
+            "rotation_error_rad": 0.8231518268585205,
+            "position_squared_contribution": 1.185262166539247,
+            "rotation_squared_contribution": 0.30114619113800883
+          },
+          "first_failure": {
+            "score": 1.02456796169281,
+            "position_error_m": 0.09631697088479996,
+            "rotation_error_rad": 0.9551905989646912,
+            "position_squared_contribution": 0.6442332555849586,
+            "rotation_squared_contribution": 0.40550625793356687
+          },
+          "validation_residual_RMS": 0.0,
+          "validation_action_bound_fraction": 0.0,
+          "final_sigma": {
+            "minimum": 0.25,
+            "mean": 0.25,
+            "maximum": 0.25
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_0/validations/epoch_0000.npz",
+            "sha256": "1655ea061dabc6abcb740fe571e160e4750bfa42b30bf8ee94374843b0c35a2e",
+            "bytes": 22923
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_0/checkpoints/epoch_0000.pt.gz",
+            "artifact_sha256": "8215d764121c9c59eefb614cb24529ba9bd65072e0b167a8f11b50f2ed0a285f",
+            "uncompressed_sha256": "71db9b627e39258f958d6992d73526c3318d99b0d7e68a9770b71df9028cd04b",
+            "bytes": 26794539,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "point_training_metrics": null,
+          "step0_checks": {
+            "mean_residual_within_tolerance": true,
+            "deterministic_action_within_tolerance": true,
+            "command_bitwise_equals_Replay": true,
+            "qpos_bitwise_equals_Replay": true,
+            "qvel_bitwise_equals_Replay": true,
+            "score_bitwise_equals_Replay": true,
+            "termination_bitwise_equals_Replay": true,
+            "contact_flags_bitwise_equal_Replay": true,
+            "is_30_of_40_fail51": true
+          },
+          "all_step0_checks_passed": true
+        },
+        "100k": {
+          "epoch": 62,
+          "budget_label": "100k",
+          "physics_steps": 99200,
+          "successful_intervals": 38,
+          "first_failure_endpoint": 59,
+          "forty_of_forty": false,
+          "beats_Replay": true,
+          "meaningful_refinement": true,
+          "endpoint40": {
+            "score": 0.6990954279899597,
+            "position_error_m": 0.07886514067649841,
+            "rotation_error_rad": 0.3575230836868286,
+            "position_squared_contribution": 0.43192433430026983,
+            "rotation_squared_contribution": 0.05681011349730625
+          },
+          "endpoint50": {
+            "score": 0.8471713066101074,
+            "position_error_m": 0.09533396363258362,
+            "rotation_error_rad": 0.44128817319869995,
+            "position_squared_contribution": 0.6311503209651929,
+            "rotation_squared_contribution": 0.08654900080224259
+          },
+          "endpoint60": {
+            "score": 1.081189751625061,
+            "position_error_m": 0.12929721176624298,
+            "rotation_error_rad": 0.13429120182991028,
+            "position_squared_contribution": 1.1609561785086586,
+            "rotation_squared_contribution": 0.008015167506187422
+          },
+          "first_failure": {
+            "score": 1.037936806678772,
+            "position_error_m": 0.12410347908735275,
+            "rotation_error_rad": 0.13206836581230164,
+            "position_squared_contribution": 1.069560661221181,
+            "rotation_squared_contribution": 0.0077520236659253
+          },
+          "validation_residual_RMS": 0.020344017073512077,
+          "validation_action_bound_fraction": 0.011805555555555555,
+          "final_sigma": {
+            "minimum": 0.2495868057012558,
+            "mean": 0.24997232854366302,
+            "maximum": 0.25032031536102295
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_0/validations/epoch_0062.npz",
+            "sha256": "48cc276c3899c9d1794e0080f81fbf553dbf511607fca7acbebc0797f0404039",
+            "bytes": 33786
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_0/checkpoints/epoch_0062.pt.gz",
+            "artifact_sha256": "c2ac852c9b78d444da3e339de529fe14de1d80e801e40393f199404540c84685",
+            "uncompressed_sha256": "495009cd0e6405efa205ee058fa27830d38bd596dd1ea02df10f61484f8dbea1",
+            "bytes": 81618414,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "point_training_metrics": {
+            "minimum_truncated_normalization_mass": 0.0033939953500805586,
+            "p01_truncated_normalization_mass": 0.019499940117442275,
+            "median_truncated_normalization_mass": 0.9961321309919708,
+            "raw_mu_outside_support_fraction": 0.06545138888888889,
+            "maximum_support_violation_in_sigma": 2.7070701747399264,
+            "p95_support_violation_in_sigma": 0.5317881872020138,
+            "deterministic_action_bound_fraction": 0.06545139104127884,
+            "deterministic_effective_residual_RMS": 0.021188069134950638,
+            "exact_post_update_KL_mean": 0.046321605832474244,
+            "ratio_outside_0p8_1p2_fraction": 0.4749999940395355,
+            "training_reward_mean": 0.32746267318725586,
+            "actor_mean_regularization": {
+              "type": "regularisation",
+              "coefficient": 0.005,
+              "unscaled_mean_sum_squared_mu": 6.746630668640137,
+              "scaled_loss_contribution": 0.033733153343200685
+            },
+            "canonical_optimizer_ratio_max_error": 0.0,
+            "rollout_to_canonical_ratio_max_error": 3.337860107421875e-06
+          }
+        },
+        "200k": {
+          "epoch": 125,
+          "budget_label": "200k",
+          "physics_steps": 200000,
+          "successful_intervals": 37,
+          "first_failure_endpoint": 58,
+          "forty_of_forty": false,
+          "beats_Replay": true,
+          "meaningful_refinement": true,
+          "endpoint40": {
+            "score": 0.6273580193519592,
+            "position_error_m": 0.06365066021680832,
+            "rotation_error_rad": 0.5025120973587036,
+            "position_squared_contribution": 0.28134767680802686,
+            "rotation_squared_contribution": 0.11223040355193033
+          },
+          "endpoint50": {
+            "score": 0.8789265751838684,
+            "position_error_m": 0.09716932475566864,
+            "rotation_error_rad": 0.5126971006393433,
+            "position_squared_contribution": 0.6556859495467082,
+            "rotation_squared_contribution": 0.1168259186684395
+          },
+          "endpoint60": {
+            "score": 1.1184117794036865,
+            "position_error_m": 0.1284496933221817,
+            "rotation_error_rad": 0.486191064119339,
+            "position_squared_contribution": 1.1457863690668424,
+            "rotation_squared_contribution": 0.10505855592422009
+          },
+          "first_failure": {
+            "score": 1.0364558696746826,
+            "position_error_m": 0.12139640003442764,
+            "rotation_error_rad": 0.3381899297237396,
+            "position_squared_contribution": 1.0234087459249155,
+            "rotation_squared_contribution": 0.050832190474021315
+          },
+          "validation_residual_RMS": 0.02426319196820259,
+          "validation_action_bound_fraction": 0.03958333333333333,
+          "final_sigma": {
+            "minimum": 0.24943719804286957,
+            "mean": 0.24997125566005707,
+            "maximum": 0.2504272758960724
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_0/validations/epoch_0125.npz",
+            "sha256": "7c4a49b5a8cdd823e8a33984f2737f20fd4a926da24b86365a12efefa9c1bb49",
+            "bytes": 33595
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_0/checkpoints/epoch_0125.pt.gz",
+            "artifact_sha256": "1c86a8bbc38366a85a78738e2c6072878dfaee6b6f84e18fb55f2f8f2f375e5d",
+            "uncompressed_sha256": "548806dca056d262c076400d641ae29e33ca83929ccc7b9a4925a85488811b2e",
+            "bytes": 81536539,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "point_training_metrics": {
+            "minimum_truncated_normalization_mass": 0.006284586572848971,
+            "p01_truncated_normalization_mass": 0.024189454029951284,
+            "median_truncated_normalization_mass": 0.9907713473658387,
+            "raw_mu_outside_support_fraction": 0.10694444444444444,
+            "maximum_support_violation_in_sigma": 2.4957483586324187,
+            "p95_support_violation_in_sigma": 0.8426982753069058,
+            "deterministic_action_bound_fraction": 0.10694444179534912,
+            "deterministic_effective_residual_RMS": 0.024740194901823997,
+            "exact_post_update_KL_mean": 0.04261393423330936,
+            "ratio_outside_0p8_1p2_fraction": 0.5249999761581421,
+            "training_reward_mean": 0.35640162229537964,
+            "actor_mean_regularization": {
+              "type": "regularisation",
+              "coefficient": 0.005,
+              "unscaled_mean_sum_squared_mu": 9.58723258972168,
+              "scaled_loss_contribution": 0.0479361629486084
+            },
+            "canonical_optimizer_ratio_max_error": 0.0,
+            "rollout_to_canonical_ratio_max_error": 2.9802322387695312e-06
+          }
+        },
+        "300k": {
+          "epoch": 188,
+          "budget_label": "300k",
+          "physics_steps": 300800,
+          "successful_intervals": 29,
+          "first_failure_endpoint": 50,
+          "forty_of_forty": false,
+          "beats_Replay": false,
+          "meaningful_refinement": false,
+          "endpoint40": {
+            "score": 0.6320401430130005,
+            "position_error_m": 0.07352812588214874,
+            "rotation_error_rad": 0.2325306087732315,
+            "position_squared_contribution": 0.375443423315355,
+            "rotation_squared_contribution": 0.02403132622953318
+          },
+          "endpoint50": {
+            "score": 1.0246981382369995,
+            "position_error_m": 0.09714459627866745,
+            "rotation_error_rad": 0.9423224925994873,
+            "position_squared_contribution": 0.6553522629267563,
+            "rotation_squared_contribution": 0.3946540800261825
+          },
+          "endpoint60": {
+            "score": 1.235222339630127,
+            "position_error_m": 0.137006014585495,
+            "rotation_error_rad": 0.7071623802185059,
+            "position_squared_contribution": 1.3035172244861715,
+            "rotation_squared_contribution": 0.2222571697761345
+          },
+          "first_failure": {
+            "score": 1.0246981382369995,
+            "position_error_m": 0.09714459627866745,
+            "rotation_error_rad": 0.9423224925994873,
+            "position_squared_contribution": 0.6553522629267563,
+            "rotation_squared_contribution": 0.3946540800261825
+          },
+          "validation_residual_RMS": 0.02978711947798729,
+          "validation_action_bound_fraction": 0.12638888888888888,
+          "final_sigma": {
+            "minimum": 0.24919582903385162,
+            "mean": 0.24997299909591675,
+            "maximum": 0.25118839740753174
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_0/validations/epoch_0188.npz",
+            "sha256": "4bf58ce572aef0d8079fb62837a244afe16ee5d13d34f3c5a2a49c7f9040ee43",
+            "bytes": 33219
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_0/checkpoints/epoch_0188.pt.gz",
+            "artifact_sha256": "abcf59fc98895cf21ce6d0d801077beb532c9e83355421cbe2543034a97687db",
+            "uncompressed_sha256": "5a45e7e61e3d60d9ddc567ebd1c08d8adf75ac89196255db07bbf569e0abe0df",
+            "bytes": 81489544,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "point_training_metrics": {
+            "minimum_truncated_normalization_mass": 8.608651902441977e-08,
+            "p01_truncated_normalization_mass": 0.0009231852220308284,
+            "median_truncated_normalization_mass": 0.9521988258782412,
+            "raw_mu_outside_support_fraction": 0.2032986111111111,
+            "maximum_support_violation_in_sigma": 5.227117558138371,
+            "p95_support_violation_in_sigma": 1.6969924782032892,
+            "deterministic_action_bound_fraction": 0.20329861342906952,
+            "deterministic_effective_residual_RMS": 0.03122851438820362,
+            "exact_post_update_KL_mean": 0.04987974930414886,
+            "ratio_outside_0p8_1p2_fraction": 0.53125,
+            "training_reward_mean": 0.3409470319747925,
+            "actor_mean_regularization": {
+              "type": "regularisation",
+              "coefficient": 0.005,
+              "unscaled_mean_sum_squared_mu": 17.81982421875,
+              "scaled_loss_contribution": 0.08909912109375
+            },
+            "canonical_optimizer_ratio_max_error": 0.0,
+            "rollout_to_canonical_ratio_max_error": 4.76837158203125e-06
+          }
+        },
+        "400k": {
+          "epoch": 250,
+          "budget_label": "400k",
+          "physics_steps": 400000,
+          "successful_intervals": 33,
+          "first_failure_endpoint": 54,
+          "forty_of_forty": false,
+          "beats_Replay": true,
+          "meaningful_refinement": false,
+          "endpoint40": {
+            "score": 0.5434243083000183,
+            "position_error_m": 0.06334824860095978,
+            "rotation_error_rad": 0.19343255460262299,
+            "position_squared_contribution": 0.278680597278403,
+            "rotation_squared_contribution": 0.01662940141337632
+          },
+          "endpoint50": {
+            "score": 0.7079777121543884,
+            "position_error_m": 0.0776403546333313,
+            "rotation_error_rad": 0.4311545193195343,
+            "position_squared_contribution": 0.4186128241381562,
+            "rotation_squared_contribution": 0.08261965312429276
+          },
+          "endpoint60": {
+            "score": 1.1314573287963867,
+            "position_error_m": 0.1258666068315506,
+            "rotation_error_rad": 0.6364471316337585,
+            "position_squared_contribution": 1.1001668552283435,
+            "rotation_squared_contribution": 0.1800288672732617
+          },
+          "first_failure": {
+            "score": 1.0259491205215454,
+            "position_error_m": 0.09574830532073975,
+            "rotation_error_rad": 0.9673813581466675,
+            "position_squared_contribution": 0.6366484702634444,
+            "rotation_squared_contribution": 0.4159229742620849
+          },
+          "validation_residual_RMS": 0.034739844501018524,
+          "validation_action_bound_fraction": 0.22569444444444445,
+          "final_sigma": {
+            "minimum": 0.24863947927951813,
+            "mean": 0.24993132054805756,
+            "maximum": 0.2512262463569641
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_0/validations/epoch_0250.npz",
+            "sha256": "95b025706a2ed4fdcaf73f6928d0256844fdfa81fe44ae1f9dd5fdfd68a5feba",
+            "bytes": 32717
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_0/checkpoints/epoch_0250.pt.gz",
+            "artifact_sha256": "bf0985e03fefd76a1f4a8f2a7b0f09dbf5f0cd4fd5d19cb2aa35a8b104ff5fcf",
+            "uncompressed_sha256": "1082020a019b3cfa7d0d0b3a11c39c05c34458fed7de3b7c9830211e932f5e01",
+            "bytes": 81492544,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "point_training_metrics": {
+            "minimum_truncated_normalization_mass": 1.5244228102062607e-10,
+            "p01_truncated_normalization_mass": 7.515875600703215e-05,
+            "median_truncated_normalization_mass": 0.8596858785198822,
+            "raw_mu_outside_support_fraction": 0.2779513888888889,
+            "maximum_support_violation_in_sigma": 6.2962743021221,
+            "p95_support_violation_in_sigma": 2.278703289708451,
+            "deterministic_action_bound_fraction": 0.2779513895511627,
+            "deterministic_effective_residual_RMS": 0.034845754504203796,
+            "exact_post_update_KL_mean": 0.056065443520009195,
+            "ratio_outside_0p8_1p2_fraction": 0.5375000238418579,
+            "training_reward_mean": 0.36575037240982056,
+            "actor_mean_regularization": {
+              "type": "regularisation",
+              "coefficient": 0.005,
+              "unscaled_mean_sum_squared_mu": 23.608434677124023,
+              "scaled_loss_contribution": 0.11804217338562012
+            },
+            "canonical_optimizer_ratio_max_error": 0.0,
+            "rollout_to_canonical_ratio_max_error": 4.76837158203125e-06
+          }
+        }
+      },
+      "report": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_0/report.json",
+        "sha256": "8b9133f620195c864fe890b466e23d09870bcc0bdc86123d8187d56e59865367",
+        "bytes": 212352
+      },
+      "chunk_commit_written": false,
+      "intermediate_checkpoint_selected": false,
+      "final_400k_successful_intervals": 33,
+      "delta_step0_to_400k": 3,
+      "validation_bound_fraction_monotonically_increases": true
+    },
+    "1": {
+      "seed": 1,
+      "status": "completed_fixed_400k_no_chunk_commit",
+      "step0_successful_intervals": 30,
+      "step0_first_failure_endpoint": 51,
+      "completed_actor_updates": 250,
+      "observed_minimum_truncated_normalization_mass": 7.510811916855431e-09,
+      "learning_curve": {
+        "0": {
+          "epoch": 0,
+          "budget_label": "0",
+          "physics_steps": 0,
+          "successful_intervals": 30,
+          "first_failure_endpoint": 51,
+          "forty_of_forty": false,
+          "beats_Replay": false,
+          "meaningful_refinement": false,
+          "endpoint40": {
+            "score": 0.6679563522338867,
+            "position_error_m": 0.0759785920381546,
+            "rotation_error_rad": 0.31918832659721375,
+            "position_squared_contribution": 0.4008851700069674,
+            "rotation_squared_contribution": 0.04528052792707982
+          },
+          "endpoint50": {
+            "score": 0.9944888353347778,
+            "position_error_m": 0.0913563072681427,
+            "rotation_error_rad": 0.9597967267036438,
+            "position_squared_contribution": 0.5795815887271738,
+            "rotation_squared_contribution": 0.4094265584849018
+          },
+          "endpoint60": {
+            "score": 1.2191834449768066,
+            "position_error_m": 0.13064369559288025,
+            "rotation_error_rad": 0.8231518268585205,
+            "position_squared_contribution": 1.185262166539247,
+            "rotation_squared_contribution": 0.30114619113800883
+          },
+          "first_failure": {
+            "score": 1.02456796169281,
+            "position_error_m": 0.09631697088479996,
+            "rotation_error_rad": 0.9551905989646912,
+            "position_squared_contribution": 0.6442332555849586,
+            "rotation_squared_contribution": 0.40550625793356687
+          },
+          "validation_residual_RMS": 0.0,
+          "validation_action_bound_fraction": 0.0,
+          "final_sigma": {
+            "minimum": 0.25,
+            "mean": 0.25,
+            "maximum": 0.25
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_1/validations/epoch_0000.npz",
+            "sha256": "1655ea061dabc6abcb740fe571e160e4750bfa42b30bf8ee94374843b0c35a2e",
+            "bytes": 22923
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_1/checkpoints/epoch_0000.pt.gz",
+            "artifact_sha256": "c4ef0c5b47527980054a45d1db86a85c678fea26bb169ef2dfa114d8bb1b0867",
+            "uncompressed_sha256": "beef8f375c51f588ebc53c45b6e49ac5731e52483762d8b10c5127e002713ce2",
+            "bytes": 26794427,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "point_training_metrics": null,
+          "step0_checks": {
+            "mean_residual_within_tolerance": true,
+            "deterministic_action_within_tolerance": true,
+            "command_bitwise_equals_Replay": true,
+            "qpos_bitwise_equals_Replay": true,
+            "qvel_bitwise_equals_Replay": true,
+            "score_bitwise_equals_Replay": true,
+            "termination_bitwise_equals_Replay": true,
+            "contact_flags_bitwise_equal_Replay": true,
+            "is_30_of_40_fail51": true
+          },
+          "all_step0_checks_passed": true
+        },
+        "100k": {
+          "epoch": 62,
+          "budget_label": "100k",
+          "physics_steps": 99200,
+          "successful_intervals": 30,
+          "first_failure_endpoint": 51,
+          "forty_of_forty": false,
+          "beats_Replay": false,
+          "meaningful_refinement": false,
+          "endpoint40": {
+            "score": 0.7226030826568604,
+            "position_error_m": 0.07336318492889404,
+            "rotation_error_rad": 0.5778297185897827,
+            "position_squared_contribution": 0.37376089603549356,
+            "rotation_squared_contribution": 0.14839430386024333
+          },
+          "endpoint50": {
+            "score": 0.9978040456771851,
+            "position_error_m": 0.08897361904382706,
+            "rotation_error_rad": 1.0016018152236938,
+            "position_squared_contribution": 0.5497433948441712,
+            "rotation_squared_contribution": 0.44586942055973267
+          },
+          "endpoint60": {
+            "score": 1.2405229806900024,
+            "position_error_m": 0.12778611481189728,
+            "rotation_error_rad": 0.9544985294342041,
+            "position_squared_contribution": 1.1339785512999578,
+            "rotation_squared_contribution": 0.4049188634186926
+          },
+          "first_failure": {
+            "score": 1.0274434089660645,
+            "position_error_m": 0.09288616478443146,
+            "rotation_error_rad": 1.0134544372558594,
+            "position_squared_contribution": 0.5991555283583719,
+            "rotation_squared_contribution": 0.4564843983971514
+          },
+          "validation_residual_RMS": 0.018606627359986305,
+          "validation_action_bound_fraction": 0.0,
+          "final_sigma": {
+            "minimum": 0.2496006339788437,
+            "mean": 0.24999406933784485,
+            "maximum": 0.2503150403499603
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_1/validations/epoch_0062.npz",
+            "sha256": "bdf499b6f847aba8e79ecb5c4cfae0833218a6422e12cb08cf86f60cdd637ea8",
+            "bytes": 33781
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_1/checkpoints/epoch_0062.pt.gz",
+            "artifact_sha256": "53a89f9307b049d87bc43f60deb085fef1d5d77c1a7c5935c8eb66deee72bbf3",
+            "uncompressed_sha256": "dcad2f4e4a583e1758341c5b42e9b73d4695955e89144a4dd2e35caa246c8b20",
+            "bytes": 81727265,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "point_training_metrics": {
+            "minimum_truncated_normalization_mass": 0.00023999916889705375,
+            "p01_truncated_normalization_mass": 0.04737474270706106,
+            "median_truncated_normalization_mass": 0.998178453435689,
+            "raw_mu_outside_support_fraction": 0.03177083333333333,
+            "maximum_support_violation_in_sigma": 3.4916769884088374,
+            "p95_support_violation_in_sigma": 0.0,
+            "deterministic_action_bound_fraction": 0.03177083283662796,
+            "deterministic_effective_residual_RMS": 0.01913728564977646,
+            "exact_post_update_KL_mean": 0.06144901008108805,
+            "ratio_outside_0p8_1p2_fraction": 0.5562499761581421,
+            "training_reward_mean": 0.26452797651290894,
+            "actor_mean_regularization": {
+              "type": "regularisation",
+              "coefficient": 0.005,
+              "unscaled_mean_sum_squared_mu": 5.4023356437683105,
+              "scaled_loss_contribution": 0.027011678218841553
+            },
+            "canonical_optimizer_ratio_max_error": 0.0,
+            "rollout_to_canonical_ratio_max_error": 3.0994415283203125e-06
+          }
+        },
+        "200k": {
+          "epoch": 125,
+          "budget_label": "200k",
+          "physics_steps": 200000,
+          "successful_intervals": 34,
+          "first_failure_endpoint": 55,
+          "forty_of_forty": false,
+          "beats_Replay": true,
+          "meaningful_refinement": false,
+          "endpoint40": {
+            "score": 0.6703323125839233,
+            "position_error_m": 0.07884673029184341,
+            "rotation_error_rad": 0.19912585616111755,
+            "position_squared_contribution": 0.43172269984129846,
+            "rotation_squared_contribution": 0.01762271404084359
+          },
+          "endpoint50": {
+            "score": 0.8650323748588562,
+            "position_error_m": 0.09554105997085571,
+            "rotation_error_rad": 0.507314145565033,
+            "position_squared_contribution": 0.6338954264135173,
+            "rotation_squared_contribution": 0.11438561879572422
+          },
+          "endpoint60": {
+            "score": 1.1660667657852173,
+            "position_error_m": 0.13295163214206696,
+            "rotation_error_rad": 0.5453941226005554,
+            "position_squared_contribution": 1.2275094784194094,
+            "rotation_squared_contribution": 0.13220211065210208
+          },
+          "first_failure": {
+            "score": 1.0028319358825684,
+            "position_error_m": 0.11117547750473022,
+            "rotation_error_rad": 0.5757722854614258,
+            "position_squared_contribution": 0.8583324165558873,
+            "rotation_squared_contribution": 0.1473394332024327
+          },
+          "validation_residual_RMS": 0.024479679763317108,
+          "validation_action_bound_fraction": 0.04583333333333333,
+          "final_sigma": {
+            "minimum": 0.24903902411460876,
+            "mean": 0.2499694973230362,
+            "maximum": 0.2507058382034302
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_1/validations/epoch_0125.npz",
+            "sha256": "d65c746574bcbb447755432afc28a10897e9cdb748765f3ad7532a979471e368",
+            "bytes": 33470
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_1/checkpoints/epoch_0125.pt.gz",
+            "artifact_sha256": "bea6003583f973c11341cd50c3d6a52fe9be2686dfab6232e1db3a83edf6b186",
+            "uncompressed_sha256": "8dcd74763b97459d2b1f76d41bfe0795b5e598d557848eda2e30ec1e6fc0a6cb",
+            "bytes": 81657438,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "point_training_metrics": {
+            "minimum_truncated_normalization_mass": 1.0734214415109022e-06,
+            "p01_truncated_normalization_mass": 0.001997481908393203,
+            "median_truncated_normalization_mass": 0.991950716362811,
+            "raw_mu_outside_support_fraction": 0.11163194444444445,
+            "maximum_support_violation_in_sigma": 4.739086087396444,
+            "p95_support_violation_in_sigma": 1.0901787044567275,
+            "deterministic_action_bound_fraction": 0.11163194477558136,
+            "deterministic_effective_residual_RMS": 0.024429406970739365,
+            "exact_post_update_KL_mean": 0.05581975976406176,
+            "ratio_outside_0p8_1p2_fraction": 0.518750011920929,
+            "training_reward_mean": 0.31358978152275085,
+            "actor_mean_regularization": {
+              "type": "regularisation",
+              "coefficient": 0.005,
+              "unscaled_mean_sum_squared_mu": 9.744841575622559,
+              "scaled_loss_contribution": 0.048724207878112796
+            },
+            "canonical_optimizer_ratio_max_error": 0.0,
+            "rollout_to_canonical_ratio_max_error": 2.86102294921875e-06
+          }
+        },
+        "300k": {
+          "epoch": 188,
+          "budget_label": "300k",
+          "physics_steps": 300800,
+          "successful_intervals": 22,
+          "first_failure_endpoint": 43,
+          "forty_of_forty": false,
+          "beats_Replay": false,
+          "meaningful_refinement": false,
+          "endpoint40": {
+            "score": 0.8552536964416504,
+            "position_error_m": 0.07033754885196686,
+            "rotation_error_rad": 0.9342140555381775,
+            "position_squared_contribution": 0.3435674151738073,
+            "rotation_squared_contribution": 0.3878915118067063
+          },
+          "endpoint50": {
+            "score": 1.2182849645614624,
+            "position_error_m": 0.08744138479232788,
+            "rotation_error_rad": 1.464514970779419,
+            "position_squared_contribution": 0.5309719287777744,
+            "rotation_squared_contribution": 0.953246266505352
+          },
+          "endpoint60": {
+            "score": 1.3137127161026,
+            "position_error_m": 0.1282261312007904,
+            "rotation_error_rad": 1.1463372707366943,
+            "position_squared_contribution": 1.1418014390779385,
+            "rotation_squared_contribution": 0.584039617013357
+          },
+          "first_failure": {
+            "score": 1.0122061967849731,
+            "position_error_m": 0.07732260972261429,
+            "rotation_error_rad": 1.1709303855895996,
+            "position_squared_contribution": 0.41519347043859206,
+            "rotation_squared_contribution": 0.6093679857320037
+          },
+          "validation_residual_RMS": 0.02771546132862568,
+          "validation_action_bound_fraction": 0.09375,
+          "final_sigma": {
+            "minimum": 0.24877417087554932,
+            "mean": 0.24993659555912018,
+            "maximum": 0.2506612241268158
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_1/validations/epoch_0188.npz",
+            "sha256": "2ccfdeb972f1a31ffcc95f01b10452d9a9b0ce167221553f7a0bc549ac49b932",
+            "bytes": 33416
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_1/checkpoints/epoch_0188.pt.gz",
+            "artifact_sha256": "d31a40e4d6340871478718ec9a586a7a90e720c98f82614be6c9ec61f004f984",
+            "uncompressed_sha256": "11cccdbad9ba5f6f5569a5bdab3e9c2fe143a76762b02a70c777c9e8de6b678e",
+            "bytes": 81551430,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "point_training_metrics": {
+            "minimum_truncated_normalization_mass": 4.2180261727864377e-08,
+            "p01_truncated_normalization_mass": 0.002242217208718418,
+            "median_truncated_normalization_mass": 0.9754893223640919,
+            "raw_mu_outside_support_fraction": 0.15520833333333334,
+            "maximum_support_violation_in_sigma": 5.357544651415197,
+            "p95_support_violation_in_sigma": 1.5965493782379796,
+            "deterministic_action_bound_fraction": 0.15520833432674408,
+            "deterministic_effective_residual_RMS": 0.027899304404854774,
+            "exact_post_update_KL_mean": 0.05226013909085755,
+            "ratio_outside_0p8_1p2_fraction": 0.543749988079071,
+            "training_reward_mean": 0.33791178464889526,
+            "actor_mean_regularization": {
+              "type": "regularisation",
+              "coefficient": 0.005,
+              "unscaled_mean_sum_squared_mu": 13.891716003417969,
+              "scaled_loss_contribution": 0.06945858001708985
+            },
+            "canonical_optimizer_ratio_max_error": 0.0,
+            "rollout_to_canonical_ratio_max_error": 4.76837158203125e-06
+          }
+        },
+        "400k": {
+          "epoch": 250,
+          "budget_label": "400k",
+          "physics_steps": 400000,
+          "successful_intervals": 38,
+          "first_failure_endpoint": 59,
+          "forty_of_forty": false,
+          "beats_Replay": true,
+          "meaningful_refinement": true,
+          "endpoint40": {
+            "score": 0.5973464846611023,
+            "position_error_m": 0.07011132687330246,
+            "rotation_error_rad": 0.18651866912841797,
+            "position_squared_contribution": 0.3413609830510461,
+            "rotation_squared_contribution": 0.015461872859305004
+          },
+          "endpoint50": {
+            "score": 0.7430311441421509,
+            "position_error_m": 0.08482033759355545,
+            "rotation_error_rad": 0.3436209261417389,
+            "position_squared_contribution": 0.4996173381586609,
+            "rotation_squared_contribution": 0.052477929281113944
+          },
+          "endpoint60": {
+            "score": 1.0890077352523804,
+            "position_error_m": 0.1286078691482544,
+            "rotation_error_rad": 0.2898070216178894,
+            "position_squared_contribution": 1.148610000476009,
+            "rotation_squared_contribution": 0.0373280487906808
+          },
+          "first_failure": {
+            "score": 1.0343655347824097,
+            "position_error_m": 0.12190131098031998,
+            "rotation_error_rad": 0.29229870438575745,
+            "position_squared_contribution": 1.031939556855603,
+            "rotation_squared_contribution": 0.037972681149152185
+          },
+          "validation_residual_RMS": 0.035773612558841705,
+          "validation_action_bound_fraction": 0.27569444444444446,
+          "final_sigma": {
+            "minimum": 0.24889858067035675,
+            "mean": 0.24989789724349976,
+            "maximum": 0.2507595121860504
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_1/validations/epoch_0250.npz",
+            "sha256": "7dc367e8d21e37589ec56d0b3173e9337229321858ed86ec591ed6c47d993fe9",
+            "bytes": 32065
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_1/checkpoints/epoch_0250.pt.gz",
+            "artifact_sha256": "006289392e0e8b4ca88ff1a84e074a182d9c6ac69e9d82ff0439f06240885ae7",
+            "uncompressed_sha256": "eba8f46652f414ee0d80e7fed480907004e4c5898d77ebfb8945d189af621ae6",
+            "bytes": 81536107,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "point_training_metrics": {
+            "minimum_truncated_normalization_mass": 1.6501268795821034e-07,
+            "p01_truncated_normalization_mass": 1.4504707645102145e-06,
+            "median_truncated_normalization_mass": 0.8203470415865897,
+            "raw_mu_outside_support_fraction": 0.3190972222222222,
+            "maximum_support_violation_in_sigma": 5.10544018229358,
+            "p95_support_violation_in_sigma": 2.0052982924869474,
+            "deterministic_action_bound_fraction": 0.31909722089767456,
+            "deterministic_effective_residual_RMS": 0.03547636419534683,
+            "exact_post_update_KL_mean": 0.053446570562600194,
+            "ratio_outside_0p8_1p2_fraction": 0.5,
+            "training_reward_mean": 0.365212082862854,
+            "actor_mean_regularization": {
+              "type": "regularisation",
+              "coefficient": 0.005,
+              "unscaled_mean_sum_squared_mu": 24.879451751708984,
+              "scaled_loss_contribution": 0.12439725875854492
+            },
+            "canonical_optimizer_ratio_max_error": 0.0,
+            "rollout_to_canonical_ratio_max_error": 4.76837158203125e-06
+          }
+        }
+      },
+      "report": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_1/report.json",
+        "sha256": "61de9c877590af239d0b29615da5625959fad0dc56151ba9c03a77f4ec3d4cf7",
+        "bytes": 212270
+      },
+      "chunk_commit_written": false,
+      "intermediate_checkpoint_selected": false,
+      "final_400k_successful_intervals": 38,
+      "delta_step0_to_400k": 8,
+      "validation_bound_fraction_monotonically_increases": true
+    },
+    "2": {
+      "seed": 2,
+      "status": "failed_closed_before_fixed_400k_budget",
+      "step0_successful_intervals": 30,
+      "step0_first_failure_endpoint": 51,
+      "completed_actor_updates": 211,
+      "observed_minimum_truncated_normalization_mass": 1.6863732632543815e-12,
+      "learning_curve": {
+        "0": {
+          "epoch": 0,
+          "budget_label": "0",
+          "physics_steps": 0,
+          "successful_intervals": 30,
+          "first_failure_endpoint": 51,
+          "forty_of_forty": false,
+          "beats_Replay": false,
+          "meaningful_refinement": false,
+          "endpoint40": {
+            "score": 0.6679563522338867,
+            "position_error_m": 0.0759785920381546,
+            "rotation_error_rad": 0.31918832659721375,
+            "position_squared_contribution": 0.4008851700069674,
+            "rotation_squared_contribution": 0.04528052792707982
+          },
+          "endpoint50": {
+            "score": 0.9944888353347778,
+            "position_error_m": 0.0913563072681427,
+            "rotation_error_rad": 0.9597967267036438,
+            "position_squared_contribution": 0.5795815887271738,
+            "rotation_squared_contribution": 0.4094265584849018
+          },
+          "endpoint60": {
+            "score": 1.2191834449768066,
+            "position_error_m": 0.13064369559288025,
+            "rotation_error_rad": 0.8231518268585205,
+            "position_squared_contribution": 1.185262166539247,
+            "rotation_squared_contribution": 0.30114619113800883
+          },
+          "first_failure": {
+            "score": 1.02456796169281,
+            "position_error_m": 0.09631697088479996,
+            "rotation_error_rad": 0.9551905989646912,
+            "position_squared_contribution": 0.6442332555849586,
+            "rotation_squared_contribution": 0.40550625793356687
+          },
+          "validation_residual_RMS": 0.0,
+          "validation_action_bound_fraction": 0.0,
+          "final_sigma": {
+            "minimum": 0.25,
+            "mean": 0.25,
+            "maximum": 0.25
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_2/validations/epoch_0000.npz",
+            "sha256": "1655ea061dabc6abcb740fe571e160e4750bfa42b30bf8ee94374843b0c35a2e",
+            "bytes": 22923
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_2/checkpoints/epoch_0000.pt.gz",
+            "artifact_sha256": "faaafdd5ce2bd6de1ce5220655915bad4ef1d21a83cda3197bc484f79aa7ec62",
+            "uncompressed_sha256": "a165e0790c305abaaba881624af896c6234f7133792f43ca30e57490bba38b21",
+            "bytes": 26794395,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "point_training_metrics": null,
+          "step0_checks": {
+            "mean_residual_within_tolerance": true,
+            "deterministic_action_within_tolerance": true,
+            "command_bitwise_equals_Replay": true,
+            "qpos_bitwise_equals_Replay": true,
+            "qvel_bitwise_equals_Replay": true,
+            "score_bitwise_equals_Replay": true,
+            "termination_bitwise_equals_Replay": true,
+            "contact_flags_bitwise_equal_Replay": true,
+            "is_30_of_40_fail51": true
+          },
+          "all_step0_checks_passed": true
+        },
+        "100k": {
+          "epoch": 62,
+          "budget_label": "100k",
+          "physics_steps": 99200,
+          "successful_intervals": 31,
+          "first_failure_endpoint": 52,
+          "forty_of_forty": false,
+          "beats_Replay": true,
+          "meaningful_refinement": false,
+          "endpoint40": {
+            "score": 0.7501397728919983,
+            "position_error_m": 0.06798038631677628,
+            "rotation_error_rad": 0.7375726699829102,
+            "position_squared_contribution": 0.32092589748459327,
+            "rotation_squared_contribution": 0.24178375266920843
+          },
+          "endpoint50": {
+            "score": 0.9577081203460693,
+            "position_error_m": 0.09130313992500305,
+            "rotation_error_rad": 0.8724503517150879,
+            "position_squared_contribution": 0.5789071777892144,
+            "rotation_squared_contribution": 0.33829760720345803
+          },
+          "endpoint60": {
+            "score": 1.088426113128662,
+            "position_error_m": 0.1236991360783577,
+            "rotation_error_rad": 0.5240753293037415,
+            "position_squared_contribution": 1.0626025185091708,
+            "rotation_squared_contribution": 0.12206886701547778
+          },
+          "first_failure": {
+            "score": 1.025463581085205,
+            "position_error_m": 0.10074996203184128,
+            "rotation_error_rad": 0.8831878900527954,
+            "position_squared_contribution": 0.7048996423206568,
+            "rotation_squared_contribution": 0.3466759329492928
+          },
+          "validation_residual_RMS": 0.020211894065141678,
+          "validation_action_bound_fraction": 0.016666666666666666,
+          "final_sigma": {
+            "minimum": 0.24934925138950348,
+            "mean": 0.2499932199716568,
+            "maximum": 0.25040704011917114
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_2/validations/epoch_0062.npz",
+            "sha256": "a2789f91a514c6aeb88cb5870272c5ba91a3919ba105226a5423ec0fd7374950",
+            "bytes": 33766
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_2/checkpoints/epoch_0062.pt.gz",
+            "artifact_sha256": "a7b8000d39c884b3f21a59e54756612d9c3d34ab50c9cce1148f1687aaa5426b",
+            "uncompressed_sha256": "2810e1c8ffef1780d360a651b38d38e6306a53b50e07f31bf9ae433678bd547b",
+            "bytes": 81607957,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "point_training_metrics": {
+            "minimum_truncated_normalization_mass": 0.0002562047180381666,
+            "p01_truncated_normalization_mass": 0.013247831573538248,
+            "median_truncated_normalization_mass": 0.9967500421434061,
+            "raw_mu_outside_support_fraction": 0.06059027777777778,
+            "maximum_support_violation_in_sigma": 3.4741840451522785,
+            "p95_support_violation_in_sigma": 0.3751909209318472,
+            "deterministic_action_bound_fraction": 0.06059027835726738,
+            "deterministic_effective_residual_RMS": 0.02079925872385502,
+            "exact_post_update_KL_mean": 0.03943252172055287,
+            "ratio_outside_0p8_1p2_fraction": 0.4749999940395355,
+            "training_reward_mean": 0.3151181936264038,
+            "actor_mean_regularization": {
+              "type": "regularisation",
+              "coefficient": 0.005,
+              "unscaled_mean_sum_squared_mu": 6.634219169616699,
+              "scaled_loss_contribution": 0.0331710958480835
+            },
+            "canonical_optimizer_ratio_max_error": 0.0,
+            "rollout_to_canonical_ratio_max_error": 2.6226043701171875e-06
+          }
+        },
+        "200k": {
+          "epoch": 125,
+          "budget_label": "200k",
+          "physics_steps": 200000,
+          "successful_intervals": 29,
+          "first_failure_endpoint": 50,
+          "forty_of_forty": false,
+          "beats_Replay": false,
+          "meaningful_refinement": false,
+          "endpoint40": {
+            "score": 0.5877003073692322,
+            "position_error_m": 0.06648648530244827,
+            "rotation_error_rad": 0.29399916529655457,
+            "position_squared_contribution": 0.30697588388004654,
+            "rotation_squared_contribution": 0.03841578186447592
+          },
+          "endpoint50": {
+            "score": 1.0700229406356812,
+            "position_error_m": 0.10465802997350693,
+            "rotation_error_rad": 0.9298825263977051,
+            "position_squared_contribution": 0.7606460581899634,
+            "rotation_squared_contribution": 0.38430289462212386
+          },
+          "endpoint60": {
+            "score": 1.2865283489227295,
+            "position_error_m": 0.1418163925409317,
+            "rotation_error_rad": 0.7626381516456604,
+            "position_squared_contribution": 1.3966589717585853,
+            "rotation_squared_contribution": 0.25849642237578196
+          },
+          "first_failure": {
+            "score": 1.0700229406356812,
+            "position_error_m": 0.10465802997350693,
+            "rotation_error_rad": 0.9298825263977051,
+            "position_squared_contribution": 0.7606460581899634,
+            "rotation_squared_contribution": 0.38430289462212386
+          },
+          "validation_residual_RMS": 0.025714367628097534,
+          "validation_action_bound_fraction": 0.07708333333333334,
+          "final_sigma": {
+            "minimum": 0.24922022223472595,
+            "mean": 0.2500073313713074,
+            "maximum": 0.250760942697525
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_2/validations/epoch_0125.npz",
+            "sha256": "20a834825894a8c9ca93080584849e6f2bccccf2e50a50bc189cfd36ba01a118",
+            "bytes": 33371
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_2/checkpoints/epoch_0125.pt.gz",
+            "artifact_sha256": "52e55e4e3e2e115c7287da2cee61eeadd047d227b513d625fdce325212a826a6",
+            "uncompressed_sha256": "c80e7dec4ade386df06d89ea6db807cdd6eb35cca7f0e2e813e6ef83e0771128",
+            "bytes": 81622676,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "point_training_metrics": {
+            "minimum_truncated_normalization_mass": 0.00012592080675899453,
+            "p01_truncated_normalization_mass": 0.023884564305276277,
+            "median_truncated_normalization_mass": 0.9919013784367191,
+            "raw_mu_outside_support_fraction": 0.12100694444444444,
+            "maximum_support_violation_in_sigma": 3.6603798626944983,
+            "p95_support_violation_in_sigma": 1.053654126110206,
+            "deterministic_action_bound_fraction": 0.12100694328546524,
+            "deterministic_effective_residual_RMS": 0.025949323549866676,
+            "exact_post_update_KL_mean": 0.062248897437645875,
+            "ratio_outside_0p8_1p2_fraction": 0.6000000238418579,
+            "training_reward_mean": 0.3168150782585144,
+            "actor_mean_regularization": {
+              "type": "regularisation",
+              "coefficient": 0.005,
+              "unscaled_mean_sum_squared_mu": 11.079625129699707,
+              "scaled_loss_contribution": 0.05539812564849854
+            },
+            "canonical_optimizer_ratio_max_error": 0.0,
+            "rollout_to_canonical_ratio_max_error": 3.814697265625e-06
+          }
+        },
+        "300k": {
+          "epoch": 188,
+          "budget_label": "300k",
+          "physics_steps": 300800,
+          "successful_intervals": 23,
+          "first_failure_endpoint": 44,
+          "forty_of_forty": false,
+          "beats_Replay": false,
+          "meaningful_refinement": false,
+          "endpoint40": {
+            "score": 0.7361387014389038,
+            "position_error_m": 0.07143078744411469,
+            "rotation_error_rad": 0.6496400237083435,
+            "position_squared_contribution": 0.3543303746448815,
+            "rotation_squared_contribution": 0.1875698490683454
+          },
+          "endpoint50": {
+            "score": 1.2830864191055298,
+            "position_error_m": 0.10052178800106049,
+            "rotation_error_rad": 1.4578583240509033,
+            "position_squared_contribution": 0.701710407147927,
+            "rotation_squared_contribution": 0.9446003968908928
+          },
+          "endpoint60": {
+            "score": 1.5030986070632935,
+            "position_error_m": 0.13900364935398102,
+            "rotation_error_rad": 1.4367923736572266,
+            "position_squared_contribution": 1.3418065648419797,
+            "rotation_squared_contribution": 0.9174988111109188
+          },
+          "first_failure": {
+            "score": 1.0437549352645874,
+            "position_error_m": 0.08823896944522858,
+            "rotation_error_rad": 1.111136555671692,
+            "position_squared_contribution": 0.54070248116361,
+            "rotation_squared_contribution": 0.5487219757110893
+          },
+          "validation_residual_RMS": 0.02938891388475895,
+          "validation_action_bound_fraction": 0.15763888888888888,
+          "final_sigma": {
+            "minimum": 0.24895936250686646,
+            "mean": 0.24992141127586365,
+            "maximum": 0.25082889199256897
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_2/validations/epoch_0188.npz",
+            "sha256": "8f0256ba6b7224c4cddcf0022ee76235115e11292b1b07c6cd2230dafbe352db",
+            "bytes": 33182
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_2/checkpoints/epoch_0188.pt.gz",
+            "artifact_sha256": "fc16c8a79af179658328fc807e763c08366b8a9e7844c3d55a52f2cf8a6ffb24",
+            "uncompressed_sha256": "e43e363481a1d8a1b890c198e556b37ce0bb00d3c8fc1c6520729ee21bd4b141",
+            "bytes": 81595679,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "point_training_metrics": {
+            "minimum_truncated_normalization_mass": 6.481287173620842e-10,
+            "p01_truncated_normalization_mass": 0.0004067854813411343,
+            "median_truncated_normalization_mass": 0.971836231516262,
+            "raw_mu_outside_support_fraction": 0.2048611111111111,
+            "maximum_support_violation_in_sigma": 6.067860097479332,
+            "p95_support_violation_in_sigma": 1.8351390726620613,
+            "deterministic_action_bound_fraction": 0.2048611044883728,
+            "deterministic_effective_residual_RMS": 0.029944419860839844,
+            "exact_post_update_KL_mean": 0.046559440453691335,
+            "ratio_outside_0p8_1p2_fraction": 0.4937500059604645,
+            "training_reward_mean": 0.3460385799407959,
+            "actor_mean_regularization": {
+              "type": "regularisation",
+              "coefficient": 0.005,
+              "unscaled_mean_sum_squared_mu": 17.955726623535156,
+              "scaled_loss_contribution": 0.08977863311767578
+            },
+            "canonical_optimizer_ratio_max_error": 0.0,
+            "rollout_to_canonical_ratio_max_error": 3.814697265625e-06
+          }
+        }
+      },
+      "report": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_2/failure_report.json",
+        "sha256": "cde319800e0f9469a6d8c9356150b47a2eda8b3ca870f15e05a2a6defc7f73d4",
+        "bytes": 183093
+      },
+      "chunk_commit_written": false,
+      "intermediate_checkpoint_selected": false,
+      "final_400k_successful_intervals": null,
+      "delta_step0_to_400k": null,
+      "exception": {
+        "type": "ValueError",
+        "message": "truncated-Gaussian normalization mass 8.46822612e-13 is below the 1e-12 fail-closed threshold",
+        "traceback": "Traceback (most recent call last):\n  File \"/data_all/zzx/3.2RL/scripts/run_taco_pour_algorithmic_candidate_C_v5.py\", line 617, in main\n    agent.train_epoch()\n  File \"/data_all/zzx/3.2RL/src/video_to_spider/rl/algorithmic_training.py\", line 294, in train_epoch\n    result = super().train_epoch()\n             ^^^^^^^^^^^^^^^^^^^^^\n  File \"/data_all/zzx/3.2RL/src/video_to_spider/rl/state_feasible_truncated_gaussian.py\", line 1110, in train_epoch\n    result = super().train_epoch()\n             ^^^^^^^^^^^^^^^^^^^^^\n  File \"/data_all/zzx/3.2RL/external/human2sim2robot/human2sim2robot/ppo/ppo_agent.py\", line 1034, in train_epoch\n    self.train_actor_critic(self.dataset[i])\n  File \"/data_all/zzx/3.2RL/src/video_to_spider/rl/algorithmic_training_v5.py\", line 219, in train_actor_critic\n    result = super().train_actor_critic(input_dict)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data_all/zzx/3.2RL/src/video_to_spider/rl/algorithmic_training.py\", line 237, in train_actor_critic\n    post = self.evaluate_ppo_distribution(input_dict)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data_all/zzx/3.2RL/src/video_to_spider/rl/algorithmic_training.py\", line 121, in evaluate_ppo_distribution\n    result = super().evaluate_ppo_distribution(input_dict)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data_all/zzx/3.2RL/src/video_to_spider/rl/state_feasible_truncated_gaussian.py\", line 1293, in evaluate_ppo_distribution\n    neglogp = self.recompute_truncated_neglogp(\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data_all/zzx/3.2RL/src/video_to_spider/rl/state_feasible_truncated_gaussian.py\", line 1178, in recompute_truncated_neglogp\n    return -truncated_normal_log_prob(\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data_all/zzx/3.2RL/src/video_to_spider/rl/state_feasible_truncated_gaussian.py\", line 541, in truncated_normal_log_prob\n    terms = _distribution_terms(\n            ^^^^^^^^^^^^^^^^^^^^\n  File \"/data_all/zzx/3.2RL/src/video_to_spider/rl/state_feasible_truncated_gaussian.py\", line 524, in _distribution_terms\n    raise ValueError(\nValueError: truncated-Gaussian normalization mass 8.46822612e-13 is below the 1e-12 fail-closed threshold\n"
+      },
+      "failure_normalization_mass": 8.46822612e-13,
+      "eligible_as_400k_outcome": false
+    }
+  },
+  "aggregate": {
+    "completed_seeds": [
+      0,
+      1
+    ],
+    "failed_seeds": [
+      2
+    ],
+    "mass_floor_failure_seeds": [
+      2
+    ],
+    "all_three_reached_400k": false,
+    "global_minimum_truncated_normalization_mass": 8.46822612e-13,
+    "median_validated_intervals": {
+      "0": 30.0,
+      "100k": 31.0,
+      "200k": 34.0,
+      "300k": 23.0,
+      "400k": null
+    },
+    "seeds_beating_Replay_at_400k": [
+      0,
+      1
+    ],
+    "strict_success_events": [],
+    "seed_robust_strict_success": false,
+    "active_baseline": false
+  },
+  "v4_comparison": {
+    "artifact": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/B_budget_extension_500k/comparison.json",
+      "sha256": "df950a37827f2d47d3d4634395e15ab13668d68aa569d7c49e61af0223558c19",
+      "bytes": 23732
+    },
+    "B_seeds_reaching_400k": [],
+    "B_mass_floor_failure_seeds": [
+      0,
+      2
+    ],
+    "B_numerical_gate_failure_seeds": [
+      1
+    ],
+    "B_validation_bound_fraction": {
+      "0": {
+        "100k": 0.017361111111111112,
+        "200k": 0.2076388888888889
+      },
+      "1": {
+        "100k": 0.004861111111111111,
+        "200k": 0.04097222222222222,
+        "300k": 0.13333333333333333
+      },
+      "2": {
+        "100k": 0.013194444444444444,
+        "200k": 0.14305555555555555,
+        "300k": 0.25555555555555554
+      }
+    },
+    "raw_mu_support_metrics_available_in_v4": false,
+    "raw_mu_cross_candidate_values_invented": false
+  },
+  "prefrozen_classification": {
+    "C1_mean_regularization_fixes_structural_instability": {
+      "triggered": false,
+      "structural_stability_core_satisfied": false,
+      "no_validation_bound_fraction_monotonic_explosion": false,
+      "relative_support_evidence": "C does not reach 400k for 3/3 seeds: seed2 repeats the normalization-mass failure; v4 has no directly comparable raw-mu metric",
+      "active_baseline": false
+    },
+    "C2_numerical_stability_fixed_but_performance_drifts": {
+      "triggered": false,
+      "evaluable_at_fixed_400k_budget": false,
+      "median_400k_at_most_30": false,
+      "median_continuously_declines_after_100k": false,
+      "diagnostic_median_through_300k": {
+        "100k": 31.0,
+        "200k": 34.0,
+        "300k": 23.0
+      }
+    },
+    "C3_mass_floor_still_occurs": {
+      "triggered": true,
+      "mass_floor_failure_seeds": [
+        2
+      ],
+      "regularization_coefficient_sweep_allowed": false
+    },
+    "C4_strict_task_success": {
+      "triggered": false,
+      "events": [],
+      "seed_robust": false,
+      "automatic_chunk_commit_allowed": false
+    }
+  },
+  "forbidden_actions_executed": [],
+  "chunk_commit_written": false
+}

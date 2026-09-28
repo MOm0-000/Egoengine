@@ -1,0 +1,225 @@
+schema: taco_pour_algorithmic_reproduction_training_benchmark_v5
+status: authorized_candidate_C_fresh_400k
+paper_faithful: false
+classification: local_algorithmic_reproduction_H2S2R_LSTM_mean_regularization_ablation
+purpose: >-
+  Test whether the H2S2R public LSTM PPO actor-mean regularization prevents
+  Candidate B's long-budget raw-mean drift outside the state-feasible
+  truncated-Gaussian support. This is a local reproduction ablation, not a
+  recovered EgoEngine author parameter.
+
+v4_evidence_immutable: true
+v4_checkpoint_resume_allowed: false
+v4_threshold_or_history_rewrite_allowed: false
+
+candidate_C:
+  seeds: [0, 1, 2]
+  initialization: replay_preserving
+  mean_head_weight: 0.0
+  mean_head_bias: 0.0
+  initial_sigma_multiplier: 0.25
+  bounds_loss_coef: 0.005
+  bound_loss_type: regularisation
+  actor_bound_loss: '0.005 * mean(sum(mu^2, dim=action))'
+  provenance: upstream_public_H2S2R_CrossEmbodimentPPOLSTM_config
+  actor_mini_epochs: 1
+  critic_mini_epochs: 4
+  actor_learning_rate: 0.0001
+  critic_learning_rate: unchanged
+  linear_LR_allowed: false
+  adaptive_LR_allowed: false
+  half_LR_allowed: false
+  KL_penalty_allowed: false
+  target_KL_allowed: false
+  warm_start_allowed: false
+  seed_specific_settings_allowed: false
+  intermediate_checkpoint_selection_allowed: false
+  automatic_1m_allowed: false
+  chunk_commit_allowed: false
+
+frozen_task:
+  episode: '20230927_017'
+  boundary_endpoint: 20
+  validation_sources: [20, 59]
+  validation_endpoints: [21, 60]
+  validation_intervals: 40
+  timing:
+    action_at_source_t_uses_reference: t_plus_1
+    reward_for_state_t_plus_1_uses_reference: t_plus_1
+  collision_scene: current_mixed_formal_scene
+  actuator: current_unlimited_affine_position_actuator
+  objective: taco_pour_local_normalized_ellipse_v1
+  residual_scale: 0.05
+  action_frame: world_or_base
+  action_distribution: taco_pour_baseline_preserving_truncated_gaussian_v2
+  residual_execution_identity: original_formal_reference_plus_residual
+  action_bound_contract: baseline_preserving_nonworsening_ctrlrange_violation
+  observation: taco_pour_transition_aligned_236d_v1
+  observation_dimension: 236
+  observation_RMS: frozen_across_rollout_and_optimizer_then_committed_once
+  worlds: 4
+  horizon_control_intervals_per_world: 40
+  physics_steps_per_control_interval: 10
+  physics_steps_per_epoch: 1600
+  control_intervals_per_epoch: 160
+  seed: per_run_0_1_2
+
+step0_gate:
+  required_for_every_seed: true
+  before_optimizer_updates: true
+  actor_mean_max_abs_tolerance: 1.0e-7
+  deterministic_action_max_abs_tolerance: 1.0e-7
+  command_bitwise_equal_Replay: true
+  qpos_bitwise_equal_Replay: true
+  qvel_bitwise_equal_Replay: true
+  score_bitwise_equal_Replay: true
+  termination_bitwise_equal_Replay: true
+  contact_flags_bitwise_equal_Replay: true
+  successful_intervals: 30
+  first_failure_endpoint: 51
+  failure_action: stop_whole_candidate_before_training
+
+likelihood_gate:
+  semantic_fields_exact:
+    - actor_parameters
+    - actor_RMS
+    - normalization_version
+    - observations
+    - dones
+    - actions
+    - action_bounds
+    - RNN_start_states
+  canonical_optimizer_ratio_bitwise_one: true
+  canonical_optimizer_ratio_max_error: 0.0
+  rollout_to_canonical_role: numerical_diagnostic_only_below_semantic_hard_fail
+  retired_v4_numerical_blocker: 1.52587890625e-5
+  semantic_hard_fail: 1.0e-4
+  v4_history_rewrite_allowed: false
+
+fixed_milestones:
+  - {name: '0', epoch: 0, physics_steps: 0, control_intervals: 0}
+  - {name: 100k, epoch: 62, physics_steps: 99200, control_intervals: 9920}
+  - {name: 200k, epoch: 125, physics_steps: 200000, control_intervals: 20000}
+  - {name: 300k, epoch: 188, physics_steps: 300800, control_intervals: 30080}
+  - {name: 400k, epoch: 250, physics_steps: 400000, control_intervals: 40000}
+
+passive_support_metrics:
+  - minimum_truncated_normalization_mass
+  - p01_truncated_normalization_mass
+  - median_truncated_normalization_mass
+  - raw_mu_outside_support_fraction
+  - maximum_support_violation_in_sigma
+  - p95_support_violation_in_sigma
+  - deterministic_action_bound_fraction
+  - deterministic_effective_residual_RMS
+  - exact_post_update_KL
+  - ratio_outside_0p8_1p2
+  - sigma
+  - training_reward
+  - actor_mean_regularization
+
+validation:
+  deterministic_truncated_mode: true
+  frozen_RMS: true
+  fixed_milestone_checkpoint_roundtrip_required: true
+  deterministic_endpoint20_to60_validation_required: true
+  formal_success_requires: 40_of_40
+  Replay_successful_intervals: 30
+  intermediate_checkpoint_selection_allowed: false
+  seed_robust_strict_success_requires: at_least_2_of_3_seeds_40_of_40
+  chunk_commit_requires_separate_authorization: true
+
+prefrozen_classification:
+  C1:
+    condition: >-
+      all three seeds reach 400k, no mass-floor failure, minimum mass remains
+      at least 1e-12, support drift is materially lower than Candidate B, and
+      deterministic bound occupancy does not monotonically explode
+    interpretation: H2S2R_mean_regularization_fixes_structural_instability
+    active_baseline_requires_median_validated_intervals_gt: 30
+  C2:
+    condition: all three seeds reach 400k but median validation is at most 30 or declines after 100k
+    interpretation: numerical_stability_fixed_but_policy_performance_drifts
+    next_candidate_only_after_review: H2S2R_LSTM_linear_LR_schedule
+  C3:
+    condition: any seed reaches normalization mass below 1e-12 before 400k
+    interpretation: unconstrained_raw_mu_state_truncated_Normal_unsuitable_for_long_training
+    regularization_coefficient_sweep_allowed: false
+  C4:
+    condition: any fixed milestone is 40_of_40
+    interpretation: strict_success_exists_no_automatic_chunk_commit
+
+forbidden:
+  - Candidate_A
+  - Candidate_B_resume
+  - linear_LR
+  - half_LR
+  - adaptive_LR
+  - KL_penalty_or_target_KL
+  - normalization_mass_floor_change
+  - sigma_change
+  - residual_scale_change
+  - network_change
+  - reward_or_objective_change
+  - observation_change
+  - intermediate_best_checkpoint_selection
+  - automatic_1m
+  - chunk_commit
+
+historical_v4_interpretation: >-
+  Candidate B can learn useful refinement at 100k, but the current fixed-LR,
+  unregularized truncated-Gaussian PPO exhibits sustained action-support drift
+  at longer budgets; two seeds enter extremely low-probability truncated
+  regions and all three stop before the authorized 500k endpoint.
+
+inputs:
+  base_v4_contract:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_algorithmic_reproduction_training_v4.yaml
+    sha256: 5b3b34f0bca0ca407053864b269a73a782cdc6cb285b5e48b45a3f662ffe0ab4
+  v4_B_500k_extension_contract:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_algorithmic_B_500k_extension_v4.yaml
+    sha256: 7a8e690934acbb710eb0b468de45747de79979de1acd860a2419f8961abd6380
+  v4_B_500k_comparison:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/B_budget_extension_500k/comparison.json
+    sha256: df950a37827f2d47d3d4634395e15ab13668d68aa569d7c49e61af0223558c19
+  H2S2R_LSTM_config:
+    path: /data_all/zzx/3.2RL/external/human2sim2robot/human2sim2robot/sim_training/cfg/train/CrossEmbodimentPPOLSTM.yaml
+    sha256: 4f14cfc054012f14803e712d6371fa1688c007e1921dc4941a01b4daf4e667be
+  Replay_step0_trajectory:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/candidate_B/seed_0/step0_trajectory.npz
+    sha256: 625161255c954d45f8e672734eba14fec9dc9b0aa2e70d616d48854151ac806e
+  simulator_config:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml
+    sha256: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+  initialization_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v2/candidate_a/report.json
+    sha256: 9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a
+  protocol_at_authorization:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_algorithmic_reproduction_training_v3_protocol_snapshot.yaml
+    sha256: 1f4a96edfa0bc17ecb578fd5d8ae1514b77099713cc9b9f74adf6813a62873f3
+  objective_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_local_normalized_ellipse_v1.yaml
+    sha256: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+  observation_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_observation_local_236d_v1.yaml
+    sha256: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  action_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_residual_action_scaled_v1.yaml
+    sha256: 71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4
+  distribution_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_baseline_preserving_truncated_gaussian_v2.yaml
+    sha256: 3187a0b50ad79a682a2f7754f4749e07e1c024d313fd23d3a72721b94da60604
+  source_boundary:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_replay_rebase_v1/tool_only/committed_boundary_endpoint_20.pt.gz
+    sha256: a3646e24af1ba871e5ecc885669508223a5e0f26d3cf29f0482f02678419e337
+
+implementation_contract:
+  state_feasible_distribution_sha256: e14caea5ae45058cbedf7311f20a657f9fa6dd83942d33ae7d4b9485c521c0fa
+  v4_algorithmic_training_sha256: 903fac349ad1b2b026c2c9b73383073e4c9e1b88f5c988aaf122e54283c66c65
+  v5_algorithmic_training_sha256: aa3e00121f98fa0c5ab1e0c4bc71549f76c5e2e886a4c3e60c441cc40e8ef4b2
+  MJWP_environment_sha256: cc4cb86b73bdd1ef671ed06d185192119199cda2d037ce7685a5abe8cd5b856a
+  official_PPO_agent_sha256: b41f1c088d8ad4e261b9c5338f90a7f0ae910b7453ab348532312b3d87bc4c30
+  PPO_config_builder_sha256: 4b887e5e4f493fdc5a6541f3c1c811ec65a4e2cbab9f974cc1627e0d54048b84
+  training_runner_sha256: 523c13f0ae8f5b9e2f92f838ba7a4b48e484b218e632bfe709e10148762a0282
+
+output_directory: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5

@@ -1,0 +1,105 @@
+{
+  "epoch": 250,
+  "samples": 160,
+  "actor_updates": 1,
+  "observation_normalization_version_used": 249,
+  "observation_normalization_version_after_commit": 250,
+  "credit": {
+    "path": "/data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_0/update_audit/epoch_0250_credit.npz",
+    "sha256": "b70beab6b8392a6c23f1266639a59f7c4329108899a13a825e97bc980ae4bded"
+  },
+  "update": {
+    "epoch": 250,
+    "global_actor_update": 250,
+    "pre_optimizer_identity": {
+      "epoch": 250,
+      "samples": 160,
+      "semantic_state_identity": {
+        "actor_parameter_hash_equal": true,
+        "actor_RMS_hash_equal": true,
+        "normalization_version_equal": true,
+        "observations_equal": true,
+        "dones_equal": true,
+        "actions_equal": true,
+        "action_low_equal": true,
+        "action_high_equal": true,
+        "RNN_start_states_equal": true
+      },
+      "semantic_state_identity_passed": true,
+      "rollout_vs_canonical": {
+        "max_abs_mu_difference": 4.76837158203125e-07,
+        "max_abs_sigma_difference": 0.0,
+        "max_abs_logprob_difference": 4.76837158203125e-06,
+        "mu_element_difference_count": 3230,
+        "sigma_element_difference_count": 0,
+        "ratio_min": 0.999995231628418,
+        "ratio_max": 1.000004768371582,
+        "max_abs_ratio_minus_one": 4.76837158203125e-06,
+        "ratio_tolerance": 1.52587890625e-05,
+        "likelihood_equivalence_passed": true,
+        "mu_sigma_are_diagnostic_only": true,
+        "likelihood_equivalence_is_diagnostic_only": true,
+        "semantic_hard_fail_passed": true
+      },
+      "canonical_optimizer_identity": {
+        "ratio_min": 1.0,
+        "ratio_max": 1.0,
+        "max_abs_ratio_minus_one": 0.0,
+        "ratio_tolerance": 1.1920928955078125e-07,
+        "ratio_bitwise_equal_one": true,
+        "passed": true
+      },
+      "semantic_identity_hard_fail_threshold": 0.0001,
+      "semantic_identity_hard_fail": false,
+      "passed": true,
+      "classification": "canonical_old_policy_identity_pass",
+      "maximum_abs_error_from_one": 0.0,
+      "ratio_max_abs_error_from_one": 4.76837158203125e-06,
+      "numerical_identity_passed": true,
+      "v5_gate_semantics": "semantic fields exact; canonical optimizer ratio bitwise one; rollout/canonical likelihood diagnostic unless above 1e-4"
+    },
+    "pre_optimizer_ratio_identity_max_abs_error": 0.0,
+    "post_optimizer_ratio": {
+      "min": 0.3092396557331085,
+      "mean": 1.0454117339104414,
+      "p50": 0.993011087179184,
+      "p95": 1.6855836391448975,
+      "max": 2.3590054512023926
+    },
+    "post_optimizer_ratio_outside_0p8_1p2_fraction": 0.5375000238418579,
+    "surrogate_changed_by_clip_fraction": 0.5375000238418579,
+    "exact_old_to_new_truncated_policy_KL": {
+      "min": 0.022000595919892396,
+      "mean": 0.056065443520009195,
+      "p50": 0.04993273792936781,
+      "p95": 0.12905690202134373,
+      "max": 0.2797533341968835
+    },
+    "entropy_pre_optimizer": -15.60240650177002,
+    "sigma_post_optimizer": {
+      "min": 0.24863947927951813,
+      "mean": 0.24993130771650207,
+      "p50": 0.24996107816696167,
+      "p95": 0.25065678358078003,
+      "max": 0.2512262463569641
+    },
+    "gradient_norm_before_clip": 55.03998565673828,
+    "gradient_norm_after_clip": 1.0,
+    "parameter_delta_l2": 0.054686009398335816,
+    "deterministic_action_bound_fraction": 0.2779513895511627,
+    "deterministic_effective_residual_RMS": 0.034845754504203796,
+    "training_reward_mean": 0.36575037240982056,
+    "minimum_truncated_normalization_mass": 1.5244228102062607e-10,
+    "p01_truncated_normalization_mass": 7.515875600703215e-05,
+    "median_truncated_normalization_mass": 0.8596858785198822,
+    "raw_mu_outside_support_fraction": 0.2779513888888889,
+    "maximum_support_violation_in_sigma": 6.2962743021221,
+    "p95_support_violation_in_sigma": 2.278703289708451,
+    "actor_mean_regularization": {
+      "type": "regularisation",
+      "coefficient": 0.005,
+      "unscaled_mean_sum_squared_mu": 23.608434677124023,
+      "scaled_loss_contribution": 0.11804217338562012
+    }
+  }
+}

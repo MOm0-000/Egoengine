@@ -1193,7 +1193,8 @@ evaluation:
       valid for their stated scopes.
   algorithmic_reproduction_training_benchmark_v4:
     status: candidate_B_fixed_500k_extension_failed_closed_all_three_seeds_no_chunk_commit
-    active_algorithmic_evidence: true
+    active_algorithmic_evidence: false
+    superseded_as_active_evidence_by: algorithmic_reproduction_training_benchmark_v5
     paper_faithful: false
     classification: local_algorithmic_reproduction_after_canonical_old_policy_likelihood_fix
     contract: /data_all/zzx/3.2RL/configs/taco_pour_algorithmic_reproduction_training_v4.yaml
@@ -1341,6 +1342,88 @@ evaluation:
         selected as a fallback.
     later_milestones_executed: true
     chunk_commit_written: false
+  algorithmic_reproduction_training_benchmark_v5:
+    status: candidate_C_triggers_prefrozen_C3_mass_floor_recurrence_no_chunk_commit
+    active_algorithmic_evidence: true
+    paper_faithful: false
+    classification: local_algorithmic_reproduction_H2S2R_LSTM_mean_regularization_ablation
+    contract: /data_all/zzx/3.2RL/configs/taco_pour_algorithmic_reproduction_training_v5.yaml
+    output: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5
+    comparison: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/comparison.json
+    summary: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/summary.md
+    only_algorithm_change_from_candidate_B:
+      bounds_loss_coef: 0.005
+      bound_loss_type: regularisation
+      provenance: upstream_public_H2S2R_CrossEmbodimentPPOLSTM_config
+    linear_LR_executed: false
+    warm_start_used: false
+    all_seed_step0_Replay_identity_checks_passed: true
+    Replay: {successful_intervals: 30, first_failure_endpoint: 51}
+    likelihood_gate:
+      semantic_identity_exact_for_all_completed_updates: true
+      canonical_optimizer_ratio_max_error: 0.0
+      maximum_rollout_to_canonical_ratio_error: 7.62939453125e-6
+      semantic_hard_fail_threshold: 1.0e-4
+    seed0:
+      status: completed_fixed_400k_no_chunk_commit
+      fixed_milestones:
+        at_0: {successful_intervals: 30, first_failure_endpoint: 51}
+        at_100k: {successful_intervals: 38, first_failure_endpoint: 59}
+        at_200k: {successful_intervals: 37, first_failure_endpoint: 58}
+        at_300k: {successful_intervals: 29, first_failure_endpoint: 50}
+        at_400k: {successful_intervals: 33, first_failure_endpoint: 54}
+      observed_minimum_truncated_normalization_mass: 6.787170825361954e-11
+      final_validation_action_bound_fraction: 0.22569444444444445
+      report: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_0/report.json
+    seed1:
+      status: completed_fixed_400k_no_chunk_commit
+      fixed_milestones:
+        at_0: {successful_intervals: 30, first_failure_endpoint: 51}
+        at_100k: {successful_intervals: 30, first_failure_endpoint: 51}
+        at_200k: {successful_intervals: 34, first_failure_endpoint: 55}
+        at_300k: {successful_intervals: 22, first_failure_endpoint: 43}
+        at_400k: {successful_intervals: 38, first_failure_endpoint: 59}
+      observed_minimum_truncated_normalization_mass: 7.510811916855431e-9
+      final_validation_action_bound_fraction: 0.27569444444444446
+      report: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_1/report.json
+    seed2:
+      status: failed_closed_before_fixed_400k_budget
+      fixed_milestones:
+        at_0: {successful_intervals: 30, first_failure_endpoint: 51}
+        at_100k: {successful_intervals: 31, first_failure_endpoint: 52}
+        at_200k: {successful_intervals: 29, first_failure_endpoint: 50}
+        at_300k: {successful_intervals: 23, first_failure_endpoint: 44}
+      last_completed_actor_update_epoch: 211
+      physics_steps_at_exception: 339200
+      failure: truncated_Gaussian_normalization_mass_8p46822612e_13_below_frozen_1e_12_floor
+      failure_report: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_2/failure_report.json
+    median_validated_intervals_through_common_milestones:
+      at_0: 30
+      at_100k: 31
+      at_200k: 34
+      at_300k: 23
+      at_400k: null
+    prefrozen_classification:
+      C1_mean_regularization_fixes_structural_instability: false
+      C2_numerical_stability_fixed_but_performance_drifts:
+        evaluated_at_fixed_400k_budget: false
+        diagnostic_performance_drift_visible_by_300k: true
+      C3_mass_floor_still_occurs: true
+      C4_strict_task_success: false
+    interpretation: >-
+      H2S2R-style actor-mean regularization does not solve the long-budget
+      support-collapse mechanism for the current unconstrained raw-mean,
+      state-truncated Normal policy. Seed 2 crosses the unchanged 1e-12 mass
+      floor before 400k; seeds 0 and 1 reach 400k but show large, nonmonotonic
+      task-performance drift and elevated action-bound occupancy. Per the
+      prefrozen C3 rule, no regularization-coefficient sweep is authorized;
+      the next algorithm decision is a bounded-policy parameterization, not
+      linear-LR activation under Candidate C.
+    intermediate_checkpoint_selected: false
+    regularization_coefficient_sweep_allowed: false
+    linear_LR_follow_on_automatically_authorized: false
+    strict_40_of_40_success: false
+    chunk_commit_written: false
 
 runtime_contract:
   fail_closed: true
@@ -1474,6 +1557,12 @@ audit_results:
   algorithmic_candidate_B_500k_seed0_failure_v4: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/B_budget_extension_500k/seed_0/failure_report.json
   algorithmic_candidate_B_500k_seed1_failure_v4: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/B_budget_extension_500k/seed_1/failure_report.json
   algorithmic_candidate_B_500k_seed2_failure_v4: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/B_budget_extension_500k/seed_2/failure_report.json
+  algorithmic_candidate_C_contract_v5: /data_all/zzx/3.2RL/configs/taco_pour_algorithmic_reproduction_training_v5.yaml
+  algorithmic_candidate_C_comparison_v5: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/comparison.json
+  algorithmic_candidate_C_summary_v5: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/summary.md
+  algorithmic_candidate_C_seed0_report_v5: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_0/report.json
+  algorithmic_candidate_C_seed1_report_v5: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_1/report.json
+  algorithmic_candidate_C_seed2_failure_v5: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v5/training/candidate_C/seed_2/failure_report.json
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -1534,6 +1623,11 @@ result_acceptance_blockers:
   - algorithmic_benchmark_v4_two_seeds_cross_truncated_Gaussian_normalization_mass_floor_and_one_crosses_frozen_rollout_likelihood_tolerance
   - algorithmic_benchmark_v4_prefrozen_B500_performance_cases_are_not_evaluable_without_any_complete_500k_trajectory
   - algorithmic_benchmark_v4_no_automatic_1M_continuation_or_intermediate_checkpoint_selection_is_authorized
+  - algorithmic_benchmark_v5_Candidate_C_seed2_repeats_the_truncated_Gaussian_mass_floor_failure_before_400k
+  - algorithmic_benchmark_v5_C3_is_triggered_and_C1_C4_are_false
+  - algorithmic_benchmark_v5_seed0_and_seed1_complete_400k_without_strict_40_of_40_success
+  - algorithmic_benchmark_v5_no_regularization_coefficient_sweep_linear_LR_follow_on_or_chunk_commit_is_authorized
+  - unconstrained_raw_mu_state_truncated_Normal_requires_a_bounded_policy_parameterization_decision
   - source47_zero_residual_still_fails_endpoint49_and_source48_has_no_tool_effect
   - no_source47_semantic_action_subspace_preserves_contact_or_survives_endpoint49
   - source46_wrist_weakening_rescues_endpoint49_but_not_endpoint50
