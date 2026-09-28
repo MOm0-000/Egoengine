@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = ROOT / "configs/taco_pour_algorithmic_reproduction_training_v4.yaml"
 RUN = ROOT / "runs/taco_pour_algorithmic_reproduction_training_v4"
 CHECKPOINT_GATE = ROOT / "runs/taco_pour_algorithmic_checkpoint_roundtrip_v4"
+PROTOCOL = ROOT / "configs/replay_rl_protocol.yaml"
 
 
 def _sha256(path: Path) -> str:
@@ -49,6 +50,28 @@ def test_v4_contract_freezes_canonical_policy_and_original_learning_settings():
         contract["training_budget"]["seed0_milestones"]
     )
     assert [row["epoch"] for row in milestones] == [62, 313, 625]
+
+
+def test_v4_is_the_active_algorithmic_evidence():
+    protocol = yaml.safe_load(PROTOCOL.read_text())
+    v3 = protocol["evaluation"]["algorithmic_reproduction_training_benchmark_v3"]
+    v4 = protocol["evaluation"]["algorithmic_reproduction_training_benchmark_v4"]
+    assert v3["active_algorithmic_evidence"] is False
+    assert v3["superseded_as_active_evidence_by"] == (
+        "algorithmic_reproduction_training_benchmark_v4"
+    )
+    assert v4["active_algorithmic_evidence"] is True
+    assert v4["status"] == "seed0_100k_B_then_A_completed_no_chunk_commit"
+    assert v4["canonical_old_policy_gate"]["all_124_actor_updates_passed"] is True
+    assert v4["seed0_100k"]["candidate_B"] == {
+        "successful_intervals": 36,
+        "first_failure_endpoint": 57,
+    }
+    assert v4["seed0_100k"]["candidate_A"] == {
+        "successful_intervals": 29,
+        "first_failure_endpoint": 50,
+    }
+    assert v4["chunk_commit_written"] is False
 
 
 def test_v4_implementation_hashes_are_bound_to_current_files():

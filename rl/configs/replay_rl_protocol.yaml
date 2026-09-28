@@ -1127,6 +1127,8 @@ evaluation:
       chunk_commit_allowed: false
   algorithmic_reproduction_training_benchmark_v3:
     status: halted_quality_gate_failure_before_100k
+    active_algorithmic_evidence: false
+    superseded_as_active_evidence_by: algorithmic_reproduction_training_benchmark_v4
     paper_faithful: false
     classification: local_algorithmic_reproduction_after_replay_identity_and_numeric_likelihood_gate_fix
     contract: /data_all/zzx/3.2RL/configs/taco_pour_algorithmic_reproduction_training_v3.yaml
@@ -1189,6 +1191,50 @@ evaluation:
       reward-timing and observation-normalization defect evidence, policy
       extremization, and within-trajectory behavioral interventions remain
       valid for their stated scopes.
+  algorithmic_reproduction_training_benchmark_v4:
+    status: seed0_100k_B_then_A_completed_no_chunk_commit
+    active_algorithmic_evidence: true
+    paper_faithful: false
+    classification: local_algorithmic_reproduction_after_canonical_old_policy_likelihood_fix
+    contract: /data_all/zzx/3.2RL/configs/taco_pour_algorithmic_reproduction_training_v4.yaml
+    frozen_run_contract: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/contract.yaml
+    output: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4
+    comparison: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/comparison.json
+    summary: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/summary.md
+    checkpoint_roundtrip: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_checkpoint_roundtrip_v4/report.json
+    v1_evidence_immutable: true
+    v2_evidence_immutable: true
+    v3_evidence_immutable: true
+    v3_checkpoint_resume_allowed: false
+    v3_epoch32_reclassification: algorithm_not_run_due_retired_mu_absolute_gate
+    Replay: {successful_intervals: 30, first_failure_endpoint: 51}
+    candidate_B_step0:
+      successful_intervals: 30
+      first_failure_endpoint: 51
+      exact_Replay_identity: true
+    canonical_old_policy_gate:
+      profile: canonical_old_policy_snapshot_v1
+      rollout_to_canonical_ratio_atol: 1.52587890625e-5
+      canonical_ratio_atol: 1.1920928955078125e-7
+      semantic_identity_hard_fail: 1.0e-4
+      mu_sigma_absolute_differences_are_diagnostic_only: true
+      candidate_B_maximum_rollout_to_canonical_ratio_error: 3.814697265625e-6
+      candidate_A_maximum_rollout_to_canonical_ratio_error: 5.7220458984375e-6
+      maximum_canonical_optimizer_ratio_error: 0.0
+      all_124_actor_updates_passed: true
+    checkpoint_infrastructure:
+      exact_roundtrip: true
+      eligible_for_warm_start: false
+    seed0_100k:
+      actual_physics_steps_per_candidate: 99200
+      candidate_B: {successful_intervals: 36, first_failure_endpoint: 57}
+      candidate_A: {successful_intervals: 29, first_failure_endpoint: 50}
+      best_candidate: B
+      best_candidate_beats_Replay: true
+      best_candidate_meaningful_refinement: true
+      strict_40_of_40_success: false
+    later_milestones_executed: false
+    chunk_commit_written: false
 
 runtime_contract:
   fail_closed: true
@@ -1309,6 +1355,10 @@ audit_results:
   algorithmic_reproduction_training_candidate_A_v3: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v3/candidate_A/seed_0/report.json
   algorithmic_likelihood_numeric_reclassification_v3: /data_all/zzx/3.2RL/runs/taco_pour_likelihood_identity_numeric_reclassification_v3/report.json
   algorithmic_checkpoint_roundtrip_v3: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_checkpoint_roundtrip_v3/report.json
+  algorithmic_reproduction_training_B0_v4: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/candidate_B/seed_0/report.json
+  algorithmic_reproduction_training_candidate_A_v4: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/candidate_A/seed_0/report.json
+  algorithmic_reproduction_training_comparison_v4: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v4/comparison.json
+  algorithmic_checkpoint_roundtrip_v4: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_checkpoint_roundtrip_v4/report.json
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
