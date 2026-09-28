@@ -93,22 +93,35 @@ def exact_equal(left, right) -> bool:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--contract", type=Path, default=CONTRACT)
+    parser.add_argument("--run-root", type=Path, default=RUN_ROOT)
     parser.add_argument("--candidate", choices=("A", "B"), required=True)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument(
+        "--target-milestone",
+        choices=("100k", "500k", "1m"),
+        default="100k",
+    )
     args = parser.parse_args()
     if args.seed not in (0, 1, 2):
         raise ValueError("benchmark seeds are frozen to 0, 1, and 2")
 
-    contract = yaml.safe_load(CONTRACT.read_text())
+    contract = yaml.safe_load(args.contract.read_text())
+    schema = str(contract.get("schema", ""))
+    version = schema.rsplit("_v", 1)[-1] if "_v" in schema else ""
     if (
-        contract.get("schema") != "taco_pour_algorithmic_reproduction_training_benchmark_v3"
+        schema not in {
+            "taco_pour_algorithmic_reproduction_training_benchmark_v3",
+            "taco_pour_algorithmic_reproduction_training_benchmark_v4",
+        }
         or contract.get("status") != "authorized_fresh_B0_roundtrip_then_A_B_training"
         or contract.get("paper_faithful") is not False
     ):
-        raise ValueError("benchmark v3 is not authorized")
+        raise ValueError("benchmark is not authorized")
+    run_root = args.run_root
     if args.seed in (1, 2):
         seed0_report_path = (
-            RUN_ROOT
+            run_root
             / "training"
             / f"candidate_{args.candidate}"
             / "seed_0"
@@ -122,12 +135,12 @@ def main() -> None:
             raise RuntimeError(
                 "additional seeds are not authorized unless seed 0 exceeds Replay"
             )
-    b0_path = RUN_ROOT / "candidate_B/seed_0/report.json"
+    b0_path = run_root / "candidate_B/seed_0/report.json"
     b0 = json.loads(b0_path.read_text())
     if b0.get("status") != "passed_training_may_start" or not all(b0["checks"].values()):
         raise RuntimeError("exact Candidate-B B0 gate did not authorize training")
     checkpoint_gate_path = (
-        ROOT / "runs/taco_pour_algorithmic_checkpoint_roundtrip_v3/report.json"
+        ROOT / f"runs/taco_pour_algorithmic_checkpoint_roundtrip_v{version}/report.json"
     )
     checkpoint_gate = json.loads(checkpoint_gate_path.read_text())
     if (
@@ -159,6 +172,7 @@ def main() -> None:
     from video_to_spider.rl.objective_contract import load_runtime_objective
     from video_to_spider.rl.observation_contract import load_runtime_observation
     from video_to_spider.rl.state_feasible_truncated_gaussian import (
+        CanonicalOldPolicyGateSpec,
         LikelihoodIdentityGateSpec,
         StateFeasibleTruncatedGaussianPpoAgent,
         load_truncated_gaussian_profile,
@@ -183,7 +197,16 @@ def main() -> None:
             raise ValueError(f"frozen implementation changed: {name}")
     milestones = validate_budget_plan(contract["training_budget"]["seed0_milestones"])
     milestone_by_epoch = {int(row["epoch"]): row for row in milestones}
-    final_epoch = max(milestone_by_epoch)
+    target_key = {
+        "100k": "ckpt_100k",
+        "500k": "ckpt_500k",
+        "1m": "ckpt_1m",
+    }[args.target_milestone]
+    final_epoch = int(
+        contract["training_budget"]["seed0_milestones"][target_key][
+            "declared_nearest_epoch"
+        ]
+    )
 
     objective = load_runtime_objective(
         paths["protocol_at_authorization"], paths["objective_profile"],
@@ -199,15 +222,29 @@ def main() -> None:
     )
     distribution = replace(distribution, optimizer_training_authorized=True)
     gate_row = contract["quality_gates"]["pre_optimizer_likelihood_identity"]
-    identity_gate = LikelihoodIdentityGateSpec(
-        mu_atol=float(gate_row["mu_atol"]),
-        sigma_atol=float(gate_row["sigma_atol"]),
-        ratio_atol=float(gate_row["ratio_atol"]),
-        semantic_identity_hard_fail=float(
-            gate_row["semantic_identity_hard_fail"]
-        ),
-    )
-    identity_gate.validate()
+    if version == "4":
+        identity_gate = LikelihoodIdentityGateSpec.float32_ulp_aware_v1()
+        canonical_gate = CanonicalOldPolicyGateSpec(
+            rollout_to_canonical_ratio_atol=float(
+                gate_row["rollout_to_canonical_ratio_atol"]
+            ),
+            canonical_ratio_atol=float(gate_row["canonical_ratio_atol"]),
+            semantic_identity_hard_fail=float(
+                gate_row["semantic_identity_hard_fail"]
+            ),
+        )
+        canonical_gate.validate()
+    else:
+        identity_gate = LikelihoodIdentityGateSpec(
+            mu_atol=float(gate_row["mu_atol"]),
+            sigma_atol=float(gate_row["sigma_atol"]),
+            ratio_atol=float(gate_row["ratio_atol"]),
+            semantic_identity_hard_fail=float(
+                gate_row["semantic_identity_hard_fail"]
+            ),
+        )
+        identity_gate.validate()
+        canonical_gate = None
     _, initialization = load_accepted_initialization(
         paths["initialization_report"], paths["simulator_config"]
     )
@@ -247,13 +284,19 @@ def main() -> None:
         world.set_env_state(boundary)
         return world
 
-    output = RUN_ROOT / "training" / f"candidate_{args.candidate}" / f"seed_{args.seed}"
+    output = (
+        run_root
+        / "training"
+        / f"candidate_{args.candidate}"
+        / f"seed_{args.seed}"
+        / args.target_milestone
+    )
     if output.exists():
         raise FileExistsError(output)
     output.mkdir(parents=True)
     (output / "input_contracts").mkdir()
     for name, path in {
-        "benchmark_contract": CONTRACT,
+        "benchmark_contract": args.contract,
         "B0_report": b0_path,
         "checkpoint_gate_report": checkpoint_gate_path,
         **paths,
@@ -290,6 +333,7 @@ def main() -> None:
         env=training_env,
         distribution_spec=distribution,
         likelihood_identity_gate=identity_gate,
+        canonical_old_policy_gate=canonical_gate,
         audit_dir=output / "update_audit",
     )
     initialization_audit = (
@@ -298,7 +342,7 @@ def main() -> None:
         else replay_preserving_initialization(agent, sigma_multiplier=0.25)
     )
     config_hashes = {
-        "benchmark_contract": sha256(CONTRACT),
+        "benchmark_contract": sha256(args.contract),
         "B0_report": sha256(b0_path),
         "checkpoint_gate_report": sha256(checkpoint_gate_path),
         "training_runner": sha256(Path(__file__)),
@@ -403,6 +447,7 @@ def main() -> None:
         env=validation_world,
         distribution_spec=distribution,
         likelihood_identity_gate=identity_gate,
+        canonical_old_policy_gate=canonical_gate,
     )
 
     def validate(epoch: int) -> dict[str, object]:
@@ -460,7 +505,10 @@ def main() -> None:
             "chunk_commit_written": False,
         }
 
-    validations = {str(epoch): validate(epoch) for epoch in (0, 62, 313, 625)}
+    validation_epochs = [0] + sorted(
+        epoch for epoch in milestone_by_epoch if epoch <= final_epoch
+    )
+    validations = {str(epoch): validate(epoch) for epoch in validation_epochs}
     if validation_agent.writer is not None:
         validation_agent.writer.close()
 
@@ -476,7 +524,8 @@ def main() -> None:
                 "mean_deterministic_action_bound_fraction": None,
                 "mean_deterministic_effective_residual_RMS": None,
                 "mean_training_reward": None,
-                "maximum_pre_optimizer_ratio_identity_error": None,
+                "maximum_rollout_to_canonical_ratio_error": None,
+                "maximum_canonical_optimizer_ratio_identity_error": None,
             }
 
         def mean(name: str) -> float:
@@ -503,10 +552,26 @@ def main() -> None:
                 "deterministic_effective_residual_RMS"
             ),
             "mean_training_reward": mean("training_reward_mean"),
-            "maximum_pre_optimizer_ratio_identity_error": float(np.max([
-                float(row["pre_optimizer_identity"][
-                    "ratio_max_abs_error_from_one"
-                ])
+            "maximum_rollout_to_canonical_ratio_error": float(np.max([
+                float(row["pre_optimizer_identity"].get(
+                    "rollout_vs_canonical", {}
+                ).get(
+                    "max_abs_ratio_minus_one",
+                    row["pre_optimizer_identity"][
+                        "ratio_max_abs_error_from_one"
+                    ],
+                ))
+                for row in rows
+            ])),
+            "maximum_canonical_optimizer_ratio_identity_error": float(np.max([
+                float(row["pre_optimizer_identity"].get(
+                    "canonical_optimizer_identity", {}
+                ).get(
+                    "max_abs_ratio_minus_one",
+                    row["pre_optimizer_identity"][
+                        "maximum_abs_error_from_one"
+                    ],
+                ))
                 for row in rows
             ])),
             "all_pre_optimizer_identity_checks_passed": all(
@@ -516,15 +581,12 @@ def main() -> None:
         }
 
     learning_curve = {
-        str(epoch): learning_curve_row(epoch) for epoch in (0, 62, 313, 625)
+        str(epoch): learning_curve_row(epoch) for epoch in validation_epochs
     }
     report = {
-        "schema": "taco_pour_algorithmic_reproduction_training_candidate_v3",
+        "schema": f"taco_pour_algorithmic_reproduction_training_candidate_v{version}",
         "status": "completed_fixed_seed0_budget_no_chunk_commit",
-        "classification": (
-            "local_algorithmic_reproduction_after_replay_identity_and_numeric_"
-            "likelihood_gate_fix"
-        ),
+        "classification": contract["classification"],
         "paper_faithful": False,
         "candidate": args.candidate,
         "seed": args.seed,
@@ -543,6 +605,7 @@ def main() -> None:
             "actor_learning_rate": 1.0e-4,
             "actor_mini_epochs": 1,
             "critic_mini_epochs": 4,
+            "target_milestone": args.target_milestone,
         },
         "residual_action": residual_report,
         "action_distribution": distribution_report,

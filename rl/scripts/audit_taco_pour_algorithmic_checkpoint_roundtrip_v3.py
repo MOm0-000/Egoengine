@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 from dataclasses import replace
 import gzip
 import hashlib
@@ -47,12 +48,27 @@ def equal(left, right) -> bool:
 
 
 def main() -> None:
-    if OUTPUT.exists():
-        raise FileExistsError(OUTPUT)
-    contract = yaml.safe_load(CONTRACT.read_text())
-    if contract["schema"] != "taco_pour_algorithmic_reproduction_training_benchmark_v3":
-        raise ValueError("checkpoint gate requires benchmark v3")
-    b0_path = ROOT / "runs/taco_pour_algorithmic_reproduction_training_v3/candidate_B/seed_0/report.json"
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--contract", type=Path, default=CONTRACT)
+    parser.add_argument("--output-dir", type=Path, default=OUTPUT)
+    parser.add_argument("--benchmark-run-dir", type=Path, default=None)
+    args = parser.parse_args()
+    if args.output_dir.exists():
+        raise FileExistsError(args.output_dir)
+    contract = yaml.safe_load(args.contract.read_text())
+    schema = str(contract.get("schema", ""))
+    version = schema.rsplit("_v", 1)[-1] if "_v" in schema else ""
+    if schema not in {
+        "taco_pour_algorithmic_reproduction_training_benchmark_v3",
+        "taco_pour_algorithmic_reproduction_training_benchmark_v4",
+    }:
+        raise ValueError("checkpoint gate requires benchmark v3 or v4")
+    benchmark_run_dir = (
+        Path(contract["output_directory"])
+        if args.benchmark_run_dir is None
+        else args.benchmark_run_dir
+    )
+    b0_path = benchmark_run_dir / "candidate_B/seed_0/report.json"
     b0 = json.loads(b0_path.read_text())
     if b0["status"] != "passed_training_may_start" or not all(b0["checks"].values()):
         raise ValueError("checkpoint gate requires the exact B0 identity pass")
@@ -77,6 +93,7 @@ def main() -> None:
     from video_to_spider.rl.objective_contract import load_runtime_objective
     from video_to_spider.rl.observation_contract import load_runtime_observation
     from video_to_spider.rl.state_feasible_truncated_gaussian import (
+        CanonicalOldPolicyGateSpec,
         LikelihoodIdentityGateSpec,
         StateFeasibleTruncatedGaussianPpoAgent,
         load_truncated_gaussian_profile,
@@ -98,15 +115,29 @@ def main() -> None:
     distribution, _ = load_truncated_gaussian_profile(paths["distribution_profile"])
     distribution = replace(distribution, optimizer_training_authorized=True)
     gate_row = contract["quality_gates"]["pre_optimizer_likelihood_identity"]
-    identity_gate = LikelihoodIdentityGateSpec(
-        mu_atol=float(gate_row["mu_atol"]),
-        sigma_atol=float(gate_row["sigma_atol"]),
-        ratio_atol=float(gate_row["ratio_atol"]),
-        semantic_identity_hard_fail=float(
-            gate_row["semantic_identity_hard_fail"]
-        ),
-    )
-    identity_gate.validate()
+    if version == "4":
+        identity_gate = LikelihoodIdentityGateSpec.float32_ulp_aware_v1()
+        canonical_gate = CanonicalOldPolicyGateSpec(
+            rollout_to_canonical_ratio_atol=float(
+                gate_row["rollout_to_canonical_ratio_atol"]
+            ),
+            canonical_ratio_atol=float(gate_row["canonical_ratio_atol"]),
+            semantic_identity_hard_fail=float(
+                gate_row["semantic_identity_hard_fail"]
+            ),
+        )
+        canonical_gate.validate()
+    else:
+        identity_gate = LikelihoodIdentityGateSpec(
+            mu_atol=float(gate_row["mu_atol"]),
+            sigma_atol=float(gate_row["sigma_atol"]),
+            ratio_atol=float(gate_row["ratio_atol"]),
+            semantic_identity_hard_fail=float(
+                gate_row["semantic_identity_hard_fail"]
+            ),
+        )
+        identity_gate.validate()
+        canonical_gate = None
     _, initialization = load_accepted_initialization(
         paths["initialization_report"], paths["simulator_config"]
     )
@@ -157,6 +188,7 @@ def main() -> None:
         env=env,
         distribution_spec=distribution,
         likelihood_identity_gate=identity_gate,
+        canonical_old_policy_gate=canonical_gate,
     )
     try:
         replay_preserving_initialization(agent, sigma_multiplier=0.25)
@@ -177,7 +209,7 @@ def main() -> None:
             simulation_physics_steps=0,
             simulation_control_intervals=0,
             config_hashes={
-                "benchmark_contract": sha256(CONTRACT),
+                "benchmark_contract": sha256(args.contract),
                 "B0_report": sha256(b0_path),
             },
         )
@@ -197,7 +229,7 @@ def main() -> None:
         if not all(field_equality.values()):
             raise RuntimeError(f"checkpoint roundtrip differs: {field_equality}")
         report = {
-            "schema": "taco_pour_algorithmic_checkpoint_roundtrip_v3",
+            "schema": f"taco_pour_algorithmic_checkpoint_roundtrip_v{version}",
             "status": "passed_no_optimizer_step",
             "paper_faithful": False,
             "real_fresh_agent": True,
@@ -211,7 +243,7 @@ def main() -> None:
             "chunk_commit_allowed": restored["chunk_commit_allowed"],
             "artifact": {
                 **artifact,
-                "path": str((OUTPUT / "fresh_agent_roundtrip.pt.gz").resolve()),
+                "path": str((args.output_dir / "fresh_agent_roundtrip.pt.gz").resolve()),
                 "repository_retention": "local_only_not_versioned",
                 "available_in_clean_checkout": False,
                 "reproduction_script": (
@@ -221,10 +253,10 @@ def main() -> None:
                 "purpose": "infrastructure_roundtrip_only",
             },
             "B0_report_sha256": sha256(b0_path),
-            "benchmark_contract_sha256": sha256(CONTRACT),
+            "benchmark_contract_sha256": sha256(args.contract),
         }
         (temporary_output / "report.json").write_text(json.dumps(report, indent=2) + "\n")
-        temporary_output.replace(OUTPUT)
+        temporary_output.replace(args.output_dir)
     finally:
         if agent.writer is not None:
             agent.writer.close()

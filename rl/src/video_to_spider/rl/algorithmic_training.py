@@ -174,36 +174,41 @@ class AlgorithmicBenchmarkPpoAgent(StateFeasibleTruncatedGaussianPpoAgent):
             name: value.detach().cpu().clone()
             for name, value in self.model.named_parameters()
         }
-        old_mu = input_dict["mu"].detach().clone()
-        old_sigma = input_dict["sigma"].detach().clone()
-        old_neglogp = input_dict["old_logp_actions"].detach().clone()
+        rollout_old_mu = input_dict["mu"].detach().clone()
+        rollout_old_sigma = input_dict["sigma"].detach().clone()
+        rollout_old_neglogp = input_dict["old_logp_actions"].detach().clone()
         low = input_dict["action_lows"].detach().clone()
         high = input_dict["action_highs"].detach().clone()
         try:
             result = super().train_actor_critic(input_dict)
         except RuntimeError as error:
-            if "pre-optimizer likelihood identity gate failed" not in str(error):
+            if not any(message in str(error) for message in (
+                "pre-optimizer likelihood identity gate failed",
+                "canonical old-policy gate failed",
+            )):
                 raise
             failed = self._latest_distribution_evaluation
             if failed is None:
                 raise RuntimeError("identity failure did not retain its distribution") from error
             with torch.no_grad():
                 recomputed = self.evaluate_ppo_distribution(input_dict)
-                ratio = torch.exp(old_neglogp - recomputed["neglogp"])
+                ratio = torch.exp(
+                    rollout_old_neglogp - recomputed["neglogp"]
+                )
             failure_path = self.audit_dir / f"epoch_{self.epoch_num:04d}_identity_failure.npz"
             np.savez_compressed(
                 failure_path,
-                old_mu=old_mu.detach().cpu().numpy(),
+                old_mu=rollout_old_mu.detach().cpu().numpy(),
                 failed_mu=failed["mu"].detach().cpu().numpy(),
                 recomputed_mu=recomputed["mu"].detach().cpu().numpy(),
-                old_sigma=old_sigma.detach().cpu().numpy(),
+                old_sigma=rollout_old_sigma.detach().cpu().numpy(),
                 failed_sigma=failed["sigma"].detach().cpu().numpy(),
                 recomputed_sigma=recomputed["sigma"].detach().cpu().numpy(),
-                old_neglogp=old_neglogp.detach().cpu().numpy(),
+                old_neglogp=rollout_old_neglogp.detach().cpu().numpy(),
                 failed_neglogp=failed["neglogp"].detach().cpu().numpy(),
                 recomputed_neglogp=recomputed["neglogp"].detach().cpu().numpy(),
                 failed_ratio=torch.exp(
-                    old_neglogp - failed["neglogp"]
+                    rollout_old_neglogp - failed["neglogp"]
                 ).detach().cpu().numpy(),
                 ratio=ratio.detach().cpu().numpy(),
                 action=input_dict["actions"].detach().cpu().numpy(),
@@ -211,6 +216,19 @@ class AlgorithmicBenchmarkPpoAgent(StateFeasibleTruncatedGaussianPpoAgent):
                 action_high=high.detach().cpu().numpy(),
             )
             raise
+        if self.canonical_old_policy_gate is None:
+            old_mu = rollout_old_mu
+            old_sigma = rollout_old_sigma
+            old_neglogp = rollout_old_neglogp
+        else:
+            canonical = self._canonical_old_policy_for_latest_update
+            if canonical is None:
+                raise RuntimeError(
+                    "canonical benchmark update did not retain its old policy"
+                )
+            old_mu = canonical["mu"]
+            old_sigma = canonical["sigma"]
+            old_neglogp = canonical["neglogp"]
         after = {
             name: value.detach().cpu().clone()
             for name, value in self.model.named_parameters()
@@ -230,15 +248,18 @@ class AlgorithmicBenchmarkPpoAgent(StateFeasibleTruncatedGaussianPpoAgent):
             at_low = torch.isclose(deterministic, low, rtol=0.0, atol=1.0e-7)
             at_high = torch.isclose(deterministic, high, rtol=0.0, atol=1.0e-7)
             residual = deterministic * float(self.distribution_spec.residual_scale)
+        identity = dict(self._likelihood_identity_checks[-1])
+        canonical_identity = identity.get("canonical_optimizer_identity")
+        canonical_ratio_error = (
+            float(canonical_identity["max_abs_ratio_minus_one"])
+            if canonical_identity is not None
+            else float(identity["maximum_abs_error_from_one"])
+        )
         row = {
             "epoch": int(self.epoch_num),
             "global_actor_update": len(self.update_reports) + 1,
-            "pre_optimizer_identity": dict(
-                self._likelihood_identity_checks[-1]
-            ),
-            "pre_optimizer_ratio_identity_max_abs_error": float(
-                self._likelihood_identity_checks[-1]["maximum_abs_error_from_one"]
-            ),
+            "pre_optimizer_identity": identity,
+            "pre_optimizer_ratio_identity_max_abs_error": canonical_ratio_error,
             "post_optimizer_ratio": _distribution(ratio),
             "post_optimizer_ratio_outside_0p8_1p2_fraction": float(
                 ((ratio < 0.8) | (ratio > 1.2)).float().mean().cpu()

@@ -61,12 +61,83 @@ class LikelihoodIdentityGateSpec:
             raise ValueError("likelihood identity tolerances are not strictly nested")
 
 
+@dataclass(frozen=True)
+class CanonicalOldPolicyGateSpec:
+    """Identity contract for the differentiable canonical old policy.
+
+    The rollout/autograd actor outputs are retained as numerical diagnostics,
+    but only their likelihood ratio is a numerical gate.  The PPO denominator
+    is detached from the *same* differentiable evaluation used for the first
+    optimizer loss, so its ratio identity has a much stricter contract.
+    """
+
+    rollout_to_canonical_ratio_atol: float
+    canonical_ratio_atol: float
+    semantic_identity_hard_fail: float
+
+    @classmethod
+    def v1(cls) -> "CanonicalOldPolicyGateSpec":
+        epsilon = float(torch.finfo(torch.float32).eps)
+        return cls(
+            rollout_to_canonical_ratio_atol=128.0 * epsilon,
+            canonical_ratio_atol=epsilon,
+            semantic_identity_hard_fail=1.0e-4,
+        )
+
+    def validate(self) -> None:
+        epsilon = float(torch.finfo(torch.float32).eps)
+        expected = (128.0 * epsilon, epsilon, 1.0e-4)
+        observed = (
+            float(self.rollout_to_canonical_ratio_atol),
+            float(self.canonical_ratio_atol),
+            float(self.semantic_identity_hard_fail),
+        )
+        if observed != expected:
+            raise ValueError(
+                "canonical old-policy gate must be frozen to 128 float32 eps "
+                f"for rollout equivalence, one eps for canonical identity, and "
+                f"semantic hard fail 1e-4; got {observed}"
+            )
+        if not (
+            self.canonical_ratio_atol
+            < self.rollout_to_canonical_ratio_atol
+            < self.semantic_identity_hard_fail
+            < 0.2
+        ):
+            raise ValueError("canonical old-policy tolerances are not strictly nested")
+
+
 def _tensor_sha256(tensor: torch.Tensor) -> str:
     value = tensor.detach().cpu().contiguous()
     digest = hashlib.sha256()
     digest.update(str(value.dtype).encode())
     digest.update(np.asarray(value.shape, dtype=np.int64).tobytes())
     digest.update(value.numpy().tobytes())
+    return digest.hexdigest()
+
+
+def _tensor_tree_sha256(value: Any) -> str:
+    """Hash tensor provenance without changing dtype, shape, or ordering."""
+
+    digest = hashlib.sha256()
+
+    def update(item: Any) -> None:
+        if torch.is_tensor(item):
+            tensor = item.detach().cpu().contiguous()
+            digest.update(b"tensor")
+            digest.update(str(tensor.dtype).encode())
+            digest.update(np.asarray(tensor.shape, dtype=np.int64).tobytes())
+            digest.update(tensor.numpy().tobytes())
+            return
+        if isinstance(item, (tuple, list)):
+            digest.update(type(item).__name__.encode())
+            digest.update(np.asarray([len(item)], dtype=np.int64).tobytes())
+            for child in item:
+                update(child)
+            return
+        raise TypeError(f"unsupported tensor provenance value {type(item)!r}")
+
+    update(value)
     return digest.hexdigest()
 
 
@@ -151,6 +222,115 @@ def numerical_likelihood_identity_report(
         "policy_output_numerical_equivalence_passed": bool(numerical),
         "semantic_identity_hard_fail": bool(
             max_ratio > gate.semantic_identity_hard_fail
+        ),
+    }
+
+
+def canonical_old_policy_identity_report(
+    *,
+    rollout_mu: torch.Tensor,
+    canonical_mu: torch.Tensor,
+    rollout_sigma: torch.Tensor,
+    canonical_sigma: torch.Tensor,
+    rollout_neglogp: torch.Tensor,
+    canonical_neglogp: torch.Tensor,
+    rollout_to_canonical_ratio: torch.Tensor,
+    canonical_optimizer_ratio: torch.Tensor,
+    semantic_identity: dict[str, bool],
+    gate: CanonicalOldPolicyGateSpec,
+) -> dict[str, Any]:
+    """Audit rollout policy equivalence and canonical PPO identity.
+
+    Mu and sigma differences intentionally remain diagnostic only.  The
+    rollout/autograd boundary is authorized by semantic provenance plus the
+    action likelihood, while the PPO denominator itself is produced by
+    detaching the exact differentiable evaluation used by the loss.
+    """
+
+    gate.validate()
+    pairs = (
+        ("mu", rollout_mu, canonical_mu),
+        ("sigma", rollout_sigma, canonical_sigma),
+        ("neglogp", rollout_neglogp, canonical_neglogp),
+    )
+    for name, rollout, canonical in pairs:
+        if rollout.shape != canonical.shape:
+            raise ValueError(f"rollout/canonical {name} shapes differ")
+        if not bool(torch.isfinite(rollout).all() and torch.isfinite(canonical).all()):
+            raise ValueError(f"rollout/canonical {name} contains nonfinite values")
+    for name, ratio in (
+        ("rollout_to_canonical", rollout_to_canonical_ratio),
+        ("canonical_optimizer", canonical_optimizer_ratio),
+    ):
+        if not bool(torch.isfinite(ratio).all()):
+            raise ValueError(f"{name} ratio contains nonfinite values")
+
+    mu_difference = (canonical_mu.detach() - rollout_mu.detach()).abs()
+    sigma_difference = (canonical_sigma.detach() - rollout_sigma.detach()).abs()
+    logprob_difference = (
+        canonical_neglogp.detach() - rollout_neglogp.detach()
+    ).abs()
+    external_ratio = rollout_to_canonical_ratio.detach()
+    canonical_ratio = canonical_optimizer_ratio.detach()
+    external_error = (external_ratio - 1.0).abs()
+    canonical_error = (canonical_ratio - 1.0).abs()
+    max_external_error = float(external_error.max().cpu())
+    max_canonical_error = float(canonical_error.max().cpu())
+    semantic_passed = bool(semantic_identity) and all(semantic_identity.values())
+    rollout_likelihood_passed = (
+        max_external_error <= gate.rollout_to_canonical_ratio_atol
+    )
+    canonical_ratio_exact = bool(
+        torch.equal(canonical_ratio, torch.ones_like(canonical_ratio))
+    )
+    canonical_ratio_passed = (
+        max_canonical_error <= gate.canonical_ratio_atol
+    )
+    semantic_hard_fail = (
+        max_external_error > gate.semantic_identity_hard_fail
+    )
+    return {
+        "semantic_state_identity": dict(semantic_identity),
+        "semantic_state_identity_passed": semantic_passed,
+        "rollout_vs_canonical": {
+            "max_abs_mu_difference": float(mu_difference.max().cpu()),
+            "max_abs_sigma_difference": float(sigma_difference.max().cpu()),
+            "max_abs_logprob_difference": float(logprob_difference.max().cpu()),
+            "mu_element_difference_count": int(
+                torch.count_nonzero(
+                    canonical_mu.detach() != rollout_mu.detach()
+                ).cpu()
+            ),
+            "sigma_element_difference_count": int(
+                torch.count_nonzero(
+                    canonical_sigma.detach() != rollout_sigma.detach()
+                ).cpu()
+            ),
+            "ratio_min": float(external_ratio.min().cpu()),
+            "ratio_max": float(external_ratio.max().cpu()),
+            "max_abs_ratio_minus_one": max_external_error,
+            "ratio_tolerance": float(
+                gate.rollout_to_canonical_ratio_atol
+            ),
+            "likelihood_equivalence_passed": rollout_likelihood_passed,
+            "mu_sigma_are_diagnostic_only": True,
+        },
+        "canonical_optimizer_identity": {
+            "ratio_min": float(canonical_ratio.min().cpu()),
+            "ratio_max": float(canonical_ratio.max().cpu()),
+            "max_abs_ratio_minus_one": max_canonical_error,
+            "ratio_tolerance": float(gate.canonical_ratio_atol),
+            "ratio_bitwise_equal_one": canonical_ratio_exact,
+            "passed": canonical_ratio_passed,
+        },
+        "semantic_identity_hard_fail_threshold": float(
+            gate.semantic_identity_hard_fail
+        ),
+        "semantic_identity_hard_fail": semantic_hard_fail,
+        "passed": bool(
+            semantic_passed
+            and rollout_likelihood_passed
+            and canonical_ratio_passed
         ),
     }
 
@@ -440,6 +620,7 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
         *args,
         distribution_spec: TruncatedGaussianActionSpec,
         likelihood_identity_gate: LikelihoodIdentityGateSpec | None = None,
+        canonical_old_policy_gate: CanonicalOldPolicyGateSpec | None = None,
         commit_observation_stats_after_epoch: bool = True,
         **kwargs,
     ):
@@ -450,6 +631,9 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
             else likelihood_identity_gate
         )
         self.likelihood_identity_gate.validate()
+        self.canonical_old_policy_gate = canonical_old_policy_gate
+        if self.canonical_old_policy_gate is not None:
+            self.canonical_old_policy_gate.validate()
         super().__init__(*args, **kwargs)
         if self.cfg.clip_actions:
             raise ValueError("official [-1,1] action clamp must be disabled")
@@ -479,6 +663,11 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
         self._rollout_actor_parameter_hash: str | None = None
         self._rollout_actor_normalizer: dict[str, Any] | None = None
         self._rollout_normalization_version: int | None = None
+        self._rollout_semantic_hashes: dict[str, str] | None = None
+        self._canonical_old_policy_for_epoch: dict[str, torch.Tensor] | None = None
+        self._canonical_old_policy_for_latest_update: (
+            dict[str, torch.Tensor] | None
+        ) = None
 
     def _normalization_pair(self) -> dict[str, Any]:
         result = {
@@ -495,7 +684,11 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
 
     def observation_normalization_audit(self) -> dict[str, Any]:
         return {
-            "schema": "frozen_rollout_observation_normalization_v1",
+            "schema": (
+                "canonical_old_policy_observation_normalization_v1"
+                if self.canonical_old_policy_gate is not None
+                else "frozen_rollout_observation_normalization_v1"
+            ),
             "semantics": (
                 "one frozen actor/critic observation transform is used for rollout "
                 "collection and every PPO likelihood/value recomputation; raw rollout "
@@ -594,6 +787,119 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
                 f"{numerical['max_abs_mu_difference']:.9g}, max_sigma="
                 f"{numerical['max_abs_sigma_difference']:.9g}, max_ratio="
                 f"{numerical['ratio_max_abs_error_from_one']:.9g}"
+            )
+
+    def _validate_canonical_first_update_identity(
+        self,
+        *,
+        input_dict: dict[str, torch.Tensor],
+        canonical: dict[str, torch.Tensor],
+        rollout_to_canonical_ratio: torch.Tensor,
+        canonical_optimizer_ratio: torch.Tensor,
+        pre_recompute_actor_parameter_hash: str,
+        pre_recompute_actor_normalizer: dict[str, Any],
+        pre_recompute_normalization_version: int,
+    ) -> None:
+        if self.canonical_old_policy_gate is None:
+            raise RuntimeError("canonical old-policy gate was not configured")
+        if self._actor_updates_in_epoch != 0:
+            self._actor_updates_in_epoch += 1
+            return
+        if (
+            self._rollout_actor_parameter_hash is None
+            or self._rollout_actor_normalizer is None
+            or self._rollout_normalization_version is None
+            or self._rollout_semantic_hashes is None
+        ):
+            raise RuntimeError(
+                "rollout identity was not captured before canonicalization"
+            )
+        semantic = {
+            "actor_parameter_hash_equal": (
+                pre_recompute_actor_parameter_hash
+                == self._rollout_actor_parameter_hash
+            ),
+            "actor_RMS_hash_equal": (
+                pre_recompute_actor_normalizer
+                == self._rollout_actor_normalizer
+            ),
+            "normalization_version_equal": (
+                int(pre_recompute_normalization_version)
+                == int(self._rollout_normalization_version)
+            ),
+            "observations_equal": (
+                _tensor_tree_sha256(input_dict["obs"])
+                == self._rollout_semantic_hashes["obs"]
+            ),
+            "dones_equal": (
+                _tensor_tree_sha256(input_dict["dones"])
+                == self._rollout_semantic_hashes["dones"]
+            ),
+            "actions_equal": (
+                _tensor_tree_sha256(input_dict["actions"])
+                == self._rollout_semantic_hashes["actions"]
+            ),
+            "action_low_equal": (
+                _tensor_tree_sha256(input_dict["action_lows"])
+                == self._rollout_semantic_hashes["action_lows"]
+            ),
+            "action_high_equal": (
+                _tensor_tree_sha256(input_dict["action_highs"])
+                == self._rollout_semantic_hashes["action_highs"]
+            ),
+            "RNN_start_states_equal": (
+                _tensor_tree_sha256(input_dict["rnn_states"])
+                == self._rollout_semantic_hashes["rnn_states"]
+            ),
+        }
+        report = canonical_old_policy_identity_report(
+            rollout_mu=input_dict["mu"],
+            canonical_mu=canonical["mu"],
+            rollout_sigma=input_dict["sigma"],
+            canonical_sigma=canonical["sigma"],
+            rollout_neglogp=input_dict["old_logp_actions"],
+            canonical_neglogp=canonical["neglogp"],
+            rollout_to_canonical_ratio=rollout_to_canonical_ratio,
+            canonical_optimizer_ratio=canonical_optimizer_ratio,
+            semantic_identity=semantic,
+            gate=self.canonical_old_policy_gate,
+        )
+        if report["semantic_identity_hard_fail"]:
+            classification = "semantic_implementation_identity_defect"
+        elif not report["semantic_state_identity_passed"]:
+            classification = "frozen_policy_state_identity_defect"
+        elif not report["rollout_vs_canonical"][
+            "likelihood_equivalence_passed"
+        ]:
+            classification = "rollout_canonical_likelihood_mismatch"
+        elif not report["canonical_optimizer_identity"]["passed"]:
+            classification = "canonical_ratio_implementation_defect"
+        else:
+            classification = "canonical_old_policy_identity_pass"
+        row = {
+            "epoch": int(self.epoch_num),
+            "samples": int(canonical_optimizer_ratio.numel()),
+            **report,
+            "classification": classification,
+            # Compatibility fields used by bounded-size benchmark summaries.
+            "maximum_abs_error_from_one": report[
+                "canonical_optimizer_identity"
+            ]["max_abs_ratio_minus_one"],
+            "ratio_max_abs_error_from_one": report[
+                "rollout_vs_canonical"
+            ]["max_abs_ratio_minus_one"],
+            "numerical_identity_passed": bool(report["passed"]),
+        }
+        self._likelihood_identity_checks.append(row)
+        self._actor_updates_in_epoch += 1
+        if not report["passed"]:
+            raise RuntimeError(
+                "canonical old-policy gate failed: "
+                f"classification={classification}, semantic={semantic}, "
+                "rollout_ratio_error="
+                f"{report['rollout_vs_canonical']['max_abs_ratio_minus_one']:.9g}, "
+                "canonical_ratio_error="
+                f"{report['canonical_optimizer_identity']['max_abs_ratio_minus_one']:.9g}"
             )
 
     def init_tensors(self) -> None:
@@ -711,6 +1017,15 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
         self._rollout_normalization_version = int(
             self._observation_normalization_version
         )
+        if self.canonical_old_policy_gate is not None:
+            self._rollout_semantic_hashes = {
+                "obs": _tensor_tree_sha256(batch_dict["obses"]),
+                "dones": _tensor_tree_sha256(batch_dict["dones"]),
+                "actions": _tensor_tree_sha256(batch_dict["actions"]),
+                "action_lows": _tensor_tree_sha256(batch_dict["action_lows"]),
+                "action_highs": _tensor_tree_sha256(batch_dict["action_highs"]),
+                "rnn_states": _tensor_tree_sha256(batch_dict["rnn_states"]),
+            }
         actor_observations = self._preproc_obs(batch_dict["obses"])
         if not torch.is_tensor(actor_observations):
             raise TypeError("frozen normalization contract requires tensor observations")
@@ -788,6 +1103,9 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
         self._rollout_actor_parameter_hash = None
         self._rollout_actor_normalizer = None
         self._rollout_normalization_version = None
+        self._rollout_semantic_hashes = None
+        self._canonical_old_policy_for_epoch = None
+        self._canonical_old_policy_for_latest_update = None
         before = self._normalization_pair()
         result = super().train_epoch()
         before_commit = self._normalization_pair()
@@ -845,6 +1163,8 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
         self._rollout_actor_parameter_hash = None
         self._rollout_actor_normalizer = None
         self._rollout_normalization_version = None
+        self._rollout_semantic_hashes = None
+        self._canonical_old_policy_for_epoch = None
         return result
 
     def recompute_truncated_neglogp(
@@ -995,7 +1315,7 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
                 "optimizer training is forbidden by the gate-only truncated-Gaussian profile"
             )
         value_preds = input_dict["old_values"]
-        old_neglogp = input_dict["old_logp_actions"]
+        rollout_old_neglogp = input_dict["old_logp_actions"]
         advantage = input_dict["advantages"]
         returns = input_dict["returns"]
         pre_recompute_actor_parameter_hash = _module_parameter_sha256(self.model)
@@ -1006,15 +1326,57 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
             self._observation_normalization_version
         )
         current = self.evaluate_ppo_distribution(input_dict)
-        ratio = torch.exp(old_neglogp - current["neglogp"])
-        self._validate_first_update_identity(
-            input_dict=input_dict,
-            current=current,
-            ratio=ratio,
-            pre_recompute_actor_parameter_hash=pre_recompute_actor_parameter_hash,
-            pre_recompute_actor_normalizer=pre_recompute_actor_normalizer,
-            pre_recompute_normalization_version=pre_recompute_normalization_version,
-        )
+        if self.canonical_old_policy_gate is None:
+            old_neglogp = rollout_old_neglogp
+            ratio = torch.exp(old_neglogp - current["neglogp"])
+            self._validate_first_update_identity(
+                input_dict=input_dict,
+                current=current,
+                ratio=ratio,
+                pre_recompute_actor_parameter_hash=pre_recompute_actor_parameter_hash,
+                pre_recompute_actor_normalizer=pre_recompute_actor_normalizer,
+                pre_recompute_normalization_version=pre_recompute_normalization_version,
+            )
+        else:
+            if self._actor_updates_in_epoch == 0:
+                # This one differentiable evaluation is both the canonical old
+                # policy and the current side of the first PPO loss.  Detaching
+                # the denominator preserves an exactly identical value while
+                # retaining the policy gradient through current["neglogp"].
+                self._canonical_old_policy_for_epoch = {
+                    name: current[name].detach().clone()
+                    for name in ("neglogp", "mu", "sigma")
+                }
+            if self._canonical_old_policy_for_epoch is None:
+                raise RuntimeError("canonical old policy was not initialized")
+            canonical_old = self._canonical_old_policy_for_epoch
+            old_neglogp = canonical_old["neglogp"]
+            rollout_to_canonical_ratio = torch.exp(
+                rollout_old_neglogp - current["neglogp"]
+            )
+            ratio = torch.exp(old_neglogp - current["neglogp"])
+            if self._actor_updates_in_epoch == 0:
+                self._validate_canonical_first_update_identity(
+                    input_dict=input_dict,
+                    canonical=current,
+                    rollout_to_canonical_ratio=rollout_to_canonical_ratio,
+                    canonical_optimizer_ratio=ratio,
+                    pre_recompute_actor_parameter_hash=(
+                        pre_recompute_actor_parameter_hash
+                    ),
+                    pre_recompute_actor_normalizer=(
+                        pre_recompute_actor_normalizer
+                    ),
+                    pre_recompute_normalization_version=(
+                        pre_recompute_normalization_version
+                    ),
+                )
+            else:
+                self._actor_updates_in_epoch += 1
+            self._canonical_old_policy_for_latest_update = {
+                name: value.detach().clone()
+                for name, value in canonical_old.items()
+            }
         clipped_ratio = torch.clamp(
             ratio, 1.0 - self.cfg.e_clip, 1.0 + self.cfg.e_clip
         )

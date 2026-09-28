@@ -79,8 +79,13 @@ def main() -> None:
     if args.output_dir.exists():
         raise FileExistsError(args.output_dir)
     contract = yaml.safe_load(args.contract.read_text())
+    schema = str(contract.get("schema", ""))
+    version = schema.rsplit("_v", 1)[-1] if "_v" in schema else ""
     if (
-        contract.get("schema") != "taco_pour_algorithmic_reproduction_training_benchmark_v3"
+        schema not in {
+            "taco_pour_algorithmic_reproduction_training_benchmark_v3",
+            "taco_pour_algorithmic_reproduction_training_benchmark_v4",
+        }
         or contract.get("status") != "authorized_fresh_B0_roundtrip_then_A_B_training"
         or contract.get("paper_faithful") is not False
         or Path(contract.get("output_directory", "")) != args.output_dir.resolve()
@@ -109,6 +114,7 @@ def main() -> None:
     from video_to_spider.rl.objective_contract import load_runtime_objective
     from video_to_spider.rl.observation_contract import load_runtime_observation
     from video_to_spider.rl.state_feasible_truncated_gaussian import (
+        CanonicalOldPolicyGateSpec,
         LikelihoodIdentityGateSpec,
         StateFeasibleTruncatedGaussianPpoAgent,
         load_truncated_gaussian_profile,
@@ -145,15 +151,29 @@ def main() -> None:
     )
     distribution = replace(distribution, optimizer_training_authorized=True)
     gate_row = contract["quality_gates"]["pre_optimizer_likelihood_identity"]
-    identity_gate = LikelihoodIdentityGateSpec(
-        mu_atol=float(gate_row["mu_atol"]),
-        sigma_atol=float(gate_row["sigma_atol"]),
-        ratio_atol=float(gate_row["ratio_atol"]),
-        semantic_identity_hard_fail=float(
-            gate_row["semantic_identity_hard_fail"]
-        ),
-    )
-    identity_gate.validate()
+    if version == "4":
+        identity_gate = LikelihoodIdentityGateSpec.float32_ulp_aware_v1()
+        canonical_gate = CanonicalOldPolicyGateSpec(
+            rollout_to_canonical_ratio_atol=float(
+                gate_row["rollout_to_canonical_ratio_atol"]
+            ),
+            canonical_ratio_atol=float(gate_row["canonical_ratio_atol"]),
+            semantic_identity_hard_fail=float(
+                gate_row["semantic_identity_hard_fail"]
+            ),
+        )
+        canonical_gate.validate()
+    else:
+        identity_gate = LikelihoodIdentityGateSpec(
+            mu_atol=float(gate_row["mu_atol"]),
+            sigma_atol=float(gate_row["sigma_atol"]),
+            ratio_atol=float(gate_row["ratio_atol"]),
+            semantic_identity_hard_fail=float(
+                gate_row["semantic_identity_hard_fail"]
+            ),
+        )
+        identity_gate.validate()
+        canonical_gate = None
     _, initialization = load_accepted_initialization(
         paths["initialization_report"], paths["simulator_config"]
     )
@@ -216,6 +236,7 @@ def main() -> None:
         env=candidate_env,
         distribution_spec=distribution,
         likelihood_identity_gate=identity_gate,
+        canonical_old_policy_gate=canonical_gate,
     )
     initialization_audit = replay_preserving_initialization(
         agent, sigma_multiplier=0.25
@@ -377,7 +398,7 @@ def main() -> None:
         arrays_path = b0 / "step0_trajectory.npz"
         np.savez_compressed(arrays_path, **arrays)
         b0_report = {
-            "schema": "taco_pour_replay_preserving_candidate_B_step0_gate_v3",
+            "schema": f"taco_pour_replay_preserving_candidate_B_step0_gate_v{version}",
             "status": "passed_training_may_start" if passed else "failed_training_forbidden",
             "paper_faithful": False,
             "backend": "CPU_MuJoCo_Warp",
@@ -419,7 +440,7 @@ def main() -> None:
         a0 = temporary_output / "candidate_A" / "seed_0"
         a0.mkdir(parents=True)
         (a0 / "report.json").write_text(json.dumps({
-            "schema": "taco_pour_algorithmic_candidate_A_seed0_v3",
+            "schema": f"taco_pour_algorithmic_candidate_A_seed0_v{version}",
             "status": "not_started_due_candidate_B_step0_gate_failure" if not passed else "authorized_not_started",
             "optimizer_updates": 0,
             "simulation_physics_steps_for_training": 0,
@@ -427,7 +448,7 @@ def main() -> None:
         }, indent=2) + "\n")
 
         comparison = {
-            "schema": "taco_pour_algorithmic_reproduction_training_comparison_v3",
+            "schema": f"taco_pour_algorithmic_reproduction_training_comparison_v{version}",
             "status": "B0_failed_no_training" if not passed else "B0_passed_training_authorized",
             "Replay_validated_intervals": replay_summary["successful_intervals"],
             "Replay_first_failure_endpoint": replay_summary["first_failure_endpoint"],
@@ -454,7 +475,7 @@ def main() -> None:
         comparison_path = temporary_output / "comparison.json"
         comparison_path.write_text(json.dumps(comparison, indent=2) + "\n")
         (temporary_output / "summary.md").write_text(
-            "# TACO Pour Algorithmic Reproduction Training Benchmark v3\n\n"
+            f"# TACO Pour Algorithmic Reproduction Training Benchmark v{version}\n\n"
             "Candidate B's mandatory zero-step gate was evaluated before any "
             "optimizer update.\n\n"
             f"- Formal Replay: `{replay_summary['successful_intervals']}/40`, "
