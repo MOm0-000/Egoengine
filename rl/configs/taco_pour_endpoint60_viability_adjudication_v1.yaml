@@ -1,0 +1,177 @@
+schema: taco_pour_endpoint60_viability_adjudication_v1
+status: authorized_read_only_adjudication
+base_git_commit: 76f88b2614768369f9818e9b127bab1ef9e51035
+paper_faithful: false
+purpose: >-
+  Distinguish previous-policy carryover, one-step action viability, and
+  endpoint60 arrival-state viability without training or changing any task,
+  policy, action, reward, observation, or physics contract.
+
+runtime:
+  backend: CPU_MuJoCo_Warp
+  training_allowed: false
+  optimizer_updates_policy: false
+  reward_changed: false
+  observation_changed: false
+  action_changed: false
+  action_scale_changed: false
+  action_support_changed: false
+  physics_changed: false
+  LR_changed: false
+  endpoint40_to60_chunk_commit_allowed: false
+
+carryover:
+  candidate: D
+  source_solver_endpoint: 20
+  seed: 2
+  epoch: 125
+  initial_RNN: zero
+  deterministic_policy: true
+  required_historical_bitwise_endpoints: [21, 60]
+  continuous_rollout_endpoints: [21, 80]
+  RNN_reset_at_endpoint40_or60: false
+  strict_window_source: 40
+  strict_window_intervals: 40
+
+known_endpoint60_boundaries:
+  A: {lineage: source40_candidate_D_seed0_epoch125, teacher_seed: 0}
+  B: {lineage: source40_candidate_D_seed1_epoch125, teacher_seed: 1}
+  P: {lineage: promoted_source20_candidate_D_seed2_epoch125_continuation, teacher_seed: 2}
+  reference_or_GT_state_injection: false
+
+historical_source60_audit:
+  simulation_steps: 0
+  source_endpoint: 60
+  tail_world_mapping: {world2: A, world3: B}
+  epochs: [63, 125]
+  seeds: [0, 1, 2]
+  distributions: [min, p01, p05, median, p95, max]
+  best_score_minus_boundary: true
+  best_sampled_action_saved: true
+  logger_limitation: >-
+    v6 visitation stores score, position/rotation errors, actions and contact
+    flags, but not per-sample lift or total reward. C-e and contact bonus are
+    reconstructed exactly; lift and total reward must remain unavailable
+    rather than being joined from a differently ordered artifact.
+
+one_step_search:
+  source_endpoint: 60
+  outcome_endpoint: 61
+  exact_state_feasible_support_only: true
+  normalized_action_dimensions: 36
+  exact_feasibility: score_less_than_or_equal_to_1_and_not_terminated
+  baseline_candidates:
+    - zero_residual
+    - teacher_or_current_continuation_deterministic_action_if_available
+    - historical_best_A_action
+    - historical_best_B_action
+  sobol:
+    seed: 600061
+    actions: 4096
+    distribution: uniform_exact_state_support
+  CEM:
+    seed: 610060
+    generations: 6
+    population: 512
+    total_actions: 3072
+    elite_fraction: 0.10
+    elite_count: 52
+    initial_center: best_baseline_or_Sobol_action
+    initial_std_fraction_of_support_width: 0.25
+    project_to_exact_support: true
+  maximum_new_control_intervals_per_boundary: 7168
+  save_top_actions: 32
+  exact_feasible_replay_must_be_bitwise_equal: true
+  hyperparameter_sweep_allowed: false
+
+prefrozen_classification:
+  C1:
+    condition: continuous_previous_policy_endpoint41_80_is_40_of_40
+    classification: POLICY_CARRYOVER_SOLVES_NEXT_WINDOW
+    action: stop_and_write_separate_promotion_request
+  C3:
+    condition: A_and_B_not_feasible_and_P_feasible
+    classification: ARRIVAL_STATE_VIABILITY_BOTTLENECK
+    action: stop_previous_solver_warm_start_or_carryover_becomes_next_candidate
+  C2:
+    condition: A_or_B_feasible_regardless_of_P
+    classification: ONE_STEP_VIABLE_ACTION_EXISTS
+    action: stop_no_automatic_LR_or_curriculum_change
+  C4:
+    condition: no_feasible_action_found_on_A_B_or_P
+    classification: NO_ONE_STEP_FEASIBLE_ACTION_FOUND_ON_KNOWN_ENDPOINT60_STATES
+    interpretation: finite_negative_evidence_not_mathematical_infeasibility
+    action: stop_close_tail_reset_LR_sigma_and_more_source60_exploration
+
+inputs:
+  protocol_at_authorization:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_algorithmic_reproduction_training_v3_protocol_snapshot.yaml
+    sha256: 1f4a96edfa0bc17ecb578fd5d8ae1514b77099713cc9b9f74adf6813a62873f3
+  objective_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_local_normalized_ellipse_v1.yaml
+    sha256: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+  observation_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_observation_local_236d_v1.yaml
+    sha256: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  action_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_residual_action_scaled_v1.yaml
+    sha256: 71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4
+  distribution_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_support_anchored_bounded_mean_truncated_gaussian_v1.yaml
+    sha256: 24dc3decf62890bd14268539fd875215756ca500e097ccedfede4128d062762f
+  simulator_config:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml
+    sha256: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+  initialization_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v2/candidate_a/report.json
+    sha256: 9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a
+  source_boundary_endpoint20:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_replay_rebase_v1/tool_only/committed_boundary_endpoint_20.pt.gz
+    sha256: a3646e24af1ba871e5ecc885669508223a5e0f26d3cf29f0482f02678419e337
+  carryover_checkpoint:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v6/training/candidate_D/seed_2/checkpoints/epoch_0125.pt.gz
+    sha256: b4e62f89d68137782809416a15f6d240b139b75dbf6391ba6fa3534f63cb3670
+  boundary_A_teacher_checkpoint:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1/chunk_source_40/candidate_D/seed_0/checkpoints/epoch_0125.pt.gz
+    sha256: c64c01a8c829b5aa80bde1d33671847b71129b90d5a700c01631c5a9fd990e05
+  boundary_B_teacher_checkpoint:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1/chunk_source_40/candidate_D/seed_1/checkpoints/epoch_0125.pt.gz
+    sha256: 4bee7e2b408f7a01077ed906f571241a19a4247ad252254ddc6f053f27abc621
+  promoted_historical_trajectory:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_candidate_D_strict_success_promotion_v1/promoted_validation.npz
+    sha256: fe4851561905696848fc705fbd920115f9dd48d8f530b2b2a3b94bc04876645e
+  promotion_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_candidate_D_strict_success_promotion_v1/report.json
+    sha256: 30e20c48730dd2678ca1cce851f4478f76b568cdf92f2af358721e726ef49da6
+  boundary_A:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/tail_boundary_builder/seed0_endpoint60.pt.gz
+    sha256: 866749795ab78ca9cd6e27169c1139e72a08d24268d398c6a102e2dbddc8e960
+  boundary_B:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/tail_boundary_builder/seed1_endpoint60.pt.gz
+    sha256: 9fc2fa24edfc7fea1f7f29ffb253fa1b089ac3556b9bb9c9498aa4e224e9a300
+  candidate_F_seed0_visitation_manifest:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/manifest.json
+    sha256: 05d4acecf0f0408a2d24b3c72158501f18651fdbad1b3ae6cf9b72106c3d0481
+  candidate_F_seed1_visitation_manifest:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_1/training_visitation/manifest.json
+    sha256: 8d0e299d8f4799218fcc18b31ffbba521eb61b9974aba42ffb7bc6bb5bd8b177
+  candidate_F_seed2_visitation_manifest:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_2/training_visitation/manifest.json
+    sha256: 252a4d1030e7ec84e923ef6124ab315e8c3d46cb00fcf27234abc2adc0e32e2b
+
+immutable_progress:
+  endpoint20_to40_committed: true
+  endpoint40_to60_committed: false
+
+forbidden:
+  - PPO_training
+  - reward_observation_action_physics_or_LR_change
+  - support_expansion
+  - source60_tail_curriculum_extension
+  - LR_or_sigma_only_tuning
+  - curriculum_ratio_sweep
+  - reference_or_GT_state_injection
+  - mathematical_infeasibility_claim_from_finite_negative_search
+  - direct_chunk_commit
+
+output_directory: /data_all/zzx/3.2RL/runs/taco_pour_endpoint60_viability_adjudication_v1

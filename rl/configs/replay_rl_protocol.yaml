@@ -1654,6 +1654,48 @@ evaluation:
       chunk_commit_written: false
       endpoint20_to40_committed: true
       endpoint40_to60_committed: false
+    endpoint60_viability_adjudication_v1:
+      status: completed_C3_no_training_no_commit
+      classification: ARRIVAL_STATE_VIABILITY_BOTTLENECK
+      paper_faithful: false
+      contract: /data_all/zzx/3.2RL/configs/taco_pour_endpoint60_viability_adjudication_v1.yaml
+      report: /data_all/zzx/3.2RL/runs/taco_pour_endpoint60_viability_adjudication_v1/report.json
+      decision: /data_all/zzx/3.2RL/runs/taco_pour_endpoint60_viability_adjudication_v1/decision.json
+      continuous_previous_policy:
+        historical_endpoint21_60_all_arrays_bitwise_equal: true
+        RNN_reset_at_endpoint40_or60: false
+        successful_intervals_endpoint41_80: 20
+        first_failure_endpoint: 61
+        strict_40_of_40: false
+      historical_source60_samples:
+        simulation_control_intervals: 0
+        samples_per_boundary: {A: 7560, B: 7560}
+        all_terminate_at_endpoint61: true
+        best_score_minus_1: {A: 0.026925206184387207, B: 0.023451566696166992}
+        lift_and_total_reward_status: unavailable_not_recorded_do_not_invent_join
+      exact_support_one_step_search:
+        evaluated_actions_per_boundary: 7168
+        boundary_A: {feasible: 0, best_score: 1.0135926008224487}
+        boundary_B: {feasible: 0, best_score: 1.0200165510177612}
+        boundary_P: {feasible: 727, best_score: 0.989890456199646}
+        best_actions_bitwise_reproduced_on_CPU: true
+        finite_negative_is_mathematical_infeasibility_proof: false
+      interpretation: >-
+        The promoted previous policy does not solve the full next window by
+        continuous carryover, but its naturally reached endpoint60 state P has
+        a substantial exact one-step feasible basin.  Neither fresh source40
+        arrival A nor B yields a feasible action in the frozen finite search.
+        The active bottleneck is therefore endpoint60 arrival-state viability;
+        previous-solver carryover or warm start is the next candidate, not
+        further source60 tail reset, LR-only, sigma-only, or ratio tuning.
+      previous_solver_warm_start_or_carryover_next_candidate: true
+      repository_verification: {tests: 818, subtests: 57, warnings: 19}
+      source60_tail_curriculum_extension_authorized: false
+      LR_or_sigma_only_tuning_authorized: false
+      curriculum_ratio_sweep_authorized: false
+      endpoint20_to40_committed: true
+      endpoint40_to60_committed: false
+      chunk_commit_written: false
 
 runtime_contract:
   fail_closed: true
@@ -1820,6 +1862,9 @@ audit_results:
   candidate_F_seed0_report_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/report.json
   candidate_F_seed1_report_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_1/report.json
   candidate_F_seed2_report_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_2/report.json
+  endpoint60_viability_adjudication_contract_v1: /data_all/zzx/3.2RL/configs/taco_pour_endpoint60_viability_adjudication_v1.yaml
+  endpoint60_viability_adjudication_report_v1: /data_all/zzx/3.2RL/runs/taco_pour_endpoint60_viability_adjudication_v1/report.json
+  endpoint60_viability_adjudication_decision_v1: /data_all/zzx/3.2RL/runs/taco_pour_endpoint60_viability_adjudication_v1/decision.json
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -1900,6 +1945,11 @@ result_acceptance_blockers:
   - candidate_F_all_15120_tail_world_source60_actions_terminate_at_endpoint61
   - candidate_F_post_curriculum_median_deep_lookahead_fraction_is_zero_and_triggers_F3_TAIL_TRANSITION_REMAINS_BOTTLENECK
   - candidate_F_does_not_authorize_optimizer_LR_review_ratio_sweep_400k_extension_or_chunk_commit
+  - endpoint60_previous_policy_continuous_carryover_reproduces_endpoint21_to60_bitwise_but_fails_endpoint61
+  - endpoint60_boundaries_A_and_B_have_zero_of_7168_one_step_feasible_actions_in_the_frozen_finite_search
+  - endpoint60_boundary_P_has_727_of_7168_exact_one_step_feasible_actions_and_triggers_C3_ARRIVAL_STATE_VIABILITY_BOTTLENECK
+  - endpoint60_finite_negative_search_on_A_and_B_is_not_a_mathematical_infeasibility_proof
+  - endpoint60_adjudication_blocks_more_source60_tail_reset_LR_only_sigma_only_ratio_sweep_and_direct_chunk_commit
   - complete_197_transition_algorithmic_trajectory_not_yet_generated
   - source47_zero_residual_still_fails_endpoint49_and_source48_has_no_tool_effect
   - no_source47_semantic_action_subspace_preserves_contact_or_survives_endpoint49
