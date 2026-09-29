@@ -1541,7 +1541,7 @@ evaluation:
     committed_boundary_sha256: 7cf90b48a2a16d41b1f055fdb4fa30f1fdb89d32064ffbfc776b0fdc0e1b9090
     paper_cost_comparison_eligible: false
   progressive_chunk_execution_v1:
-    status: endpoint40_lookahead_visitation_bottleneck_candidate_E_blocked_no_commit
+    status: candidate_F_tail_transition_bottleneck_no_commit
     active_algorithmic_evidence: true
     paper_faithful: false
     contract: /data_all/zzx/3.2RL/configs/taco_pour_progressive_chunk_execution_v1.yaml
@@ -1610,6 +1610,48 @@ evaluation:
       optimizer_LR_only_change_authorized: false
       Candidate_E_authorized: false
       Candidate_E_executed: false
+      endpoint20_to40_committed: true
+      endpoint40_to60_committed: false
+    candidate_F_two_chunk_curriculum_v1:
+      status: completed_three_fresh_seeds_F3_no_commit
+      classification: TAIL_TRANSITION_REMAINS_BOTTLENECK
+      paper_faithful: false
+      local_change: rollout_reset_start_state_distribution_only
+      contract: /data_all/zzx/3.2RL/configs/taco_pour_candidate_F_two_chunk_curriculum_v1.yaml
+      output: /data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1
+      comparison: /data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/comparison.json
+      summary: /data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/summary.md
+      boundary_builder_status: passed_two_natural_endpoint60_boundaries
+      sampler_gate_status: passed_no_training_sampler_gate
+      sampler_gate_optimizer_steps: 0
+      fixed_world_starts:
+        epochs1_62: [40, 40, 40, 40]
+        epochs63_125: [40, 40, 60, 60]
+      seed0_fixed_milestones:
+        at_0: {successful_intervals: 9, first_failure_endpoint: 50}
+        at_100k: {successful_intervals: 17, first_failure_endpoint: 58}
+        at_200k: {successful_intervals: 14, first_failure_endpoint: 55}
+      seed1_fixed_milestones:
+        at_0: {successful_intervals: 9, first_failure_endpoint: 50}
+        at_100k: {successful_intervals: 19, first_failure_endpoint: 60}
+        at_200k: {successful_intervals: 19, first_failure_endpoint: 60}
+      seed2_fixed_milestones:
+        at_0: {successful_intervals: 9, first_failure_endpoint: 50}
+        at_100k: {successful_intervals: 20, first_failure_endpoint: 61}
+        at_200k: {successful_intervals: 20, first_failure_endpoint: 61}
+      strict_40_of_40_found: false
+      post_curriculum_all_world_deep_lookahead_fractions:
+        - 0.0
+        - 0.0
+        - 0.0000992063492063492
+      post_curriculum_median_deep_lookahead_fraction: 0.0
+      post_curriculum_tail_source60_actions: 15120
+      post_curriculum_tail_endpoint61_tracking_terminations: 15120
+      tail_worlds_crossing_source60_to61: 0
+      optimizer_LR_review_authorized: false
+      ratio_sweep_authorized: false
+      automatic_400k_extension_authorized: false
+      chunk_commit_written: false
       endpoint20_to40_committed: true
       endpoint40_to60_committed: false
 
@@ -1770,6 +1812,14 @@ audit_results:
   endpoint40_optimizer_comparison_v1: /data_all/zzx/3.2RL/runs/taco_pour_endpoint40_optimizer_review_v1/optimizer_comparison.json
   endpoint40_optimizer_review_decision_v1: /data_all/zzx/3.2RL/runs/taco_pour_endpoint40_optimizer_review_v1/decision.json
   endpoint40_optimizer_review_summary_v1: /data_all/zzx/3.2RL/runs/taco_pour_endpoint40_optimizer_review_v1/visitation_summary.md
+  candidate_F_two_chunk_curriculum_contract_v1: /data_all/zzx/3.2RL/configs/taco_pour_candidate_F_two_chunk_curriculum_v1.yaml
+  candidate_F_tail_boundary_builder_report_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/tail_boundary_builder/report.json
+  candidate_F_sampler_gate_report_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/sampler_gate/report.json
+  candidate_F_comparison_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/comparison.json
+  candidate_F_summary_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/summary.md
+  candidate_F_seed0_report_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/report.json
+  candidate_F_seed1_report_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_1/report.json
+  candidate_F_seed2_report_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_2/report.json
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -1846,6 +1896,10 @@ result_acceptance_blockers:
   - endpoint40_failed_to_successful_control_deep_lookahead_ratio_is_0p005900826
   - endpoint40_review_classifies_LOOKAHEAD_VISITATION_BOTTLENECK_and_does_not_authorize_Candidate_E
   - endpoint40_visitation_credit_join_is_not_proven_and_no_row_order_is_guessed
+  - candidate_F_2plus2_curriculum_completes_three_fresh_200k_seeds_without_fixed_milestone_40_of_40
+  - candidate_F_all_15120_tail_world_source60_actions_terminate_at_endpoint61
+  - candidate_F_post_curriculum_median_deep_lookahead_fraction_is_zero_and_triggers_F3_TAIL_TRANSITION_REMAINS_BOTTLENECK
+  - candidate_F_does_not_authorize_optimizer_LR_review_ratio_sweep_400k_extension_or_chunk_commit
   - complete_197_transition_algorithmic_trajectory_not_yet_generated
   - source47_zero_residual_still_fails_endpoint49_and_source48_has_no_tool_effect
   - no_source47_semantic_action_subspace_preserves_contact_or_survives_endpoint49

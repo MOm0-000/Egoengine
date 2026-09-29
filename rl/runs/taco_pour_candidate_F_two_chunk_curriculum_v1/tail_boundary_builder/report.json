@@ -1,0 +1,199 @@
+{
+  "schema": "taco_pour_candidate_F_tail_boundary_builder_v1",
+  "status": "passed_two_natural_endpoint60_boundaries",
+  "paper_faithful": false,
+  "simulation_role": "exact_revalidation_and_boundary_capture_only",
+  "training_executed": false,
+  "optimizer_steps": 0,
+  "reference_or_GT_state_injection": false,
+  "boundaries": [
+    {
+      "teacher_seed": 0,
+      "teacher_epoch": 125,
+      "teacher_checkpoint": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1/chunk_source_40/candidate_D/seed_0/checkpoints/epoch_0125.pt.gz",
+        "sha256": "c64c01a8c829b5aa80bde1d33671847b71129b90d5a700c01631c5a9fd990e05",
+        "bytes": 81645876
+      },
+      "historical_validation": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1/chunk_source_40/candidate_D/seed_0/validations/epoch_0125.npz",
+        "sha256": "0d98ced4adaf414882b0f1dfa20d519d8a28c998d0bffc342d9f4f2507f7793b",
+        "bytes": 45833
+      },
+      "endpoint41_60_array_exact_checks": {
+        "endpoint": true,
+        "terminated": true,
+        "tracking_score": true,
+        "position_error": true,
+        "rotation_error": true,
+        "ctrl": true,
+        "qpos": true,
+        "qvel": true,
+        "contact_flags": true,
+        "deterministic_action": true,
+        "raw_location": true,
+        "bounded_mu": true,
+        "actor_sigma": true,
+        "action_low": true,
+        "action_high": true,
+        "actor_mu": true
+      },
+      "all_endpoint41_60_arrays_bitwise_equal": true,
+      "nonterminal_through_endpoint60": true,
+      "reference_endpoint": 60,
+      "rollout_start_endpoint": 40,
+      "observation_prefix_length": 20,
+      "boundary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/tail_boundary_builder/seed0_endpoint60.pt.gz",
+        "artifact_sha256": "866749795ab78ca9cd6e27169c1139e72a08d24268d398c6a102e2dbddc8e960",
+        "uncompressed_sha256": "6f001b168a27fd25822df62d2424cbabca0478aab5bd591ce042922a6db6f0b4",
+        "bytes": 136850,
+        "payload_roundtrip_exact": true
+      },
+      "boundary_restore": {
+        "schema": "egoengine_physics_rnn_boundary_v1",
+        "worlds": 1,
+        "reference_endpoints": [
+          60
+        ],
+        "actor_state_sha256": "43afd1c9db3e0a7ef6e989217c2d64efa0079c1db51c566a4c4db5ca30760539",
+        "physics_bitwise_equal": [
+          true
+        ],
+        "observation_bitwise_equal": true,
+        "rnn_state_shapes": [
+          [
+            1,
+            1,
+            1024
+          ],
+          [
+            1,
+            1,
+            1024
+          ]
+        ],
+        "agent_runtime_shapes": {
+          "dones": [
+            1
+          ],
+          "current_rewards": [
+            1,
+            1
+          ],
+          "current_shaped_rewards": [
+            1,
+            1
+          ],
+          "current_lengths": [
+            1
+          ]
+        },
+        "exploration_rng_restored": false
+      },
+      "captured_validation": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/tail_boundary_builder/seed0_endpoint41_60_validation.npz",
+        "sha256": "3fe5e6d84ddab3819cdba7b0efe597116737c3353e25825974c523c7bbbd5fd9",
+        "bytes": 24823
+      },
+      "off_policy_curriculum_state": true,
+      "direct_chunk_commit_allowed": false
+    },
+    {
+      "teacher_seed": 1,
+      "teacher_epoch": 125,
+      "teacher_checkpoint": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1/chunk_source_40/candidate_D/seed_1/checkpoints/epoch_0125.pt.gz",
+        "sha256": "4bee7e2b408f7a01077ed906f571241a19a4247ad252254ddc6f053f27abc621",
+        "bytes": 81640418
+      },
+      "historical_validation": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1/chunk_source_40/candidate_D/seed_1/validations/epoch_0125.npz",
+        "sha256": "b1b88cc627c3189b1d91a022ac7014ddfe0dd5782d64c360cece691f901d2942",
+        "bytes": 45733
+      },
+      "endpoint41_60_array_exact_checks": {
+        "endpoint": true,
+        "terminated": true,
+        "tracking_score": true,
+        "position_error": true,
+        "rotation_error": true,
+        "ctrl": true,
+        "qpos": true,
+        "qvel": true,
+        "contact_flags": true,
+        "deterministic_action": true,
+        "raw_location": true,
+        "bounded_mu": true,
+        "actor_sigma": true,
+        "action_low": true,
+        "action_high": true,
+        "actor_mu": true
+      },
+      "all_endpoint41_60_arrays_bitwise_equal": true,
+      "nonterminal_through_endpoint60": true,
+      "reference_endpoint": 60,
+      "rollout_start_endpoint": 40,
+      "observation_prefix_length": 20,
+      "boundary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/tail_boundary_builder/seed1_endpoint60.pt.gz",
+        "artifact_sha256": "9fc2fa24edfc7fea1f7f29ffb253fa1b089ac3556b9bb9c9498aa4e224e9a300",
+        "uncompressed_sha256": "820b004ef09008cf3f85230ed8429e2c3d876cec6d97e2de1220557b39f0adaf",
+        "bytes": 135676,
+        "payload_roundtrip_exact": true
+      },
+      "boundary_restore": {
+        "schema": "egoengine_physics_rnn_boundary_v1",
+        "worlds": 1,
+        "reference_endpoints": [
+          60
+        ],
+        "actor_state_sha256": "79c69177c551cdfad7e0e6687e0bed025358dd5ab825ccda172fedaa9135ab79",
+        "physics_bitwise_equal": [
+          true
+        ],
+        "observation_bitwise_equal": true,
+        "rnn_state_shapes": [
+          [
+            1,
+            1,
+            1024
+          ],
+          [
+            1,
+            1,
+            1024
+          ]
+        ],
+        "agent_runtime_shapes": {
+          "dones": [
+            1
+          ],
+          "current_rewards": [
+            1,
+            1
+          ],
+          "current_shaped_rewards": [
+            1,
+            1
+          ],
+          "current_lengths": [
+            1
+          ]
+        },
+        "exploration_rng_restored": false
+      },
+      "captured_validation": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/tail_boundary_builder/seed1_endpoint41_60_validation.npz",
+        "sha256": "148e1b89c6f5f6953c54aa8f47e44aa95db522ae841a8e55f6af8ee459074cce",
+        "bytes": 24704
+      },
+      "off_policy_curriculum_state": true,
+      "direct_chunk_commit_allowed": false
+    }
+  ],
+  "sampler_gate_authorized": true,
+  "candidate_F_training_authorized": false,
+  "endpoint20_to40_committed": true,
+  "endpoint40_to60_committed": false
+}

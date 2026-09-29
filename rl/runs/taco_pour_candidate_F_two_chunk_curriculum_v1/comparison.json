@@ -1,0 +1,861 @@
+{
+  "candidate": "F_balanced_two_chunk_lookahead_curriculum",
+  "commit_state": {
+    "candidate_F_chunk_commit_written": false,
+    "endpoint20_to40_committed": true,
+    "endpoint40_to60_committed": false
+  },
+  "decision": {
+    "automatic_400k_extension_authorized": false,
+    "code": "F3",
+    "frozen_thresholds": {
+      "F2_minimum": 0.2,
+      "F3_strict_upper_bound": 0.05
+    },
+    "further_ratio_sweep_authorized": false,
+    "label": "TAIL_TRANSITION_REMAINS_BOTTLENECK",
+    "optimizer_or_LR_review_authorized": false,
+    "post_curriculum_all_world_deep_lookahead_fractions": [
+      0.0,
+      0.0,
+      9.92063492063492e-05
+    ],
+    "post_curriculum_all_world_median_deep_lookahead_fraction": 0.0,
+    "post_curriculum_tail_endpoint61_tracking_termination_count": 15120,
+    "post_curriculum_tail_source60_action_count": 15120,
+    "promotion_request_required_before_commit": false,
+    "strict_success_at_fixed_milestone": false
+  },
+  "frozen_curriculum": {
+    "epochs_1_through_62": [
+      40,
+      40,
+      40,
+      40
+    ],
+    "epochs_63_through_125": [
+      40,
+      40,
+      60,
+      60
+    ],
+    "ratio_sweep_performed": false
+  },
+  "gates": {
+    "no_training_sampler_gate": {
+      "optimizer_steps": 0,
+      "path": "runs/taco_pour_candidate_F_two_chunk_curriculum_v1/sampler_gate/report.json",
+      "sha256": "90b688378954b57e0f8ed2f96a55f17e8b4dbdb40dee163c51d118c740d18343"
+    },
+    "tail_boundary_builder": {
+      "path": "runs/taco_pour_candidate_F_two_chunk_curriculum_v1/tail_boundary_builder/report.json",
+      "sha256": "0a56f69b0201c02b2b5527ce383ed84a577f6dd3d9c4f9439c5b7cf2bcabad62"
+    }
+  },
+  "local_engineering_change": "rollout reset/start-state distribution only",
+  "paper_faithful": false,
+  "schema": "taco_pour_candidate_F_two_chunk_curriculum_comparison_v1",
+  "seeds": [
+    {
+      "chunk_commit_written": false,
+      "coverage": {
+        "epochs_1_through_62": {
+          "all_worlds": {
+            "endpoint61_tracking_termination_count": 4,
+            "fraction_k_ge_21": 0.0,
+            "fraction_k_ge_25": 0.0,
+            "fraction_k_ge_30": 0.0,
+            "fraction_k_ge_35": 0.0,
+            "maximum_outcome_endpoint": 61,
+            "maximum_reached_k_histogram_by_epoch_world": {
+              "10": 5,
+              "11": 7,
+              "12": 1,
+              "13": 3,
+              "14": 6,
+              "15": 15,
+              "16": 29,
+              "17": 48,
+              "18": 73,
+              "19": 57,
+              "20": 4
+            },
+            "sample_count": 9920,
+            "source60_action_count": 4,
+            "tracking_termination_count": 619,
+            "tracking_termination_endpoint_histogram": {
+              "49": 7,
+              "50": 18,
+              "51": 49,
+              "52": 45,
+              "53": 42,
+              "54": 34,
+              "55": 48,
+              "56": 57,
+              "57": 66,
+              "58": 88,
+              "59": 101,
+              "60": 60,
+              "61": 4
+            }
+          },
+          "anchor_worlds": {
+            "endpoint61_tracking_termination_count": 2,
+            "fraction_k_ge_21": 0.0,
+            "fraction_k_ge_25": 0.0,
+            "fraction_k_ge_30": 0.0,
+            "fraction_k_ge_35": 0.0,
+            "maximum_outcome_endpoint": 61,
+            "maximum_reached_k_histogram_by_epoch_world": {
+              "10": 5,
+              "11": 3,
+              "13": 1,
+              "14": 3,
+              "15": 11,
+              "16": 12,
+              "17": 20,
+              "18": 37,
+              "19": 30,
+              "20": 2
+            },
+            "sample_count": 4960,
+            "source60_action_count": 2,
+            "tracking_termination_count": 307,
+            "tracking_termination_endpoint_histogram": {
+              "49": 4,
+              "50": 11,
+              "51": 22,
+              "52": 17,
+              "53": 22,
+              "54": 13,
+              "55": 26,
+              "56": 31,
+              "57": 26,
+              "58": 45,
+              "59": 56,
+              "60": 32,
+              "61": 2
+            }
+          },
+          "tail_worlds": {
+            "endpoint61_tracking_termination_count": 2,
+            "fraction_k_ge_21": 0.0,
+            "fraction_k_ge_25": 0.0,
+            "fraction_k_ge_30": 0.0,
+            "fraction_k_ge_35": 0.0,
+            "maximum_outcome_endpoint": 61,
+            "maximum_reached_k_histogram_by_epoch_world": {
+              "11": 4,
+              "12": 1,
+              "13": 2,
+              "14": 3,
+              "15": 4,
+              "16": 17,
+              "17": 28,
+              "18": 36,
+              "19": 27,
+              "20": 2
+            },
+            "sample_count": 4960,
+            "source60_action_count": 2,
+            "tracking_termination_count": 312,
+            "tracking_termination_endpoint_histogram": {
+              "49": 3,
+              "50": 7,
+              "51": 27,
+              "52": 28,
+              "53": 20,
+              "54": 21,
+              "55": 22,
+              "56": 26,
+              "57": 40,
+              "58": 43,
+              "59": 45,
+              "60": 28,
+              "61": 2
+            }
+          }
+        },
+        "epochs_63_through_125": {
+          "all_worlds": {
+            "endpoint61_tracking_termination_count": 5073,
+            "fraction_k_ge_21": 0.0,
+            "fraction_k_ge_25": 0.0,
+            "fraction_k_ge_30": 0.0,
+            "fraction_k_ge_35": 0.0,
+            "maximum_outcome_endpoint": 61,
+            "maximum_reached_k_histogram_by_epoch_world": {
+              "12": 1,
+              "13": 3,
+              "14": 1,
+              "15": 4,
+              "16": 6,
+              "17": 8,
+              "18": 14,
+              "19": 56,
+              "20": 159
+            },
+            "sample_count": 10080,
+            "source60_action_count": 5073,
+            "tracking_termination_count": 5269,
+            "tracking_termination_endpoint_histogram": {
+              "51": 1,
+              "52": 7,
+              "53": 10,
+              "54": 14,
+              "55": 18,
+              "56": 16,
+              "57": 18,
+              "58": 16,
+              "59": 31,
+              "60": 65,
+              "61": 5073
+            }
+          },
+          "anchor_worlds": {
+            "endpoint61_tracking_termination_count": 33,
+            "fraction_k_ge_21": 0.0,
+            "fraction_k_ge_25": 0.0,
+            "fraction_k_ge_30": 0.0,
+            "fraction_k_ge_35": 0.0,
+            "maximum_outcome_endpoint": 61,
+            "maximum_reached_k_histogram_by_epoch_world": {
+              "12": 1,
+              "13": 3,
+              "14": 1,
+              "15": 4,
+              "16": 6,
+              "17": 8,
+              "18": 14,
+              "19": 56,
+              "20": 33
+            },
+            "sample_count": 5040,
+            "source60_action_count": 33,
+            "tracking_termination_count": 229,
+            "tracking_termination_endpoint_histogram": {
+              "51": 1,
+              "52": 7,
+              "53": 10,
+              "54": 14,
+              "55": 18,
+              "56": 16,
+              "57": 18,
+              "58": 16,
+              "59": 31,
+              "60": 65,
+              "61": 33
+            }
+          },
+          "tail_worlds": {
+            "endpoint61_tracking_termination_count": 5040,
+            "fraction_k_ge_21": 0.0,
+            "fraction_k_ge_25": 0.0,
+            "fraction_k_ge_30": 0.0,
+            "fraction_k_ge_35": 0.0,
+            "maximum_outcome_endpoint": 61,
+            "maximum_reached_k_histogram_by_epoch_world": {
+              "20": 126
+            },
+            "sample_count": 5040,
+            "source60_action_count": 5040,
+            "tracking_termination_count": 5040,
+            "tracking_termination_endpoint_histogram": {
+              "61": 5040
+            }
+          }
+        }
+      },
+      "fresh_actor_critic_optimizers_RMS_RNN": true,
+      "milestones": {
+        "0": {
+          "endpoint60_score": 1.3083211183547974,
+          "endpoint70_score": 1.5288703441619873,
+          "endpoint80_score": 1.6938729286193848,
+          "epoch": 0,
+          "final_sigma": {
+            "maximum": 0.25,
+            "mean": 0.25,
+            "minimum": 0.25
+          },
+          "first_failure_endpoint": 50,
+          "forty_of_forty": false,
+          "successful_intervals": 9,
+          "validation_action_bound_fraction": 0.0,
+          "validation_residual_RMS": 0.0
+        },
+        "125": {
+          "endpoint60_score": 1.1759655475616455,
+          "endpoint70_score": 1.4969639778137207,
+          "endpoint80_score": 1.5254695415496826,
+          "epoch": 125,
+          "final_sigma": {
+            "maximum": 0.2508016526699066,
+            "mean": 0.2500317692756653,
+            "minimum": 0.2492857575416565
+          },
+          "first_failure_endpoint": 55,
+          "forty_of_forty": false,
+          "successful_intervals": 14,
+          "validation_action_bound_fraction": 0.0,
+          "validation_residual_RMS": 0.021971892565488815
+        },
+        "62": {
+          "endpoint60_score": 1.1972576379776,
+          "endpoint70_score": 1.4601166248321533,
+          "endpoint80_score": 1.4093304872512817,
+          "epoch": 62,
+          "final_sigma": {
+            "maximum": 0.2505936026573181,
+            "mean": 0.24998579919338226,
+            "minimum": 0.24952147901058197
+          },
+          "first_failure_endpoint": 58,
+          "forty_of_forty": false,
+          "successful_intervals": 17,
+          "validation_action_bound_fraction": 0.0,
+          "validation_residual_RMS": 0.014804970473051071
+        }
+      },
+      "report": {
+        "path": "runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/report.json",
+        "sha256": "ce84f309ded03b162e386b4438b44f024ac9cb55709acf78cbf91f51f40e54ec"
+      },
+      "seed": 0,
+      "status": "completed_200k_without_strict_success_no_chunk_commit",
+      "strict_success": false,
+      "strict_success_epoch": null,
+      "warm_start_used": false
+    },
+    {
+      "chunk_commit_written": false,
+      "coverage": {
+        "epochs_1_through_62": {
+          "all_worlds": {
+            "endpoint61_tracking_termination_count": 90,
+            "fraction_k_ge_21": 0.0,
+            "fraction_k_ge_25": 0.0,
+            "fraction_k_ge_30": 0.0,
+            "fraction_k_ge_35": 0.0,
+            "maximum_outcome_endpoint": 61,
+            "maximum_reached_k_histogram_by_epoch_world": {
+              "10": 13,
+              "11": 9,
+              "12": 9,
+              "13": 7,
+              "14": 7,
+              "15": 16,
+              "16": 9,
+              "17": 15,
+              "18": 23,
+              "19": 67,
+              "20": 72,
+              "9": 1
+            },
+            "sample_count": 9920,
+            "source60_action_count": 90,
+            "tracking_termination_count": 627,
+            "tracking_termination_endpoint_histogram": {
+              "48": 4,
+              "49": 10,
+              "50": 45,
+              "51": 86,
+              "52": 58,
+              "53": 38,
+              "54": 29,
+              "55": 30,
+              "56": 32,
+              "57": 25,
+              "58": 38,
+              "59": 43,
+              "60": 99,
+              "61": 90
+            }
+          },
+          "anchor_worlds": {
+            "endpoint61_tracking_termination_count": 39,
+            "fraction_k_ge_21": 0.0,
+            "fraction_k_ge_25": 0.0,
+            "fraction_k_ge_30": 0.0,
+            "fraction_k_ge_35": 0.0,
+            "maximum_outcome_endpoint": 61,
+            "maximum_reached_k_histogram_by_epoch_world": {
+              "10": 6,
+              "11": 4,
+              "12": 6,
+              "13": 5,
+              "14": 4,
+              "15": 8,
+              "16": 6,
+              "17": 6,
+              "18": 10,
+              "19": 34,
+              "20": 34,
+              "9": 1
+            },
+            "sample_count": 4960,
+            "source60_action_count": 39,
+            "tracking_termination_count": 316,
+            "tracking_termination_endpoint_histogram": {
+              "49": 5,
+              "50": 25,
+              "51": 47,
+              "52": 32,
+              "53": 16,
+              "54": 14,
+              "55": 18,
+              "56": 14,
+              "57": 10,
+              "58": 22,
+              "59": 21,
+              "60": 53,
+              "61": 39
+            }
+          },
+          "tail_worlds": {
+            "endpoint61_tracking_termination_count": 51,
+            "fraction_k_ge_21": 0.0,
+            "fraction_k_ge_25": 0.0,
+            "fraction_k_ge_30": 0.0,
+            "fraction_k_ge_35": 0.0,
+            "maximum_outcome_endpoint": 61,
+            "maximum_reached_k_histogram_by_epoch_world": {
+              "10": 7,
+              "11": 5,
+              "12": 3,
+              "13": 2,
+              "14": 3,
+              "15": 8,
+              "16": 3,
+              "17": 9,
+              "18": 13,
+              "19": 33,
+              "20": 38
+            },
+            "sample_count": 4960,
+            "source60_action_count": 51,
+            "tracking_termination_count": 311,
+            "tracking_termination_endpoint_histogram": {
+              "48": 4,
+              "49": 5,
+              "50": 20,
+              "51": 39,
+              "52": 26,
+              "53": 22,
+              "54": 15,
+              "55": 12,
+              "56": 18,
+              "57": 15,
+              "58": 16,
+              "59": 22,
+              "60": 46,
+              "61": 51
+            }
+          }
+        },
+        "epochs_63_through_125": {
+          "all_worlds": {
+            "endpoint61_tracking_termination_count": 5103,
+            "fraction_k_ge_21": 0.0,
+            "fraction_k_ge_25": 0.0,
+            "fraction_k_ge_30": 0.0,
+            "fraction_k_ge_35": 0.0,
+            "maximum_outcome_endpoint": 61,
+            "maximum_reached_k_histogram_by_epoch_world": {
+              "18": 6,
+              "19": 57,
+              "20": 189
+            },
+            "sample_count": 10080,
+            "source60_action_count": 5103,
+            "tracking_termination_count": 5231,
+            "tracking_termination_endpoint_histogram": {
+              "53": 1,
+              "54": 1,
+              "55": 1,
+              "56": 5,
+              "57": 5,
+              "58": 11,
+              "59": 31,
+              "60": 73,
+              "61": 5103
+            }
+          },
+          "anchor_worlds": {
+            "endpoint61_tracking_termination_count": 63,
+            "fraction_k_ge_21": 0.0,
+            "fraction_k_ge_25": 0.0,
+            "fraction_k_ge_30": 0.0,
+            "fraction_k_ge_35": 0.0,
+            "maximum_outcome_endpoint": 61,
+            "maximum_reached_k_histogram_by_epoch_world": {
+              "18": 6,
+              "19": 57,
+              "20": 63
+            },
+            "sample_count": 5040,
+            "source60_action_count": 63,
+            "tracking_termination_count": 191,
+            "tracking_termination_endpoint_histogram": {
+              "53": 1,
+              "54": 1,
+              "55": 1,
+              "56": 5,
+              "57": 5,
+              "58": 11,
+              "59": 31,
+              "60": 73,
+              "61": 63
+            }
+          },
+          "tail_worlds": {
+            "endpoint61_tracking_termination_count": 5040,
+            "fraction_k_ge_21": 0.0,
+            "fraction_k_ge_25": 0.0,
+            "fraction_k_ge_30": 0.0,
+            "fraction_k_ge_35": 0.0,
+            "maximum_outcome_endpoint": 61,
+            "maximum_reached_k_histogram_by_epoch_world": {
+              "20": 126
+            },
+            "sample_count": 5040,
+            "source60_action_count": 5040,
+            "tracking_termination_count": 5040,
+            "tracking_termination_endpoint_histogram": {
+              "61": 5040
+            }
+          }
+        }
+      },
+      "fresh_actor_critic_optimizers_RMS_RNN": true,
+      "milestones": {
+        "0": {
+          "endpoint60_score": 1.3083211183547974,
+          "endpoint70_score": 1.5288703441619873,
+          "endpoint80_score": 1.6938729286193848,
+          "epoch": 0,
+          "final_sigma": {
+            "maximum": 0.25,
+            "mean": 0.25,
+            "minimum": 0.25
+          },
+          "first_failure_endpoint": 50,
+          "forty_of_forty": false,
+          "successful_intervals": 9,
+          "validation_action_bound_fraction": 0.0,
+          "validation_residual_RMS": 0.0
+        },
+        "125": {
+          "endpoint60_score": 1.0228010416030884,
+          "endpoint70_score": 1.5173439979553223,
+          "endpoint80_score": 1.5986428260803223,
+          "epoch": 125,
+          "final_sigma": {
+            "maximum": 0.2506978213787079,
+            "mean": 0.25001031160354614,
+            "minimum": 0.24927277863025665
+          },
+          "first_failure_endpoint": 60,
+          "forty_of_forty": false,
+          "successful_intervals": 19,
+          "validation_action_bound_fraction": 0.0,
+          "validation_residual_RMS": 0.024717038497328758
+        },
+        "62": {
+          "endpoint60_score": 1.0109421014785767,
+          "endpoint70_score": 1.5226969718933105,
+          "endpoint80_score": 1.6038644313812256,
+          "epoch": 62,
+          "final_sigma": {
+            "maximum": 0.2505912184715271,
+            "mean": 0.25004851818084717,
+            "minimum": 0.24954859912395477
+          },
+          "first_failure_endpoint": 60,
+          "forty_of_forty": false,
+          "successful_intervals": 19,
+          "validation_action_bound_fraction": 0.0,
+          "validation_residual_RMS": 0.02000134438276291
+        }
+      },
+      "report": {
+        "path": "runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_1/report.json",
+        "sha256": "82e9f70777f2df0019163cf143b1e84a6effbbc9cd148aecf25b9b6cee2e848c"
+      },
+      "seed": 1,
+      "status": "completed_200k_without_strict_success_no_chunk_commit",
+      "strict_success": false,
+      "strict_success_epoch": null,
+      "warm_start_used": false
+    },
+    {
+      "chunk_commit_written": false,
+      "coverage": {
+        "epochs_1_through_62": {
+          "all_worlds": {
+            "endpoint61_tracking_termination_count": 70,
+            "fraction_k_ge_21": 0.00010080645161290323,
+            "fraction_k_ge_25": 0.0,
+            "fraction_k_ge_30": 0.0,
+            "fraction_k_ge_35": 0.0,
+            "maximum_outcome_endpoint": 62,
+            "maximum_reached_k_histogram_by_epoch_world": {
+              "10": 4,
+              "11": 7,
+              "12": 3,
+              "13": 1,
+              "14": 5,
+              "15": 2,
+              "16": 7,
+              "17": 15,
+              "18": 34,
+              "19": 108,
+              "20": 59,
+              "21": 1,
+              "9": 2
+            },
+            "sample_count": 9920,
+            "source60_action_count": 71,
+            "tracking_termination_count": 577,
+            "tracking_termination_endpoint_histogram": {
+              "48": 3,
+              "49": 10,
+              "50": 42,
+              "51": 39,
+              "52": 29,
+              "53": 20,
+              "54": 12,
+              "55": 11,
+              "56": 13,
+              "57": 29,
+              "58": 46,
+              "59": 88,
+              "60": 164,
+              "61": 70,
+              "62": 1
+            }
+          },
+          "anchor_worlds": {
+            "endpoint61_tracking_termination_count": 37,
+            "fraction_k_ge_21": 0.0,
+            "fraction_k_ge_25": 0.0,
+            "fraction_k_ge_30": 0.0,
+            "fraction_k_ge_35": 0.0,
+            "maximum_outcome_endpoint": 61,
+            "maximum_reached_k_histogram_by_epoch_world": {
+              "10": 3,
+              "11": 7,
+              "12": 1,
+              "13": 1,
+              "14": 2,
+              "15": 1,
+              "16": 4,
+              "17": 6,
+              "18": 18,
+              "19": 50,
+              "20": 30,
+              "9": 1
+            },
+            "sample_count": 4960,
+            "source60_action_count": 37,
+            "tracking_termination_count": 292,
+            "tracking_termination_endpoint_histogram": {
+              "48": 2,
+              "49": 6,
+              "50": 24,
+              "51": 19,
+              "52": 19,
+              "53": 12,
+              "54": 5,
+              "55": 4,
+              "56": 5,
+              "57": 12,
+              "58": 22,
+              "59": 48,
+              "60": 77,
+              "61": 37
+            }
+          },
+          "tail_worlds": {
+            "endpoint61_tracking_termination_count": 33,
+            "fraction_k_ge_21": 0.00020161290322580645,
+            "fraction_k_ge_25": 0.0,
+            "fraction_k_ge_30": 0.0,
+            "fraction_k_ge_35": 0.0,
+            "maximum_outcome_endpoint": 62,
+            "maximum_reached_k_histogram_by_epoch_world": {
+              "10": 1,
+              "12": 2,
+              "14": 3,
+              "15": 1,
+              "16": 3,
+              "17": 9,
+              "18": 16,
+              "19": 58,
+              "20": 29,
+              "21": 1,
+              "9": 1
+            },
+            "sample_count": 4960,
+            "source60_action_count": 34,
+            "tracking_termination_count": 285,
+            "tracking_termination_endpoint_histogram": {
+              "48": 1,
+              "49": 4,
+              "50": 18,
+              "51": 20,
+              "52": 10,
+              "53": 8,
+              "54": 7,
+              "55": 7,
+              "56": 8,
+              "57": 17,
+              "58": 24,
+              "59": 40,
+              "60": 87,
+              "61": 33,
+              "62": 1
+            }
+          }
+        },
+        "epochs_63_through_125": {
+          "all_worlds": {
+            "endpoint61_tracking_termination_count": 5125,
+            "fraction_k_ge_21": 9.92063492063492e-05,
+            "fraction_k_ge_25": 0.0,
+            "fraction_k_ge_30": 0.0,
+            "fraction_k_ge_35": 0.0,
+            "maximum_outcome_endpoint": 62,
+            "maximum_reached_k_histogram_by_epoch_world": {
+              "18": 1,
+              "19": 38,
+              "20": 212,
+              "21": 1
+            },
+            "sample_count": 10080,
+            "source60_action_count": 5127,
+            "tracking_termination_count": 5192,
+            "tracking_termination_endpoint_histogram": {
+              "52": 1,
+              "56": 1,
+              "57": 5,
+              "58": 2,
+              "59": 16,
+              "60": 41,
+              "61": 5125,
+              "62": 1
+            }
+          },
+          "anchor_worlds": {
+            "endpoint61_tracking_termination_count": 85,
+            "fraction_k_ge_21": 0.0001984126984126984,
+            "fraction_k_ge_25": 0.0,
+            "fraction_k_ge_30": 0.0,
+            "fraction_k_ge_35": 0.0,
+            "maximum_outcome_endpoint": 62,
+            "maximum_reached_k_histogram_by_epoch_world": {
+              "18": 1,
+              "19": 38,
+              "20": 86,
+              "21": 1
+            },
+            "sample_count": 5040,
+            "source60_action_count": 87,
+            "tracking_termination_count": 152,
+            "tracking_termination_endpoint_histogram": {
+              "52": 1,
+              "56": 1,
+              "57": 5,
+              "58": 2,
+              "59": 16,
+              "60": 41,
+              "61": 85,
+              "62": 1
+            }
+          },
+          "tail_worlds": {
+            "endpoint61_tracking_termination_count": 5040,
+            "fraction_k_ge_21": 0.0,
+            "fraction_k_ge_25": 0.0,
+            "fraction_k_ge_30": 0.0,
+            "fraction_k_ge_35": 0.0,
+            "maximum_outcome_endpoint": 61,
+            "maximum_reached_k_histogram_by_epoch_world": {
+              "20": 126
+            },
+            "sample_count": 5040,
+            "source60_action_count": 5040,
+            "tracking_termination_count": 5040,
+            "tracking_termination_endpoint_histogram": {
+              "61": 5040
+            }
+          }
+        }
+      },
+      "fresh_actor_critic_optimizers_RMS_RNN": true,
+      "milestones": {
+        "0": {
+          "endpoint60_score": 1.3083211183547974,
+          "endpoint70_score": 1.5288703441619873,
+          "endpoint80_score": 1.6938729286193848,
+          "epoch": 0,
+          "final_sigma": {
+            "maximum": 0.25,
+            "mean": 0.25,
+            "minimum": 0.25
+          },
+          "first_failure_endpoint": 50,
+          "forty_of_forty": false,
+          "successful_intervals": 9,
+          "validation_action_bound_fraction": 0.0,
+          "validation_residual_RMS": 0.0
+        },
+        "125": {
+          "endpoint60_score": 0.9932841062545776,
+          "endpoint70_score": 1.667319416999817,
+          "endpoint80_score": 1.8892532587051392,
+          "epoch": 125,
+          "final_sigma": {
+            "maximum": 0.2508614659309387,
+            "mean": 0.24995000660419464,
+            "minimum": 0.24921706318855286
+          },
+          "first_failure_endpoint": 61,
+          "forty_of_forty": false,
+          "successful_intervals": 20,
+          "validation_action_bound_fraction": 0.0,
+          "validation_residual_RMS": 0.024925095960497856
+        },
+        "62": {
+          "endpoint60_score": 0.9682931303977966,
+          "endpoint70_score": 1.5472016334533691,
+          "endpoint80_score": 1.7874716520309448,
+          "epoch": 62,
+          "final_sigma": {
+            "maximum": 0.2504354417324066,
+            "mean": 0.24999737739562988,
+            "minimum": 0.24947716295719147
+          },
+          "first_failure_endpoint": 61,
+          "forty_of_forty": false,
+          "successful_intervals": 20,
+          "validation_action_bound_fraction": 0.0,
+          "validation_residual_RMS": 0.019195733591914177
+        }
+      },
+      "report": {
+        "path": "runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_2/report.json",
+        "sha256": "ffaa92b809f2e82c687a243281bce6269d20668de7e8a3a38adc9cc070405852"
+      },
+      "seed": 2,
+      "status": "completed_200k_without_strict_success_no_chunk_commit",
+      "strict_success": false,
+      "strict_success_epoch": null,
+      "warm_start_used": false
+    }
+  ],
+  "verification": {
+    "focused_tests": "10 passed",
+    "full_repository_tests": "814 passed, 19 warnings, 57 subtests passed"
+  }
+}

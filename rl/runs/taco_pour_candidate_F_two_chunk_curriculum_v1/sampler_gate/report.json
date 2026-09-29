@@ -1,0 +1,264 @@
+{
+  "schema": "taco_pour_candidate_F_no_training_sampler_gate_v1",
+  "paper_faithful": false,
+  "training_executed": false,
+  "optimizer_steps": 0,
+  "tail_boundary_builder": {
+    "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/tail_boundary_builder/report.json",
+    "sha256": "0a56f69b0201c02b2b5527ce383ed84a577f6dd3d9c4f9439c5b7cf2bcabad62",
+    "bytes": 6659
+  },
+  "initialization": {
+    "changed_network_state_keys": [
+      "sigma",
+      "mu.weight"
+    ],
+    "mean_weight_sha256": "bb55302ebd16a3dc9398cbc98941a8dd9180eb486057595912e64a2bb9ebfb69",
+    "mean_bias_sha256": "5b29a4a45c1dd5bfef83841d658cdca5edbfc7577ac098b8c4cbb01bd5b6ae87",
+    "mean_weight_max_abs": 0.0,
+    "mean_bias_max_abs": 0.0,
+    "initial_sigma_min": 0.25,
+    "initial_sigma_max": 0.25,
+    "sigma_multiplier": 0.25,
+    "sigma_remains_learnable": true
+  },
+  "candidate_F_training_authorized": true,
+  "endpoint20_to40_committed": true,
+  "endpoint40_to60_committed": false,
+  "status": "passed_no_training_sampler_gate",
+  "stale_teacher_memory": {
+    "rejected": true,
+    "message": "paired RNN state belongs to a different actor/normalization state"
+  },
+  "first_prepare": {
+    "epoch": 63,
+    "world_starts": [
+      40,
+      40,
+      60,
+      60
+    ],
+    "anchor_physics_bitwise_exact": [
+      true,
+      true
+    ],
+    "tail_physics_bitwise_exact": [
+      true,
+      true
+    ],
+    "actor_hash_before": "ceb9842392b4d002365cf937e5eabf32b8c0f382bcee838cc7d83ca4cf983990",
+    "actor_hash_after": "ceb9842392b4d002365cf937e5eabf32b8c0f382bcee838cc7d83ca4cf983990",
+    "RMS_hash_before": "f244ce04e667905e227c1be524857ad1450294ff3902babfc893fd0c205d4f7d",
+    "RMS_hash_after": "f244ce04e667905e227c1be524857ad1450294ff3902babfc893fd0c205d4f7d",
+    "actor_and_RMS_unchanged": true,
+    "audit": {
+      "epoch": 63,
+      "world_start_endpoints": [
+        40,
+        40,
+        60,
+        60
+      ],
+      "actor_state_sha256": "ceb9842392b4d002365cf937e5eabf32b8c0f382bcee838cc7d83ca4cf983990",
+      "normalization_unchanged_during_prefix_replay": true,
+      "tail_prefix_observations": [
+        20,
+        20
+      ],
+      "tail_physics_generated_by_current_actor": [
+        false,
+        false
+      ],
+      "tail_episode_bookkeeping_reset_to_zero": true,
+      "termination_counts_by_world": [
+        {
+          "any": 0,
+          "tracking": 0,
+          "timeout": 0
+        },
+        {
+          "any": 0,
+          "tracking": 0,
+          "timeout": 0
+        },
+        {
+          "any": 0,
+          "tracking": 0,
+          "timeout": 0
+        },
+        {
+          "any": 0,
+          "tracking": 0,
+          "timeout": 0
+        }
+      ],
+      "restore": {
+        "schema": "egoengine_physics_rnn_boundary_v1",
+        "worlds": 4,
+        "reference_endpoints": [
+          40,
+          40,
+          60,
+          60
+        ],
+        "actor_state_sha256": "ceb9842392b4d002365cf937e5eabf32b8c0f382bcee838cc7d83ca4cf983990",
+        "physics_bitwise_equal": [
+          true,
+          true,
+          true,
+          true
+        ],
+        "observation_bitwise_equal": true,
+        "rnn_state_shapes": [
+          [
+            1,
+            4,
+            1024
+          ],
+          [
+            1,
+            4,
+            1024
+          ]
+        ],
+        "agent_runtime_shapes": {
+          "dones": [
+            4
+          ],
+          "current_rewards": [
+            4,
+            1
+          ],
+          "current_shaped_rewards": [
+            4,
+            1
+          ],
+          "current_lengths": [
+            4
+          ]
+        },
+        "exploration_rng_restored": false
+      }
+    }
+  },
+  "current_actor_refresh": {
+    "epoch": 64,
+    "changed_parameter": "a2c_network.rnn.rnn.weight_ih_l0",
+    "actor_hash_after_mutation": "ef7a5089d26902175bb22bade51e0e6135cb240402c992e22d083f62b140a9c3",
+    "actor_hash_after_refresh": "ef7a5089d26902175bb22bade51e0e6135cb240402c992e22d083f62b140a9c3",
+    "RMS_hash_before": "f244ce04e667905e227c1be524857ad1450294ff3902babfc893fd0c205d4f7d",
+    "RMS_hash_after": "f244ce04e667905e227c1be524857ad1450294ff3902babfc893fd0c205d4f7d",
+    "tail_hidden_changed": true,
+    "audit": {
+      "epoch": 64,
+      "world_start_endpoints": [
+        40,
+        40,
+        60,
+        60
+      ],
+      "actor_state_sha256": "ef7a5089d26902175bb22bade51e0e6135cb240402c992e22d083f62b140a9c3",
+      "normalization_unchanged_during_prefix_replay": true,
+      "tail_prefix_observations": [
+        20,
+        20
+      ],
+      "tail_physics_generated_by_current_actor": [
+        false,
+        false
+      ],
+      "tail_episode_bookkeeping_reset_to_zero": true,
+      "termination_counts_by_world": [
+        {
+          "any": 0,
+          "tracking": 0,
+          "timeout": 0
+        },
+        {
+          "any": 0,
+          "tracking": 0,
+          "timeout": 0
+        },
+        {
+          "any": 0,
+          "tracking": 0,
+          "timeout": 0
+        },
+        {
+          "any": 0,
+          "tracking": 0,
+          "timeout": 0
+        }
+      ],
+      "restore": {
+        "schema": "egoengine_physics_rnn_boundary_v1",
+        "worlds": 4,
+        "reference_endpoints": [
+          40,
+          40,
+          60,
+          60
+        ],
+        "actor_state_sha256": "ef7a5089d26902175bb22bade51e0e6135cb240402c992e22d083f62b140a9c3",
+        "physics_bitwise_equal": [
+          true,
+          true,
+          true,
+          true
+        ],
+        "observation_bitwise_equal": true,
+        "rnn_state_shapes": [
+          [
+            1,
+            4,
+            1024
+          ],
+          [
+            1,
+            4,
+            1024
+          ]
+        ],
+        "agent_runtime_shapes": {
+          "dones": [
+            4
+          ],
+          "current_rewards": [
+            4,
+            1
+          ],
+          "current_shaped_rewards": [
+            4,
+            1
+          ],
+          "current_lengths": [
+            4
+          ]
+        },
+        "exploration_rng_restored": false
+      }
+    }
+  },
+  "tail_done_reset": {
+    "tail_done_observed": [
+      true,
+      true
+    ],
+    "physics_bitwise_exact": [
+      true,
+      true
+    ],
+    "RNN_bitwise_exact": [
+      true,
+      true
+    ],
+    "outcome_endpoints_until_reset": [
+      [
+        61
+      ],
+      [
+        61
+      ]
+    ]
+  }
+}

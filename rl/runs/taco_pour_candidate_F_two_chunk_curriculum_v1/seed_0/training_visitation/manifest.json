@@ -1,0 +1,1925 @@
+{
+  "schema": "taco_ppo_training_visitation_v6_world_indexed",
+  "status": "complete",
+  "logging_semantics": {
+    "endpoint_alignment": "transition t->t+1 commands ctrl[t+1], scores physical state[t+1] against ref[t+1], and exposes ref[t+2] to the next actor observation except for reference-tail clipping",
+    "world_index": "stable IndependentMJWPTrainingEnv batch position for this rollout sample; present only in the world-indexed v6 schema",
+    "sampled_action_preclamp": "stochastic action sampled from the PPO policy distribution before the official [-1,1] clamp; this is not actor mean mu",
+    "sampled_action_clamped": "the same sampled action after the official [-1,1] clamp",
+    "actor_mu": "mean of the Gaussian PPO policy distribution used to draw the recorded sample",
+    "actor_sigma": "strictly-positive standard deviation (exp(logstd), not variance) of the Gaussian PPO policy distribution used to draw the recorded sample",
+    "reference_ctrl": "full residual-action control target at transition t->t+1 before the policy residual and before actuator ctrlrange",
+    "requested_residual": "full action-space signed control-target offset after local scale and formal safety clip, before actuator ctrlrange",
+    "effective_residual_after_ctrlrange": "full action-space signed control-target offset remaining after the model's enabled actuator ctrlrange clamp; not realized qpos motion",
+    "residual_lost_to_ctrlrange": "signed requested minus effective control-target residual",
+    "legacy_v2_applied_residual": "historical v2 right_wrist_applied_residual equals requested_residual for its recorded six dimensions; v2 artifacts remain immutable",
+    "actor_distribution_parameters": "mu and sigma are passively captured from the same official get_action_values result as the sampled action; no extra actor forward pass is performed",
+    "contact_summary": "control-endpoint hand-object finger flags; not substep collision topology",
+    "write_timing": "rollout samples are held in memory and written only at the next epoch boundary or after training completes"
+  },
+  "incomplete_step_discarded": false,
+  "action_contract": {
+    "dimensions": 36,
+    "actuator_names": [
+      "R_forearm_tx_position",
+      "R_forearm_ty_position",
+      "R_forearm_tz_position",
+      "R_forearm_roll_position",
+      "R_forearm_pitch_position",
+      "R_forearm_yaw_position",
+      "right_thumb_bend_position",
+      "right_thumb_rota1_position",
+      "right_thumb_rota2_position",
+      "right_index_bend_position",
+      "right_index_joint1_position",
+      "right_index_joint2_position",
+      "right_middle_joint1_position",
+      "right_middle_joint2_position",
+      "right_ring_joint1_position",
+      "right_ring_joint2_position",
+      "right_pinky_joint1_position",
+      "right_pinky_joint2_position",
+      "L_forearm_tx_position",
+      "L_forearm_ty_position",
+      "L_forearm_tz_position",
+      "L_forearm_roll_position",
+      "L_forearm_pitch_position",
+      "L_forearm_yaw_position",
+      "left_thumb_bend_position",
+      "left_thumb_rota1_position",
+      "left_thumb_rota2_position",
+      "left_index_bend_position",
+      "left_index_joint1_position",
+      "left_index_joint2_position",
+      "left_middle_joint1_position",
+      "left_middle_joint2_position",
+      "left_ring_joint1_position",
+      "left_ring_joint2_position",
+      "left_pinky_joint1_position",
+      "left_pinky_joint2_position"
+    ],
+    "coordinate_units": [
+      "m",
+      "m",
+      "m",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "m",
+      "m",
+      "m",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad"
+    ],
+    "residual_scale": 0.05,
+    "residual_clip": 0.05,
+    "ctrlrange": {
+      "control_clamping_enabled": true,
+      "model_disableflags": 0,
+      "ctrllimited": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "ctrlrange": [
+        [
+          -5.0,
+          5.0
+        ],
+        [
+          -5.0,
+          5.0
+        ],
+        [
+          -5.0,
+          5.0
+        ],
+        [
+          -6.2,
+          6.2
+        ],
+        [
+          -6.2,
+          6.2
+        ],
+        [
+          -6.2,
+          6.2
+        ],
+        [
+          0.0,
+          1.83
+        ],
+        [
+          -1.05,
+          1.57
+        ],
+        [
+          -0.175,
+          1.83
+        ],
+        [
+          -0.175,
+          0.175
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.94
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          -5.0,
+          5.0
+        ],
+        [
+          -5.0,
+          5.0
+        ],
+        [
+          -5.0,
+          5.0
+        ],
+        [
+          -6.2,
+          6.2
+        ],
+        [
+          -6.2,
+          6.2
+        ],
+        [
+          -6.2,
+          6.2
+        ],
+        [
+          0.0,
+          1.83
+        ],
+        [
+          -1.05,
+          1.57
+        ],
+        [
+          -0.17,
+          1.83
+        ],
+        [
+          -0.175,
+          0.175
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ]
+      ]
+    }
+  },
+  "object_roles": [
+    "tool",
+    "target"
+  ],
+  "hand_roles": [
+    "right",
+    "left"
+  ],
+  "epochs": [
+    {
+      "epoch": 1,
+      "frame_at_start": 0,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0001_visits.npz",
+        "sha256": "63261e051d70dc200fb6dae77ee2de1e5f751dea83e24c5d16d6f75350cc8e29"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0001_summary.json",
+        "sha256": "514c3cebb3f9468064d49728965b25f705b2d7b9dd81836bffec25976715b528"
+      }
+    },
+    {
+      "epoch": 2,
+      "frame_at_start": 160,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0002_visits.npz",
+        "sha256": "501ec77adaf7bb112a1191a4a452b1c836abac7e6d82b69a3b0b9e5d83d16975"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0002_summary.json",
+        "sha256": "2e8f3edaba8649792deb01464b69b37668f4973c42448db0d67a5294897f8b50"
+      }
+    },
+    {
+      "epoch": 3,
+      "frame_at_start": 320,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0003_visits.npz",
+        "sha256": "9687d24af457c0cb46b198e0bd61b5a88dbcae583fe9ce41491582dd12b58bd4"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0003_summary.json",
+        "sha256": "70eae4acbf1ad2ba14d65afd8711ef82d58474cff52d2e7f3851f77152843940"
+      }
+    },
+    {
+      "epoch": 4,
+      "frame_at_start": 480,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0004_visits.npz",
+        "sha256": "a291802c023f16c083b858eb439b238dcf4951a2477bcc036eeb7964c92091c6"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0004_summary.json",
+        "sha256": "c1d620d65e3a2b2732f2f5d60fdd060ac3fbf1be074e8debf5c479d1495e7ff5"
+      }
+    },
+    {
+      "epoch": 5,
+      "frame_at_start": 640,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0005_visits.npz",
+        "sha256": "5f21d646d5f24ea16d1e0c557427ec8a98f69d7ec1eb474545ae99ab6b020e90"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0005_summary.json",
+        "sha256": "ddd89c51e4dc775e46a4ebd422279bad12a9d1e213ca5951d09395df214e6bfa"
+      }
+    },
+    {
+      "epoch": 6,
+      "frame_at_start": 800,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0006_visits.npz",
+        "sha256": "4fe7b6cb95dc0758186f78303bbfc05fd8199df97ce268280e0f0d51b27a7637"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0006_summary.json",
+        "sha256": "5b255d6eb7ad0ff76b45c87e083a8004ea5600eb732ea37a524bea4e9df339b0"
+      }
+    },
+    {
+      "epoch": 7,
+      "frame_at_start": 960,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0007_visits.npz",
+        "sha256": "fca06f9e511e301db56c23871af23ca4c48fc6f755e88026d5d6eae19124b3b6"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0007_summary.json",
+        "sha256": "15f805629e542e522f066c4a66775dd747c3b5b71dd8b5ff5aa4052d5255f6c3"
+      }
+    },
+    {
+      "epoch": 8,
+      "frame_at_start": 1120,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0008_visits.npz",
+        "sha256": "0c5691d9091cb8d5339f7d52994d1f088d7f6a469daa5003869336b24499c1f2"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0008_summary.json",
+        "sha256": "2b13ca16b916787179c44544e854a033ae26a80b84d08bc3ac03df9616c52ead"
+      }
+    },
+    {
+      "epoch": 9,
+      "frame_at_start": 1280,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0009_visits.npz",
+        "sha256": "fd01eeba183e584690e24dcff6bce045ede574ccca480d109adc897e499b9dd0"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0009_summary.json",
+        "sha256": "483d4f51283b76968568e8d0273b26a12d98dbd76c3b239d0db6957e0af42109"
+      }
+    },
+    {
+      "epoch": 10,
+      "frame_at_start": 1440,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0010_visits.npz",
+        "sha256": "d18e7ac3616a16362bc5b531f0817fcbeff7ae553e3f914b0539adcf856475cb"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0010_summary.json",
+        "sha256": "3a0a535c771fc3f690aaa7d5895529bb5a1af4b4704fb805c35508c1e49bd9ae"
+      }
+    },
+    {
+      "epoch": 11,
+      "frame_at_start": 1600,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0011_visits.npz",
+        "sha256": "ec4822ada708e54060cbc583fa45fe7a69416d66aabb0cbc315e708bba1cda29"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0011_summary.json",
+        "sha256": "96abb6ddde03a022c5b50fe5071746763809f1c69559f5cec6cca2b421dcf097"
+      }
+    },
+    {
+      "epoch": 12,
+      "frame_at_start": 1760,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0012_visits.npz",
+        "sha256": "0e8969084befdc853dc773b2baf29c08353d286b65c5b2adb9d45f582160c86a"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0012_summary.json",
+        "sha256": "ebfd08fbc1b21b69c9d21493be428407517f8954eb4fbfb281e16fd0c64c7984"
+      }
+    },
+    {
+      "epoch": 13,
+      "frame_at_start": 1920,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0013_visits.npz",
+        "sha256": "b5d67f2bb586570ce27200defe0c9d4160cf179b7258d3a7a719c085a5780d2e"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0013_summary.json",
+        "sha256": "78959453694b6533bae204a68b25ab4ef2fb7331841e8f4da675a94cdae73e4e"
+      }
+    },
+    {
+      "epoch": 14,
+      "frame_at_start": 2080,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0014_visits.npz",
+        "sha256": "25d35b56974ea17000b0e04ae7924776d9513a4c18c52952e39c656d932d8c39"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0014_summary.json",
+        "sha256": "d3fd4d0f8aedd93df721c61160948cdca18820bab7f780e55d1d6bd54820f04f"
+      }
+    },
+    {
+      "epoch": 15,
+      "frame_at_start": 2240,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0015_visits.npz",
+        "sha256": "77305818e17a2dc2ee73000ed76f3fc1b426ca57761a993085a925bc29b29e45"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0015_summary.json",
+        "sha256": "5763b7dfe4299731eb3e2c3c0cb123c8e3777a1b2b23f1c00a92f05ed46c0f5f"
+      }
+    },
+    {
+      "epoch": 16,
+      "frame_at_start": 2400,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0016_visits.npz",
+        "sha256": "793e99c52a127861840fd57de6e232a360e1788f1ef3b7509b5c85bf621fbc82"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0016_summary.json",
+        "sha256": "4eef115bb2c0e5b4021426560425a693e690f76482e684184c351d9e3227b6cf"
+      }
+    },
+    {
+      "epoch": 17,
+      "frame_at_start": 2560,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0017_visits.npz",
+        "sha256": "295818094dbb291fba0580a0314fb0ca6a82ebfe16a353b2e9d25d8ef91f443e"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0017_summary.json",
+        "sha256": "fb91b860aacb73ec3e0152c0ea1d7b6a0b5ceae83b56728ed42bc081c390e3a6"
+      }
+    },
+    {
+      "epoch": 18,
+      "frame_at_start": 2720,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0018_visits.npz",
+        "sha256": "efc67bff0a09409ae2fbee15f12b49134cc4d5b1637d95b1e8e9e4f033f583bd"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0018_summary.json",
+        "sha256": "2ce7de20947ef296225f17caea666834be78d4b1d93bfa1666090a24e9c3df45"
+      }
+    },
+    {
+      "epoch": 19,
+      "frame_at_start": 2880,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0019_visits.npz",
+        "sha256": "e66bc9177950f8fbd69d5719c1853a9f0a4b433e054478a7c200ea186a791650"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0019_summary.json",
+        "sha256": "2ea2b772792d1f1803d5a4d2c17919a50660829097af349ac93264fba2a737ee"
+      }
+    },
+    {
+      "epoch": 20,
+      "frame_at_start": 3040,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0020_visits.npz",
+        "sha256": "2add1996717f0ca4d22d21876eba11c61755ad969d1c4290e7d668e10b22067b"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0020_summary.json",
+        "sha256": "dc8bbfd63aafeefb199e4c3bd52842d24f1681277373524c594b56c116ba5052"
+      }
+    },
+    {
+      "epoch": 21,
+      "frame_at_start": 3200,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0021_visits.npz",
+        "sha256": "dcddb5bbeaa442a3e03c7fb5ff144a905fd95441bf3e649510294477beecfb53"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0021_summary.json",
+        "sha256": "c0a78624d8fa9f23da33d6e0e014da38697b167103ae8fbadc8587c75dfc139e"
+      }
+    },
+    {
+      "epoch": 22,
+      "frame_at_start": 3360,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0022_visits.npz",
+        "sha256": "13fb75424ac4b3b80ea6018989e4671b83681959704ea722808abc2c3936b021"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0022_summary.json",
+        "sha256": "3e08efad4af20f8929f8333df11ba9cf015b4ac6763c0ac9d1e8228f3248b76d"
+      }
+    },
+    {
+      "epoch": 23,
+      "frame_at_start": 3520,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0023_visits.npz",
+        "sha256": "7b20ad33473876b5227f03626ef7f94ff6493f0185ac99ce9cf134ddfb441074"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0023_summary.json",
+        "sha256": "caa7033984fce3e8c946e9f8404cfbc186ff47eb081d79d5c1767b5798096f9b"
+      }
+    },
+    {
+      "epoch": 24,
+      "frame_at_start": 3680,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0024_visits.npz",
+        "sha256": "2257f6d983c6cd8c02402f6976b6875fa89d7f270a5f562b08537809f36f76c4"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0024_summary.json",
+        "sha256": "58cc2d82ff52c67089585c4f6f93294f3610ff6b28090a097c677b24c853d0e8"
+      }
+    },
+    {
+      "epoch": 25,
+      "frame_at_start": 3840,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0025_visits.npz",
+        "sha256": "6eb6f99bf0e14177d4d53b9352bc86e2a7c19b8635b496c3f550e6d5cb493a83"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0025_summary.json",
+        "sha256": "0e7c5b419cdbd5d195f2d4426ad51eb7546189aa5cb2a60ac5c51b098932ab42"
+      }
+    },
+    {
+      "epoch": 26,
+      "frame_at_start": 4000,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0026_visits.npz",
+        "sha256": "336202d76a14aeabace8edc0b4587ad7736fcdd2b05e67c0b6f1f5914ab429d0"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0026_summary.json",
+        "sha256": "7c0b8b5c8cede04d7b41056da5b8a39cea6a66d2482b8817d8655d4f08ffea09"
+      }
+    },
+    {
+      "epoch": 27,
+      "frame_at_start": 4160,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0027_visits.npz",
+        "sha256": "0bce88cd445c484aee8d34bfced85e28330c3a53d6252d3414f874a37a4773cd"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0027_summary.json",
+        "sha256": "4eb64ae154cdf375567b2a48118e86889407b0a9ba2df3ef91d47267b612a2be"
+      }
+    },
+    {
+      "epoch": 28,
+      "frame_at_start": 4320,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0028_visits.npz",
+        "sha256": "764a0c62b5117e85307e795fc75c729e3cb499d160d4ebea46f78100525b20fd"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0028_summary.json",
+        "sha256": "ebd6b72995c02d6f9447cd73772f1ec363464ac78a60de82e47d8962bf7be429"
+      }
+    },
+    {
+      "epoch": 29,
+      "frame_at_start": 4480,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0029_visits.npz",
+        "sha256": "228a1a7549e2d933babecfea0d3a386188d0285ba2f1e7be27489068e4b467a2"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0029_summary.json",
+        "sha256": "a3301d7029220c5863cffd8cf66886460864ead7740c846f8983a4b5a8b1ea4c"
+      }
+    },
+    {
+      "epoch": 30,
+      "frame_at_start": 4640,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0030_visits.npz",
+        "sha256": "aded273bc80d23e3cf208b2a780787f944fd9880d429e5ee7d4798a793d8623a"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0030_summary.json",
+        "sha256": "92f7eecf01e6b08152298e0c388e97b361442dd9744e970d6d1afc1c0a24ea5f"
+      }
+    },
+    {
+      "epoch": 31,
+      "frame_at_start": 4800,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0031_visits.npz",
+        "sha256": "03d2c70563de3c3e3656e352c5a62182d17d6513e9ad76a6572b7e001032f78a"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0031_summary.json",
+        "sha256": "1d9340068297363ee2ecaa517ee86a469883467c637ea428ad5057a89d689733"
+      }
+    },
+    {
+      "epoch": 32,
+      "frame_at_start": 4960,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0032_visits.npz",
+        "sha256": "6e42c60e5cbbd628e769e542b49c45bc117127afec666627edaaa81acba5fc14"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0032_summary.json",
+        "sha256": "def7c2e89ea72b595a89d6f14288472efec2ce39a8186aa188f3dbbda6201d5a"
+      }
+    },
+    {
+      "epoch": 33,
+      "frame_at_start": 5120,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0033_visits.npz",
+        "sha256": "030fdc006efcd3c3e4f854ae8e3ef0ea62eb332b47906ed72a18d6a550578e8e"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0033_summary.json",
+        "sha256": "a93366abc40f38828173b6f7d9ac3c4f1739d613daad206256f5a38338df803e"
+      }
+    },
+    {
+      "epoch": 34,
+      "frame_at_start": 5280,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0034_visits.npz",
+        "sha256": "41e9c5a4bbb75330208041fff0e040b58b9a803e3d4b5d1da7eec9c7d341d6e1"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0034_summary.json",
+        "sha256": "c036a939a40680d80008a5e379d2f4e4b3d93af2b6869eb365fc441c4fea9346"
+      }
+    },
+    {
+      "epoch": 35,
+      "frame_at_start": 5440,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0035_visits.npz",
+        "sha256": "3b740a9f3e9db6510b917a01a1b5f0bbf1d1b1fa2b790fb03b0193967a98bd23"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0035_summary.json",
+        "sha256": "d2c61c0270052cd781554ba8a7f7942e3409c23a355ac525273c9a6a4342dbfb"
+      }
+    },
+    {
+      "epoch": 36,
+      "frame_at_start": 5600,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0036_visits.npz",
+        "sha256": "7fd524326b7c0cbf33f2dfd082e00f9a656555d65928dff0d0c24e1ce104b934"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0036_summary.json",
+        "sha256": "0b82c8b0e58335843c8ba1796d20916a97471fbc13d8f3d6f76dc0046c75de4c"
+      }
+    },
+    {
+      "epoch": 37,
+      "frame_at_start": 5760,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0037_visits.npz",
+        "sha256": "f11f7e44fb2d23b0927b12e28ac12921490e39b4e42e1a6a434b76103ac9be5b"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0037_summary.json",
+        "sha256": "b99a06f2ca521b6d16f4fd2ac7eff80358af1dab2e891dfd5c58fae80cbb481d"
+      }
+    },
+    {
+      "epoch": 38,
+      "frame_at_start": 5920,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0038_visits.npz",
+        "sha256": "3859fc0b8e68a348ff12d6a8270ab50e8e01627dc11b59ce274fc783b7252aee"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0038_summary.json",
+        "sha256": "7495855feef91d8466dfff3ff0c9f3c5af5f67de559a6b58d3ba2a950d143a03"
+      }
+    },
+    {
+      "epoch": 39,
+      "frame_at_start": 6080,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0039_visits.npz",
+        "sha256": "93982fcd8f92d9e0499b211e1147c34fcb5056134f713492a2ffbf9543618920"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0039_summary.json",
+        "sha256": "01f06d4fa1917359339ca0b08f42f1c39c8374c970ebd3b5bdb73fb04b846ca5"
+      }
+    },
+    {
+      "epoch": 40,
+      "frame_at_start": 6240,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0040_visits.npz",
+        "sha256": "2d1563d83bd128b510124067ad6b3ba29719d10972e06b055f8a5620c6292ea9"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0040_summary.json",
+        "sha256": "c6bdf5baf8add9fa830c740a40e3b2d4f7e629fbf23d7e6f3ff5454eb54e1e6b"
+      }
+    },
+    {
+      "epoch": 41,
+      "frame_at_start": 6400,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0041_visits.npz",
+        "sha256": "82821ade0a221250f5f9df9fce5c61ebc1166cc5f3d65c14d17f77935b5ddb53"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0041_summary.json",
+        "sha256": "e698da9cb06d059bec72f48dc9639a18d4e901df4bf73126e2a642ed0dd7b9ef"
+      }
+    },
+    {
+      "epoch": 42,
+      "frame_at_start": 6560,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0042_visits.npz",
+        "sha256": "27a2f137754318f2f93cec06b32a6c7b40b8f4fb3581a4f571f5727750f45b0d"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0042_summary.json",
+        "sha256": "b5d965e55f9c50d073efd29e3b9a141bb2efa6caeecf3783da14a37bcdfda6a4"
+      }
+    },
+    {
+      "epoch": 43,
+      "frame_at_start": 6720,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0043_visits.npz",
+        "sha256": "c2ebcf2cbfd2286e2d836aa7534b1d2af0c24ae501087fd968303cebbdc58b54"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0043_summary.json",
+        "sha256": "ae3ddd927d735be206a7426419a9bdde900fa7794cad3b6b16baddb6d435cae1"
+      }
+    },
+    {
+      "epoch": 44,
+      "frame_at_start": 6880,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0044_visits.npz",
+        "sha256": "4b2fb55b84c7d7c01b3c0a08dd1502c5534568ad572720e6feb65bd6e678934b"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0044_summary.json",
+        "sha256": "e43a3ef62757a10166bc6109fd211175caf60a747d56c2ec8d556eb168bb63b0"
+      }
+    },
+    {
+      "epoch": 45,
+      "frame_at_start": 7040,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0045_visits.npz",
+        "sha256": "5368c7a7880ca19652733b97eb6b58c4c616453b3f7375f0084ec05ae605aea7"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0045_summary.json",
+        "sha256": "030aabd11b997157be4dd5d35afb4970769c0362a9b73a520f441b9db14c3ad6"
+      }
+    },
+    {
+      "epoch": 46,
+      "frame_at_start": 7200,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0046_visits.npz",
+        "sha256": "247a65612cdf0dbee9cc8bf873ab2049ec8d2755292df77851d7efa77cb2979b"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0046_summary.json",
+        "sha256": "7a91ec26a22a6c1cdbe6e568885b5587d9d3e8048b6522f798550adbef1a6536"
+      }
+    },
+    {
+      "epoch": 47,
+      "frame_at_start": 7360,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0047_visits.npz",
+        "sha256": "dc0ac377ecbb1f949e649fc778a5a43819ca84d1d76be678881410ddd040749e"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0047_summary.json",
+        "sha256": "3b11eeda4a35f3dd608751221cc566865187305599c97b0e072576a9c40ec168"
+      }
+    },
+    {
+      "epoch": 48,
+      "frame_at_start": 7520,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0048_visits.npz",
+        "sha256": "a2fd5d8182e8354ff6920e7351586d5399c9b7a54b8ac9072422ebff7328d71a"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0048_summary.json",
+        "sha256": "e505266fa798129241975adb9306408e164c147c0cc5ec32835e11e6096c2584"
+      }
+    },
+    {
+      "epoch": 49,
+      "frame_at_start": 7680,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0049_visits.npz",
+        "sha256": "878d498451f1424a25159f23c4b269aa686a69d8f3d43b5012c38e12c122caec"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0049_summary.json",
+        "sha256": "f93649cb3b5e2e2c49147e597563b497b5335e7a3b42696f982d3a3fdfb4f5c8"
+      }
+    },
+    {
+      "epoch": 50,
+      "frame_at_start": 7840,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0050_visits.npz",
+        "sha256": "fc6b49d5ecc38f4281dcf6509b35dc9f11acbc369ec013879ce6d427a0b708f2"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0050_summary.json",
+        "sha256": "54aeb5f2d05c5bad902a7b2a12fc60565e43523742f8673280afea2836b00b0d"
+      }
+    },
+    {
+      "epoch": 51,
+      "frame_at_start": 8000,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0051_visits.npz",
+        "sha256": "2c9fd67bf83a3d84c670a6ca2d7c17baa56294fd17132301f843065eb43f19fd"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0051_summary.json",
+        "sha256": "45eb604538365ab8fc29e0eb1ec29ceb371ada28743faa2feeb3ce287ad9b8c9"
+      }
+    },
+    {
+      "epoch": 52,
+      "frame_at_start": 8160,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0052_visits.npz",
+        "sha256": "f18817f2645625c8544729bc8fd75cd0200f5873efbd1bbbfc84b73c678948d5"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0052_summary.json",
+        "sha256": "53d0b11e5690696fb0b305c8a5f38abcf77d4aee83117e171412adcf92fe26e2"
+      }
+    },
+    {
+      "epoch": 53,
+      "frame_at_start": 8320,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0053_visits.npz",
+        "sha256": "4293cfd2745ac751f2c378908223bac7055585bb4720d241476344f971ba5064"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0053_summary.json",
+        "sha256": "0a149704fc06f6b6f41c15a2b5289726aa1fec8403e8831cc09d2a959c1ed33d"
+      }
+    },
+    {
+      "epoch": 54,
+      "frame_at_start": 8480,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0054_visits.npz",
+        "sha256": "23d446d97634ecff7aa6eb21401bea8f3eac1d2276eb2461082f73caa0d00cb9"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0054_summary.json",
+        "sha256": "ec9591764d2864e32567621bbab146ccc69a6a4bf8e7bfd847844ddf61df8eae"
+      }
+    },
+    {
+      "epoch": 55,
+      "frame_at_start": 8640,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0055_visits.npz",
+        "sha256": "361b8e99c36df82611b3add7517fd61a315f50d64e3087d8cf51f5ec51d7739f"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0055_summary.json",
+        "sha256": "82e5869825ece01d58be7b46990028f87a28098b60e5e1cb0b0ef95b844da00c"
+      }
+    },
+    {
+      "epoch": 56,
+      "frame_at_start": 8800,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0056_visits.npz",
+        "sha256": "3481b48fc70d2edd9fbef0a2e4eb48c6cc55813cb7cd9b0fc3e7c0adac55fea4"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0056_summary.json",
+        "sha256": "7cc32069000481a22bd2333c6436a77ce5b3d16c15e0b3890b09b22803d40302"
+      }
+    },
+    {
+      "epoch": 57,
+      "frame_at_start": 8960,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0057_visits.npz",
+        "sha256": "8f2ff4c5d10a880fa618d3cc77a8d9d2ec75f67e5e570c1cbd8e99d7b0661b02"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0057_summary.json",
+        "sha256": "cdd424b36c9d1fd56d29c3d18a9437c5334e80c5624152610098897451042129"
+      }
+    },
+    {
+      "epoch": 58,
+      "frame_at_start": 9120,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0058_visits.npz",
+        "sha256": "1c0bc488265cf5a35652228f5fe41f28fd34c8f08adc5e3f17d4710f91936298"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0058_summary.json",
+        "sha256": "95c020f75b026db3938b472e60d43f0dd8625f70c04b130d2b136117e8604f2f"
+      }
+    },
+    {
+      "epoch": 59,
+      "frame_at_start": 9280,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0059_visits.npz",
+        "sha256": "d0e69c74c2e51d6eb54595588c5bb8590cd1637a32dd2fcdf9e33a1ab527ff2f"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0059_summary.json",
+        "sha256": "cceae4d4eb4f237c04959006be48c922e4b1335b297e0fa3d81b4b3f9e43f237"
+      }
+    },
+    {
+      "epoch": 60,
+      "frame_at_start": 9440,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0060_visits.npz",
+        "sha256": "5e657d4f6e20ff683f0ab534c843ee2833dfb2f4e90fc4547fb405e1697a59c9"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0060_summary.json",
+        "sha256": "2868c8a9b110ddcd9f42e4c6371bbd112b5d13b5159903f6398b9d7a373bfeed"
+      }
+    },
+    {
+      "epoch": 61,
+      "frame_at_start": 9600,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0061_visits.npz",
+        "sha256": "80b8e1e356ffaf5c5262cbf2948f36ccde1749b5d845a65b20af13f00ca1005f"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0061_summary.json",
+        "sha256": "0077a3cc3ff385456eeaf25c5d43fd03a7530dce3784d8265c86d0d3cd23656c"
+      }
+    },
+    {
+      "epoch": 62,
+      "frame_at_start": 9760,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0062_visits.npz",
+        "sha256": "64d93891e19f746c7e4a467133a026c7b3241f219b871fc860c5dc63743de19c"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0062_summary.json",
+        "sha256": "a1f0606e68951b2f147c72f2c9fdc1bea7d75afc1c6114a2935221174ee6505b"
+      }
+    },
+    {
+      "epoch": 63,
+      "frame_at_start": 9920,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0063_visits.npz",
+        "sha256": "e3c32cd54f04086843566963b0b23c3e3a3fc6c8dbbcca264acef98b09e519fa"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0063_summary.json",
+        "sha256": "09f5bb6621276564a8b4641d325f48b1c1994cb09d1caa5c47418db938985d2c"
+      }
+    },
+    {
+      "epoch": 64,
+      "frame_at_start": 10080,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0064_visits.npz",
+        "sha256": "e408582800b4c25f63560480a93f081c44090a5cec02f5d72f3801624c18aa11"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0064_summary.json",
+        "sha256": "961a343f8be828b97568eb88e4774e61b5033775a3088b7e88f731ee9565f876"
+      }
+    },
+    {
+      "epoch": 65,
+      "frame_at_start": 10240,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0065_visits.npz",
+        "sha256": "e7654a168c9eb7756efb33bb1dd3f1a2f301d5fdb56a2c3230bda5d47fde8141"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0065_summary.json",
+        "sha256": "c2e23441c92c7a755ae68a1a255ebe7e8d9670088d13ded9af6257ab61c48436"
+      }
+    },
+    {
+      "epoch": 66,
+      "frame_at_start": 10400,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0066_visits.npz",
+        "sha256": "3f0b4d76338010d17282dfebcde602aedfc470da16298502053552fdb0b94020"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0066_summary.json",
+        "sha256": "20e728f350af2ea626cd8a69f3ef2cd9b008f39e8a63a7f82b4783467919e79a"
+      }
+    },
+    {
+      "epoch": 67,
+      "frame_at_start": 10560,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0067_visits.npz",
+        "sha256": "ce9c7cf0db9cb3f335179b1bc9f6c2ea51182b8b880dfe4a2aeb5365f29fa480"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0067_summary.json",
+        "sha256": "fec0918043a4bc013cf60f1eaabacde33a5b73dbd132408f55b96375ee29fc72"
+      }
+    },
+    {
+      "epoch": 68,
+      "frame_at_start": 10720,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0068_visits.npz",
+        "sha256": "5d94f4aece664e8013949a75bd738e8702834e24e410235e1d051fff61542530"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0068_summary.json",
+        "sha256": "af37117fdc6341cdbb3c175632863dd2c9a25bee93c4d626ea6bcf3d6ac914df"
+      }
+    },
+    {
+      "epoch": 69,
+      "frame_at_start": 10880,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0069_visits.npz",
+        "sha256": "b2e242f4b5651f60ab61452c04e181e06e1eaecabae7c06aff8a54216fb9a72a"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0069_summary.json",
+        "sha256": "bb773c1455238b3b33769ed315b69b5127e95d04885cc5462f164e2edb22735a"
+      }
+    },
+    {
+      "epoch": 70,
+      "frame_at_start": 11040,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0070_visits.npz",
+        "sha256": "26a3669e6e355781ce0af2b37e957e2761715104d976b75e437f7442363b68d3"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0070_summary.json",
+        "sha256": "d2b2bf11fb0afbdf0e6de9aef2179adafb6185d1caa6bc18b232696ec4a5c759"
+      }
+    },
+    {
+      "epoch": 71,
+      "frame_at_start": 11200,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0071_visits.npz",
+        "sha256": "9f1ebd731783329d608627621f6b04976ef4fbf03eab096e5120b4d74be32f44"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0071_summary.json",
+        "sha256": "38bed61d0319a00102de7ed556ff098d0f46f40e1ee9e60101593b14b1a7bbdf"
+      }
+    },
+    {
+      "epoch": 72,
+      "frame_at_start": 11360,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0072_visits.npz",
+        "sha256": "aa079225d0f036fa69f4c3f84d8c718a0c09d6f8d65ae94c969bd8264e8344fb"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0072_summary.json",
+        "sha256": "c59b3571ae8bacfc50b688db9f1108c6231541f33832c8a8a1bf9f6d11cdd916"
+      }
+    },
+    {
+      "epoch": 73,
+      "frame_at_start": 11520,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0073_visits.npz",
+        "sha256": "5d3cbf4f09ff69102fe8c5a959d29a27171dc762762f6f605cafa00b81b71f86"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0073_summary.json",
+        "sha256": "d085f8244d261935180987266af80945b1395ada5e6bf65470e07426b02d2f81"
+      }
+    },
+    {
+      "epoch": 74,
+      "frame_at_start": 11680,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0074_visits.npz",
+        "sha256": "0da6839dfe58d35f3bc1f6d31882f5ea672fbf4fe7ec388e9d36c5dbe66edd39"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0074_summary.json",
+        "sha256": "503e9b5954eca8062cefd5dd81843f38c2f146487121ebff32f20b2d94ba8b76"
+      }
+    },
+    {
+      "epoch": 75,
+      "frame_at_start": 11840,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0075_visits.npz",
+        "sha256": "a7b7ad1bd2e9b995b19b031bdd722394ff9db097008d7343da32c092fc44a89f"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0075_summary.json",
+        "sha256": "4986cdcc488cc9ae2674a7c4f0da41ccef843c1657183a2f3b5b917c186e7224"
+      }
+    },
+    {
+      "epoch": 76,
+      "frame_at_start": 12000,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0076_visits.npz",
+        "sha256": "e559e47f7ae0400bc5c885fde9fb57732f22719f06e481a2c34c91219f67ed0c"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0076_summary.json",
+        "sha256": "1cb3efd54c1af72cd74e887d2077fd2d6533a62e44872cab62bf781c567e68ac"
+      }
+    },
+    {
+      "epoch": 77,
+      "frame_at_start": 12160,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0077_visits.npz",
+        "sha256": "11f03bff111ddd8ad1fc6916944171a6969684024fa95df740ecb8334734acf5"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0077_summary.json",
+        "sha256": "d5d970251a3eabc4ae972adc8e761d313d708891aa78b891dfefcb74a325193b"
+      }
+    },
+    {
+      "epoch": 78,
+      "frame_at_start": 12320,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0078_visits.npz",
+        "sha256": "7738557abdf8e3eaa733b68da49197125843a08a9ab4d584af0c1d7c4e5c8436"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0078_summary.json",
+        "sha256": "815d53a024446d633aa8aa54894abb7553ab06d68e56e2db75bbf9c331dff894"
+      }
+    },
+    {
+      "epoch": 79,
+      "frame_at_start": 12480,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0079_visits.npz",
+        "sha256": "c5c43b590c0550b400e9b81f9f69b3bee6a8c2c42ccf60b621320c1bc512562c"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0079_summary.json",
+        "sha256": "0f0e7e549e83930ba8371af48362eaaaa470d04404be938b08205a1e54b5413d"
+      }
+    },
+    {
+      "epoch": 80,
+      "frame_at_start": 12640,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0080_visits.npz",
+        "sha256": "18789f6ad56b6e8b2811e1a7714d7042fe93a2f0ff04dc2378edc2a47e238c73"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0080_summary.json",
+        "sha256": "57fa666466d9f764192a2a518dc2219cb6220d4daba3b36710e36d523867028e"
+      }
+    },
+    {
+      "epoch": 81,
+      "frame_at_start": 12800,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0081_visits.npz",
+        "sha256": "7c1730dc55d0e90dfcce9fecdbac1f92755c95aad93acc91aa55b166f1d19981"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0081_summary.json",
+        "sha256": "743e002f9e5e8b04f68ab54516cc4ee237189cc1760aaa4e6848bc4298c5b8be"
+      }
+    },
+    {
+      "epoch": 82,
+      "frame_at_start": 12960,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0082_visits.npz",
+        "sha256": "19a22674a5d44c7446f121e92ceb8e96e17a52c8c4584efe18f3a03bafe4cf82"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0082_summary.json",
+        "sha256": "1e8556f0b5f63a61b3fd868a413c3cf613495a6140fce296dbbc6c7673db87e8"
+      }
+    },
+    {
+      "epoch": 83,
+      "frame_at_start": 13120,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0083_visits.npz",
+        "sha256": "2aef249fb338b9c16a5de2c8069ee8a31c1623b473bfe45b185f8243c857ce50"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0083_summary.json",
+        "sha256": "01fc39bc0ede08d83ae4175f8886386fecf7589b2ba57c1bb9a4706fab570a19"
+      }
+    },
+    {
+      "epoch": 84,
+      "frame_at_start": 13280,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0084_visits.npz",
+        "sha256": "c6e6dfc4eff2c1516fde7b8ec02ce2a43df291e37c57c25f210f502f35a41497"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0084_summary.json",
+        "sha256": "99ca2036285faabd9fbd9da6f990d944db0f549119064c9f0ccc9d589dd1df8c"
+      }
+    },
+    {
+      "epoch": 85,
+      "frame_at_start": 13440,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0085_visits.npz",
+        "sha256": "16641c9183e951bfa6fd51b8377a34502a9a10f2501a43a13a54b299673051f0"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0085_summary.json",
+        "sha256": "43d1afe290c193d672edb95f749e10722962a287bdf5f20226e33770fa0a6208"
+      }
+    },
+    {
+      "epoch": 86,
+      "frame_at_start": 13600,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0086_visits.npz",
+        "sha256": "4c65bfa66875630e5d5a54e38e298a1264ed4b453b4bfa4ae8f8257fe0d2bcd8"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0086_summary.json",
+        "sha256": "60e9c5f18df3bb80ad29fa38d33a2a54f9df99800c8e8f910b6d07a95f6c5af3"
+      }
+    },
+    {
+      "epoch": 87,
+      "frame_at_start": 13760,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0087_visits.npz",
+        "sha256": "eb8488235505be5cf38754747fbe81dc746cc9ea443a97988713fd27d0e34ee8"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0087_summary.json",
+        "sha256": "f028d8ccdb58de60b43126427c3e8d4da4df43aecedbe9537e1e5537b8952e19"
+      }
+    },
+    {
+      "epoch": 88,
+      "frame_at_start": 13920,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0088_visits.npz",
+        "sha256": "efd8e44901950e91728ae5d350d323b8143663956814f1e6ac2024867b90d379"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0088_summary.json",
+        "sha256": "432e7c5ff4f1b6086809f0f1d7301e44bd2f9a8c2cfce0399823f94cddb2ca0e"
+      }
+    },
+    {
+      "epoch": 89,
+      "frame_at_start": 14080,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0089_visits.npz",
+        "sha256": "64c6617c56055f0e154b562751493e95c9e8882cf4a98f16ab292b0e3a00eeeb"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0089_summary.json",
+        "sha256": "d5b58c64d10912ad4659eb0aaaa0d5b2a58abd1f3010c7ee46fb7f09512b0e6f"
+      }
+    },
+    {
+      "epoch": 90,
+      "frame_at_start": 14240,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0090_visits.npz",
+        "sha256": "1a7376b727283a495ff61da270dfd05a6ecaf538c3da0559be0ce04b6e720da9"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0090_summary.json",
+        "sha256": "2ca51954dd56b463e4c79aca5b5d4c3d7a07d54f69c6ba948069e5153fbe4b01"
+      }
+    },
+    {
+      "epoch": 91,
+      "frame_at_start": 14400,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0091_visits.npz",
+        "sha256": "3ef445d86f009376f7f821b99247d1cd506e9f8bcc02208dbb6bea056c1fa3c0"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0091_summary.json",
+        "sha256": "0b24a863d91c47df42c32ea98e8d6e68afe51a4d453b23146aa82e68902ca994"
+      }
+    },
+    {
+      "epoch": 92,
+      "frame_at_start": 14560,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0092_visits.npz",
+        "sha256": "b5c0f371e0146ecd4b08914bdf152c0bfbdbb23a83be9086c9c86b1544161093"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0092_summary.json",
+        "sha256": "fe80d08712c443906349fff5cb9f6de9ed4dabec2ebbc9ce41961d8f00189787"
+      }
+    },
+    {
+      "epoch": 93,
+      "frame_at_start": 14720,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0093_visits.npz",
+        "sha256": "0fa8105ba2919d58317ddbd8d8605e43815f90dbf30aab663119e3b4915a4343"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0093_summary.json",
+        "sha256": "623812a8753e8dfd4ac3883eb690fd62a6ba5a9605c7ce3360efff27adeee78e"
+      }
+    },
+    {
+      "epoch": 94,
+      "frame_at_start": 14880,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0094_visits.npz",
+        "sha256": "315008d4fb9b31e713f7e3f593a66df7d8a4b050ddd1153ed06cca1a21a64c43"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0094_summary.json",
+        "sha256": "2642d8a80cada6b8e28b69cb2f456989b14d896df0eac755cae6e216e3d97e53"
+      }
+    },
+    {
+      "epoch": 95,
+      "frame_at_start": 15040,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0095_visits.npz",
+        "sha256": "4ce55bc378cf9b53705376c110c89fa651cdbe3622c09a05b1dea88401d0f2b2"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0095_summary.json",
+        "sha256": "3c1c745d2489bf2542e87e408ed23cece7942af6a1763959e37e9e3ad83e2840"
+      }
+    },
+    {
+      "epoch": 96,
+      "frame_at_start": 15200,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0096_visits.npz",
+        "sha256": "c2fe8acc7e6315356afdf21d655aa3487fa848e6db95aa85382945a15d552df6"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0096_summary.json",
+        "sha256": "6eb86ee879418ea91ddc77879436534d844c0084df5bb8d6ad053b9787aa5571"
+      }
+    },
+    {
+      "epoch": 97,
+      "frame_at_start": 15360,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0097_visits.npz",
+        "sha256": "d40baf05a82d80fcea1dd3b8e7c3be181744571193956dfa22df3a4d4bc8fe95"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0097_summary.json",
+        "sha256": "d7356c2d1f827a9f9b94271bea052a94b7404b226ed5df90f9066423dedbb3a4"
+      }
+    },
+    {
+      "epoch": 98,
+      "frame_at_start": 15520,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0098_visits.npz",
+        "sha256": "487901c59737fcffda16013ce0a7ce06067e735da32b6c144e3effd5067c435c"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0098_summary.json",
+        "sha256": "03cdeb322f2bda87b7d7316c2f65933a47408a686da875ef533809ac87212981"
+      }
+    },
+    {
+      "epoch": 99,
+      "frame_at_start": 15680,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0099_visits.npz",
+        "sha256": "5c76fc863aea37a397aeef5c7214247d88f75ee91f556fdb75610bdabfbb029c"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0099_summary.json",
+        "sha256": "bfb4905ccdedf6c8386662431b3d15d9ec0dcf13af3d950478a58aa451134966"
+      }
+    },
+    {
+      "epoch": 100,
+      "frame_at_start": 15840,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0100_visits.npz",
+        "sha256": "c5a6e4fde337f1dadb9ef717dba480f1c2069642d700cdeeeb54607cfd0cd3fb"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0100_summary.json",
+        "sha256": "4159cd02342e58907da13892183bf6b689a85949e8b989efb8158e045ae15e8c"
+      }
+    },
+    {
+      "epoch": 101,
+      "frame_at_start": 16000,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0101_visits.npz",
+        "sha256": "03da5d73f87eedbbcb99fc2db8496a09d1a3bad5cfb79b53c56cc8b4d635c7bc"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0101_summary.json",
+        "sha256": "91cdc250170c5df77908061ac116a87199f13f1af0ef5788653b4005c1036588"
+      }
+    },
+    {
+      "epoch": 102,
+      "frame_at_start": 16160,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0102_visits.npz",
+        "sha256": "8bd7316b9e7578b078599c5dbe74ff554c7743f6947b7749dae2e0f8e7914393"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0102_summary.json",
+        "sha256": "018cebfd159a56338e32338ad8b0fd87a781563a0596e08d29d1e6282ae6f970"
+      }
+    },
+    {
+      "epoch": 103,
+      "frame_at_start": 16320,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0103_visits.npz",
+        "sha256": "a325326a4b355307ea2d25d0115194e61cae51cbb337c76b6838944d4492b625"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0103_summary.json",
+        "sha256": "3bf85f8392a372fe16108b70d06b0e84a38e33ba674b4d9128be916bf10c9359"
+      }
+    },
+    {
+      "epoch": 104,
+      "frame_at_start": 16480,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0104_visits.npz",
+        "sha256": "e641a41008678b43f86b7b30d3f08d2c8cc000721390c0232d290b0bf52cb0d5"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0104_summary.json",
+        "sha256": "efb963363edda599885fe7d8fbf585248ae6737f9ac4101dab86512d1e6b2cf3"
+      }
+    },
+    {
+      "epoch": 105,
+      "frame_at_start": 16640,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0105_visits.npz",
+        "sha256": "80c55300220660f34127cbb00c797bf073369f9e66a55b5d5da2652d7858c121"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0105_summary.json",
+        "sha256": "af650b15a2f533f6cf588319db0c328d4cf7258cefb92c58d8e7425b08c18bc8"
+      }
+    },
+    {
+      "epoch": 106,
+      "frame_at_start": 16800,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0106_visits.npz",
+        "sha256": "c2931288d0d04ddbfb229bafc4c7832bb5ba884bf6496cf43f14d3ade1f14b3a"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0106_summary.json",
+        "sha256": "85238e6a650fe3b88872ec038916dfc320ce829455b2a1323d088bbe78039e9d"
+      }
+    },
+    {
+      "epoch": 107,
+      "frame_at_start": 16960,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0107_visits.npz",
+        "sha256": "f2a9df8c856b489b02c10b655366ab2bd3d8ef6c96f7f2b28a34a48a3683570f"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0107_summary.json",
+        "sha256": "552000470946922388a8fa7b5e4ae195f005ade5ed31b7a96018fb7e8bc46549"
+      }
+    },
+    {
+      "epoch": 108,
+      "frame_at_start": 17120,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0108_visits.npz",
+        "sha256": "9c74a947ecbef4cc373ed8b329ff28a3abbb0f7b1000b3e781b4e6f137c8a64b"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0108_summary.json",
+        "sha256": "90bc1e705e6869d86c95c714fd78482722d128582ce9d0b7ef4a41b3d7d45763"
+      }
+    },
+    {
+      "epoch": 109,
+      "frame_at_start": 17280,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0109_visits.npz",
+        "sha256": "6b63b400dca97cdbaa9d316509d08cdfb0aebf567a4c1eff0e4b4086edf50a1a"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0109_summary.json",
+        "sha256": "6729c6151a849feb88ba851976a213f5a75159f1c18393c6b29db2c0ed120cc1"
+      }
+    },
+    {
+      "epoch": 110,
+      "frame_at_start": 17440,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0110_visits.npz",
+        "sha256": "22b8b9ed3e0f19b557631f4fd18c358868160886906efe3b72da12ed149624cb"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0110_summary.json",
+        "sha256": "c156159f401776e02796c525c1336e5e7c91c995220e8d01422f9a86ebee62c7"
+      }
+    },
+    {
+      "epoch": 111,
+      "frame_at_start": 17600,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0111_visits.npz",
+        "sha256": "823b1e14920836797d0c4ec35014b15495e091afce187cc9eecf4b4fe5a8e409"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0111_summary.json",
+        "sha256": "49c0b9616249e1263090d3b8dc2a3e05c2c114f7fa2f7774bc46b103d5bb2004"
+      }
+    },
+    {
+      "epoch": 112,
+      "frame_at_start": 17760,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0112_visits.npz",
+        "sha256": "b4413fe19a8727e26939e02ababea28bf704f5e111095c43fcffee1a5779ed99"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0112_summary.json",
+        "sha256": "1382a18e0678d8428b32e6241e6d046fc018dff34275070016fa437818094f17"
+      }
+    },
+    {
+      "epoch": 113,
+      "frame_at_start": 17920,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0113_visits.npz",
+        "sha256": "f4f24de54832c4aadf5ca12f4cfaec18182a255119286929e29358fc869af571"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0113_summary.json",
+        "sha256": "9e527224ee1c2ce2591d92feaf70d9a6221afec17cba5967670aa7145ad8b69b"
+      }
+    },
+    {
+      "epoch": 114,
+      "frame_at_start": 18080,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0114_visits.npz",
+        "sha256": "8258a2295d7068ae5a4a6c2043522ffd0b6169efa7b5876b9b2e54bbd61d490b"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0114_summary.json",
+        "sha256": "8e63ec746fd154eefc00377c12349ef985837632b5a5d18a4d7c6fbd23162d1b"
+      }
+    },
+    {
+      "epoch": 115,
+      "frame_at_start": 18240,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0115_visits.npz",
+        "sha256": "23183de3b39ef70ea047058cbd27705673ee26807af441344baf7d61e0c9ff55"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0115_summary.json",
+        "sha256": "f2e10eb62734a2834a88283d73f92e1117ccf23cc1077f2e72cf2c1c6bab4bd5"
+      }
+    },
+    {
+      "epoch": 116,
+      "frame_at_start": 18400,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0116_visits.npz",
+        "sha256": "7e6345116c8e5cfa6f8d87500a94e70b2050048d785e1ccc16fba2d0b3ec53ff"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0116_summary.json",
+        "sha256": "e7ef1ba3550a95967275e8e2582d095e07b12ef0a33cc76e25f87a9685354d3c"
+      }
+    },
+    {
+      "epoch": 117,
+      "frame_at_start": 18560,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0117_visits.npz",
+        "sha256": "45a3cff1836d18e25e0a2152c44014484195fefd695082e8dfeb013e3ae6d680"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0117_summary.json",
+        "sha256": "c720c736fd9cf99a500c7b0c807c22538c5248ff1f2d01eb23964efd5eb1ed72"
+      }
+    },
+    {
+      "epoch": 118,
+      "frame_at_start": 18720,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0118_visits.npz",
+        "sha256": "88112816c59674a8e54d7be49a889288733107ed7f06684abc6c30b5895996a8"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0118_summary.json",
+        "sha256": "64f55810a5c8720899904da1f9876d3676095e81f9e7e41c9d61a3805634d441"
+      }
+    },
+    {
+      "epoch": 119,
+      "frame_at_start": 18880,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0119_visits.npz",
+        "sha256": "a4bece200209c511f36de48e930d865442de7edacb642019999e79ead170aa06"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0119_summary.json",
+        "sha256": "191165951cddabf0a0883aba1ad0833a2ce31834c5cc25db8a05e4f1f0b089f0"
+      }
+    },
+    {
+      "epoch": 120,
+      "frame_at_start": 19040,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0120_visits.npz",
+        "sha256": "a2b329abde2e23108363d6efbc18b86518bf24876e08cd5131700f97e3ac04d9"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0120_summary.json",
+        "sha256": "29f2f0f76a025283bcb88b6914cf5d427197124f9712c2131f201966d2441430"
+      }
+    },
+    {
+      "epoch": 121,
+      "frame_at_start": 19200,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0121_visits.npz",
+        "sha256": "39fe5a19c274e496fe0286276df92ad439ba03a66e77877de15cb5b7657bbc58"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0121_summary.json",
+        "sha256": "703e01d74b47d755a7b26a816b6924f07cdf6af5cdf3bff22c8b4be37383e87c"
+      }
+    },
+    {
+      "epoch": 122,
+      "frame_at_start": 19360,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0122_visits.npz",
+        "sha256": "7ffbf51739942802217b045c2d68dcf586bbf2cbe1ea83403681f240392c2b57"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0122_summary.json",
+        "sha256": "93cbce62830d7d0e9310bc13cf3b1253e8e2e9ef9937205fc1d70007289864c0"
+      }
+    },
+    {
+      "epoch": 123,
+      "frame_at_start": 19520,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0123_visits.npz",
+        "sha256": "f94d52e790f178906cf49ee0167cb981019e62419c01e8d81c5abf376f8777d7"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0123_summary.json",
+        "sha256": "3a0f9ea723f9b1473f46423ba6817fba16b67890439b73356a355ca839111943"
+      }
+    },
+    {
+      "epoch": 124,
+      "frame_at_start": 19680,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0124_visits.npz",
+        "sha256": "4afdf4afb0060be07e9650e6659135b21306655e257e7af577913d0288086434"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0124_summary.json",
+        "sha256": "e5d750f44039933618ac29d9abf706e5491d23c3d410d719c0443e20b4093666"
+      }
+    },
+    {
+      "epoch": 125,
+      "frame_at_start": 19840,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0125_visits.npz",
+        "sha256": "93402f05a5cd3e4e9200821efc4fd4c06617bbe71e93b799737579ec27734836"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1/seed_0/training_visitation/epoch_0125_summary.json",
+        "sha256": "aa3e53dd48ab91f7b88db083452f0fdb64c80925e86ad9ea476d11ee03d09778"
+      }
+    }
+  ]
+}

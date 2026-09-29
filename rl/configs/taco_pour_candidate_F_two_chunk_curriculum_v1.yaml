@@ -1,0 +1,145 @@
+schema: taco_pour_candidate_F_two_chunk_curriculum_v1
+status: authorized_fixed_two_chunk_curriculum_200k
+paper_faithful: false
+classification: local_balanced_two_chunk_lookahead_curriculum
+base_git_commit: aa11d0d5aa858530adbb1e3657a18c679c601c28
+purpose: >-
+  Repair the measured endpoint40 next-chunk visitation starvation while
+  preserving Candidate D's policy, optimizer, reward, observation, action and
+  physics contracts. The 2+2 reset distribution is local engineering, not a
+  recovered EgoEngine author implementation.
+
+candidate_F:
+  fresh_seeds: [0, 1, 2]
+  warm_start_allowed: false
+  initialization: replay_preserving
+  location_parameterization: support_anchored_piecewise_tanh
+  initial_sigma_multiplier: 0.25
+  actor_learning_rate: 0.0001
+  actor_mini_epochs: 1
+  critic_mini_epochs: 4
+  worlds: 4
+  horizon_control_intervals_per_world: 40
+  physics_steps_per_epoch: 1600
+  maximum_epoch: 125
+  maximum_physics_steps_per_seed: 200000
+  fixed_milestone_epochs: [62, 125]
+  strict_success: 40_of_40
+  first_strict_success_action: stop_all_restarts_request_separate_promotion
+  non_strict_checkpoint_selection_allowed: false
+  chunk_commit_allowed: false
+
+curriculum:
+  activation_epoch: 63
+  epochs_1_through_62_world_starts: [40, 40, 40, 40]
+  epochs_63_through_125_world_starts: [40, 40, 60, 60]
+  fixed_assignment: true
+  random_tail_selection: false
+  ratio_sweep_allowed: false
+  tail_A: {teacher_seed: 0, teacher_epoch: 125, reference_endpoint: 60}
+  tail_B: {teacher_seed: 1, teacher_epoch: 125, reference_endpoint: 60}
+  tail_rnn_refresh_every_epoch: true
+  tail_physics_off_policy: true
+  tail_direct_chunk_commit_allowed: false
+
+validation:
+  source_endpoint: 40
+  lookahead_endpoint: 80
+  intervals: 40
+  recurrent_state: zero
+  deterministic_action: bounded_distribution_mean
+  milestones: [0, 62, 125]
+  acceptance: strict_40_of_40
+
+coverage_audit:
+  relative_source_offset: k_equals_source_endpoint_minus_40
+  segments: {pre_curriculum: [1, 62], curriculum: [63, 125]}
+  cohorts:
+    all_worlds: [0, 1, 2, 3]
+    anchor_worlds: [0, 1]
+    tail_worlds: [2, 3]
+  fractions: [k_ge_21, k_ge_25, k_ge_30, k_ge_35]
+  counts:
+    - source60_action
+    - endpoint61_tracking_termination
+  histograms:
+    - maximum_reached_k_by_epoch_world
+    - tracking_termination_endpoint
+
+prefrozen_classification:
+  F1:
+    condition: any_fixed_milestone_40_of_40
+    classification: LOOKAHEAD_CURRICULUM_STRICT_SUCCESS
+    action: stop_all_seeds_request_separate_promotion
+  F2:
+    condition: no_strict_success_and_median_epochs63_125_deep_fraction_at_least_0p20
+    classification: LOOKAHEAD_COVERAGE_RESTORED_NO_STRICT_SUCCESS
+    action: authorize_future_optimizer_review_with_curriculum_preserved
+  F3:
+    condition: no_strict_success_and_median_epochs63_125_deep_fraction_below_0p05
+    classification: TAIL_TRANSITION_REMAINS_BOTTLENECK
+    action: stop_optimizer_LR_remains_blocked
+  F4:
+    condition: otherwise
+    classification: MIXED_CURRICULUM_RESULT
+    action: stop_no_ratio_or_LR_sweep
+
+inputs:
+  source_boundary_endpoint40:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_candidate_D_strict_success_promotion_v1/committed_boundary_endpoint_40.pt.gz
+    sha256: 7cf90b48a2a16d41b1f055fdb4fa30f1fdb89d32064ffbfc776b0fdc0e1b9090
+  Replay_40_80_trajectory:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1/chunk_source_40/replay/replay_validation_40_80.npz
+    sha256: 1d34672e8ceb637fa4e866824e282d9da74a8d3536382693ea3f930db24a45af
+  tail_A_teacher_checkpoint:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1/chunk_source_40/candidate_D/seed_0/checkpoints/epoch_0125.pt.gz
+    sha256: c64c01a8c829b5aa80bde1d33671847b71129b90d5a700c01631c5a9fd990e05
+  tail_A_historical_validation:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1/chunk_source_40/candidate_D/seed_0/validations/epoch_0125.npz
+    sha256: 0d98ced4adaf414882b0f1dfa20d519d8a28c998d0bffc342d9f4f2507f7793b
+  tail_B_teacher_checkpoint:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1/chunk_source_40/candidate_D/seed_1/checkpoints/epoch_0125.pt.gz
+    sha256: 4bee7e2b408f7a01077ed906f571241a19a4247ad252254ddc6f053f27abc621
+  tail_B_historical_validation:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1/chunk_source_40/candidate_D/seed_1/validations/epoch_0125.npz
+    sha256: b1b88cc627c3189b1d91a022ac7014ddfe0dd5782d64c360cece691f901d2942
+  bounded_mean_distribution_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_support_anchored_bounded_mean_truncated_gaussian_v1.yaml
+    sha256: 24dc3decf62890bd14268539fd875215756ca500e097ccedfede4128d062762f
+  simulator_config:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml
+    sha256: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+  initialization_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v2/candidate_a/report.json
+    sha256: 9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a
+  protocol_at_authorization:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_algorithmic_reproduction_training_v3_protocol_snapshot.yaml
+    sha256: 1f4a96edfa0bc17ecb578fd5d8ae1514b77099713cc9b9f74adf6813a62873f3
+  objective_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_local_normalized_ellipse_v1.yaml
+    sha256: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+  observation_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_observation_local_236d_v1.yaml
+    sha256: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  action_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_residual_action_scaled_v1.yaml
+    sha256: 71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4
+
+forbidden:
+  - half_linear_or_adaptive_LR
+  - KL_penalty_or_target_KL
+  - reward_observation_action_network_or_physics_change
+  - ratio_sweep
+  - different_tail_teacher
+  - random_tail_endpoint
+  - endpoint61_state_injection
+  - historical_TRASH_curriculum_revival
+  - non_strict_checkpoint_selection
+  - curriculum_tail_acceptance
+  - direct_chunk_commit
+
+immutable_progress:
+  endpoint20_to40_committed: true
+  endpoint40_to60_committed: false
+
+output_directory: /data_all/zzx/3.2RL/runs/taco_pour_candidate_F_two_chunk_curriculum_v1

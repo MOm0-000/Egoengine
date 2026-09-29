@@ -12,6 +12,7 @@ import numpy as np
 
 
 SCHEMA = "taco_ppo_training_visitation_v5"
+WORLD_INDEX_SCHEMA = "taco_ppo_training_visitation_v6_world_indexed"
 _FINGERS = ("thumb", "index", "middle", "ring", "pinky")
 
 
@@ -57,6 +58,7 @@ class PpoTrainingTrace:
         residual_scale: float,
         residual_clip: float,
         ctrlrange_contract: dict[str, Any],
+        include_world_index: bool = False,
     ) -> None:
         self.output_dir = Path(output_dir)
         if self.output_dir.exists():
@@ -74,6 +76,8 @@ class PpoTrainingTrace:
         self.residual_scale = float(residual_scale)
         self.residual_clip = float(residual_clip)
         self.ctrlrange_contract = ctrlrange_contract
+        self.include_world_index = bool(include_world_index)
+        self.schema = WORLD_INDEX_SCHEMA if self.include_world_index else SCHEMA
         self._active: dict[str, Any] | None = None
         self._epochs: list[dict[str, Any]] = []
         self._finalized = False
@@ -105,6 +109,8 @@ class PpoTrainingTrace:
             "tracking_terminated": [],
             "time_out": [],
         }
+        if self.include_world_index:
+            self._active["world_index"] = []
 
     def record(
         self,
@@ -155,6 +161,8 @@ class PpoTrainingTrace:
             "time_out": np.asarray(info["time_outs"], bool),
         }
         batch = len(arrays["source_endpoint"])
+        if self.include_world_index:
+            arrays["world_index"] = np.arange(batch, dtype=np.int32)
         if any(len(value) != batch for value in arrays.values()):
             raise ValueError("training-trace fields have inconsistent world counts")
         action_shape = (batch, len(self.actuator_names))
@@ -387,7 +395,7 @@ class PpoTrainingTrace:
         summary_path = self.output_dir / f"{stem}_summary.json"
         np.savez_compressed(raw_path, **data)
         summary = {
-            "schema": SCHEMA,
+            "schema": self.schema,
             "epoch": epoch,
             "frame_at_start": int(active["frame_at_start"]),
             **self._summary(data),
@@ -415,13 +423,19 @@ class PpoTrainingTrace:
             if self._epochs else "training_failed_before_logged_rollout"
         )
         manifest = {
-            "schema": SCHEMA,
+            "schema": self.schema,
             "status": status,
             "logging_semantics": {
                 "endpoint_alignment": (
                     "transition t->t+1 commands ctrl[t+1], scores physical state[t+1] "
                     "against ref[t+1], and exposes ref[t+2] to the next actor observation "
                     "except for reference-tail clipping"
+                ),
+                "world_index": (
+                    "stable IndependentMJWPTrainingEnv batch position for this rollout "
+                    "sample; present only in the world-indexed v6 schema"
+                    if self.include_world_index else
+                    "not recorded by the legacy v5 schema"
                 ),
                 "sampled_action_preclamp": (
                     "stochastic action sampled from the PPO policy distribution before the "

@@ -11,10 +11,14 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from video_to_spider.rl.training_trace import PpoTrainingTrace, SCHEMA
+from video_to_spider.rl.training_trace import (
+    PpoTrainingTrace,
+    SCHEMA,
+    WORLD_INDEX_SCHEMA,
+)
 
 
-def _trace(path: Path) -> PpoTrainingTrace:
+def _trace(path: Path, *, include_world_index: bool = False) -> PpoTrainingTrace:
     return PpoTrainingTrace(
         path,
         actuator_names=tuple(f"actuator_{index}" for index in range(36)),
@@ -32,6 +36,7 @@ def _trace(path: Path) -> PpoTrainingTrace:
             "ctrllimited": [True] * 36,
             "ctrlrange": [[-1.0, 1.0]] * 36,
         },
+        include_world_index=include_world_index,
     )
 
 
@@ -195,3 +200,34 @@ def test_failed_training_before_rollout_writes_explicit_empty_manifest(tmp_path)
     report = trace.finalize(completed=False)
     assert report["epochs"] == []
     assert report["status"] == "training_failed_before_logged_rollout"
+
+
+def test_world_indexed_trace_records_stable_batch_positions(tmp_path):
+    output = tmp_path / "visits"
+    trace = _trace(output, include_world_index=True)
+    trace.begin_epoch(63, 99_200)
+    zeros = np.zeros((2, 36), np.float32)
+    info = _info(41)
+    for name in ("command_reference_endpoint", "reward_reference_endpoint"):
+        info[name] = np.array([41, 61], np.int32)
+    info["next_observation_goal_reference_endpoint"] = np.array([42, 62], np.int32)
+    trace.record(
+        source_endpoint=np.array([40, 60], np.int32),
+        outcome_endpoint=np.array([41, 61], np.int32),
+        sampled_action_preclamp=zeros,
+        sampled_action_clamped=zeros,
+        actor_mu=zeros,
+        actor_sigma=np.ones((2, 36), np.float32),
+        reference_ctrl=zeros.astype(np.float64),
+        requested_residual=zeros.astype(np.float64),
+        effective_residual_after_ctrlrange=zeros.astype(np.float64),
+        residual_lost_to_ctrlrange=zeros.astype(np.float64),
+        info=info,
+    )
+    report = trace.finalize(completed=True)
+    with np.load(output / "epoch_0063_visits.npz", allow_pickle=False) as data:
+        np.testing.assert_array_equal(data["world_index"], [0, 1])
+    assert report["schema"] == WORLD_INDEX_SCHEMA
+    assert "stable IndependentMJWPTrainingEnv batch position" in report[
+        "logging_semantics"
+    ]["world_index"]

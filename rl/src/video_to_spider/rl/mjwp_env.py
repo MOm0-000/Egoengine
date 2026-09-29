@@ -1415,6 +1415,8 @@ class IndependentMJWPTrainingEnv:
             torch.Tensor, torch.Tensor, torch.Tensor
         ] | None = None
         self._tail_curriculum: dict[str, Any] | None = None
+        self._fixed_two_chunk_curriculum: dict[str, Any] | None = None
+        self._curriculum_active_this_epoch = False
         self._curriculum_reset_rnn_states: tuple[torch.Tensor, ...] | None = None
         self._curriculum_epoch_audits: list[dict[str, Any]] = []
         for world in worlds[1:]:
@@ -1525,7 +1527,7 @@ class IndependentMJWPTrainingEnv:
         rewards = np.concatenate([row[1] for row in rows])
         dones = np.concatenate([row[2] for row in rows])
         info = self._join_info([row[3] for row in rows])
-        if self._tail_curriculum is not None:
+        if self._curriculum_active_this_epoch:
             if not self._curriculum_epoch_audits:
                 raise RuntimeError("curriculum step occurred before epoch preparation")
             counts = self._curriculum_epoch_audits[-1]["termination_counts_by_world"]
@@ -1593,6 +1595,13 @@ class IndependentMJWPTrainingEnv:
     def set_train_info(self, frame: int, agent: Any) -> None:
         if self._tail_curriculum is not None:
             self._prepare_tail_curriculum_epoch(agent)
+        elif self._fixed_two_chunk_curriculum is not None:
+            start_epoch = int(self._fixed_two_chunk_curriculum["activation_epoch"])
+            if int(agent.epoch_num) >= start_epoch:
+                self._prepare_fixed_two_chunk_curriculum_epoch(agent)
+            else:
+                self._curriculum_active_this_epoch = False
+                self._curriculum_reset_rnn_states = None
         if self._training_trace is not None:
             self._training_trace.begin_epoch(int(agent.epoch_num), int(frame))
 
@@ -1626,6 +1635,65 @@ class IndependentMJWPTrainingEnv:
             "window_end_endpoint": window_end_endpoint,
             "world_start_endpoints": (20, 20, 20, 46),
         }
+        self._curriculum_reset_rnn_states = None
+        self._curriculum_epoch_audits = []
+
+    def enable_fixed_two_chunk_curriculum(
+        self,
+        tail_boundaries: Sequence[dict[str, Any]],
+        *,
+        anchor_endpoint: int,
+        tail_endpoint: int,
+        window_end_endpoint: int,
+        activation_epoch: int,
+    ) -> None:
+        """Enable the independent fixed 2-anchor + 2-tail curriculum."""
+        if self.num_envs != 4:
+            raise ValueError("the fixed two-chunk curriculum requires exactly four worlds")
+        if self._tail_curriculum is not None or self._fixed_two_chunk_curriculum is not None:
+            raise RuntimeError("a curriculum is already enabled")
+        if (anchor_endpoint, tail_endpoint, window_end_endpoint) != (40, 60, 80):
+            raise ValueError("the Candidate-F curriculum endpoints are exactly 40, 60, 80")
+        if int(activation_epoch) != 63:
+            raise ValueError("the Candidate-F curriculum activates exactly at epoch 63")
+        boundaries = tuple(deepcopy(boundary) for boundary in tail_boundaries)
+        if len(boundaries) != 2:
+            raise ValueError("the fixed curriculum requires exactly two tail boundaries")
+        for boundary in boundaries:
+            if boundary.get("schema") != "egoengine_physics_rnn_boundary_v1":
+                raise ValueError("tail boundary uses an unsupported schema")
+            if int(boundary.get("reference_endpoint", -1)) != tail_endpoint:
+                raise ValueError("tail boundary is not endpoint 60")
+            if int(boundary.get("rollout_start_endpoint", -1)) != anchor_endpoint:
+                raise ValueError("tail observation history must begin at endpoint 40")
+            if len(tuple(boundary.get("observation_prefix", ()))) != 20:
+                raise ValueError("endpoint-60 tail boundary requires its complete 20-step prefix")
+            provenance = boundary.get("provenance", {})
+            if provenance.get("off_policy_curriculum_state") is not True:
+                raise ValueError("tail boundary is not marked as an off-policy curriculum state")
+            if provenance.get("direct_chunk_commit_allowed") is not False:
+                raise ValueError("tail boundary incorrectly permits a direct chunk commit")
+            if int(np.asarray(boundary["physics_state"]["episode_lengths"])[0]) != (
+                window_end_endpoint
+            ):
+                raise ValueError("tail boundary does not freeze the endpoint-80 window")
+            observation = boundary.get("observation")
+            if not isinstance(observation, dict) or set(observation) != {"obs", "states"}:
+                raise ValueError("tail boundary lacks the asymmetric actor/critic observation")
+            if any(
+                not isinstance(row, dict) or set(row) != {"obs", "states"}
+                for row in boundary.get("observation_prefix", ())
+            ):
+                raise ValueError("tail prefix lacks the asymmetric actor/critic observation")
+        self._fixed_two_chunk_curriculum = {
+            "tail_boundaries": boundaries,
+            "anchor_endpoint": int(anchor_endpoint),
+            "tail_endpoint": int(tail_endpoint),
+            "window_end_endpoint": int(window_end_endpoint),
+            "activation_epoch": int(activation_epoch),
+            "world_start_endpoints": (40, 40, 60, 60),
+        }
+        self._curriculum_active_this_epoch = False
         self._curriculum_reset_rnn_states = None
         self._curriculum_epoch_audits = []
 
@@ -1689,6 +1757,7 @@ class IndependentMJWPTrainingEnv:
         self._curriculum_reset_rnn_states = tuple(
             state.detach().clone() for state in agent.rnn_states
         )
+        self._curriculum_active_this_epoch = True
         self._curriculum_epoch_audits.append({
             "epoch": int(agent.epoch_num),
             "world_start_endpoints": restore["reference_endpoints"],
@@ -1704,6 +1773,85 @@ class IndependentMJWPTrainingEnv:
             "restore": restore,
         })
 
+    def _prepare_fixed_two_chunk_curriculum_epoch(self, agent: Any) -> None:
+        from video_to_spider.rl.curriculum_reset import (
+            make_rollout_start_boundary,
+            refresh_boundary_rnn_for_actor,
+            restore_physics_rnn_boundaries,
+        )
+
+        contract = self._fixed_two_chunk_curriculum
+        if contract is None:
+            raise RuntimeError("fixed two-chunk curriculum was not enabled")
+        anchor_endpoint = int(contract["anchor_endpoint"])
+        end_endpoint = int(contract["window_end_endpoint"])
+        anchor_boundaries = []
+        for index, world in enumerate(self.worlds[:2]):
+            state = world._chunk_reset_state
+            if state is None:
+                raise RuntimeError("chunk reset must be configured before curriculum rollout")
+            if int(np.asarray(state["time_indices"])[0]) != anchor_endpoint:
+                raise ValueError("anchor chunk state is not endpoint 40")
+            if int(np.asarray(state["episode_lengths"])[0]) != end_endpoint:
+                raise ValueError("anchor chunk state does not end at endpoint 80")
+            world.set_env_state(state)
+            anchor_boundaries.append(make_rollout_start_boundary(
+                agent,
+                world,
+                provenance={
+                    "role": "formal_endpoint40_anchor",
+                    "world_index": index,
+                    "fixed_reference_endpoint": anchor_endpoint,
+                },
+            ))
+
+        tails = []
+        refresh_rows = []
+        for tail_index, source in enumerate(contract["tail_boundaries"], start=2):
+            tail = refresh_boundary_rnn_for_actor(agent, source)
+            refresh = tail["provenance"]["rnn_refresh"]
+            if refresh.get(
+                "actor_and_input_normalization_unchanged_during_replay"
+            ) is not True:
+                raise RuntimeError("tail prefix replay changed actor normalization")
+            if int(np.asarray(tail["physics_state"]["episode_lengths"])[0]) != end_endpoint:
+                raise RuntimeError("refreshed tail changed the frozen episode window")
+            if any(bool(value.any()) for value in tail["agent_runtime"].values()):
+                raise RuntimeError("captured tail runtime bookkeeping is not reset")
+            tail["provenance"]["curriculum_episode_bookkeeping"] = (
+                "captured_zero_without_changing_saved_physics_or_recurrent_memory"
+            )
+            tail["provenance"]["curriculum_world_index"] = tail_index
+            tails.append(tail)
+            refresh_rows.append(refresh)
+
+        boundaries = (*anchor_boundaries, *tails)
+        restore = restore_physics_rnn_boundaries(agent, self, boundaries)
+        if restore["reference_endpoints"] != [40, 40, 60, 60]:
+            raise RuntimeError("fixed curriculum world assignment changed")
+        for world in self.worlds:
+            world._chunk_reset_state = world.get_env_state()
+        self._curriculum_reset_rnn_states = tuple(
+            state.detach().clone() for state in agent.rnn_states
+        )
+        self._curriculum_active_this_epoch = True
+        self._curriculum_epoch_audits.append({
+            "epoch": int(agent.epoch_num),
+            "world_start_endpoints": restore["reference_endpoints"],
+            "actor_state_sha256": restore["actor_state_sha256"],
+            "normalization_unchanged_during_prefix_replay": True,
+            "tail_prefix_observations": [
+                int(row["prefix_observations"]) for row in refresh_rows
+            ],
+            "tail_physics_generated_by_current_actor": [False, False],
+            "tail_episode_bookkeeping_reset_to_zero": True,
+            "termination_counts_by_world": [
+                {"any": 0, "tracking": 0, "timeout": 0}
+                for _ in range(self.num_envs)
+            ],
+            "restore": restore,
+        })
+
     def reset_rnn_states_after_done(
         self,
         rnn_states: list[torch.Tensor],
@@ -1711,7 +1859,7 @@ class IndependentMJWPTrainingEnv:
     ) -> list[torch.Tensor]:
         """Restore the current-actor memory paired with each curriculum reset."""
         indices = done_indices.reshape(-1).long()
-        if self._tail_curriculum is None:
+        if not self._curriculum_active_this_epoch:
             for state in rnn_states:
                 state[:, indices, :] = 0.0
             return rnn_states
@@ -1724,8 +1872,23 @@ class IndependentMJWPTrainingEnv:
         return rnn_states
 
     def tail_curriculum_audit(self) -> dict[str, Any] | None:
-        if self._tail_curriculum is None:
+        if self._tail_curriculum is None and not self._curriculum_active_this_epoch:
             return None
+        if self._tail_curriculum is None:
+            contract = self._fixed_two_chunk_curriculum
+            if contract is None:
+                raise RuntimeError("active curriculum has no contract")
+            return {
+                "schema": "taco_pour_fixed_two_chunk_curriculum_sampler_v1",
+                "world_start_endpoints": list(contract["world_start_endpoints"]),
+                "fixed_every_active_epoch": True,
+                "activation_epoch": int(contract["activation_epoch"]),
+                "random_tail_endpoint_selection": False,
+                "CPU_acceptance_start_endpoint": 40,
+                "CPU_acceptance_required_steps": 40,
+                "tail_physical_state_is_off_policy": True,
+                "epochs_prepared": deepcopy(self._curriculum_epoch_audits),
+            }
         return {
             "schema": "taco_pour_tail_curriculum_sampler_v1",
             "world_start_endpoints": list(
@@ -1739,13 +1902,34 @@ class IndependentMJWPTrainingEnv:
             "epochs_prepared": deepcopy(self._curriculum_epoch_audits),
         }
 
+    def fixed_two_chunk_curriculum_audit(self) -> dict[str, Any] | None:
+        if self._fixed_two_chunk_curriculum is None:
+            return None
+        contract = self._fixed_two_chunk_curriculum
+        return {
+            "schema": "taco_pour_fixed_two_chunk_curriculum_sampler_v1",
+            "world_start_endpoints_before_activation": [40, 40, 40, 40],
+            "world_start_endpoints_after_activation": list(
+                contract["world_start_endpoints"]
+            ),
+            "activation_epoch": int(contract["activation_epoch"]),
+            "fixed_every_active_epoch": True,
+            "random_tail_endpoint_selection": False,
+            "CPU_acceptance_start_endpoint": 40,
+            "CPU_acceptance_required_steps": 40,
+            "tail_physical_state_is_off_policy": True,
+            "epochs_prepared": deepcopy(self._curriculum_epoch_audits),
+        }
+
     def curriculum_rnn_reset_states(self) -> tuple[torch.Tensor, ...]:
         """Return the epoch-bound nonzero memories used after episode resets."""
-        if self._tail_curriculum is None or self._curriculum_reset_rnn_states is None:
+        if not self._curriculum_active_this_epoch or self._curriculum_reset_rnn_states is None:
             raise RuntimeError("tail curriculum RNN reset states are not prepared")
         return tuple(state.detach().clone() for state in self._curriculum_reset_rnn_states)
 
-    def enable_training_trace(self, output_dir: str | Path) -> None:
+    def enable_training_trace(
+        self, output_dir: str | Path, *, include_world_index: bool = False
+    ) -> None:
         if self._training_trace is not None:
             raise RuntimeError("training trace is already enabled")
         if self._pending_training_policy_distribution is not None:
@@ -1773,6 +1957,7 @@ class IndependentMJWPTrainingEnv:
             ctrlrange_contract=ctrlrange_contract(
                 representative.env.model_cpu, indices
             ),
+            include_world_index=include_world_index,
         )
 
     def record_training_policy_distribution(
