@@ -1515,6 +1515,80 @@ evaluation:
     intermediate_checkpoint_selected: false
     seed_robust_strict_success: false
     chunk_commit_written: false
+  candidate_D_strict_success_promotion_v1:
+    status: promoted_exact_40_of_40_chunk_20_40_committed
+    active_algorithmic_evidence: true
+    paper_faithful: false
+    classification: local_algorithmic_chunk_generation
+    contract: /data_all/zzx/3.2RL/configs/taco_pour_candidate_D_strict_success_promotion_v1.yaml
+    report: /data_all/zzx/3.2RL/runs/taco_pour_candidate_D_strict_success_promotion_v1/report.json
+    source: {candidate: D, seed: 2, epoch: 125, physics_steps: 200000}
+    promotion_reason: prefrozen_D5_fixed_milestone_strict_40_of_40
+    exact_historical_validation_reproduced: true
+    successful_intervals: 40
+    first_failure_endpoint: null
+    endpoint_scores:
+      endpoint40: 0.6071889996528625
+      endpoint50: 0.7547500133514404
+      endpoint60: 0.9899907112121582
+    bounded_mu_outside_support_count: 0
+    committed_source_endpoint: 20
+    committed_target_endpoint: 40
+    committed_intervals: 20
+    lookahead_validated_through_endpoint: 60
+    lookahead_committed: false
+    committed_boundary: /data_all/zzx/3.2RL/runs/taco_pour_candidate_D_strict_success_promotion_v1/committed_boundary_endpoint_40.pt.gz
+    committed_boundary_sha256: 7cf90b48a2a16d41b1f055fdb4fa30f1fdb89d32064ffbfc776b0fdc0e1b9090
+    paper_cost_comparison_eligible: false
+  progressive_chunk_execution_v1:
+    status: endpoint40_Replay_failed_all_three_candidate_D_restarts_exhausted_no_commit
+    active_algorithmic_evidence: true
+    paper_faithful: false
+    contract: /data_all/zzx/3.2RL/configs/taco_pour_progressive_chunk_execution_v1.yaml
+    output: /data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1
+    endpoint40_Replay:
+      policy_loaded: false
+      RNN_state_used: false
+      residual: bitwise_zero
+      successful_intervals: 9
+      first_failure_endpoint: 50
+      chunk_commit_written: false
+      report: /data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1/chunk_source_40/replay/report.json
+    chunk_local_solver:
+      contract: /data_all/zzx/3.2RL/configs/taco_pour_candidate_D_chunk_local_solver_v1.yaml
+      initialization: fresh_replay_preserving_candidate_D
+      seed_order: [0, 1, 2]
+      active_seed: null
+      fixed_milestones_only: true
+      seed0_fixed_milestones:
+        at_0: {successful_intervals: 9, first_failure_endpoint: 50}
+        at_100k: {successful_intervals: 17, first_failure_endpoint: 58}
+        at_200k: {successful_intervals: 20, first_failure_endpoint: 61}
+        at_300p8k: {successful_intervals: 20, first_failure_endpoint: 61}
+        at_400k: {successful_intervals: 14, first_failure_endpoint: 55}
+      seed0_status: completed_400k_without_strict_success_no_chunk_commit
+      seed0_report: /data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1/chunk_source_40/candidate_D/seed_0/report.json
+      seed1_fixed_milestones:
+        at_0: {successful_intervals: 9, first_failure_endpoint: 50}
+        at_100k: {successful_intervals: 19, first_failure_endpoint: 60}
+        at_200k: {successful_intervals: 20, first_failure_endpoint: 61}
+        at_300p8k: {successful_intervals: 20, first_failure_endpoint: 61}
+        at_400k: {successful_intervals: 20, first_failure_endpoint: 61}
+      seed1_status: completed_400k_without_strict_success_no_chunk_commit
+      seed1_report: /data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1/chunk_source_40/candidate_D/seed_1/report.json
+      seed2_fixed_milestones:
+        at_0: {successful_intervals: 9, first_failure_endpoint: 50}
+        at_100k: {successful_intervals: 20, first_failure_endpoint: 61}
+        at_200k: {successful_intervals: 19, first_failure_endpoint: 60}
+        at_300p8k: {successful_intervals: 20, first_failure_endpoint: 61}
+        at_400k: {successful_intervals: 17, first_failure_endpoint: 58}
+      seed2_status: completed_400k_without_strict_success_no_chunk_commit
+      seed2_report: /data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1/chunk_source_40/candidate_D/seed_2/report.json
+      restart_protocol_exhausted: true
+      strict_success_found: false
+      LR_schedule_review_allowed_but_not_executed: true
+      first_strict_40_of_40_requires_separate_promotion: true
+      chunk_commit_written: false
 
 runtime_contract:
   fail_closed: true
@@ -1661,6 +1735,13 @@ audit_results:
   algorithmic_candidate_D_seed0_report_v6: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v6/training/candidate_D/seed_0/report.json
   algorithmic_candidate_D_seed1_report_v6: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v6/training/candidate_D/seed_1/report.json
   algorithmic_candidate_D_seed2_report_v6: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v6/training/candidate_D/seed_2/report.json
+  candidate_D_strict_success_promotion_contract_v1: /data_all/zzx/3.2RL/configs/taco_pour_candidate_D_strict_success_promotion_v1.yaml
+  candidate_D_strict_success_promotion_report_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_D_strict_success_promotion_v1/report.json
+  progressive_chunk_execution_contract_v1: /data_all/zzx/3.2RL/configs/taco_pour_progressive_chunk_execution_v1.yaml
+  progressive_endpoint40_replay_report_v1: /data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1/chunk_source_40/replay/report.json
+  candidate_D_chunk_local_solver_contract_v1: /data_all/zzx/3.2RL/configs/taco_pour_candidate_D_chunk_local_solver_v1.yaml
+  progressive_chunk_execution_comparison_v1: /data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1/comparison.json
+  progressive_chunk_execution_summary_v1: /data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1/summary.md
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -1714,7 +1795,7 @@ result_acceptance_blockers:
   - Gate_Q_is_the_final_physics_gate_and_closes_without_authorizing_Gate_B_Gate_C_PPO_retraining_or_chunk_commit
   - local_algorithmic_benchmark_exception_does_not_supersede_the_Gate_Q_exact_reproduction_blocker
   - exact_reproduction_is_blocked_pending_unpublished_simulator_contact_actuation_object_physics_and_objective_details
-  - active_corrected_Replay_passes_only_30_of_40_in_second_window
+  - corrected_endpoint20_Replay_30_of_40_is_superseded_for_execution_by_the_exact_Candidate_D_seed2_epoch125_promotion
   - algorithmic_benchmark_v4_Candidate_A_improves_on_only_1_of_3_seeds
   - algorithmic_benchmark_v4_no_candidate_seed_reaches_strict_40_of_40
   - algorithmic_benchmark_v4_Candidate_B_fixed_500k_extension_fails_closed_for_all_3_seeds_before_target_budget
@@ -1729,7 +1810,11 @@ result_acceptance_blockers:
   - algorithmic_benchmark_v6_all_three_seeds_complete_400k_with_bounded_mean_inside_support_and_no_mass_floor_failure
   - algorithmic_benchmark_v6_seed2_reaches_40_of_40_only_at_the_fixed_200k_milestone_and_regresses_afterward
   - algorithmic_benchmark_v6_strict_success_is_not_seed_robust_and_intermediate_checkpoint_selection_is_forbidden
-  - algorithmic_benchmark_v6_no_automatic_LR_schedule_squashed_distribution_500k_extension_or_chunk_commit_is_authorized
+  - algorithmic_benchmark_v6_evidence_remains_immutable_and_its_D5_event_is_committed_only_through_the_separate_exact_promotion_contract
+  - progressive_endpoint40_Replay_passes_only_9_of_40_and_writes_no_endpoint60_chunk
+  - fresh_endpoint40_candidate_D_seed0_seed1_and_seed2_all_exhaust_400k_without_any_fixed_milestone_40_of_40
+  - progressive_endpoint60_chunk_commit_remains_blocked_after_three_fresh_candidate_D_restarts
+  - complete_197_transition_algorithmic_trajectory_not_yet_generated
   - source47_zero_residual_still_fails_endpoint49_and_source48_has_no_tool_effect
   - no_source47_semantic_action_subspace_preserves_contact_or_survives_endpoint49
   - source46_wrist_weakening_rescues_endpoint49_but_not_endpoint50

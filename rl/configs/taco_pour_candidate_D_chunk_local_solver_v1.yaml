@@ -1,0 +1,93 @@
+schema: taco_pour_candidate_D_chunk_local_solver_v1
+status: authorized_fresh_chunk_source40
+paper_faithful: false
+classification: local_progressive_chunk_candidate_D_training
+purpose: >-
+  Solve the failed endpoint-40 Replay window with fresh Candidate D. Stop at
+  the first predeclared fixed milestone that is strict 40/40 and require a
+  separate promotion; otherwise exhaust 400k and advance the frozen seed order.
+
+candidate_D:
+  source_endpoint: 40
+  lookahead_endpoint: 80
+  commit_target_endpoint: 60
+  restart_seed_order: [0, 1, 2]
+  initialization: replay_preserving
+  fresh_actor_critic_optimizer_RMS_RNN: true
+  initial_sigma_multiplier: 0.25
+  location_parameterization: support_anchored_piecewise_tanh
+  actor_learning_rate: 0.0001
+  actor_mini_epochs: 1
+  critic_mini_epochs: 4
+  worlds: 4
+  horizon_control_intervals_per_world: 40
+  physics_steps_per_epoch: 1600
+  fixed_milestone_epochs: [62, 125, 188, 250]
+  maximum_physics_steps_per_restart: 400000
+  first_strict_milestone_action: stop_no_commit_request_separate_promotion
+  warm_start_allowed: false
+  non_strict_checkpoint_selection_allowed: false
+  seed_specific_settings_allowed: false
+  LR_schedule_allowed: false
+  chunk_commit_allowed: false
+
+step0_gate:
+  exact_Replay_identity_required: true
+  successful_intervals: 9
+  first_failure_endpoint: 50
+  raw_location_bitwise_zero: true
+  bounded_mu_bitwise_zero: true
+  deterministic_action_bitwise_zero: true
+
+inputs:
+  progressive_execution_contract:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_progressive_chunk_execution_v1.yaml
+    sha256: 0f2f890a87e9462e46c3d52578da2717efeea13d52644183b67bcf89d5e56c75
+  Replay_40_80_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1/chunk_source_40/replay/report.json
+    sha256: 0da9fc2283c563557386821185aeb77c518914c03b38d60ed1b84d58bffa1951
+  Replay_40_80_trajectory:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1/chunk_source_40/replay/replay_validation_40_80.npz
+    sha256: 1d34672e8ceb637fa4e866824e282d9da74a8d3536382693ea3f930db24a45af
+  source_boundary:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_candidate_D_strict_success_promotion_v1/committed_boundary_endpoint_40.pt.gz
+    sha256: 7cf90b48a2a16d41b1f055fdb4fa30f1fdb89d32064ffbfc776b0fdc0e1b9090
+  bounded_mean_distribution_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_support_anchored_bounded_mean_truncated_gaussian_v1.yaml
+    sha256: 24dc3decf62890bd14268539fd875215756ca500e097ccedfede4128d062762f
+  simulator_config:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml
+    sha256: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+  initialization_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v2/candidate_a/report.json
+    sha256: 9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a
+  protocol_at_authorization:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_algorithmic_reproduction_training_v3_protocol_snapshot.yaml
+    sha256: 1f4a96edfa0bc17ecb578fd5d8ae1514b77099713cc9b9f74adf6813a62873f3
+  objective_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_local_normalized_ellipse_v1.yaml
+    sha256: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+  observation_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_observation_local_236d_v1.yaml
+    sha256: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  action_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_residual_action_scaled_v1.yaml
+    sha256: 71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4
+
+implementation_contract:
+  state_feasible_distribution_sha256: e14caea5ae45058cbedf7311f20a657f9fa6dd83942d33ae7d4b9485c521c0fa
+  v6_algorithmic_training_sha256: 792dab0fcbbaeea48c58ad32e3a3d6812505479d85dc31704d1efebca32c20d0
+  MJWP_environment_sha256: cc4cb86b73bdd1ef671ed06d185192119199cda2d037ce7685a5abe8cd5b856a
+  official_PPO_agent_sha256: b41f1c088d8ad4e261b9c5338f90a7f0ae910b7453ab348532312b3d87bc4c30
+  PPO_config_builder_sha256: 4b887e5e4f493fdc5a6541f3c1c811ec65a4e2cbab9f974cc1627e0d54048b84
+  chunk_solver_runner_sha256: 7a81a2358f8f8bbc01a3e8162e35d83272697191b9f820c2ca91e9b221db9d85
+
+forbidden:
+  - warm_start
+  - non_strict_checkpoint_selection
+  - LR_schedule
+  - reward_objective_observation_action_physics_change
+  - source_level_debugging
+  - chunk_commit_without_separate_promotion
+
+output_directory: /data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1

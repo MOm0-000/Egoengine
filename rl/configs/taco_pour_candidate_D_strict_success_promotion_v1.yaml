@@ -1,0 +1,128 @@
+schema: taco_pour_candidate_D_strict_success_promotion_v1
+status: authorized_exact_revalidation_then_chunk_commit
+paper_faithful: false
+classification: local_algorithmic_chunk_generation
+purpose: >-
+  Revalidate the unique pre-frozen Candidate-D seed-2 epoch-125 strict-success
+  milestone bitwise, then commit only its first 20 control intervals and the
+  exact endpoint-40 physics boundary. This does not rewrite immutable v6
+  evidence and is not eligible for paper cost comparison.
+
+promotion:
+  candidate: D
+  seed: 2
+  epoch: 125
+  source_endpoint: 20
+  target_endpoint: 40
+  lookahead_endpoint: 60
+  validation_intervals: 40
+  committed_intervals: 20
+  commit_only_after_exact_revalidation: true
+  promotion_reason: prefrozen_D5_fixed_milestone_strict_40_of_40
+  algorithmic_chunk_generation: true
+  paper_cost_comparison_eligible: false
+  retraining_allowed: false
+  checkpoint_substitution_allowed: false
+  threshold_relaxation_allowed: false
+
+exact_revalidation:
+  runtime:
+    mujoco: 3.13.0
+    mujoco_warp: 3.13.0
+    repository_overlay: /data_all/zzx/3.2RL/.env_mjwp313_overlay
+  required_bitwise_fields:
+    - endpoint
+    - terminated
+    - tracking_score
+    - position_error
+    - rotation_error
+    - ctrl
+    - qpos
+    - qvel
+    - contact_flags
+    - deterministic_action
+    - raw_location
+    - bounded_mu
+    - actor_sigma
+    - action_low
+    - action_high
+    - actor_mu
+  object_pose_semantics: qpos_last_14_dofs_derived_and_bitwise_checked
+  strict_successful_intervals: 40
+  first_failure_endpoint: null
+  bounded_mu_outside_support_count: 0
+  expected_scores:
+    endpoint_40: 0.6071889996528625
+    endpoint_50: 0.7547500133514404
+    endpoint_60: 0.9899907112121582
+  mismatch_action: fail_closed_no_commit_no_retrain
+
+commit_contract:
+  commands_and_actions_endpoints: [21, 40]
+  boundary_endpoint: 40
+  boundary_source: exact_successful_rollout_not_reference
+  lookahead_through_endpoint_60: true
+  lookahead_committed: false
+  required_artifacts:
+    - report.json
+    - promoted_validation.npz
+    - committed_chunk_20_40.npz
+    - committed_boundary_endpoint_40.pt.gz
+
+inputs:
+  v6_contract:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_algorithmic_reproduction_training_v6.yaml
+    sha256: 5b8e46ee5ce4b861b406940e8f5635a88cd23e40b9dbfcddcfca44e2fa9c8d87
+  v6_comparison:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v6/comparison.json
+    sha256: e307e340ae5bbdd72bd26797d124031fe7d8d0ab3809be8e751f27632b328119
+  bounded_mean_distribution_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_support_anchored_bounded_mean_truncated_gaussian_v1.yaml
+    sha256: 24dc3decf62890bd14268539fd875215756ca500e097ccedfede4128d062762f
+  checkpoint:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v6/training/candidate_D/seed_2/checkpoints/epoch_0125.pt.gz
+    sha256: b4e62f89d68137782809416a15f6d240b139b75dbf6391ba6fa3534f63cb3670
+    uncompressed_sha256: 1d74eed4496c6d33fdbc59f5256e9e6fb3b15a2c4a1c28f113109408b991b3c4
+  historical_validation:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v6/training/candidate_D/seed_2/validations/epoch_0125.npz
+    sha256: 0ce6b6f1305a6767b368120a5b00ad38244db5a979e0b330f9b3069284afbb37
+  source_boundary:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_corrected_replay_rebase_v1/tool_only/committed_boundary_endpoint_20.pt.gz
+    sha256: a3646e24af1ba871e5ecc885669508223a5e0f26d3cf29f0482f02678419e337
+  simulator_config:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml
+    sha256: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+  initialization_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v2/candidate_a/report.json
+    sha256: 9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a
+  protocol_at_authorization:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_algorithmic_reproduction_training_v3_protocol_snapshot.yaml
+    sha256: 1f4a96edfa0bc17ecb578fd5d8ae1514b77099713cc9b9f74adf6813a62873f3
+  objective_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_local_normalized_ellipse_v1.yaml
+    sha256: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+  observation_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_observation_local_236d_v1.yaml
+    sha256: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  action_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_residual_action_scaled_v1.yaml
+    sha256: 71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4
+
+implementation_contract:
+  state_feasible_distribution_sha256: e14caea5ae45058cbedf7311f20a657f9fa6dd83942d33ae7d4b9485c521c0fa
+  v6_algorithmic_training_sha256: 792dab0fcbbaeea48c58ad32e3a3d6812505479d85dc31704d1efebca32c20d0
+  MJWP_environment_sha256: cc4cb86b73bdd1ef671ed06d185192119199cda2d037ce7685a5abe8cd5b856a
+  official_PPO_agent_sha256: b41f1c088d8ad4e261b9c5338f90a7f0ae910b7453ab348532312b3d87bc4c30
+  PPO_config_builder_sha256: 4b887e5e4f493fdc5a6541f3c1c811ec65a4e2cbab9f974cc1627e0d54048b84
+  v6_training_runner_sha256: f92bd19114af52a2ada6f6bd6ab2eab4ce745debca9576fdcb9ebd0f0cf5bc47
+  promotion_runner_sha256: c932ef44d5759de78bfd055b7717151505fec24d7988c1e592e67b86993f25c0
+
+forbidden:
+  - modify_or_rewrite_v6_evidence
+  - retrain_or_warm_start
+  - checkpoint_substitution
+  - objective_or_threshold_change
+  - commit_lookahead_endpoints_41_through_60
+  - paper_cost_comparison
+
+output_directory: /data_all/zzx/3.2RL/runs/taco_pour_candidate_D_strict_success_promotion_v1

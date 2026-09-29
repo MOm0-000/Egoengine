@@ -1,0 +1,89 @@
+{
+  "schema": "taco_pour_progressive_replay_report_v1",
+  "paper_faithful": false,
+  "classification": "progressive_zero_residual_replay_gate",
+  "source_endpoint": 40,
+  "lookahead_endpoint": 80,
+  "commit_target_endpoint": 60,
+  "summary": {
+    "successful_intervals": 9,
+    "first_failure_endpoint": 50,
+    "forty_of_forty": false,
+    "endpoint_scores": {
+      "60": 1.3083211183547974,
+      "70": 1.5288703441619873,
+      "80": 1.6938729286193848
+    },
+    "first_failure_score": 1.0594233274459839,
+    "deterministic_residual_bitwise_zero": true
+  },
+  "candidate_D_policy_loaded": false,
+  "RNN_state_used": false,
+  "fresh_training_executed": false,
+  "residual_action": {
+    "profile_id": "taco_pour_residual_action_scaled_v1",
+    "status": "resolved_local_unpublished",
+    "paper_faithful": false,
+    "provenance": "One controlled local repair of the diagnosed normalized-action unit mismatch. The existing +/-0.05 rad safety limit is retained; only the normalized output mapping changes. EgoEngine does not publish this residual scale.",
+    "profile_path": "/data_all/zzx/3.2RL/configs/taco_pour_residual_action_scaled_v1.yaml",
+    "profile_sha256": "71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4",
+    "policy_output_range": [
+      -1.0,
+      1.0
+    ],
+    "mapping_kind": "linear_scaled_candidate",
+    "residual_scale": 0.05,
+    "residual_clip_rad": 0.05,
+    "equation": "delta_a = clip(0.05 * u, -0.05, +0.05) rad",
+    "author_recovered_scale": false,
+    "controlled_experiment": {
+      "epochs": 8,
+      "seed": 0,
+      "endpoint_boundary": 20,
+      "lookahead_control_intervals": 40,
+      "ppo_horizon": 40,
+      "learning_rate": 0.0001,
+      "objective_profile_sha256": "8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9",
+      "observation_profile_sha256": "8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7",
+      "backend_contract_sha256": "c567ad04dabe1bfc1ff3c8f9ee81db52f9f71d181cd80d56de47c2b237ad65b0",
+      "simulator_config_sha256": "0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6",
+      "initialization_report_sha256": "9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a",
+      "reference_endpoint20_state": "Bitwise-equal to the CPU endpoint-20 boundary used by the frozen checkpoint validation; serialized artifact bytes may differ while all 362 state entries agree.",
+      "unchanged": [
+        "objective",
+        "contact_and_lift_coefficients",
+        "observation",
+        "network",
+        "learning_rate",
+        "PPO_hyperparameters",
+        "training_seed",
+        "CPU_acceptance"
+      ]
+    }
+  },
+  "provenance": {
+    "contract": {
+      "path": "/data_all/zzx/3.2RL/configs/taco_pour_progressive_chunk_execution_v1.yaml",
+      "sha256": "0f2f890a87e9462e46c3d52578da2717efeea13d52644183b67bcf89d5e56c75",
+      "bytes": 3926
+    },
+    "promotion_report": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_D_strict_success_promotion_v1/report.json",
+      "sha256": "30e20c48730dd2678ca1cce851f4478f76b568cdf92f2af358721e726ef49da6",
+      "bytes": 9615
+    },
+    "source_boundary": {
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_D_strict_success_promotion_v1/committed_boundary_endpoint_40.pt.gz",
+      "sha256": "7cf90b48a2a16d41b1f055fdb4fa30f1fdb89d32064ffbfc776b0fdc0e1b9090",
+      "bytes": 102383
+    }
+  },
+  "validation": {
+    "path": "/data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1/chunk_source_40/replay/replay_validation_40_80.npz",
+    "sha256": "1d34672e8ceb637fa4e866824e282d9da74a8d3536382693ea3f930db24a45af",
+    "bytes": 25058
+  },
+  "status": "replay_failed_no_chunk_commit",
+  "chunk_commit_written": false,
+  "next_action": "fresh_candidate_D_chunk_local_solve_required"
+}
