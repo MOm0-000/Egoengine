@@ -1541,7 +1541,7 @@ evaluation:
     committed_boundary_sha256: 7cf90b48a2a16d41b1f055fdb4fa30f1fdb89d32064ffbfc776b0fdc0e1b9090
     paper_cost_comparison_eligible: false
   progressive_chunk_execution_v1:
-    status: endpoint40_Replay_failed_all_three_candidate_D_restarts_exhausted_no_commit
+    status: endpoint40_lookahead_visitation_bottleneck_candidate_E_blocked_no_commit
     active_algorithmic_evidence: true
     paper_faithful: false
     contract: /data_all/zzx/3.2RL/configs/taco_pour_progressive_chunk_execution_v1.yaml
@@ -1586,9 +1586,32 @@ evaluation:
       seed2_report: /data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1/chunk_source_40/candidate_D/seed_2/report.json
       restart_protocol_exhausted: true
       strict_success_found: false
-      LR_schedule_review_allowed_but_not_executed: true
+      LR_schedule_review_completed: true
+      LR_schedule_review_classification: LOOKAHEAD_VISITATION_BOTTLENECK
+      Candidate_E_authorized: false
+      Candidate_E_executed: false
       first_strict_40_of_40_requires_separate_promotion: true
       chunk_commit_written: false
+    endpoint40_optimizer_review_v1:
+      contract: /data_all/zzx/3.2RL/configs/taco_pour_endpoint40_optimizer_review_v1.yaml
+      output: /data_all/zzx/3.2RL/runs/taco_pour_endpoint40_optimizer_review_v1
+      decision: /data_all/zzx/3.2RL/runs/taco_pour_endpoint40_optimizer_review_v1/decision.json
+      classification: LOOKAHEAD_VISITATION_BOTTLENECK
+      read_only: true
+      new_simulation_or_training_steps: 0
+      deep_lookahead_definition: relative_source_offset_k_greater_than_or_equal_to_21
+      successful_control_epochs63_125_deep_lookahead_fraction: 0.43214285714285716
+      failed_seed0_epochs126_250_deep_lookahead_fraction: 0.00225
+      failed_seed1_epochs126_250_deep_lookahead_fraction: 0.0066
+      failed_seed2_epochs126_250_deep_lookahead_fraction: 0.00255
+      failed_second_half_median_deep_lookahead_fraction: 0.00255
+      failed_to_successful_control_ratio: 0.005900826446280992
+      credit_join_status: credit_join_not_proven
+      optimizer_LR_only_change_authorized: false
+      Candidate_E_authorized: false
+      Candidate_E_executed: false
+      endpoint20_to40_committed: true
+      endpoint40_to60_committed: false
 
 runtime_contract:
   fail_closed: true
@@ -1742,6 +1765,11 @@ audit_results:
   candidate_D_chunk_local_solver_contract_v1: /data_all/zzx/3.2RL/configs/taco_pour_candidate_D_chunk_local_solver_v1.yaml
   progressive_chunk_execution_comparison_v1: /data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1/comparison.json
   progressive_chunk_execution_summary_v1: /data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1/summary.md
+  endpoint40_optimizer_review_contract_v1: /data_all/zzx/3.2RL/configs/taco_pour_endpoint40_optimizer_review_v1.yaml
+  endpoint40_visitation_comparison_v1: /data_all/zzx/3.2RL/runs/taco_pour_endpoint40_optimizer_review_v1/visitation_comparison.json
+  endpoint40_optimizer_comparison_v1: /data_all/zzx/3.2RL/runs/taco_pour_endpoint40_optimizer_review_v1/optimizer_comparison.json
+  endpoint40_optimizer_review_decision_v1: /data_all/zzx/3.2RL/runs/taco_pour_endpoint40_optimizer_review_v1/decision.json
+  endpoint40_optimizer_review_summary_v1: /data_all/zzx/3.2RL/runs/taco_pour_endpoint40_optimizer_review_v1/visitation_summary.md
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -1814,6 +1842,10 @@ result_acceptance_blockers:
   - progressive_endpoint40_Replay_passes_only_9_of_40_and_writes_no_endpoint60_chunk
   - fresh_endpoint40_candidate_D_seed0_seed1_and_seed2_all_exhaust_400k_without_any_fixed_milestone_40_of_40
   - progressive_endpoint60_chunk_commit_remains_blocked_after_three_fresh_candidate_D_restarts
+  - endpoint40_failed_restarts_have_only_0p255_percent_median_deep_lookahead_visitation_in_epochs126_to250
+  - endpoint40_failed_to_successful_control_deep_lookahead_ratio_is_0p005900826
+  - endpoint40_review_classifies_LOOKAHEAD_VISITATION_BOTTLENECK_and_does_not_authorize_Candidate_E
+  - endpoint40_visitation_credit_join_is_not_proven_and_no_row_order_is_guessed
   - complete_197_transition_algorithmic_trajectory_not_yet_generated
   - source47_zero_residual_still_fails_endpoint49_and_source48_has_no_tool_effect
   - no_source47_semantic_action_subspace_preserves_contact_or_survives_endpoint49

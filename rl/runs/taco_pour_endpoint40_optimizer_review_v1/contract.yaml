@@ -1,0 +1,104 @@
+schema: taco_pour_endpoint40_optimizer_review_v1
+status: authorized_read_only_adjudication
+paper_faithful: false
+classification: local_endpoint40_lookahead_coverage_optimizer_adjudication
+base_git_commit: feb7d96be85cf9e50a3db7c7e0bf55aad6b0c331
+purpose: >-
+  Distinguish next-chunk on-policy visitation starvation from excessive actor
+  optimizer step size using only immutable Candidate-D artifacts. Candidate E
+  is authorized only if the prefrozen optimizer classification is met.
+
+read_only_phase:
+  simulation_allowed: false
+  training_allowed: false
+  checkpoint_mutation_allowed: false
+  protocol_history_rewrite_allowed: false
+  chunk_commit_allowed: false
+
+relative_endpoint_definition:
+  formula: k = source_endpoint - source_boundary_endpoint
+  current_chunk: [0, 19]
+  next_chunk_boundary_action: 20
+  deep_lookahead: [21, 39]
+  additional_thresholds: [25, 30, 35]
+
+segments:
+  early: [1, 62]
+  middle: [63, 125]
+  late_a: [126, 188]
+  late_b: [189, 250]
+  failed_run_second_half: [126, 250]
+  successful_control_reference: [63, 125]
+
+positive_control:
+  role: source20_candidate_D_seed2_strict_success_at_200k
+  source_boundary_endpoint: 20
+  root: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v6/training/candidate_D/seed_2
+  visitation_manifest_sha256: 96802e02bb49371fa3a03f0da551b7629e6392220b6a16f07cd930e7befe1ea2
+  update_manifest_sha256: 0605d1be5e22de448bc63ec06209326c05d6964ea26aac59b69bbde9bf8b8990
+  required_segments: [early, middle]
+
+failed_restarts:
+  - seed: 0
+    source_boundary_endpoint: 40
+    root: /data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1/chunk_source_40/candidate_D/seed_0
+    visitation_manifest_sha256: bb4becf275aea946b8f431798a9e273db5f398bfe14a1549ebb9c5fa7bee2cb4
+    update_manifest_sha256: 11250472417e86543ef5808f5345839f95d18f9b00ea1f7a30e3da4aaa797243
+  - seed: 1
+    source_boundary_endpoint: 40
+    root: /data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1/chunk_source_40/candidate_D/seed_1
+    visitation_manifest_sha256: 2ddf806f6dceee3fa94406811ff42fb5b0216c8ea175c61774af6d630b82dd21
+    update_manifest_sha256: d44b9379947fa234e28bdbcff16c9a565604aa370566dca3120e669fd2049f5a
+  - seed: 2
+    source_boundary_endpoint: 40
+    root: /data_all/zzx/3.2RL/runs/taco_pour_progressive_chunk_execution_v1/chunk_source_40/candidate_D/seed_2
+    visitation_manifest_sha256: 808182414065638e245d090dbdfd69ddad854e1da43d5e42a6e6a1403856821b
+    update_manifest_sha256: 2dd5d91e3c5d34c4668ac42e760005fab0542f86f30b98352153299249d79ab3
+
+credit_join:
+  require_artifact_level_row_identity: true
+  missing_sample_id_or_row_order_contract_action: credit_join_not_proven
+  guessing_allowed: false
+
+prefrozen_decision_order:
+  - classification: LOOKAHEAD_VISITATION_BOTTLENECK
+    condition: >-
+      median failed-run deep-lookahead fraction over epochs 126..250 is below
+      0.05 and below half of the successful-control epochs 63..125 fraction.
+    action: stop_no_candidate_E
+  - classification: OPTIMIZER_STEP_SIZE_BOTTLENECK_SUPPORTED
+    condition: >-
+      median failed-run deep-lookahead fraction over epochs 126..250 is at
+      least 0.10 and at least half of the successful-control epochs 63..125
+      fraction, with source40 optimizer aggressiveness clearly higher.
+    action: automatically_run_candidate_E
+  - classification: MIXED_OR_INCONCLUSIVE
+    condition: otherwise
+    action: stop_no_training
+
+candidate_E_conditional_contract:
+  allowed_only_after: OPTIMIZER_STEP_SIZE_BOTTLENECK_SUPPORTED
+  source_boundary_endpoint: 40
+  lookahead_endpoint: 80
+  commit_target_endpoint: 60
+  fresh_seed_order: [0, 1, 2]
+  initialization: replay_preserving_candidate_D
+  actor_learning_rate:
+    epochs_1_through_62: 0.0001
+    epochs_63_through_250: 0.00005
+  upstream_linear_schedule_allowed: false
+  actor_mini_epochs: 1
+  critic: unchanged
+  fixed_milestone_epochs: [62, 125, 188, 250]
+  maximum_physics_steps_per_seed: 400000
+  strict_success: 40_of_40
+  first_strict_success_action: stop_all_restarts_request_separate_promotion
+  non_strict_checkpoint_selection_allowed: false
+  quarter_LR_sweep_allowed: false
+  chunk_commit_allowed: false
+
+immutable_progress:
+  endpoint20_to40_committed: true
+  endpoint40_to60_committed: false
+
+output_directory: /data_all/zzx/3.2RL/runs/taco_pour_endpoint40_optimizer_review_v1
