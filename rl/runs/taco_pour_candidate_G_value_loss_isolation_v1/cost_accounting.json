@@ -1,0 +1,46 @@
+{
+  "observed": {
+    "collection_control_intervals": 480,
+    "closed_loop_control_intervals": 480,
+    "total_control_intervals": 960,
+    "physics_steps": 9600,
+    "actor_optimizer_steps": 9,
+    "critic_optimizer_steps": 12,
+    "all_optimizer_steps": 21
+  },
+  "limits": {
+    "collection_control_intervals": 480,
+    "closed_loop_control_intervals": 480,
+    "total_control_intervals": 960,
+    "physics_steps": 9600,
+    "actor_optimizer_steps": 9,
+    "critic_optimizer_steps": 12,
+    "all_optimizer_steps": 21
+  },
+  "within_all_limits": true,
+  "network_work": {
+    "actor_sample_row_forwards": 9040,
+    "planned_completed_experiment_actor_sample_row_forwards": 7920,
+    "recovery_extra_actor_sample_row_forwards": 1120,
+    "actor_forward_breakdown_per_seed": {
+      "rollout_collection": 160,
+      "canonical_distribution": 160,
+      "gradient_decomposition_one_shared_forward": 160,
+      "four_branches_pre_post_and_post_loss": 1920,
+      "four_closed_loop_prefix_burnin_plus_rollout": 240
+    },
+    "actor_autograd_calls": 28,
+    "planned_completed_experiment_actor_autograd_calls": 18,
+    "recovery_extra_actor_autograd_calls": 10,
+    "actor_autograd_breakdown_per_seed": {
+      "losswise_autograd_grad": 3,
+      "shadow_backward": 3
+    },
+    "external_critic_sample_row_forwards_lower_bound": 2892,
+    "external_critic_backward_calls": 12,
+    "actor_optimizer_steps": 9,
+    "external_critic_optimizer_steps": 12,
+    "note": "sample-row counts are logical audited calls; critic forward lower bound excludes framework-internal logging forwards if any"
+  },
+  "wall_seconds": 1421.1726868152618
+}

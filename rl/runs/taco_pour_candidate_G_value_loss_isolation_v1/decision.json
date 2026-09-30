@@ -1,0 +1,63 @@
+{
+  "schema": "taco_pour_candidate_G_value_loss_isolation_v1",
+  "validity_status": "COMPLETED_BOUNDED_VALUE_LOSS_ISOLATION",
+  "recommendation": "VALUE_POLICY_COUPLING_PRESENT_BUT_BENEFIT_UNRESOLVED",
+  "negative_evidence_flag": "ISOLATION_NOT_FAVORED_AT_TESTED_UPDATES",
+  "per_seed_review_trigger": [
+    {
+      "seed": 0,
+      "conditions": {
+        "VALUE_ONLY_bounded_mu_change_gt_8eps": true,
+        "KL_FULL_gt_1e-8": true,
+        "KL_POLICY_ONLY_le_half_FULL": false,
+        "N_POLICY_ONLY_ge_20": false,
+        "N_POLICY_ONLY_ge_N_FULL": false
+      },
+      "all_conditions": false,
+      "VALUE_ONLY_max_bounded_mu_change": 0.05345737934112549,
+      "KL_FULL_mean": 0.5216911693445988,
+      "KL_POLICY_ONLY_mean": 0.9146482192729565,
+      "N_FULL": 14,
+      "N_POLICY_ONLY": 12
+    },
+    {
+      "seed": 1,
+      "conditions": {
+        "VALUE_ONLY_bounded_mu_change_gt_8eps": true,
+        "KL_FULL_gt_1e-8": true,
+        "KL_POLICY_ONLY_le_half_FULL": false,
+        "N_POLICY_ONLY_ge_20": false,
+        "N_POLICY_ONLY_ge_N_FULL": true
+      },
+      "all_conditions": false,
+      "VALUE_ONLY_max_bounded_mu_change": 0.054230399429798126,
+      "KL_FULL_mean": 0.5095753279255162,
+      "KL_POLICY_ONLY_mean": 1.0202475487168674,
+      "N_FULL": 14,
+      "N_POLICY_ONLY": 14
+    },
+    {
+      "seed": 2,
+      "conditions": {
+        "VALUE_ONLY_bounded_mu_change_gt_8eps": true,
+        "KL_FULL_gt_1e-8": true,
+        "KL_POLICY_ONLY_le_half_FULL": false,
+        "N_POLICY_ONLY_ge_20": false,
+        "N_POLICY_ONLY_ge_N_FULL": false
+      },
+      "all_conditions": false,
+      "VALUE_ONLY_max_bounded_mu_change": 0.051363781094551086,
+      "KL_FULL_mean": 0.6055443031956179,
+      "KL_POLICY_ONLY_mean": 1.3695517599179443,
+      "N_FULL": 20,
+      "N_POLICY_ONLY": 13
+    }
+  ],
+  "positive_seed_count": 0,
+  "all_POLICY_ONLY_not_worse_than_FULL": false,
+  "candidate_G_classification_changed": false,
+  "new_long_training_authorized": false,
+  "chunk_commit_authorized": false,
+  "automatic_followon_training": false,
+  "thresholds_are_local_reporting_only": true
+}

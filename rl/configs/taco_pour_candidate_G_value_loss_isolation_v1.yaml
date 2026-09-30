@@ -1,0 +1,256 @@
+schema: taco_pour_candidate_G_value_loss_isolation_v1
+status: authorized_bounded_value_loss_isolation
+base_branch: 3.2RL
+base_git_commit: 5f036bc8c2225b55ca14fd60d2a1a10158f24edf
+paper_faithful: false
+execution_authorized_now: true
+purpose: >-
+  Isolate the internal value-loss contribution at the three Candidate-G first
+  updates using fixed historical batches, exact loss-wise gradients, paired
+  single shadow Adam steps, and bounded CPU closed-loop probes.
+
+scope:
+  candidate_G_classification_changed: false
+  new_long_training_authorized: false
+  chunk_commit_authorized: false
+  this_is_not_read_only_computation: true
+  historical_artifacts_immutable: true
+  automatic_followon_training: false
+  prospective_fallback_on_reconstruction_failure: false
+
+analysis_points:
+  training_seeds: [0, 1, 2]
+  source_checkpoint_epoch: 0
+  target_update_epoch: 1
+  same_donor: {candidate: D, seed: 2, epoch: 125, source_endpoint: 20}
+  checkpoint_selection: predeclared_first_update_only
+
+frozen_task:
+  source_endpoint: 40
+  end_endpoint: 80
+  world_starts: [40, 40, 40, 40]
+  rollout_horizon_per_world: 40
+  worlds: 4
+  physics_steps_per_control: 10
+  backend: CPU_MuJoCo_Warp
+  tracking_variant: tool_only
+  reward_action_observation_physics_reference_changed: false
+
+reconstruction:
+  prefer_checkpoint: G_own_epoch0000_not_donor_training_resume
+  one_collection_batch_per_seed: true
+  restore_rng_after_object_construction: true
+  rebuild_original_epoch_bound_context: true
+  prepare_dataset_calls_per_seed: 1
+  external_critic_update_before_actor: original_4_mini_epochs_once_per_seed
+  retain_original_value_normalization_order: true
+  explicit_value_normalizer_alias_audit: true
+  save_complete_new_reconstruction_batch: true
+  require_recorded_epoch1_batch_and_full_update_regression: true
+  no_extra_batches_to_force_match: true
+
+branches:
+  BASE: {actor_loss: none, actor_optimizer_steps: 0}
+  FULL:
+    actor_loss: L_policy + 2.0 * L_internal_value
+    actor_optimizer_steps: 1
+    historical_regression_required: true
+  POLICY_ONLY:
+    actor_loss: L_policy
+    actor_optimizer_steps: 1
+    remove_only_actor_internal_value_term: true
+  VALUE_ONLY:
+    actor_loss: 2.0 * L_internal_value
+    actor_optimizer_steps: 1
+    mechanism_probe_not_solver: true
+
+paired_invariants:
+  same_batch_advantages_returns_and_old_values: true
+  same_preupdate_actor_and_optimizer_state: true
+  same_parameter_groups: true
+  actor_learning_rate: 0.0001
+  adam_eps: 1.0e-08
+  adam_other_hyperparameters: restore_original_G_values
+  gradient_norm: 1.0
+  mixed_precision: false
+  clipped_policy_loss_unchanged: true
+  clipped_internal_value_loss_unchanged: true
+  canonical_denominator_detached_not_ratio_constant: true
+  external_critic_and_GAE_not_recomputed_per_branch: true
+  no_network_architecture_change: true
+
+gradient_decomposition:
+  losses: [L_policy, 2.0 * L_internal_value, L_policy + 2.0 * L_internal_value]
+  groups:
+    - all_parameters
+    - shared_MLP_LSTM_layer_norm
+    - policy_mean_head
+    - log_sigma
+    - internal_value_head
+  weighted_norms_and_cosines: true
+  none_gradients_recorded_separately: true
+  linearity_relative_L2_tolerance: 1.0e-05
+  zero_denominator_floor: 1.0e-12
+  gradient_norm_is_not_optimizer_contribution_fraction: true
+
+post_update_regression_tolerances:
+  existing_v6_identity_gate_unchanged: true
+  mu_sigma_absolute_tolerance: 9.5367431640625e-07
+  joint_logprob_ratio_absolute_tolerance: 0.0001
+  scalar_metric_rtol: 1.0e-05
+  scalar_metric_atol: 1.0e-07
+  widening_allowed: false
+
+closed_loop_probe:
+  branches: [BASE, FULL, POLICY_ONLY, VALUE_ONLY]
+  rollouts_per_seed: 4
+  control_intervals_per_rollout: 40
+  physics_start: immutable_committed_endpoint40_full_snapshot
+  actor_observation_RMS: original_rollout_RMS_before_post_epoch_commit_same_for_all_branches
+  RNN: reencode_sources20_39_under_branch_actor_and_common_RMS
+  action: deterministic_bounded_mu
+  auto_reset: false
+  count_only_pre_first_failure_valid_prefix: true
+  BASE_expected_valid_steps: 20
+  BASE_expected_first_failure_endpoint: 61
+  accidental_40_of_40: record_diagnostic_event_no_promotion_or_extra_replay
+
+budget:
+  maximum_collection_batches: 3
+  maximum_collection_control_intervals: 480
+  maximum_closed_loop_rollouts: 12
+  maximum_closed_loop_control_intervals: 480
+  maximum_total_control_intervals: 960
+  maximum_total_physics_steps: 9600
+  maximum_shadow_actor_optimizer_steps: 9
+  maximum_external_critic_optimizer_steps: 12
+  maximum_all_optimizer_steps: 21
+  record_network_forward_and_backward_calls: true
+  automatic_extension: false
+  new_long_training_epochs: 0
+
+decision:
+  validity_states:
+    - INCOMPLETE_INPUT_OR_RECONSTRUCTION
+    - DIAGNOSTIC_CONTRACT_FAILURE
+    - COMPLETED_BOUNDED_VALUE_LOSS_ISOLATION
+  per_seed_review_trigger:
+    VALUE_ONLY_bounded_mu_change_exceeds_float32_8eps: true
+    KL_FULL_greater_than: 1.0e-08
+    KL_POLICY_ONLY_at_most_fraction_of_FULL: 0.5
+    POLICY_ONLY_valid_prefix_at_least: 20
+    POLICY_ONLY_valid_prefix_at_least_FULL: true
+  review_trigger: at_least_2_of_3_meet_all_per_seed_conditions_and_no_seed_POLICY_ONLY_worse_than_FULL
+  positive_recommendation: REVIEW_ACTOR_INTERNAL_VALUE_DECOUPLING_ABLATION
+  coupling_without_benefit: VALUE_POLICY_COUPLING_PRESENT_BUT_BENEFIT_UNRESOLVED
+  no_resolved_effect: NO_RESOLVED_POLICY_EFFECT_AT_TESTED_FIRST_UPDATES
+  negative_evidence_flag: ISOLATION_NOT_FAVORED_AT_TESTED_UPDATES_if_POLICY_ONLY_worse_in_at_least_2_seeds
+  thresholds_are_local_reporting_only: true
+  authorizes_long_training: false
+
+inputs:
+  G_contract:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_candidate_G_policy_warm_start_v1.yaml
+    sha256: 17d7b0aa65bd8d5e5823cb2e0864df461a30ef29fa4abb099e2b2839226acd4d
+  G_comparison:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/comparison.json
+    sha256: a020849a89847e9d1c531f8757e86a4424fd85f0fe2b9faebb590bda15946a67
+  postmortem_files:
+    - {path: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_readonly_postmortem_v1/summary.md, sha256: e25c8ec50f98a107a506d828008b1fd78e528703c28134c529cb7ca6ea738e8d}
+    - {path: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_readonly_postmortem_v1/report.json, sha256: 0d89b29ec0dbcfabbbbef50f8d29da6bc4baf3ebdd760092f77e97e788429072}
+    - {path: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_readonly_postmortem_v1/decision.json, sha256: 72ee0e24fbf74a785be13a357bfe2cc9aeff1e231778dc1b6930d5d5bb2b78b2}
+    - {path: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_readonly_postmortem_v1/loss_path.md, sha256: 62f86329d238c0673b7061132fe1fde3b2ed1d3550c3a943dae4e53fda0c8d69}
+    - {path: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_readonly_postmortem_v1/input_manifest.json, sha256: 00aed135ff5db6a1b6de76e1e17b2930c02db770240f2e72cf39e4d35e1a41ad}
+  failed_attempt_recovery_seed0:
+    diagnostic_batch:
+      path: /data_all/zzx/3.2RL/TRASH/taco_pour_candidate_G_value_loss_isolation_v1_failed_preclip_norm_check/seed_0/diagnostic_batch_epoch1.pt.gz
+      sha256: 4b5cfe3b6a5eaf82c75f752a60c0ba471b42eb24cfde733493bdb02a9bd88b6e
+    pre_update_state:
+      path: /data_all/zzx/3.2RL/TRASH/taco_pour_candidate_G_value_loss_isolation_v1_failed_preclip_norm_check/seed_0/pre_actor_update_state.pt.gz
+      sha256: 8c779cf418d81de37331637957fb810157a06c0944b7209fe0b0781776f68764
+    reconstructed_visits:
+      path: /data_all/zzx/3.2RL/TRASH/taco_pour_candidate_G_value_loss_isolation_v1_failed_preclip_norm_check/seed_0/reconstruction/training_visitation/epoch_0001_visits.npz
+      sha256: 2f2e15c45e009409eae492e4ee26e6e86aa53e0d3b781a06d93c28754a8806da
+    failed_decision:
+      path: /data_all/zzx/3.2RL/TRASH/taco_pour_candidate_G_value_loss_isolation_v1_failed_preclip_norm_check/decision.json
+      sha256: 73b698c81b32009bb0050a248870101c29b816c3f8e99ff6aaa5d9ec49d6944f
+    failed_recovery_decision:
+      path: /data_all/zzx/3.2RL/TRASH/taco_pour_candidate_G_value_loss_isolation_v1_failed_recovery_base_null/decision.json
+      sha256: 9d5224e1d62c3ffeedf56c7265ed1780083a15415882f5735822189acff04707
+  completed_attempt_recovery_seed0:
+    diagnostic_batch:
+      path: /data_all/zzx/3.2RL/TRASH/taco_pour_candidate_G_value_loss_isolation_v1_failed_seed0_report_serialization/seed_0/diagnostic_batch_epoch1.pt.gz
+      sha256: 4b5cfe3b6a5eaf82c75f752a60c0ba471b42eb24cfde733493bdb02a9bd88b6e
+    pre_update_state:
+      path: /data_all/zzx/3.2RL/TRASH/taco_pour_candidate_G_value_loss_isolation_v1_failed_seed0_report_serialization/seed_0/pre_actor_update_state.pt.gz
+      sha256: 8c779cf418d81de37331637957fb810157a06c0944b7209fe0b0781776f68764
+    base_shadow:
+      path: /data_all/zzx/3.2RL/TRASH/taco_pour_candidate_G_value_loss_isolation_v1_failed_seed0_report_serialization/seed_0/shadow_states/base.pt.gz
+      sha256: 160380ea8d63cfb539723043e27e35c6f23cfe7b25be81816eb820d4f7558ce0
+    full_shadow:
+      path: /data_all/zzx/3.2RL/TRASH/taco_pour_candidate_G_value_loss_isolation_v1_failed_seed0_report_serialization/seed_0/shadow_states/full.pt.gz
+      sha256: 39580cd969e1581befdad5a9e3a29c2b2b789eaf0bc4cb5731f3ec1c00778abc
+    policy_only_shadow:
+      path: /data_all/zzx/3.2RL/TRASH/taco_pour_candidate_G_value_loss_isolation_v1_failed_seed0_report_serialization/seed_0/shadow_states/policy_only.pt.gz
+      sha256: 6de2da02a9e59db16c5c2175aa4e67962e2ca4998164c4c8df427fb0cdd88f76
+    value_only_shadow:
+      path: /data_all/zzx/3.2RL/TRASH/taco_pour_candidate_G_value_loss_isolation_v1_failed_seed0_report_serialization/seed_0/shadow_states/value_only.pt.gz
+      sha256: e56742ae17ef599f61c510fa38a105ec97638b2ff5e21c409f3a573332bf9afe
+    base_distribution:
+      path: /data_all/zzx/3.2RL/TRASH/taco_pour_candidate_G_value_loss_isolation_v1_failed_seed0_report_serialization/seed_0/shadow_states/base_distribution.npz
+      sha256: 1e551ac8357195ef40fcc85755aa8d56d50ce3cd2567e5bf3af3ae09e3961056
+    full_distribution:
+      path: /data_all/zzx/3.2RL/TRASH/taco_pour_candidate_G_value_loss_isolation_v1_failed_seed0_report_serialization/seed_0/shadow_states/full_distribution.npz
+      sha256: cae14c1dd642de78d37c4d79d408a3d95a2eb9a1a1f003b2f3752a495d3ee699
+    policy_only_distribution:
+      path: /data_all/zzx/3.2RL/TRASH/taco_pour_candidate_G_value_loss_isolation_v1_failed_seed0_report_serialization/seed_0/shadow_states/policy_only_distribution.npz
+      sha256: d4a22e92ec43da4b355a561561928d001bb8a26033bdfbeacc23d543d8fd3475
+    value_only_distribution:
+      path: /data_all/zzx/3.2RL/TRASH/taco_pour_candidate_G_value_loss_isolation_v1_failed_seed0_report_serialization/seed_0/shadow_states/value_only_distribution.npz
+      sha256: 026d9740ee58c521575add4981ec7a142b3aece7b93f68190d206bf6b2be82f8
+    base_trajectory:
+      path: /data_all/zzx/3.2RL/TRASH/taco_pour_candidate_G_value_loss_isolation_v1_failed_seed0_report_serialization/seed_0/closed_loop/base/trajectory.npz
+      sha256: deadd3e2bc219dd2bc2a8e0b5863c352fae7ac99d76ee0850ee7a35ed4905534
+    full_trajectory:
+      path: /data_all/zzx/3.2RL/TRASH/taco_pour_candidate_G_value_loss_isolation_v1_failed_seed0_report_serialization/seed_0/closed_loop/full/trajectory.npz
+      sha256: ce77dc29ed3ae1684c9fdb53dca6627ffa5a6bdc8168a0240d0c2a8d7358cfc4
+    policy_only_trajectory:
+      path: /data_all/zzx/3.2RL/TRASH/taco_pour_candidate_G_value_loss_isolation_v1_failed_seed0_report_serialization/seed_0/closed_loop/policy_only/trajectory.npz
+      sha256: d20b43a0ed30d763e088dbf1ee3f5ea56f9ce8149e157359c73dfbacbd805126
+    value_only_trajectory:
+      path: /data_all/zzx/3.2RL/TRASH/taco_pour_candidate_G_value_loss_isolation_v1_failed_seed0_report_serialization/seed_0/closed_loop/value_only/trajectory.npz
+      sha256: c6eea31314f52362eb4f6706c30b210d882f03fbbab3540d7bbef70bb99371fb
+    failed_decision:
+      path: /data_all/zzx/3.2RL/TRASH/taco_pour_candidate_G_value_loss_isolation_v1_failed_seed0_report_serialization/decision.json
+      sha256: 4295df956a4bfe525f006a95d16df2ce3a63dabb3e9b1ff18223a5ce74a9f579
+    failed_context_recovery_decision:
+      path: /data_all/zzx/3.2RL/TRASH/taco_pour_candidate_G_value_loss_isolation_v1_failed_recovery_missing_boundary_context/decision.json
+      sha256: e81f31b51c3e5b2e0824d04bc58e3018081763644cc170fcda06bba685129f31
+
+implementation_contract:
+  audit_runner:
+    path: scripts/audit_taco_pour_candidate_G_value_loss_isolation_v1.py
+    sha256: 50cbf5f410a1c6d24acd8135c6794859207bb64a0b411daefa5256e885fb0a44
+  isolation_helper:
+    path: src/video_to_spider/rl/value_loss_isolation.py
+    sha256: b1af01b5c83011d7aa4e9740c614ecdd909e552820026ac8e972b02e138a99a6
+  pure_tests:
+    path: tests/test_candidate_G_value_loss_isolation.py
+    sha256: 7a66bedfd998623f5ee86b1c5406540c0bf77b3aef3938bcdda1ac99edbe63c5
+
+forbidden:
+  - new_400k_training
+  - second_actor_update_in_any_branch
+  - extra_seed_or_donor
+  - LR_sigma_loss_coefficient_sweep
+  - changing_reward_action_support_observation_reference_physics
+  - source60_or61_tail_reset
+  - oracle_action_insertion
+  - recomputing_credit_with_final_critic
+  - RMS_ablation_grid
+  - rewriting_G3_or_historical_artifacts
+  - automatic_chunk_commit
+  - force_push
+
+output_directory: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_value_loss_isolation_v1
+task_document: taco_pour_candidate_G_value_loss_isolation_v1_codex_task.md

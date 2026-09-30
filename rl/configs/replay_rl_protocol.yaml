@@ -1828,6 +1828,62 @@ evaluation:
       candidate_G_classification_changed: false
       new_training_authorized: false
       chunk_commit_written: false
+    candidate_G_value_loss_isolation_v1:
+      status: COMPLETED_BOUNDED_VALUE_LOSS_ISOLATION
+      classification: paired_first_update_internal_value_loss_isolation
+      paper_faithful: false
+      base_git_commit: 5f036bc8c2225b55ca14fd60d2a1a10158f24edf
+      contract: /data_all/zzx/3.2RL/configs/taco_pour_candidate_G_value_loss_isolation_v1.yaml
+      output: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_value_loss_isolation_v1
+      report: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_value_loss_isolation_v1/report.json
+      decision: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_value_loss_isolation_v1/decision.json
+      summary: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_value_loss_isolation_v1/summary.md
+      reconstruction:
+        historical_batches_bitwise_equal: [true, true, true]
+        historical_credit_fields_bitwise_equal: [true, true, true]
+        credit_alignment: visitation_row_to_historical_credit_at_ppo_flat_index
+        FULL_historical_update_regression_passed: [true, true, true]
+        BASE_valid_prefix_intervals: [20, 20, 20]
+        BASE_first_failure_endpoints: [61, 61, 61]
+      gradient_findings:
+        weighted_value_to_policy_norm_ratio: [1.7558576875968868, 1.9167473383855227, 2.440587562557469]
+        policy_value_cosine: [0.0006336050077732799, -0.00028070044790028863, -0.00027820668386271746]
+        linearity_relative_L2_error: [5.201793507292371e-08, 4.371765321545703e-08, 4.756552265878086e-08]
+      paired_single_step:
+        FULL_mean_exact_KL: [0.5216911693445988, 0.5095753279255162, 0.6055443031956179]
+        POLICY_ONLY_mean_exact_KL: [0.9146482192729565, 1.0202475487168674, 1.3695517599179443]
+        VALUE_ONLY_max_bounded_mu_change: [0.05345737934112549, 0.054230399429798126, 0.051363781094551086]
+        FULL_valid_prefix_intervals: [14, 14, 20]
+        POLICY_ONLY_valid_prefix_intervals: [12, 14, 13]
+        VALUE_ONLY_valid_prefix_intervals: [15, 15, 15]
+      decision_code: VALUE_POLICY_COUPLING_PRESENT_BUT_BENEFIT_UNRESOLVED
+      negative_evidence_flag: ISOLATION_NOT_FAVORED_AT_TESTED_UPDATES
+      interpretation: >-
+        The actor-internal value loss has a resolved shared-representation
+        effect at all three Candidate-G first updates, but removing it does not
+        reduce the one-step policy displacement: POLICY_ONLY exact KL is larger
+        than FULL in every seed.  POLICY_ONLY also shortens the deterministic
+        closed-loop prefix in seeds zero and two and ties FULL in seed one.
+        This bounded experiment therefore does not support selecting internal
+        value-loss removal as a new long-training variable.  The result is
+        local to the three reconstructed first batches and does not identify a
+        unique cause of Candidate G's full-training outcome.
+      budget:
+        collection_control_intervals: 480
+        closed_loop_control_intervals: 480
+        total_control_intervals: 960
+        physics_steps: 9600
+        actor_optimizer_steps: 9
+        external_critic_optimizer_steps: 12
+        all_optimizer_steps: 21
+      recovery_provenance:
+        failed_outputs_moved_to_TRASH: true
+        seed0_collection_or_optimizer_or_probe_repeated: false
+        report_only_recovery_extra_actor_autograd_calls: 10
+        report_only_recovery_extra_actor_sample_row_forwards: 1120
+      candidate_G_classification_changed: false
+      new_long_training_authorized: false
+      chunk_commit_written: false
 
 runtime_contract:
   fail_closed: true
@@ -1837,6 +1893,10 @@ runtime_contract:
   candidate_G_readonly_postmortem_report_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_readonly_postmortem_v1/report.json
   candidate_G_readonly_postmortem_decision_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_readonly_postmortem_v1/decision.json
   candidate_G_readonly_postmortem_summary_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_readonly_postmortem_v1/summary.md
+  candidate_G_value_loss_isolation_contract_v1: /data_all/zzx/3.2RL/configs/taco_pour_candidate_G_value_loss_isolation_v1.yaml
+  candidate_G_value_loss_isolation_report_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_value_loss_isolation_v1/report.json
+  candidate_G_value_loss_isolation_decision_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_value_loss_isolation_v1/decision.json
+  candidate_G_value_loss_isolation_summary_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_value_loss_isolation_v1/summary.md
   local_objective_profiles:
     taco_pour_local_unpublished_v1:
       objective_ready: true
@@ -2013,6 +2073,10 @@ audit_results:
   candidate_G_readonly_postmortem_report_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_readonly_postmortem_v1/report.json
   candidate_G_readonly_postmortem_decision_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_readonly_postmortem_v1/decision.json
   candidate_G_readonly_postmortem_summary_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_readonly_postmortem_v1/summary.md
+  candidate_G_value_loss_isolation_contract_v1: /data_all/zzx/3.2RL/configs/taco_pour_candidate_G_value_loss_isolation_v1.yaml
+  candidate_G_value_loss_isolation_report_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_value_loss_isolation_v1/report.json
+  candidate_G_value_loss_isolation_decision_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_value_loss_isolation_v1/decision.json
+  candidate_G_value_loss_isolation_summary_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_value_loss_isolation_v1/summary.md
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -2107,6 +2171,10 @@ result_acceptance_blockers:
   - candidate_G_does_not_authorize_extra_seeds_budget_per_endpoint_repairs_or_chunk_commit
   - candidate_G_readonly_postmortem_preserves_G3_and_authorizes_no_new_training_or_chunk_commit
   - candidate_G_readonly_postmortem_next_step_is_only_an_internal_value_loss_shared_representation_review
+  - candidate_G_value_loss_isolation_resolves_value_to_policy_coupling_at_all_three_first_updates
+  - candidate_G_POLICY_ONLY_has_larger_exact_KL_than_FULL_in_all_three_first_updates
+  - candidate_G_POLICY_ONLY_closed_loop_prefix_is_worse_in_two_seeds_and_equal_in_one
+  - candidate_G_value_loss_isolation_does_not_authorize_internal_value_removal_long_training_or_chunk_commit
   - complete_197_transition_algorithmic_trajectory_not_yet_generated
   - source47_zero_residual_still_fails_endpoint49_and_source48_has_no_tool_effect
   - no_source47_semantic_action_subspace_preserves_contact_or_survives_endpoint49

@@ -1,0 +1,801 @@
+{
+  "schema": "taco_pour_candidate_G_value_loss_isolation_v1",
+  "seeds": [
+    {
+      "seed": 0,
+      "restore_field_equality": {
+        "actor": true,
+        "critic": true,
+        "actor_optimizer": true,
+        "critic_optimizer": true,
+        "observation_normalization_version": true,
+        "simulation_physics_steps": true,
+        "simulation_control_intervals": true,
+        "agent_epoch": true,
+        "agent_frame": true,
+        "agent_rnn_states": true,
+        "agent_observation": true,
+        "agent_dones": true,
+        "environment": true,
+        "rng_states": true
+      },
+      "historical_visit_regression": {
+        "all_fields_bitwise_equal": true,
+        "source": "first attempt field-wise and SHA-256 regression"
+      },
+      "FULL_historical_update_regression": {
+        "passed": true,
+        "array_max_abs_errors": {
+          "raw_location": 2.384185791015625e-07,
+          "bounded_mu": 1.1920928955078125e-07,
+          "sigma": 0.0
+        },
+        "scalar_absolute_errors": {
+          "gradient_norm_before_clip": 0.0,
+          "parameter_delta_l2": 4.7248094325880174e-11,
+          "KL_mean": 5.277719927754276e-09
+        },
+        "tolerances": {
+          "mu_sigma": 9.5367431640625e-07,
+          "joint_logprob_ratio": 0.0001,
+          "scalar_rtol": 1e-05,
+          "scalar_atol": 1e-07
+        }
+      },
+      "BASE_closed_loop": {
+        "successful_intervals": 20,
+        "first_failure_endpoint": 61,
+        "forty_of_forty": false,
+        "endpoint60": {
+          "score": 0.9899907112121582,
+          "position_error_m": 0.10832184553146362,
+          "rotation_error_rad": 0.6097583770751953,
+          "position_squared_contribution": 0.814834876343213,
+          "rotation_squared_contribution": 0.16524679040594492
+        },
+        "endpoint70": {
+          "score": 1.4259909391403198,
+          "position_error_m": 0.16929087042808533,
+          "rotation_error_rad": 0.3118201494216919,
+          "position_squared_contribution": 1.9902360284929708,
+          "rotation_squared_contribution": 0.04321413581571834
+        },
+        "endpoint80": {
+          "score": 1.5108814239501953,
+          "position_error_m": 0.17230020463466644,
+          "rotation_error_rad": 0.7053835988044739,
+          "position_squared_contribution": 2.0616222581352734,
+          "rotation_squared_contribution": 0.2211404539832671
+        },
+        "validation_residual_RMS": 0.02021661214530468,
+        "validation_action_bound_fraction": 0.0,
+        "final_sigma": {
+          "minimum": 0.24952921271324158,
+          "mean": 0.25000545382499695,
+          "maximum": 0.25059810280799866
+        },
+        "first_failure": {
+          "score": 1.0139968395233154,
+          "position_error_m": 0.11544256657361984,
+          "rotation_error_rad": 0.48071348667144775,
+          "position_squared_contribution": 0.9254851511878229,
+          "rotation_squared_contribution": 0.10270464723014229
+        },
+        "valid_prefix_intervals": 20,
+        "valid_prefix_tracking_reward_sum": 4.381872117519379,
+        "postfailure_rows_recorded_but_not_counted": 19,
+        "endpoint80_timeout_is_tracking_failure": false,
+        "branch": "BASE",
+        "trajectory": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_value_loss_isolation_v1/seed_0/closed_loop/base/trajectory.npz",
+          "sha256": "deadd3e2bc219dd2bc2a8e0b5863c352fae7ac99d76ee0850ee7a35ed4905534",
+          "bytes": 47186
+        },
+        "historical_step0_checks": {
+          "endpoint_bitwise_equal": true,
+          "terminated_bitwise_equal": true,
+          "tracking_score_bitwise_equal": true,
+          "position_error_bitwise_equal": true,
+          "rotation_error_bitwise_equal": true,
+          "ctrl_bitwise_equal": true,
+          "qpos_bitwise_equal": true,
+          "qvel_bitwise_equal": true,
+          "contact_flags_bitwise_equal": true,
+          "deterministic_action_bitwise_equal": true,
+          "raw_location_bitwise_equal": true,
+          "bounded_mu_bitwise_equal": true,
+          "actor_sigma_bitwise_equal": true,
+          "action_low_bitwise_equal": true,
+          "action_high_bitwise_equal": true,
+          "reward_bitwise_equal": true,
+          "tracking_reward_bitwise_equal": true,
+          "contact_bonus_bitwise_equal": true,
+          "lift_reward_bitwise_equal": true,
+          "actor_mu_bitwise_equal": true,
+          "is_20_of_40_fail61": true
+        }
+      },
+      "normalization": {
+        "observation_RMS_unchanged_through_prepare_and_updates": true,
+        "value_RMS_changed_once_in_prepare_dataset": true,
+        "value_normalizer_alias_external_critic": true,
+        "recovered_after_prepare_dataset": true
+      },
+      "external_critic": {
+        "optimizer_steps": 4,
+        "steps_reused_not_reexecuted": true,
+        "parameters_changed": true,
+        "actor_parameter_storage_disjoint": true,
+        "after_hash": "371730900385f895f0b7b64261791acd7ed8c95e2a000a8d9ddb34c06c710390"
+      }
+    },
+    {
+      "seed": 1,
+      "restore_field_equality": {
+        "actor": true,
+        "critic": true,
+        "actor_optimizer": true,
+        "critic_optimizer": true,
+        "observation_normalization_version": true,
+        "simulation_physics_steps": true,
+        "simulation_control_intervals": true,
+        "agent_epoch": true,
+        "agent_frame": true,
+        "agent_rnn_states": true,
+        "agent_observation": true,
+        "agent_dones": true,
+        "environment": true,
+        "rng_states": true
+      },
+      "historical_visit_regression": {
+        "all_fields_bitwise_equal": true,
+        "fields": {
+          "GAE_return": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "RMS_hash": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": null
+          },
+          "actor_hash": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": null
+          },
+          "actor_mu": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "actor_sigma": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "canonical_old_logprob": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "command_reference_endpoint": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "contact_bonus": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "contact_flags": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": null
+          },
+          "effective_residual_after_ctrlrange": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "episode_serial": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "lift_reward": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "next_observation_goal_reference_endpoint": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "normalization_version": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "normalized_advantage": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "outcome_endpoint": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "ppo_flat_index": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "ppo_time_index": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "ppo_world_index": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "raw_advantage": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "raw_total_reward": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "reference_ctrl": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "requested_residual": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "reset_context_hash": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": null
+          },
+          "residual_lost_to_ctrlrange": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "reward_reference_endpoint": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "rollout_step": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "rollout_value_before_update": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "run_id": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": null
+          },
+          "sampled_action_clamped": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "sampled_action_preclamp": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "shaped_training_reward": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "source_endpoint": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "time_out": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": null
+          },
+          "tool_objective_score": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "tool_position_error_m": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "tool_rotation_error_rad": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "tracking_reward": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "tracking_terminated": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": null
+          },
+          "training_seed": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "world_index": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          }
+        }
+      },
+      "FULL_historical_update_regression": {
+        "passed": true,
+        "array_max_abs_errors": {
+          "raw_location": 2.384185791015625e-07,
+          "bounded_mu": 1.4901161193847656e-07,
+          "sigma": 0.0
+        },
+        "scalar_absolute_errors": {
+          "gradient_norm_before_clip": 0.0,
+          "parameter_delta_l2": 5.4237780933164004e-11,
+          "KL_mean": 1.0908971614931318e-08
+        },
+        "tolerances": {
+          "mu_sigma": 9.5367431640625e-07,
+          "joint_logprob_ratio": 0.0001,
+          "scalar_rtol": 1e-05,
+          "scalar_atol": 1e-07
+        }
+      },
+      "BASE_closed_loop": {
+        "successful_intervals": 20,
+        "first_failure_endpoint": 61,
+        "forty_of_forty": false,
+        "endpoint60": {
+          "score": 0.9899907112121582,
+          "position_error_m": 0.10832184553146362,
+          "rotation_error_rad": 0.6097583770751953,
+          "position_squared_contribution": 0.814834876343213,
+          "rotation_squared_contribution": 0.16524679040594492
+        },
+        "endpoint70": {
+          "score": 1.4259909391403198,
+          "position_error_m": 0.16929087042808533,
+          "rotation_error_rad": 0.3118201494216919,
+          "position_squared_contribution": 1.9902360284929708,
+          "rotation_squared_contribution": 0.04321413581571834
+        },
+        "endpoint80": {
+          "score": 1.5108814239501953,
+          "position_error_m": 0.17230020463466644,
+          "rotation_error_rad": 0.7053835988044739,
+          "position_squared_contribution": 2.0616222581352734,
+          "rotation_squared_contribution": 0.2211404539832671
+        },
+        "validation_residual_RMS": 0.02021661214530468,
+        "validation_action_bound_fraction": 0.0,
+        "final_sigma": {
+          "minimum": 0.24952921271324158,
+          "mean": 0.25000545382499695,
+          "maximum": 0.25059810280799866
+        },
+        "first_failure": {
+          "score": 1.0139968395233154,
+          "position_error_m": 0.11544256657361984,
+          "rotation_error_rad": 0.48071348667144775,
+          "position_squared_contribution": 0.9254851511878229,
+          "rotation_squared_contribution": 0.10270464723014229
+        },
+        "valid_prefix_intervals": 20,
+        "valid_prefix_tracking_reward_sum": 4.381872117519379,
+        "postfailure_rows_recorded_but_not_counted": 19,
+        "endpoint80_timeout_is_tracking_failure": false,
+        "branch": "BASE",
+        "trajectory": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_value_loss_isolation_v1/seed_1/closed_loop/base/trajectory.npz",
+          "sha256": "deadd3e2bc219dd2bc2a8e0b5863c352fae7ac99d76ee0850ee7a35ed4905534",
+          "bytes": 47186
+        },
+        "historical_step0_checks": {
+          "endpoint_bitwise_equal": true,
+          "terminated_bitwise_equal": true,
+          "tracking_score_bitwise_equal": true,
+          "position_error_bitwise_equal": true,
+          "rotation_error_bitwise_equal": true,
+          "ctrl_bitwise_equal": true,
+          "qpos_bitwise_equal": true,
+          "qvel_bitwise_equal": true,
+          "contact_flags_bitwise_equal": true,
+          "deterministic_action_bitwise_equal": true,
+          "raw_location_bitwise_equal": true,
+          "bounded_mu_bitwise_equal": true,
+          "actor_sigma_bitwise_equal": true,
+          "action_low_bitwise_equal": true,
+          "action_high_bitwise_equal": true,
+          "reward_bitwise_equal": true,
+          "tracking_reward_bitwise_equal": true,
+          "contact_bonus_bitwise_equal": true,
+          "lift_reward_bitwise_equal": true,
+          "actor_mu_bitwise_equal": true,
+          "is_20_of_40_fail61": true
+        }
+      },
+      "normalization": {
+        "observation_RMS_unchanged_through_prepare_and_updates": true,
+        "value_RMS_changed_once_in_prepare_dataset": true,
+        "value_normalizer_alias_external_critic": true
+      },
+      "external_critic": {
+        "optimizer_steps": 4,
+        "average_loss": 1.377225250005722,
+        "parameters_changed": true,
+        "actor_parameter_storage_disjoint": true,
+        "before_hash": "925fe5bb98f8105dfdb81f2c88f64d7457594a5f2480f134454ea5405c0f8962",
+        "after_hash": "870acf29715d0aa4b1ebfd1ed29ca4df3e46824e43e4ee3c4dfd36b844a449ff"
+      }
+    },
+    {
+      "seed": 2,
+      "restore_field_equality": {
+        "actor": true,
+        "critic": true,
+        "actor_optimizer": true,
+        "critic_optimizer": true,
+        "observation_normalization_version": true,
+        "simulation_physics_steps": true,
+        "simulation_control_intervals": true,
+        "agent_epoch": true,
+        "agent_frame": true,
+        "agent_rnn_states": true,
+        "agent_observation": true,
+        "agent_dones": true,
+        "environment": true,
+        "rng_states": true
+      },
+      "historical_visit_regression": {
+        "all_fields_bitwise_equal": true,
+        "fields": {
+          "GAE_return": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "RMS_hash": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": null
+          },
+          "actor_hash": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": null
+          },
+          "actor_mu": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "actor_sigma": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "canonical_old_logprob": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "command_reference_endpoint": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "contact_bonus": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "contact_flags": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": null
+          },
+          "effective_residual_after_ctrlrange": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "episode_serial": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "lift_reward": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "next_observation_goal_reference_endpoint": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "normalization_version": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "normalized_advantage": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "outcome_endpoint": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "ppo_flat_index": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "ppo_time_index": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "ppo_world_index": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "raw_advantage": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "raw_total_reward": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "reference_ctrl": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "requested_residual": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "reset_context_hash": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": null
+          },
+          "residual_lost_to_ctrlrange": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "reward_reference_endpoint": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "rollout_step": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "rollout_value_before_update": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "run_id": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": null
+          },
+          "sampled_action_clamped": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "sampled_action_preclamp": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "shaped_training_reward": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "source_endpoint": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "time_out": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": null
+          },
+          "tool_objective_score": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "tool_position_error_m": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "tool_rotation_error_rad": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "tracking_reward": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "tracking_terminated": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": null
+          },
+          "training_seed": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          },
+          "world_index": {
+            "present_both": true,
+            "bitwise_equal": true,
+            "maximum_absolute_error": 0.0
+          }
+        }
+      },
+      "FULL_historical_update_regression": {
+        "passed": true,
+        "array_max_abs_errors": {
+          "raw_location": 2.384185791015625e-07,
+          "bounded_mu": 1.1920928955078125e-07,
+          "sigma": 0.0
+        },
+        "scalar_absolute_errors": {
+          "gradient_norm_before_clip": 0.0,
+          "parameter_delta_l2": 1.115052494782276e-12,
+          "KL_mean": 4.627392025113863e-09
+        },
+        "tolerances": {
+          "mu_sigma": 9.5367431640625e-07,
+          "joint_logprob_ratio": 0.0001,
+          "scalar_rtol": 1e-05,
+          "scalar_atol": 1e-07
+        }
+      },
+      "BASE_closed_loop": {
+        "successful_intervals": 20,
+        "first_failure_endpoint": 61,
+        "forty_of_forty": false,
+        "endpoint60": {
+          "score": 0.9899907112121582,
+          "position_error_m": 0.10832184553146362,
+          "rotation_error_rad": 0.6097583770751953,
+          "position_squared_contribution": 0.814834876343213,
+          "rotation_squared_contribution": 0.16524679040594492
+        },
+        "endpoint70": {
+          "score": 1.4259909391403198,
+          "position_error_m": 0.16929087042808533,
+          "rotation_error_rad": 0.3118201494216919,
+          "position_squared_contribution": 1.9902360284929708,
+          "rotation_squared_contribution": 0.04321413581571834
+        },
+        "endpoint80": {
+          "score": 1.5108814239501953,
+          "position_error_m": 0.17230020463466644,
+          "rotation_error_rad": 0.7053835988044739,
+          "position_squared_contribution": 2.0616222581352734,
+          "rotation_squared_contribution": 0.2211404539832671
+        },
+        "validation_residual_RMS": 0.02021661214530468,
+        "validation_action_bound_fraction": 0.0,
+        "final_sigma": {
+          "minimum": 0.24952921271324158,
+          "mean": 0.25000545382499695,
+          "maximum": 0.25059810280799866
+        },
+        "first_failure": {
+          "score": 1.0139968395233154,
+          "position_error_m": 0.11544256657361984,
+          "rotation_error_rad": 0.48071348667144775,
+          "position_squared_contribution": 0.9254851511878229,
+          "rotation_squared_contribution": 0.10270464723014229
+        },
+        "valid_prefix_intervals": 20,
+        "valid_prefix_tracking_reward_sum": 4.381872117519379,
+        "postfailure_rows_recorded_but_not_counted": 19,
+        "endpoint80_timeout_is_tracking_failure": false,
+        "branch": "BASE",
+        "trajectory": {
+          "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_value_loss_isolation_v1/seed_2/closed_loop/base/trajectory.npz",
+          "sha256": "deadd3e2bc219dd2bc2a8e0b5863c352fae7ac99d76ee0850ee7a35ed4905534",
+          "bytes": 47186
+        },
+        "historical_step0_checks": {
+          "endpoint_bitwise_equal": true,
+          "terminated_bitwise_equal": true,
+          "tracking_score_bitwise_equal": true,
+          "position_error_bitwise_equal": true,
+          "rotation_error_bitwise_equal": true,
+          "ctrl_bitwise_equal": true,
+          "qpos_bitwise_equal": true,
+          "qvel_bitwise_equal": true,
+          "contact_flags_bitwise_equal": true,
+          "deterministic_action_bitwise_equal": true,
+          "raw_location_bitwise_equal": true,
+          "bounded_mu_bitwise_equal": true,
+          "actor_sigma_bitwise_equal": true,
+          "action_low_bitwise_equal": true,
+          "action_high_bitwise_equal": true,
+          "reward_bitwise_equal": true,
+          "tracking_reward_bitwise_equal": true,
+          "contact_bonus_bitwise_equal": true,
+          "lift_reward_bitwise_equal": true,
+          "actor_mu_bitwise_equal": true,
+          "is_20_of_40_fail61": true
+        }
+      },
+      "normalization": {
+        "observation_RMS_unchanged_through_prepare_and_updates": true,
+        "value_RMS_changed_once_in_prepare_dataset": true,
+        "value_normalizer_alias_external_critic": true
+      },
+      "external_critic": {
+        "optimizer_steps": 4,
+        "average_loss": 1.514325499534607,
+        "parameters_changed": true,
+        "actor_parameter_storage_disjoint": true,
+        "before_hash": "3afeeb4bc3a48702d53a5b41d3e2e297bcf8d70fd0fae831397b34da54470800",
+        "after_hash": "18b21ce63596e96e6c232fb017c11c361c60469c77ddcc5638d55b1b8e066f76"
+      }
+    }
+  ]
+}
