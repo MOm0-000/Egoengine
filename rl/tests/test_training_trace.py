@@ -18,7 +18,13 @@ from video_to_spider.rl.training_trace import (
 )
 
 
-def _trace(path: Path, *, include_world_index: bool = False) -> PpoTrainingTrace:
+def _trace(
+    path: Path,
+    *,
+    include_world_index: bool = False,
+    run_id: str | None = None,
+    training_seed: int | None = None,
+) -> PpoTrainingTrace:
     return PpoTrainingTrace(
         path,
         actuator_names=tuple(f"actuator_{index}" for index in range(36)),
@@ -37,6 +43,8 @@ def _trace(path: Path, *, include_world_index: bool = False) -> PpoTrainingTrace
             "ctrlrange": [[-1.0, 1.0]] * 36,
         },
         include_world_index=include_world_index,
+        run_id=run_id,
+        training_seed=training_seed,
     )
 
 
@@ -231,3 +239,57 @@ def test_world_indexed_trace_records_stable_batch_positions(tmp_path):
     assert "stable IndependentMJWPTrainingEnv batch position" in report[
         "logging_semantics"
     ]["world_index"]
+
+
+def test_world_indexed_trace_joins_world_major_credit_with_explicit_permutation(tmp_path):
+    output = tmp_path / "visits"
+    trace = _trace(
+        output,
+        include_world_index=True,
+        run_id="candidate_G_seed_2",
+        training_seed=2,
+    )
+    trace.begin_epoch(1, 0)
+    zeros = np.zeros((2, 36), np.float32)
+    for step in range(2):
+        info = _info(41 + step)
+        trace.record(
+            source_endpoint=np.array([40 + step, 40 + step], np.int32),
+            outcome_endpoint=np.array([41 + step, 41 + step], np.int32),
+            sampled_action_preclamp=zeros,
+            sampled_action_clamped=zeros,
+            actor_mu=zeros,
+            actor_sigma=np.ones((2, 36), np.float32),
+            reference_ctrl=zeros.astype(np.float64),
+            requested_residual=zeros.astype(np.float64),
+            effective_residual_after_ctrlrange=zeros.astype(np.float64),
+            residual_lost_to_ctrlrange=zeros.astype(np.float64),
+            info=info,
+        )
+    # PPO order is w0t0,w0t1,w1t0,w1t1; visitation order is t0w0,t0w1,t1w0,t1w1.
+    credit = np.arange(4, dtype=np.float32)
+    trace.attach_credit(
+        rollout_value_before_update=credit,
+        gae_return=credit + 10,
+        raw_advantage=credit + 20,
+        normalized_advantage=credit + 30,
+        canonical_old_logprob=credit + 40,
+        shaped_training_reward=credit + 50,
+        actor_hash="actor",
+        rms_hash="rms",
+        normalization_version=125,
+        reset_context_hash="context",
+    )
+    report = trace.finalize(completed=True)
+    with np.load(output / "epoch_0001_visits.npz", allow_pickle=False) as data:
+        np.testing.assert_array_equal(data["raw_advantage"], [20, 22, 21, 23])
+        np.testing.assert_array_equal(data["ppo_flat_index"], [0, 2, 1, 3])
+        np.testing.assert_array_equal(data["ppo_world_index"], [0, 1, 0, 1])
+        np.testing.assert_array_equal(data["ppo_time_index"], [0, 0, 1, 1])
+        np.testing.assert_array_equal(data["rollout_step"], [0, 0, 1, 1])
+        np.testing.assert_array_equal(data["episode_serial"], [0, 0, 0, 1])
+        assert set(data["run_id"].tolist()) == {"candidate_G_seed_2"}
+        assert set(data["actor_hash"].tolist()) == {"actor"}
+    assert report["row_identity"]["fields"][:3] == [
+        "run_id", "training_seed", "epoch"
+    ]

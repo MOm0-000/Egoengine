@@ -1696,6 +1696,83 @@ evaluation:
       endpoint20_to40_committed: true
       endpoint40_to60_committed: false
       chunk_commit_written: false
+    candidate_G_policy_warm_start_v1:
+      status: completed_three_seed_fixed_400k_G3_no_commit
+      classification: NO_PREDECLARED_SUSTAINED_EXTENSION
+      paper_faithful: false
+      local_change: >-
+        Inherit the promoted source20 Candidate-D seed2 epoch125 actor, actor
+        normalization and sigma; rebuild endpoint40 recurrent memory from the
+        immutable committed source20-through39 observation prefix.  Critic and
+        both optimizers remain fresh.
+      contract: /data_all/zzx/3.2RL/configs/taco_pour_candidate_G_policy_warm_start_v1.yaml
+      output: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1
+      comparison: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/comparison.json
+      decision: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/decision.json
+      summary: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/summary.json
+      preflight_G0:
+        status: passed_training_authorized
+        committed_and_context_physics_bitwise_equal: true
+        donor_h40_bitwise_equal_after_prefix_reencoding: true
+        actor_only_inheritance_and_fresh_critic_optimizers: true
+        step0_all_arrays_bitwise_equal: true
+        four_world_physics_equal: true
+        selected_world_RNN_reset_only: true
+        canonical_optimizer_ratio_bitwise_one: true
+        two_shadow_epochs_no_optimizer: true
+      fixed_milestones:
+        seed0:
+          at_0: {successful_intervals: 20, first_failure_endpoint: 61}
+          at_99p2k: {successful_intervals: 21, first_failure_endpoint: 62}
+          at_200k: {successful_intervals: 20, first_failure_endpoint: 61}
+          at_300p8k: {successful_intervals: 20, first_failure_endpoint: 61}
+          at_400k: {successful_intervals: 17, first_failure_endpoint: 58}
+        seed1:
+          at_0: {successful_intervals: 20, first_failure_endpoint: 61}
+          at_99p2k: {successful_intervals: 15, first_failure_endpoint: 56}
+          at_200k: {successful_intervals: 20, first_failure_endpoint: 61}
+          at_300p8k: {successful_intervals: 19, first_failure_endpoint: 60}
+          at_400k: {successful_intervals: 19, first_failure_endpoint: 60}
+        seed2:
+          at_0: {successful_intervals: 20, first_failure_endpoint: 61}
+          at_99p2k: {successful_intervals: 17, first_failure_endpoint: 58}
+          at_200k: {successful_intervals: 17, first_failure_endpoint: 58}
+          at_300p8k: {successful_intervals: 20, first_failure_endpoint: 61}
+          at_400k: {successful_intervals: 18, first_failure_endpoint: 59}
+        median_successful_intervals: [20, 17, 20, 20, 18]
+      training_coverage:
+        samples_per_seed: 40000
+        source60_attempts_by_seed: [722, 604, 553]
+        endpoint61_passes_by_seed: [128, 49, 62]
+        outcome65_or_deeper_count_by_seed: [0, 0, 0]
+      cost:
+        new_training_physics_steps: 1200000
+        new_training_control_intervals: 120000
+        fixed_validation_physics_steps: 6000
+        exact_revalidation_physics_steps: 0
+        historical_donor_training_and_selection_physics_steps: 1200000
+        historical_donor_cost_charged_as_new_G_training: false
+        equal_total_data_cost_claim_allowed: false
+      prefrozen_decision:
+        code: G3
+        final_successful_intervals: [17, 19, 18]
+        final_seeds_at_least30: []
+        strict_success_events: []
+        stop_this_specific_actor_only_warm_start_package: true
+        automatic_extra_seed_or_budget_extension_authorized: false
+        per_endpoint_repair_authorized: false
+      interpretation: >-
+        Actor/RMS warm start plus causal recurrent-context reconstruction is a
+        valid, numerically audited local package, but it did not produce a
+        sustained extension at the declared final budget.  All three seeds
+        began at the exact 20/40 carryover trajectory, temporarily varied
+        around that boundary, and finished at 17/40, 19/40 and 18/40.  This G3
+        result stops only this fixed actor-only warm-start package; it is not a
+        proof against every warm-start design or mathematical task feasibility.
+      repository_verification: {tests: 822, subtests: 57, warnings: 19}
+      endpoint20_to40_committed: true
+      endpoint40_to60_committed: false
+      chunk_commit_written: false
 
 runtime_contract:
   fail_closed: true
@@ -1865,6 +1942,14 @@ audit_results:
   endpoint60_viability_adjudication_contract_v1: /data_all/zzx/3.2RL/configs/taco_pour_endpoint60_viability_adjudication_v1.yaml
   endpoint60_viability_adjudication_report_v1: /data_all/zzx/3.2RL/runs/taco_pour_endpoint60_viability_adjudication_v1/report.json
   endpoint60_viability_adjudication_decision_v1: /data_all/zzx/3.2RL/runs/taco_pour_endpoint60_viability_adjudication_v1/decision.json
+  candidate_G_policy_warm_start_contract_v1: /data_all/zzx/3.2RL/configs/taco_pour_candidate_G_policy_warm_start_v1.yaml
+  candidate_G_policy_warm_start_preflight_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/preflight_G0/report.json
+  candidate_G_policy_warm_start_comparison_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/comparison.json
+  candidate_G_policy_warm_start_decision_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/decision.json
+  candidate_G_policy_warm_start_summary_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/summary.json
+  candidate_G_policy_warm_start_seed0_report_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/report.json
+  candidate_G_policy_warm_start_seed1_report_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_1/report.json
+  candidate_G_policy_warm_start_seed2_report_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_2/report.json
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -1950,6 +2035,13 @@ result_acceptance_blockers:
   - endpoint60_boundary_P_has_727_of_7168_exact_one_step_feasible_actions_and_triggers_C3_ARRIVAL_STATE_VIABILITY_BOTTLENECK
   - endpoint60_finite_negative_search_on_A_and_B_is_not_a_mathematical_infeasibility_proof
   - endpoint60_adjudication_blocks_more_source60_tail_reset_LR_only_sigma_only_ratio_sweep_and_direct_chunk_commit
+  - candidate_G_actor_only_warm_start_preflight_passes_physics_actor_RMS_RNN_likelihood_and_logging_contracts
+  - candidate_G_three_seeds_begin_bitwise_at_the_20_of_40_previous_policy_continuation
+  - candidate_G_three_seed_final_results_are_17_19_and_18_of_40_after_400k_each
+  - candidate_G_no_seed_meets_the_local_final_G2_reporting_threshold_of_30_of_40
+  - candidate_G_triggers_G3_NO_PREDECLARED_SUSTAINED_EXTENSION
+  - candidate_G_G3_stops_only_this_fixed_actor_only_warm_start_package_not_all_warm_start_variants
+  - candidate_G_does_not_authorize_extra_seeds_budget_per_endpoint_repairs_or_chunk_commit
   - complete_197_transition_algorithmic_trajectory_not_yet_generated
   - source47_zero_residual_still_fails_endpoint49_and_source48_has_no_tool_effect
   - no_source47_semantic_action_subspace_preserves_contact_or_survives_endpoint49

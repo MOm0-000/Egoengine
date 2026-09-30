@@ -1,0 +1,1200 @@
+{
+  "schema": "taco_pour_candidate_G_policy_warm_start_comparison_v1",
+  "status": "completed_prefrozen_three_seed_adjudication",
+  "paper_faithful": false,
+  "classification": "local_policy_warm_start_with_recurrent_boundary_context",
+  "candidate": "G",
+  "contract": {
+    "path": "/data_all/zzx/3.2RL/configs/taco_pour_candidate_G_policy_warm_start_v1.yaml",
+    "sha256": "17d7b0aa65bd8d5e5823cb2e0864df461a30ef29fa4abb099e2b2839226acd4d",
+    "bytes": 9128
+  },
+  "preflight": {
+    "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/preflight_G0/report.json",
+    "sha256": "cb38dcaae5b16b6d4a78ad9f3944f095ac06cb6ffbaa32f50cc80c07e8d5aaba",
+    "bytes": 8464
+  },
+  "warm_start_scope": "source20 Candidate-D seed2 epoch125 actor/RMS/sigma plus causally reencoded endpoint40 recurrent context; fresh critic and optimizers",
+  "baselines": {
+    "zero_residual_Replay": {
+      "successful_intervals": 9,
+      "first_failure_endpoint": 50
+    },
+    "pure_previous_policy_carryover": {
+      "successful_intervals": 20,
+      "first_failure_endpoint": 61
+    },
+    "historical_fresh_source40_candidate_D": {
+      "milestone_successful_intervals_by_seed": {
+        "0": [
+          9,
+          9,
+          9
+        ],
+        "62": [
+          17,
+          19,
+          20
+        ],
+        "125": [
+          20,
+          20,
+          19
+        ],
+        "188": [
+          20,
+          20,
+          20
+        ],
+        "250": [
+          14,
+          20,
+          17
+        ]
+      },
+      "same_new_training_budget": true,
+      "equal_total_data_cost": false
+    }
+  },
+  "seeds": [
+    {
+      "seed": 0,
+      "status": "completed_400k_without_strict_success_no_chunk_commit",
+      "inheritance": {
+        "schema": "taco_pour_candidate_G_actor_only_warm_start_v1",
+        "donor_candidate": "D",
+        "donor_seed": 2,
+        "donor_epoch": 125,
+        "actor_state_sha256": "819f6126ea8fcc4277cd92b968917ff0be38cc1a6c082ad4f72d31dcfdcffe02",
+        "inherited_state_keys": [
+          "a2c_network.actor_mlp.0.bias",
+          "a2c_network.actor_mlp.0.weight",
+          "a2c_network.actor_mlp.2.bias",
+          "a2c_network.actor_mlp.2.weight",
+          "a2c_network.layer_norm.bias",
+          "a2c_network.layer_norm.weight",
+          "a2c_network.mu.bias",
+          "a2c_network.mu.weight",
+          "a2c_network.rnn.rnn.bias_hh_l0",
+          "a2c_network.rnn.rnn.bias_ih_l0",
+          "a2c_network.rnn.rnn.weight_hh_l0",
+          "a2c_network.rnn.rnn.weight_ih_l0",
+          "a2c_network.sigma",
+          "a2c_network.value.bias",
+          "a2c_network.value.weight",
+          "running_mean_std.count",
+          "running_mean_std.running_mean",
+          "running_mean_std.running_var",
+          "value_mean_std.count",
+          "value_mean_std.running_mean",
+          "value_mean_std.running_var"
+        ],
+        "inherited_state_key_count": 21,
+        "actor_input_normalization_keys": [
+          "running_mean_std.count",
+          "running_mean_std.running_mean",
+          "running_mean_std.running_var"
+        ],
+        "observation_normalization_version": 125,
+        "critic_state_sha256": "ef0479295bfefa8d2f624c5a7db4fff60f9a12d9728933b57b5d21b3a5d48396",
+        "checks": {
+          "actor_state_strictly_equal_donor": true,
+          "critic_unchanged_by_actor_import": true,
+          "actor_optimizer_fresh": true,
+          "critic_optimizer_fresh": true,
+          "normalization_version_inherited": true
+        },
+        "donor_critic_loaded": false,
+        "donor_actor_optimizer_loaded": false,
+        "donor_critic_optimizer_loaded": false,
+        "donor_RNN_or_environment_loaded": false,
+        "mean_head_zeroed_after_import": false,
+        "sigma_rescaled_after_import": false
+      },
+      "training": {
+        "worlds": 4,
+        "completed_actor_updates": 250,
+        "simulation_physics_steps": 400000,
+        "simulation_control_intervals": 40000,
+        "wall_seconds": 4606.150098800659,
+        "actor_learning_rate": 0.0001,
+        "actor_mini_epochs": 1,
+        "critic_mini_epochs": 4
+      },
+      "milestones": {
+        "0": {
+          "epoch": 0,
+          "physics_steps": 0,
+          "successful_intervals": 20,
+          "first_failure_endpoint": 61,
+          "forty_of_forty": false,
+          "endpoint60": {
+            "score": 0.9899907112121582,
+            "position_error_m": 0.10832184553146362,
+            "rotation_error_rad": 0.6097583770751953,
+            "position_squared_contribution": 0.814834876343213,
+            "rotation_squared_contribution": 0.16524679040594492
+          },
+          "endpoint70": {
+            "score": 1.4259909391403198,
+            "position_error_m": 0.16929087042808533,
+            "rotation_error_rad": 0.3118201494216919,
+            "position_squared_contribution": 1.9902360284929708,
+            "rotation_squared_contribution": 0.04321413581571834
+          },
+          "endpoint80": {
+            "score": 1.5108814239501953,
+            "position_error_m": 0.17230020463466644,
+            "rotation_error_rad": 0.7053835988044739,
+            "position_squared_contribution": 2.0616222581352734,
+            "rotation_squared_contribution": 0.2211404539832671
+          },
+          "validation_residual_RMS": 0.02021661214530468,
+          "validation_action_bound_fraction": 0.0,
+          "final_sigma": {
+            "minimum": 0.24952921271324158,
+            "mean": 0.25000545382499695,
+            "maximum": 0.25059810280799866
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/checkpoints/epoch_0000.pt.gz",
+            "artifact_sha256": "6bca858a16ef59c01f23b93850d26c88250a50abc03c2cd8add87fef29e0e5ca",
+            "uncompressed_sha256": "2118da46ead81b3167019ff0404a492efb0ad0979caedaead1f375e184480f77",
+            "bytes": 27409830,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/validations/epoch_0000.npz",
+            "sha256": "deadd3e2bc219dd2bc2a8e0b5863c352fae7ac99d76ee0850ee7a35ed4905534",
+            "bytes": 47186
+          },
+          "independent_exact_revalidation": null
+        },
+        "62": {
+          "epoch": 62,
+          "physics_steps": 99200,
+          "successful_intervals": 21,
+          "first_failure_endpoint": 62,
+          "forty_of_forty": false,
+          "endpoint60": {
+            "score": 0.9391466379165649,
+            "position_error_m": 0.10892697423696518,
+            "rotation_error_rad": 0.36134767532348633,
+            "position_squared_contribution": 0.8239642858625332,
+            "rotation_squared_contribution": 0.05803206331630564
+          },
+          "endpoint70": {
+            "score": 1.6379107236862183,
+            "position_error_m": 0.15022754669189453,
+            "rotation_error_rad": 1.5842640399932861,
+            "position_squared_contribution": 1.5672441517406497,
+            "rotation_squared_contribution": 1.1155077992959326
+          },
+          "endpoint80": {
+            "score": 2.25706148147583,
+            "position_error_m": 0.15731459856033325,
+            "rotation_error_rad": 2.7559714317321777,
+            "position_squared_contribution": 1.7186029805693614,
+            "rotation_squared_contribution": 3.375723792232849
+          },
+          "validation_residual_RMS": 0.026058856397867203,
+          "validation_action_bound_fraction": 0.0,
+          "final_sigma": {
+            "minimum": 0.24930712580680847,
+            "mean": 0.24997003376483917,
+            "maximum": 0.25068891048431396
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/checkpoints/epoch_0062.pt.gz",
+            "artifact_sha256": "77267c751e03069ff8c18e3a454f827d2b919df03c1e7675318a485feba81e91",
+            "uncompressed_sha256": "002106d38a45381aec9fe192cadc88fb6527edc5733fef483c9ed78dc6599520",
+            "bytes": 81854484,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/validations/epoch_0062.npz",
+            "sha256": "c7f12d3a65b8d71a17c9f19fc1829d14cfca5d4a9f81641836c9c5c64f2a2a91",
+            "bytes": 47254
+          },
+          "independent_exact_revalidation": null
+        },
+        "125": {
+          "epoch": 125,
+          "physics_steps": 200000,
+          "successful_intervals": 20,
+          "first_failure_endpoint": 61,
+          "forty_of_forty": false,
+          "endpoint60": {
+            "score": 0.9591109752655029,
+            "position_error_m": 0.11245133727788925,
+            "rotation_error_rad": 0.3064844310283661,
+            "position_squared_contribution": 0.878146059415667,
+            "rotation_squared_contribution": 0.04174786953901391
+          },
+          "endpoint70": {
+            "score": 1.4481596946716309,
+            "position_error_m": 0.17064028978347778,
+            "rotation_error_rad": 0.4109998345375061,
+            "position_squared_contribution": 2.022090867874255,
+            "rotation_squared_contribution": 0.07507593955104772
+          },
+          "endpoint80": {
+            "score": 1.5060596466064453,
+            "position_error_m": 0.1713484823703766,
+            "rotation_error_rad": 0.718288004398346,
+            "position_squared_contribution": 2.038909889627171,
+            "rotation_squared_contribution": 0.22930562545002586
+          },
+          "validation_residual_RMS": 0.031172670423984528,
+          "validation_action_bound_fraction": 0.0,
+          "final_sigma": {
+            "minimum": 0.24909080564975739,
+            "mean": 0.24991586804389954,
+            "maximum": 0.25099682807922363
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/checkpoints/epoch_0125.pt.gz",
+            "artifact_sha256": "b9c813b8dd11708dbab550cdb1ef61a1bba63a6df5b6cd1180e11b6e6d0bf650",
+            "uncompressed_sha256": "975a225bd37071e003bf209ce493bdc819222320e7a5e22cf17fa5f238a1d7dc",
+            "bytes": 81763018,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/validations/epoch_0125.npz",
+            "sha256": "879e870fc20032ab832153e8c68cdc0d3e306308a1d836083374de6fbd1dc461",
+            "bytes": 47027
+          },
+          "independent_exact_revalidation": null
+        },
+        "188": {
+          "epoch": 188,
+          "physics_steps": 300800,
+          "successful_intervals": 20,
+          "first_failure_endpoint": 61,
+          "forty_of_forty": false,
+          "endpoint60": {
+            "score": 0.9689199924468994,
+            "position_error_m": 0.11341807246208191,
+            "rotation_error_rad": 0.31994763016700745,
+            "position_squared_contribution": 0.89330966395931,
+            "rotation_squared_contribution": 0.04549621602199296
+          },
+          "endpoint70": {
+            "score": 1.4021273851394653,
+            "position_error_m": 0.16527244448661804,
+            "rotation_error_rad": 0.3942674398422241,
+            "position_squared_contribution": 1.8968736740682113,
+            "rotation_squared_contribution": 0.06908747294210749
+          },
+          "endpoint80": {
+            "score": 1.4392603635787964,
+            "position_error_m": 0.16315904259681702,
+            "rotation_error_rad": 0.7080236077308655,
+            "position_squared_contribution": 1.848671748688191,
+            "rotation_squared_contribution": 0.222798857379658
+          },
+          "validation_residual_RMS": 0.03169373795390129,
+          "validation_action_bound_fraction": 0.0,
+          "final_sigma": {
+            "minimum": 0.2485397607088089,
+            "mean": 0.24982507526874542,
+            "maximum": 0.25119748711586
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/checkpoints/epoch_0188.pt.gz",
+            "artifact_sha256": "5a6f82539f66073bf44b5bd68c0c72f48b925bce330899fb2570ead653ab7ac5",
+            "uncompressed_sha256": "a823dd5239b68cd32b272ec7354c05ad7592e2730e1d878d0226be21b3a40772",
+            "bytes": 81785504,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/validations/epoch_0188.npz",
+            "sha256": "e86b0d59775c8ab6fe0aec18726882baec97e4b9104beadbf96cb11083c8d62f",
+            "bytes": 47016
+          },
+          "independent_exact_revalidation": null
+        },
+        "250": {
+          "epoch": 250,
+          "physics_steps": 400000,
+          "successful_intervals": 17,
+          "first_failure_endpoint": 58,
+          "forty_of_forty": false,
+          "endpoint60": {
+            "score": 1.173048973083496,
+            "position_error_m": 0.11399907618761063,
+            "rotation_error_rad": 1.032233715057373,
+            "position_squared_contribution": 0.9024853730297676,
+            "rotation_squared_contribution": 0.4735584188893982
+          },
+          "endpoint70": {
+            "score": 1.5742971897125244,
+            "position_error_m": 0.16638313233852386,
+            "rotation_error_rad": 1.118437647819519,
+            "position_squared_contribution": 1.9224546338040798,
+            "rotation_squared_contribution": 0.5559567875822483
+          },
+          "endpoint80": {
+            "score": 1.9669163227081299,
+            "position_error_m": 0.1861354559659958,
+            "rotation_error_rad": 1.8141690492630005,
+            "position_squared_contribution": 2.4060005533103586,
+            "rotation_squared_contribution": 1.4627597063572528
+          },
+          "validation_residual_RMS": 0.03235829621553421,
+          "validation_action_bound_fraction": 0.0,
+          "final_sigma": {
+            "minimum": 0.24779345095157623,
+            "mean": 0.24974361062049866,
+            "maximum": 0.2510737478733063
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/checkpoints/epoch_0250.pt.gz",
+            "artifact_sha256": "2ff46328e2c4bc1c9c2b64452f3de1a5501318e40f040abbadff48e38f74f5c5",
+            "uncompressed_sha256": "2011bd2dcae238e87954ac6f655b245df1d502b65aa877e406680facf6a37fc0",
+            "bytes": 81819358,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/validations/epoch_0250.npz",
+            "sha256": "ca4ea2cace389c1e54de15f30ddb06cc3c33cd8f3a3f332b4a1c8ca6dbf45ee7",
+            "bytes": 47137
+          },
+          "independent_exact_revalidation": null
+        }
+      },
+      "coverage": {
+        "sample_count": 40000,
+        "source60_attempts": 722,
+        "endpoint61_outcomes": 722,
+        "endpoint61_tracking_terminations": 594,
+        "endpoint61_passes": 128,
+        "conditional_endpoint61_pass_rate": 0.1772853185595568,
+        "outcome_endpoint_reach_counts": {
+          "65": 0,
+          "70": 0,
+          "75": 0,
+          "80": 0
+        },
+        "deep_source_visit_fraction_by_k": {
+          "21": {
+            "visits": 126,
+            "fraction_of_training_samples": 0.00315
+          },
+          "25": {
+            "visits": 0,
+            "fraction_of_training_samples": 0.0
+          },
+          "30": {
+            "visits": 0,
+            "fraction_of_training_samples": 0.0
+          },
+          "35": {
+            "visits": 0,
+            "fraction_of_training_samples": 0.0
+          }
+        },
+        "maximum_source_endpoint": 61,
+        "maximum_outcome_endpoint": 62,
+        "tracking_termination_count": 1380
+      },
+      "report": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/report.json",
+        "sha256": "50e3654743770aa51290e7ad0a31f008e8f4a59ddd1d5d9c62baf77064251f2d",
+        "bytes": 582999
+      },
+      "chunk_commit_written": false,
+      "intermediate_checkpoint_selected": false
+    },
+    {
+      "seed": 1,
+      "status": "completed_400k_without_strict_success_no_chunk_commit",
+      "inheritance": {
+        "schema": "taco_pour_candidate_G_actor_only_warm_start_v1",
+        "donor_candidate": "D",
+        "donor_seed": 2,
+        "donor_epoch": 125,
+        "actor_state_sha256": "819f6126ea8fcc4277cd92b968917ff0be38cc1a6c082ad4f72d31dcfdcffe02",
+        "inherited_state_keys": [
+          "a2c_network.actor_mlp.0.bias",
+          "a2c_network.actor_mlp.0.weight",
+          "a2c_network.actor_mlp.2.bias",
+          "a2c_network.actor_mlp.2.weight",
+          "a2c_network.layer_norm.bias",
+          "a2c_network.layer_norm.weight",
+          "a2c_network.mu.bias",
+          "a2c_network.mu.weight",
+          "a2c_network.rnn.rnn.bias_hh_l0",
+          "a2c_network.rnn.rnn.bias_ih_l0",
+          "a2c_network.rnn.rnn.weight_hh_l0",
+          "a2c_network.rnn.rnn.weight_ih_l0",
+          "a2c_network.sigma",
+          "a2c_network.value.bias",
+          "a2c_network.value.weight",
+          "running_mean_std.count",
+          "running_mean_std.running_mean",
+          "running_mean_std.running_var",
+          "value_mean_std.count",
+          "value_mean_std.running_mean",
+          "value_mean_std.running_var"
+        ],
+        "inherited_state_key_count": 21,
+        "actor_input_normalization_keys": [
+          "running_mean_std.count",
+          "running_mean_std.running_mean",
+          "running_mean_std.running_var"
+        ],
+        "observation_normalization_version": 125,
+        "critic_state_sha256": "aa6933b927357c8b77ef3135851a355ee92f33b0c953073850d4579d3711ddd0",
+        "checks": {
+          "actor_state_strictly_equal_donor": true,
+          "critic_unchanged_by_actor_import": true,
+          "actor_optimizer_fresh": true,
+          "critic_optimizer_fresh": true,
+          "normalization_version_inherited": true
+        },
+        "donor_critic_loaded": false,
+        "donor_actor_optimizer_loaded": false,
+        "donor_critic_optimizer_loaded": false,
+        "donor_RNN_or_environment_loaded": false,
+        "mean_head_zeroed_after_import": false,
+        "sigma_rescaled_after_import": false
+      },
+      "training": {
+        "worlds": 4,
+        "completed_actor_updates": 250,
+        "simulation_physics_steps": 400000,
+        "simulation_control_intervals": 40000,
+        "wall_seconds": 4575.5100383758545,
+        "actor_learning_rate": 0.0001,
+        "actor_mini_epochs": 1,
+        "critic_mini_epochs": 4
+      },
+      "milestones": {
+        "0": {
+          "epoch": 0,
+          "physics_steps": 0,
+          "successful_intervals": 20,
+          "first_failure_endpoint": 61,
+          "forty_of_forty": false,
+          "endpoint60": {
+            "score": 0.9899907112121582,
+            "position_error_m": 0.10832184553146362,
+            "rotation_error_rad": 0.6097583770751953,
+            "position_squared_contribution": 0.814834876343213,
+            "rotation_squared_contribution": 0.16524679040594492
+          },
+          "endpoint70": {
+            "score": 1.4259909391403198,
+            "position_error_m": 0.16929087042808533,
+            "rotation_error_rad": 0.3118201494216919,
+            "position_squared_contribution": 1.9902360284929708,
+            "rotation_squared_contribution": 0.04321413581571834
+          },
+          "endpoint80": {
+            "score": 1.5108814239501953,
+            "position_error_m": 0.17230020463466644,
+            "rotation_error_rad": 0.7053835988044739,
+            "position_squared_contribution": 2.0616222581352734,
+            "rotation_squared_contribution": 0.2211404539832671
+          },
+          "validation_residual_RMS": 0.02021661214530468,
+          "validation_action_bound_fraction": 0.0,
+          "final_sigma": {
+            "minimum": 0.24952921271324158,
+            "mean": 0.25000545382499695,
+            "maximum": 0.25059810280799866
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_1/checkpoints/epoch_0000.pt.gz",
+            "artifact_sha256": "301b8b9ff99c2180b033c7b6ed60e962554b3e3eb702a4443e1e80bb763046d8",
+            "uncompressed_sha256": "df0b332e6291ab12085669b6165d390dace798521ddc9817bf7cf5d89de5016a",
+            "bytes": 27409504,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_1/validations/epoch_0000.npz",
+            "sha256": "deadd3e2bc219dd2bc2a8e0b5863c352fae7ac99d76ee0850ee7a35ed4905534",
+            "bytes": 47186
+          },
+          "independent_exact_revalidation": null
+        },
+        "62": {
+          "epoch": 62,
+          "physics_steps": 99200,
+          "successful_intervals": 15,
+          "first_failure_endpoint": 56,
+          "forty_of_forty": false,
+          "endpoint60": {
+            "score": 1.1632347106933594,
+            "position_error_m": 0.11322113871574402,
+            "rotation_error_rad": 1.0205566883087158,
+            "position_squared_contribution": 0.8902101563951215,
+            "rotation_squared_contribution": 0.46290486846740153
+          },
+          "endpoint70": {
+            "score": 1.5340280532836914,
+            "position_error_m": 0.16470204293727875,
+            "rotation_error_rad": 1.027734398841858,
+            "position_squared_contribution": 1.8838029824800846,
+            "rotation_squared_contribution": 0.4694391086945933
+          },
+          "endpoint80": {
+            "score": 1.7711312770843506,
+            "position_error_m": 0.16572119295597076,
+            "rotation_error_rad": 1.6633895635604858,
+            "position_squared_contribution": 1.907188457968757,
+            "rotation_squared_contribution": 1.2297177067386413
+          },
+          "validation_residual_RMS": 0.023866312578320503,
+          "validation_action_bound_fraction": 0.0,
+          "final_sigma": {
+            "minimum": 0.24937327206134796,
+            "mean": 0.25002944469451904,
+            "maximum": 0.2509494423866272
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_1/checkpoints/epoch_0062.pt.gz",
+            "artifact_sha256": "b6b2fc52ce94dd64e84b302ed465509bf3520052f0fd7692b6a97ab5bea9f98e",
+            "uncompressed_sha256": "6b25165a23144da5260b22cc30539a08aa9e130c3a0ca358fafff7b2ad35886a",
+            "bytes": 81885627,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_1/validations/epoch_0062.npz",
+            "sha256": "6c34dc99f370e0df6b0dd8abb90468095d088293cd29fa4f3a6d34766dc15be0",
+            "bytes": 47378
+          },
+          "independent_exact_revalidation": null
+        },
+        "125": {
+          "epoch": 125,
+          "physics_steps": 200000,
+          "successful_intervals": 20,
+          "first_failure_endpoint": 61,
+          "forty_of_forty": false,
+          "endpoint60": {
+            "score": 0.9817183613777161,
+            "position_error_m": 0.11436764895915985,
+            "rotation_error_rad": 0.35318708419799805,
+            "position_squared_contribution": 0.9083304950309457,
+            "rotation_squared_contribution": 0.05544049619745944
+          },
+          "endpoint70": {
+            "score": 1.3823014497756958,
+            "position_error_m": 0.16271637380123138,
+            "rotation_error_rad": 0.40278103947639465,
+            "position_squared_contribution": 1.8386540488209766,
+            "rotation_squared_contribution": 0.0721033625607489
+          },
+          "endpoint80": {
+            "score": 1.7044991254806519,
+            "position_error_m": 0.183071568608284,
+            "rotation_error_rad": 1.1402692794799805,
+            "position_squared_contribution": 2.3274443911595584,
+            "rotation_squared_contribution": 0.5778729021003528
+          },
+          "validation_residual_RMS": 0.027727555483579636,
+          "validation_action_bound_fraction": 0.0,
+          "final_sigma": {
+            "minimum": 0.24912196397781372,
+            "mean": 0.24997948110103607,
+            "maximum": 0.2509841322898865
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_1/checkpoints/epoch_0125.pt.gz",
+            "artifact_sha256": "2d36d35638eee4b061c9840777bec163afd33caf2cf4c30333fdbe451130cbf9",
+            "uncompressed_sha256": "ce940354eeac7f85698259264cd1394043c493d9d3313f6be94244b35d00c6c8",
+            "bytes": 81759410,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_1/validations/epoch_0125.npz",
+            "sha256": "0dc8e14a95076416b7dbe598f1fb996357d36bf37db95fb2379f33fa321e8ee6",
+            "bytes": 47297
+          },
+          "independent_exact_revalidation": null
+        },
+        "188": {
+          "epoch": 188,
+          "physics_steps": 300800,
+          "successful_intervals": 19,
+          "first_failure_endpoint": 60,
+          "forty_of_forty": false,
+          "endpoint60": {
+            "score": 1.0145524740219116,
+            "position_error_m": 0.11638514697551727,
+            "rotation_error_rad": 0.44662976264953613,
+            "position_squared_contribution": 0.9406598914244972,
+            "rotation_squared_contribution": 0.08865695328194709
+          },
+          "endpoint70": {
+            "score": 1.4782299995422363,
+            "position_error_m": 0.17279812693595886,
+            "rotation_error_rad": 0.5011183023452759,
+            "position_squared_contribution": 2.0735550467066495,
+            "rotation_squared_contribution": 0.11160869019796057
+          },
+          "endpoint80": {
+            "score": 1.9489545822143555,
+            "position_error_m": 0.20520037412643433,
+            "rotation_error_rad": 1.4025707244873047,
+            "position_squared_contribution": 2.924110662613099,
+            "rotation_squared_contribution": 0.8743131720839301
+          },
+          "validation_residual_RMS": 0.031183890998363495,
+          "validation_action_bound_fraction": 0.0,
+          "final_sigma": {
+            "minimum": 0.24882809817790985,
+            "mean": 0.24994921684265137,
+            "maximum": 0.2512468993663788
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_1/checkpoints/epoch_0188.pt.gz",
+            "artifact_sha256": "ba747fe2f44ac085437dd9998abb4232327a7fc6f591ad91612f732a3a9e8464",
+            "uncompressed_sha256": "8bf8f646b28fd71d1525155d5ac90d06bc51203390692ed65726ae59de220942",
+            "bytes": 81731432,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_1/validations/epoch_0188.npz",
+            "sha256": "d2df8b3701c55713bdb77e99a662734d292ba7a4ebea062cd67436849da56015",
+            "bytes": 46875
+          },
+          "independent_exact_revalidation": null
+        },
+        "250": {
+          "epoch": 250,
+          "physics_steps": 400000,
+          "successful_intervals": 19,
+          "first_failure_endpoint": 60,
+          "forty_of_forty": false,
+          "endpoint60": {
+            "score": 1.010209083557129,
+            "position_error_m": 0.11472329497337341,
+            "rotation_error_rad": 0.48959290981292725,
+            "position_squared_contribution": 0.9139885006630311,
+            "rotation_squared_contribution": 0.1065338743729285
+          },
+          "endpoint70": {
+            "score": 1.5098869800567627,
+            "position_error_m": 0.17407280206680298,
+            "rotation_error_rad": 0.6283887624740601,
+            "position_squared_contribution": 2.1042597513464147,
+            "rotation_squared_contribution": 0.17549886080163585
+          },
+          "endpoint80": {
+            "score": 1.6734402179718018,
+            "position_error_m": 0.1880590170621872,
+            "rotation_error_rad": 0.8803049921989441,
+            "position_squared_contribution": 2.455985687388612,
+            "rotation_squared_contribution": 0.3444163907957257
+          },
+          "validation_residual_RMS": 0.03468625992536545,
+          "validation_action_bound_fraction": 0.0,
+          "final_sigma": {
+            "minimum": 0.2483513057231903,
+            "mean": 0.2498919665813446,
+            "maximum": 0.25131911039352417
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_1/checkpoints/epoch_0250.pt.gz",
+            "artifact_sha256": "4b34abc32bfd568bbcacb381b428a6db1136874ce8cbe1da4d6dd476e632d4f9",
+            "uncompressed_sha256": "0a108e54a7406169ab77ef2599b834e113a08c785efd34e57c633902ea8e6045",
+            "bytes": 81726725,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_1/validations/epoch_0250.npz",
+            "sha256": "da3089778f09bdbf4be81f85c239e66cf327e87e9b3484db921c84311d77bf92",
+            "bytes": 46866
+          },
+          "independent_exact_revalidation": null
+        }
+      },
+      "coverage": {
+        "sample_count": 40000,
+        "source60_attempts": 604,
+        "endpoint61_outcomes": 604,
+        "endpoint61_tracking_terminations": 555,
+        "endpoint61_passes": 49,
+        "conditional_endpoint61_pass_rate": 0.08112582781456953,
+        "outcome_endpoint_reach_counts": {
+          "65": 0,
+          "70": 0,
+          "75": 0,
+          "80": 0
+        },
+        "deep_source_visit_fraction_by_k": {
+          "21": {
+            "visits": 43,
+            "fraction_of_training_samples": 0.001075
+          },
+          "25": {
+            "visits": 0,
+            "fraction_of_training_samples": 0.0
+          },
+          "30": {
+            "visits": 0,
+            "fraction_of_training_samples": 0.0
+          },
+          "35": {
+            "visits": 0,
+            "fraction_of_training_samples": 0.0
+          }
+        },
+        "maximum_source_endpoint": 61,
+        "maximum_outcome_endpoint": 62,
+        "tracking_termination_count": 1498
+      },
+      "report": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_1/report.json",
+        "sha256": "309d8711aabcdecc34cbd4850d4f803ff6cc45869e1a48b80f642dfe024073c4",
+        "bytes": 582995
+      },
+      "chunk_commit_written": false,
+      "intermediate_checkpoint_selected": false
+    },
+    {
+      "seed": 2,
+      "status": "completed_400k_without_strict_success_no_chunk_commit",
+      "inheritance": {
+        "schema": "taco_pour_candidate_G_actor_only_warm_start_v1",
+        "donor_candidate": "D",
+        "donor_seed": 2,
+        "donor_epoch": 125,
+        "actor_state_sha256": "819f6126ea8fcc4277cd92b968917ff0be38cc1a6c082ad4f72d31dcfdcffe02",
+        "inherited_state_keys": [
+          "a2c_network.actor_mlp.0.bias",
+          "a2c_network.actor_mlp.0.weight",
+          "a2c_network.actor_mlp.2.bias",
+          "a2c_network.actor_mlp.2.weight",
+          "a2c_network.layer_norm.bias",
+          "a2c_network.layer_norm.weight",
+          "a2c_network.mu.bias",
+          "a2c_network.mu.weight",
+          "a2c_network.rnn.rnn.bias_hh_l0",
+          "a2c_network.rnn.rnn.bias_ih_l0",
+          "a2c_network.rnn.rnn.weight_hh_l0",
+          "a2c_network.rnn.rnn.weight_ih_l0",
+          "a2c_network.sigma",
+          "a2c_network.value.bias",
+          "a2c_network.value.weight",
+          "running_mean_std.count",
+          "running_mean_std.running_mean",
+          "running_mean_std.running_var",
+          "value_mean_std.count",
+          "value_mean_std.running_mean",
+          "value_mean_std.running_var"
+        ],
+        "inherited_state_key_count": 21,
+        "actor_input_normalization_keys": [
+          "running_mean_std.count",
+          "running_mean_std.running_mean",
+          "running_mean_std.running_var"
+        ],
+        "observation_normalization_version": 125,
+        "critic_state_sha256": "9e1a9c7020ded432f6144181b63b93b63dc9323c3fbfabdc9ee497f7de6106a1",
+        "checks": {
+          "actor_state_strictly_equal_donor": true,
+          "critic_unchanged_by_actor_import": true,
+          "actor_optimizer_fresh": true,
+          "critic_optimizer_fresh": true,
+          "normalization_version_inherited": true
+        },
+        "donor_critic_loaded": false,
+        "donor_actor_optimizer_loaded": false,
+        "donor_critic_optimizer_loaded": false,
+        "donor_RNN_or_environment_loaded": false,
+        "mean_head_zeroed_after_import": false,
+        "sigma_rescaled_after_import": false
+      },
+      "training": {
+        "worlds": 4,
+        "completed_actor_updates": 250,
+        "simulation_physics_steps": 400000,
+        "simulation_control_intervals": 40000,
+        "wall_seconds": 4529.621003627777,
+        "actor_learning_rate": 0.0001,
+        "actor_mini_epochs": 1,
+        "critic_mini_epochs": 4
+      },
+      "milestones": {
+        "0": {
+          "epoch": 0,
+          "physics_steps": 0,
+          "successful_intervals": 20,
+          "first_failure_endpoint": 61,
+          "forty_of_forty": false,
+          "endpoint60": {
+            "score": 0.9899907112121582,
+            "position_error_m": 0.10832184553146362,
+            "rotation_error_rad": 0.6097583770751953,
+            "position_squared_contribution": 0.814834876343213,
+            "rotation_squared_contribution": 0.16524679040594492
+          },
+          "endpoint70": {
+            "score": 1.4259909391403198,
+            "position_error_m": 0.16929087042808533,
+            "rotation_error_rad": 0.3118201494216919,
+            "position_squared_contribution": 1.9902360284929708,
+            "rotation_squared_contribution": 0.04321413581571834
+          },
+          "endpoint80": {
+            "score": 1.5108814239501953,
+            "position_error_m": 0.17230020463466644,
+            "rotation_error_rad": 0.7053835988044739,
+            "position_squared_contribution": 2.0616222581352734,
+            "rotation_squared_contribution": 0.2211404539832671
+          },
+          "validation_residual_RMS": 0.02021661214530468,
+          "validation_action_bound_fraction": 0.0,
+          "final_sigma": {
+            "minimum": 0.24952921271324158,
+            "mean": 0.25000545382499695,
+            "maximum": 0.25059810280799866
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_2/checkpoints/epoch_0000.pt.gz",
+            "artifact_sha256": "b03d6bf808f07368040e57a008e2570d3b79b35e61c447a99a0485acb27766b5",
+            "uncompressed_sha256": "e6bdf41adfcc9aed8b1a5ba11fa6ee8c2231b1a70252bb0ef8d0f0bc313fc052",
+            "bytes": 27409499,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_2/validations/epoch_0000.npz",
+            "sha256": "deadd3e2bc219dd2bc2a8e0b5863c352fae7ac99d76ee0850ee7a35ed4905534",
+            "bytes": 47186
+          },
+          "independent_exact_revalidation": null
+        },
+        "62": {
+          "epoch": 62,
+          "physics_steps": 99200,
+          "successful_intervals": 17,
+          "first_failure_endpoint": 58,
+          "forty_of_forty": false,
+          "endpoint60": {
+            "score": 1.0121420621871948,
+            "position_error_m": 0.11324626952409744,
+            "rotation_error_rad": 0.5487343072891235,
+            "position_squared_contribution": 0.890605386189203,
+            "rotation_squared_contribution": 0.13382637333158853
+          },
+          "endpoint70": {
+            "score": 1.4513115882873535,
+            "position_error_m": 0.153080552816391,
+            "rotation_error_rad": 1.0381126403808594,
+            "position_squared_contribution": 1.62733719795638,
+            "rotation_squared_contribution": 0.4789679351637865
+          },
+          "endpoint80": {
+            "score": 1.4745984077453613,
+            "position_error_m": 0.15226520597934723,
+            "rotation_error_rad": 1.1268908977508545,
+            "position_squared_contribution": 1.6100481216620166,
+            "rotation_squared_contribution": 0.5643924868594342
+          },
+          "validation_residual_RMS": 0.024267302826046944,
+          "validation_action_bound_fraction": 0.0,
+          "final_sigma": {
+            "minimum": 0.249373659491539,
+            "mean": 0.2499835342168808,
+            "maximum": 0.2504800260066986
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_2/checkpoints/epoch_0062.pt.gz",
+            "artifact_sha256": "95ba55843b922931548a94876df189bc4e46ae06e16cb87c72e50c8881a023d7",
+            "uncompressed_sha256": "7f77453985eba7c77bb60f0260495fe51a5bc3582f8ba23b5f6e1111be460218",
+            "bytes": 81887512,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_2/validations/epoch_0062.npz",
+            "sha256": "4fd97482a9b01e6c0cf76f5336b1f4e2a2fce6b33f62b614b4afea1c604b2382",
+            "bytes": 47259
+          },
+          "independent_exact_revalidation": null
+        },
+        "125": {
+          "epoch": 125,
+          "physics_steps": 200000,
+          "successful_intervals": 17,
+          "first_failure_endpoint": 58,
+          "forty_of_forty": false,
+          "endpoint60": {
+            "score": 1.1665003299713135,
+            "position_error_m": 0.10648956894874573,
+            "rotation_error_rad": 1.13567054271698,
+            "position_squared_contribution": 0.7875019649228938,
+            "rotation_squared_contribution": 0.573221147375591
+          },
+          "endpoint70": {
+            "score": 1.5295299291610718,
+            "position_error_m": 0.16432256996631622,
+            "rotation_error_rad": 1.0221259593963623,
+            "position_squared_contribution": 1.875132430578812,
+            "rotation_squared_contribution": 0.4643295452764152
+          },
+          "endpoint80": {
+            "score": 1.6205065250396729,
+            "position_error_m": 0.1689075380563736,
+            "rotation_error_rad": 1.2044991254806519,
+            "position_squared_contribution": 1.98123308418509,
+            "rotation_squared_contribution": 0.6448080636816245
+          },
+          "validation_residual_RMS": 0.027226924896240234,
+          "validation_action_bound_fraction": 0.0,
+          "final_sigma": {
+            "minimum": 0.24941129982471466,
+            "mean": 0.24999016523361206,
+            "maximum": 0.2506926953792572
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_2/checkpoints/epoch_0125.pt.gz",
+            "artifact_sha256": "e825fc927c022b4b69446e0df12d8274213d4f0359325618edf9e92929b63708",
+            "uncompressed_sha256": "281ac10fd932649edf19998f5a9cf7e0eb3c5f632d85ff029bb4db43e492d0f5",
+            "bytes": 81810733,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_2/validations/epoch_0125.npz",
+            "sha256": "1704041051aa91122bc059babe79cfb1458630a28efb15bda4e3d08e5590fb19",
+            "bytes": 47392
+          },
+          "independent_exact_revalidation": null
+        },
+        "188": {
+          "epoch": 188,
+          "physics_steps": 300800,
+          "successful_intervals": 20,
+          "first_failure_endpoint": 61,
+          "forty_of_forty": false,
+          "endpoint60": {
+            "score": 0.9481410384178162,
+            "position_error_m": 0.11290188133716583,
+            "rotation_error_rad": 0.17604783177375793,
+            "position_squared_contribution": 0.8851968617688525,
+            "rotation_squared_contribution": 0.013774595143218389
+          },
+          "endpoint70": {
+            "score": 1.680990219116211,
+            "position_error_m": 0.16775117814540863,
+            "rotation_error_rad": 1.4003363847732544,
+            "position_squared_contribution": 1.9541984561925436,
+            "rotation_squared_contribution": 0.8715297735643681
+          },
+          "endpoint80": {
+            "score": 1.7436212301254272,
+            "position_error_m": 0.15733087062835693,
+            "rotation_error_rad": 1.7241888046264648,
+            "position_squared_contribution": 1.718958531435888,
+            "rotation_squared_contribution": 1.3212564595552165
+          },
+          "validation_residual_RMS": 0.03191014751791954,
+          "validation_action_bound_fraction": 0.0,
+          "final_sigma": {
+            "minimum": 0.2490590661764145,
+            "mean": 0.2499597817659378,
+            "maximum": 0.2507861256599426
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_2/checkpoints/epoch_0188.pt.gz",
+            "artifact_sha256": "c917b4bac56e923d1d51bc128708cd55ce71b9d5c4f26685dba38c00e9d035dc",
+            "uncompressed_sha256": "91e13abfa0608002f41439a1845432f1afec10d21c7d63d8f0eb3c84b868e045",
+            "bytes": 81764866,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_2/validations/epoch_0188.npz",
+            "sha256": "b61786d075de5d327224e596d711bd37af835d7167393535594d9ca79f76012f",
+            "bytes": 47231
+          },
+          "independent_exact_revalidation": null
+        },
+        "250": {
+          "epoch": 250,
+          "physics_steps": 400000,
+          "successful_intervals": 18,
+          "first_failure_endpoint": 59,
+          "forty_of_forty": false,
+          "endpoint60": {
+            "score": 1.057716965675354,
+            "position_error_m": 0.11493273824453354,
+            "rotation_error_rad": 0.6732249855995178,
+            "position_squared_contribution": 0.91732877224906,
+            "rotation_squared_contribution": 0.20143639166020932
+          },
+          "endpoint70": {
+            "score": 1.7422767877578735,
+            "position_error_m": 0.18526233732700348,
+            "rotation_error_rad": 1.211241364479065,
+            "position_squared_contribution": 2.383481502212808,
+            "rotation_squared_contribution": 0.6520469524556032
+          },
+          "endpoint80": {
+            "score": 1.6275665760040283,
+            "position_error_m": 0.1884205937385559,
+            "rotation_error_rad": 0.6426137685775757,
+            "position_squared_contribution": 2.465438898943746,
+            "rotation_squared_contribution": 0.1835344246957662
+          },
+          "validation_residual_RMS": 0.032379716634750366,
+          "validation_action_bound_fraction": 0.0,
+          "final_sigma": {
+            "minimum": 0.24853813648223877,
+            "mean": 0.24991917610168457,
+            "maximum": 0.25087887048721313
+          },
+          "checkpoint": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_2/checkpoints/epoch_0250.pt.gz",
+            "artifact_sha256": "d2749f7b29c3393e4eb827c68d7fa137205c156c93521bfe01a2d1eab5b5b114",
+            "uncompressed_sha256": "13371f5c5a38110b579b2c068b33ec46b7edec036067e02de58cbbb6e9a5d48d",
+            "bytes": 81795311,
+            "payload_roundtrip_exact": true,
+            "checkpoint_validation_passed": true
+          },
+          "trajectory": {
+            "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_2/validations/epoch_0250.npz",
+            "sha256": "94676591cb158e295228ba9c4de0ea6b72572ab058d427952f6616d3d4087df8",
+            "bytes": 47081
+          },
+          "independent_exact_revalidation": null
+        }
+      },
+      "coverage": {
+        "sample_count": 40000,
+        "source60_attempts": 553,
+        "endpoint61_outcomes": 553,
+        "endpoint61_tracking_terminations": 491,
+        "endpoint61_passes": 62,
+        "conditional_endpoint61_pass_rate": 0.11211573236889692,
+        "outcome_endpoint_reach_counts": {
+          "65": 0,
+          "70": 0,
+          "75": 0,
+          "80": 0
+        },
+        "deep_source_visit_fraction_by_k": {
+          "21": {
+            "visits": 60,
+            "fraction_of_training_samples": 0.0015
+          },
+          "25": {
+            "visits": 0,
+            "fraction_of_training_samples": 0.0
+          },
+          "30": {
+            "visits": 0,
+            "fraction_of_training_samples": 0.0
+          },
+          "35": {
+            "visits": 0,
+            "fraction_of_training_samples": 0.0
+          }
+        },
+        "maximum_source_endpoint": 61,
+        "maximum_outcome_endpoint": 62,
+        "tracking_termination_count": 1533
+      },
+      "report": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_2/report.json",
+        "sha256": "c0a8c6bc05fb1fa09b938633672341784c9d89b8330fe56bd3ff2439df96b4c5",
+        "bytes": 582996
+      },
+      "chunk_commit_written": false,
+      "intermediate_checkpoint_selected": false
+    }
+  ],
+  "aggregate": {
+    "completed_seeds": [
+      0,
+      1,
+      2
+    ],
+    "all_three_completed_400k": true,
+    "strict_success_events": [],
+    "final_successful_intervals": [
+      17,
+      19,
+      18
+    ],
+    "final_seeds_at_least_30": [],
+    "median_successful_intervals_by_milestone": {
+      "0": 20,
+      "62": 17,
+      "125": 20,
+      "188": 20,
+      "250": 18
+    },
+    "prefrozen_classification": "G3",
+    "prefrozen_label": "NO_PREDECLARED_SUSTAINED_EXTENSION"
+  },
+  "cost_accounting": {
+    "candidate_G_new_training": {
+      "physics_steps": 1200000,
+      "control_intervals": 120000
+    },
+    "candidate_G_fixed_milestone_validation": {
+      "rollouts": 15,
+      "physics_steps": 6000,
+      "control_intervals": 600
+    },
+    "candidate_G_exact_revalidation": {
+      "rollouts": 0,
+      "physics_steps": 0,
+      "control_intervals": 0
+    },
+    "candidate_G_training_context_reencoding": {
+      "context_rebuilds": 753,
+      "prefix_observation_forwards": 15060,
+      "physics_steps": 0
+    },
+    "candidate_G_validation_context_reencoding": {
+      "context_rebuilds": 15,
+      "prefix_observation_forwards": 300,
+      "physics_steps": 0
+    },
+    "preflight_G0_derived_from_frozen_code_path": {
+      "physics_steps": 5200,
+      "control_intervals": 520,
+      "prefix_observation_forwards": 160,
+      "runtime_counter_was_not_serialized": true
+    },
+    "historical_donor_training_and_selection": {
+      "candidate_D_seed_count": 3,
+      "fixed_budget_physics_steps_per_seed": 400000,
+      "total_historical_training_physics_steps": 1200000,
+      "charged_as_new_candidate_G_training": false,
+      "equal_total_data_cost_claim_allowed": false
+    }
+  },
+  "decision": {
+    "code": "G3",
+    "label": "NO_PREDECLARED_SUSTAINED_EXTENSION",
+    "action": "stop_this_specific_actor_only_warm_start_package",
+    "G2_final_threshold": 30,
+    "G2_threshold_is_local_reporting_only": true,
+    "chunk_commit_written": false
+  },
+  "verification": {
+    "repository_tests": 822,
+    "repository_subtests": 57,
+    "warnings": 19
+  },
+  "summarizer_sha256": "b02d10f018aa0a002921675892d834393325af2875f0cd8a0f42281783d191a8"
+}

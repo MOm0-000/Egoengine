@@ -1,0 +1,3561 @@
+{
+  "schema": "taco_ppo_training_visitation_v6_world_indexed",
+  "status": "complete",
+  "logging_semantics": {
+    "endpoint_alignment": "transition t->t+1 commands ctrl[t+1], scores physical state[t+1] against ref[t+1], and exposes ref[t+2] to the next actor observation except for reference-tail clipping",
+    "world_index": "stable IndependentMJWPTrainingEnv batch position for this rollout sample; present only in the world-indexed v6 schema",
+    "sampled_action_preclamp": "stochastic action sampled from the PPO policy distribution before the official [-1,1] clamp; this is not actor mean mu",
+    "sampled_action_clamped": "the same sampled action after the official [-1,1] clamp",
+    "actor_mu": "mean of the Gaussian PPO policy distribution used to draw the recorded sample",
+    "actor_sigma": "strictly-positive standard deviation (exp(logstd), not variance) of the Gaussian PPO policy distribution used to draw the recorded sample",
+    "reference_ctrl": "full residual-action control target at transition t->t+1 before the policy residual and before actuator ctrlrange",
+    "requested_residual": "full action-space signed control-target offset after local scale and formal safety clip, before actuator ctrlrange",
+    "effective_residual_after_ctrlrange": "full action-space signed control-target offset remaining after the model's enabled actuator ctrlrange clamp; not realized qpos motion",
+    "residual_lost_to_ctrlrange": "signed requested minus effective control-target residual",
+    "legacy_v2_applied_residual": "historical v2 right_wrist_applied_residual equals requested_residual for its recorded six dimensions; v2 artifacts remain immutable",
+    "actor_distribution_parameters": "mu and sigma are passively captured from the same official get_action_values result as the sampled action; no extra actor forward pass is performed",
+    "contact_summary": "control-endpoint hand-object finger flags; not substep collision topology",
+    "write_timing": "rollout samples are held in memory and written only at the next epoch boundary or after training completes"
+  },
+  "incomplete_step_discarded": false,
+  "action_contract": {
+    "dimensions": 36,
+    "actuator_names": [
+      "R_forearm_tx_position",
+      "R_forearm_ty_position",
+      "R_forearm_tz_position",
+      "R_forearm_roll_position",
+      "R_forearm_pitch_position",
+      "R_forearm_yaw_position",
+      "right_thumb_bend_position",
+      "right_thumb_rota1_position",
+      "right_thumb_rota2_position",
+      "right_index_bend_position",
+      "right_index_joint1_position",
+      "right_index_joint2_position",
+      "right_middle_joint1_position",
+      "right_middle_joint2_position",
+      "right_ring_joint1_position",
+      "right_ring_joint2_position",
+      "right_pinky_joint1_position",
+      "right_pinky_joint2_position",
+      "L_forearm_tx_position",
+      "L_forearm_ty_position",
+      "L_forearm_tz_position",
+      "L_forearm_roll_position",
+      "L_forearm_pitch_position",
+      "L_forearm_yaw_position",
+      "left_thumb_bend_position",
+      "left_thumb_rota1_position",
+      "left_thumb_rota2_position",
+      "left_index_bend_position",
+      "left_index_joint1_position",
+      "left_index_joint2_position",
+      "left_middle_joint1_position",
+      "left_middle_joint2_position",
+      "left_ring_joint1_position",
+      "left_ring_joint2_position",
+      "left_pinky_joint1_position",
+      "left_pinky_joint2_position"
+    ],
+    "coordinate_units": [
+      "m",
+      "m",
+      "m",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "m",
+      "m",
+      "m",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad"
+    ],
+    "residual_scale": 0.05,
+    "residual_clip": 0.05,
+    "ctrlrange": {
+      "control_clamping_enabled": true,
+      "model_disableflags": 0,
+      "ctrllimited": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "ctrlrange": [
+        [
+          -5.0,
+          5.0
+        ],
+        [
+          -5.0,
+          5.0
+        ],
+        [
+          -5.0,
+          5.0
+        ],
+        [
+          -6.2,
+          6.2
+        ],
+        [
+          -6.2,
+          6.2
+        ],
+        [
+          -6.2,
+          6.2
+        ],
+        [
+          0.0,
+          1.83
+        ],
+        [
+          -1.05,
+          1.57
+        ],
+        [
+          -0.175,
+          1.83
+        ],
+        [
+          -0.175,
+          0.175
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.94
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          -5.0,
+          5.0
+        ],
+        [
+          -5.0,
+          5.0
+        ],
+        [
+          -5.0,
+          5.0
+        ],
+        [
+          -6.2,
+          6.2
+        ],
+        [
+          -6.2,
+          6.2
+        ],
+        [
+          -6.2,
+          6.2
+        ],
+        [
+          0.0,
+          1.83
+        ],
+        [
+          -1.05,
+          1.57
+        ],
+        [
+          -0.17,
+          1.83
+        ],
+        [
+          -0.175,
+          0.175
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ],
+        [
+          0.0,
+          1.92
+        ]
+      ]
+    }
+  },
+  "row_identity": {
+    "fields": [
+      "run_id",
+      "training_seed",
+      "epoch",
+      "rollout_step",
+      "world_index",
+      "episode_serial"
+    ],
+    "PPO_flattening": "PPO credit is world-major (world*horizon+time) and is explicitly permuted into time-major visitation order before attachment"
+  },
+  "object_roles": [
+    "tool",
+    "target"
+  ],
+  "hand_roles": [
+    "right",
+    "left"
+  ],
+  "epochs": [
+    {
+      "epoch": 1,
+      "frame_at_start": 0,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0001_visits.npz",
+        "sha256": "2f2e15c45e009409eae492e4ee26e6e86aa53e0d3b781a06d93c28754a8806da"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0001_summary.json",
+        "sha256": "57edf4bd74e5c82bf7d47c4e182b053fecac71fdd06465b13d0018a54fb71795"
+      }
+    },
+    {
+      "epoch": 2,
+      "frame_at_start": 160,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0002_visits.npz",
+        "sha256": "e1a4ac84aadf7475c1a4681de0b72a4a045f0ded73482fce2bbe647e24e482cf"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0002_summary.json",
+        "sha256": "e2255e39f02017d17f76de9b4cab575a84c531eb473d336fbdd910dd10366677"
+      }
+    },
+    {
+      "epoch": 3,
+      "frame_at_start": 320,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0003_visits.npz",
+        "sha256": "00add95e2ac66eff9697be441529f28c1b4910633a6ace503c5211dc7f678e74"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0003_summary.json",
+        "sha256": "bd4a257d61ac51655f057f2b0b1e88b40a999a683a395b98138bd3fdf6154f3c"
+      }
+    },
+    {
+      "epoch": 4,
+      "frame_at_start": 480,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0004_visits.npz",
+        "sha256": "4a514948353ef80e92f55fa3675dbd854837d809bd9f5ae5dc3abf0eb7c0ceb1"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0004_summary.json",
+        "sha256": "f98fb7305d8b5786e76f8b8134f00b213453efa8f974aaf9a6110ae84d0962b4"
+      }
+    },
+    {
+      "epoch": 5,
+      "frame_at_start": 640,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0005_visits.npz",
+        "sha256": "f8a75b70f58500d8a4e00e044e235dce15f54462af6bfa05c764c84abe030db1"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0005_summary.json",
+        "sha256": "c95c15d97bcc9ec0fe3dee04a41cf93d11247e47e20b21d2e148e0e3a5fa60dd"
+      }
+    },
+    {
+      "epoch": 6,
+      "frame_at_start": 800,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0006_visits.npz",
+        "sha256": "e1a59d89e716ab026c4fe59be3796f6e143519d2c2c994779863e042959ccee2"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0006_summary.json",
+        "sha256": "ec817d015bacf81f25f0f25ea44756d97885ff0a3a35196cd378427fc272abba"
+      }
+    },
+    {
+      "epoch": 7,
+      "frame_at_start": 960,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0007_visits.npz",
+        "sha256": "74e7dcf9f0419276e61b65127ce082c5c41ff527d7a4ba0b92f97ed9a93989b8"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0007_summary.json",
+        "sha256": "d76bac91775e0fae02a9f4dbdb5eaee92f8676713f889dd07345d16c6f75c470"
+      }
+    },
+    {
+      "epoch": 8,
+      "frame_at_start": 1120,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0008_visits.npz",
+        "sha256": "f509018313f2212867185b795cc001ec287345a58f40c5b54878d9af41350d40"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0008_summary.json",
+        "sha256": "60b663bb71e89e82ce80d2855dd7ad7e692473c37f1c1e01a8cea564975450d7"
+      }
+    },
+    {
+      "epoch": 9,
+      "frame_at_start": 1280,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0009_visits.npz",
+        "sha256": "caec7a069122f175fbae630702c9f0938f2dd2bae60e65668e2047a3dec3306c"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0009_summary.json",
+        "sha256": "6e247459bd1b82b2d8a082ff6c204144b330226c1e0ca2d232ec33edb3a54f29"
+      }
+    },
+    {
+      "epoch": 10,
+      "frame_at_start": 1440,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0010_visits.npz",
+        "sha256": "1516aeb53f28c833c303b12c1a425adcfb487895b1fad532dc608c6e9ae7ec16"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0010_summary.json",
+        "sha256": "258436845a2a9ce81899933ca7c1916bfaceae93ef2de6692e10f6fd8750da35"
+      }
+    },
+    {
+      "epoch": 11,
+      "frame_at_start": 1600,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0011_visits.npz",
+        "sha256": "013429e7e8910c967c984847017e276e71d2b65fd6dbc2fd8ec66151fef234c7"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0011_summary.json",
+        "sha256": "f8ebf26f12ea343ff571689dec097c5453e25f6b7161eade586e2245348e72ce"
+      }
+    },
+    {
+      "epoch": 12,
+      "frame_at_start": 1760,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0012_visits.npz",
+        "sha256": "b3adbb794b4806ae97ae656eb8b331f0edd51758153048b0fca65b8086a19eb7"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0012_summary.json",
+        "sha256": "4a83afe23e67894a2cff70ad30d628e2157cdae062fe7e6d01bc951fa42fb7a1"
+      }
+    },
+    {
+      "epoch": 13,
+      "frame_at_start": 1920,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0013_visits.npz",
+        "sha256": "a201e3fb74f2848847a99994de302adc64dcd1abf4fcaae57c3fb3a87a9c99c4"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0013_summary.json",
+        "sha256": "f2b59ad5b09070eb7dc3d92d9e2aa02f3f04a8a057d43e346440b4a5a4989939"
+      }
+    },
+    {
+      "epoch": 14,
+      "frame_at_start": 2080,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0014_visits.npz",
+        "sha256": "c7ec26ba0c61302c5e3ebbfb6599ef5ac0896177c6be04eb1ac10304e80e7bd8"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0014_summary.json",
+        "sha256": "2c6268496b4bfed8ebf838f1edbe93b554e28bbc21ba073b6d45768a13726081"
+      }
+    },
+    {
+      "epoch": 15,
+      "frame_at_start": 2240,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0015_visits.npz",
+        "sha256": "71e89c4e260bba557d60dc83109dbea8a6f75e7672413409cfafa63b7561f154"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0015_summary.json",
+        "sha256": "47297dd529c42997a85721ee163577f7548d5f53f4f86e877ef6d0016cc77ded"
+      }
+    },
+    {
+      "epoch": 16,
+      "frame_at_start": 2400,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0016_visits.npz",
+        "sha256": "7a2421075d996dd2946e664e8bbaf3d58c52a0f748638eacb744eac2166b95ec"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0016_summary.json",
+        "sha256": "1cccf98a4fde38dd3cbecca8a49e7042d130474b86dc864ab1cc53359b28e4d4"
+      }
+    },
+    {
+      "epoch": 17,
+      "frame_at_start": 2560,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0017_visits.npz",
+        "sha256": "8fdccfc36dbd970e0e5a22aa4e222c5aa5c05a4ad73e596fe6e4f445d51fc217"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0017_summary.json",
+        "sha256": "2c403f23cf71eeac58c2f85b8b171d71d2df981e2fdae72326cdd82f8a3f78df"
+      }
+    },
+    {
+      "epoch": 18,
+      "frame_at_start": 2720,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0018_visits.npz",
+        "sha256": "719011d890c8500e3269321ae201dd65ec96c64e8799295cab3f0a40c558ea7b"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0018_summary.json",
+        "sha256": "31648ad376c69d87033de3c9da59b4b209be26d2519ef3f1332ce25dfdae78fe"
+      }
+    },
+    {
+      "epoch": 19,
+      "frame_at_start": 2880,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0019_visits.npz",
+        "sha256": "61067d3e918d575950d5ad8bc125497135cde5fce24d423ed57c35f6757c456a"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0019_summary.json",
+        "sha256": "eb7b2180bab9fe3c5b5e755a0421d58c8c3ee93a5aec38baa10a7e8fad7f76b7"
+      }
+    },
+    {
+      "epoch": 20,
+      "frame_at_start": 3040,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0020_visits.npz",
+        "sha256": "cad983be8e0ba826babc2228f5a94dad360a9cdedc167b09ed0f6d9c27e2fb21"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0020_summary.json",
+        "sha256": "4f21fad6b04671af58e5ece5ba429c2919fb743f2dc0e3d19b0f2f24321d9872"
+      }
+    },
+    {
+      "epoch": 21,
+      "frame_at_start": 3200,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0021_visits.npz",
+        "sha256": "0f52bc3d6d1c5013711b95ed4e7f82e1ff30eb0e7067fd9af3f463b49da1fde7"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0021_summary.json",
+        "sha256": "0880d97de9017bc24b0fece9adc49852bac7a04be8db78bebc93641ae8f65870"
+      }
+    },
+    {
+      "epoch": 22,
+      "frame_at_start": 3360,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0022_visits.npz",
+        "sha256": "74e0b1541923aca7b1feab73f6a61af0a49a21dcb0fb7e7df8adec1def357117"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0022_summary.json",
+        "sha256": "364004d9e5b31779d0c0ee600ba836969f5a888b4701c8d29b62e350434b543c"
+      }
+    },
+    {
+      "epoch": 23,
+      "frame_at_start": 3520,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0023_visits.npz",
+        "sha256": "8bdb43b02904863a0685109559fab80669f9ad5ebb295bf168486c1d50f283bf"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0023_summary.json",
+        "sha256": "10944d55af35da8a9bfe4d6b22d650a8c196d08ccbd93101ac4e975ae90621f8"
+      }
+    },
+    {
+      "epoch": 24,
+      "frame_at_start": 3680,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0024_visits.npz",
+        "sha256": "df0f35fbcd929d3b786fa59567f66d0226c25ed37860a131274c27d4d7dbac38"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0024_summary.json",
+        "sha256": "14d7e8cf2e5658bdaf3667e82c03c37afa9971f7c703120050fbdcf020c0ad3a"
+      }
+    },
+    {
+      "epoch": 25,
+      "frame_at_start": 3840,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0025_visits.npz",
+        "sha256": "b443e3ce5d1de2362a61e9f4e65832f1002b9b63232b8742b9a6e97cb13e71eb"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0025_summary.json",
+        "sha256": "f6862bad57fea64b273bc8fca3e2d14b41ba0cc40dcee97af07bc364d627dd9d"
+      }
+    },
+    {
+      "epoch": 26,
+      "frame_at_start": 4000,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0026_visits.npz",
+        "sha256": "cf511789d0ef59c1ddd8c84920599d70dbb5a2417c43855a5825582648453428"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0026_summary.json",
+        "sha256": "b558ed059638b2559785c0d0c1dde25870dbdbf1755fd2de9c17855617c86599"
+      }
+    },
+    {
+      "epoch": 27,
+      "frame_at_start": 4160,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0027_visits.npz",
+        "sha256": "8e8eef3e8e2c0576e73677ead477b5eb114c6b85ca2765746eff9e9047fd9dfd"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0027_summary.json",
+        "sha256": "fc418e758d844949b50388e0137d3ce7f746c58153b78c81d362e2d0f07cfa02"
+      }
+    },
+    {
+      "epoch": 28,
+      "frame_at_start": 4320,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0028_visits.npz",
+        "sha256": "cd5ae425dd96876b3f54040fff30f2f0bc2759e4aa83347179171289a96de14c"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0028_summary.json",
+        "sha256": "0aebad82f74af990d595b4b01628ebbec9edbe648f218570b9adbcdcce7ed4e1"
+      }
+    },
+    {
+      "epoch": 29,
+      "frame_at_start": 4480,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0029_visits.npz",
+        "sha256": "cc4c01ab6b1561e49b9b8bc0a0f597e63e3c49b155281600ca7c9f825809e9a7"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0029_summary.json",
+        "sha256": "9fcc30f8dbfba964b819b41a854e7ea9db9c18272a025fb15753be6b8bce8360"
+      }
+    },
+    {
+      "epoch": 30,
+      "frame_at_start": 4640,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0030_visits.npz",
+        "sha256": "752d81377ff6be0ad34f6f079350c1127d4baa48f9ae439ac9d07e00cc129e7b"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0030_summary.json",
+        "sha256": "4cb8b3e2cf0f0deb12bdc84bdaf18be0a3225a2b4b8dc8d6621a65f3f9fba359"
+      }
+    },
+    {
+      "epoch": 31,
+      "frame_at_start": 4800,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0031_visits.npz",
+        "sha256": "aa60f3f9cc8bae4700164220c8d6d13aca277349421c89e027ccbec5d20906cd"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0031_summary.json",
+        "sha256": "71cbdefa724775c205194a9e384e0d070e066e644f26ba1c0219906d285a6465"
+      }
+    },
+    {
+      "epoch": 32,
+      "frame_at_start": 4960,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0032_visits.npz",
+        "sha256": "d2d7c78723e54ac4bf32b051892f01607027025d6dc01981e0b402ab5868fcf4"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0032_summary.json",
+        "sha256": "1ff1e2b6abf786c8f7bbfaca2251c6f134eb68714c22a378ced23b31208f670f"
+      }
+    },
+    {
+      "epoch": 33,
+      "frame_at_start": 5120,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0033_visits.npz",
+        "sha256": "92a9a0eae404a6569d55e430f11b54eae57c54ab7f4401f0e5b911a1e10adc70"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0033_summary.json",
+        "sha256": "4d95ee64a05941de38378fc6972e26fca45b3580318d42873eb4cc4b25ce9e99"
+      }
+    },
+    {
+      "epoch": 34,
+      "frame_at_start": 5280,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0034_visits.npz",
+        "sha256": "2b4d380db6b1011a491219a56cca0b721ab3915094e806f8008257b1745cf06b"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0034_summary.json",
+        "sha256": "378f3a4a3df27cff91ee37ad5b3f07a347b8f7ddb639d6280f7081f82c69cdcc"
+      }
+    },
+    {
+      "epoch": 35,
+      "frame_at_start": 5440,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0035_visits.npz",
+        "sha256": "3357613730d62717ca16063efee5ffd73faf22cf324842ef922368d384f64ce2"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0035_summary.json",
+        "sha256": "00d919433ff2b5868990867735a0cee4898f306a8c73450b0fbe5c8ba57bb9a8"
+      }
+    },
+    {
+      "epoch": 36,
+      "frame_at_start": 5600,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0036_visits.npz",
+        "sha256": "3b3a5f8ae4bc594bc7566276d54a66b48052c04f927545974868459d84945865"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0036_summary.json",
+        "sha256": "940867a843f784ccd1de244638104e0d620f654bbcd6f596c0d5b337df73f4a0"
+      }
+    },
+    {
+      "epoch": 37,
+      "frame_at_start": 5760,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0037_visits.npz",
+        "sha256": "48902dbea548d0b280a1631198af7f76106dc066eb34f9649e09c8e21ce8cd2d"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0037_summary.json",
+        "sha256": "2ccfc1453cb994af17716aacb3aba1e3206b433e8055c3afd91c839bd92c5102"
+      }
+    },
+    {
+      "epoch": 38,
+      "frame_at_start": 5920,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0038_visits.npz",
+        "sha256": "62f004e70aa9ae895cacedc97e1546a6b642705c0789d88654e0806cfcf47b62"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0038_summary.json",
+        "sha256": "c0c62907d019c7bb4f831ad4e55a4ca030a84de32df6a0de892ea045a5ed3767"
+      }
+    },
+    {
+      "epoch": 39,
+      "frame_at_start": 6080,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0039_visits.npz",
+        "sha256": "8ca8f28305c66bab52a4f837ed4fa9cd400ee8a0b3164c525dd109d3ef7fdda4"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0039_summary.json",
+        "sha256": "e9ced24138f0487a85840bc03f605ecabd0f264a5527cc90b8f4e8e3118393b7"
+      }
+    },
+    {
+      "epoch": 40,
+      "frame_at_start": 6240,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0040_visits.npz",
+        "sha256": "ba844559c17810d3caba1e4114caa3d797e065515712722461a7d9c9c6784c47"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0040_summary.json",
+        "sha256": "0d086fd2d46cb7fc54da94106062672272fc6b3dbaf0a0d9b9225eccf2e944a2"
+      }
+    },
+    {
+      "epoch": 41,
+      "frame_at_start": 6400,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0041_visits.npz",
+        "sha256": "24f89a950d9223b54f553ad886770dfbee23e2a6177cd1cd49e75e47b64812e0"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0041_summary.json",
+        "sha256": "aaa56e0989e9aa61e81dc478029fd4a9d95d7be7cb7cc64992a9ccffe88b82c1"
+      }
+    },
+    {
+      "epoch": 42,
+      "frame_at_start": 6560,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0042_visits.npz",
+        "sha256": "98e1c708ee3e127796846f7f53e3393774d6440db3338867370d4832c0748fc3"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0042_summary.json",
+        "sha256": "32e18f04d88c3e23d3fb85579cc9be651e45c778ddf73361ddb6e4d5762e2057"
+      }
+    },
+    {
+      "epoch": 43,
+      "frame_at_start": 6720,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0043_visits.npz",
+        "sha256": "7c86348c17f32cc49bf84db10482ceb566b1f42fdf0638d4cc373827148b23cb"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0043_summary.json",
+        "sha256": "0560290fb8bf471800fed3deffe00a48abc082bfc324c33cbfe6cbef99faedae"
+      }
+    },
+    {
+      "epoch": 44,
+      "frame_at_start": 6880,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0044_visits.npz",
+        "sha256": "887671de312c4c204ea3af74739b4a5475dc63cf5a5751f897a1cf1792bfb864"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0044_summary.json",
+        "sha256": "b8b4f57a1d01e11779c2b181343e847b37e47de3de6f9cbfb2dc39ef3cf8a4c7"
+      }
+    },
+    {
+      "epoch": 45,
+      "frame_at_start": 7040,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0045_visits.npz",
+        "sha256": "e5f7cee619f49bbf0b4b05ac8307d7bf5bd51cc109ad9257c3f85c892cd55aa8"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0045_summary.json",
+        "sha256": "faf17269ca2bea26e4a9e88376923c0f55ac764e55c608ed02302c79fc188fde"
+      }
+    },
+    {
+      "epoch": 46,
+      "frame_at_start": 7200,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0046_visits.npz",
+        "sha256": "f649e186f6463566fc350cd4115b900ac0dd4aa8d478fcfd223b80a46a1d61c3"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0046_summary.json",
+        "sha256": "f3b46744367e0dd6ed3d9f988988c3fd4f4b99e188dadc5bfdd6d6817b02f9bb"
+      }
+    },
+    {
+      "epoch": 47,
+      "frame_at_start": 7360,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0047_visits.npz",
+        "sha256": "a387467d4c2fb887b32ef4f5135c8a9de86520f25f05ded97ff88757bc439c3e"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0047_summary.json",
+        "sha256": "4bd857dc407159b508dd57380eb055b6cbfa3aacfcce12ba571cf7c5d669cc4d"
+      }
+    },
+    {
+      "epoch": 48,
+      "frame_at_start": 7520,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0048_visits.npz",
+        "sha256": "1a521c0edec4a71afc6d69ba31a5fb50e80e0a8238e7a4fed883572b42c9f2c4"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0048_summary.json",
+        "sha256": "ed153c3d243ad1518913c930a0a5bae39e64eaef16d887ca263d4e8a3edc9144"
+      }
+    },
+    {
+      "epoch": 49,
+      "frame_at_start": 7680,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0049_visits.npz",
+        "sha256": "068c7e78a205b9a6d8f1dcb04f95a36cd71cbb390fbc18faf528d685ff6525a9"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0049_summary.json",
+        "sha256": "b72bbd00e16543f53489faefc4aec3008d82716eee4497e18d91b19871365995"
+      }
+    },
+    {
+      "epoch": 50,
+      "frame_at_start": 7840,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0050_visits.npz",
+        "sha256": "54d8ca78f3a81b8b30fe56f017b2b5beb4bdc339b778d2c50d9cc20aa2bc9637"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0050_summary.json",
+        "sha256": "64eff2a40ba22b803d86cf38c2e111cfce133455a26368a8bfd77ff7ad701342"
+      }
+    },
+    {
+      "epoch": 51,
+      "frame_at_start": 8000,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0051_visits.npz",
+        "sha256": "b9f1fa3e63e20c6f081e5c4d60fd20be8b1013f1f558f4b5a9ec1d6964bde67e"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0051_summary.json",
+        "sha256": "5f80daa0c50b5db0d695cf49eb0676d54cee5ec9cd38cfc89229ae26b4c0d5ea"
+      }
+    },
+    {
+      "epoch": 52,
+      "frame_at_start": 8160,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0052_visits.npz",
+        "sha256": "6dc169521cf85c19e24a5c0a1653d72b849b542a3a44e505bd7178d6e14356ef"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0052_summary.json",
+        "sha256": "d2065bdde9f416b66e8d677d03fca73cc5aaba024eae57cc5442ef1438b10a6e"
+      }
+    },
+    {
+      "epoch": 53,
+      "frame_at_start": 8320,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0053_visits.npz",
+        "sha256": "f1de1dc5ab07020f82e4d3d6afe89f1faee576096e135bdbef11ab9e0722a2f0"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0053_summary.json",
+        "sha256": "66190e1e71f91c111c7efee7f7060c9f896f5792ac0141f2c6b2a7e094b0fbdc"
+      }
+    },
+    {
+      "epoch": 54,
+      "frame_at_start": 8480,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0054_visits.npz",
+        "sha256": "9389bd28727ffa84e639994ac6c06dc253d51abcabaa5a772750022b6764b59f"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0054_summary.json",
+        "sha256": "f2532d215149f8a6b00798bed5fd5296b2b67fdd47a1b4c59055a5884ae7d28d"
+      }
+    },
+    {
+      "epoch": 55,
+      "frame_at_start": 8640,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0055_visits.npz",
+        "sha256": "6954bc7a8018d7d709473f9987aa33bb2b9296edfbb5b3f42ddf12769dc804b2"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0055_summary.json",
+        "sha256": "3c7ca46875118ab465f4f29775621d1722948470c7ab7cba319ce7508829a3e5"
+      }
+    },
+    {
+      "epoch": 56,
+      "frame_at_start": 8800,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0056_visits.npz",
+        "sha256": "755f61b3c5d8008050b6af4e829e0656d3248f1d87baf72cdc0c421783d5bcad"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0056_summary.json",
+        "sha256": "506e46bdde462cf150c1959ccaa3e6fdc0c8286a9934d42d57f660916c523dbf"
+      }
+    },
+    {
+      "epoch": 57,
+      "frame_at_start": 8960,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0057_visits.npz",
+        "sha256": "fb4fcaa381e41d92c912855762658cbce27aaeaa40695fa46a41bcb0ae8d8f2b"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0057_summary.json",
+        "sha256": "d070c8f173b44a02e5c6b9bdc4d4ad8096e5b320086c3577a66f08ceb5e16936"
+      }
+    },
+    {
+      "epoch": 58,
+      "frame_at_start": 9120,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0058_visits.npz",
+        "sha256": "2a23c73a9f73a506d718168e3d8439c1d3aeab5201dc180d659cbd12ccb4da7c"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0058_summary.json",
+        "sha256": "dc1afc469e6b694fc1e333a4c7a23679e65983a5e3c3c59c2814c1e237d972eb"
+      }
+    },
+    {
+      "epoch": 59,
+      "frame_at_start": 9280,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0059_visits.npz",
+        "sha256": "2c4defed0bd793dcea28ad84a57ceb3af6bb01cfb7035b0be99ea624cd979ac3"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0059_summary.json",
+        "sha256": "1be2a61b6474d96a3dc4757b6b08eca04eac71a3c4a09eaa1f804a6716f89597"
+      }
+    },
+    {
+      "epoch": 60,
+      "frame_at_start": 9440,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0060_visits.npz",
+        "sha256": "54be238e7c5545647c0067c3cec6c456d0da2a523cbbd077208df4a9be359e7c"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0060_summary.json",
+        "sha256": "1018c293e2ce6847974b9c766721bdf042fa95acc39d4a482d42176f150ff11b"
+      }
+    },
+    {
+      "epoch": 61,
+      "frame_at_start": 9600,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0061_visits.npz",
+        "sha256": "5baf1e09c61c7c16dbdd9cc8addf122780e3ca22077231b849400c39418505b6"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0061_summary.json",
+        "sha256": "201e3e022e555e8cfd9cb36d8ba7dd898901bff4479d850a1bd335e71bddff56"
+      }
+    },
+    {
+      "epoch": 62,
+      "frame_at_start": 9760,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0062_visits.npz",
+        "sha256": "5c6db1cf76fb6207a517c2a373230eb8403ad69e157d4c888a46924e925d6908"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0062_summary.json",
+        "sha256": "fc98b94255145ce7cd2f7f9d50e704fc663e781848cbd39d8ae104a14201402a"
+      }
+    },
+    {
+      "epoch": 63,
+      "frame_at_start": 9920,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0063_visits.npz",
+        "sha256": "aada2fad1ee3535861b092c7212522dfe12cd203dcd86b121d4ec9485f911db6"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0063_summary.json",
+        "sha256": "0d7f46a716eaec99d299175513c3b2bc8d6cbc651a5b22bbcb630e1592670ac1"
+      }
+    },
+    {
+      "epoch": 64,
+      "frame_at_start": 10080,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0064_visits.npz",
+        "sha256": "59afe371081dee50bf58fda53fcf5bf83e864a9e01a648ec8ab4edeb509fd277"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0064_summary.json",
+        "sha256": "47512358e585cb187c8de41b3efc1f77845073759ae2e35b219b7d453665f11f"
+      }
+    },
+    {
+      "epoch": 65,
+      "frame_at_start": 10240,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0065_visits.npz",
+        "sha256": "7a32cb02e86e92ad4985efea3a31080e3ca217a95a99fc4501581e16b14716dd"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0065_summary.json",
+        "sha256": "2ada9b0985963a3a0c96cfe52c6ba6562a4237d671712f88b7e77cd32542b941"
+      }
+    },
+    {
+      "epoch": 66,
+      "frame_at_start": 10400,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0066_visits.npz",
+        "sha256": "8123c551c5781098658e06ebe42ca8795ddfdd07e82ecd6b894d06c3ef536a47"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0066_summary.json",
+        "sha256": "073cbe9481717446121c219cfdb8ba74faeed81d6425112fc49284222e50f3d8"
+      }
+    },
+    {
+      "epoch": 67,
+      "frame_at_start": 10560,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0067_visits.npz",
+        "sha256": "9d6990298d9bee17afe6131fbeee84893e0b2f36d832eea6e1131ae7ebb98fa6"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0067_summary.json",
+        "sha256": "2c6875652012ac33af19314196040fc133a39cb778989c1bce059acbf1e4ca65"
+      }
+    },
+    {
+      "epoch": 68,
+      "frame_at_start": 10720,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0068_visits.npz",
+        "sha256": "09a297aff3e77c750fbcf1a46fa37d182abb0122dde5ee304dc467a7452c4000"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0068_summary.json",
+        "sha256": "57bf4e4d4a4b9f3ba92ad5699c2acee744ecbf1a5dbc21489c6058ec6c609aec"
+      }
+    },
+    {
+      "epoch": 69,
+      "frame_at_start": 10880,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0069_visits.npz",
+        "sha256": "3a3ec2571faa8b26e458020399e5b051acbe9d902b9535e162c9efbbe1ac60b5"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0069_summary.json",
+        "sha256": "163dc10f754d0fe536cf2b72b8bb0e65b426ff862b7b96cbbdbbdd39ca89a6f1"
+      }
+    },
+    {
+      "epoch": 70,
+      "frame_at_start": 11040,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0070_visits.npz",
+        "sha256": "c4217ebf2e1eab90161a1440324182e844d731cf1f58d75790d0e5f8963c487e"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0070_summary.json",
+        "sha256": "38ef71fbc6471aa11839fddb94a8d6a91fb640073c3995c2120241d68715e162"
+      }
+    },
+    {
+      "epoch": 71,
+      "frame_at_start": 11200,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0071_visits.npz",
+        "sha256": "9dc6db4c16c60d6817ba211db49ffeb476b2496e0c178f3f8f62127e85be9b34"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0071_summary.json",
+        "sha256": "348eddfea4a3f95228208e57707b279dc05eb9763c2e91cd8f1fb50fbddc2782"
+      }
+    },
+    {
+      "epoch": 72,
+      "frame_at_start": 11360,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0072_visits.npz",
+        "sha256": "1546a330a19f26bf40b12e274a85a3bf86bde3e822d3668fb0662c91afbccf6e"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0072_summary.json",
+        "sha256": "cb17f2567e4b994a19ed05c20a374429b8cd99532d8518ca0c3451f6da2a3a1b"
+      }
+    },
+    {
+      "epoch": 73,
+      "frame_at_start": 11520,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0073_visits.npz",
+        "sha256": "f346211756415320179adb93bcf618b8672993e94abaa05a97a57974b0757ad3"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0073_summary.json",
+        "sha256": "4ecf663744ae5a9c182295fc11929a5ad9809618f2d7814d406a6a417d470a30"
+      }
+    },
+    {
+      "epoch": 74,
+      "frame_at_start": 11680,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0074_visits.npz",
+        "sha256": "976cfc54a81a2ff4f6847e754a0f1017ba0e6930c202f7c994ae660caa06e27d"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0074_summary.json",
+        "sha256": "880eb5451a28db632acef1df6df67d0d8167aa009b270697176532e2f3c0e4b8"
+      }
+    },
+    {
+      "epoch": 75,
+      "frame_at_start": 11840,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0075_visits.npz",
+        "sha256": "0edbabe94d05b0a27146b782c571f0b4973a00e0095d3039b3bf6ee302b3342a"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0075_summary.json",
+        "sha256": "83ae46c98bd3defd98a1767df807fba169636d82ebdbcdbc7eab76baa09791c2"
+      }
+    },
+    {
+      "epoch": 76,
+      "frame_at_start": 12000,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0076_visits.npz",
+        "sha256": "2f91f33b5330c2451481368a80122b6e44244e00a052789cfeeb13b08f4acf6d"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0076_summary.json",
+        "sha256": "9cee058db2494bc8c32c122f1b06c2a3df8e6ddf526bc198975fa4f50077773f"
+      }
+    },
+    {
+      "epoch": 77,
+      "frame_at_start": 12160,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0077_visits.npz",
+        "sha256": "79c6e1333b085773eee3822d5865e6a2b7a8ab5deb11a39bda0f3297762b8d32"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0077_summary.json",
+        "sha256": "12ea87d8722ab66bbecc890bb137d461f853d95ad069663d955616b13bcf1565"
+      }
+    },
+    {
+      "epoch": 78,
+      "frame_at_start": 12320,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0078_visits.npz",
+        "sha256": "53e016d9a1e77798589d5962e111defd732a67ae16b8a67b8172c4978003285f"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0078_summary.json",
+        "sha256": "de2cd8f645a046df1c450fe114057a1c9a6ceb063a05ebb2360c662e9d8176f2"
+      }
+    },
+    {
+      "epoch": 79,
+      "frame_at_start": 12480,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0079_visits.npz",
+        "sha256": "9c05d9e8edeb7ef02ce93d58b349d11c02f8bb78a254e64395053bfcdfaa2bf0"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0079_summary.json",
+        "sha256": "b2f1ae217eeab0d6c7cb4256d3e0835c4db2afba9a28fb64cf7bb7ae944aa1d9"
+      }
+    },
+    {
+      "epoch": 80,
+      "frame_at_start": 12640,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0080_visits.npz",
+        "sha256": "cbd5ef190f5a328d2725b1cd1563fac5f85b8cd35b8dfe696899ca88e1aa462c"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0080_summary.json",
+        "sha256": "455ba4f75b1ca20169d2d196717e564efb75d60b42cf3c9082c31116ca8e7386"
+      }
+    },
+    {
+      "epoch": 81,
+      "frame_at_start": 12800,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0081_visits.npz",
+        "sha256": "98f29440d454ec2cd5a4cfa252c5121adc6f3c12c3f4b3c36eb3b6995b342081"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0081_summary.json",
+        "sha256": "6e92dcd2cfca0b57b2e9fe1bef7174c0d37d87731d015859e04d62413552e2cd"
+      }
+    },
+    {
+      "epoch": 82,
+      "frame_at_start": 12960,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0082_visits.npz",
+        "sha256": "ff4e5e0d40e9737a11c3add59fdb0f48dea02393b063267c38fb8145a7ee9f02"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0082_summary.json",
+        "sha256": "34408e9d702732bf5a0c7c2c996f1c5e5331f7a9f3142df5359ecbc1afe5e1dd"
+      }
+    },
+    {
+      "epoch": 83,
+      "frame_at_start": 13120,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0083_visits.npz",
+        "sha256": "f2bf1f2c114e96691936519efd7b241cb7d1d7c1b29e1021d6bb53fa6e35d25c"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0083_summary.json",
+        "sha256": "c92d4d650f962f3a1a7db47c5fb9ec8f1f59f4fd56cfb2811a51afe5fb48969e"
+      }
+    },
+    {
+      "epoch": 84,
+      "frame_at_start": 13280,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0084_visits.npz",
+        "sha256": "b78e3af49e21b43184e956eaab90fce230b12bf505044b566e89954ceb524f69"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0084_summary.json",
+        "sha256": "9f4bb60c4ff32a31d545dc8816793a5a013dc849feee5abfc8b0e288d40d043a"
+      }
+    },
+    {
+      "epoch": 85,
+      "frame_at_start": 13440,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0085_visits.npz",
+        "sha256": "0fad9d4da5a1ad168cb52a9171e0833680b7ce439f4e3cb49efff4235a89e479"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0085_summary.json",
+        "sha256": "ab9115459ccb98984ff55911011550e96704a33c2c8a1fa067cd66ffc1066340"
+      }
+    },
+    {
+      "epoch": 86,
+      "frame_at_start": 13600,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0086_visits.npz",
+        "sha256": "aba76bbb9cb1ac762b8a73974ff05e80e07f7ae6dbdce9b0e5348d55c71e4fc4"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0086_summary.json",
+        "sha256": "66e0126022dd5afa17d3921d90e35e6307d115df9b6c8db5bdf8906f32acb3e4"
+      }
+    },
+    {
+      "epoch": 87,
+      "frame_at_start": 13760,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0087_visits.npz",
+        "sha256": "c64a13639aa34455717f1d06ba0b843fc7e9bb9e2e1077a7f8344f21c392b4ed"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0087_summary.json",
+        "sha256": "d7736797b51143b0a7dbaf3cf31f99848f1602c53dcf94827a40fa34cfe91ec0"
+      }
+    },
+    {
+      "epoch": 88,
+      "frame_at_start": 13920,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0088_visits.npz",
+        "sha256": "112afd22992890b4ce768a07d1a0ee4fdbcd90122036e6793706f56985ff8a30"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0088_summary.json",
+        "sha256": "5b47373486f1d1e281b06737bf0222cbdd8dd89d2ff7a19b87b05b1c97a8f19f"
+      }
+    },
+    {
+      "epoch": 89,
+      "frame_at_start": 14080,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0089_visits.npz",
+        "sha256": "6cc5504db0fa862d7344feb6f2d679515cd10da938dfda6d348012ab00b5ecee"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0089_summary.json",
+        "sha256": "4887bed36af7beb777eac9efddc5b3e1959f4ec8c2f8d2993f1ec96b2a6e93f3"
+      }
+    },
+    {
+      "epoch": 90,
+      "frame_at_start": 14240,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0090_visits.npz",
+        "sha256": "4a6a48630d1c5b4c1a3341baa859f7ade6ad2c194c7902ae755ff5a497860ac7"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0090_summary.json",
+        "sha256": "718d1b6ae9ff4902da1e6a0a79fca85e28ee6ef495f6eb76806dc4fa2294ee4a"
+      }
+    },
+    {
+      "epoch": 91,
+      "frame_at_start": 14400,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0091_visits.npz",
+        "sha256": "d0baf4c4237bcc5aa444a2f96770e2ded92f50839e10d7216333700a937af34f"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0091_summary.json",
+        "sha256": "6de131393bc71154fe7d708d85279116bcff6ef0d65b258c6fceb1164487c6bf"
+      }
+    },
+    {
+      "epoch": 92,
+      "frame_at_start": 14560,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0092_visits.npz",
+        "sha256": "e353aa8b4a722144e58ddd215de1511cd9c1d3ad5ca6890e37bd630ce0941930"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0092_summary.json",
+        "sha256": "de91f1d783366672d3a0efb3c4dc51cd0e0d60e9919505792631f530adf10b8e"
+      }
+    },
+    {
+      "epoch": 93,
+      "frame_at_start": 14720,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0093_visits.npz",
+        "sha256": "646d3a5b7fedc6ad65e50fe2e3d6ea186887ec98883cf24691e11642d801ac90"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0093_summary.json",
+        "sha256": "771408456df6fcffdc04ffb93f3e606148d51dcdf8d7b31547fd694edc82114a"
+      }
+    },
+    {
+      "epoch": 94,
+      "frame_at_start": 14880,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0094_visits.npz",
+        "sha256": "59cf4e50c0a1d9d438000b0d6b8cc44671d4150279f8ec10a014bbdc2581820b"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0094_summary.json",
+        "sha256": "8d679c8ebf862a33f33a3908507d323684d25f2c6cf6ed083f5b7370463cbda4"
+      }
+    },
+    {
+      "epoch": 95,
+      "frame_at_start": 15040,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0095_visits.npz",
+        "sha256": "63b99d3760712c23ced655b861b32d74b5c6837c95d286d02d8026b2b305d398"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0095_summary.json",
+        "sha256": "c9075ef3bedbabe4734c6dcad44b0837c96cfcb474b743307986d9fcb8fd693a"
+      }
+    },
+    {
+      "epoch": 96,
+      "frame_at_start": 15200,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0096_visits.npz",
+        "sha256": "42b0eb5353174b916a5807011401d790416e032a3b2684468cc4a607cf2e1b3b"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0096_summary.json",
+        "sha256": "e7f3f21df3df49124451e088f352615f98b83bbc02ee48eca674d58fb6d52f21"
+      }
+    },
+    {
+      "epoch": 97,
+      "frame_at_start": 15360,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0097_visits.npz",
+        "sha256": "752e78eb58488a18ff51790fd9581cef41101541e885caec49063349805846bb"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0097_summary.json",
+        "sha256": "75464051a02bccdd8a4115c5f0e14c9efb17e9ed1a506120ff51320cc30ad5bb"
+      }
+    },
+    {
+      "epoch": 98,
+      "frame_at_start": 15520,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0098_visits.npz",
+        "sha256": "5a9ea11046631525a622c97b823a5a8b33b9b609c3ea48d0edf597df96291354"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0098_summary.json",
+        "sha256": "61fe2779873280f5383ad23fc88d23fb17a232756e67fe46f631277a74f00e62"
+      }
+    },
+    {
+      "epoch": 99,
+      "frame_at_start": 15680,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0099_visits.npz",
+        "sha256": "41b9800bb838830708be7519b44e05dde76da6eae1b1cb27e752325b1698ccb6"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0099_summary.json",
+        "sha256": "e60621a39731d9e28712dc4a04df2f4cbb276c7ef40816eadda26a1d59b33bc1"
+      }
+    },
+    {
+      "epoch": 100,
+      "frame_at_start": 15840,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0100_visits.npz",
+        "sha256": "4055bdde8aa7831891ffc3b422278d7dc8125692a7e18ae3f007ba738f70b782"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0100_summary.json",
+        "sha256": "4b7f8920aafb9d195a04e3cf1db0b524fe502615a9056534e0ddd7e76c50e4e1"
+      }
+    },
+    {
+      "epoch": 101,
+      "frame_at_start": 16000,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0101_visits.npz",
+        "sha256": "a7b66d0f5db114bc738900a8887ff8249fb9993d92e704e9de469c6ec9368f6d"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0101_summary.json",
+        "sha256": "67397cd613b13b4066d7a5385a79f3d9d8c0ab8cb7f5023317f474023d768085"
+      }
+    },
+    {
+      "epoch": 102,
+      "frame_at_start": 16160,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0102_visits.npz",
+        "sha256": "1a5e53fcf5d581b51b508afb3f6c0bf0c2de8160ec5614d1cc47f290d77434cf"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0102_summary.json",
+        "sha256": "e2560657f35b08792b16dd4a598995e9c53415d56c9d3f5d82bec1e2f891ccac"
+      }
+    },
+    {
+      "epoch": 103,
+      "frame_at_start": 16320,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0103_visits.npz",
+        "sha256": "3b8da352c94d5d4ef86725a1a94d7360491c4416d06c2ed35166c4f445fc0a4c"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0103_summary.json",
+        "sha256": "94dd0ff8995bf32b149a5e6f39b9e60d976a4f24c6e4ecc98cf725cba76b3e2d"
+      }
+    },
+    {
+      "epoch": 104,
+      "frame_at_start": 16480,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0104_visits.npz",
+        "sha256": "07e3d83079e8a262a08a49b4a92b47501be57b68d63eaec4dfac0dbe1b814b0b"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0104_summary.json",
+        "sha256": "62237d25b38ef3a733d742caf39cec91f9042257ef4eb5d07015f8c2f6a5dd40"
+      }
+    },
+    {
+      "epoch": 105,
+      "frame_at_start": 16640,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0105_visits.npz",
+        "sha256": "a8cb40a38a45cc0293cefd80a71742477453fd5150648a9478e34eda8a98d33e"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0105_summary.json",
+        "sha256": "9fb95414ade07b5530507cd4c59d854915ff311da01397a85367ff82e7fd71c6"
+      }
+    },
+    {
+      "epoch": 106,
+      "frame_at_start": 16800,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0106_visits.npz",
+        "sha256": "abff2d2d3c25ae781bbc6620f7f7ac9acd5f6a1f4450215af6abc6366b7fe12f"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0106_summary.json",
+        "sha256": "bd8bc4d8b0ffb5f5da4081541c7323b6e9f90c2153940fa64d4045e88d82c1c1"
+      }
+    },
+    {
+      "epoch": 107,
+      "frame_at_start": 16960,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0107_visits.npz",
+        "sha256": "3754a00e36311af19147a923c30a3f962a1bf10886d66e28dabc09027bf5f28d"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0107_summary.json",
+        "sha256": "bbbea3901f4ddf474f07be93465e50026e68f7f9405fcf12a85232c88c76111c"
+      }
+    },
+    {
+      "epoch": 108,
+      "frame_at_start": 17120,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0108_visits.npz",
+        "sha256": "a0bd55bc0374dedf042fbfa8e9da07046bef033ac1d26a5e42dc4f970b0401f0"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0108_summary.json",
+        "sha256": "d0e499285f747db6b20b7080738b167432888a53e1dce45c85b06cebe5ce626f"
+      }
+    },
+    {
+      "epoch": 109,
+      "frame_at_start": 17280,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0109_visits.npz",
+        "sha256": "837b6bd7c6f414c8b19af9de479eb08b2255b964c5cb19327d0b0db55cc7c499"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0109_summary.json",
+        "sha256": "cf9e70175f175b3421d3ac87d7bd493b70cb3ad69bc958bd76109eb0d3ff1f30"
+      }
+    },
+    {
+      "epoch": 110,
+      "frame_at_start": 17440,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0110_visits.npz",
+        "sha256": "9956fbcc6bc612d2aa4ec71fcd4f1afef095c763b72f3be496f9bd3b614b91f3"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0110_summary.json",
+        "sha256": "7cc054b0b63e2353651758faaf09c815769842761382476c9c52e3488ccf92fc"
+      }
+    },
+    {
+      "epoch": 111,
+      "frame_at_start": 17600,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0111_visits.npz",
+        "sha256": "2cff124f36a96f400d2b7a9ee798f55b596f284096bb9e46ca0fd88aca2b15d5"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0111_summary.json",
+        "sha256": "17cc52e1917ca97d8f01f5b2add47c0c0080427f9e5ebed6e60cdf3c2c5853bc"
+      }
+    },
+    {
+      "epoch": 112,
+      "frame_at_start": 17760,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0112_visits.npz",
+        "sha256": "9bcfe2c8dff78e36ab3150897539f6cbeb5111e87e391dc34755cdc0159d083d"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0112_summary.json",
+        "sha256": "79c9618a63d25075c03f7f18f7f8ac26d758606510000d832f7d825afe1e6285"
+      }
+    },
+    {
+      "epoch": 113,
+      "frame_at_start": 17920,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0113_visits.npz",
+        "sha256": "e00db2c7765b581ba03bd2dee000729ee9d720db9591ea9fd86269336c2dfdce"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0113_summary.json",
+        "sha256": "4ad48df4ee4bb88e4fa17b2cec8dc76c15a520bb93c26e7c2b890c0b0c651904"
+      }
+    },
+    {
+      "epoch": 114,
+      "frame_at_start": 18080,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0114_visits.npz",
+        "sha256": "1070566c829632c08d75abdf69eae79d8837a98c0b585bf36a49ce94b4f8099d"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0114_summary.json",
+        "sha256": "3dd39185d7e0236b0ac9345c74969c2ed247ff5f6918f073884e0153dbebebc1"
+      }
+    },
+    {
+      "epoch": 115,
+      "frame_at_start": 18240,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0115_visits.npz",
+        "sha256": "8cffc0e2527c956bd18ef4fb5e85b23d27797f94d82868b3a428a50f4b2c3737"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0115_summary.json",
+        "sha256": "88a4e42b9f60a94f10823534e94434bfdf60a8236cb354e05ac86c4da688fedd"
+      }
+    },
+    {
+      "epoch": 116,
+      "frame_at_start": 18400,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0116_visits.npz",
+        "sha256": "0275f92b25c9191f87180a39b091ffd63d0eef87dfdadb2cb86ffeab65437d52"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0116_summary.json",
+        "sha256": "16491f64608dce3824026dd25c0f30d8d79f6b7d7377396c3b864e4277899a4e"
+      }
+    },
+    {
+      "epoch": 117,
+      "frame_at_start": 18560,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0117_visits.npz",
+        "sha256": "e9b68278143589f02566fb422b7216b30580d1ed042b58b699d5c5957f519c30"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0117_summary.json",
+        "sha256": "75b29732b0a28ebaf45d8c3f813a96382be9fee1a45759ebf585ab21b5d4d709"
+      }
+    },
+    {
+      "epoch": 118,
+      "frame_at_start": 18720,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0118_visits.npz",
+        "sha256": "00b6f2e7b2cb1930b8fc0895b37e898ff02e7988089a5b5f6c1452bf62733780"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0118_summary.json",
+        "sha256": "588ff75b88f010050fee9692496cfb3438ef509db82f76a4556c65bef97a83fe"
+      }
+    },
+    {
+      "epoch": 119,
+      "frame_at_start": 18880,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0119_visits.npz",
+        "sha256": "8d86f67d8b117c6ca45ef1c4e903950f39e6a3ebd92ca52d557c521d8f2dbf05"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0119_summary.json",
+        "sha256": "9928a6f66231ca3390457c6256e85384cf58992cf26940688d8b849763812eb1"
+      }
+    },
+    {
+      "epoch": 120,
+      "frame_at_start": 19040,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0120_visits.npz",
+        "sha256": "fd8a54b95b338d528496c15abc24634b4856549f19d9cb01807bb6743eb83d05"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0120_summary.json",
+        "sha256": "a1820e94d3253ac96d5136f8705d3e9145fe90f21f3527e0986f00ba5d5b9f36"
+      }
+    },
+    {
+      "epoch": 121,
+      "frame_at_start": 19200,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0121_visits.npz",
+        "sha256": "5bcea93cfb2a0258426768a5caa378e06375c853ac5979b2db9a579d09badcec"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0121_summary.json",
+        "sha256": "520dac8e27233a62bfe55df0054d5ed5e229e04eefa53df565c131bf3b03785b"
+      }
+    },
+    {
+      "epoch": 122,
+      "frame_at_start": 19360,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0122_visits.npz",
+        "sha256": "495352d26ce01ea73b5872389fb3ca579abe52f3fcf05828191cf352215f6671"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0122_summary.json",
+        "sha256": "7738e43d27feea4cc2edbb5426edb02502c95d4b7ac73884b872cfb2568440b2"
+      }
+    },
+    {
+      "epoch": 123,
+      "frame_at_start": 19520,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0123_visits.npz",
+        "sha256": "3e5c3a040408bf4f553fcbb178cae35fff71b3f9dd90c406f6ac3f1230ce8bd8"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0123_summary.json",
+        "sha256": "a977c99e52d208a985c59169d18e56b261f00c67b8a6b6afbc5c0216169756a6"
+      }
+    },
+    {
+      "epoch": 124,
+      "frame_at_start": 19680,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0124_visits.npz",
+        "sha256": "c95cadd5ff5c8bb5db5a7cf7d9dbd63ea8d3821d4fc8c6001c00dbda1e9af681"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0124_summary.json",
+        "sha256": "6a6b1549e2fe86ee238a286557580d1a7e7a26bf2fe70633ef8dd30cc9aa3e62"
+      }
+    },
+    {
+      "epoch": 125,
+      "frame_at_start": 19840,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0125_visits.npz",
+        "sha256": "8b5c646410cfb8dd0fb3e995a19ab83cd15e7f1af4cfbc3e1fc1d8c089e540fd"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0125_summary.json",
+        "sha256": "dcfa8ca3f3bb830d3e127718c49dfa344b63ad1d9579e3fb7c60fb4dcd705bbd"
+      }
+    },
+    {
+      "epoch": 126,
+      "frame_at_start": 20000,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0126_visits.npz",
+        "sha256": "927b1247a1480fe41a4cd99fe9b8050a821c6214358342669b33a8ca486006f3"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0126_summary.json",
+        "sha256": "75458ed8304816fe4e21f7c527191cc851ba1558c5b484aea34d645c25f2f231"
+      }
+    },
+    {
+      "epoch": 127,
+      "frame_at_start": 20160,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0127_visits.npz",
+        "sha256": "c1a4a9b294c7ad3398de5cd2e8a9a01564d3c13890cbf1b00cf9a7d44271c70c"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0127_summary.json",
+        "sha256": "db0bc13116cb0e4475cc36e0a41b2215349c04355548569106c276e7c399bbf3"
+      }
+    },
+    {
+      "epoch": 128,
+      "frame_at_start": 20320,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0128_visits.npz",
+        "sha256": "3b6d9b8765460e80d61bd747d0e5cc5ebdf501d9a25d7ad882a5b84a57c1fd4e"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0128_summary.json",
+        "sha256": "bba4c062cfe72fae58bb808f182865955a39f6facd7be3d1ad9d2bfe631a7bfa"
+      }
+    },
+    {
+      "epoch": 129,
+      "frame_at_start": 20480,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0129_visits.npz",
+        "sha256": "411c4303cafda2cf5512fa56a804e3a430c74bffcebcb038d8f816e3259ef01b"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0129_summary.json",
+        "sha256": "2a133a36caf3f7e93ebea0a4bcaa63dde33417b6c3c2ee8b7dad24cd8507f640"
+      }
+    },
+    {
+      "epoch": 130,
+      "frame_at_start": 20640,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0130_visits.npz",
+        "sha256": "674f184c3239968d7ba75c6cc29120502db62df08d8fb6aa42a17e4c4c05c83f"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0130_summary.json",
+        "sha256": "bad216b13ed881d9625d6908fb0a7951ead9c07e55b9714ba506847f2adeaa58"
+      }
+    },
+    {
+      "epoch": 131,
+      "frame_at_start": 20800,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0131_visits.npz",
+        "sha256": "aa1060c0cd52dd68704206daf35757104927524c51c39d9489048bd6ff885f8d"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0131_summary.json",
+        "sha256": "9a51064f20b47da310492acd40bdbc6ad7c191c143a8135f76cad3414a6a7351"
+      }
+    },
+    {
+      "epoch": 132,
+      "frame_at_start": 20960,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0132_visits.npz",
+        "sha256": "e9f2efb8386f387db745a4f6111dcca94b5e1a4a1e0a84c4ec6cb7a533fdb826"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0132_summary.json",
+        "sha256": "9c0da5a4a5420c0499685965c9a606259ce312483ce463202bc2531221c154bf"
+      }
+    },
+    {
+      "epoch": 133,
+      "frame_at_start": 21120,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0133_visits.npz",
+        "sha256": "7f77d84d00bbfd258a58074ed8e8c5f2e2453da0f1bd56deb8209299c13efbd2"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0133_summary.json",
+        "sha256": "382ebd36428ebcb395219ab310e2cdfe53a2cbef84fc974ef621397a5e251a2c"
+      }
+    },
+    {
+      "epoch": 134,
+      "frame_at_start": 21280,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0134_visits.npz",
+        "sha256": "26386ec0c91e7ca46bd06e0d2a96748df683e3a6267badd60f7acfe67e4a21b2"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0134_summary.json",
+        "sha256": "666a6b38c29750a7a95dfb427e9f0ab184b98b5ca3e1998a12c62cfdef30a662"
+      }
+    },
+    {
+      "epoch": 135,
+      "frame_at_start": 21440,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0135_visits.npz",
+        "sha256": "b7fb5d8d9a01cd40377e63c29856b8a7435f3ac60e99fd157b336e47b1bccbe2"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0135_summary.json",
+        "sha256": "41e8488651d173abd20c893cef505a30ea9bb30db46085036e408782b47f65be"
+      }
+    },
+    {
+      "epoch": 136,
+      "frame_at_start": 21600,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0136_visits.npz",
+        "sha256": "ae5f4afaa4f1ea443cb2cdebf94bf9c35d5b17ee95b916fd8921c6942e56033d"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0136_summary.json",
+        "sha256": "d8e86b39999a5d4b87e71cddb3486e54d6fe0a55822fbb8f70b4bdcd8435afe9"
+      }
+    },
+    {
+      "epoch": 137,
+      "frame_at_start": 21760,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0137_visits.npz",
+        "sha256": "1181278ceea6ad61d7297b944f3655af6ede6f6c8e7eb16452df98fe62d17a21"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0137_summary.json",
+        "sha256": "c4555dbb4c307bdc9602d24e9c15f21a1a5dc6d7cdf38fef1cac45da17d983a0"
+      }
+    },
+    {
+      "epoch": 138,
+      "frame_at_start": 21920,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0138_visits.npz",
+        "sha256": "1d8e908dab24177ab264e66d82361780c640563851e18eaacf9beebc4e37d1fb"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0138_summary.json",
+        "sha256": "5793757379fea2f66b5ab171d0a2183f1a9c4715bbe351adc3db8d05dda007eb"
+      }
+    },
+    {
+      "epoch": 139,
+      "frame_at_start": 22080,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0139_visits.npz",
+        "sha256": "0b7a055ec22939e7bb51291d11f7cd42c7efd3ba0d2e63e24085cdf7a23ca94e"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0139_summary.json",
+        "sha256": "04b873f158a6c7ddd946a6ede9f68b41abb61106783a06c388b9af75c756bf86"
+      }
+    },
+    {
+      "epoch": 140,
+      "frame_at_start": 22240,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0140_visits.npz",
+        "sha256": "e61fef3f0f4ad5e3c662d558e91e2e24b2940d50a9c6f57b5a8da373c7a45027"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0140_summary.json",
+        "sha256": "c5828157a093fabc2aa1eeb8f11bfa1759a37b0809b481f3cecc0af220eceb91"
+      }
+    },
+    {
+      "epoch": 141,
+      "frame_at_start": 22400,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0141_visits.npz",
+        "sha256": "cc4b7ef3879b354fc9648b24846d897d16d9bbe9024bbb1c5c7ae29264525d76"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0141_summary.json",
+        "sha256": "acf74787e5f45cec2b68625be53d0636aeb433ee78ab1a31b2b8a724b24c4a9c"
+      }
+    },
+    {
+      "epoch": 142,
+      "frame_at_start": 22560,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0142_visits.npz",
+        "sha256": "4b3a9a74a6050b04c8f3970ec1751a83a87f917a096d00245b21d5fa0d12ae03"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0142_summary.json",
+        "sha256": "a4e46f6c02831dfe1ed355bc4ab8e7bfde3ec753fd994180903684ecb4338bec"
+      }
+    },
+    {
+      "epoch": 143,
+      "frame_at_start": 22720,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0143_visits.npz",
+        "sha256": "7ff958cb391f2dd7f64184a9692732bc11e6893637ac1116af0685ce09af6a60"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0143_summary.json",
+        "sha256": "5b486d42e9b3d53ee931fa8d6159b695d4ed83089689363c5fadb5ea6a8efc2c"
+      }
+    },
+    {
+      "epoch": 144,
+      "frame_at_start": 22880,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0144_visits.npz",
+        "sha256": "8e27e6d4c7b91367e84eef931c1e236d60b315c4a17dacade5d2dd0aaf7b22ff"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0144_summary.json",
+        "sha256": "ad90ad6d62075f6fbb3a5915502f859f2df86608dfe337d9cd0940210263120b"
+      }
+    },
+    {
+      "epoch": 145,
+      "frame_at_start": 23040,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0145_visits.npz",
+        "sha256": "af1010682f47ad8937a6193078561da987b97315625bc642ad310a02e1f330e2"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0145_summary.json",
+        "sha256": "6fd3332bf40dc234dd40e7a7f801279795d9a78a1c9af4fd991fc05a9d69a674"
+      }
+    },
+    {
+      "epoch": 146,
+      "frame_at_start": 23200,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0146_visits.npz",
+        "sha256": "1a004191c5016f8328f5f25c682c39b5e712a7a4eb9b76f27aca9af94c98a4a1"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0146_summary.json",
+        "sha256": "890ced992c8ae3864aec08805664ff9b54182d0116674d1ce6fbe5d1b6bd3e5c"
+      }
+    },
+    {
+      "epoch": 147,
+      "frame_at_start": 23360,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0147_visits.npz",
+        "sha256": "6242ac64fdf5327758e5be9ffa80389c2bc5a4eaa78a113fa22224c016861f1b"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0147_summary.json",
+        "sha256": "683c031b37abcd131770238a83245ceec0ba94f0e65050d3ebba224f98b0eaaf"
+      }
+    },
+    {
+      "epoch": 148,
+      "frame_at_start": 23520,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0148_visits.npz",
+        "sha256": "485efcb4222aba40c9320f280736faf0bd71a1287f1bc41bf84f7cb6c795b523"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0148_summary.json",
+        "sha256": "6a14270e1601f8c9dac5346097f0b5717566a2bd0d4b772d0c82347ae4b8c524"
+      }
+    },
+    {
+      "epoch": 149,
+      "frame_at_start": 23680,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0149_visits.npz",
+        "sha256": "007fd9a5c9d3a0506731b59e94428dfac4546a17bf0f79537a657c20b7ea712b"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0149_summary.json",
+        "sha256": "d7e57b3797d23e6f80cbd25b596474198160593d8226a28a35b1d77b1d4e460d"
+      }
+    },
+    {
+      "epoch": 150,
+      "frame_at_start": 23840,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0150_visits.npz",
+        "sha256": "f0ca79d9824f9320d9683e074571ff86e689a8b203d5b4996dba329dc2c7bb3c"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0150_summary.json",
+        "sha256": "ce16b0bebb65b07aa172c5a90be9a7b463412365da2c4b303bf8f41c1d06c289"
+      }
+    },
+    {
+      "epoch": 151,
+      "frame_at_start": 24000,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0151_visits.npz",
+        "sha256": "0a39e86cf25838ee127041673803c3c97ec37719c909d266c767baafe56e93ce"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0151_summary.json",
+        "sha256": "231b4aadda45862a63baeb05d8e76961ea64863259f2e7f95c383319ace90515"
+      }
+    },
+    {
+      "epoch": 152,
+      "frame_at_start": 24160,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0152_visits.npz",
+        "sha256": "284bfd580884578caa777445c86306f5b40b0c2cf209c84f1ceb1b80ef3198c1"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0152_summary.json",
+        "sha256": "c7ba153237f3492217b824bbd41075a6280fe2f34f8e9c60cbd083c05e452446"
+      }
+    },
+    {
+      "epoch": 153,
+      "frame_at_start": 24320,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0153_visits.npz",
+        "sha256": "a00ada8e482c36b1856944a43cb9708a286d4afe6e64f3669913af91ba526813"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0153_summary.json",
+        "sha256": "f9227e19a7d894b674985839dadec5c692fc0a2c09220c7110dd685c7fd69e1a"
+      }
+    },
+    {
+      "epoch": 154,
+      "frame_at_start": 24480,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0154_visits.npz",
+        "sha256": "8981e5348a930a14da21848146140e9e00cff61445ace832a71081a06cf84705"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0154_summary.json",
+        "sha256": "0c80dd144de583cab0b14c89df877f9ca367b760555c0df280b7e645cb4e63a7"
+      }
+    },
+    {
+      "epoch": 155,
+      "frame_at_start": 24640,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0155_visits.npz",
+        "sha256": "5d65681277c7325f8555e148b02cd23db03559bae00349db1fcca8cbdad500bf"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0155_summary.json",
+        "sha256": "e38be2265854541495df97521ebd751d2ff8fab0bfc64eb5ad37a2f247ec08f6"
+      }
+    },
+    {
+      "epoch": 156,
+      "frame_at_start": 24800,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0156_visits.npz",
+        "sha256": "99ac2783e66dd3c930593075f49356d4f2a4bcbe5199c7d15e362dc0596ea635"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0156_summary.json",
+        "sha256": "989dc54d62251d569985aaf8a2583ae67e4b00746fe47105f9ba17cbf15c36d1"
+      }
+    },
+    {
+      "epoch": 157,
+      "frame_at_start": 24960,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0157_visits.npz",
+        "sha256": "7daaa659df9a926ef4b3af51edaec358b5a42971f705630d3d8a2cfbe43332c7"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0157_summary.json",
+        "sha256": "11c2291940cbc11a7e2591c42322a6c5aa43f8edb4c7cbc19cc1f3b73d97648a"
+      }
+    },
+    {
+      "epoch": 158,
+      "frame_at_start": 25120,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0158_visits.npz",
+        "sha256": "cc178caf36d45ae1a66b07bde46a6c822edea2ef366425c15e93b2ca630c20e7"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0158_summary.json",
+        "sha256": "cf10d6b28a94053d7770b1c4f6834a6956ace4ec33e1123af7dc56f3cc713cb9"
+      }
+    },
+    {
+      "epoch": 159,
+      "frame_at_start": 25280,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0159_visits.npz",
+        "sha256": "86216d864f8c96d3eaf756c1bdd53152ca9aafbdcc85e9ff69584833289ea05f"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0159_summary.json",
+        "sha256": "a13be2d7e7edba7e63a8a1b39c457b7c189ce98767b5d3d1f61f07c4a7e68719"
+      }
+    },
+    {
+      "epoch": 160,
+      "frame_at_start": 25440,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0160_visits.npz",
+        "sha256": "5726f401b4a637001ae9637b9d6110622a5ef26a9d0a3785291001ef90261b66"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0160_summary.json",
+        "sha256": "f183fdbe175a2ea22e540ede21ea57c683aede5fe255b1becfbf0ac75c0338fc"
+      }
+    },
+    {
+      "epoch": 161,
+      "frame_at_start": 25600,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0161_visits.npz",
+        "sha256": "a8d7acca0be43396e772a4d083e1046cc6050ba0a506a2617a177f4efd5d85a3"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0161_summary.json",
+        "sha256": "c3411b666569d3df152cc5875944c095a27ed9563da8d01ae2cf3a56a64b92ad"
+      }
+    },
+    {
+      "epoch": 162,
+      "frame_at_start": 25760,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0162_visits.npz",
+        "sha256": "fde0c061436550a6660a028efc823883e1005bd86420e53e871cd706403dd1cd"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0162_summary.json",
+        "sha256": "ebf3d03a8ed5091cb67f0920ec19a725109c608a2b46971a71d859653e85a5a6"
+      }
+    },
+    {
+      "epoch": 163,
+      "frame_at_start": 25920,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0163_visits.npz",
+        "sha256": "98140f3ce65a6138cd7355f757cec90b872f582db7bd641b3b1ba3af18be1e0c"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0163_summary.json",
+        "sha256": "6a06dadf8e7f92893cbf6aa8e7118fdf64996e96e7e61b58545bfc697e4d9ae0"
+      }
+    },
+    {
+      "epoch": 164,
+      "frame_at_start": 26080,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0164_visits.npz",
+        "sha256": "c9648885e54450c603dd20dfb95b169f199343f1bf18759ca21c4d61e8385787"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0164_summary.json",
+        "sha256": "0e295d38ffbe63f407adc4abef71208a57f9075896b57e415b504c83f0cb08bf"
+      }
+    },
+    {
+      "epoch": 165,
+      "frame_at_start": 26240,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0165_visits.npz",
+        "sha256": "77c54c3902290e6038e58c59628a52ee35fd721b4a46a56eb0cbd3e7d9d06dff"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0165_summary.json",
+        "sha256": "c47e3faea7aea976744d4f5e23f6db16a6ec3ad702303b75466cf5720cb1bb8e"
+      }
+    },
+    {
+      "epoch": 166,
+      "frame_at_start": 26400,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0166_visits.npz",
+        "sha256": "adb2ae0831b6681e4ccfd61c136936d440f5519cccfd2c251298925671fc270b"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0166_summary.json",
+        "sha256": "5f7c2059f387d4d597b453553ef0dbc10cbb05c94827067c43d6bf180763bb2b"
+      }
+    },
+    {
+      "epoch": 167,
+      "frame_at_start": 26560,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0167_visits.npz",
+        "sha256": "6c099212dd1d816280947ce651e18734d635a32cdcc5adf744a3a01049a12dba"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0167_summary.json",
+        "sha256": "122953221c33c6828babdbe714b28b53a9b2e91e960422263514fb42ec2a4157"
+      }
+    },
+    {
+      "epoch": 168,
+      "frame_at_start": 26720,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0168_visits.npz",
+        "sha256": "dff15c29116d3bfc2260d99bba7d1549994ac4fbd24789f3a5eec30159a4d9f4"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0168_summary.json",
+        "sha256": "6099b800fcf86a6b3bea3a57622e70896235e9b3015805f5924b22fe97d53085"
+      }
+    },
+    {
+      "epoch": 169,
+      "frame_at_start": 26880,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0169_visits.npz",
+        "sha256": "c70f8b11dac35e57f4bfa6c6502fd51ed7cc71284ca9831ca8f79ef8885449e8"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0169_summary.json",
+        "sha256": "ebe5b601455a87dec94ec457ef91fe31cba1a58880634d930bd6e86d225943ef"
+      }
+    },
+    {
+      "epoch": 170,
+      "frame_at_start": 27040,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0170_visits.npz",
+        "sha256": "e59d41acee5d1c61cd42283043be500b62ffb7d6f131c01e72c57ef7490fc943"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0170_summary.json",
+        "sha256": "124bd7b00112ee92a7ce2b852de81d2b3c46e8dadf4e567613af0960563cbcdd"
+      }
+    },
+    {
+      "epoch": 171,
+      "frame_at_start": 27200,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0171_visits.npz",
+        "sha256": "f2de0512f4ccf35604e631f397b229d573ccf4d0d17d016efa53395b64857ceb"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0171_summary.json",
+        "sha256": "4b4b8a2fe0ac3d361bd0ef6beeec98a597d3aee645d193646f176b6431364ece"
+      }
+    },
+    {
+      "epoch": 172,
+      "frame_at_start": 27360,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0172_visits.npz",
+        "sha256": "082a259be6554331baf93d78d9df040a796be9db6675c66fae8eecf752f95dde"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0172_summary.json",
+        "sha256": "e5f9caf12d1acfc9e250abc2d6cc94913834febfe56108ead65f1eb5bb7203ac"
+      }
+    },
+    {
+      "epoch": 173,
+      "frame_at_start": 27520,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0173_visits.npz",
+        "sha256": "50cfea47d7ad099841bc7d8540240a60981f8282bbb8e4aafe636aa6cf5461ac"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0173_summary.json",
+        "sha256": "d8113af9a5fffbbb18cbc62db360c342bedd1bc7b5705484c7d4a7469ec3e470"
+      }
+    },
+    {
+      "epoch": 174,
+      "frame_at_start": 27680,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0174_visits.npz",
+        "sha256": "400d4ce7b1e16eb9edf57a4fd254098ff107ea6a02337832539e2ec8463a43a2"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0174_summary.json",
+        "sha256": "bae7805ba6f81c07638215e4575ac34fcd7d5a412fa4f8e83594ef032de13204"
+      }
+    },
+    {
+      "epoch": 175,
+      "frame_at_start": 27840,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0175_visits.npz",
+        "sha256": "58df5739ee272b76efaaa87b5cd24cfd78f06569553717aeee2eea00998a9dd5"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0175_summary.json",
+        "sha256": "c320b5ba5d3d94816c2cf3c34b9428efa2b50821af1235dd7a9aab052f72259d"
+      }
+    },
+    {
+      "epoch": 176,
+      "frame_at_start": 28000,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0176_visits.npz",
+        "sha256": "5d1cc74ca6ddf889407cc04bad92c3b9ee5af5f12d05efa2051de621578e61a1"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0176_summary.json",
+        "sha256": "215da022aa6efa34ccf038fdd1c92c9bb7b21bf53405c4962e5d95dd05cb8c02"
+      }
+    },
+    {
+      "epoch": 177,
+      "frame_at_start": 28160,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0177_visits.npz",
+        "sha256": "b8332b9b5d243c563be09895a630798841eba1c07eb3b9343ffc96a9dc565ac6"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0177_summary.json",
+        "sha256": "ca6e4bf23f10b0d182d6b387b44464bcf12009022757b44feb95e0fafabcc001"
+      }
+    },
+    {
+      "epoch": 178,
+      "frame_at_start": 28320,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0178_visits.npz",
+        "sha256": "1d72e346c22194f4f8848d0ce98bf9549dd45c8b99dd5e07a9b85792847c352f"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0178_summary.json",
+        "sha256": "441f703b3027b9389b63e9dbe552696f10652ae544ebb67d176ab15cfae81f94"
+      }
+    },
+    {
+      "epoch": 179,
+      "frame_at_start": 28480,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0179_visits.npz",
+        "sha256": "2a726f011cc2c5b2df1163ebdd997c3314825a876bb4a64a65350b758e35c178"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0179_summary.json",
+        "sha256": "c9183ea8deb74b8c04be075553220145fb23e6d9bd0e65f6f64a0a5105d4268f"
+      }
+    },
+    {
+      "epoch": 180,
+      "frame_at_start": 28640,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0180_visits.npz",
+        "sha256": "a68be0a07ca73a58df2b394084fb034b22392efe9fd7ec5049c75087c3ddc552"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0180_summary.json",
+        "sha256": "8c2151da9393f4741b33fe031567a31c4f8796a161a09114a1307f4f72922b89"
+      }
+    },
+    {
+      "epoch": 181,
+      "frame_at_start": 28800,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0181_visits.npz",
+        "sha256": "edbe132c99a03c866300fdaffbe2a8d309cdb9230e3b8127e05c727ddf0095b5"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0181_summary.json",
+        "sha256": "a92af1178303b2875384d235027c3ded4fda02f559533c9f341226f1e61d978a"
+      }
+    },
+    {
+      "epoch": 182,
+      "frame_at_start": 28960,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0182_visits.npz",
+        "sha256": "edbc0cfed4d234afcccf3fb22a19ad548c5035af62110fd87b2f01e2361068b3"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0182_summary.json",
+        "sha256": "aee8ff24fff0531f52a52b2cbb2d59c13d9567e408c7838cb730f80135bf7b8c"
+      }
+    },
+    {
+      "epoch": 183,
+      "frame_at_start": 29120,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0183_visits.npz",
+        "sha256": "71b096291c31a8e754364af6a042bfe2a6d01f0c0a61c7f8d833e68ca94f3a12"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0183_summary.json",
+        "sha256": "fb9138c9372f6daa164da87fd7b2a1e8c76111a3a8fc7a858b8e52e4a3babea9"
+      }
+    },
+    {
+      "epoch": 184,
+      "frame_at_start": 29280,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0184_visits.npz",
+        "sha256": "0c4252ea4aaa8ffb15bc726bf9ddc5d0c4f3375ffe75b9a350c3fce503ecb36e"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0184_summary.json",
+        "sha256": "d2b23db8b4edc7aeec6e4054d0fd8dcc4e1bbaf2d60eab162bb0236a836bc66c"
+      }
+    },
+    {
+      "epoch": 185,
+      "frame_at_start": 29440,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0185_visits.npz",
+        "sha256": "c719c3b7b9eeba5aadeb9e879059222db949f11a814164c3f1c59deb4a94b4c5"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0185_summary.json",
+        "sha256": "2ab395e38ea79d5b2062a3d7b1687b72787ff77e7c0974c7f86d86272fa31073"
+      }
+    },
+    {
+      "epoch": 186,
+      "frame_at_start": 29600,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0186_visits.npz",
+        "sha256": "6386a599fc25a7c2880088a725fcacb7a7bfc0c640cbc71cdd42da0c0fa8656a"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0186_summary.json",
+        "sha256": "644bf203e44215b6d0dd2d3ea6d7c0d191858731b14448e9bd620e54b55ca9bc"
+      }
+    },
+    {
+      "epoch": 187,
+      "frame_at_start": 29760,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0187_visits.npz",
+        "sha256": "1af97ea2d0ef63998e68d597aba7edb342622fe2dd8e7da3ba2af5249400e1d4"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0187_summary.json",
+        "sha256": "c6d333cced02c41b84945a0888ad29772321cb676fff6314475374bf8096417a"
+      }
+    },
+    {
+      "epoch": 188,
+      "frame_at_start": 29920,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0188_visits.npz",
+        "sha256": "518c01fcd33375a3e1a90c4da7bc330f43fe0d598b60bcf86116cee85b6c1c11"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0188_summary.json",
+        "sha256": "71ee6909e2910f1b46888d0282340e3a1b974c77e165ce6a039a90e82b84bbee"
+      }
+    },
+    {
+      "epoch": 189,
+      "frame_at_start": 30080,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0189_visits.npz",
+        "sha256": "4f426d00fb78869947f81aa851ee528c6f053e17c7b2205792df8a96b1db7e08"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0189_summary.json",
+        "sha256": "da77a2c4876e2f4b7d7aa2c781f6bc2ff0128bf0566435e99bf859782999b24f"
+      }
+    },
+    {
+      "epoch": 190,
+      "frame_at_start": 30240,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0190_visits.npz",
+        "sha256": "245fb6cfab68d83fbd8f781948ef9ac5cd7e05dccbba0633f2cb828bad8b0eac"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0190_summary.json",
+        "sha256": "57462954d1e8d168c0a781e4759d21ecd6331705ceb6cd86ca895f0e332c9eaa"
+      }
+    },
+    {
+      "epoch": 191,
+      "frame_at_start": 30400,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0191_visits.npz",
+        "sha256": "286280622050e61010ac08e145798fd70476893c3e1ffe1c5dc2b3705b65cb5a"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0191_summary.json",
+        "sha256": "939b7221e659532719493d1bc30ac90a8078c1420ee78fc2803f08475661a239"
+      }
+    },
+    {
+      "epoch": 192,
+      "frame_at_start": 30560,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0192_visits.npz",
+        "sha256": "97c0e0e5d1fc031d2761002eba4befeaf9745747f44846805b5131afd8f64935"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0192_summary.json",
+        "sha256": "bc49777010b4d037385e59437d29ca6db3d6ad2ef65dce22bcb244304476f22e"
+      }
+    },
+    {
+      "epoch": 193,
+      "frame_at_start": 30720,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0193_visits.npz",
+        "sha256": "f1aa418e0dbebca8bd17b20054434fadcf3672aafcb5c85f273c7f4da2f752bc"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0193_summary.json",
+        "sha256": "33ac7d822cc5676002442d5f020000f98a4546e847254f954b652d1ccaf91893"
+      }
+    },
+    {
+      "epoch": 194,
+      "frame_at_start": 30880,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0194_visits.npz",
+        "sha256": "3fec99630b3b3605b9cd1b449e58efbfd4728e0ef48686887fe528f2073e142f"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0194_summary.json",
+        "sha256": "d06fcb5a64c7800c419b948132c4547f8329baa589f0189aa8d950836f1a76e5"
+      }
+    },
+    {
+      "epoch": 195,
+      "frame_at_start": 31040,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0195_visits.npz",
+        "sha256": "70f41a3af79d7439273b45546210a9ce5909a5a087fa35f76f974f7d6bf8288b"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0195_summary.json",
+        "sha256": "05753fa9879d1b102fa9cfa25e6d5663cc32d73125e03587c2c57050e59648ef"
+      }
+    },
+    {
+      "epoch": 196,
+      "frame_at_start": 31200,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0196_visits.npz",
+        "sha256": "ac823fac54169810ad87fe0a4a1fd51cceb9143887a747fcaa061376617301b0"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0196_summary.json",
+        "sha256": "3e04d84a24c0f956aa2ee159aaf3acd949ab302de8aa3c7a0a81861fdd40ea2c"
+      }
+    },
+    {
+      "epoch": 197,
+      "frame_at_start": 31360,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0197_visits.npz",
+        "sha256": "6d9855616093773020c736e8bb0fc2dabd6d1bbd38c1deae106241ecd6443a30"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0197_summary.json",
+        "sha256": "a5fc00ab11353b2d42939556894ee5c5b5381cf5eec9b1454f382f635408e792"
+      }
+    },
+    {
+      "epoch": 198,
+      "frame_at_start": 31520,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0198_visits.npz",
+        "sha256": "5ec0cf34b99d7cf0d0d27ec7f1810228cbb2be5c993604bee8dbf6e79fe4caab"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0198_summary.json",
+        "sha256": "d489ac394fff3ee71ca9ff20ddfc1a8d70e41dd11d300f86dbc1866cd5e27d56"
+      }
+    },
+    {
+      "epoch": 199,
+      "frame_at_start": 31680,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0199_visits.npz",
+        "sha256": "caf5c1c4a1a7438b17969917556463203854786bc226520c39f6cee55d0542a3"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0199_summary.json",
+        "sha256": "ceb3b7399cb82665f2f6e949989499658c0fd5366fbea829e2c86f51d4572c7d"
+      }
+    },
+    {
+      "epoch": 200,
+      "frame_at_start": 31840,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0200_visits.npz",
+        "sha256": "15084c409694a0c091dcf6a9ee3a05af3635c401f977f9c00ace607fdb36a4cf"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0200_summary.json",
+        "sha256": "332ed15633209b8ed904dcfc8b44f4491fa6ead1e08d9730058f5ded745086c4"
+      }
+    },
+    {
+      "epoch": 201,
+      "frame_at_start": 32000,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0201_visits.npz",
+        "sha256": "c854d25d81d11b2b4382a5e5bf39efa8b5b84d9430974bdb932b722b06e36a91"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0201_summary.json",
+        "sha256": "a049959a3ec10418c5bb3ddf75f4d50a9c909801b13486da46db1c76919a57f9"
+      }
+    },
+    {
+      "epoch": 202,
+      "frame_at_start": 32160,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0202_visits.npz",
+        "sha256": "e4172276ff65f0748e9593c5ad19e7e2e00aeee6300b70cb8c43ccc97e7fa6ca"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0202_summary.json",
+        "sha256": "10fea551c0d5a8457ee8719f5fc0af7155496415b8ac128fa62233c0a689b4f9"
+      }
+    },
+    {
+      "epoch": 203,
+      "frame_at_start": 32320,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0203_visits.npz",
+        "sha256": "eeb6b93548a246f1920b85330e4b54292a578b6032e8003f8bc5bcdde1985790"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0203_summary.json",
+        "sha256": "4ca379460373291c4ee7cab270bedc014ca89b1896d5c11889c03e06168fbe6b"
+      }
+    },
+    {
+      "epoch": 204,
+      "frame_at_start": 32480,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0204_visits.npz",
+        "sha256": "df6a2d2f942a14d0f5aa990f1d6b3cf77c712caad500de89ce53d0fb35a8b650"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0204_summary.json",
+        "sha256": "1f6599784a3f44bf811836c0543f6c8f2f98b321a6c5931dd815ab96bd6b1026"
+      }
+    },
+    {
+      "epoch": 205,
+      "frame_at_start": 32640,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0205_visits.npz",
+        "sha256": "9cd17010036b0a1ff915d68596f61aa332ae50a3ee582ff300f4b0fab3e1a69c"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0205_summary.json",
+        "sha256": "2755feafde242a12bee80ba3903da4334e85e89f174a1a3317cb9e92de9643e4"
+      }
+    },
+    {
+      "epoch": 206,
+      "frame_at_start": 32800,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0206_visits.npz",
+        "sha256": "89eb4ae5648ac509ba0bc1dc8815e69708d18a8da8c5806b1f2177e57d14456f"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0206_summary.json",
+        "sha256": "dece1ae2144f70367b0a57a79b63cce8cc7971da523d80042784be14e0c95df3"
+      }
+    },
+    {
+      "epoch": 207,
+      "frame_at_start": 32960,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0207_visits.npz",
+        "sha256": "26de13092651b15b2d03b52643b4d946a311558e8890883b189d6d302d77a301"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0207_summary.json",
+        "sha256": "f3e2e7f5b3270bc3269e8b0f150f408e4792da89a4064e11a63761d89243923c"
+      }
+    },
+    {
+      "epoch": 208,
+      "frame_at_start": 33120,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0208_visits.npz",
+        "sha256": "8852c684d3619064fcbf22038aec33f68d44853185587ca47a21e8c41b8887c1"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0208_summary.json",
+        "sha256": "ec1de95d6ee4856ec05ea464a0f67705d6f1409425c1299c54bb3fa070c6fcde"
+      }
+    },
+    {
+      "epoch": 209,
+      "frame_at_start": 33280,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0209_visits.npz",
+        "sha256": "7857550ccd98b98b5c8f130f809ea3ae19df43cce00d872bef76cad3f4c74f82"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0209_summary.json",
+        "sha256": "bf7e456fb2f5ef0a2b24c19d87e3887c7a1f589a972f8a7845c69cf81ba51d91"
+      }
+    },
+    {
+      "epoch": 210,
+      "frame_at_start": 33440,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0210_visits.npz",
+        "sha256": "0d07ad0c9adc80bc6a582460f9c709f26a7e7b3a2e574c2d835ad760d9e1a9ef"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0210_summary.json",
+        "sha256": "927e39ef4f0cd34fb63d8799e6e30483f1f970f58550853eb779d794f5cca880"
+      }
+    },
+    {
+      "epoch": 211,
+      "frame_at_start": 33600,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0211_visits.npz",
+        "sha256": "73f1709999df3bdf34833b06b7bc9ee08dc4479a3fc02006b201116088b526e8"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0211_summary.json",
+        "sha256": "4505e6d52f05734bbfcb00ec8f53cbe2928c36de168a7ca94f12b62f9ec30e65"
+      }
+    },
+    {
+      "epoch": 212,
+      "frame_at_start": 33760,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0212_visits.npz",
+        "sha256": "1cc05aa4f0a8da664cbeea57f15421b28127cdfb112bae2fe94bb216c96dce4c"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0212_summary.json",
+        "sha256": "fbe50bf37f76186eb314a51be9b6683090fececafaac7880e075f40058771d45"
+      }
+    },
+    {
+      "epoch": 213,
+      "frame_at_start": 33920,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0213_visits.npz",
+        "sha256": "9f1cd01d9759bd20bbd5c77204732b83d0f160447666a084dc789aac03f46552"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0213_summary.json",
+        "sha256": "fdb9635140c94b20b2c5abbe0daa9d357c0d816efc6db794429768cf9fe8fc04"
+      }
+    },
+    {
+      "epoch": 214,
+      "frame_at_start": 34080,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0214_visits.npz",
+        "sha256": "ea5e0dd80cd165203e462efbb853d0c4cd8748283806d25d84bc025dd8ccf0b9"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0214_summary.json",
+        "sha256": "b0aac646fefa4d13a57a505d328e6dc4c8b590ab4fe4d5cd6be4cddff2b7352b"
+      }
+    },
+    {
+      "epoch": 215,
+      "frame_at_start": 34240,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0215_visits.npz",
+        "sha256": "c2617a3b4a70619ae75a39e1bbd9d4609531bccad69a2fdbcc66767871f3b536"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0215_summary.json",
+        "sha256": "b58c313bca347899849f5a93263993f1b0cfd0e4fa77b2e1f2bf75dea5536268"
+      }
+    },
+    {
+      "epoch": 216,
+      "frame_at_start": 34400,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0216_visits.npz",
+        "sha256": "d7853e53ed825183643e1d11674ebc0723639206340ea280ff733308d00d35de"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0216_summary.json",
+        "sha256": "f5e0785c4b64d11b92fbed7fb543621386f893292c7d6670cdfecdead8a54d6a"
+      }
+    },
+    {
+      "epoch": 217,
+      "frame_at_start": 34560,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0217_visits.npz",
+        "sha256": "23761a7c790325773e4edfe339f5d7b7879c33b9011542f3bbdd3957e9a4f8f9"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0217_summary.json",
+        "sha256": "fd5057efeaa4e5ec82fc829adb5c9d3eae71d7a69a68d0fcc0e179febf11a687"
+      }
+    },
+    {
+      "epoch": 218,
+      "frame_at_start": 34720,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0218_visits.npz",
+        "sha256": "899a39577607de7822f9399c6c88e898b9b9013688ddec294fb0cae3b174735f"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0218_summary.json",
+        "sha256": "e0aca8eea40cc9a8e246135f1307597aa42e16e11b5af1c16d53d8175f52e3c5"
+      }
+    },
+    {
+      "epoch": 219,
+      "frame_at_start": 34880,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0219_visits.npz",
+        "sha256": "ca10801550d3e197ea53250e4ec65637da37e06df0367c40b0d91cbdcba10b78"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0219_summary.json",
+        "sha256": "959e37881e46b6d459e0f424e1256f6b8a17e30ffebec92a6b8bcf0510f98e01"
+      }
+    },
+    {
+      "epoch": 220,
+      "frame_at_start": 35040,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0220_visits.npz",
+        "sha256": "b62b4c49aed74032aad5fe4dd58eff311466e84c19b8829b073ce3afc02c8ee0"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0220_summary.json",
+        "sha256": "a2f6d4a8aca0d58f75be44f2f2a3dc850a574392aa2848529aacc5a5948a7432"
+      }
+    },
+    {
+      "epoch": 221,
+      "frame_at_start": 35200,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0221_visits.npz",
+        "sha256": "1aecc2fa014600c83c600a950d3bd197193015d9a74e3207ce6f4c1251c17e81"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0221_summary.json",
+        "sha256": "f894e9a9db9759dc318adbae5251aaf7720021c0136e8086e92d61d8e06276fd"
+      }
+    },
+    {
+      "epoch": 222,
+      "frame_at_start": 35360,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0222_visits.npz",
+        "sha256": "3a7c31163272da6e6b1c81405e17718eb9c446527020019eba4b771df620e8c7"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0222_summary.json",
+        "sha256": "76aa9cb3430eb9392573b49d9899276e5c3426743dad0718608c5e9b33fcf419"
+      }
+    },
+    {
+      "epoch": 223,
+      "frame_at_start": 35520,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0223_visits.npz",
+        "sha256": "fb0dd01154632639b4e11c5ba02ba4b0be3d5548288f08c4be5e7664564bf816"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0223_summary.json",
+        "sha256": "7a494b6be6d2be40d30275fe92ddfb6df12c8f438d6ea4748574e85b6e484333"
+      }
+    },
+    {
+      "epoch": 224,
+      "frame_at_start": 35680,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0224_visits.npz",
+        "sha256": "b3559f397340e33f7b127023c9d0d79658414f31cfeacb4e119e7f8276b7f067"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0224_summary.json",
+        "sha256": "c69ec30d4172313017cdf2bbfe4038b95ce6a9fe573667b0b819e03575b6a13a"
+      }
+    },
+    {
+      "epoch": 225,
+      "frame_at_start": 35840,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0225_visits.npz",
+        "sha256": "ec9a06001e61b8e373c6095885adbcdcd68f545f06aa5b5c40ecfe345a9d2cb3"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0225_summary.json",
+        "sha256": "17b11392e712dc79b9e0a7af95df7b5c391e82a36bc87c49c3a72f2d2d9bd872"
+      }
+    },
+    {
+      "epoch": 226,
+      "frame_at_start": 36000,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0226_visits.npz",
+        "sha256": "6db2573b15e5af00fb72a853161966f167fa0bc6ca464dc9a46d9e2e7597a4df"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0226_summary.json",
+        "sha256": "d71651387d7bbabedc010b218bcecf5b38a9392cc247c667f2b36695f2bfbe63"
+      }
+    },
+    {
+      "epoch": 227,
+      "frame_at_start": 36160,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0227_visits.npz",
+        "sha256": "2c39400db5a3c5aa10772270d6494eb5002691c5479481a7ef188926a293aa19"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0227_summary.json",
+        "sha256": "40f3cc1482c4d44c1076b0d3fd658c7f3ab316472062073a911fad95a79eef13"
+      }
+    },
+    {
+      "epoch": 228,
+      "frame_at_start": 36320,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0228_visits.npz",
+        "sha256": "1d2b07b6ae2ebfe4a860fcec63226cd5502846c3cd0f5b01c163767356c5235e"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0228_summary.json",
+        "sha256": "c61033dff2db0f00d46d5de96d700735f92e105d052d331d672c44621459b364"
+      }
+    },
+    {
+      "epoch": 229,
+      "frame_at_start": 36480,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0229_visits.npz",
+        "sha256": "7d0a5ef9a7b6703924bb3477915941559a6465384ca718c5c7165ff812e8f4ff"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0229_summary.json",
+        "sha256": "d59e8c1382cab2047113b0d66b31607790f5cf5875c1e91b46dc8f9aa8e58d98"
+      }
+    },
+    {
+      "epoch": 230,
+      "frame_at_start": 36640,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0230_visits.npz",
+        "sha256": "89505f08d3ccf846372211b50b6012de86515289478eecd3361224054dbee352"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0230_summary.json",
+        "sha256": "cd587121a495cac77f0deca99832a157cf69f9ae1912fd6e3537c63a1ab68e4b"
+      }
+    },
+    {
+      "epoch": 231,
+      "frame_at_start": 36800,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0231_visits.npz",
+        "sha256": "c4aba81e2ca88ecc57f1155a967ae1afeaa396c6b38fa2f2c60bfe8f867c0d5a"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0231_summary.json",
+        "sha256": "ad3c45dd927d2c5f0ed56f74855d2b97545de99b73e1299a5ce9bb128fb928a8"
+      }
+    },
+    {
+      "epoch": 232,
+      "frame_at_start": 36960,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0232_visits.npz",
+        "sha256": "4f55cfb29240a6d2fcfdd65974e38490e5f0ac88b1447d12690cf399cff661e9"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0232_summary.json",
+        "sha256": "bde18e0f8af1657dc7b5d50c75cfa4cdd05a1155777b802ed40def78dbf5f3c3"
+      }
+    },
+    {
+      "epoch": 233,
+      "frame_at_start": 37120,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0233_visits.npz",
+        "sha256": "b95f41eb4c3952160889042735d6ff9b226bdb2ae04f4afffa993042f5a54c23"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0233_summary.json",
+        "sha256": "178eba37c02c69c3a24193db0e5c300d0d7a82416584af826ae5df7be9022846"
+      }
+    },
+    {
+      "epoch": 234,
+      "frame_at_start": 37280,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0234_visits.npz",
+        "sha256": "743cf2b2fc5d78bafd119532dfc8d60b9a66e3946a64f81d9825b7639d9c6b57"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0234_summary.json",
+        "sha256": "73ca88ea53803f8637f3b40442685aabc73552b467e74e3896f8369dab1c2f3f"
+      }
+    },
+    {
+      "epoch": 235,
+      "frame_at_start": 37440,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0235_visits.npz",
+        "sha256": "5f59e459f735bf3a559eb7b2919d7a90f943abece848e8248af59af4713fbd99"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0235_summary.json",
+        "sha256": "6a8054033a9f4129cd86c264e841b9bfaf48c1abde16103a2ea1d050e875ce61"
+      }
+    },
+    {
+      "epoch": 236,
+      "frame_at_start": 37600,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0236_visits.npz",
+        "sha256": "5ce013a9d80397214c333fbcb9f2c7de8485c1d97c81a16b107242c85b1c1570"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0236_summary.json",
+        "sha256": "cbd169bf4d3070cf565ee746bcc3735829c874d00e1827801be8ed8a2dbf7d25"
+      }
+    },
+    {
+      "epoch": 237,
+      "frame_at_start": 37760,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0237_visits.npz",
+        "sha256": "10e3f63ed0e7af37e928013c66c5b6a73ee0fc5d60ff4bf6363bb38a578f1fe4"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0237_summary.json",
+        "sha256": "170124dead9f830400cef2c3d6c36fb291bb0b0ac75eb935a2552bc6ea3acf3e"
+      }
+    },
+    {
+      "epoch": 238,
+      "frame_at_start": 37920,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0238_visits.npz",
+        "sha256": "e91e994398e25274ae037620521a41d28bc98dda830f4dd086db1e40adb35a5b"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0238_summary.json",
+        "sha256": "8024f8a2e399fe7e7552097f44aec37c8cf7d0643ab97113bd04d721c9d1bf7c"
+      }
+    },
+    {
+      "epoch": 239,
+      "frame_at_start": 38080,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0239_visits.npz",
+        "sha256": "ef43ebe1c2d961c911a52b6c96c9a22a45d59674c5f98cbc01650f9b4a27f055"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0239_summary.json",
+        "sha256": "191312d255d43ae83f032950b757014cd8dbfedaa20c416e6c12bfec8feeb4d1"
+      }
+    },
+    {
+      "epoch": 240,
+      "frame_at_start": 38240,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0240_visits.npz",
+        "sha256": "7f3a1ac1b276c5b8d4889f79d93f19c1ffde864b6a661fb23886324b73e8afb6"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0240_summary.json",
+        "sha256": "0038e2e05953ce26358922f3069ef9395f314e12da907709011cebb5de5fb209"
+      }
+    },
+    {
+      "epoch": 241,
+      "frame_at_start": 38400,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0241_visits.npz",
+        "sha256": "01226b92a24742bfdd1edb2f368f7995a77c11fe3400984115be29a876e6e198"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0241_summary.json",
+        "sha256": "99b3b20798fa718cf344f7ba22871f6c0d7dc1c7edeba02e1f23a3f721209c47"
+      }
+    },
+    {
+      "epoch": 242,
+      "frame_at_start": 38560,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0242_visits.npz",
+        "sha256": "cf31232fbdcd7e863799f5ec7e3fee1e0c3d3d56ebac306ce1bb0cff8f231085"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0242_summary.json",
+        "sha256": "aebffd9a89cc68eb5932ad1bfa19e1826aa74b678a799900b70712837a3bc356"
+      }
+    },
+    {
+      "epoch": 243,
+      "frame_at_start": 38720,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0243_visits.npz",
+        "sha256": "9d5379564d610895eee3384c7408363244963090404589d534eb73a98dc4390c"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0243_summary.json",
+        "sha256": "b8a21a511287a7b9c74a2091e0b36bbd6a533c1bf598426fe14fa11029e721de"
+      }
+    },
+    {
+      "epoch": 244,
+      "frame_at_start": 38880,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0244_visits.npz",
+        "sha256": "3e3b4bd4d9ca81de0c0e77490a8bd18fe92507cd8859104cf41e9d1a71f8f41c"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0244_summary.json",
+        "sha256": "417fccfdc2b99cbb4192915c0e90cfdbec3796c936447a2d21adc17b35cb4f2f"
+      }
+    },
+    {
+      "epoch": 245,
+      "frame_at_start": 39040,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0245_visits.npz",
+        "sha256": "6aa530babe3009a819ec80ea57e294938172e84f5c4c154c1450ffda3c2a3848"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0245_summary.json",
+        "sha256": "82429d2feee28b230a3737afa0dd67c9f2bfafa58b474e10ebba374a4c0990eb"
+      }
+    },
+    {
+      "epoch": 246,
+      "frame_at_start": 39200,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0246_visits.npz",
+        "sha256": "20ad91dc4db98e7aed5bc2220df06d87dfb3f4adea44929a0a0275245be36dc0"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0246_summary.json",
+        "sha256": "203a8c1e88cc391ac623e85d19c8c70c04bdab90ab1cb44d1f19a031d75bc84f"
+      }
+    },
+    {
+      "epoch": 247,
+      "frame_at_start": 39360,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0247_visits.npz",
+        "sha256": "546041fb9550b54d42313b48d41f66ca2e5c02263662c57c47d17492d6684c59"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0247_summary.json",
+        "sha256": "ff826c5c000a8122e2ce8f701e3b87ab13031827d09babd357ecb6eddb518341"
+      }
+    },
+    {
+      "epoch": 248,
+      "frame_at_start": 39520,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0248_visits.npz",
+        "sha256": "b5d71a683f8508270a80c26bd0056fb46ae27676ea65c53624b7d5ad8ec51eec"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0248_summary.json",
+        "sha256": "a91335a854be308faeb3bd3fb63488da97e8e6cdc86205589352b03a6144f8d3"
+      }
+    },
+    {
+      "epoch": 249,
+      "frame_at_start": 39680,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0249_visits.npz",
+        "sha256": "02585117513cd726d498fae01b3b1874424a8bad971eedb8d98114462818576b"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0249_summary.json",
+        "sha256": "ae93a26d98e9fde46f4a762d6f12f5c15fca2d16c02796c5923e86b0db893fa5"
+      }
+    },
+    {
+      "epoch": 250,
+      "frame_at_start": 39840,
+      "sample_count": 160,
+      "visits": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0250_visits.npz",
+        "sha256": "49544bbfbd21c9f8ff643786f2a923e874ec9deb38cb9208a303d1a99f84425d"
+      },
+      "summary": {
+        "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/epoch_0250_summary.json",
+        "sha256": "cfb1f17ea4b52aab139ff369d7fe233cd2e7f8dc541d72863b3ce686626283f2"
+      }
+    }
+  ]
+}

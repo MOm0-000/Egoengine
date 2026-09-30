@@ -1,0 +1,212 @@
+schema: taco_pour_candidate_G_policy_warm_start_v1
+status: authorized_fixed_actor_only_warm_start_400k_per_seed
+base_branch: 3.2RL
+base_git_commit: a89857d3705d89c0f45542451f6ef0114f2413e5
+paper_faithful: false
+classification: local_policy_warm_start_with_recurrent_boundary_context
+execution_authorized_now: true
+chunk_commit_authorized: false
+purpose: >-
+  Test whether the promoted source20 Candidate-D actor, its input normalization,
+  and causally reconstructed endpoint40 memory can solve the full source40-to80
+  window under otherwise unchanged task and PPO contracts.
+
+frozen_task:
+  episode: '20230927_017'
+  tracking_variant: tool_only
+  source_endpoint: 40
+  outcome_endpoints_inclusive: [41, 80]
+  window_control_intervals: 40
+  possible_commit_target_after_separate_promotion: 60
+  world_start_endpoints: [40, 40, 40, 40]
+  command_reference: t+1
+  reward_reference: t+1
+  returned_goal_reference: t+2
+  objective: taco_pour_local_normalized_ellipse_v1
+  termination: normalized_ellipse_score > 1
+  actor_dimension: 236
+  privileged_critic_dimension: 108
+  residual_dimension: 36
+  residual_scale: 0.05
+  action_frame: world_or_base
+  distribution: support_anchored_bounded_mean_state_truncated_normal
+  training_backend: CPU_MuJoCo_Warp
+  validation_backend: CPU_MuJoCo_Warp
+  independent_one_world_instances: 4
+  physics_steps_per_control: 10
+
+warm_start:
+  donor: {candidate: D, source_endpoint: 20, seed: 2, epoch: 125}
+  load_complete_actor_model_state_dict_strict: true
+  inherit_actor_input_RMS: true
+  inherit_actor_log_sigma_exactly: true
+  inherit_actor_normalization_version_provenance: true
+  actor_mean_head_zeroing_after_load: false
+  sigma_multiplier_after_load: null
+  asymmetric_critic: fresh_same_seed_initialization_as_source40_D
+  actor_optimizer: fresh_no_donor_moments
+  critic_optimizer: fresh_no_donor_moments
+  donor_training_env_RNN_rollout_RNG_restore: false
+  same_donor_for_every_seed: true
+
+recurrent_boundary_context:
+  physics_reset: immutable_committed_endpoint40_snapshot
+  prefix_source_endpoints_inclusive: [20, 39]
+  prefix_observation_count: 20
+  burn_in_start_hidden: zero_at_source20
+  burn_in_end_hidden: pre_forward_hidden_at_source40
+  burn_in_uses_current_actor_and_current_frozen_RMS: true
+  prefix_updates_RMS: false
+  prefix_in_PPO_loss_GAE_or_training_sample_count: false
+  refresh_before_each_rollout_epoch_and_validation: true
+  done_reset: same_epoch_endpoint40_physics_and_h40_selected_world_only
+  likelihood_recompute_uses_same_nonzero_reset_context: true
+  exploration_RNG_rewound_on_reset: false
+  do_not_physically_reexecute_prefix: true
+
+optimization:
+  seeds: [0, 1, 2]
+  actor_learning_rate: 0.0001
+  critic_learning_rate: 0.00005
+  actor_mini_epochs: 1
+  critic_mini_epochs: 4
+  horizon_per_world: 40
+  batch_size: 160
+  minibatch_size: 160
+  seq_length: 4
+  bptt_length: 4
+  gamma: 0.998
+  gae_tau: 0.95
+  ppo_clip: 0.2
+  entropy_coef: 0.0
+  bounds_loss_coef: 0.0
+  gradient_norm: 1.0
+  lr_schedule: null
+  KL_penalty_or_target_KL: false
+  value_bootstrap: false
+  official_action_hard_clamp: false
+  observation_RMS: frozen_during_rollout_and_updates_commit_once_after_epoch
+
+budget:
+  seed_order: [0, 1, 2]
+  control_intervals_per_epoch: 160
+  physics_steps_per_epoch: 1600
+  maximum_epochs_per_seed: 250
+  maximum_new_training_physics_steps_per_seed: 400000
+  maximum_new_training_physics_steps_all_seeds: 1200000
+  milestones:
+    - {epoch: 0, physics_steps: 0, control_intervals: 0}
+    - {epoch: 62, physics_steps: 99200, control_intervals: 9920}
+    - {epoch: 125, physics_steps: 200000, control_intervals: 20000}
+    - {epoch: 188, physics_steps: 300800, control_intervals: 30080}
+    - {epoch: 250, physics_steps: 400000, control_intervals: 40000}
+  stop_all_unstarted_seeds_after_first_verified_strict_milestone: true
+  arbitrary_intermediate_best_checkpoint_selection: false
+
+preflight_G0:
+  required: true
+  expected_step0:
+    valid_intervals: 20
+    first_failure_endpoint: 61
+    score_at60: 0.9899907112121582
+    score_at61: 1.0139968395233154
+  checks:
+    - input_hashes
+    - committed_and_context_physics_bitwise_equal
+    - donor_h40_bitwise_equal_after_prefix_reencoding
+    - step0_endpoints41_to80_bitwise_equal_continuous_baseline
+    - actor_only_inheritance_and_fresh_critic_optimizers
+    - four_world_partial_reset_independence
+    - two_no_optimizer_shadow_epochs_RMS_commit_context_refresh
+    - canonical_ratio_and_rollout_numeric_identity
+    - checkpoint_cold_roundtrip
+    - lossless_world_time_credit_join
+  mismatch_action: stop_before_training_no_tolerance_widening
+
+validation:
+  start_physics: exact_committed_endpoint40
+  RNN: checkpoint_actor_prefix_burn_in
+  action: bounded_mu_deterministic
+  reset_at_endpoint60: false
+  strict_success: all_40_finite_score_le_1_and_no_tracking_termination
+  endpoint80_timeout_is_tracking_failure: false
+  strict_success_requires_independent_bitwise_CPU_replay: true
+  automatic_chunk_commit: false
+
+prefrozen_classification:
+  precedence: [G0, G1, G2, G3]
+  G0: CONTRACT_OR_NUMERICAL_FAILURE
+  G1: STRICT_NEXT_WINDOW_SUCCESS
+  G2: REPEATED_PARTIAL_WINDOW_EXTENSION_NO_COMMIT
+  G2_condition: all_seeds_complete_and_at_least_two_epoch250_validations_ge_30
+  G3: NO_PREDECLARED_SUSTAINED_EXTENSION
+
+historical_comparisons:
+  pure_carryover: {valid_intervals: 20, first_failure_endpoint: 61}
+  fresh_source40_D:
+    100k: [17, 19, 20]
+    200k: [20, 20, 19]
+    300p8k: [20, 20, 20]
+    400k: [14, 20, 17]
+  fresh_source40_Replay: {valid_intervals: 9, first_failure_endpoint: 50}
+
+forbidden:
+  - reward_observation_action_support_or_physics_change
+  - LR_sigma_schedule_or_sweep
+  - donor_critic_or_optimizer_inheritance
+  - tail_curriculum_or_oracle_action_insertion
+  - physical_reexecution_of_source20_to40
+  - zero_RNN_at40_or_stale_hidden_after_actor_or_RMS_change
+  - prefix_RMS_GAE_loss_or_sample_count
+  - automatic_extra_seed_or_budget_extension
+  - direct_chunk_commit
+
+inputs:
+  donor_checkpoint:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_algorithmic_reproduction_training_v6/training/candidate_D/seed_2/checkpoints/epoch_0125.pt.gz
+    sha256: b4e62f89d68137782809416a15f6d240b139b75dbf6391ba6fa3534f63cb3670
+  source_boundary:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_candidate_D_strict_success_promotion_v1/committed_boundary_endpoint_40.pt.gz
+    sha256: 7cf90b48a2a16d41b1f055fdb4fa30f1fdb89d32064ffbfc776b0fdc0e1b9090
+  boundary_context:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_endpoint60_viability_adjudication_v1/carryover/endpoint40_physics_rnn.pt.gz
+    sha256: 0cc3a0901428fe3091f7420e5fafdd9b0a756f2d30d36ea194875ccefcbeb803
+  carryover_baseline:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_endpoint60_viability_adjudication_v1/carryover/continuous_20_80.npz
+    sha256: 9e7e6014cf550ba9c3f66a22911dbae9801370d2591dbae92598efd2972eb17c
+  protocol_at_authorization:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_algorithmic_reproduction_training_v3_protocol_snapshot.yaml
+    sha256: 1f4a96edfa0bc17ecb578fd5d8ae1514b77099713cc9b9f74adf6813a62873f3
+  objective_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_local_normalized_ellipse_v1.yaml
+    sha256: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+  observation_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_observation_local_236d_v1.yaml
+    sha256: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  action_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_residual_action_scaled_v1.yaml
+    sha256: 71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4
+  bounded_mean_distribution_profile:
+    path: /data_all/zzx/3.2RL/configs/taco_pour_support_anchored_bounded_mean_truncated_gaussian_v1.yaml
+    sha256: 24dc3decf62890bd14268539fd875215756ca500e097ccedfede4128d062762f
+  simulator_config:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml
+    sha256: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+  initialization_report:
+    path: /data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v2/candidate_a/report.json
+    sha256: 9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a
+
+implementation_contract:
+  status: hashes_frozen_before_sampling
+  hashes:
+    runner: bf756f35c9a313aad64f93480376ccb073b54afc50e6fc0d247d67fafb63e899
+    policy_warm_start: d195f25257e6168fcf437ed38ba10535c589e0cbb6a1fb209c16aff7ce93229d
+    state_feasible_distribution: 86b833c9be32baf55ce1b5fd27f92f728516c418ac21795f0aeae17257da65aa
+    bounded_mean_training: daa992ecd8267c24110d4827651f43919fb46410a90a704089a8d0f2cbd32a0e
+    curriculum_reset: 1142612bf331b14386ea084c192ff2057165f1022af5f8251bdfb7c7b2458ab3
+    MJWP_environment: 97ce5f9fb95c8c1a2e6b176ebffa1d779642c195095325bac5bd46a049b2d9b3
+    training_trace: 9ccab56b49ff97dd084c89334ec80ba332d5d6da2055f9648e17f0675964a186
+    official_PPO_agent: b41f1c088d8ad4e261b9c5338f90a7f0ae910b7453ab348532312b3d87bc4c30
+    PPO_config_builder: 4b887e5e4f493fdc5a6541f3c1c811ec65a4e2cbab9f974cc1627e0d54048b84
+
+output_directory: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1

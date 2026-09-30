@@ -18,6 +18,7 @@ from video_to_spider.rl.curriculum_reset import (
     refresh_boundary_rnn_for_actor,
     restore_physics_rnn_boundaries,
 )
+from video_to_spider.rl.mjwp_env import IndependentMJWPTrainingEnv
 
 
 class _Normalizer(torch.nn.Module):
@@ -224,3 +225,75 @@ def test_capture_rejects_terminated_tail_state():
             observation_prefix=[world.current_observation()] * 30,
             provenance={},
         )
+
+
+def _boundary_context_env(worlds):
+    env = object.__new__(IndependentMJWPTrainingEnv)
+    env.worlds = tuple(worlds)
+    env.num_envs = len(worlds)
+    env._tail_curriculum = None
+    env._fixed_two_chunk_curriculum = None
+    env._boundary_recurrent_context = None
+    env._curriculum_active_this_epoch = False
+    env._curriculum_reset_rnn_states = None
+    env._boundary_context_active_this_epoch = False
+    env._boundary_context_reset_rnn_states = None
+    env._boundary_context_epoch_audits = []
+    return env
+
+
+def test_boundary_context_refreshes_current_actor_memory_for_every_world():
+    source = _Agent()
+    boundary = _capture(source, 23, 2.0)
+    worlds = [_World(23, 2.0) for _ in range(4)]
+    for world in worlds:
+        world.state["episode_lengths"] = np.array([40], dtype=np.int32)
+        world._chunk_reset_state = world.get_env_state()
+    env = _boundary_context_env(worlds)
+    env.enable_boundary_recurrent_context(
+        boundary, start_endpoint=23, window_end_endpoint=40
+    )
+
+    agent = _Agent()
+    agent.model.load_state_dict(source.model.state_dict())
+    with torch.no_grad():
+        next(agent.model.parameters()).add_(0.01)
+    agent.epoch_num = 1
+    env._prepare_boundary_recurrent_context_epoch(agent)
+
+    reset = env.rollout_reset_rnn_states()
+    assert reset is not None
+    assert [list(state.shape) for state in reset] == [[1, 4, 2], [1, 4, 2]]
+    audit = env.boundary_recurrent_context_audit()
+    assert audit["world_start_endpoints"] == [23, 23, 23, 23]
+    assert audit["epochs_prepared"][0]["prefix_observations"] == 3
+    assert audit["prefix_updates_normalization"] is False
+
+
+def test_boundary_context_done_reset_restores_only_selected_world_memory():
+    env = _boundary_context_env([_World(20, 0.0) for _ in range(4)])
+    env._boundary_context_active_this_epoch = True
+    env._boundary_context_reset_rnn_states = (
+        torch.arange(8, dtype=torch.float32).reshape(1, 4, 2),
+    )
+    current = [torch.full((1, 4, 2), -1.0)]
+    result = env.reset_rnn_states_after_done(current, torch.tensor([[1], [3]]))
+    torch.testing.assert_close(result[0][:, 0], torch.full((1, 2), -1.0))
+    torch.testing.assert_close(result[0][:, 2], torch.full((1, 2), -1.0))
+    torch.testing.assert_close(result[0][:, 1], torch.tensor([[2.0, 3.0]]))
+    torch.testing.assert_close(result[0][:, 3], torch.tensor([[6.0, 7.0]]))
+
+
+def test_default_and_curriculum_reset_semantics_remain_distinct():
+    env = _boundary_context_env([_World(20, 0.0) for _ in range(4)])
+    assert env.rollout_reset_rnn_states() is None
+    current = [torch.ones(1, 4, 2)]
+    env.reset_rnn_states_after_done(current, torch.tensor([[2]]))
+    assert not current[0][:, 2].any()
+    assert current[0][:, 0].all()
+
+    env._curriculum_active_this_epoch = True
+    env._curriculum_reset_rnn_states = (torch.full((1, 4, 2), 5.0),)
+    curriculum = env.rollout_reset_rnn_states()
+    assert curriculum is not None
+    torch.testing.assert_close(curriculum[0], torch.full((1, 4, 2), 5.0))

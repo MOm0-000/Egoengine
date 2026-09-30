@@ -1,0 +1,120 @@
+{
+  "epoch": 131,
+  "samples": 160,
+  "actor_updates": 1,
+  "observation_normalization_version_used": 255,
+  "observation_normalization_version_after_commit": 256,
+  "credit": {
+    "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_1/update_audit/epoch_0131_credit.npz",
+    "sha256": "a548fd58928b4d702f6afc24422e06e5f98d61b8f9bcb4303a094b63ccb8a5a1"
+  },
+  "update": {
+    "epoch": 131,
+    "global_actor_update": 131,
+    "pre_optimizer_identity": {
+      "epoch": 131,
+      "samples": 160,
+      "semantic_state_identity": {
+        "actor_parameter_hash_equal": true,
+        "actor_RMS_hash_equal": true,
+        "normalization_version_equal": true,
+        "observations_equal": true,
+        "dones_equal": true,
+        "actions_equal": true,
+        "action_low_equal": true,
+        "action_high_equal": true,
+        "RNN_start_states_equal": true
+      },
+      "semantic_state_identity_passed": true,
+      "rollout_vs_canonical": {
+        "max_abs_mu_difference": 1.1920928955078125e-07,
+        "max_abs_sigma_difference": 0.0,
+        "max_abs_logprob_difference": 2.86102294921875e-06,
+        "mu_element_difference_count": 2421,
+        "sigma_element_difference_count": 0,
+        "ratio_min": 0.9999971389770508,
+        "ratio_max": 1.0000019073486328,
+        "max_abs_ratio_minus_one": 2.86102294921875e-06,
+        "ratio_tolerance": 1.52587890625e-05,
+        "likelihood_equivalence_passed": true,
+        "mu_sigma_are_diagnostic_only": true,
+        "likelihood_equivalence_is_diagnostic_only": true,
+        "semantic_hard_fail_passed": true
+      },
+      "canonical_optimizer_identity": {
+        "ratio_min": 1.0,
+        "ratio_max": 1.0,
+        "max_abs_ratio_minus_one": 0.0,
+        "ratio_tolerance": 1.1920928955078125e-07,
+        "ratio_bitwise_equal_one": true,
+        "passed": true
+      },
+      "semantic_identity_hard_fail_threshold": 0.0001,
+      "semantic_identity_hard_fail": false,
+      "passed": true,
+      "classification": "canonical_old_policy_identity_pass",
+      "maximum_abs_error_from_one": 0.0,
+      "ratio_max_abs_error_from_one": 2.86102294921875e-06,
+      "numerical_identity_passed": true,
+      "v5_gate_semantics": "semantic fields exact; canonical optimizer ratio bitwise one; rollout/canonical likelihood diagnostic unless above 1e-4"
+    },
+    "pre_optimizer_ratio_identity_max_abs_error": 0.0,
+    "post_optimizer_ratio": {
+      "min": 0.46410679817199707,
+      "mean": 1.036817072145641,
+      "p50": 1.0102283954620361,
+      "p95": 1.5749282062053673,
+      "max": 2.129300594329834
+    },
+    "post_optimizer_ratio_outside_0p8_1p2_fraction": 0.46875,
+    "surrogate_changed_by_clip_fraction": 0.46875,
+    "exact_old_to_new_truncated_policy_KL": {
+      "min": 0.01495773697187025,
+      "mean": 0.03780520277350384,
+      "p50": 0.03188434884194086,
+      "p95": 0.08883658666836501,
+      "max": 0.10441176567422772
+    },
+    "entropy_pre_optimizer": -7.504288673400879,
+    "sigma_post_optimizer": {
+      "min": 0.2490660697221756,
+      "mean": 0.24996817857027054,
+      "p50": 0.25002312660217285,
+      "p95": 0.2509225904941559,
+      "max": 0.2509649991989136
+    },
+    "gradient_norm_before_clip": 38.19552993774414,
+    "gradient_norm_after_clip": 1.0,
+    "parameter_delta_l2": 0.055127541562892554,
+    "deterministic_action_bound_fraction": 0.0486111119389534,
+    "deterministic_effective_residual_RMS": 0.030373435467481613,
+    "training_reward_mean": 0.30523550510406494,
+    "minimum_truncated_normalization_mass": 0.49996664262416435,
+    "p01_truncated_normalization_mass": 0.4999675073875784,
+    "median_truncated_normalization_mass": 0.9074697633506201,
+    "raw_location_abs_mean": 0.7342634954255725,
+    "raw_location_abs_p95": 1.5288430690765384,
+    "raw_location_abs_max": 1.9925718307495117,
+    "tanh_saturation_fraction": 0.0,
+    "bounded_mu_outside_support_count": 0,
+    "bounded_mu_at_support_fraction": 0.04861111111111111,
+    "bounded_mu_normalized_support_position": {
+      "minimum": 0.0,
+      "p05": 0.03138848096132278,
+      "median": 0.4707648456096649,
+      "p95": 0.9277413323521614,
+      "maximum": 1.0
+    },
+    "minimum_distance_to_support_boundary_in_sigma": 0.0,
+    "location_parameterization": {
+      "network_output": "raw_location_latent_eta",
+      "ppo_mu": "support_anchored_bounded_distribution_mean",
+      "bounds_loss_coef": 0.0
+    }
+  },
+  "support_distribution": {
+    "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_1/update_audit/epoch_0131_support.npz",
+    "sha256": "c38318e9df19c12d42b006076a0b1445e696a887db0e84041f168ae6293bf6dc",
+    "bytes": 41671
+  }
+}

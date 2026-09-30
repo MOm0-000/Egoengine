@@ -59,6 +59,8 @@ class PpoTrainingTrace:
         residual_clip: float,
         ctrlrange_contract: dict[str, Any],
         include_world_index: bool = False,
+        run_id: str | None = None,
+        training_seed: int | None = None,
     ) -> None:
         self.output_dir = Path(output_dir)
         if self.output_dir.exists():
@@ -77,6 +79,10 @@ class PpoTrainingTrace:
         self.residual_clip = float(residual_clip)
         self.ctrlrange_contract = ctrlrange_contract
         self.include_world_index = bool(include_world_index)
+        self.run_id = None if run_id is None else str(run_id)
+        self.training_seed = None if training_seed is None else int(training_seed)
+        if (self.run_id is None) != (self.training_seed is None):
+            raise ValueError("run_id and training_seed must be supplied together")
         self.schema = WORLD_INDEX_SCHEMA if self.include_world_index else SCHEMA
         self._active: dict[str, Any] | None = None
         self._epochs: list[dict[str, Any]] = []
@@ -106,11 +112,20 @@ class PpoTrainingTrace:
             "effective_residual_after_ctrlrange": [],
             "residual_lost_to_ctrlrange": [],
             "contact_flags": [],
+            "tracking_reward": [],
+            "contact_bonus": [],
+            "lift_reward": [],
+            "raw_total_reward": [],
             "tracking_terminated": [],
             "time_out": [],
         }
         if self.include_world_index:
             self._active["world_index"] = []
+            self._active["rollout_step"] = []
+            self._active["episode_serial"] = []
+            self._active["_episode_serial_state"] = np.zeros(
+                0, dtype=np.int32
+            )
 
     def record(
         self,
@@ -129,8 +144,26 @@ class PpoTrainingTrace:
     ) -> None:
         if self._active is None:
             raise RuntimeError("PPO step occurred without an active training-trace epoch")
+        source = np.asarray(source_endpoint, np.int32)
+        count = len(source)
+        tracking_reward = np.asarray(
+            info.get("aggregate_tracking_reward", np.zeros(count)), np.float32
+        )
+        contact_bonus = np.asarray(
+            info.get("aggregate_contact_bonus", np.zeros(count)), np.float32
+        )
+        lift_reward = np.asarray(
+            info.get("lift_reward", np.zeros(count)), np.float32
+        )
+        raw_total_reward = np.asarray(
+            info.get(
+                "raw_total_reward",
+                tracking_reward + contact_bonus + lift_reward,
+            ),
+            np.float32,
+        )
         arrays = {
-            "source_endpoint": np.asarray(source_endpoint, np.int32),
+            "source_endpoint": source,
             "outcome_endpoint": np.asarray(outcome_endpoint, np.int32),
             "command_reference_endpoint": np.asarray(
                 info["command_reference_endpoint"], np.int32
@@ -157,12 +190,23 @@ class PpoTrainingTrace:
                 residual_lost_to_ctrlrange, np.float64
             ),
             "contact_flags": np.asarray(info["contact_flags"], bool),
+            "tracking_reward": tracking_reward,
+            "contact_bonus": contact_bonus,
+            "lift_reward": lift_reward,
+            "raw_total_reward": raw_total_reward,
             "tracking_terminated": np.asarray(info["terminated"], bool),
             "time_out": np.asarray(info["time_outs"], bool),
         }
         batch = len(arrays["source_endpoint"])
         if self.include_world_index:
             arrays["world_index"] = np.arange(batch, dtype=np.int32)
+            step = len(self._active["source_endpoint"])
+            arrays["rollout_step"] = np.full(batch, step, dtype=np.int32)
+            serial = self._active["_episode_serial_state"]
+            if not len(serial):
+                serial = np.zeros(batch, dtype=np.int32)
+                self._active["_episode_serial_state"] = serial
+            arrays["episode_serial"] = serial.copy()
         if any(len(value) != batch for value in arrays.values()):
             raise ValueError("training-trace fields have inconsistent world counts")
         action_shape = (batch, len(self.actuator_names))
@@ -216,6 +260,77 @@ class PpoTrainingTrace:
             if value.dtype.kind == "f" and not np.isfinite(value).all():
                 raise ValueError(f"non-finite training trace field: {name}")
             self._active[name].append(value.copy())
+        if self.include_world_index:
+            ended = arrays["tracking_terminated"] | arrays["time_out"]
+            self._active["_episode_serial_state"] += ended.astype(np.int32)
+
+    def attach_credit(
+        self,
+        *,
+        rollout_value_before_update: np.ndarray,
+        gae_return: np.ndarray,
+        raw_advantage: np.ndarray,
+        normalized_advantage: np.ndarray,
+        canonical_old_logprob: np.ndarray,
+        shaped_training_reward: np.ndarray,
+        actor_hash: str,
+        rms_hash: str,
+        normalization_version: int,
+        reset_context_hash: str,
+    ) -> None:
+        """Join world-major PPO credit to the active time-major visitation rows."""
+        if self._active is None or not self.include_world_index:
+            raise RuntimeError("credit attachment requires an active world-indexed trace")
+        worlds = len(self._active["source_endpoint"][0])
+        horizon = len(self._active["source_endpoint"])
+        samples = worlds * horizon
+
+        def time_major(value: np.ndarray) -> np.ndarray:
+            array = np.asarray(value)
+            if array.shape[0] != samples:
+                raise ValueError("credit array does not match rollout sample count")
+            tail = array.shape[1:]
+            return array.reshape(worlds, horizon, *tail).swapaxes(0, 1).reshape(
+                samples, *tail
+            )
+
+        fields = {
+            "rollout_value_before_update": rollout_value_before_update,
+            "GAE_return": gae_return,
+            "raw_advantage": raw_advantage,
+            "normalized_advantage": normalized_advantage,
+            "canonical_old_logprob": canonical_old_logprob,
+            "shaped_training_reward": shaped_training_reward,
+        }
+        for name, value in fields.items():
+            if name in self._active:
+                raise RuntimeError(f"credit field was attached twice: {name}")
+            self._active[name] = [time_major(np.asarray(value))]
+        world_index = np.repeat(np.arange(worlds, dtype=np.int32), horizon)
+        time_index = np.tile(np.arange(horizon, dtype=np.int32), worlds)
+        self._active["ppo_flat_index"] = [time_major(np.arange(samples, dtype=np.int32))]
+        self._active["ppo_world_index"] = [time_major(world_index)]
+        self._active["ppo_time_index"] = [time_major(time_index)]
+        self._active["run_id"] = [
+            np.full(samples, self.run_id, dtype=f"<U{max(1, len(self.run_id or ''))}")
+        ]
+        self._active["training_seed"] = [
+            np.full(samples, self.training_seed, dtype=np.int32)
+        ]
+        self._active["actor_hash"] = [
+            np.full(samples, actor_hash, dtype=f"<U{max(1, len(actor_hash))}")
+        ]
+        self._active["RMS_hash"] = [
+            np.full(samples, rms_hash, dtype=f"<U{max(1, len(rms_hash))}")
+        ]
+        self._active["normalization_version"] = [
+            np.full(samples, int(normalization_version), dtype=np.int32)
+        ]
+        self._active["reset_context_hash"] = [np.full(
+            samples,
+            reset_context_hash,
+            dtype=f"<U{max(1, len(reset_context_hash))}",
+        )]
 
     def _contact_pattern(self, flags: np.ndarray) -> str:
         parts = []
@@ -488,6 +603,16 @@ class PpoTrainingTrace:
                 "residual_scale": self.residual_scale,
                 "residual_clip": self.residual_clip,
                 "ctrlrange": self.ctrlrange_contract,
+            },
+            "row_identity": {
+                "fields": [
+                    "run_id", "training_seed", "epoch", "rollout_step",
+                    "world_index", "episode_serial",
+                ] if self.run_id is not None else None,
+                "PPO_flattening": (
+                    "PPO credit is world-major (world*horizon+time) and is explicitly "
+                    "permuted into time-major visitation order before attachment"
+                ) if self.run_id is not None else None,
             },
             "object_roles": list(self.object_roles),
             "hand_roles": list(self.hand_roles),

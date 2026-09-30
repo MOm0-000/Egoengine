@@ -1,0 +1,548 @@
+{
+  "schema": "taco_pour_candidate_G_policy_warm_start_training_v1",
+  "paper_faithful": false,
+  "candidate": "G",
+  "seed": 0,
+  "inheritance": {
+    "schema": "taco_pour_candidate_G_actor_only_warm_start_v1",
+    "donor_candidate": "D",
+    "donor_seed": 2,
+    "donor_epoch": 125,
+    "actor_state_sha256": "819f6126ea8fcc4277cd92b968917ff0be38cc1a6c082ad4f72d31dcfdcffe02",
+    "inherited_state_keys": [
+      "a2c_network.actor_mlp.0.bias",
+      "a2c_network.actor_mlp.0.weight",
+      "a2c_network.actor_mlp.2.bias",
+      "a2c_network.actor_mlp.2.weight",
+      "a2c_network.layer_norm.bias",
+      "a2c_network.layer_norm.weight",
+      "a2c_network.mu.bias",
+      "a2c_network.mu.weight",
+      "a2c_network.rnn.rnn.bias_hh_l0",
+      "a2c_network.rnn.rnn.bias_ih_l0",
+      "a2c_network.rnn.rnn.weight_hh_l0",
+      "a2c_network.rnn.rnn.weight_ih_l0",
+      "a2c_network.sigma",
+      "a2c_network.value.bias",
+      "a2c_network.value.weight",
+      "running_mean_std.count",
+      "running_mean_std.running_mean",
+      "running_mean_std.running_var",
+      "value_mean_std.count",
+      "value_mean_std.running_mean",
+      "value_mean_std.running_var"
+    ],
+    "inherited_state_key_count": 21,
+    "actor_input_normalization_keys": [
+      "running_mean_std.count",
+      "running_mean_std.running_mean",
+      "running_mean_std.running_var"
+    ],
+    "observation_normalization_version": 125,
+    "critic_state_sha256": "ef0479295bfefa8d2f624c5a7db4fff60f9a12d9728933b57b5d21b3a5d48396",
+    "checks": {
+      "actor_state_strictly_equal_donor": true,
+      "critic_unchanged_by_actor_import": true,
+      "actor_optimizer_fresh": true,
+      "critic_optimizer_fresh": true,
+      "normalization_version_inherited": true
+    },
+    "donor_critic_loaded": false,
+    "donor_actor_optimizer_loaded": false,
+    "donor_critic_optimizer_loaded": false,
+    "donor_RNN_or_environment_loaded": false,
+    "mean_head_zeroed_after_import": false,
+    "sigma_rescaled_after_import": false
+  },
+  "preflight": {
+    "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/preflight_G0/report.json",
+    "status": "passed_training_authorized"
+  },
+  "training": {
+    "worlds": 4,
+    "completed_actor_updates": 0,
+    "simulation_physics_steps": 0,
+    "simulation_control_intervals": 0,
+    "wall_seconds": 0.0024721622467041016,
+    "actor_learning_rate": 0.0001,
+    "actor_mini_epochs": 1,
+    "critic_mini_epochs": 4
+  },
+  "validations": {},
+  "checkpoints": {},
+  "training_visitation": {
+    "path": "/data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/training_visitation/manifest.json",
+    "sha256": "650466565f2b2dec0a1b9c814485a603786083753e6250ed59606abe2f367922",
+    "schema": "taco_ppo_training_visitation_v6_world_indexed",
+    "status": "training_failed_before_logged_rollout",
+    "logging_semantics": {
+      "endpoint_alignment": "transition t->t+1 commands ctrl[t+1], scores physical state[t+1] against ref[t+1], and exposes ref[t+2] to the next actor observation except for reference-tail clipping",
+      "world_index": "stable IndependentMJWPTrainingEnv batch position for this rollout sample; present only in the world-indexed v6 schema",
+      "sampled_action_preclamp": "stochastic action sampled from the PPO policy distribution before the official [-1,1] clamp; this is not actor mean mu",
+      "sampled_action_clamped": "the same sampled action after the official [-1,1] clamp",
+      "actor_mu": "mean of the Gaussian PPO policy distribution used to draw the recorded sample",
+      "actor_sigma": "strictly-positive standard deviation (exp(logstd), not variance) of the Gaussian PPO policy distribution used to draw the recorded sample",
+      "reference_ctrl": "full residual-action control target at transition t->t+1 before the policy residual and before actuator ctrlrange",
+      "requested_residual": "full action-space signed control-target offset after local scale and formal safety clip, before actuator ctrlrange",
+      "effective_residual_after_ctrlrange": "full action-space signed control-target offset remaining after the model's enabled actuator ctrlrange clamp; not realized qpos motion",
+      "residual_lost_to_ctrlrange": "signed requested minus effective control-target residual",
+      "legacy_v2_applied_residual": "historical v2 right_wrist_applied_residual equals requested_residual for its recorded six dimensions; v2 artifacts remain immutable",
+      "actor_distribution_parameters": "mu and sigma are passively captured from the same official get_action_values result as the sampled action; no extra actor forward pass is performed",
+      "contact_summary": "control-endpoint hand-object finger flags; not substep collision topology",
+      "write_timing": "rollout samples are held in memory and written only at the next epoch boundary or after training completes"
+    },
+    "incomplete_step_discarded": false,
+    "action_contract": {
+      "dimensions": 36,
+      "actuator_names": [
+        "R_forearm_tx_position",
+        "R_forearm_ty_position",
+        "R_forearm_tz_position",
+        "R_forearm_roll_position",
+        "R_forearm_pitch_position",
+        "R_forearm_yaw_position",
+        "right_thumb_bend_position",
+        "right_thumb_rota1_position",
+        "right_thumb_rota2_position",
+        "right_index_bend_position",
+        "right_index_joint1_position",
+        "right_index_joint2_position",
+        "right_middle_joint1_position",
+        "right_middle_joint2_position",
+        "right_ring_joint1_position",
+        "right_ring_joint2_position",
+        "right_pinky_joint1_position",
+        "right_pinky_joint2_position",
+        "L_forearm_tx_position",
+        "L_forearm_ty_position",
+        "L_forearm_tz_position",
+        "L_forearm_roll_position",
+        "L_forearm_pitch_position",
+        "L_forearm_yaw_position",
+        "left_thumb_bend_position",
+        "left_thumb_rota1_position",
+        "left_thumb_rota2_position",
+        "left_index_bend_position",
+        "left_index_joint1_position",
+        "left_index_joint2_position",
+        "left_middle_joint1_position",
+        "left_middle_joint2_position",
+        "left_ring_joint1_position",
+        "left_ring_joint2_position",
+        "left_pinky_joint1_position",
+        "left_pinky_joint2_position"
+      ],
+      "coordinate_units": [
+        "m",
+        "m",
+        "m",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "m",
+        "m",
+        "m",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad",
+        "rad"
+      ],
+      "residual_scale": 0.05,
+      "residual_clip": 0.05,
+      "ctrlrange": {
+        "control_clamping_enabled": true,
+        "model_disableflags": 0,
+        "ctrllimited": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "ctrlrange": [
+          [
+            -5.0,
+            5.0
+          ],
+          [
+            -5.0,
+            5.0
+          ],
+          [
+            -5.0,
+            5.0
+          ],
+          [
+            -6.2,
+            6.2
+          ],
+          [
+            -6.2,
+            6.2
+          ],
+          [
+            -6.2,
+            6.2
+          ],
+          [
+            0.0,
+            1.83
+          ],
+          [
+            -1.05,
+            1.57
+          ],
+          [
+            -0.175,
+            1.83
+          ],
+          [
+            -0.175,
+            0.175
+          ],
+          [
+            0.0,
+            1.92
+          ],
+          [
+            0.0,
+            1.92
+          ],
+          [
+            0.0,
+            1.92
+          ],
+          [
+            0.0,
+            1.94
+          ],
+          [
+            0.0,
+            1.92
+          ],
+          [
+            0.0,
+            1.92
+          ],
+          [
+            0.0,
+            1.92
+          ],
+          [
+            0.0,
+            1.92
+          ],
+          [
+            -5.0,
+            5.0
+          ],
+          [
+            -5.0,
+            5.0
+          ],
+          [
+            -5.0,
+            5.0
+          ],
+          [
+            -6.2,
+            6.2
+          ],
+          [
+            -6.2,
+            6.2
+          ],
+          [
+            -6.2,
+            6.2
+          ],
+          [
+            0.0,
+            1.83
+          ],
+          [
+            -1.05,
+            1.57
+          ],
+          [
+            -0.17,
+            1.83
+          ],
+          [
+            -0.175,
+            0.175
+          ],
+          [
+            0.0,
+            1.92
+          ],
+          [
+            0.0,
+            1.92
+          ],
+          [
+            0.0,
+            1.92
+          ],
+          [
+            0.0,
+            1.92
+          ],
+          [
+            0.0,
+            1.92
+          ],
+          [
+            0.0,
+            1.92
+          ],
+          [
+            0.0,
+            1.92
+          ],
+          [
+            0.0,
+            1.92
+          ]
+        ]
+      }
+    },
+    "row_identity": {
+      "fields": [
+        "run_id",
+        "training_seed",
+        "epoch",
+        "rollout_step",
+        "world_index",
+        "episode_serial"
+      ],
+      "PPO_flattening": "PPO credit is world-major (world*horizon+time) and is explicitly permuted into time-major visitation order before attachment"
+    },
+    "object_roles": [
+      "tool",
+      "target"
+    ],
+    "hand_roles": [
+      "right",
+      "left"
+    ],
+    "epochs": []
+  },
+  "update_audit": null,
+  "boundary_context_audit": {
+    "schema": "egoengine_boundary_recurrent_context_provider_v1",
+    "world_start_endpoints": [
+      40,
+      40,
+      40,
+      40
+    ],
+    "window_end_endpoint": 80,
+    "fixed_every_epoch": true,
+    "random_endpoint_selection": false,
+    "prefix_updates_normalization": false,
+    "prefix_enters_PPO_samples": false,
+    "epochs_prepared": [
+      {
+        "epoch": 0,
+        "world_start_endpoints": [
+          40,
+          40,
+          40,
+          40
+        ],
+        "actor_state_sha256": "819f6126ea8fcc4277cd92b968917ff0be38cc1a6c082ad4f72d31dcfdcffe02",
+        "normalization_unchanged_during_prefix_replay": true,
+        "prefix_observations": 20,
+        "physics_generated_by_current_actor": false,
+        "episode_bookkeeping_reset_to_zero": true,
+        "restore": {
+          "schema": "egoengine_physics_rnn_boundary_v1",
+          "worlds": 4,
+          "reference_endpoints": [
+            40,
+            40,
+            40,
+            40
+          ],
+          "actor_state_sha256": "819f6126ea8fcc4277cd92b968917ff0be38cc1a6c082ad4f72d31dcfdcffe02",
+          "physics_bitwise_equal": [
+            true,
+            true,
+            true,
+            true
+          ],
+          "observation_bitwise_equal": true,
+          "rnn_state_shapes": [
+            [
+              1,
+              4,
+              1024
+            ],
+            [
+              1,
+              4,
+              1024
+            ]
+          ],
+          "agent_runtime_shapes": {
+            "dones": [
+              4
+            ],
+            "current_rewards": [
+              4,
+              1
+            ],
+            "current_shaped_rewards": [
+              4,
+              1
+            ],
+            "current_lengths": [
+              4
+            ]
+          },
+          "exploration_rng_restored": false
+        }
+      }
+    ]
+  },
+  "residual_action": {
+    "profile_id": "taco_pour_residual_action_scaled_v1",
+    "status": "resolved_local_unpublished",
+    "paper_faithful": false,
+    "provenance": "One controlled local repair of the diagnosed normalized-action unit mismatch. The existing +/-0.05 rad safety limit is retained; only the normalized output mapping changes. EgoEngine does not publish this residual scale.",
+    "profile_path": "/data_all/zzx/3.2RL/configs/taco_pour_residual_action_scaled_v1.yaml",
+    "profile_sha256": "71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4",
+    "policy_output_range": [
+      -1.0,
+      1.0
+    ],
+    "mapping_kind": "linear_scaled_candidate",
+    "residual_scale": 0.05,
+    "residual_clip_rad": 0.05,
+    "equation": "delta_a = clip(0.05 * u, -0.05, +0.05) rad",
+    "author_recovered_scale": false,
+    "controlled_experiment": {
+      "epochs": 8,
+      "seed": 0,
+      "endpoint_boundary": 20,
+      "lookahead_control_intervals": 40,
+      "ppo_horizon": 40,
+      "learning_rate": 0.0001,
+      "objective_profile_sha256": "8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9",
+      "observation_profile_sha256": "8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7",
+      "backend_contract_sha256": "c567ad04dabe1bfc1ff3c8f9ee81db52f9f71d181cd80d56de47c2b237ad65b0",
+      "simulator_config_sha256": "0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6",
+      "initialization_report_sha256": "9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a",
+      "reference_endpoint20_state": "Bitwise-equal to the CPU endpoint-20 boundary used by the frozen checkpoint validation; serialized artifact bytes may differ while all 362 state entries agree.",
+      "unchanged": [
+        "objective",
+        "contact_and_lift_coefficients",
+        "observation",
+        "network",
+        "learning_rate",
+        "PPO_hyperparameters",
+        "training_seed",
+        "CPU_acceptance"
+      ]
+    }
+  },
+  "action_distribution": {
+    "profile_id": "taco_pour_support_anchored_bounded_mean_truncated_gaussian_v1",
+    "profile_path": "/data_all/zzx/3.2RL/configs/taco_pour_support_anchored_bounded_mean_truncated_gaussian_v1.yaml",
+    "profile_sha256": "24dc3decf62890bd14268539fd875215756ca500e097ccedfede4128d062762f",
+    "status": "authorized_local_algorithmic_candidate",
+    "paper_faithful": false,
+    "distribution": {
+      "kind": "independent_state_truncated_normal",
+      "location_parameterization": "support_anchored_piecewise_tanh",
+      "network_output_semantics": "raw_location_latent_eta",
+      "ppo_mus_semantics": "bounded_distribution_mean",
+      "formula": {
+        "eta_nonnegative": "high_i_times_tanh_eta_i",
+        "eta_negative": "negative_low_i_times_tanh_eta_i",
+        "eta_zero_branch": "positive_when_positive_width_exists_else_negative"
+      },
+      "zero_latent_is_zero_residual": true,
+      "bounded_mean_inside_state_support_by_construction": true,
+      "deterministic_action": "bounded_distribution_mean",
+      "stochastic_sampling": "inverse_CDF_truncated_Normal",
+      "likelihood": "exact_state_truncated_Normal",
+      "entropy": "exact_state_truncated_Normal",
+      "residual_scale": 0.05,
+      "reference_snap_tolerance": 2e-07,
+      "minimum_normalization_mass": 1e-12,
+      "official_minus1_plus1_clamp_enabled": false,
+      "execution_reference": "formal_reference_ctrl_unmodified",
+      "bounds_semantics": "do_not_worsen_baseline_ctrlrange_violation"
+    },
+    "promotion": {
+      "optimizer_training_authorized": true,
+      "task_success_authorized": false,
+      "chunk_commit_authorized": false
+    }
+  },
+  "intermediate_checkpoint_selected": false,
+  "chunk_commit_written": false,
+  "status": "failed_closed_G0_or_runtime_contract",
+  "exception": {
+    "type": "ValueError",
+    "message": "benchmark checkpoint candidate must be A or B",
+    "traceback": "Traceback (most recent call last):\n  File \"/data_all/zzx/3.2RL/scripts/run_taco_pour_candidate_G_policy_warm_start_v1.py\", line 629, in train_seed\n    save_milestone(0)\n  File \"/data_all/zzx/3.2RL/scripts/run_taco_pour_candidate_G_policy_warm_start_v1.py\", line 592, in save_milestone\n    payload = build_checkpoint_payload(\n              ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data_all/zzx/3.2RL/src/video_to_spider/rl/algorithmic_benchmark.py\", line 160, in build_checkpoint_payload\n    raise ValueError(\"benchmark checkpoint candidate must be A or B\")\nValueError: benchmark checkpoint candidate must be A or B\n"
+  },
+  "eligible_for_promotion": false
+}

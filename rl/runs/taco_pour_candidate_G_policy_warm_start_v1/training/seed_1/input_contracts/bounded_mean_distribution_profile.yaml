@@ -1,0 +1,39 @@
+schema: taco_support_anchored_bounded_mean_truncated_gaussian_v1
+profile_id: taco_pour_support_anchored_bounded_mean_truncated_gaussian_v1
+status: authorized_local_algorithmic_candidate
+paper_faithful: false
+classification: local_support_anchored_bounded_mean_ablation
+
+distribution:
+  kind: independent_state_truncated_normal
+  location_parameterization: support_anchored_piecewise_tanh
+  network_output_semantics: raw_location_latent_eta
+  ppo_mus_semantics: bounded_distribution_mean
+  formula:
+    eta_nonnegative: high_i_times_tanh_eta_i
+    eta_negative: negative_low_i_times_tanh_eta_i
+    eta_zero_branch: positive_when_positive_width_exists_else_negative
+  zero_latent_is_zero_residual: true
+  bounded_mean_inside_state_support_by_construction: true
+  deterministic_action: bounded_distribution_mean
+  stochastic_sampling: inverse_CDF_truncated_Normal
+  likelihood: exact_state_truncated_Normal
+  entropy: exact_state_truncated_Normal
+  residual_scale: 0.05
+  reference_snap_tolerance: 2.0e-7
+  minimum_normalization_mass: 1.0e-12
+  official_minus1_plus1_clamp_enabled: false
+  execution_reference: formal_reference_ctrl_unmodified
+  bounds_semantics: do_not_worsen_baseline_ctrlrange_violation
+
+promotion:
+  optimizer_training_authorized: true
+  task_success_authorized: false
+  chunk_commit_authorized: false
+
+provenance:
+  baseline: Candidate_B_v4
+  only_algorithm_change: support_anchored_bounded_distribution_mean
+  bounds_loss_coef: 0.0
+  local_engineering_candidate: true
+  recovered_EgoEngine_author_parameter: false
