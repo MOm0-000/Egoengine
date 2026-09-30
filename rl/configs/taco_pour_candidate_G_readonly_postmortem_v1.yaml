@@ -1,0 +1,113 @@
+schema: taco_pour_candidate_G_readonly_postmortem_v1
+status: authorized_readonly_existing_artifact_review
+paper_faithful: false
+task_id: taco_pour_candidate_G_readonly_postmortem_v1
+base_branch: 3.2RL
+base_git_commit: 577d0f08172d011cefc53b87215470aaf722f1da
+git_repository: /data_all/zzx/Egoengine_upload_3_2
+candidate_G_run_root: runs/taco_pour_candidate_G_policy_warm_start_v1
+output_directory: runs/taco_pour_candidate_G_readonly_postmortem_v1
+
+scope:
+  seeds: [0, 1, 2]
+  epochs_per_seed: 250
+  worlds: 4
+  horizon: 40
+  transition_records: 120000
+  fixed_validation_arrays: 15
+  epoch_bins: [[1, 10], [11, 62], [63, 125], [126, 188], [189, 250]]
+  questions:
+    - continuation_after_successful_source60_to_endpoint61
+    - recorded_reward_value_return_and_advantage_credit
+    - post_update_probability_change_for_sampled_actions
+
+budget:
+  new_physics_steps: 0
+  new_control_intervals: 0
+  new_network_forwards: 0
+  optimizer_updates: 0
+  new_rollouts: 0
+  checkpoint_payload_loads: 0
+
+forbidden:
+  - simulator_or_environment_instantiation
+  - reset_step_rollout_replay_or_search
+  - agent_or_model_instantiation
+  - checkpoint_payload_loading
+  - network_forward_backward_or_optimizer_step
+  - reward_observation_action_support_physics_or_training_change
+  - cross_epoch_episode_stitching
+  - final_critic_historical_value_imputation
+  - new_seed_checkpoint_selection_or_chunk_commit
+  - automatic_training_authorization
+
+numeric_contract:
+  truncated_normal: torch_float64_cdf_float32_coordinate_and_joint_reduction
+  minimum_normalization_mass: 1.0e-12
+  diagnostic_hard_fail: 1.0e-4
+  ambiguous_delta_logp_abs_le: 1.0e-4
+  advantage_normalization: full_160_row_batch_torch_unbiased_std_plus_1e-8
+  gamma: 0.998
+  gae_tau: 0.95
+
+primary_inputs:
+  candidate_G_contract:
+    path: configs/taco_pour_candidate_G_policy_warm_start_v1.yaml
+    sha256: 17d7b0aa65bd8d5e5823cb2e0864df461a30ef29fa4abb099e2b2839226acd4d
+  candidate_G_summary:
+    path: runs/taco_pour_candidate_G_policy_warm_start_v1/summary.md
+    sha256: f08a6184c6555a8f07f5d0a7d154402ccef81e066c3d13b425a31a681cc06a6d
+  candidate_G_comparison:
+    path: runs/taco_pour_candidate_G_policy_warm_start_v1/comparison.json
+    sha256: a020849a89847e9d1c531f8757e86a4424fd85f0fe2b9faebb590bda15946a67
+  candidate_G_decision:
+    path: runs/taco_pour_candidate_G_policy_warm_start_v1/decision.json
+    sha256: c1a3e39057919d8d46555427b7edd4307e722dfb659389889c399514ba5b9984
+  candidate_G_preflight:
+    path: runs/taco_pour_candidate_G_policy_warm_start_v1/preflight_G0/report.json
+    sha256: cb38dcaae5b16b6d4a78ad9f3944f095ac06cb6ffbaa32f50cc80c07e8d5aaba
+  seed0_report:
+    path: runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/report.json
+    sha256: 50e3654743770aa51290e7ad0a31f008e8f4a59ddd1d5d9c62baf77064251f2d
+  seed1_report:
+    path: runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_1/report.json
+    sha256: 309d8711aabcdecc34cbd4850d4f803ff6cc45869e1a48b80f642dfe024073c4
+  seed2_report:
+    path: runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_2/report.json
+    sha256: c0a8c6bc05fb1fa09b938633672341784c9d89b8330fe56bd3ff2439df96b4c5
+
+source_files:
+  candidate_G_runner: scripts/run_taco_pour_candidate_G_policy_warm_start_v1.py
+  policy_warm_start: src/video_to_spider/rl/policy_warm_start.py
+  training_trace: src/video_to_spider/rl/training_trace.py
+  algorithmic_training: src/video_to_spider/rl/algorithmic_training.py
+  bounded_mean_training: src/video_to_spider/rl/algorithmic_training_v6.py
+  state_feasible_distribution: src/video_to_spider/rl/state_feasible_truncated_gaussian.py
+  official_PPO_agent: external/human2sim2robot/human2sim2robot/ppo/ppo_agent.py
+  official_asymmetric_critic: external/human2sim2robot/human2sim2robot/ppo/utils/asymmetric_critic.py
+  official_network: external/human2sim2robot/human2sim2robot/ppo/utils/network.py
+
+source_sha256:
+  candidate_G_runner: 0b3517bec4c04fe2737073896e8ee8efd7208eedd2c595e116dffb5a63dbbb70
+  policy_warm_start: afdff3db28ad660984586fe156083d8d0d9ea7ec722b9a47cd0ac95e29f4a38d
+  training_trace: 9ccab56b49ff97dd084c89334ec80ba332d5d6da2055f9648e17f0675964a186
+  algorithmic_training: 903fac349ad1b2b026c2c9b73383073e4c9e1b88f5c988aaf122e54283c66c65
+  bounded_mean_training: 792dab0fcbbaeea48c58ad32e3a3d6812505479d85dc31704d1efebca32c20d0
+  state_feasible_distribution: e14caea5ae45058cbedf7311f20a657f9fa6dd83942d33ae7d4b9485c521c0fa
+  official_PPO_agent: b41f1c088d8ad4e261b9c5338f90a7f0ae910b7453ab348532312b3d87bc4c30
+  official_asymmetric_critic: d492992808cd948a6b22c5488b4a57ae48c2c5361a507504a81fa16b08cc1eec
+  official_network: 07374df073097e11b116e3d37592a7e9a6bdd8287819e99b38951fdae0d293de
+
+implementation:
+  audit_script: scripts/audit_taco_pour_candidate_G_readonly_postmortem_v1.py
+  audit_script_sha256: 48ef78fd527970c187200ea8d4a2e775a814387fd7d732690c9207c32d90fbfa
+
+decision_contract:
+  allowed_statuses:
+    - DATA_CONTRACT_FAILURE
+    - PARTIAL_EVIDENCE
+    - COMPLETED_READ_ONLY_REVIEW
+  preserve_candidate_G_classification: true
+  new_training_authorized: false
+  chunk_commit_authorized: false
+  at_most_one_next_review_recommendation: true

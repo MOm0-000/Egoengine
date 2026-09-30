@@ -1,0 +1,15 @@
+{
+  "schema": "taco_pour_candidate_G_readonly_postmortem_v1_decision",
+  "status": "COMPLETED_READ_ONLY_REVIEW",
+  "candidate_G_original_classification": "G3_NO_PREDECLARED_SUSTAINED_EXTENSION",
+  "candidate_G_classification_changed": false,
+  "new_training_authorized": false,
+  "chunk_commit_authorized": false,
+  "next_review_recommendation": "REVIEW_ACTOR_INTERNAL_VALUE_LOSS_AND_SHARED_REPRESENTATION_CREDIT_PATH",
+  "recommendation_basis": "Candidate G used a fresh asymmetric critic for rollout credit while the actor optimizer simultaneously applied a coefficient-2 internal value loss through the shared policy MLP/LSTM representation; the saved data cannot separate that loss contribution, so this is the narrowest supported next code/evidence review rather than an LR, reward, or curriculum change.",
+  "not_selected": {
+    "learning_rate_change": "large early updates are observed, but retrospective arrays do not establish LR as the unique cause",
+    "reward_change": "successful continuation credit is observational and no reward arithmetic mismatch was found",
+    "curriculum_or_more_training": "G3 remains closed and no new training is authorized"
+  }
+}

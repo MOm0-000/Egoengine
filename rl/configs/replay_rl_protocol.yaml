@@ -1773,11 +1773,70 @@ evaluation:
       endpoint20_to40_committed: true
       endpoint40_to60_committed: false
       chunk_commit_written: false
+    candidate_G_readonly_postmortem_v1:
+      status: COMPLETED_READ_ONLY_REVIEW
+      classification: immutable_existing_artifact_postmortem
+      paper_faithful: false
+      base_git_commit: 577d0f08172d011cefc53b87215470aaf722f1da
+      contract: /data_all/zzx/3.2RL/configs/taco_pour_candidate_G_readonly_postmortem_v1.yaml
+      output: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_readonly_postmortem_v1
+      report: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_readonly_postmortem_v1/report.json
+      decision: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_readonly_postmortem_v1/decision.json
+      summary: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_readonly_postmortem_v1/summary.md
+      evidence_scope:
+        seeds: 3
+        epochs_per_seed: 250
+        transition_records: 120000
+        actor_updates_recomputed: 750
+        fixed_validation_arrays_read: 15
+        old_input_files_hash_verified: 3817
+      continuation:
+        source60_attempts: 1879
+        successful_60_to_61: 239
+        visible_source61_action_rows: 229
+        visible_source61_actions_terminating_at62: 229
+        right_censored_successes_at_rollout_boundary: 10
+        unexplained_join_gap: 0
+        cross_epoch_join_used: false
+      credit_findings:
+        terminal_episodes_recomputed: 4411
+        terminal_rows_recomputed: 85830
+        maximum_abs_GAE_error: 1.9073486328125e-06
+        maximum_abs_return_error: 1.9073486328125e-06
+        pooled_and_equal_epoch_source60_credit_disagree_in_sign: true
+        cohorts_are_observational_not_paired_counterfactuals: true
+      update_findings:
+        maximum_reported_ratio_scalar_error: 0.0
+        all_post_update_recomputations_usable: true
+        per_update_exact_KL_mean_mean: 0.05967560874785958
+        per_update_ratio_outside_fraction_mean: 0.518625
+        actor_optimizer_contains_internal_value_loss: true
+        actor_internal_value_loss_effective_coefficient: 2.0
+        actor_policy_and_internal_value_share_MLP_LSTM: true
+      interpretation: >-
+        The exact 239-versus-229 continuation difference is completely
+        explained by ten successful transitions at the frozen rollout
+        boundary.  All 229 visible source61 actions terminate at endpoint62.
+        Saved credit and post-update probabilities are internally
+        reproducible, but cohort evidence is observational and cannot identify
+        a unique cause.  Candidate G remains G3.  The narrow next review is the
+        actor internal-value-loss/shared-representation credit path; it is not
+        a training authorization.
+      next_review_recommendation: REVIEW_ACTOR_INTERNAL_VALUE_LOSS_AND_SHARED_REPRESENTATION_CREDIT_PATH
+      budget: {new_physics_steps: 0, new_control_intervals: 0, new_network_forwards: 0, optimizer_updates: 0}
+      pure_data_tests: {passed: 19, full_suite_run: false}
+      candidate_G_classification_changed: false
+      new_training_authorized: false
+      chunk_commit_written: false
 
 runtime_contract:
   fail_closed: true
   paper_faithful_run_ready: false
   active_local_objective_profile: taco_pour_local_normalized_ellipse_v1
+  candidate_G_readonly_postmortem_contract_v1: /data_all/zzx/3.2RL/configs/taco_pour_candidate_G_readonly_postmortem_v1.yaml
+  candidate_G_readonly_postmortem_report_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_readonly_postmortem_v1/report.json
+  candidate_G_readonly_postmortem_decision_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_readonly_postmortem_v1/decision.json
+  candidate_G_readonly_postmortem_summary_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_readonly_postmortem_v1/summary.md
   local_objective_profiles:
     taco_pour_local_unpublished_v1:
       objective_ready: true
@@ -1950,6 +2009,10 @@ audit_results:
   candidate_G_policy_warm_start_seed0_report_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_0/report.json
   candidate_G_policy_warm_start_seed1_report_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_1/report.json
   candidate_G_policy_warm_start_seed2_report_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_policy_warm_start_v1/training/seed_2/report.json
+  candidate_G_readonly_postmortem_contract_v1: /data_all/zzx/3.2RL/configs/taco_pour_candidate_G_readonly_postmortem_v1.yaml
+  candidate_G_readonly_postmortem_report_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_readonly_postmortem_v1/report.json
+  candidate_G_readonly_postmortem_decision_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_readonly_postmortem_v1/decision.json
+  candidate_G_readonly_postmortem_summary_v1: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_readonly_postmortem_v1/summary.md
   active_dual_backend_contract: /data_all/zzx/3.2RL/configs/taco_pour_gpu_train_cpu_validate_v1.yaml
   active_bug_impact_revalidation: /data_all/zzx/3.2RL/runs/taco_pour_bug_revalidation_v1/report.json
   revalidated_metric_groups: 33
@@ -2042,6 +2105,8 @@ result_acceptance_blockers:
   - candidate_G_triggers_G3_NO_PREDECLARED_SUSTAINED_EXTENSION
   - candidate_G_G3_stops_only_this_fixed_actor_only_warm_start_package_not_all_warm_start_variants
   - candidate_G_does_not_authorize_extra_seeds_budget_per_endpoint_repairs_or_chunk_commit
+  - candidate_G_readonly_postmortem_preserves_G3_and_authorizes_no_new_training_or_chunk_commit
+  - candidate_G_readonly_postmortem_next_step_is_only_an_internal_value_loss_shared_representation_review
   - complete_197_transition_algorithmic_trajectory_not_yet_generated
   - source47_zero_residual_still_fails_endpoint49_and_source48_has_no_tool_effect
   - no_source47_semantic_action_subspace_preserves_contact_or_survives_endpoint49
