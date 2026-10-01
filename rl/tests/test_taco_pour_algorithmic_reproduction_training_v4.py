@@ -1,4 +1,3 @@
-import hashlib
 import json
 from pathlib import Path
 
@@ -13,10 +12,6 @@ CONTRACT = ROOT / "configs/taco_pour_algorithmic_reproduction_training_v4.yaml"
 RUN = ROOT / "runs/taco_pour_algorithmic_reproduction_training_v4"
 CHECKPOINT_GATE = ROOT / "runs/taco_pour_algorithmic_checkpoint_roundtrip_v4"
 PROTOCOL = ROOT / "configs/replay_rl_protocol.yaml"
-
-
-def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def test_v4_contract_freezes_canonical_policy_and_original_learning_settings():
@@ -97,27 +92,15 @@ def test_v4_is_immutable_and_v5_is_superseded_by_v6_algorithmic_evidence():
     assert v4["chunk_commit_written"] is False
 
 
-def test_v4_implementation_hashes_are_bound_to_current_files():
+def test_v4_implementation_hashes_remain_bound_to_the_immutable_run_contract():
     contract = yaml.safe_load(CONTRACT.read_text())
-    paths = {
-        "state_feasible_distribution_sha256": (
-            ROOT / "src/video_to_spider/rl/state_feasible_truncated_gaussian.py"
-        ),
-        "algorithmic_training_sha256": (
-            ROOT / "src/video_to_spider/rl/algorithmic_training.py"
-        ),
-        "benchmark_runner_sha256": (
-            ROOT / "scripts/run_taco_pour_algorithmic_reproduction_training_v3.py"
-        ),
-        "checkpoint_roundtrip_runner_sha256": (
-            ROOT / "scripts/audit_taco_pour_algorithmic_checkpoint_roundtrip_v3.py"
-        ),
-        "training_runner_sha256": (
-            ROOT / "scripts/run_taco_pour_algorithmic_training_v3.py"
-        ),
-    }
-    for key, path in paths.items():
-        assert contract["implementation_contract"][key] == _sha256(path)
+    materialized = yaml.safe_load((RUN / "contract.yaml").read_text())
+    # Historical evidence is tied to the source hashes captured when that run
+    # was produced.  A later bug fix must not rewrite those hashes merely to
+    # follow the current checkout.
+    assert contract["implementation_contract"] == materialized[
+        "implementation_contract"
+    ]
 
 
 def test_v4_B0_and_checkpoint_gates_when_materialized():

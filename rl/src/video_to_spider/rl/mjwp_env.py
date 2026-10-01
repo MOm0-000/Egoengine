@@ -117,6 +117,22 @@ def _trace_actuator_metadata(model: mujoco.MjModel, indices: tuple[int, ...]):
 _SNAPSHOT_METADATA_FIELDS = (
     "snapshot_schema", "mujoco_warp_version", "warp_state_keys",
 )
+_SNAPSHOT_NUMPY_FIELDS = (
+    "time_indices", "start_indices", "episode_lengths",
+)
+_SNAPSHOT_TORCH_FIELDS = (
+    "last_action", "last_ctrl", "initial_object_heights",
+    "last_tracking_error", "last_tracking_position_error",
+    "last_tracking_rotation_error", "last_tracking_errors",
+    "last_tracking_rewards", "last_object_terminated",
+    "last_contact_bonus", "last_terminated", "last_contact_score",
+    "last_lift_reward",
+)
+_SNAPSHOT_RUNTIME_FIELDS = (
+    *_SNAPSHOT_NUMPY_FIELDS,
+    "rng_state",
+    *_SNAPSHOT_TORCH_FIELDS,
+)
 
 
 def _copy_from_torch(target: Any, value: torch.Tensor) -> None:
@@ -892,7 +908,15 @@ class MJWPVectorEnv:
             )
         return tuple(keys)
 
-    def set_env_state(self, state: Any) -> None:
+    def _warp_state_target(self, key: str) -> Any:
+        data = self.env.data_wp_prev if key.startswith("prev.") else self.env.data_wp
+        local_key = key[5:] if key.startswith("prev.") else key
+        parts = local_key.split(".")
+        target = data if len(parts) == 1 else getattr(data, parts[0])
+        return getattr(target, parts[-1])
+
+    def _validate_env_state(self, state: Any) -> None:
+        """Fail closed on a complete snapshot before mutating live state."""
         if not isinstance(state, dict):
             raise ValueError("MJWP state must be the dictionary returned by get_env_state")
         if state.get("snapshot_schema") != _MJWP_SNAPSHOT_SCHEMA:
@@ -903,9 +927,72 @@ class MJWPVectorEnv:
         runtime_version = version("mujoco-warp")
         if state.get("mujoco_warp_version") != runtime_version:
             raise ValueError("MJWP snapshot was created by a different mujoco-warp version")
-        expected_keys = self._warp_state_keys()
-        if tuple(state.get("warp_state_keys", ())) != expected_keys:
+
+        expected_warp_keys = self._warp_state_keys()
+        if tuple(state.get("warp_state_keys", ())) != expected_warp_keys:
             raise ValueError("MJWP snapshot does not contain the complete runtime state field set")
+        expected_fields = {
+            *_SNAPSHOT_METADATA_FIELDS,
+            *_SNAPSHOT_RUNTIME_FIELDS,
+            *expected_warp_keys,
+        }
+        actual_fields = set(state)
+        missing = sorted(expected_fields - actual_fields)
+        unexpected = sorted(actual_fields - expected_fields)
+        if missing or unexpected:
+            details = []
+            if missing:
+                details.append(f"missing={missing}")
+            if unexpected:
+                details.append(f"unexpected={unexpected}")
+            raise ValueError(
+                "MJWP snapshot payload fields do not match its schema: "
+                + ", ".join(details)
+            )
+
+        for name in _SNAPSHOT_NUMPY_FIELDS:
+            value = state[name]
+            expected = getattr(self, name)
+            if not isinstance(value, np.ndarray):
+                raise ValueError(f"MJWP snapshot field {name!r} must be a numpy array")
+            if value.shape != expected.shape or value.dtype != expected.dtype:
+                raise ValueError(
+                    f"MJWP snapshot field {name!r} has shape/dtype "
+                    f"{value.shape}/{value.dtype}, expected {expected.shape}/{expected.dtype}"
+                )
+
+        try:
+            rng_probe = deepcopy(self.rng)
+            rng_probe.bit_generator.state = deepcopy(state["rng_state"])
+        except Exception as exc:
+            raise ValueError("MJWP snapshot contains an invalid RNG state") from exc
+
+        for name in _SNAPSHOT_TORCH_FIELDS:
+            value = state[name]
+            expected = getattr(self, f"_{name}")
+            if not torch.is_tensor(value):
+                raise ValueError(f"MJWP snapshot field {name!r} must be a torch tensor")
+            if value.shape != expected.shape or value.dtype != expected.dtype:
+                raise ValueError(
+                    f"MJWP snapshot field {name!r} has shape/dtype "
+                    f"{tuple(value.shape)}/{value.dtype}, expected "
+                    f"{tuple(expected.shape)}/{expected.dtype}"
+                )
+
+        for key in expected_warp_keys:
+            value = state[key]
+            if not torch.is_tensor(value):
+                raise ValueError(f"MJWP snapshot field {key!r} must be a torch tensor")
+            expected = wp.to_torch(self._warp_state_target(key))
+            if value.shape != expected.shape or value.dtype != expected.dtype:
+                raise ValueError(
+                    f"MJWP snapshot field {key!r} has shape/dtype "
+                    f"{tuple(value.shape)}/{value.dtype}, expected "
+                    f"{tuple(expected.shape)}/{expected.dtype}"
+                )
+
+    def set_env_state(self, state: Any) -> None:
+        self._validate_env_state(state)
         self.time_indices = np.asarray(state["time_indices"], dtype=np.int32).copy()
         self.start_indices = np.asarray(state["start_indices"], dtype=np.int64).copy()
         self.episode_lengths = np.asarray(state["episode_lengths"], dtype=np.int32).copy()
@@ -927,20 +1014,10 @@ class MJWPVectorEnv:
             for key, value in state.items():
                 if key in {
                     *_SNAPSHOT_METADATA_FIELDS,
-                    "time_indices", "start_indices", "episode_lengths", "rng_state",
-                    "last_action", "last_ctrl", "initial_object_heights",
-                    "last_tracking_error", "last_tracking_position_error",
-                    "last_tracking_rotation_error", "last_tracking_errors",
-                    "last_tracking_rewards", "last_object_terminated",
-                    "last_contact_bonus", "last_terminated", "last_contact_score",
-                    "last_lift_reward",
+                    *_SNAPSHOT_RUNTIME_FIELDS,
                 }:
                     continue
-                data = self.env.data_wp_prev if key.startswith("prev.") else self.env.data_wp
-                key = key[5:] if key.startswith("prev.") else key
-                parts = key.split(".")
-                target = data if len(parts) == 1 else getattr(data, parts[0])
-                target = getattr(target, parts[-1])
+                target = self._warp_state_target(key)
                 _copy_from_torch(target, value.to(str(self.env.device)))
         wp.synchronize()
 
@@ -1587,13 +1664,23 @@ class IndependentMJWPTrainingEnv:
         }
 
     def set_env_state(self, state: dict[str, Any]) -> None:
+        if not isinstance(state, dict):
+            raise ValueError("independent MJWP state must be a dictionary")
         if state.get("schema") == "egoengine_independent_mjwp_worlds_v1":
             states = state.get("worlds", ())
             if len(states) != self.num_envs:
                 raise ValueError("independent checkpoint has the wrong world count")
             for world, world_state in zip(self.worlds, states, strict=True):
+                validator = getattr(world, "_validate_env_state", None)
+                if validator is not None:
+                    validator(world_state)
+            for world, world_state in zip(self.worlds, states, strict=True):
                 world.set_env_state(world_state)
             return
+        for world in self.worlds:
+            validator = getattr(world, "_validate_env_state", None)
+            if validator is not None:
+                validator(state)
         for world in self.worlds:
             world.set_env_state(state)
 

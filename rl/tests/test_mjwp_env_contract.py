@@ -197,6 +197,35 @@ def test_legacy_partial_snapshot_is_rejected(env):
         env.set_env_state(state)
 
 
+@pytest.mark.parametrize(
+    "mutation",
+    ["missing_declared_qpos", "unexpected_field", "wrong_dtype", "wrong_world_count"],
+)
+def test_snapshot_preflight_rejects_invalid_payload_without_mutation(env, mutation):
+    before = env.get_env_state()
+    invalid = env.get_env_state()
+    if mutation == "missing_declared_qpos":
+        del invalid["qpos"]
+    elif mutation == "unexpected_field":
+        invalid["unrecognized_runtime_field"] = torch.zeros(1)
+    elif mutation == "wrong_dtype":
+        invalid["qpos"] = invalid["qpos"].double()
+    else:
+        invalid["qpos"] = invalid["qpos"][:1].clone()
+
+    with pytest.raises(ValueError):
+        env.set_env_state(invalid)
+
+    after = env.get_env_state()
+    for key, value in before.items():
+        if isinstance(value, dict):
+            assert after[key] == value
+        elif hasattr(value, "numpy"):
+            np.testing.assert_array_equal(after[key].numpy(), value.numpy())
+        else:
+            np.testing.assert_array_equal(after[key], value)
+
+
 def test_unused_contact_buffer_entries_do_not_count(env):
     import warp as wp
     env.reset()

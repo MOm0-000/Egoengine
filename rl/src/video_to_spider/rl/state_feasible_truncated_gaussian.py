@@ -1074,11 +1074,18 @@ class StateFeasibleTruncatedGaussianPpoAgent(OfficialPpoAgent):
         self.dataset.values_dict["action_highs"] = batch_dict["action_highs"]
 
     def train_asymmetric_critic(self) -> float:
-        """Train critic weights while keeping its input transform immutable."""
+        """Train critic weights while keeping its input transform immutable.
+
+        The outer PPO flag is a global freeze and the independent critic flag
+        is a component-local freeze.  Either request is authoritative; this
+        keeps the override consistent with ``AsymmetricCritic.train_net`` and
+        prevents a locally frozen critic from receiving optimizer steps.
+        """
         critic = self.asymmetric_critic_net
+        critic_frozen = bool(self.cfg.freeze_critic or critic.cfg.freeze_critic)
         loss = 0.0
         for _ in range(critic.cfg.mini_epochs):
-            if self.cfg.freeze_critic:
+            if critic_frozen:
                 break
             for index in range(len(critic.dataset)):
                 critic.train()

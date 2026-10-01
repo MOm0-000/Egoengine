@@ -18,8 +18,10 @@ PYTHONPATH="$PWD/.env_mjwp313_overlay:$PWD/src:$PWD/scripts:$PWD/external/mink/s
   /data_all/zzx/egoengine/spider/.venv/bin/python -m pytest -q
 ```
 
-On 2026-09-27 this command passed **748 tests and 57 subtests**.
-The 19 warnings are known upstream/diagnostic warnings: capsule-mesh MULTICCD
+On 2026-10-01 this command passed **851 tests and 57 subtests** after the
+`96e8c03` review fixes (value-normalization consistency, fail-closed MJWP
+snapshot validation and independent-critic freeze semantics).
+The 18 warnings are known upstream/diagnostic warnings: capsule-mesh MULTICCD
 capacity, PyTorch AMP deprecations, two Trimesh degenerate-volume warnings and
 seven SciPy pickle deprecations.
 

@@ -116,6 +116,34 @@ class RunningMeanStd(nn.Module):
                 y = torch.clamp(y, min=-5.0, max=5.0)
         return y
 
+    def normalize_pair(
+        self,
+        first: torch.Tensor,
+        second: torch.Tensor,
+        *,
+        update_stats: bool,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Normalize two loss operands with one immutable statistics version.
+
+        Value clipping compares old predictions and returns in one numerical
+        coordinate system.  Calling :meth:`forward` on the operands
+        separately while the module is in training mode updates the running
+        statistics between those calls and silently gives them different
+        coordinates.  Commit the combined batch once, then perform one pure
+        transform so every row uses exactly the same mean and variance.
+        """
+        if first.ndim == 0 or second.ndim == 0:
+            raise ValueError("normalization operands must have a batch dimension")
+        if first.shape[1:] != second.shape[1:]:
+            raise ValueError("normalization operands must have matching sample shapes")
+        if first.device != second.device or first.dtype != second.dtype:
+            raise ValueError("normalization operands must share device and dtype")
+        combined = torch.cat((first, second), dim=0)
+        if update_stats:
+            self.update(combined)
+        normalized = self(combined, update_stats=False)
+        return normalized[: first.shape[0]], normalized[first.shape[0] :]
+
     @torch.no_grad()
     def update(
         self,

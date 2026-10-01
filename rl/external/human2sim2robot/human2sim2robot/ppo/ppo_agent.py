@@ -935,12 +935,11 @@ class PpoAgent:
         advantages = returns - values
 
         if self.cfg.normalize_value:
-            if self.cfg.freeze_critic:
-                self.value_mean_std.eval()
-            else:
-                self.value_mean_std.train()
-            values = self.value_mean_std(values)
-            returns = self.value_mean_std(returns)
+            values, returns = self.value_mean_std.normalize_pair(
+                values,
+                returns,
+                update_stats=not self.cfg.freeze_critic,
+            )
             self.value_mean_std.eval()
 
         advantages = torch.sum(advantages, dim=1)
