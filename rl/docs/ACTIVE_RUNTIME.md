@@ -19,6 +19,12 @@ Historical Candidate runners are evidence only and, after R1 verification,
 live under `TRASH/rl_core_refactor_r1_legacy_2026-10-01/` rather than beside the
 active entrypoint.
 
+The default `pytest` surface is likewise limited to the fixture-free active
+core and runtime contracts. Server-fixture parity is selected explicitly with
+`pytest tests/integration_core`; Candidate/Gate-specific historical tests live
+under `TRASH/rl_active_test_surface_r1_2026-10-01/`. See `tests/README.md` for
+the exact commands.
+
 Immutable checkpoints, batches and trajectories stay in `runs/` because the
 new verifier consumes them by SHA-256. They are evidence, not alternate
 runtime implementations.

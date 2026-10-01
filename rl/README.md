@@ -19,6 +19,15 @@ artifacts remain in `runs/` as inputs and provenance, not as active code.
 See [`docs/ACTIVE_RUNTIME.md`](docs/ACTIVE_RUNTIME.md) and
 [`runs/rl_core_refactor_r1/summary.md`](runs/rl_core_refactor_r1/summary.md).
 
+The default test command now selects only the fixture-free active surface:
+
+```bash
+python -m pytest
+```
+
+Server-fixture integration and retired historical tests require explicit paths;
+see [`tests/README.md`](tests/README.md).
+
 This directory is the code and audit snapshot for reproducing the action-generation
 and RL portions of EgoEngine Section 3.2 and Appendix C. The active experiment is
 the bimanual TACO Pour/Bowl/Plate episode `20230927_017`.

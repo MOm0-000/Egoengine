@@ -17,3 +17,14 @@
 
 The run is successful only when the report says
 `STRUCTURAL_REFACTOR_VERIFIED`; skipped physics checks are not a pass.
+
+## `rl_active_test_surface_r1`
+
+- Type: test-surface cleanup; no algorithm or runtime behavior change.
+- Default surface: fixture-free core plus active runtime contracts.
+- Explicit integration: saved-batch parity under `tests/integration_core/`.
+- Historical relocation:
+  `TRASH/rl_active_test_surface_r1_2026-10-01/` (55 tests, original hashes in
+  `MANIFEST.sha256`).
+- Long training: forbidden.
+- Chunk commit: forbidden.
