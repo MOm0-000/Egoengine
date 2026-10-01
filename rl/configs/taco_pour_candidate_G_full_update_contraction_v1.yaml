@@ -1,0 +1,154 @@
+schema: taco_pour_candidate_G_full_update_contraction_v1
+status: authorized_bounded_full_update_contraction
+base_branch: 3.2RL
+base_git_commit: 5f243e9864da6a7b71ce2cdc4a304aa7d5996496
+paper_faithful: false
+execution_authorized_now: true
+purpose: >-
+  Test finite contraction of each saved Candidate-G FULL first-update actor
+  displacement without sampling, gradients, optimizer steps, or training.
+scope:
+  original_candidate_G_classification: G3_NO_PREDECLARED_SUSTAINED_EXTENSION
+  original_isolation_classification: VALUE_POLICY_COUPLING_PRESENT_BUT_BENEFIT_UNRESOLVED
+  original_isolation_negative_evidence: ISOLATION_NOT_FAVORED_AT_TESTED_UPDATES
+  candidate_G_classification_changed: false
+  training_allowed: false
+  autograd_allowed: false
+  actor_optimizer_steps_allowed: 0
+  critic_optimizer_steps_allowed: 0
+  chunk_commit_authorized: false
+  automatic_followon_experiment: false
+parent:
+  experiment: taco_pour_candidate_G_value_loss_isolation_v1
+  root: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_value_loss_isolation_v1
+  required_summary_files:
+    - report.json
+    - decision.json
+    - input_manifest.json
+    - reconstruction_report.json
+    - cost_accounting.json
+  seeds: [0, 1, 2]
+conditions:
+  anchor_alphas: [0.0, 1.0]
+  new_alphas: [0.5, 0.25, 0.125]
+  exact_fractions: [1/2, 1/4, 1/8]
+  execution_order: all_seed_anchors_then_seed_0_1_2_each_half_quarter_eighth
+  adaptive_search: false
+  extra_scales_or_seeds: false
+  seed_specific_grid: false
+  best_alpha_selection: false
+input_resolution:
+  resolve_only_from_parent_formal_metadata: true
+  no_filename_only_identity: true
+  no_arbitrary_TRASH_substitution: true
+  all_required_bytes_verified_before_physics: true
+  resolved_manifest_required_before_execution: true
+  missing_artifacts_action: MISSING_REQUIRED_ARTIFACTS_stop_no_regeneration
+  committed_endpoint40_sha256: 7cf90b48a2a16d41b1f055fdb4fa30f1fdb89d32064ffbfc776b0fdc0e1b9090
+  boundary_context_sha256: 0cc3a0901428fe3091f7420e5fafdd9b0a756f2d30d36ea194875ccefcbeb803
+interpolation:
+  direction: saved_FULL_actor_minus_saved_BASE_actor
+  parameters: model_named_parameters_all_groups_same_alpha
+  buffers: bitwise_equal_then_clone_BASE
+  pre_actor_must_equal_BASE: true
+  endpoints: direct_clone
+  interior_recipe: (BASE.float64 + alpha * (FULL.float64 - BASE.float64)).cast_once
+  device: cpu
+  log_sigma: interpolate_in_parameter_space
+  optimizer_state_interpolation: false
+  action_interpolation: false
+  actor_schema: egoengine_diagnostic_actor_interpolation_v1
+  eligible_for_training_resume: false
+  eligible_for_chunk_commit: false
+fixed_batch:
+  worlds: 4
+  horizon: 40
+  samples: 160
+  bptt_length: 4
+  saved_optimizer_input_only: true
+  saved_old_block_and_reset_context: true
+  prepare_dataset_allowed: false
+  GAE_recomputation_allowed: false
+  RMS_update_allowed: false
+  forwards_per_condition: 1
+  metrics:
+    - exact_KL_old_to_alpha
+    - joint_ratio
+    - ratio_outside_0p8_1p2
+    - true_clip_active
+    - bounded_mu_change
+    - sigma_change
+    - policy_loss
+    - clipped_internal_value_loss
+    - full_loss
+  source_groups: [source40_56, source57_59, source60, source61,
+                  source60_outcome61_pass, source60_outcome61_fail]
+anchor_regression:
+  all_anchors_before_new_conditions: true
+  model_identity: bitwise
+  distribution_max_abs_mu_sigma: 9.5367431640625e-07
+  joint_logprob_ratio_limit: 0.0001
+  scalar_rtol: 1.0e-5
+  scalar_atol: 1.0e-7
+  closed_loop_all_arrays: bitwise
+  expected_BASE_N: [20, 20, 20]
+  expected_FULL_N: [14, 14, 20]
+  tolerance_widening: false
+  automatic_retry: false
+closed_loop:
+  backend: CPU_MuJoCo_Warp
+  source_endpoint: 40
+  final_endpoint: 80
+  intervals_per_probe: 40
+  physics_steps_per_interval: 10
+  exact_committed_endpoint40: true
+  prefix_sources: [20, 39]
+  burnin_rows_per_probe: 20
+  physical_prefix_reexecution: false
+  reset_at_endpoint60: false
+  auto_reset: false
+  deterministic_bounded_mean: true
+  postfailure_diagnostics_recorded_not_counted: true
+  endpoint80_timeout_is_tracking_failure: false
+budget:
+  new_training_samples: 0
+  new_training_control_intervals: 0
+  actor_optimizer_steps: 0
+  critic_optimizer_steps: 0
+  backward_calls: 0
+  fixed_batch_forwards: 15
+  fixed_batch_rows: 2400
+  rollouts: 15
+  control_intervals: 600
+  physics_steps: 6000
+  closed_loop_actor_rows: 600
+  burnin_actor_rows: 300
+  total_actor_rows: 3300
+  automatic_probe_retry: false
+decision:
+  baseline_preservation_N: 20
+  common_preservation_set_C: new_alphas_where_all_three_seeds_N_ge_20
+  common_extension_set_E: alphas_in_C_where_at_least_two_seeds_N_gt_20
+  classifications:
+    - COMMON_SCALE_RESTORES_BASE_PREFIX
+    - MIXED_SCALE_RESPONSE
+    - NO_RESTORATION_ON_PREDECLARED_SCALES
+  N40_is_diagnostic_only: true
+  alpha_is_recommended_training_LR: false
+  new_training_authorized: false
+  chunk_commit_authorized: false
+output:
+  root: /data_all/zzx/3.2RL/runs/taco_pour_candidate_G_full_update_contraction_v1
+  output_must_not_preexist: true
+  raw_large_artifacts_server_only: true
+  all_conditions_reported: true
+  historical_files_immutable: true
+implementation_contract:
+  status: hashes_frozen_before_execution
+  hashes:
+    runner: ee2ae53fdb8561d366a55c822cca6b0423a22d15b4c8822e748b6769965121c6
+    helper: c6c3796741e17a5ebcfe78f9ae44707209710be35a2e05449fd7b6585849501a
+    tests: f7845f9ea174a87f85eb0c64db0440fbf059b2e90bb2a52ab5145c884b8eb84a
+    policy_warm_start: afdff3db28ad660984586fe156083d8d0d9ea7ec722b9a47cd0ac95e29f4a38d
+    validation_runner: 0b3517bec4c04fe2737073896e8ee8efd7208eedd2c595e116dffb5a63dbbb70
+    distribution: e14caea5ae45058cbedf7311f20a657f9fa6dd83942d33ae7d4b9485c521c0fa
