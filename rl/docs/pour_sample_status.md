@@ -102,4 +102,6 @@ executing physics. See [the follow-up](/data_all/zzx/3.2RL/docs/pour_thumb_and_r
 - [Original depth manifest](/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/depth_original/original_depth_manifest.json)
 - [Raw-depth table audit](/data_all/zzx/3.2RL/docs/pour_raw_depth_table_audit.md)
 - [Reproduction command](/data_all/zzx/3.2RL/scripts/prepare_taco_pour_sample.py)
-- [Active protocol](/data_all/zzx/3.2RL/configs/replay_rl_protocol.yaml)
+- Historical evidence protocol: `configs/replay_rl_protocol.yaml` (retained for
+  hash-bound read-only tests, not an execution entrypoint). The active bounded
+  runtime contract is `configs/rl_core_refactor_r1.yaml`.

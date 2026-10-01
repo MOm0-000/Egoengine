@@ -547,7 +547,7 @@ class PpoTrainingTrace:
                     "except for reference-tail clipping"
                 ),
                 "world_index": (
-                    "stable IndependentMJWPTrainingEnv batch position for this rollout "
+                    "stable world-major batch position for this rollout "
                     "sample; present only in the world-indexed v6 schema"
                     if self.include_world_index else
                     "not recorded by the legacy v5 schema"

@@ -236,7 +236,7 @@ def test_world_indexed_trace_records_stable_batch_positions(tmp_path):
     with np.load(output / "epoch_0063_visits.npz", allow_pickle=False) as data:
         np.testing.assert_array_equal(data["world_index"], [0, 1])
     assert report["schema"] == WORLD_INDEX_SCHEMA
-    assert "stable IndependentMJWPTrainingEnv batch position" in report[
+    assert "stable world-major batch position" in report[
         "logging_semantics"
     ]["world_index"]
 

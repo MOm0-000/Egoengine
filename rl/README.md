@@ -1,5 +1,24 @@
 # EgoEngine 3.2 RL reproduction
 
+## Active development entrypoint
+
+The only active RL development/verification entrypoint is the compact R1 core:
+
+```bash
+PYTHONPATH="$PWD/.env_mjwp313_overlay:$PWD/src:$PWD/external/human2sim2robot:$PWD/external/spider_compat" \
+OMP_NUM_THREADS=4 \
+/data_all/zzx/egoengine/spider/.venv/bin/python scripts/run_rl.py inspect
+```
+
+Use `scripts/run_rl.py verify --physics` only for the bounded structural
+verification. It has no long-training mode and cannot commit a chunk. The
+retired Candidate/PpoAgent orchestration is recoverable under
+`TRASH/rl_core_refactor_r1_legacy_2026-10-01/`; immutable historical run
+artifacts remain in `runs/` as inputs and provenance, not as active code.
+
+See [`docs/ACTIVE_RUNTIME.md`](docs/ACTIVE_RUNTIME.md) and
+[`runs/rl_core_refactor_r1/summary.md`](runs/rl_core_refactor_r1/summary.md).
+
 This directory is the code and audit snapshot for reproducing the action-generation
 and RL portions of EgoEngine Section 3.2 and Appendix C. The active experiment is
 the bimanual TACO Pour/Bowl/Plate episode `20230927_017`.
@@ -22,10 +41,10 @@ does not claim an exact reproduction of the paper's three-mode cost comparison.
 - The paper does not publish the exact objective coefficients or actor observation
   encoding. Local choices remain explicitly separated from paper-recovered facts.
 
-Start with [`docs/pour_discussion_handoff.md`](docs/pour_discussion_handoff.md) for
-the concise technical handoff, then see [`docs/replay_rl_implementation.md`](docs/replay_rl_implementation.md)
-and [`configs/replay_rl_protocol.yaml`](configs/replay_rl_protocol.yaml) for the
-implementation contract.
+Start with [`docs/ACTIVE_RUNTIME.md`](docs/ACTIVE_RUNTIME.md) for the current
+technical handoff. Historical discussion, candidate protocols and their source
+remain recoverable in Git history, `runs/`, and the dated `TRASH/` archive; they
+are not active runtime contracts.
 
 ## What is included
 
@@ -56,8 +75,9 @@ including a 25 GB source archive; placing that material in ordinary Git would be
 neither practical nor a clean dependency boundary. Small selection, acquisition and
 checksum manifests are kept under `data/taco_v1/pour_bowl_plate/`.
 
-Restore the TACO files at the paths recorded in
-`configs/replay_rl_protocol.yaml` and the acquisition manifests. Original depth must
+Restore the TACO files at the paths recorded in the immutable protocol snapshot
+`configs/taco_pour_algorithmic_reproduction_training_v3_protocol_snapshot.yaml`
+and the acquisition manifests. Original depth must
 remain 1920x1080 `gray16le` and is decoded as `raw_uint16 / 4000.0` metres. Do not use
 the obsolete resized depth as metric input.
 

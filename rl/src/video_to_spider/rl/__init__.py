@@ -1,8 +1,8 @@
-"""Human2Sim2Robot-style residual RL primitives adapted to xHand.
+"""Residual-RL task primitives and the stable :mod:`video_to_spider.rl.core`.
 
-The numerical pieces here are deliberately dependency-light (NumPy only) so
-they stay testable independently of the cloned SPIDER checkout. The real
-MJWP/PPO adapter lives in ``mjwp_env.py`` and uses the official H2S2R trainer.
+The active PPO orchestration is the direct, non-inherited ``core`` package.
+``mjwp_env.py`` remains the audited low-level MuJoCo-Warp adapter; it does not
+own the active policy or optimizer lifecycle.
 """
 
 from .h2s2r import (
