@@ -58,8 +58,8 @@ def prepare_batch(policy: PolicyBundle, batch: RolloutBatch) -> PreparedBatch:
 
     B1 remains closed: old values and returns are normalized as one pair after
     a single statistics update, so both losses observe the same transform.
-    S1 remains explicit here until the auxiliary-head decision is committed
-    separately from the collector wiring repair.
+    The actor-internal head is an auxiliary regressor for the same normalized
+    GAE return.  It is never used as the rollout baseline.
     """
     raw_advantage = (batch.returns - batch.values).sum(dim=1)
     advantage = (raw_advantage - raw_advantage.mean()) / (raw_advantage.std() + 1.0e-8)
@@ -191,12 +191,8 @@ def update_actor(
     clipped_ratio = ratio.clamp(1.0 - config.clip, 1.0 + config.clip)
     actor_loss = torch.max(-advantage * ratio, -advantage * clipped_ratio).mean()
     returns = actor_input["returns"]
-    old_value = actor_input["old_values"]
-    clipped_value = old_value + (current.values - old_value).clamp(-config.clip, config.clip)
-    internal_value_loss = torch.max(
-        (current.values - returns).square(), (clipped_value - returns).square()
-    ).squeeze(1).mean()
-    loss = actor_loss + 0.5 * config.critic_coefficient * internal_value_loss
+    internal_value_loss = (current.values - returns).square().mean()
+    loss = actor_loss + 2.0 * internal_value_loss
     for parameter in actor.parameters():
         parameter.grad = None
     loss.backward()

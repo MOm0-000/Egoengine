@@ -250,3 +250,26 @@ def test_live_likelihood_gate_catches_collection_recompute_mismatch(monkeypatch)
         )
 
 
+def test_internal_value_auxiliary_mse_has_effective_two_x_gradient(monkeypatch):
+    import video_to_spider.rl.core.ppo as ppo
+
+    monkeypatch.setattr(ppo, "recurrent_evaluate", _fake_recurrent)
+    actor = _ScalarActor()
+    policy = SimpleNamespace(
+        actor=actor,
+        actor_optimizer=torch.optim.SGD(actor.parameters(), lr=0.1),
+        distribution=DistributionSpec(),
+        normalization_version=0,
+    )
+    actor_input = _actor_input(old_neglogp=0.0)
+    # A deliberately unrelated external-critic old value must not change the
+    # internal head's plain auxiliary regression.
+    actor_input["old_values"] = torch.full((160, 1), -100.0)
+    report = update_actor(
+        policy, actor_input, (torch.zeros(1, 4, 1),), PPOConfig(grad_norm=10.0)
+    )
+    assert report["internal_value_loss"] == 1.0
+    # d(2 * (w-1)^2)/dw at w=0 is -4; SGD(0.1) moves to +0.4.
+    assert actor.weight.item() == pytest.approx(0.4)
+
+
