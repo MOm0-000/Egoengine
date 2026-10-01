@@ -116,6 +116,12 @@ class _FakeEnvironment:
             "next_observation_goal_reference_endpoint": outcome + 1,
             "time_outs": timeout,
             "terminated": terminated,
+            "aggregate_tracking_reward": np.ones(2, np.float32),
+            "aggregate_contact_bonus": np.zeros(2, np.float32),
+            "lift_reward": np.zeros(2, np.float32),
+            "object_tracking_error": np.full(2, 0.5, np.float32),
+            "object_position_error": np.full((2, 1), 0.05, np.float32),
+            "object_rotation_error": np.full((2, 1), 0.5, np.float32),
         }
         if self.omit_key:
             del info[self.omit_key]

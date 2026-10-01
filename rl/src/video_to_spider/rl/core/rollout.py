@@ -24,6 +24,12 @@ class RolloutBatch:
     observations: torch.Tensor
     critic_observations: torch.Tensor
     rewards: torch.Tensor
+    tracking_reward: torch.Tensor
+    contact_bonus: torch.Tensor
+    lift_reward: torch.Tensor
+    tracking_score: torch.Tensor
+    position_error: torch.Tensor
+    rotation_error: torch.Tensor
     episode_start: torch.Tensor
     done_after: torch.Tensor
     terminated: torch.Tensor
@@ -63,7 +69,9 @@ class RolloutBatch:
         if self.last_values.shape != (worlds, 1):
             raise ValueError("last_values has the wrong shape")
         for name in (
-            "neglogp", "rewards", "episode_start", "done_after", "terminated", "timeout",
+            "neglogp", "rewards", "tracking_reward", "contact_bonus", "lift_reward",
+            "tracking_score", "position_error", "rotation_error",
+            "episode_start", "done_after", "terminated", "timeout",
             "source_endpoint", "outcome_endpoint", "command_reference_endpoint",
             "reward_reference_endpoint", "next_goal_reference_endpoint", "rollout_step",
             "world_index", "episode_serial", "ppo_flat_index",
@@ -98,7 +106,9 @@ class RolloutBatch:
                     raise ValueError("reference cursor disagrees with reset/transition history")
         finite_names = (
             "actions", "neglogp", "values", "mu", "sigma", "action_low", "action_high",
-            "raw_location", "observations", "critic_observations", "rewards", "returns",
+            "raw_location", "observations", "critic_observations", "rewards",
+            "tracking_reward", "contact_bonus", "lift_reward", "tracking_score",
+            "position_error", "rotation_error", "returns",
             "last_values",
         )
         if any(not bool(torch.isfinite(getattr(self, name)).all()) for name in finite_names):
@@ -216,7 +226,8 @@ class FixedBoundaryCollector:
         rows: dict[str, list[torch.Tensor]] = {name: [] for name in (
             "actions", "neglogp", "values", "mu", "sigma", "action_low",
             "action_high", "raw_location", "observations", "critic_observations",
-            "rewards", "episode_start", "done_after", "terminated", "timeout", "source_endpoint",
+            "rewards", "tracking_reward", "contact_bonus", "lift_reward", "tracking_score",
+            "position_error", "rotation_error", "episode_start", "done_after", "terminated", "timeout", "source_endpoint",
             "outcome_endpoint", "command_reference_endpoint", "reward_reference_endpoint",
             "next_goal_reference_endpoint", "rollout_step", "world_index", "episode_serial",
         )}
@@ -227,6 +238,8 @@ class FixedBoundaryCollector:
             "source_reference_endpoint", "outcome_reference_endpoint",
             "command_reference_endpoint", "reward_reference_endpoint",
             "next_observation_goal_reference_endpoint", "time_outs", "terminated",
+            "aggregate_tracking_reward", "aggregate_contact_bonus", "lift_reward",
+            "object_tracking_error", "object_position_error", "object_rotation_error",
         )
         for offset in range(self.horizon):
             if offset % 4 == 0:
@@ -276,6 +289,12 @@ class FixedBoundaryCollector:
                 "observations": observation,
                 "critic_observations": critic_observation,
                 "rewards": torch.as_tensor(reward, dtype=torch.float32),
+                "tracking_reward": torch.as_tensor(info["aggregate_tracking_reward"], dtype=torch.float32),
+                "contact_bonus": torch.as_tensor(info["aggregate_contact_bonus"], dtype=torch.float32),
+                "lift_reward": torch.as_tensor(info["lift_reward"], dtype=torch.float32),
+                "tracking_score": torch.as_tensor(info["object_tracking_error"], dtype=torch.float32),
+                "position_error": torch.as_tensor(info["object_position_error"], dtype=torch.float32).reshape(worlds, -1)[:, 0],
+                "rotation_error": torch.as_tensor(info["object_rotation_error"], dtype=torch.float32).reshape(worlds, -1)[:, 0],
                 "episode_start": episode_start,
                 "done_after": done_after,
                 "terminated": terminated,

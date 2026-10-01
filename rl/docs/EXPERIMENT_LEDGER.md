@@ -46,3 +46,22 @@ The run is successful only when the report says
   delegates hashing, model audit and physics construction to their core owners.
 - Report: `docs/runner_surface_audit_r1.md`.
 - Runtime behavior changed: no.
+
+## `taco_pour_rl_train_v1`
+
+- Type: corrected-core training enablement plus one bounded seed-0 pilot.
+- Task/window: TACO `20230927_017`, `tool_only`, committed s40 to endpoint80.
+- Donor: Candidate D seed2 epoch125 actor/RMS/log-sigma only.
+- Fresh state: external critic and both optimizers.
+- Collector corrections: raw critic value, post-action GAE mask, real endpoint
+  and timeout fields, world-major RNN block starts, per-epoch h40 rebuild and
+  live rollout/recomputation likelihood gate.
+- S1 local decision: PPO surrogate plus `2 ×` internal value auxiliary MSE;
+  external critic remains the sole GAE baseline.
+- Functional gate: continuous epochs 1–2 versus cold checkpoint resume of
+  epoch2, with batch/endpoints/loss/model/optimizer/RMS/RNG exact comparison.
+- Training budget: one seed, 250 epochs, at most 400,000 training physics
+  steps; fixed evaluations at epochs 0/62/125/188/250.
+- Training success does not authorize chunk commit.
+- Historical Candidate-G evidence remains valid history but is not a numeric
+  baseline for the corrected collector/loss semantics.

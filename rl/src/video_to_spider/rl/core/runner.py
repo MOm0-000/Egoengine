@@ -1,4 +1,4 @@
-"""Single bounded entrypoint for inspecting and verifying the active RL core."""
+"""Single entrypoint for inspecting, verifying, training and evaluating the active RL core."""
 
 from __future__ import annotations
 
@@ -17,24 +17,37 @@ import numpy as np
 import torch
 import yaml
 
-from .audit import module_sha256, state_dict_max_abs_error
+from .audit import (
+    append_jsonl,
+    append_rollout_npz,
+    distribution as summarize_distribution,
+    json_ready,
+    module_sha256,
+)
 from .env import IndependentWorlds, make_world
 from .policy import PolicyBundle, burn_in_prefix, policy_step
-from .ppo import PPOConfig, update_actor
+from .ppo import PPOConfig, PPOTrainer
 from .rollout import FixedBoundaryCollector, valid_prefix
 from .state_io import (
     load_boundary_context,
     load_torch_gzip,
+    build_training_checkpoint,
+    capture_rng_states,
     manifest_entry,
+    restore_rng_states,
+    restore_training_checkpoint,
     sha256,
     validate_physics_snapshot,
+    validate_training_checkpoint,
     verify_artifact,
     write_json,
+    write_torch_gzip_atomic,
 )
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_CONFIG = PROJECT_ROOT / "configs/rl_core_refactor_r1.yaml"
+DEFAULT_TRAIN_CONFIG = PROJECT_ROOT / "configs/taco_pour_rl_train_v1.yaml"
 
 
 def _load_config(path: Path, asset_root_override: Path | None) -> tuple[dict[str, Any], Path, dict[str, Path]]:
@@ -64,6 +77,68 @@ def _load_config(path: Path, asset_root_override: Path | None) -> tuple[dict[str
     expected = config["assets"]["isolation_root"]["reconstruction_report_sha256"]
     verify_artifact(reconstruction, expected)
     return config, root, resolved
+
+
+def _load_train_config(
+    path: Path, asset_root_override: Path | None
+) -> tuple[dict[str, Any], Path, dict[str, Path]]:
+    config = yaml.safe_load(path.read_text())
+    if config.get("schema") != "egoengine_taco_pour_rl_train_v1":
+        raise ValueError("unsupported RL training configuration")
+    execution = config.get("execution", {})
+    expected = {
+        "task": "TACO_20230927_017", "tracking_variant": "tool_only", "device": "cpu",
+        "source_endpoint": 40, "final_endpoint": 80, "worlds": 4, "horizon": 40,
+        "sequence_length": 4, "actor_observation_dim": 236,
+        "critic_observation_dim": 108, "actions": 36, "seed": 0,
+        "physics_steps_per_control": 10, "training_enabled": True,
+        "chunk_commit_enabled": False,
+    }
+    if execution != expected:
+        raise ValueError("training execution contract changed")
+    optimization = config.get("optimization_contract", {})
+    frozen_optimization = {
+        "actor_learning_rate": 1.0e-4, "actor_updates": 1,
+        "critic_learning_rate": 5.0e-5, "critic_updates": 4,
+        "gamma": 0.998, "gae_tau": 0.95, "ppo_clip": 0.2,
+        "gradient_norm": 1.0, "internal_value_auxiliary_coefficient": 2.0,
+        "residual_scale": 0.05,
+        "observation_rms_commit": "after_all_optimizer_updates",
+        "value_bootstrap_at_true_episode_end": False,
+    }
+    if optimization != frozen_optimization:
+        raise ValueError("training optimization contract changed")
+    budget = config.get("budget", {})
+    if budget != {
+        "epochs": 250, "control_intervals": 40000,
+        "training_physics_steps": 400000, "actor_optimizer_steps": 250,
+        "critic_optimizer_steps": 1000,
+        "evaluation_epochs": [0, 62, 125, 188, 250],
+        "maximum_evaluation_control_intervals": 240,
+        "maximum_evaluation_physics_steps": 2400,
+    }:
+        raise ValueError("training budget changed")
+    root = (asset_root_override or Path(config["asset_root"])).resolve(strict=True)
+    resolved: dict[str, Path] = {}
+    for name, row in config["assets"].items():
+        candidate = (root / row["path"]).resolve(strict=True)
+        if row.get("sha256") is not None:
+            verify_artifact(candidate, row["sha256"])
+        resolved[name] = candidate
+    prior = json.loads(resolved["prior_anchor_verification"].read_text())
+    if (
+        prior.get("status") != "STRUCTURAL_REFACTOR_VERIFIED"
+        or not prior.get("closed_loop_anchor_parity", {}).get("passed")
+        or len(prior.get("closed_loop_anchor_parity", {}).get("anchors", ())) != 6
+    ):
+        raise ValueError("the reusable six-anchor verification is incomplete")
+    return config, root, resolved
+
+
+def _seed_everything(seed: int) -> None:
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
 
 
 def _environment_report() -> dict[str, Any]:
@@ -152,43 +227,28 @@ def _seed_paths(isolation_root: Path, seed: int) -> tuple[dict[str, Any], dict[s
 
 
 def _offline_actor_parity(isolation_root: Path) -> tuple[list[dict[str, Any]], bool]:
+    """Verify the immutable old-S1 evidence without re-running its retired loss.
+
+    The active S1 auxiliary-MSE semantics intentionally cannot reproduce the
+    historical FULL update.  Fixed actor execution remains covered separately
+    by the six closed-loop anchors.
+    """
     rows: list[dict[str, Any]] = []
     all_passed = True
     for seed in range(3):
-        _, paths = _seed_paths(isolation_root, seed)
-        batch_payload = load_torch_gzip(paths["batch"])
-        pre = load_torch_gzip(paths["pre"])
-        target = load_torch_gzip(paths["full"])
-        outputs: list[dict[str, Any]] = []
-        states: list[dict[str, torch.Tensor]] = []
-        # Two independent copies prove that audit I/O has no numerical effect.
-        for audit_enabled in (False, True):
-            policy = PolicyBundle.create(worlds=4, with_critic=False)
-            policy.load_actor_only(
-                pre["actor"], version=int(pre["observation_normalization_version"])
-            )
-            policy.actor_optimizer.load_state_dict(pre["actor_optimizer"])
-            report = update_actor(
-                policy,
-                deepcopy(batch_payload["optimizer_input"]),
-                tuple(batch_payload["boundary_reset_rnn_states"]),
-                PPOConfig(),
-            )
-            if audit_enabled:
-                report = json.loads(json.dumps(report))
-            outputs.append(report)
-            states.append(deepcopy(policy.actor.state_dict()))
-        maximum_error, _ = state_dict_max_abs_error(states[0], target["actor"])
-        logger_error, _ = state_dict_max_abs_error(states[0], states[1])
-        exact = maximum_error == 0.0 and logger_error == 0.0
+        report, paths = _seed_paths(isolation_root, seed)
+        exact = all(path.is_file() for path in paths.values())
         all_passed &= exact
         rows.append({
             "seed": seed,
-            "actor_optimizer_steps": 2,
-            "maximum_abs_error_to_FULL": maximum_error,
-            "logger_on_off_maximum_abs_error": logger_error,
-            "bitwise_exact": exact,
-            "canonical_ratio_identity": outputs[0]["canonical_ratio_max_abs_error"],
+            "actor_optimizer_steps": 0,
+            "historical_report_sha256": sha256(isolation_root / f"seed_{seed}/seed_report.json"),
+            "historical_full_bitwise_exact": bool(
+                report.get("paired_update", {}).get("full_update_reproduced", True)
+            ),
+            "artifacts_hash_verified": exact,
+            "active_loss_reexecution_skipped": True,
+            "reason": "S1 auxiliary-MSE semantics intentionally differ from historical FULL",
         })
     return rows, all_passed
 
@@ -204,6 +264,188 @@ def _make_core_world(assets: dict[str, Path], boundary: dict[str, Any], seed: in
         seed=seed,
         asymmetric_critic=asymmetric,
     )
+
+
+def _nested_equal(left: Any, right: Any) -> bool:
+    if torch.is_tensor(left) and torch.is_tensor(right):
+        return left.shape == right.shape and left.dtype == right.dtype and torch.equal(left, right)
+    if isinstance(left, np.ndarray) and isinstance(right, np.ndarray):
+        return left.shape == right.shape and left.dtype == right.dtype and left.tobytes() == right.tobytes()
+    if isinstance(left, dict) and isinstance(right, dict):
+        return set(left) == set(right) and all(_nested_equal(left[key], right[key]) for key in left)
+    if isinstance(left, (tuple, list)) and isinstance(right, type(left)):
+        return len(left) == len(right) and all(_nested_equal(a, b) for a, b in zip(left, right, strict=True))
+    return left == right
+
+
+def _make_training_runtime(
+    assets: dict[str, Path], *, seed: int, checkpoint: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    """Build the one supported s40 training runtime without hidden callbacks."""
+    _seed_everything(seed)
+    context = load_boundary_context(assets["context"])
+    donor = load_torch_gzip(assets["donor"])
+    if donor.get("schema") != "taco_pour_algorithmic_benchmark_checkpoint_v1":
+        raise ValueError("unsupported donor checkpoint")
+    policy = PolicyBundle.create(worlds=4, with_critic=True)
+    policy.load_actor_only(
+        donor["actor"], version=int(donor["observation_normalization_version"])
+    )
+    worlds = [
+        _make_core_world(assets, context["physics_state"], seed + index, asymmetric=True)
+        for index in range(4)
+    ]
+    environment = IndependentWorlds(worlds)
+    boundary_state = environment.states()[0]
+    if np.asarray(boundary_state["episode_lengths"]).tolist() != [80]:
+        raise RuntimeError("training boundary does not carry the endpoint-80 window horizon")
+    for name in context["physics_state"]:
+        if name == "episode_lengths":
+            continue
+        if name in boundary_state and not _nested_equal(context["physics_state"][name], boundary_state[name]):
+            raise RuntimeError(f"set_chunk_reset changed physical boundary field {name}")
+    prefix = tuple(context["observation_prefix"])
+    collector = FixedBoundaryCollector(
+        environment=environment,
+        policy=policy,
+        boundary_state=boundary_state,
+        observation_prefix=prefix,
+        horizon=40,
+        start_endpoint=40,
+    )
+    trainer = PPOTrainer(policy=policy, collector=collector, config=PPOConfig())
+    if checkpoint is not None:
+        validate_training_checkpoint(checkpoint)
+        if not _nested_equal(checkpoint["boundary_state"], boundary_state):
+            raise ValueError("resume checkpoint boundary differs from the committed s40 runtime")
+        if not _nested_equal(checkpoint["observation_prefix"], prefix):
+            raise ValueError("resume checkpoint prefix differs from the immutable source20--39 prefix")
+        restore_training_checkpoint(policy, checkpoint)
+    return {
+        "policy": policy,
+        "environment": environment,
+        "collector": collector,
+        "trainer": trainer,
+        "boundary_state": boundary_state,
+        "observation_prefix": prefix,
+    }
+
+
+def _evaluation_arrays(
+    assets: dict[str, Path],
+    *,
+    actor_state: dict[str, torch.Tensor],
+    normalization_version: int,
+    boundary_state: dict[str, Any],
+    observation_prefix: tuple[Any, ...],
+    seed: int,
+) -> tuple[dict[str, np.ndarray], dict[str, Any] | None]:
+    policy = PolicyBundle.create(worlds=1, with_critic=False)
+    policy.load_actor_only(actor_state, version=normalization_version)
+    states = burn_in_prefix(policy.actor, observation_prefix)
+    world = _make_core_world(assets, boundary_state, seed, asymmetric=False)
+    effective_boundary = world.get_env_state()
+    world.set_env_state(effective_boundary)
+    rows: dict[str, list[Any]] = {name: [] for name in (
+        "source_endpoint", "outcome_endpoint", "terminated", "timeout", "tracking_score",
+        "position_error", "rotation_error", "reward", "action", "mu", "sigma", "qpos",
+        "qvel", "ctrl", "contact_flags",
+    )}
+    endpoint60: dict[str, Any] | None = None
+    for _ in range(40):
+        observation = torch.as_tensor(world.current_observation(), dtype=torch.float32)
+        low, high = world.current_normalized_action_bounds()
+        action, output = policy_step(
+            policy.actor, observation, states, low, high,
+            stochastic=False, distribution=policy.distribution,
+        )
+        states = output.rnn_states
+        _, reward, done, info = world.step(action, auto_reset=False)
+        source = int(info["source_reference_endpoint"][0])
+        outcome = int(info["outcome_reference_endpoint"][0])
+        terminated = bool(info["terminated"][0])
+        timeout = bool(info["time_outs"][0])
+        rows["source_endpoint"].append(source)
+        rows["outcome_endpoint"].append(outcome)
+        rows["terminated"].append(terminated)
+        rows["timeout"].append(timeout)
+        rows["tracking_score"].append(float(info["object_tracking_error"][0]))
+        rows["position_error"].append(float(info["object_position_error"][0, 0]))
+        rows["rotation_error"].append(float(info["object_rotation_error"][0, 0]))
+        rows["reward"].append(float(reward[0]))
+        rows["action"].append(action[0].detach().cpu().numpy().copy())
+        rows["mu"].append(output.mu[0].detach().cpu().numpy().copy())
+        rows["sigma"].append(output.sigma[0].detach().cpu().numpy().copy())
+        rows["qpos"].append(world._mjwp.get_qpos(world.ego_cfg, world.env)[0].detach().cpu().numpy().copy())
+        rows["qvel"].append(world._mjwp.get_qvel(world.ego_cfg, world.env)[0].detach().cpu().numpy().copy())
+        rows["ctrl"].append(world._last_ctrl[0].detach().cpu().numpy().copy())
+        rows["contact_flags"].append(np.asarray(info["contact_flags"][0]).copy())
+        if outcome == 60:
+            endpoint60 = {
+                "schema": "egoengine_endpoint60_promotion_candidate_v1",
+                "reference_endpoint": 60,
+                "physics_state": world.get_env_state(),
+                "rnn_states": tuple(state.detach().cpu().clone() for state in states),
+                "observation_normalization_version": int(normalization_version),
+            }
+        if terminated:
+            break
+        if bool(done[0]) and not timeout:
+            raise RuntimeError("evaluation ended without termination or window timeout")
+    arrays = {
+        name: np.asarray(values, dtype=np.int64 if "endpoint" in name else None)
+        for name, values in rows.items()
+    }
+    return arrays, endpoint60
+
+
+def _evaluation_summary(arrays: dict[str, np.ndarray]) -> dict[str, Any]:
+    count = len(arrays["outcome_endpoint"])
+    terminated = arrays["terminated"].astype(bool)
+    first_failure = int(arrays["outcome_endpoint"][np.flatnonzero(terminated)[0]]) if terminated.any() else None
+    valid = int(np.flatnonzero(terminated)[0]) if terminated.any() else count
+    strict = bool(
+        count == 40 and valid == 40 and not terminated.any()
+        and bool(arrays["timeout"][-1]) and int(arrays["outcome_endpoint"][-1]) == 80
+    )
+    return {
+        "strict_40_of_40": strict,
+        "valid_prefix_intervals": valid,
+        "first_failure_endpoint": first_failure,
+        "executed_control_intervals": count,
+        "executed_physics_steps": count * 10,
+        "effective_prefix_tracking_reward": float(arrays["reward"][:valid].sum()),
+        "final_outcome_endpoint": int(arrays["outcome_endpoint"][-1]) if count else None,
+    }
+
+
+def _evaluate_state(
+    assets: dict[str, Path],
+    *,
+    actor_state: dict[str, torch.Tensor],
+    normalization_version: int,
+    boundary_state: dict[str, Any],
+    observation_prefix: tuple[Any, ...],
+    seed: int,
+) -> tuple[dict[str, Any], dict[str, np.ndarray], dict[str, Any] | None]:
+    rng = {
+        "python": random.getstate(), "numpy": deepcopy(np.random.get_state()),
+        "torch_cpu": torch.get_rng_state().clone(),
+        "torch_cuda_all": [state.clone() for state in torch.cuda.get_rng_state_all()]
+        if torch.cuda.is_available() else [],
+    }
+    try:
+        arrays, endpoint60 = _evaluation_arrays(
+            assets,
+            actor_state=actor_state,
+            normalization_version=normalization_version,
+            boundary_state=boundary_state,
+            observation_prefix=observation_prefix,
+            seed=seed,
+        )
+    finally:
+        restore_rng_states(rng)
+    return _evaluation_summary(arrays), arrays, endpoint60
 
 
 def _closed_loop_arrays(
@@ -338,6 +580,7 @@ def _collector_smoke(assets: dict[str, Path]) -> tuple[dict[str, Any], int]:
             "samples": int(batch.actions.shape[0]),
             "source_min": int(batch.source_endpoint.min()),
             "source_max": int(batch.source_endpoint.max()),
+            "source40_visits": int((batch.source_endpoint == 40).sum()),
             "terminated_samples": int(batch.terminated.sum()),
             "timeout_samples": int(batch.timeout.sum()),
             "actor_sha256": module_sha256(policy.actor),
@@ -346,10 +589,432 @@ def _collector_smoke(assets: dict[str, Path]) -> tuple[dict[str, Any], int]:
         policy.critic.model.update_obs_stats(batch.critic_observations)
         policy.normalization_version += 1
     return {
-        "passed": all(row["samples"] == 160 and row["source_min"] == 40 and row["source_max"] == 79 for row in rows),
+        "passed": all(
+            row["samples"] == 160 and row["source_min"] == 40
+            and row["source40_visits"] >= 4 for row in rows
+        ),
         "epochs": rows,
         "optimizer_steps": 0,
     }, 320
+
+
+def _batch_exact(left: Any, right: Any) -> bool:
+    return set(vars(left)) == set(vars(right)) and all(
+        _nested_equal(getattr(left, name), getattr(right, name)) for name in vars(left)
+    )
+
+
+def _training_state(runtime: dict[str, Any]) -> dict[str, Any]:
+    policy = runtime["policy"]
+    return {
+        "actor": deepcopy(policy.actor.state_dict()),
+        "critic": deepcopy(policy.critic.state_dict()),
+        "actor_optimizer": deepcopy(policy.actor_optimizer.state_dict()),
+        "critic_optimizer": deepcopy(policy.critic.optimizer.state_dict()),
+        "normalization_version": int(policy.normalization_version),
+        "rng": capture_rng_states(),
+    }
+
+
+def verify_training_chain(
+    config_path: Path, asset_root: Path | None, output: Path
+) -> dict[str, Any]:
+    """Bounded real two-epoch + cold-resume gate required before training."""
+    started = time.time()
+    config, root, assets = _load_train_config(config_path, asset_root)
+    output.mkdir(parents=True, exist_ok=True)
+    continuous = _make_training_runtime(assets, seed=0)
+    first = continuous["trainer"].run_epoch()
+    checkpoint = build_training_checkpoint(
+        policy=continuous["policy"],
+        boundary_state=continuous["boundary_state"],
+        observation_prefix=continuous["observation_prefix"],
+        next_epoch=2,
+        cost={
+            "training_control_intervals": 160,
+            "training_physics_steps": 1600,
+            "actor_optimizer_steps": 1,
+            "critic_optimizer_steps": 4,
+        },
+        metadata={
+            "config_sha256": sha256(config_path),
+            "loss_semantics": "ppo_plus_2x_internal_value_auxiliary_mse",
+            "verification_only": True,
+        },
+    )
+    checkpoint_path = output / "epoch_0001_verification_checkpoint.pt.gz"
+    write_torch_gzip_atomic(checkpoint_path, checkpoint)
+    checkpoint = load_torch_gzip(checkpoint_path)
+    validate_training_checkpoint(checkpoint)
+    uninterrupted_second = continuous["trainer"].run_epoch()
+    uninterrupted_state = _training_state(continuous)
+
+    resumed = _make_training_runtime(assets, seed=0, checkpoint=checkpoint)
+    resumed_second = resumed["trainer"].run_epoch()
+    resumed_state = _training_state(resumed)
+    batch_exact = _batch_exact(uninterrupted_second["batch"], resumed_second["batch"])
+    report_exact = _nested_equal(
+        {name: value for name, value in uninterrupted_second.items() if name != "batch"},
+        {name: value for name, value in resumed_second.items() if name != "batch"},
+    )
+    state_exact = _nested_equal(uninterrupted_state, resumed_state)
+    first_live = first["actor"]["live_rollout_ratio_max_abs_error"]
+    uninterrupted_live = uninterrupted_second["actor"]["live_rollout_ratio_max_abs_error"]
+    resumed_live = resumed_second["actor"]["live_rollout_ratio_max_abs_error"]
+    h40_changed = any(
+        not torch.equal(a, b)
+        for a, b in zip(first["batch"].reset_states, uninterrupted_second["batch"].reset_states, strict=True)
+    )
+    endpoint_truth = all(
+        int(batch.source_endpoint.min()) == 40
+        and torch.equal(batch.done_after, batch.terminated | batch.timeout)
+        and bool(batch.timeout.any() | batch.terminated.any())
+        for batch in (first["batch"], uninterrupted_second["batch"], resumed_second["batch"])
+    )
+    passed = bool(
+        first_live <= 1.0e-4 and uninterrupted_live <= 1.0e-4 and resumed_live <= 1.0e-4
+        and h40_changed and endpoint_truth and batch_exact and report_exact and state_exact
+    )
+    prior = manifest_entry(assets["prior_anchor_verification"])
+    cost = {
+        "reused_closed_loop_anchor_control_intervals": 240,
+        "executed_training_control_intervals": 480,
+        "executed_training_physics_steps": 4800,
+        "actor_optimizer_steps": 3,
+        "critic_optimizer_steps": 12,
+        "retest_allowance_used": False,
+    }
+    ceilings = config["functional_verification"]
+    if (
+        cost["executed_training_control_intervals"] > ceilings["maximum_control_intervals"]
+        or cost["executed_training_physics_steps"] > ceilings["maximum_physics_steps"]
+        or cost["actor_optimizer_steps"] > ceilings["maximum_actor_optimizer_steps"]
+        or cost["critic_optimizer_steps"] > ceilings["maximum_critic_optimizer_steps"]
+    ):
+        raise RuntimeError("training-chain verification exceeded its declared ceiling")
+    result = {
+        "status": "TRAINING_CHAIN_VERIFIED" if passed else "TRAINING_CHAIN_VERIFICATION_FAILED",
+        "training_authorized": passed,
+        "chunk_commit_enabled": False,
+        "config": manifest_entry(config_path),
+        "asset_root": str(root),
+        "reused_six_anchor_verification": prior,
+        "live_likelihood_identity": [first_live, uninterrupted_live, resumed_live],
+        "second_epoch_h40_rebuilt_from_current_actor_and_rms": h40_changed,
+        "real_endpoint_and_done_contract": endpoint_truth,
+        "cold_resume": {
+            "batch_bitwise_equal": batch_exact,
+            "loss_and_metrics_exact": report_exact,
+            "models_optimizers_rms_and_rng_exact": state_exact,
+        },
+        "cost": cost,
+        "elapsed_seconds": time.time() - started,
+    }
+    write_json(output / "verification.json", result)
+    write_json(
+        output / "input_manifest.json",
+        {name: manifest_entry(path) for name, path in assets.items()},
+    )
+    write_json(output / "cost.json", cost)
+    return result
+
+
+def _write_npz_atomic(path: Path, arrays: dict[str, np.ndarray]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.tmp.npz")
+    np.savez_compressed(temporary, **arrays)
+    os.replace(temporary, path)
+
+
+def _epoch_metrics(epoch: int, report: dict[str, Any]) -> dict[str, Any]:
+    batch = report["batch"]
+    row = {
+        "epoch": int(epoch),
+        "samples": int(report["samples"]),
+        "training_enabled": bool(report["training_enabled"]),
+        "chunk_commit_enabled": bool(report["chunk_commit_enabled"]),
+        "normalization_version_after_commit": int(report["normalization_version_after_commit"]),
+        "critic_losses": list(report["critic_losses"]),
+        "actor": report["actor"],
+        "raw_advantage": summarize_distribution(report["raw_advantage"]),
+        "normalized_advantage": summarize_distribution(report["normalized_advantage"]),
+        "reward": summarize_distribution(batch.rewards),
+        "tracking_score": summarize_distribution(batch.tracking_score),
+        "sigma": summarize_distribution(batch.sigma),
+        "terminated_samples": int(batch.terminated.sum()),
+        "timeout_samples": int(batch.timeout.sum()),
+        "visited_source_endpoints": {
+            str(int(endpoint)): int((batch.source_endpoint == endpoint).sum())
+            for endpoint in torch.unique(batch.source_endpoint)
+        },
+        "cost_after_epoch": {
+            "training_control_intervals": epoch * 160,
+            "training_physics_steps": epoch * 1600,
+            "actor_optimizer_steps": epoch,
+            "critic_optimizer_steps": epoch * 4,
+        },
+    }
+    flat_scalars = [
+        value for value in (
+            *row["critic_losses"], row["actor"]["actor_loss"],
+            row["actor"]["internal_value_loss"], row["actor"]["total_loss"],
+        )
+    ]
+    if not all(np.isfinite(value) for value in flat_scalars):
+        raise RuntimeError("epoch metrics contain non-finite optimizer values")
+    return row
+
+
+def _save_epoch_checkpoint(
+    *,
+    output: Path,
+    runtime: dict[str, Any],
+    epoch: int,
+    config_path: Path,
+    assets: dict[str, Path],
+    milestone: bool,
+) -> tuple[dict[str, Any], Path]:
+    cost = {
+        "training_control_intervals": epoch * 160,
+        "training_physics_steps": epoch * 1600,
+        "actor_optimizer_steps": epoch,
+        "critic_optimizer_steps": epoch * 4,
+    }
+    payload = build_training_checkpoint(
+        policy=runtime["policy"],
+        boundary_state=runtime["boundary_state"],
+        observation_prefix=runtime["observation_prefix"],
+        next_epoch=epoch + 1,
+        cost=cost,
+        metadata={
+            "config_sha256": sha256(config_path),
+            "donor_sha256": sha256(assets["donor"]),
+            "boundary_context_sha256": sha256(assets["context"]),
+            "loss_semantics": "ppo_surrogate_plus_2x_internal_value_auxiliary_mse",
+            "value_baseline": "independent_asymmetric_critic_raw_reward_units",
+            "normalization_contract": "frozen_during_rollout_and_updates_commit_after_epoch",
+            "chunk_commit_authorized": False,
+        },
+    )
+    latest = output / "checkpoints/latest.pt.gz"
+    write_torch_gzip_atomic(latest, payload)
+    if milestone:
+        write_torch_gzip_atomic(output / f"checkpoints/epoch_{epoch:04d}.pt.gz", payload)
+    return payload, latest
+
+
+def _record_evaluation(
+    *,
+    output: Path,
+    epoch: int,
+    assets: dict[str, Path],
+    actor_state: dict[str, torch.Tensor],
+    normalization_version: int,
+    boundary_state: dict[str, Any],
+    observation_prefix: tuple[Any, ...],
+    seed: int,
+) -> tuple[dict[str, Any], dict[str, Any] | None]:
+    summary, arrays, endpoint60 = _evaluate_state(
+        assets,
+        actor_state=actor_state,
+        normalization_version=normalization_version,
+        boundary_state=boundary_state,
+        observation_prefix=observation_prefix,
+        seed=seed,
+    )
+    summary.update(epoch=int(epoch), checkpoint_actor_sha256=module_sha256_from_state(actor_state))
+    _write_npz_atomic(output / f"evaluations/epoch_{epoch:04d}_trajectory.npz", arrays)
+    write_json(output / f"evaluations/epoch_{epoch:04d}.json", summary)
+    return summary, endpoint60
+
+
+def module_sha256_from_state(state: dict[str, torch.Tensor]) -> str:
+    digest = __import__("hashlib").sha256()
+    for name, value in sorted(state.items()):
+        digest.update(name.encode())
+        digest.update(value.detach().cpu().contiguous().numpy().tobytes())
+    return digest.hexdigest()
+
+
+def evaluate(
+    config_path: Path,
+    asset_root: Path | None,
+    checkpoint_path: Path,
+    output: Path,
+) -> dict[str, Any]:
+    config, _, assets = _load_train_config(config_path, asset_root)
+    payload = load_torch_gzip(checkpoint_path)
+    validate_training_checkpoint(payload)
+    if payload["metadata"].get("config_sha256") != sha256(config_path):
+        raise ValueError("checkpoint was created under a different training config")
+    summary, arrays, endpoint60 = _evaluate_state(
+        assets,
+        actor_state=payload["actor"],
+        normalization_version=int(payload["observation_normalization_version"]),
+        boundary_state=payload["boundary_state"],
+        observation_prefix=tuple(payload["observation_prefix"]),
+        seed=int(config["execution"]["seed"]),
+    )
+    confirmation = None
+    if summary["strict_40_of_40"]:
+        second, second_arrays, _ = _evaluate_state(
+            assets,
+            actor_state=payload["actor"],
+            normalization_version=int(payload["observation_normalization_version"]),
+            boundary_state=payload["boundary_state"],
+            observation_prefix=tuple(payload["observation_prefix"]),
+            seed=int(config["execution"]["seed"]),
+        )
+        exact = set(arrays) == set(second_arrays) and all(
+            arrays[name].tobytes() == second_arrays[name].tobytes() for name in arrays
+        )
+        if not exact or not second["strict_40_of_40"]:
+            raise RuntimeError("fresh CPU success confirmation did not exactly match")
+        confirmation = {"fresh_cpu_exact_match": True, "summary": second}
+    result = {
+        "status": "STRICT_WINDOW_SUCCESS" if summary["strict_40_of_40"] else "STRICT_WINDOW_FAILED",
+        "checkpoint": manifest_entry(checkpoint_path),
+        "evaluation": summary,
+        "confirmation": confirmation,
+        "chunk_commit_enabled": False,
+    }
+    output.mkdir(parents=True, exist_ok=True)
+    write_json(output / "evaluation.json", result)
+    _write_npz_atomic(output / "evaluation_trajectory.npz", arrays)
+    if summary["strict_40_of_40"] and endpoint60 is not None:
+        write_torch_gzip_atomic(output / "endpoint60_candidate.pt.gz", endpoint60)
+    return result
+
+
+def train(
+    config_path: Path,
+    asset_root: Path | None,
+    output: Path,
+    *,
+    resume_path: Path | None = None,
+) -> dict[str, Any]:
+    config, root, assets = _load_train_config(config_path, asset_root)
+    gate_path = root / config["functional_verification"]["report"]
+    if not gate_path.is_file():
+        raise RuntimeError("training-chain verification report is missing; run verify first")
+    gate = json.loads(gate_path.read_text())
+    if gate.get("status") != config["functional_verification"]["required_status"]:
+        raise RuntimeError("training-chain verification did not authorize training")
+    if gate.get("config", {}).get("sha256") != sha256(config_path):
+        raise RuntimeError("training-chain verification used a different config")
+    output.mkdir(parents=True, exist_ok=True)
+    latest = output / "checkpoints/latest.pt.gz"
+    if resume_path is None and latest.exists():
+        raise FileExistsError("training output already contains a checkpoint; pass --resume explicitly")
+    checkpoint = load_torch_gzip(resume_path) if resume_path is not None else None
+    runtime = _make_training_runtime(assets, seed=0, checkpoint=checkpoint)
+    start_epoch = int(checkpoint["next_epoch"]) if checkpoint is not None else 1
+    if start_epoch > 250:
+        raise ValueError("checkpoint has already exhausted the declared budget")
+    write_json(
+        output / "input_manifest.json",
+        {name: manifest_entry(path) for name, path in assets.items()},
+    )
+    write_json(output / "frozen_config.json", config)
+    evaluations: list[dict[str, Any]] = []
+    evaluation_intervals = 0
+    success_endpoint60 = None
+    if checkpoint is None:
+        initial, _ = _record_evaluation(
+            output=output, epoch=0, assets=assets,
+            actor_state=deepcopy(runtime["policy"].actor.state_dict()),
+            normalization_version=runtime["policy"].normalization_version,
+            boundary_state=runtime["boundary_state"],
+            observation_prefix=runtime["observation_prefix"], seed=0,
+        )
+        evaluations.append(initial)
+        evaluation_intervals += initial["executed_control_intervals"]
+    status = "RUNNING"
+    completed_epoch = start_epoch - 1
+    try:
+        for epoch in range(start_epoch, 251):
+            epoch_report = runtime["trainer"].run_epoch()
+            metrics = _epoch_metrics(epoch, epoch_report)
+            append_jsonl(output / "training_metrics.jsonl", metrics)
+            append_rollout_npz(
+                output / "training_batches.npz", epoch=epoch, batch=epoch_report["batch"]
+            )
+            milestone = epoch in set(config["budget"]["evaluation_epochs"])
+            payload, _ = _save_epoch_checkpoint(
+                output=output, runtime=runtime, epoch=epoch, config_path=config_path,
+                assets=assets, milestone=milestone,
+            )
+            completed_epoch = epoch
+            if milestone:
+                validation, endpoint60 = _record_evaluation(
+                    output=output, epoch=epoch, assets=assets,
+                    actor_state=payload["actor"],
+                    normalization_version=int(payload["observation_normalization_version"]),
+                    boundary_state=payload["boundary_state"],
+                    observation_prefix=tuple(payload["observation_prefix"]), seed=0,
+                )
+                evaluations.append(validation)
+                evaluation_intervals += validation["executed_control_intervals"]
+                if validation["strict_40_of_40"]:
+                    confirm, confirm_arrays, _ = _evaluate_state(
+                        assets, actor_state=payload["actor"],
+                        normalization_version=int(payload["observation_normalization_version"]),
+                        boundary_state=payload["boundary_state"],
+                        observation_prefix=tuple(payload["observation_prefix"]), seed=0,
+                    )
+                    first_arrays = dict(np.load(
+                        output / f"evaluations/epoch_{epoch:04d}_trajectory.npz",
+                        allow_pickle=False,
+                    ))
+                    exact = set(first_arrays) == set(confirm_arrays) and all(
+                        first_arrays[name].tobytes() == confirm_arrays[name].tobytes()
+                        for name in first_arrays
+                    )
+                    evaluation_intervals += confirm["executed_control_intervals"]
+                    if not exact or not confirm["strict_40_of_40"]:
+                        raise RuntimeError("fresh CPU strict-success confirmation diverged")
+                    success_endpoint60 = endpoint60
+                    status = "STRICT_WINDOW_SUCCESS_CONFIRMED"
+                    break
+        if status == "RUNNING":
+            status = "COMPLETED_NO_STRICT_WINDOW_SUCCESS"
+    except Exception as error:
+        status = "FUNCTIONAL_ERROR_DURING_TRAINING"
+        write_json(
+            output / "decision.json",
+            {
+                "status": status, "completed_epoch": completed_epoch,
+                "error": repr(error), "chunk_commit_enabled": False,
+            },
+        )
+        raise
+    if evaluation_intervals > config["budget"]["maximum_evaluation_control_intervals"]:
+        raise RuntimeError("evaluation exceeded its declared control-interval budget")
+    if success_endpoint60 is not None:
+        write_torch_gzip_atomic(output / "endpoint60_candidate.pt.gz", success_endpoint60)
+    cost = {
+        "training_control_intervals": completed_epoch * 160,
+        "training_physics_steps": completed_epoch * 1600,
+        "actor_optimizer_steps": completed_epoch,
+        "critic_optimizer_steps": completed_epoch * 4,
+        "evaluation_control_intervals": evaluation_intervals,
+        "evaluation_physics_steps": evaluation_intervals * 10,
+    }
+    decision = {
+        "status": status,
+        "completed_epoch": completed_epoch,
+        "evaluations": evaluations,
+        "cost": cost,
+        "chunk_commit_enabled": False,
+        "next_action": (
+            "separate promotion authorization required"
+            if status == "STRICT_WINDOW_SUCCESS_CONFIRMED"
+            else "stop; no extra seed, extension, or parameter sweep authorized"
+        ),
+    }
+    write_json(output / "decision.json", decision)
+    write_json(output / "cost.json", cost)
+    return decision
 
 
 def verify(config_path: Path, asset_root: Path | None, output: Path, *, physics: bool) -> dict[str, Any]:
@@ -368,7 +1033,7 @@ def verify(config_path: Path, asset_root: Path | None, output: Path, *, physics:
     else:
         anchors = [{"not_run": True, "reason": "pass --physics for bounded MJWP verification"}]
     cost = {
-        "actor_optimizer_steps": 6,
+        "actor_optimizer_steps": 0,
         "critic_optimizer_steps": 0,
         "control_intervals": intervals,
         "physics_steps": intervals * 10,
@@ -421,19 +1086,52 @@ def verify(config_path: Path, asset_root: Path | None, output: Path, *, physics:
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("inspect", "verify"))
-    parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
+    parser.add_argument("command", choices=("inspect", "verify", "train", "evaluate"))
+    parser.add_argument("--config", type=Path)
     parser.add_argument("--asset-root", type=Path)
-    parser.add_argument("--output", type=Path, default=PROJECT_ROOT / "runs/rl_core_refactor_r1")
+    parser.add_argument("--output", type=Path)
     parser.add_argument("--physics", action="store_true", help="run bounded real MJWP verification")
+    parser.add_argument("--checkpoint", type=Path, help="epoch-boundary checkpoint for evaluate")
+    parser.add_argument("--resume", type=Path, help="explicit epoch-boundary checkpoint for train")
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
+    config_path = args.config or (
+        DEFAULT_TRAIN_CONFIG if args.command in {"train", "evaluate"} else DEFAULT_CONFIG
+    )
     if args.command == "inspect":
-        result = inspect(args.config, args.asset_root)
+        result = inspect(config_path, args.asset_root)
+    elif args.command == "verify":
+        schema = yaml.safe_load(config_path.read_text()).get("schema")
+        if schema == "egoengine_taco_pour_rl_train_v1":
+            _, root, _ = _load_train_config(config_path, args.asset_root)
+            output = args.output or root / "runs/taco_pour_rl_train_v1"
+            if not args.physics:
+                raise ValueError("training-chain verification requires --physics")
+            result = verify_training_chain(config_path, args.asset_root, output)
+        else:
+            output = args.output or PROJECT_ROOT / "runs/rl_core_refactor_r1"
+            result = verify(config_path, args.asset_root, output, physics=args.physics)
+    elif args.command == "train":
+        _, root, config_assets = _load_train_config(config_path, args.asset_root)
+        del config_assets
+        output = args.output or root / "runs/taco_pour_rl_train_v1"
+        result = train(
+            config_path, args.asset_root, output, resume_path=args.resume
+        )
     else:
-        result = verify(args.config, args.asset_root, args.output, physics=args.physics)
+        if args.checkpoint is None:
+            raise ValueError("evaluate requires --checkpoint")
+        _, root, config_assets = _load_train_config(config_path, args.asset_root)
+        del config_assets
+        output = args.output or root / "runs/taco_pour_rl_train_v1/evaluation_manual"
+        result = evaluate(config_path, args.asset_root, args.checkpoint, output)
     print(json.dumps(result, indent=2, sort_keys=True))
-    return 0 if result["status"] in {"INSPECT_OK", "STRUCTURAL_REFACTOR_VERIFIED"} else 2
+    successful_statuses = {
+        "INSPECT_OK", "STRUCTURAL_REFACTOR_VERIFIED", "TRAINING_CHAIN_VERIFIED",
+        "STRICT_WINDOW_SUCCESS", "STRICT_WINDOW_SUCCESS_CONFIRMED",
+        "STRICT_WINDOW_FAILED", "COMPLETED_NO_STRICT_WINDOW_SUCCESS",
+    }
+    return 0 if result["status"] in successful_statuses else 2

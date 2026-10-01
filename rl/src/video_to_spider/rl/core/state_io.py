@@ -6,8 +6,10 @@ from copy import deepcopy
 import gzip
 import hashlib
 import json
+import os
 from pathlib import Path
 import random
+import tempfile
 from typing import Any
 
 import numpy as np
@@ -15,6 +17,7 @@ import torch
 
 
 CORE_CHECKPOINT_SCHEMA = "egoengine_rl_core_checkpoint_v1"
+TRAINING_CHECKPOINT_SCHEMA = "egoengine_rl_checkpoint_v2"
 LEGACY_G_CHECKPOINT_SCHEMA = "taco_pour_algorithmic_benchmark_checkpoint_v1"
 
 
@@ -48,6 +51,23 @@ def write_torch_gzip(path: str | Path, value: dict[str, Any]) -> None:
     with target.open("wb") as raw:
         with gzip.GzipFile(filename="", mode="wb", fileobj=raw, compresslevel=6, mtime=0) as destination:
             torch.save(value, destination)
+
+
+def write_torch_gzip_atomic(path: str | Path, value: dict[str, Any]) -> None:
+    """Write a gzip Torch artifact atomically in its destination directory."""
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=f".{target.name}.", suffix=".tmp", dir=target.parent
+    )
+    os.close(descriptor)
+    temporary = Path(temporary_name)
+    try:
+        write_torch_gzip(temporary, value)
+        os.replace(temporary, target)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
 
 
 def capture_rng_states() -> dict[str, Any]:
@@ -168,6 +188,80 @@ def validate_core_checkpoint(payload: dict[str, Any]) -> None:
             raise ValueError(f"core checkpoint is missing {name}")
     if payload.get("training_enabled") is not False or payload.get("chunk_commit_enabled") is not False:
         raise ValueError("R1 checkpoint must remain non-training and non-committing")
+
+
+def build_training_checkpoint(
+    *,
+    policy: Any,
+    boundary_state: dict[str, Any],
+    observation_prefix: Any,
+    next_epoch: int,
+    cost: dict[str, int],
+    metadata: dict[str, Any],
+) -> dict[str, Any]:
+    """Build the sole supported epoch-boundary training checkpoint."""
+    validate_physics_snapshot(boundary_state)
+    if policy.critic is None:
+        raise ValueError("training checkpoint requires the external critic")
+    if int(next_epoch) < 1:
+        raise ValueError("next_epoch must identify a positive training epoch")
+    return {
+        "schema": TRAINING_CHECKPOINT_SCHEMA,
+        "purpose": "epoch_boundary",
+        "actor": deepcopy(policy.actor.state_dict()),
+        "critic": deepcopy(policy.critic.state_dict()),
+        "actor_optimizer": deepcopy(policy.actor_optimizer.state_dict()),
+        "critic_optimizer": deepcopy(policy.critic.optimizer.state_dict()),
+        "observation_normalization_version": int(policy.normalization_version),
+        "next_epoch": int(next_epoch),
+        "cost": {name: int(value) for name, value in cost.items()},
+        "rng_states": capture_rng_states(),
+        "boundary_state": deepcopy(boundary_state),
+        "observation_prefix": deepcopy(tuple(observation_prefix)),
+        "metadata": deepcopy(metadata),
+        "resume_resets_all_worlds_to_committed_boundary": True,
+        "training_enabled": True,
+        "chunk_commit_enabled": False,
+    }
+
+
+def validate_training_checkpoint(payload: dict[str, Any]) -> None:
+    if payload.get("schema") != TRAINING_CHECKPOINT_SCHEMA:
+        raise ValueError("unsupported training checkpoint schema")
+    if payload.get("purpose") != "epoch_boundary":
+        raise ValueError("only epoch-boundary checkpoints are supported")
+    if payload.get("resume_resets_all_worlds_to_committed_boundary") is not True:
+        raise ValueError("checkpoint does not declare boundary-reset resume semantics")
+    if payload.get("training_enabled") is not True or payload.get("chunk_commit_enabled") is not False:
+        raise ValueError("training/checkpoint authority flags are inconsistent")
+    required = {
+        "actor", "critic", "actor_optimizer", "critic_optimizer", "rng_states",
+        "boundary_state", "observation_prefix", "next_epoch", "cost", "metadata",
+        "observation_normalization_version",
+    }
+    missing = sorted(required - set(payload))
+    if missing:
+        raise ValueError(f"training checkpoint is incomplete: {missing}")
+    validate_physics_snapshot(payload["boundary_state"])
+    if len(payload["observation_prefix"]) != 20:
+        raise ValueError("training checkpoint has an invalid boundary prefix")
+    if int(payload["next_epoch"]) < 1:
+        raise ValueError("training checkpoint has an invalid next_epoch")
+
+
+def restore_training_checkpoint(policy: Any, payload: dict[str, Any]) -> None:
+    """Restore model/optimizer/RNG state; worlds are rebuilt at the boundary."""
+    validate_training_checkpoint(payload)
+    actor_result = policy.actor.load_state_dict(payload["actor"], strict=True)
+    critic_result = policy.critic.load_state_dict(payload["critic"], strict=True)
+    if actor_result.missing_keys or actor_result.unexpected_keys:
+        raise RuntimeError("actor checkpoint keys are incompatible")
+    if critic_result.missing_keys or critic_result.unexpected_keys:
+        raise RuntimeError("critic checkpoint keys are incompatible")
+    policy.actor_optimizer.load_state_dict(payload["actor_optimizer"])
+    policy.critic.optimizer.load_state_dict(payload["critic_optimizer"])
+    policy.normalization_version = int(payload["observation_normalization_version"])
+    restore_rng_states(payload["rng_states"])
 
 
 def manifest_entry(path: str | Path) -> dict[str, Any]:

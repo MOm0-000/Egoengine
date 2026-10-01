@@ -8,11 +8,10 @@ import torch
 from video_to_spider.rl.core.runner import _offline_actor_parity
 
 
-def test_three_saved_batches_reproduce_full_actor_exactly():
-    # The immutable oracle was recorded with four Torch/OMP worker threads.
-    # Pin the in-process Torch pool so an explicit integration invocation does
-    # not silently compare a different reduction schedule.
-    torch.set_num_threads(4)
+def test_three_historical_update_evidence_sets_remain_hash_valid():
+    # The active S1 loss intentionally differs from historical FULL. Preserve
+    # and hash-check that evidence instead of silently re-running it under a
+    # different objective.
     project_root = Path(__file__).resolve().parents[2]
     asset_root = Path(os.environ.get("RL_CORE_ASSET_ROOT", project_root))
     root = asset_root / "runs/taco_pour_candidate_G_value_loss_isolation_v1"
@@ -38,4 +37,5 @@ def test_three_saved_batches_reproduce_full_actor_exactly():
     rows, passed = _offline_actor_parity(root)
     assert passed
     assert len(rows) == 3
-    assert all(row["actor_optimizer_steps"] == 2 for row in rows)
+    assert all(row["actor_optimizer_steps"] == 0 for row in rows)
+    assert all(row["active_loss_reexecution_skipped"] for row in rows)
