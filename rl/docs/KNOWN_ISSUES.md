@@ -12,5 +12,8 @@
 | S1 | resolved local design decision | actor-internal value head is a `2.0 ×` auxiliary MSE on the normalized GAE return. It is not the GAE baseline; the independent critic retains clipped value loss. |
 
 The S1 choice is not claimed paper-faithful and is not isolated as a success
-cause. A single bounded seed-0 s40→80 pilot is authorized only after the
-training-chain gate passes. Chunk commit remains disabled.
+cause. The bounded seed-0 s40→80 pilot passed its training-chain gate and used
+the full authorized 400,000 training physics steps, but no fixed milestone
+passed strict 40/40 (`20/18/20/20/20`). Its terminal status is
+`COMPLETED_NO_STRICT_WINDOW_SUCCESS`; chunk commit remains disabled and the
+frozen decision forbids an automatic extra seed, extension or parameter sweep.

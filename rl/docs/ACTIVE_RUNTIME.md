@@ -22,6 +22,13 @@ verification report. Its fixed task is TACO `20230927_017`, `tool_only`, CPU,
 source 40 through endpoint 80, four independent worlds, 40 intervals, BPTT 4,
 seed 0 and at most 400,000 training physics steps. It cannot commit a chunk.
 
+The one authorized v1 pilot is complete. It consumed the full budget and
+ended `COMPLETED_NO_STRICT_WINDOW_SUCCESS`; the five fixed deterministic
+evaluations validated `20/18/20/20/20` intervals. This is a valid negative
+result, not authorization to run another seed, extend the budget, select an
+intermediate checkpoint, or commit a chunk. See
+`runs/taco_pour_rl_train_v1/summary.md`.
+
 The collector uses raw-reward critic values, post-action `done_after`,
 pre-forward `episode_start`, real environment reference cursors/timeouts and a
 world-major RNN block layout. Boundary hidden state is rebuilt from the
