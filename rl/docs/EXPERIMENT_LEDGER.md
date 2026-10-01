@@ -76,3 +76,33 @@ The run is successful only when the report says
   artifact hashes: `runs/taco_pour_rl_train_v1/server_artifacts.sha256`.
 - Historical Candidate-G evidence remains valid history but is not a numeric
   baseline for the corrected collector/loss semantics.
+
+## `taco_pour_rl_task_informed_critic_v2`
+
+- Type: one bounded local critic information-design experiment.
+- Source basis: EgoEngine residual-PPO description plus the Human2Sim2Robot
+  principle that critic state includes actor observation and task information.
+- Only algorithm intervention: external critic input `108 -> 345`, assembled
+  as raw actor236 + raw privileged108 + physical source phase1.
+- Unchanged: environment output contract, actor, reward, action distribution,
+  physics, reference semantics, PPO settings, seed and acceptance gate.
+- Fresh state: donor actor/RMS as in v1; new critic and both optimizers.
+- Functional result: `TRAINING_CHAIN_VERIFIED` after the one allowed retest;
+  continuous/cold-resume batch, metrics, model, optimizer, RMS and RNG matched.
+- Epoch-0 result: all 15 common v1 trajectory arrays bitwise equal;
+  `20/40, fail@61`.
+- Fixed evaluation result: `20/18/20/19/19`; terminal status
+  `COMPLETED_NO_STRICT_WINDOW_SUCCESS` and final failure endpoint 60.
+- Tail evidence: source60/61 action counts `654/75`; source64/69/74/79 counts
+  all zero; no feasible outcome at endpoint65 or later.
+- Valid formal cost: 400,000 training + 1,010 evaluation physics steps.
+  Functional gates cost 9,600. An isolated invalid epoch-1 invocation cost
+  another 1,810, making actual all-in execution 412,420 (420 above the declared
+  ceiling); this is recorded rather than hidden.
+- No chunk commit occurred. No extra seed, budget extension, intermediate
+  checkpoint selection, parameter sweep, MPC, or tail reset is authorized.
+- Lightweight report:
+  `runs/taco_pour_rl_task_informed_critic_v2/summary.md`; server-only hashes:
+  `runs/taco_pour_rl_task_informed_critic_v2/server_artifacts.sha256`.
+- This is not author parameter recovery. The missing EgoEngine MPC branch
+  remains a method difference for a separately authorized future review.

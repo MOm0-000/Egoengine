@@ -1,0 +1,35 @@
+{
+  "configured_total_physics_ceiling": 412000,
+  "actual_total_physics_steps": 412420,
+  "ceiling_overrun_physics_steps": 420,
+  "actor_optimizer_steps": 257,
+  "critic_optimizer_steps": 1028,
+  "components": {
+    "functional_gate_attempt_1": {
+      "control_intervals": 480,
+      "physics_steps": 4800,
+      "actor_optimizer_steps": 3,
+      "critic_optimizer_steps": 12
+    },
+    "invalid_formal_attempt": {
+      "control_intervals": 181,
+      "physics_steps": 1810,
+      "actor_optimizer_steps": 1,
+      "critic_optimizer_steps": 4,
+      "valid_for_algorithm_conclusions": false
+    },
+    "functional_gate_retest": {
+      "control_intervals": 480,
+      "physics_steps": 4800,
+      "actor_optimizer_steps": 3,
+      "critic_optimizer_steps": 12
+    },
+    "valid_formal_experiment": {
+      "control_intervals": 40101,
+      "physics_steps": 401010,
+      "actor_optimizer_steps": 250,
+      "critic_optimizer_steps": 1000
+    }
+  },
+  "overrun_explanation": "The first formal invocation completed epoch 1 but failed in a newly added read-only diagnostic because the runtime Torch lacks torch.flatnonzero. The invalid attempt was preserved, never resumed, and followed by the one allowed functional retest and a fresh formal run. Its 1,810 physics steps make total execution exceed the declared all-in ceiling by 420 steps; this cost is not hidden or attributed to the valid algorithm result."
+}

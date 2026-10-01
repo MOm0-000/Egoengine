@@ -3,31 +3,35 @@
 The sole development entrypoint is:
 
 ```bash
-PYTHONPATH="$PWD/.env_mjwp313_overlay:$PWD/src:$PWD/external/human2sim2robot:$PWD/external/spider_compat" \
+PYTHONPATH="/data_all/zzx/3.2RL/.env_mjwp313_overlay:$PWD/src:$PWD/external/human2sim2robot:$PWD/external/spider_compat" \
 OMP_NUM_THREADS=4 \
 /data_all/zzx/egoengine/spider/.venv/bin/python scripts/run_rl.py inspect
 ```
 
 Bounded structural verification is explicitly selected with `verify --physics`.
-The active entrypoint now also exposes the one authorized training contract:
+The active entrypoint also exposes the most recent frozen training contract:
 
 ```bash
-python scripts/run_rl.py verify --config configs/taco_pour_rl_train_v1.yaml --physics
-python scripts/run_rl.py train --config configs/taco_pour_rl_train_v1.yaml
-python scripts/run_rl.py evaluate --config configs/taco_pour_rl_train_v1.yaml --checkpoint PATH
+python scripts/run_rl.py verify --config configs/taco_pour_rl_task_informed_critic_v2.yaml --physics
+python scripts/run_rl.py train --config configs/taco_pour_rl_task_informed_critic_v2.yaml
+python scripts/run_rl.py evaluate --config configs/taco_pour_rl_task_informed_critic_v2.yaml --checkpoint PATH
 ```
 
 The training command is fail-closed on a successful real two-epoch/cold-resume
 verification report. Its fixed task is TACO `20230927_017`, `tool_only`, CPU,
 source 40 through endpoint 80, four independent worlds, 40 intervals, BPTT 4,
 seed 0 and at most 400,000 training physics steps. It cannot commit a chunk.
+The completed v2 decision does not authorize running the command again.
 
-The one authorized v1 pilot is complete. It consumed the full budget and
-ended `COMPLETED_NO_STRICT_WINDOW_SUCCESS`; the five fixed deterministic
-evaluations validated `20/18/20/20/20` intervals. This is a valid negative
-result, not authorization to run another seed, extend the budget, select an
-intermediate checkpoint, or commit a chunk. See
-`runs/taco_pour_rl_train_v1/summary.md`.
+The authorized task-informed critic v2 pilot is complete. Its external critic
+receives raw actor observation 236 + privileged extras 108 + physical phase 1;
+the environment still returns the unchanged 236-D observation and 108-D
+privileged extra. It consumed the full formal budget and ended
+`COMPLETED_NO_STRICT_WINDOW_SUCCESS`; the five fixed evaluations validated
+`20/18/20/19/19` intervals. This is a bounded negative result, not
+authorization to run another seed, extend the budget, select an intermediate
+checkpoint, or commit a chunk. See
+`runs/taco_pour_rl_task_informed_critic_v2/summary.md`.
 
 The collector uses raw-reward critic values, post-action `done_after`,
 pre-forward `episode_start`, real environment reference cursors/timeouts and a
