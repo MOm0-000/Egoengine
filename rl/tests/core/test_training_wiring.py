@@ -98,6 +98,12 @@ class _FakeEnvironment:
     def normalized_action_bounds(self):
         return torch.full((2, 36), -1.0), torch.full((2, 36), 1.0)
 
+    def current_reference_endpoints(self):
+        sources = (
+            [40, 40], [40, 41], [41, 42], [42, 40], [43, 41]
+        )[self.offset]
+        return torch.tensor(sources, dtype=torch.int64)
+
     def step(self, _actions, *, auto_reset):
         assert auto_reset
         sources = (
@@ -151,6 +157,15 @@ def test_collector_uses_real_endpoints_timeout_and_rebuilds_boundary_hidden(monk
     import video_to_spider.rl.core.rollout as rollout
 
     version = {"value": 2.0}
+    assembled = []
+    real_make_critic_input = rollout.make_critic_input
+
+    def record_critic_input(*args, **kwargs):
+        result = real_make_critic_input(*args, **kwargs)
+        assembled.append(result.clone())
+        return result
+
+    monkeypatch.setattr(rollout, "make_critic_input", record_critic_input)
     monkeypatch.setattr(
         rollout,
         "burn_in_prefix",
@@ -173,6 +188,12 @@ def test_collector_uses_real_endpoints_timeout_and_rebuilds_boundary_hidden(monk
     assert batch.timeout.tolist() == [False, False, False, False, False, False, True, False]
     assert batch.episode_serial.tolist() == [0, 1, 1, 1, 0, 0, 0, 1]
     assert batch.normalization_version == 7
+    assert batch.critic_observations.shape == (8, 345)
+    assert batch.critic_phase.tolist() == pytest.approx(
+        [0.0, 0.0, 0.025, 0.05, 0.0, 0.025, 0.05, 0.0]
+    )
+    assert len(assembled) == 5  # four transition values plus one bootstrap value
+    assert assembled[-1][:, -1].tolist() == pytest.approx([0.075, 0.025])
     assert collector.reset_states[0][0, 0, 0].item() == 2.0
     version["value"] = 5.0
     collector.collect()

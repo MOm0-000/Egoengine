@@ -15,6 +15,8 @@ from typing import Any
 import numpy as np
 import torch
 
+from .policy import CRITIC_INPUT_DIM, CRITIC_INPUT_SPEC
+
 
 CORE_CHECKPOINT_SCHEMA = "egoengine_rl_core_checkpoint_v1"
 TRAINING_CHECKPOINT_SCHEMA = "egoengine_rl_checkpoint_v2"
@@ -205,6 +207,11 @@ def build_training_checkpoint(
         raise ValueError("training checkpoint requires the external critic")
     if int(next_epoch) < 1:
         raise ValueError("next_epoch must identify a positive training epoch")
+    checkpoint_metadata = deepcopy(metadata)
+    checkpoint_metadata.update({
+        "critic_input_spec": CRITIC_INPUT_SPEC,
+        "critic_input_dimension": CRITIC_INPUT_DIM,
+    })
     return {
         "schema": TRAINING_CHECKPOINT_SCHEMA,
         "purpose": "epoch_boundary",
@@ -218,7 +225,7 @@ def build_training_checkpoint(
         "rng_states": capture_rng_states(),
         "boundary_state": deepcopy(boundary_state),
         "observation_prefix": deepcopy(tuple(observation_prefix)),
-        "metadata": deepcopy(metadata),
+        "metadata": checkpoint_metadata,
         "resume_resets_all_worlds_to_committed_boundary": True,
         "training_enabled": True,
         "chunk_commit_enabled": False,
@@ -247,6 +254,21 @@ def validate_training_checkpoint(payload: dict[str, Any]) -> None:
         raise ValueError("training checkpoint has an invalid boundary prefix")
     if int(payload["next_epoch"]) < 1:
         raise ValueError("training checkpoint has an invalid next_epoch")
+    metadata = payload["metadata"]
+    if metadata.get("critic_input_spec") != CRITIC_INPUT_SPEC:
+        raise ValueError("training checkpoint critic input spec is incompatible")
+    if metadata.get("critic_input_dimension") != CRITIC_INPUT_DIM:
+        raise ValueError("training checkpoint critic input dimension is incompatible")
+    critic = payload["critic"]
+    expected_shapes = {
+        "model.a2c_network.actor_mlp.0.weight": (1024, CRITIC_INPUT_DIM),
+        "model.running_mean_std.running_mean": (CRITIC_INPUT_DIM,),
+        "model.running_mean_std.running_var": (CRITIC_INPUT_DIM,),
+    }
+    for name, shape in expected_shapes.items():
+        value = critic.get(name)
+        if not torch.is_tensor(value) or tuple(value.shape) != shape:
+            raise ValueError(f"training checkpoint critic tensor {name} is incompatible")
 
 
 def restore_training_checkpoint(policy: Any, payload: dict[str, Any]) -> None:

@@ -120,6 +120,17 @@ class IndependentWorlds:
         pairs = [world.current_normalized_action_bounds() for world in self.worlds]
         return torch.cat([pair[0] for pair in pairs]), torch.cat([pair[1] for pair in pairs])
 
+    def current_reference_endpoints(self) -> torch.Tensor:
+        """Read each world's current physical reference cursor without mutation."""
+        endpoints = []
+        for world in self.worlds:
+            start = torch.as_tensor(world.start_indices, dtype=torch.int64).reshape(-1)
+            time = torch.as_tensor(world.time_indices, dtype=torch.int64).reshape(-1)
+            if start.numel() != 1 or time.numel() != 1:
+                raise ValueError("independent world reference cursor is not scalar")
+            endpoints.append(start + time)
+        return torch.cat(endpoints)
+
     def states(self) -> list[dict[str, Any]]:
         return [world.get_env_state() for world in self.worlds]
 

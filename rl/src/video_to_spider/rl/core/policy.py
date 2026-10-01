@@ -25,7 +25,9 @@ from .distribution import (
 
 
 ACTOR_OBSERVATION_DIM = 236
-CRITIC_OBSERVATION_DIM = 108
+PRIVILEGED_EXTRA_DIM = 108
+CRITIC_INPUT_DIM = ACTOR_OBSERVATION_DIM + PRIVILEGED_EXTRA_DIM + 1
+CRITIC_INPUT_SPEC = "actor236_privileged108_phase1_v1"
 ACTION_DIM = 36
 
 
@@ -83,7 +85,7 @@ def make_external_critic(*, worlds: int, horizon: int = 40) -> AsymmetricCritic:
         e_clip=0.2,
     )
     return AsymmetricCritic(
-        state_shape=(CRITIC_OBSERVATION_DIM,),
+        state_shape=(CRITIC_INPUT_DIM,),
         value_size=1,
         ppo_device="cpu",
         num_agents=1,

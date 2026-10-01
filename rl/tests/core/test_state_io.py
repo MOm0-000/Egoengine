@@ -16,6 +16,7 @@ from video_to_spider.rl.core.state_io import (
     write_torch_gzip,
     write_torch_gzip_atomic,
 )
+from video_to_spider.rl.core.policy import CRITIC_INPUT_DIM, CRITIC_INPUT_SPEC
 
 
 def _snapshot():
@@ -75,9 +76,26 @@ def test_core_checkpoint_cold_roundtrip(tmp_path):
 def test_epoch_boundary_training_checkpoint_atomic_roundtrip(tmp_path):
     actor = torch.nn.Linear(2, 1)
     critic_module = torch.nn.Linear(2, 1)
+
+    class CheckpointCritic:
+        def __init__(self, module):
+            self.module = module
+            self.optimizer = torch.optim.Adam(module.parameters(), lr=5e-5)
+
+        def state_dict(self):
+            return {
+                "model.a2c_network.actor_mlp.0.weight": torch.zeros(1024, CRITIC_INPUT_DIM),
+                "model.running_mean_std.running_mean": torch.zeros(CRITIC_INPUT_DIM),
+                "model.running_mean_std.running_var": torch.ones(CRITIC_INPUT_DIM),
+            }
+
+        def load_state_dict(self, state, strict=True):
+            assert strict
+            assert state["model.a2c_network.actor_mlp.0.weight"].shape == (1024, CRITIC_INPUT_DIM)
+            return SimpleNamespace(missing_keys=[], unexpected_keys=[])
+
     critic = SimpleNamespace(
-        state_dict=critic_module.state_dict,
-        load_state_dict=critic_module.load_state_dict,
+        state_dict=CheckpointCritic(critic_module).state_dict,
         optimizer=torch.optim.Adam(critic_module.parameters(), lr=5e-5),
     )
     policy = SimpleNamespace(
@@ -100,15 +118,21 @@ def test_epoch_boundary_training_checkpoint_atomic_roundtrip(tmp_path):
     assert not list(tmp_path.glob("*.tmp"))
     restored = load_torch_gzip(path)
     validate_training_checkpoint(restored)
+    assert restored["metadata"]["critic_input_spec"] == CRITIC_INPUT_SPEC
+    assert restored["metadata"]["critic_input_dimension"] == CRITIC_INPUT_DIM
+
+    legacy_108 = deepcopy(restored)
+    legacy_108["metadata"].pop("critic_input_spec")
+    legacy_108["metadata"]["critic_input_dimension"] = 108
+    legacy_108["critic"]["model.a2c_network.actor_mlp.0.weight"] = torch.zeros(1024, 108)
+    with pytest.raises(ValueError, match="critic input spec"):
+        validate_training_checkpoint(legacy_108)
 
     target_actor = torch.nn.Linear(2, 1)
     target_critic_module = torch.nn.Linear(2, 1)
     target = SimpleNamespace(
         actor=target_actor,
-        critic=SimpleNamespace(
-            load_state_dict=target_critic_module.load_state_dict,
-            optimizer=torch.optim.Adam(target_critic_module.parameters(), lr=5e-5),
-        ),
+        critic=CheckpointCritic(target_critic_module),
         actor_optimizer=torch.optim.Adam(target_actor.parameters(), lr=1e-4),
         normalization_version=0,
     )

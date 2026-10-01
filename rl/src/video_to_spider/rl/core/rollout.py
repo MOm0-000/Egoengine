@@ -8,7 +8,49 @@ from typing import Any, Callable, Sequence
 import numpy as np
 import torch
 
-from .policy import PolicyBundle, burn_in_prefix, policy_step
+from .policy import (
+    ACTOR_OBSERVATION_DIM,
+    CRITIC_INPUT_DIM,
+    PRIVILEGED_EXTRA_DIM,
+    PolicyBundle,
+    burn_in_prefix,
+    policy_step,
+)
+
+
+def make_critic_input(
+    actor_obs_raw: torch.Tensor,
+    privileged_raw: torch.Tensor,
+    source_endpoints: torch.Tensor,
+    *,
+    window_start: int = 40,
+    window_end: int = 80,
+) -> torch.Tensor:
+    """Assemble the task-informed critic input in raw observation units."""
+    if actor_obs_raw.ndim != 2 or actor_obs_raw.shape[1] != ACTOR_OBSERVATION_DIM:
+        raise ValueError("actor critic-prefix observation has the wrong shape")
+    if privileged_raw.ndim != 2 or privileged_raw.shape != (
+        actor_obs_raw.shape[0], PRIVILEGED_EXTRA_DIM
+    ):
+        raise ValueError("privileged critic-extra observation has the wrong shape")
+    if source_endpoints.shape != (actor_obs_raw.shape[0],):
+        raise ValueError("critic phase endpoints have the wrong shape")
+    if actor_obs_raw.dtype != privileged_raw.dtype:
+        raise ValueError("critic input components must share dtype")
+    if actor_obs_raw.device != privileged_raw.device or actor_obs_raw.device != source_endpoints.device:
+        raise ValueError("critic input components must share device")
+    if window_end <= window_start:
+        raise ValueError("critic phase window is empty")
+    if not bool(torch.isfinite(actor_obs_raw).all()) or not bool(torch.isfinite(privileged_raw).all()):
+        raise ValueError("critic input components contain non-finite values")
+    if bool(((source_endpoints < window_start) | (source_endpoints > window_end)).any()):
+        raise ValueError("critic phase endpoint is outside the declared window")
+    phase = (source_endpoints - window_start).to(dtype=actor_obs_raw.dtype)
+    phase = (phase / float(window_end - window_start)).unsqueeze(-1)
+    result = torch.cat((actor_obs_raw, privileged_raw, phase), dim=-1)
+    if result.shape != (actor_obs_raw.shape[0], CRITIC_INPUT_DIM):
+        raise RuntimeError("assembled critic input dimension changed")
+    return result
 
 
 @dataclass
@@ -23,6 +65,7 @@ class RolloutBatch:
     raw_location: torch.Tensor
     observations: torch.Tensor
     critic_observations: torch.Tensor
+    critic_phase: torch.Tensor
     rewards: torch.Tensor
     tracking_reward: torch.Tensor
     contact_bonus: torch.Tensor
@@ -59,7 +102,7 @@ class RolloutBatch:
             "action_high": 36,
             "raw_location": 36,
             "observations": 236,
-            "critic_observations": 108,
+            "critic_observations": CRITIC_INPUT_DIM,
         }
         for name, width in vector_names.items():
             if getattr(self, name).shape != (batch, width):
@@ -75,6 +118,7 @@ class RolloutBatch:
             "source_endpoint", "outcome_endpoint", "command_reference_endpoint",
             "reward_reference_endpoint", "next_goal_reference_endpoint", "rollout_step",
             "world_index", "episode_serial", "ppo_flat_index",
+            "critic_phase",
         ):
             if getattr(self, name).shape != (batch,):
                 raise ValueError(f"{name} has the wrong shape")
@@ -88,6 +132,9 @@ class RolloutBatch:
             raise ValueError("next observation goal is not one endpoint ahead")
         if not torch.equal(self.done_after, self.terminated | self.timeout):
             raise ValueError("done_after must equal terminated | timeout")
+        expected_phase = (self.source_endpoint - 40).to(torch.float32) / 40.0
+        if not torch.equal(self.critic_phase, expected_phase):
+            raise ValueError("critic phase does not match the physical source endpoint")
         for world in range(worlds):
             offset = world * horizon
             if not bool(self.episode_start[offset]):
@@ -188,6 +235,7 @@ class FixedBoundaryCollector:
         observation_prefix: Sequence[torch.Tensor | Any],
         horizon: int = 40,
         start_endpoint: int = 40,
+        end_endpoint: int = 80,
     ) -> None:
         self.environment = environment
         self.policy = policy
@@ -198,6 +246,9 @@ class FixedBoundaryCollector:
         self.reset_states: tuple[torch.Tensor, ...] = ()
         self.horizon = int(horizon)
         self.start_endpoint = int(start_endpoint)
+        self.end_endpoint = int(end_endpoint)
+        if self.end_endpoint <= self.start_endpoint:
+            raise ValueError("collector reference window is empty")
 
     def _critic_value(self, states: torch.Tensor) -> torch.Tensor:
         critic = self.policy.critic
@@ -226,6 +277,7 @@ class FixedBoundaryCollector:
         rows: dict[str, list[torch.Tensor]] = {name: [] for name in (
             "actions", "neglogp", "values", "mu", "sigma", "action_low",
             "action_high", "raw_location", "observations", "critic_observations",
+            "critic_phase",
             "rewards", "tracking_reward", "contact_bonus", "lift_reward", "tracking_score",
             "position_error", "rotation_error", "episode_start", "done_after", "terminated", "timeout", "source_endpoint",
             "outcome_endpoint", "command_reference_endpoint", "reward_reference_endpoint",
@@ -246,7 +298,15 @@ class FixedBoundaryCollector:
                 for index, state in enumerate(rnn_states):
                     block_states[index].append(state.clone())
             observation = torch.as_tensor(observation_raw["obs"], dtype=torch.float32)
-            critic_observation = torch.as_tensor(observation_raw["states"], dtype=torch.float32)
+            privileged = torch.as_tensor(observation_raw["states"], dtype=torch.float32)
+            source_before_action = self.environment.current_reference_endpoints()
+            critic_observation = make_critic_input(
+                observation,
+                privileged,
+                source_before_action,
+                window_start=self.start_endpoint,
+                window_end=self.end_endpoint,
+            )
             low, high = self.environment.normalized_action_bounds()
             action, output = policy_step(
                 self.policy.actor,
@@ -277,6 +337,8 @@ class FixedBoundaryCollector:
                     info["next_observation_goal_reference_endpoint"], dtype=torch.int64
                 ),
             }
+            if not torch.equal(source_before_action, endpoints["source_endpoint"]):
+                raise RuntimeError("pre-action critic phase disagrees with environment source cursor")
             values_by_name = {
                 "actions": action,
                 "neglogp": output.neglogp,
@@ -288,6 +350,7 @@ class FixedBoundaryCollector:
                 "raw_location": output.raw_location,
                 "observations": observation,
                 "critic_observations": critic_observation,
+                "critic_phase": critic_observation[:, -1],
                 "rewards": torch.as_tensor(reward, dtype=torch.float32),
                 "tracking_reward": torch.as_tensor(info["aggregate_tracking_reward"], dtype=torch.float32),
                 "contact_bonus": torch.as_tensor(info["aggregate_contact_bonus"], dtype=torch.float32),
@@ -317,8 +380,17 @@ class FixedBoundaryCollector:
             episode_start = done_after
             observation_raw = next_raw
 
-        next_states = torch.as_tensor(observation_raw["states"], dtype=torch.float32)
-        last_values = self._critic_value(next_states)
+        next_actor_observation = torch.as_tensor(observation_raw["obs"], dtype=torch.float32)
+        next_privileged = torch.as_tensor(observation_raw["states"], dtype=torch.float32)
+        next_sources = self.environment.current_reference_endpoints()
+        next_critic_input = make_critic_input(
+            next_actor_observation,
+            next_privileged,
+            next_sources,
+            window_start=self.start_endpoint,
+            window_end=self.end_endpoint,
+        )
+        last_values = self._critic_value(next_critic_input)
         rewards_tm = torch.stack(rows["rewards"]).unsqueeze(-1)
         values_tm = torch.stack(rows["values"])
         done_after_tm = torch.stack(rows["done_after"])
