@@ -323,12 +323,12 @@ def _collector_smoke(assets: dict[str, Path]) -> tuple[dict[str, Any], int]:
     policy.load_actor_only(
         donor["actor"], version=int(donor["observation_normalization_version"])
     )
-    reset = burn_in_prefix(policy.actor, context["observation_prefix"], worlds=4)
+    boundary_state = environment.states()[0]
     collector = FixedBoundaryCollector(
         environment=environment,
         policy=policy,
-        boundary_state=context["physics_state"],
-        reset_states=reset,
+        boundary_state=boundary_state,
+        observation_prefix=context["observation_prefix"],
     )
     rows = []
     for epoch in range(2):
@@ -345,8 +345,6 @@ def _collector_smoke(assets: dict[str, Path]) -> tuple[dict[str, Any], int]:
         policy.actor.update_obs_stats(batch.observations)
         policy.critic.model.update_obs_stats(batch.critic_observations)
         policy.normalization_version += 1
-        reset = burn_in_prefix(policy.actor, context["observation_prefix"], worlds=4)
-        collector.reset_states = reset
     return {
         "passed": all(row["samples"] == 160 and row["source_min"] == 40 and row["source_max"] == 79 for row in rows),
         "epochs": rows,

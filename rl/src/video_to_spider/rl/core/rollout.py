@@ -8,7 +8,7 @@ from typing import Any, Callable, Sequence
 import numpy as np
 import torch
 
-from .policy import DistributionOutput, PolicyBundle, policy_step
+from .policy import PolicyBundle, burn_in_prefix, policy_step
 
 
 @dataclass
@@ -24,10 +24,12 @@ class RolloutBatch:
     observations: torch.Tensor
     critic_observations: torch.Tensor
     rewards: torch.Tensor
-    dones: torch.Tensor
+    episode_start: torch.Tensor
+    done_after: torch.Tensor
     terminated: torch.Tensor
     timeout: torch.Tensor
     returns: torch.Tensor
+    last_values: torch.Tensor
     block_start_states: tuple[torch.Tensor, ...]
     reset_states: tuple[torch.Tensor, ...]
     source_endpoint: torch.Tensor
@@ -35,7 +37,11 @@ class RolloutBatch:
     command_reference_endpoint: torch.Tensor
     reward_reference_endpoint: torch.Tensor
     next_goal_reference_endpoint: torch.Tensor
+    rollout_step: torch.Tensor
+    world_index: torch.Tensor
+    episode_serial: torch.Tensor
     ppo_flat_index: torch.Tensor
+    normalization_version: int
 
     def validate(self, *, worlds: int, horizon: int) -> None:
         batch = worlds * horizon
@@ -54,10 +60,13 @@ class RolloutBatch:
                 raise ValueError(f"{name} has the wrong world-major shape")
         if self.values.shape != (batch, 1) or self.returns.shape != (batch, 1):
             raise ValueError("value tensors have the wrong shape")
+        if self.last_values.shape != (worlds, 1):
+            raise ValueError("last_values has the wrong shape")
         for name in (
-            "neglogp", "rewards", "dones", "terminated", "timeout",
+            "neglogp", "rewards", "episode_start", "done_after", "terminated", "timeout",
             "source_endpoint", "outcome_endpoint", "command_reference_endpoint",
-            "reward_reference_endpoint", "next_goal_reference_endpoint", "ppo_flat_index",
+            "reward_reference_endpoint", "next_goal_reference_endpoint", "rollout_step",
+            "world_index", "episode_serial", "ppo_flat_index",
         ):
             if getattr(self, name).shape != (batch,):
                 raise ValueError(f"{name} has the wrong shape")
@@ -69,6 +78,31 @@ class RolloutBatch:
             raise ValueError("reward is not aligned with physical outcome")
         if not torch.equal(self.next_goal_reference_endpoint, self.outcome_endpoint + 1):
             raise ValueError("next observation goal is not one endpoint ahead")
+        if not torch.equal(self.done_after, self.terminated | self.timeout):
+            raise ValueError("done_after must equal terminated | timeout")
+        for world in range(worlds):
+            offset = world * horizon
+            if not bool(self.episode_start[offset]):
+                raise ValueError("the first row of every world must start an episode")
+            for step in range(1, horizon):
+                row = offset + step
+                previous = row - 1
+                if bool(self.episode_start[row]) != bool(self.done_after[previous]):
+                    raise ValueError("episode_start is not the preceding post-action done")
+                expected_source = (
+                    self.source_endpoint[offset]
+                    if bool(self.done_after[previous])
+                    else self.outcome_endpoint[previous]
+                )
+                if self.source_endpoint[row] != expected_source:
+                    raise ValueError("reference cursor disagrees with reset/transition history")
+        finite_names = (
+            "actions", "neglogp", "values", "mu", "sigma", "action_low", "action_high",
+            "raw_location", "observations", "critic_observations", "rewards", "returns",
+            "last_values",
+        )
+        if any(not bool(torch.isfinite(getattr(self, name)).all()) for name in finite_names):
+            raise ValueError("rollout contains non-finite values")
 
 
 def world_major(time_major: torch.Tensor) -> torch.Tensor:
@@ -79,10 +113,26 @@ def world_major(time_major: torch.Tensor) -> torch.Tensor:
     )
 
 
+def pack_block_start_states(
+    block_states: Sequence[torch.Tensor], *, worlds: int
+) -> torch.Tensor:
+    """Pack `[block][layers,world,hidden]` as world-major BPTT sequences."""
+    if not block_states:
+        raise ValueError("at least one recurrent block state is required")
+    layers, observed_worlds, hidden = block_states[0].shape
+    if observed_worlds != worlds or any(
+        state.shape != (layers, worlds, hidden) for state in block_states
+    ):
+        raise ValueError("recurrent block states have inconsistent shapes")
+    return torch.stack(tuple(block_states), dim=0).permute(1, 2, 0, 3).reshape(
+        layers, worlds * len(block_states), hidden
+    )
+
+
 def compute_gae(
     rewards: torch.Tensor,
     values: torch.Tensor,
-    dones: torch.Tensor,
+    done_after: torch.Tensor,
     last_values: torch.Tensor,
     *,
     gamma: float = 0.998,
@@ -91,19 +141,15 @@ def compute_gae(
     """Compute GAE on `[T,W,1]`; visible right truncation is bootstrapped."""
     if rewards.shape != values.shape or rewards.ndim != 3 or rewards.shape[-1] != 1:
         raise ValueError("GAE rewards/values must share [T,W,1]")
-    if dones.shape != rewards.shape[:2] or last_values.shape != rewards.shape[1:]:
+    if done_after.shape != rewards.shape[:2] or last_values.shape != rewards.shape[1:]:
         raise ValueError("GAE done/bootstrap shapes disagree")
     advantages = torch.zeros_like(rewards)
     last = torch.zeros_like(last_values)
     for time_index in reversed(range(rewards.shape[0])):
-        if time_index == rewards.shape[0] - 1:
-            next_value = last_values
-            next_nonterminal = 1.0 - dones[time_index].float().unsqueeze(1)
-        else:
-            next_value = values[time_index + 1]
-            next_nonterminal = 1.0 - dones[time_index + 1].float().unsqueeze(1)
-        delta = rewards[time_index] + gamma * next_value * next_nonterminal - values[time_index]
-        last = delta + gamma * tau * next_nonterminal * last
+        next_value = last_values if time_index == rewards.shape[0] - 1 else values[time_index + 1]
+        not_done = (~done_after[time_index]).to(values.dtype).unsqueeze(-1)
+        delta = rewards[time_index] + gamma * not_done * next_value - values[time_index]
+        last = delta + gamma * tau * not_done * last
         advantages[time_index] = last
     return advantages + values
 
@@ -129,14 +175,17 @@ class FixedBoundaryCollector:
         environment: Any,
         policy: PolicyBundle,
         boundary_state: dict[str, Any],
-        reset_states: Sequence[torch.Tensor],
+        observation_prefix: Sequence[torch.Tensor | Any],
         horizon: int = 40,
         start_endpoint: int = 40,
     ) -> None:
         self.environment = environment
         self.policy = policy
         self.boundary_state = boundary_state
-        self.reset_states = tuple(state.clone() for state in reset_states)
+        self.observation_prefix = tuple(observation_prefix)
+        if len(self.observation_prefix) != 20:
+            raise ValueError("fixed-boundary collector requires sources20--39 observations")
+        self.reset_states: tuple[torch.Tensor, ...] = ()
         self.horizon = int(horizon)
         self.start_endpoint = int(start_endpoint)
 
@@ -146,13 +195,19 @@ class FixedBoundaryCollector:
             return torch.zeros((states.shape[0], 1), dtype=torch.float32)
         critic.model.eval()
         with torch.no_grad():
-            normalized = critic.model.norm_obs(states, update_stats=False)
-            result = critic.model({"obs": normalized, "is_train": True})
+            result = critic.model({
+                "obs": states,
+                "is_train": False,
+                "update_obs_stats": False,
+            })
         return result["values"]
 
     def collect(self) -> RolloutBatch:
         worlds = len(self.environment.worlds)
         self.environment.restore_all(self.boundary_state)
+        self.reset_states = burn_in_prefix(
+            self.policy.actor, self.observation_prefix, worlds=worlds
+        )
         rnn_states = tuple(state.clone() for state in self.reset_states)
         observation_raw = self.environment.current_observation()
         if not isinstance(observation_raw, dict):
@@ -161,11 +216,18 @@ class FixedBoundaryCollector:
         rows: dict[str, list[torch.Tensor]] = {name: [] for name in (
             "actions", "neglogp", "values", "mu", "sigma", "action_low",
             "action_high", "raw_location", "observations", "critic_observations",
-            "rewards", "dones", "terminated", "timeout", "source_endpoint",
+            "rewards", "episode_start", "done_after", "terminated", "timeout", "source_endpoint",
             "outcome_endpoint", "command_reference_endpoint", "reward_reference_endpoint",
-            "next_goal_reference_endpoint",
+            "next_goal_reference_endpoint", "rollout_step", "world_index", "episode_serial",
         )}
         block_states: list[list[torch.Tensor]] = [[] for _ in rnn_states]
+        episode_start = torch.ones(worlds, dtype=torch.bool)
+        episode_serial = torch.zeros(worlds, dtype=torch.int64)
+        required_info = (
+            "source_reference_endpoint", "outcome_reference_endpoint",
+            "command_reference_endpoint", "reward_reference_endpoint",
+            "next_observation_goal_reference_endpoint", "time_outs", "terminated",
+        )
         for offset in range(self.horizon):
             if offset % 4 == 0:
                 for index, state in enumerate(rnn_states):
@@ -184,10 +246,24 @@ class FixedBoundaryCollector:
             )
             values = self._critic_value(critic_observation)
             next_raw, reward, done, info = self.environment.step(action, auto_reset=True)
-            terminated = torch.as_tensor(info["terminated"], dtype=torch.bool)
-            timeout = torch.as_tensor(info.get("timeout", np.zeros(worlds)), dtype=torch.bool)
-            source = torch.full((worlds,), self.start_endpoint + offset, dtype=torch.int64)
-            outcome = source + 1
+            missing = [name for name in required_info if name not in info]
+            if missing:
+                raise KeyError(f"environment info is missing required fields: {missing}")
+            terminated = torch.as_tensor(info["terminated"], dtype=torch.bool).clone()
+            timeout = torch.as_tensor(info["time_outs"], dtype=torch.bool).clone()
+            done_after = terminated | timeout
+            returned_done = torch.as_tensor(done, dtype=torch.bool)
+            if not torch.equal(returned_done, done_after):
+                raise RuntimeError("environment done disagrees with terminated | time_outs")
+            endpoints = {
+                "source_endpoint": torch.as_tensor(info["source_reference_endpoint"], dtype=torch.int64),
+                "outcome_endpoint": torch.as_tensor(info["outcome_reference_endpoint"], dtype=torch.int64),
+                "command_reference_endpoint": torch.as_tensor(info["command_reference_endpoint"], dtype=torch.int64),
+                "reward_reference_endpoint": torch.as_tensor(info["reward_reference_endpoint"], dtype=torch.int64),
+                "next_goal_reference_endpoint": torch.as_tensor(
+                    info["next_observation_goal_reference_endpoint"], dtype=torch.int64
+                ),
+            }
             values_by_name = {
                 "actions": action,
                 "neglogp": output.neglogp,
@@ -200,41 +276,46 @@ class FixedBoundaryCollector:
                 "observations": observation,
                 "critic_observations": critic_observation,
                 "rewards": torch.as_tensor(reward, dtype=torch.float32),
-                "dones": torch.as_tensor(done, dtype=torch.bool),
+                "episode_start": episode_start,
+                "done_after": done_after,
                 "terminated": terminated,
                 "timeout": timeout,
-                "source_endpoint": source,
-                "outcome_endpoint": outcome,
-                "command_reference_endpoint": outcome,
-                "reward_reference_endpoint": outcome,
-                "next_goal_reference_endpoint": outcome + 1,
+                **endpoints,
+                "rollout_step": torch.full((worlds,), offset, dtype=torch.int64),
+                "world_index": torch.arange(worlds, dtype=torch.int64),
+                "episode_serial": episode_serial,
             }
             for name, value in values_by_name.items():
                 rows[name].append(value.clone())
             rnn_states = output.rnn_states
-            if bool(torch.as_tensor(done).any()):
-                done_mask = torch.as_tensor(done, dtype=torch.bool).reshape(1, worlds, 1)
+            if bool(done_after.any()):
+                done_mask = done_after.reshape(1, worlds, 1)
                 rnn_states = tuple(
                     torch.where(done_mask, reset, state)
                     for state, reset in zip(rnn_states, self.reset_states, strict=True)
                 )
+            episode_serial = episode_serial + done_after.to(torch.int64)
+            episode_start = done_after
             observation_raw = next_raw
 
         next_states = torch.as_tensor(observation_raw["states"], dtype=torch.float32)
         last_values = self._critic_value(next_states)
         rewards_tm = torch.stack(rows["rewards"]).unsqueeze(-1)
         values_tm = torch.stack(rows["values"])
-        dones_tm = torch.stack(rows["dones"])
-        returns_tm = compute_gae(rewards_tm, values_tm, dones_tm, last_values)
+        done_after_tm = torch.stack(rows["done_after"])
+        returns_tm = compute_gae(rewards_tm, values_tm, done_after_tm, last_values)
         flat: dict[str, torch.Tensor] = {
             name: world_major(torch.stack(value)) for name, value in rows.items()
         }
         flat["returns"] = world_major(returns_tm)
+        flat["last_values"] = last_values
         flat["block_start_states"] = tuple(
-            torch.cat(states, dim=1) for states in block_states
+            pack_block_start_states(states, worlds=worlds)
+            for states in block_states
         )
         flat["reset_states"] = self.reset_states
         flat["ppo_flat_index"] = torch.arange(worlds * self.horizon, dtype=torch.int64)
+        flat["normalization_version"] = int(self.policy.normalization_version)
         batch = RolloutBatch(**flat)
         batch.validate(worlds=worlds, horizon=self.horizon)
         return batch

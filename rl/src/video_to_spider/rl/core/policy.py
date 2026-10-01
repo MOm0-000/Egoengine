@@ -155,7 +155,7 @@ def recurrent_evaluate(
     actions: torch.Tensor,
     low: torch.Tensor,
     high: torch.Tensor,
-    dones: torch.Tensor,
+    episode_start: torch.Tensor,
     block_start_states: Sequence[torch.Tensor],
     reset_states: Sequence[torch.Tensor],
     worlds: int,
@@ -189,7 +189,7 @@ def recurrent_evaluate(
     actor.eval()
     normalized = actor.norm_obs(observations, update_stats=False)
     by_world = normalized.reshape(worlds, horizon, ACTOR_OBSERVATION_DIM)
-    done_by_world = dones.reshape(worlds, horizon).bool()
+    episode_start_by_world = episode_start.reshape(worlds, horizon).bool()
     raw_rows: list[list[torch.Tensor | None]] = [[None] * horizon for _ in range(worlds)]
     logstd_rows: list[list[torch.Tensor | None]] = [[None] * horizon for _ in range(worlds)]
     value_rows: list[list[torch.Tensor | None]] = [[None] * horizon for _ in range(worlds)]
@@ -201,10 +201,10 @@ def recurrent_evaluate(
         states = [state.index_select(1, indices) for state in block_start_states]
         for local_step in range(sequence):
             time_index = block * sequence + local_step
-            done = done_by_world[:, time_index]
-            if bool(done.any().item()):
+            starts = episode_start_by_world[:, time_index]
+            if bool(starts.any().item()):
                 states = [
-                    torch.where(done.reshape(1, worlds, 1), reset, state)
+                    torch.where(starts.reshape(1, worlds, 1), reset, state)
                     for state, reset in zip(states, reset_states, strict=True)
                 ]
             raw, logstd, value, states = actor.a2c_network(

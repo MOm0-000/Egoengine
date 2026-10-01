@@ -58,8 +58,8 @@ def prepare_batch(policy: PolicyBundle, batch: RolloutBatch) -> PreparedBatch:
 
     B1 remains closed: old values and returns are normalized as one pair after
     a single statistics update, so both losses observe the same transform.
-    S1 is explicit: the actor-internal clipped value loss is centered on the
-    external critic's rollout value, matching the current local contract.
+    S1 remains explicit here until the auxiliary-head decision is committed
+    separately from the collector wiring repair.
     """
     raw_advantage = (batch.returns - batch.values).sum(dim=1)
     advantage = (raw_advantage - raw_advantage.mean()) / (raw_advantage.std() + 1.0e-8)
@@ -77,19 +77,21 @@ def prepare_batch(policy: PolicyBundle, batch: RolloutBatch) -> PreparedBatch:
         "returns": returns,
         "actions": batch.actions,
         "obs": batch.observations,
-        "dones": batch.dones,
+        "episode_start": batch.episode_start,
         "rnn_states": batch.block_start_states,
         "mu": batch.mu,
         "sigma": batch.sigma,
+        "raw_location": batch.raw_location,
         "action_lows": batch.action_low,
         "action_highs": batch.action_high,
+        "normalization_version": batch.normalization_version,
     }
     critic_input = {
         "old_values": old_values,
         "returns": returns,
         "actions": batch.actions,
         "obs": batch.critic_observations,
-        "dones": batch.dones,
+        "done_after": batch.done_after,
     }
     return PreparedBatch(actor_input, critic_input, raw_advantage, advantage)
 
@@ -145,7 +147,7 @@ def update_actor(
         actions=actor_input["actions"],
         low=actor_input["action_lows"],
         high=actor_input["action_highs"],
-        dones=actor_input["dones"],
+        episode_start=actor_input["episode_start"],
         block_start_states=actor_input["rnn_states"],
         reset_states=reset_states,
         worlds=config.worlds,
@@ -153,6 +155,31 @@ def update_actor(
         sequence=config.sequence,
         distribution=policy.distribution,
     )
+    if int(actor_input["normalization_version"]) != int(policy.normalization_version):
+        raise RuntimeError("rollout and recomputation use different observation RMS versions")
+    rollout_ratio = torch.exp(actor_input["old_logp_actions"] - current.neglogp)
+    if not bool(torch.isfinite(rollout_ratio).all()):
+        raise RuntimeError("live rollout likelihood ratio is non-finite")
+    rollout_identity_error = float((rollout_ratio - 1.0).abs().max().detach())
+    if rollout_identity_error > 1.0e-4:
+        raise RuntimeError(
+            f"live rollout/recomputation likelihood mismatch: {rollout_identity_error}"
+        )
+    float32_envelope = 128.0 * torch.finfo(torch.float32).eps
+    live_errors = {
+        "mu": float((actor_input["mu"] - current.mu).abs().max().detach()),
+        "sigma": float((actor_input["sigma"] - current.sigma).abs().max().detach()),
+        "raw_location": float(
+            (actor_input["raw_location"] - current.raw_location).abs().max().detach()
+        ),
+        "neglogp": float(
+            (actor_input["old_logp_actions"] - current.neglogp).abs().max().detach()
+        ),
+    }
+    if any(not torch.isfinite(torch.tensor(value)) for value in live_errors.values()):
+        raise RuntimeError("live rollout/recomputation comparison is non-finite")
+    if any(value > float32_envelope for name, value in live_errors.items() if name != "neglogp"):
+        raise RuntimeError(f"live rollout distribution mismatch: {live_errors}")
     canonical_old = detached_snapshot(
         {"neglogp": current.neglogp, "mu": current.mu, "sigma": current.sigma}
     )
@@ -163,8 +190,8 @@ def update_actor(
     advantage = actor_input["advantages"]
     clipped_ratio = ratio.clamp(1.0 - config.clip, 1.0 + config.clip)
     actor_loss = torch.max(-advantage * ratio, -advantage * clipped_ratio).mean()
-    old_value = actor_input["old_values"]
     returns = actor_input["returns"]
+    old_value = actor_input["old_values"]
     clipped_value = old_value + (current.values - old_value).clamp(-config.clip, config.clip)
     internal_value_loss = torch.max(
         (current.values - returns).square(), (clipped_value - returns).square()
@@ -182,7 +209,7 @@ def update_actor(
             actions=actor_input["actions"],
             low=actor_input["action_lows"],
             high=actor_input["action_highs"],
-            dones=actor_input["dones"],
+            episode_start=actor_input["episode_start"],
             block_start_states=actor_input["rnn_states"],
             reset_states=reset_states,
             worlds=config.worlds,
@@ -201,6 +228,8 @@ def update_actor(
         "total_loss": float(loss.detach()),
         "gradient_norm_before_clip": float(norm.detach()),
         "canonical_ratio_max_abs_error": identity_error,
+        "live_rollout_ratio_max_abs_error": rollout_identity_error,
+        "live_recomputation_max_abs_errors": live_errors,
         "post_ratio": distribution(post_ratio),
         "exact_kl": distribution(kl),
         "actor_sha256_before": before_hash,
@@ -263,6 +292,9 @@ class PPOTrainer:
             "critic_losses": critic_losses,
             "actor": actor_report,
             "normalization_version_after_commit": self.policy.normalization_version,
-            "training_enabled": False,
+            "training_enabled": True,
             "chunk_commit_enabled": False,
+            "batch": batch,
+            "raw_advantage": prepared.raw_advantage,
+            "normalized_advantage": prepared.normalized_advantage,
         }
