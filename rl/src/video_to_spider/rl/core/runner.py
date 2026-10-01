@@ -634,8 +634,19 @@ def verify_training_chain(
     started = time.time()
     config, root, assets = _load_train_config(config_path, asset_root)
     output.mkdir(parents=True, exist_ok=True)
+    previous_report_path = output / "verification.json"
+    previous_report = (
+        json.loads(previous_report_path.read_text())
+        if previous_report_path.is_file()
+        else None
+    )
+    if previous_report is not None and previous_report.get("cost", {}).get(
+        "retest_allowance_used", False
+    ):
+        raise RuntimeError("the single functional-verification retest was already used")
     continuous = _make_training_runtime(assets, seed=0)
     first = continuous["trainer"].run_epoch()
+    _epoch_metrics(1, first)
     checkpoint = build_training_checkpoint(
         policy=continuous["policy"],
         boundary_state=continuous["boundary_state"],
@@ -658,10 +669,12 @@ def verify_training_chain(
     checkpoint = load_torch_gzip(checkpoint_path)
     validate_training_checkpoint(checkpoint)
     uninterrupted_second = continuous["trainer"].run_epoch()
+    _epoch_metrics(2, uninterrupted_second)
     uninterrupted_state = _training_state(continuous)
 
     resumed = _make_training_runtime(assets, seed=0, checkpoint=checkpoint)
     resumed_second = resumed["trainer"].run_epoch()
+    _epoch_metrics(2, resumed_second)
     resumed_state = _training_state(resumed)
     batch_exact = _batch_exact(uninterrupted_second["batch"], resumed_second["batch"])
     report_exact = _nested_equal(
@@ -687,14 +700,19 @@ def verify_training_chain(
         and h40_changed and endpoint_truth and batch_exact and report_exact and state_exact
     )
     prior = manifest_entry(assets["prior_anchor_verification"])
-    cost = {
+    attempt_cost = {
         "reused_closed_loop_anchor_control_intervals": 240,
         "executed_training_control_intervals": 480,
         "executed_training_physics_steps": 4800,
         "actor_optimizer_steps": 3,
         "critic_optimizer_steps": 12,
-        "retest_allowance_used": False,
     }
+    previous_cost = previous_report.get("cost", {}) if previous_report is not None else {}
+    cost = {
+        name: int(attempt_cost[name]) + int(previous_cost.get(name, 0))
+        for name in attempt_cost
+    }
+    cost["retest_allowance_used"] = previous_report is not None
     ceilings = config["functional_verification"]
     if (
         cost["executed_training_control_intervals"] > ceilings["maximum_control_intervals"]
@@ -718,6 +736,22 @@ def verify_training_chain(
             "loss_and_metrics_exact": report_exact,
             "models_optimizers_rms_and_rng_exact": state_exact,
         },
+        "attempts": [
+            *(
+                previous_report.get("attempts", [{
+                    "ordinal": 1,
+                    "status": previous_report.get("status"),
+                    "cost": previous_cost,
+                }])
+                if previous_report is not None
+                else []
+            ),
+            {
+                "ordinal": 2 if previous_report is not None else 1,
+                "status": "TRAINING_CHAIN_VERIFIED" if passed else "TRAINING_CHAIN_VERIFICATION_FAILED",
+                "cost": attempt_cost,
+            },
+        ],
         "cost": cost,
         "elapsed_seconds": time.time() - started,
     }
@@ -769,8 +803,8 @@ def _critic_diagnostics(batch: Any, *, gamma: float = 0.998) -> dict[str, Any]:
     episode_keys = torch.stack((batch.world_index, batch.episode_serial), dim=-1)
     for key in torch.unique(episode_keys, dim=0):
         mask = (episode_keys == key).all(dim=-1)
-        indices = torch.flatnonzero(mask)
-        if not len(indices):
+        indices = torch.nonzero(mask, as_tuple=False).flatten()
+        if indices.numel() == 0:
             continue
         if not bool(batch.done_after[indices[-1]]):
             right_truncated_episodes += 1

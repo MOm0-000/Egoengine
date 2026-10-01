@@ -12,6 +12,7 @@ from video_to_spider.rl.core.policy import (
     make_external_critic,
 )
 from video_to_spider.rl.core.rollout import make_critic_input
+from video_to_spider.rl.core.runner import _critic_diagnostics
 
 
 def test_critic_input_preserves_raw_actor_extra_and_physical_phase():
@@ -67,3 +68,22 @@ def test_new_model_critic_is_345d_while_actor_remains_236d():
     assert actor.running_mean_std.running_mean.shape == (ACTOR_OBSERVATION_DIM,)
     assert critic.model.running_mean_std.running_mean.shape == (CRITIC_INPUT_DIM,)
     assert critic.model.a2c_network.actor_mlp[0].weight.shape == (1024, CRITIC_INPUT_DIM)
+
+
+def test_critic_diagnostics_supports_runtime_torch_nonzero_api():
+    batch = SimpleNamespace(
+        source_endpoint=torch.tensor([40, 41, 60, 61]),
+        outcome_endpoint=torch.tensor([41, 42, 61, 62]),
+        values=torch.tensor([[0.1], [0.2], [0.3], [0.4]]),
+        returns=torch.tensor([[1.0], [0.8], [0.6], [0.4]]),
+        rewards=torch.tensor([[0.5], [0.4], [0.3], [0.2]]),
+        world_index=torch.tensor([0, 0, 1, 1]),
+        episode_serial=torch.tensor([0, 0, 0, 0]),
+        done_after=torch.tensor([False, True, False, False]),
+        terminated=torch.tensor([False, True, False, False]),
+    )
+    diagnostics = _critic_diagnostics(batch)
+    assert diagnostics["visible_terminal_episodes"] == 1
+    assert diagnostics["collector_right_truncated_episodes"] == 1
+    assert diagnostics["visible_terminal_mc_return_fit"]["sources_40_59"]["samples"] == 2
+    assert diagnostics["visible_terminal_mc_return_fit"]["sources_60_79"]["samples"] == 0
