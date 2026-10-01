@@ -18,6 +18,16 @@
 The run is successful only when the report says
 `STRUCTURAL_REFACTOR_VERIFIED`; skipped physics checks are not a pass.
 
+## `mjwp_env_active_surface_audit_r1`
+
+- Type: active-call-graph audit and historical API removal.
+- Physics/contact/reward/snapshot behavior: unchanged.
+- Removed: H2S2R/Gym trainer compatibility and environment-owned training
+  tracing; the pre-narrowing source remains in the R1 legacy TRASH archive.
+- Report: `docs/mjwp_env_active_surface_audit_r1.md`.
+- Long training: forbidden.
+- Chunk commit: forbidden.
+
 ## `rl_active_test_surface_r1`
 
 - Type: test-surface cleanup; no algorithm or runtime behavior change.
@@ -28,3 +38,11 @@ The run is successful only when the report says
   `MANIFEST.sha256`).
 - Long training: forbidden.
 - Chunk commit: forbidden.
+
+## `runner_surface_audit_r1`
+
+- Type: read-only responsibility audit.
+- Decision: no split; the current bounded call chain is shorter and already
+  delegates hashing, model audit and physics construction to their core owners.
+- Report: `docs/runner_surface_audit_r1.md`.
+- Runtime behavior changed: no.

@@ -1,9 +1,8 @@
-"""Vectorized Spider MJWP environment matching the H2S2R PpoAgent interface.
+"""Narrow MuJoCo-Warp physics environment for the active RL core.
 
-This is the adapter between the cloned Spider MuJoCo+Warp backend and the
-verified PPO trainer from the official Human2Sim2Robot repository.  It does not
-reimplement PPO; it only produces the ``get_env_info / reset / step`` surface
-that ``human2sim2robot.ppo.ppo_agent.PpoAgent`` expects.
+This is the actor-free adapter between the pinned Spider MuJoCo+Warp backend
+and :mod:`video_to_spider.rl.core`. Policy orchestration, PPO bookkeeping and
+training-report emission deliberately live outside the environment.
 
 Action-space adaptation: H2S2R outputs palm/PCA actions for a fabric controller.
 EgoEngine needs a residual on the upstream reference.  We expose one residual
@@ -17,7 +16,6 @@ from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import dataclass, field, replace
 from importlib.metadata import version
-from pathlib import Path
 from typing import Any
 
 import mujoco
@@ -35,24 +33,11 @@ from video_to_spider.rl.h2s2r import (
 from video_to_spider.rl.reset_sampler import PreGraspResetSampler, PreGraspSamplerConfig
 from video_to_spider.rl.objective_contract import RuntimeObjective
 from video_to_spider.rl.observation_contract import RuntimeObservationContract
-from video_to_spider.rl.residual_semantics import (
-    control_target_residuals,
-    ctrlrange_contract,
-)
-from video_to_spider.rl.training_trace import PpoTrainingTrace
 from egoengine_repro.action.paper_rewards import (
     lifting,
     object_tracking,
     opposition_contact,
 )
-
-try:  # Gym is an H2S2R PpoAgent dependency, but keep this module importable for tests.
-    import gym
-    from gym import spaces
-except ModuleNotFoundError:  # pragma: no cover - only used in the training runtime
-    gym = None
-    spaces = None
-
 
 _XHAND_FINGERS = ("thumb", "index", "middle", "ring", "pinky")
 _MJWP_SNAPSHOT_SCHEMA = "egoengine_mjwp_snapshot_v3_reward_aligned"
@@ -93,25 +78,6 @@ _WP_EFC_FIELDS = (
     "J_rowadr", "J_colind", "J", "pos", "margin", "D", "vel", "aref",
     "frictionloss", "force", "state", "island", "Ma", "Jqvel",
 )
-
-
-def _trace_actuator_metadata(model: mujoco.MjModel, indices: tuple[int, ...]):
-    names = []
-    units = []
-    for index in indices:
-        names.append(
-            mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_ACTUATOR, index)
-            or f"actuator_{index}"
-        )
-        joint = int(model.actuator_trnid[index, 0])
-        joint_type = int(model.jnt_type[joint])
-        if joint_type == int(mujoco.mjtJoint.mjJNT_SLIDE):
-            units.append("m")
-        elif joint_type == int(mujoco.mjtJoint.mjJNT_HINGE):
-            units.append("rad")
-        else:
-            raise ValueError("training trace supports only scalar slide/hinge controls")
-    return tuple(names), tuple(units)
 
 
 _SNAPSHOT_METADATA_FIELDS = (
@@ -340,10 +306,6 @@ class MJWPVectorEnv:
         self.time_indices = np.zeros(self.num_envs, dtype=np.int32)
         self.rng = np.random.default_rng(seed)
         self._chunk_reset_state = None
-        self._training_trace: PpoTrainingTrace | None = None
-        self._pending_training_policy_distribution: tuple[
-            torch.Tensor, torch.Tensor, torch.Tensor
-        ] | None = None
         self._state_feasible_action_contract: dict[str, Any] | None = None
         # Work spent on rejected lookahead and PPO must not disappear on restore.
         self.simulation_control_intervals = 0
@@ -391,26 +353,6 @@ class MJWPVectorEnv:
         )
         self._reset_worlds()
 
-    # ------------------------------------------------------------------
-    # PpoAgent-compatible API
-    # ------------------------------------------------------------------
-    def get_env_info(self) -> dict[str, Any]:
-        assert spaces is not None, "gym is required for the H2S2R PpoAgent runtime"
-        return {
-            "observation_space": spaces.Box(low=-np.inf, high=np.inf, shape=(self.obs_dim,), dtype=np.float32),
-            "action_space": spaces.Box(low=-1.0, high=1.0, shape=(self.env_cfg.residual.hand_dof,), dtype=np.float32),
-            "state_space": spaces.Box(low=-np.inf, high=np.inf, shape=(self.priv_dim,), dtype=np.float32),
-            "agents": 1,
-            "value_size": 1,
-        }
-
-    def get_number_of_agents(self) -> int:
-        return 1
-
-    def reset(self) -> np.ndarray | dict[str, np.ndarray]:
-        self._reset_worlds()
-        return self.current_observation()
-
     def current_observation(self) -> np.ndarray | dict[str, np.ndarray]:
         """Read the observation at the current physics state without resetting it."""
         obs, privileged = self._build_observations()
@@ -428,7 +370,6 @@ class MJWPVectorEnv:
             raise ValueError(f"actions must have shape {(self.num_envs, self.env_cfg.residual.hand_dof)}")
         if not np.isfinite(actions).all():
             raise ValueError("residual actions must be finite")
-        policy_actions = actions.copy()
         source_endpoints = self.start_indices + self.time_indices
         command_reference_endpoints = np.minimum(
             source_endpoints + 1, self.ctrl_ref.shape[0] - 1
@@ -519,41 +460,7 @@ class MJWPVectorEnv:
                 next_observation_goal_reference_endpoints.copy()
             ),
         }
-        if self._training_trace is not None:
-            if self._pending_training_policy_distribution is None:
-                raise RuntimeError("training trace is active but the sampled action/mu/sigma are missing")
-            sampled_action, actor_mu, actor_sigma = self._pending_training_policy_distribution
-            control_indices = list(self.env_cfg.residual.hand_control_indices)
-            semantics = control_target_residuals(
-                self.env.model_cpu,
-                reference_ctrls.detach().cpu().numpy(),
-                full_ctrl.detach().cpu().numpy(),
-            )
-            self._training_trace.record(
-                source_endpoint=source_endpoints,
-                outcome_endpoint=outcome_endpoints,
-                sampled_action_preclamp=(
-                    sampled_action.detach().cpu().numpy()
-                ),
-                sampled_action_clamped=policy_actions,
-                actor_mu=actor_mu.detach().cpu().numpy(),
-                actor_sigma=actor_sigma.detach().cpu().numpy(),
-                reference_ctrl=reference_ctrls.detach().cpu().numpy()[:, control_indices],
-                requested_residual=semantics["requested_residual"][:, control_indices],
-                effective_residual_after_ctrlrange=(
-                    semantics["effective_residual_after_ctrlrange"][:, control_indices]
-                ),
-                residual_lost_to_ctrlrange=(
-                    semantics["residual_lost_to_ctrlrange"][:, control_indices]
-                ),
-                info=infos,
-            )
-            self._pending_training_policy_distribution = None
         return self._pack_observation(obs, next_privileged), reward.cpu().numpy(), done_np, infos
-
-    def set_train_info(self, frame: int, agent: Any) -> None:
-        if self._training_trace is not None:
-            self._training_trace.begin_epoch(int(agent.epoch_num), int(frame))
 
     def enable_state_feasible_action_contract(
         self, *, reference_snap_tolerance: float
@@ -613,55 +520,6 @@ class MJWPVectorEnv:
             "snap_calls": 0,
             "snapped_component_count": 0,
             "maximum_reference_violation": 0.0,
-        }
-
-    def _snap_state_feasible_reference(
-        self, reference_ctrls: torch.Tensor
-    ) -> tuple[torch.Tensor, dict[str, Any]]:
-        """Legacy diagnostic helper; never use this to form executed control.
-
-        Historical audit scripts call this private method to reconstruct the
-        former action contract.  Runtime execution and current bounds do not.
-        """
-        contract = self._state_feasible_action_contract
-        if contract is None:
-            raise RuntimeError("state-feasible action contract is not enabled")
-        indices = contract["indices"]
-        controlled = reference_ctrls[:, indices].to(torch.float64)
-        limited = contract["limited"]
-        lower = contract["lower"]
-        upper = contract["upper"]
-        below = torch.where(limited, torch.clamp_min(lower - controlled, 0.0), 0.0)
-        above = torch.where(limited, torch.clamp_min(controlled - upper, 0.0), 0.0)
-        violation = torch.maximum(below, above)
-        maximum = float(violation.max().item())
-        tolerance = contract["reference_snap_tolerance"]
-        if maximum > tolerance:
-            raise ValueError(
-                f"reference control exceeds ctrlrange by {maximum:.9g}, above "
-                f"the {tolerance:.9g} fail-closed tolerance"
-            )
-        controlled_f32 = reference_ctrls[:, indices]
-        snapped = torch.where(
-            limited,
-            torch.clamp(
-                controlled_f32,
-                contract["safe_lower_f32"],
-                contract["safe_upper_f32"],
-            ),
-            controlled_f32,
-        )
-        result = reference_ctrls.clone()
-        result[:, indices] = snapped
-        count = int((violation > 0.0).sum().item())
-        contract["snap_calls"] += 1
-        contract["snapped_component_count"] += count
-        contract["maximum_reference_violation"] = max(
-            contract["maximum_reference_violation"], maximum
-        )
-        return result, {
-            "snapped_component_count": count,
-            "maximum_reference_violation": maximum,
         }
 
     def _reference_for_action_bound_construction(
@@ -762,84 +620,6 @@ class MJWPVectorEnv:
         if bool(((low_f32 > 0.0) | (high_f32 < 0.0)).any().item()):
             raise RuntimeError("zero residual is outside baseline-preserving support")
         return low_f32, high_f32
-
-    def state_feasible_action_audit(self) -> dict[str, Any] | None:
-        contract = self._state_feasible_action_contract
-        if contract is None:
-            return None
-        return {
-            "reference_snap_tolerance": contract["reference_snap_tolerance"],
-            "execution_reference": "formal_reference_ctrl_unmodified",
-            "bounds_semantics": "do_not_worsen_baseline_ctrlrange_violation",
-            "bound_calls": contract["bound_calls"],
-            "baseline_violating_component_count": contract[
-                "baseline_violating_component_count"
-            ],
-            "snap_calls": contract["snap_calls"],
-            "snapped_component_count": contract["snapped_component_count"],
-            "maximum_reference_violation": contract["maximum_reference_violation"],
-        }
-
-    def enable_training_trace(self, output_dir: str | Path) -> None:
-        """Enable lossless PPO-rollout logging without changing rollout tensors."""
-        if self._training_trace is not None:
-            raise RuntimeError("training trace is already enabled")
-        if self._pending_training_policy_distribution is not None:
-            raise RuntimeError("cannot enable training trace with a pending policy distribution")
-        indices = tuple(self.env_cfg.residual.hand_control_indices)
-        actuator_names, actuator_units = _trace_actuator_metadata(
-            self.env.model_cpu, indices
-        )
-        if len(actuator_names) != self.env_cfg.residual.hand_dof:
-            raise ValueError("residual action coordinates do not match hand actuator coordinates")
-        hand_roles = (
-            ("right", "left")
-            if self.ego_cfg.embodiment_type == "bimanual"
-            else (str(self.ego_cfg.embodiment_type),)
-        )
-        self._training_trace = PpoTrainingTrace(
-            output_dir,
-            actuator_names=actuator_names,
-            actuator_units=actuator_units,
-            object_roles=self.object_roles,
-            hand_roles=hand_roles,
-            residual_scale=self.env_cfg.residual.residual_scale,
-            residual_clip=self.env_cfg.residual.residual_clip,
-            ctrlrange_contract=ctrlrange_contract(self.env.model_cpu, indices),
-        )
-
-    def record_training_policy_distribution(
-        self, actions: torch.Tensor, actor_mu: torch.Tensor, actor_sigma: torch.Tensor
-    ) -> None:
-        """Receive the official sampled action and its existing Gaussian parameters."""
-        if self._training_trace is None:
-            return
-        if self._pending_training_policy_distribution is not None:
-            raise RuntimeError("previous PPO policy distribution was not consumed by env.step")
-        expected = (self.num_envs, self.env_cfg.residual.hand_dof)
-        for name, value in (("sampled action", actions), ("actor mu", actor_mu), ("actor sigma", actor_sigma)):
-            if tuple(value.shape) != expected:
-                raise ValueError(f"PPO {name} must have shape {expected}")
-        # Keep a detached reference until env.step has completed. The official
-        # adapter already transfers the bounded action to CPU before stepping;
-        # avoiding an extra pre-step GPU synchronization keeps this hook passive.
-        self._pending_training_policy_distribution = (
-            actions.detach(), actor_mu.detach(), actor_sigma.detach()
-        )
-
-    def finalize_training_trace(self, *, completed: bool) -> dict[str, Any] | None:
-        if self._training_trace is None:
-            return None
-        pending = self._pending_training_policy_distribution is not None
-        if pending and completed:
-            raise RuntimeError("cannot finalize training trace with an unconsumed PPO action")
-        self._pending_training_policy_distribution = None
-        report = self._training_trace.finalize(
-            completed=completed,
-            incomplete_step_discarded=pending,
-        )
-        self._training_trace = None
-        return report
 
     def set_chunk_reset(self, *, start: int, end: int) -> None:
         """Train a bounded window from its exact incoming state, not reference qpos.

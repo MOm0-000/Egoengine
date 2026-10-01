@@ -25,6 +25,15 @@ core and runtime contracts. Server-fixture parity is selected explicitly with
 under `TRASH/rl_active_test_surface_r1_2026-10-01/`. See `tests/README.md` for
 the exact commands.
 
+`MJWPVectorEnv` is now an actor-free physics adapter rather than an H2S2R
+trainer-compatible environment. Its retained physical closure and deliberately
+removed historical hooks are listed in
+`docs/mjwp_env_active_surface_audit_r1.md`.
+
+`core/runner.py` remains a single bounded verifier after review: splitting its
+asset inspection, parity execution and small report writer would lengthen the
+call chain without removing duplication. See `docs/runner_surface_audit_r1.md`.
+
 Immutable checkpoints, batches and trajectories stay in `runs/` because the
 new verifier consumes them by SHA-256. They are evidence, not alternate
 runtime implementations.

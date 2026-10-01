@@ -51,6 +51,42 @@ def test_retired_implementations_are_not_beside_the_active_core():
     assert (root / "scripts/run_rl.py").is_file()
 
 
+def test_mjwp_environment_exposes_only_the_active_or_reusable_surface():
+    root = Path(__file__).resolve().parents[2]
+    source = root / "src/video_to_spider/rl/mjwp_env.py"
+    tree = ast.parse(source.read_text())
+    environment = next(
+        node
+        for node in tree.body
+        if isinstance(node, ast.ClassDef) and node.name == "MJWPVectorEnv"
+    )
+    methods = {
+        node.name for node in environment.body if isinstance(node, ast.FunctionDef)
+    }
+    required = {
+        "current_observation",
+        "step",
+        "enable_state_feasible_action_contract",
+        "current_normalized_action_bounds",
+        "set_chunk_reset",
+        "get_env_state",
+        "set_env_state",
+    }
+    retired = {
+        "get_env_info",
+        "get_number_of_agents",
+        "reset",
+        "set_train_info",
+        "enable_training_trace",
+        "record_training_policy_distribution",
+        "finalize_training_trace",
+        "state_feasible_action_audit",
+        "_snap_state_feasible_reference",
+    }
+    assert required <= methods
+    assert methods.isdisjoint(retired)
+
+
 def test_default_test_surface_is_explicit_and_fixture_free():
     root = Path(__file__).resolve().parents[2]
     pytest_ini = (root / "pytest.ini").read_text()

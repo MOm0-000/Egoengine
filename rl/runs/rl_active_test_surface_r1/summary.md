@@ -2,7 +2,7 @@
 
 Status: `ACTIVE_TEST_SURFACE_GREEN`
 
-- Default clean-checkout surface: `30 passed`, repeated successfully in a
+- Default clean-checkout surface: `31 passed`, repeated successfully in a
   detached worktree containing only committed files.
 - Explicit saved-batch integration: `1 passed` with the immutable asset root.
 - Historical relocation: 55 files, 377 tests collectable only by explicit
