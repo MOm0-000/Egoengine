@@ -25,7 +25,15 @@ from .audit import (
     module_sha256,
 )
 from .env import IndependentWorlds, make_world
-from .policy import PolicyBundle, burn_in_prefix, policy_step
+from .policy import (
+    ACTOR_OBSERVATION_DIM,
+    CRITIC_INPUT_DIM,
+    CRITIC_INPUT_SPEC,
+    PRIVILEGED_EXTRA_DIM,
+    PolicyBundle,
+    burn_in_prefix,
+    policy_step,
+)
 from .ppo import PPOConfig, PPOTrainer
 from .rollout import FixedBoundaryCollector, valid_prefix
 from .state_io import (
@@ -47,7 +55,7 @@ from .state_io import (
 
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_CONFIG = PROJECT_ROOT / "configs/rl_core_refactor_r1.yaml"
-DEFAULT_TRAIN_CONFIG = PROJECT_ROOT / "configs/taco_pour_rl_train_v1.yaml"
+DEFAULT_TRAIN_CONFIG = PROJECT_ROOT / "configs/taco_pour_rl_task_informed_critic_v2.yaml"
 
 
 def _load_config(path: Path, asset_root_override: Path | None) -> tuple[dict[str, Any], Path, dict[str, Path]]:
@@ -83,14 +91,17 @@ def _load_train_config(
     path: Path, asset_root_override: Path | None
 ) -> tuple[dict[str, Any], Path, dict[str, Path]]:
     config = yaml.safe_load(path.read_text())
-    if config.get("schema") != "egoengine_taco_pour_rl_train_v1":
+    if config.get("schema") != "egoengine_taco_pour_rl_task_informed_critic_v2":
         raise ValueError("unsupported RL training configuration")
     execution = config.get("execution", {})
     expected = {
         "task": "TACO_20230927_017", "tracking_variant": "tool_only", "device": "cpu",
         "source_endpoint": 40, "final_endpoint": 80, "worlds": 4, "horizon": 40,
-        "sequence_length": 4, "actor_observation_dim": 236,
-        "critic_observation_dim": 108, "actions": 36, "seed": 0,
+        "sequence_length": 4, "actor_observation_dim": ACTOR_OBSERVATION_DIM,
+        "privileged_extra_dim": PRIVILEGED_EXTRA_DIM,
+        "critic_input_dim": CRITIC_INPUT_DIM,
+        "critic_input_spec": CRITIC_INPUT_SPEC,
+        "actions": 36, "seed": 0,
         "physics_steps_per_control": 10, "training_enabled": True,
         "chunk_commit_enabled": False,
     }
@@ -726,6 +737,83 @@ def _write_npz_atomic(path: Path, arrays: dict[str, np.ndarray]) -> None:
     os.replace(temporary, path)
 
 
+def _fit_summary(values: torch.Tensor, targets: torch.Tensor) -> dict[str, Any]:
+    if values.numel() == 0:
+        return {"samples": 0, "mse": None, "explained_variance": None}
+    values = values.to(torch.float64).reshape(-1)
+    targets = targets.to(torch.float64).reshape(-1)
+    residual_variance = torch.var(targets - values, unbiased=False)
+    target_variance = torch.var(targets, unbiased=False)
+    explained = (
+        float(1.0 - residual_variance / target_variance)
+        if float(target_variance) > 0.0
+        else None
+    )
+    return {
+        "samples": int(values.numel()),
+        "mse": float(torch.mean((values - targets).square())),
+        "explained_variance": explained,
+    }
+
+
+def _critic_diagnostics(batch: Any, *, gamma: float = 0.998) -> dict[str, Any]:
+    ranges = {"sources_40_59": (40, 60), "sources_60_79": (60, 80)}
+    gae_fit = {}
+    for name, (low, high) in ranges.items():
+        mask = (batch.source_endpoint >= low) & (batch.source_endpoint < high)
+        gae_fit[name] = _fit_summary(batch.values[mask], batch.returns[mask])
+
+    mc_targets = torch.full_like(batch.values, torch.nan)
+    visible_terminal_episodes = 0
+    right_truncated_episodes = 0
+    episode_keys = torch.stack((batch.world_index, batch.episode_serial), dim=-1)
+    for key in torch.unique(episode_keys, dim=0):
+        mask = (episode_keys == key).all(dim=-1)
+        indices = torch.flatnonzero(mask)
+        if not len(indices):
+            continue
+        if not bool(batch.done_after[indices[-1]]):
+            right_truncated_episodes += 1
+            continue
+        visible_terminal_episodes += 1
+        running = torch.zeros((), dtype=batch.rewards.dtype)
+        for index in reversed(indices.tolist()):
+            running = batch.rewards[index] + gamma * running
+            mc_targets[index] = running
+    mc_fit = {}
+    for name, (low, high) in ranges.items():
+        mask = (
+            (batch.source_endpoint >= low)
+            & (batch.source_endpoint < high)
+            & torch.isfinite(mc_targets[:, 0])
+        )
+        mc_fit[name] = _fit_summary(batch.values[mask], mc_targets[mask])
+
+    source_targets = (60, 61, 64, 69, 74, 79)
+    outcome_targets = (61, 65, 70, 75, 80)
+    source_counts = {
+        str(endpoint): int((batch.source_endpoint == endpoint).sum())
+        for endpoint in source_targets
+    }
+    feasible_outcome_counts = {}
+    feasible_outcome_episode_counts = {}
+    for endpoint in outcome_targets:
+        mask = (batch.outcome_endpoint == endpoint) & ~batch.terminated
+        feasible_outcome_counts[str(endpoint)] = int(mask.sum())
+        feasible_outcome_episode_counts[str(endpoint)] = int(
+            torch.unique(episode_keys[mask], dim=0).shape[0]
+        )
+    return {
+        "gae_return_fit": gae_fit,
+        "visible_terminal_mc_return_fit": mc_fit,
+        "visible_terminal_episodes": visible_terminal_episodes,
+        "collector_right_truncated_episodes": right_truncated_episodes,
+        "source_action_counts": source_counts,
+        "feasible_outcome_counts": feasible_outcome_counts,
+        "feasible_outcome_episode_counts": feasible_outcome_episode_counts,
+    }
+
+
 def _epoch_metrics(epoch: int, report: dict[str, Any]) -> dict[str, Any]:
     batch = report["batch"]
     row = {
@@ -747,6 +835,7 @@ def _epoch_metrics(epoch: int, report: dict[str, Any]) -> dict[str, Any]:
             str(int(endpoint)): int((batch.source_endpoint == endpoint).sum())
             for endpoint in torch.unique(batch.source_endpoint)
         },
+        "critic_diagnostics": _critic_diagnostics(batch),
         "cost_after_epoch": {
             "training_control_intervals": epoch * 160,
             "training_physics_steps": epoch * 1600,
@@ -792,6 +881,8 @@ def _save_epoch_checkpoint(
             "boundary_context_sha256": sha256(assets["context"]),
             "loss_semantics": "ppo_surrogate_plus_2x_internal_value_auxiliary_mse",
             "value_baseline": "independent_asymmetric_critic_raw_reward_units",
+            "critic_input_spec": CRITIC_INPUT_SPEC,
+            "critic_input_dimension": CRITIC_INPUT_DIM,
             "normalization_contract": "frozen_during_rollout_and_updates_commit_after_epoch",
             "chunk_commit_authorized": False,
         },
@@ -826,6 +917,31 @@ def _record_evaluation(
     _write_npz_atomic(output / f"evaluations/epoch_{epoch:04d}_trajectory.npz", arrays)
     write_json(output / f"evaluations/epoch_{epoch:04d}.json", summary)
     return summary, endpoint60
+
+
+def _compare_epoch0_to_v1(
+    observed_path: Path, expected_path: Path
+) -> dict[str, Any]:
+    with np.load(observed_path, allow_pickle=False) as observed, np.load(
+        expected_path, allow_pickle=False
+    ) as expected:
+        common = sorted(set(observed.files) & set(expected.files))
+        if not common:
+            raise ValueError("epoch-0 trajectories have no common arrays")
+        exact = {
+            name: bool(
+                observed[name].shape == expected[name].shape
+                and observed[name].dtype == expected[name].dtype
+                and observed[name].tobytes() == expected[name].tobytes()
+            )
+            for name in common
+        }
+    return {
+        "all_common_arrays_bitwise_equal": all(exact.values()),
+        "common_array_count": len(common),
+        "per_array": exact,
+        "expected": manifest_entry(expected_path),
+    }
 
 
 def module_sha256_from_state(state: dict[str, torch.Tensor]) -> str:
@@ -907,6 +1023,10 @@ def train(
     if resume_path is None and latest.exists():
         raise FileExistsError("training output already contains a checkpoint; pass --resume explicitly")
     checkpoint = load_torch_gzip(resume_path) if resume_path is not None else None
+    if checkpoint is not None:
+        validate_training_checkpoint(checkpoint)
+        if checkpoint["metadata"].get("config_sha256") != sha256(config_path):
+            raise ValueError("resume checkpoint was created under a different training config")
     runtime = _make_training_runtime(assets, seed=0, checkpoint=checkpoint)
     start_epoch = int(checkpoint["next_epoch"]) if checkpoint is not None else 1
     if start_epoch > 250:
@@ -920,6 +1040,14 @@ def train(
     evaluation_intervals = 0
     success_endpoint60 = None
     if checkpoint is None:
+        _save_epoch_checkpoint(
+            output=output,
+            runtime=runtime,
+            epoch=0,
+            config_path=config_path,
+            assets=assets,
+            milestone=True,
+        )
         initial, _ = _record_evaluation(
             output=output, epoch=0, assets=assets,
             actor_state=deepcopy(runtime["policy"].actor.state_dict()),
@@ -929,6 +1057,27 @@ def train(
         )
         evaluations.append(initial)
         evaluation_intervals += initial["executed_control_intervals"]
+        epoch0_parity = _compare_epoch0_to_v1(
+            output / "evaluations/epoch_0000_trajectory.npz",
+            assets["v1_epoch0_trajectory"],
+        )
+        write_json(output / "epoch0_v1_parity.json", epoch0_parity)
+        if (
+            not epoch0_parity["all_common_arrays_bitwise_equal"]
+            or initial["valid_prefix_intervals"] != 20
+            or initial["first_failure_endpoint"] != 61
+        ):
+            write_json(
+                output / "decision.json",
+                {
+                    "status": "FUNCTIONAL_ERROR_BEFORE_TRAINING",
+                    "completed_epoch": 0,
+                    "epoch0_v1_parity": epoch0_parity,
+                    "evaluation": initial,
+                    "chunk_commit_enabled": False,
+                },
+            )
+            raise RuntimeError("task-informed critic epoch-0 actor/physics parity failed")
     status = "RUNNING"
     completed_epoch = start_epoch - 1
     try:
@@ -1096,6 +1245,13 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+def _training_output(config: dict[str, Any], root: Path) -> Path:
+    run_directory = config.get("run_directory")
+    if run_directory != "runs/taco_pour_rl_task_informed_critic_v2":
+        raise ValueError("task-informed critic run directory changed")
+    return root / run_directory
+
+
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
     config_path = args.config or (
@@ -1105,9 +1261,9 @@ def main(argv: list[str] | None = None) -> int:
         result = inspect(config_path, args.asset_root)
     elif args.command == "verify":
         schema = yaml.safe_load(config_path.read_text()).get("schema")
-        if schema == "egoengine_taco_pour_rl_train_v1":
-            _, root, _ = _load_train_config(config_path, args.asset_root)
-            output = args.output or root / "runs/taco_pour_rl_train_v1"
+        if schema == "egoengine_taco_pour_rl_task_informed_critic_v2":
+            train_config, root, _ = _load_train_config(config_path, args.asset_root)
+            output = args.output or _training_output(train_config, root)
             if not args.physics:
                 raise ValueError("training-chain verification requires --physics")
             result = verify_training_chain(config_path, args.asset_root, output)
@@ -1115,18 +1271,18 @@ def main(argv: list[str] | None = None) -> int:
             output = args.output or PROJECT_ROOT / "runs/rl_core_refactor_r1"
             result = verify(config_path, args.asset_root, output, physics=args.physics)
     elif args.command == "train":
-        _, root, config_assets = _load_train_config(config_path, args.asset_root)
+        train_config, root, config_assets = _load_train_config(config_path, args.asset_root)
         del config_assets
-        output = args.output or root / "runs/taco_pour_rl_train_v1"
+        output = args.output or _training_output(train_config, root)
         result = train(
             config_path, args.asset_root, output, resume_path=args.resume
         )
     else:
         if args.checkpoint is None:
             raise ValueError("evaluate requires --checkpoint")
-        _, root, config_assets = _load_train_config(config_path, args.asset_root)
+        train_config, root, config_assets = _load_train_config(config_path, args.asset_root)
         del config_assets
-        output = args.output or root / "runs/taco_pour_rl_train_v1/evaluation_manual"
+        output = args.output or _training_output(train_config, root) / "evaluation_manual"
         result = evaluate(config_path, args.asset_root, args.checkpoint, output)
     print(json.dumps(result, indent=2, sort_keys=True))
     successful_statuses = {
