@@ -28,6 +28,8 @@ ACTOR_OBSERVATION_DIM = 236
 PRIVILEGED_EXTRA_DIM = 108
 CRITIC_INPUT_DIM = ACTOR_OBSERVATION_DIM + PRIVILEGED_EXTRA_DIM + 1
 CRITIC_INPUT_SPEC = "actor236_privileged108_phase1_v1"
+ASSISTED_CRITIC_INPUT_DIM = CRITIC_INPUT_DIM + 1
+ASSISTED_CRITIC_INPUT_SPEC = "actor236_privileged108_phase1_assist1_v1"
 ACTION_DIM = 36
 
 
@@ -71,7 +73,11 @@ def make_actor(*, worlds: int) -> models.ModelA2CContinuousLogStd:
     )
 
 
-def make_external_critic(*, worlds: int, horizon: int = 40) -> AsymmetricCritic:
+def make_external_critic(
+    *, worlds: int, horizon: int = 40, input_dimension: int = CRITIC_INPUT_DIM
+) -> AsymmetricCritic:
+    if input_dimension not in (CRITIC_INPUT_DIM, ASSISTED_CRITIC_INPUT_DIM):
+        raise ValueError("unsupported external critic input dimension")
     batch_size = worlds * horizon
     config = AsymmetricCriticConfig(
         name="xhand_asymmetric_critic_mlp",
@@ -85,7 +91,7 @@ def make_external_critic(*, worlds: int, horizon: int = 40) -> AsymmetricCritic:
         e_clip=0.2,
     )
     return AsymmetricCritic(
-        state_shape=(CRITIC_INPUT_DIM,),
+        state_shape=(input_dimension,),
         value_size=1,
         ppo_device="cpu",
         num_agents=1,
@@ -120,6 +126,8 @@ class PolicyBundle:
     critic: AsymmetricCritic | None
     distribution: DistributionSpec
     normalization_version: int = 0
+    critic_input_dim: int = CRITIC_INPUT_DIM
+    critic_input_spec: str = CRITIC_INPUT_SPEC
 
     @classmethod
     def create(
@@ -128,6 +136,8 @@ class PolicyBundle:
         worlds: int,
         actor_learning_rate: float = 1.0e-4,
         with_critic: bool = True,
+        critic_input_dim: int = CRITIC_INPUT_DIM,
+        critic_input_spec: str = CRITIC_INPUT_SPEC,
     ) -> "PolicyBundle":
         actor = make_actor(worlds=worlds)
         optimizer = torch.optim.Adam(
@@ -136,11 +146,24 @@ class PolicyBundle:
             eps=1.0e-8,
             weight_decay=0.0,
         )
+        expected_spec = (
+            CRITIC_INPUT_SPEC
+            if critic_input_dim == CRITIC_INPUT_DIM
+            else ASSISTED_CRITIC_INPUT_SPEC
+        )
+        if critic_input_spec != expected_spec:
+            raise ValueError("critic input dimension/specification disagree")
         return cls(
             actor=actor,
             actor_optimizer=optimizer,
-            critic=make_external_critic(worlds=worlds) if with_critic else None,
+            critic=(
+                make_external_critic(worlds=worlds, input_dimension=critic_input_dim)
+                if with_critic
+                else None
+            ),
             distribution=DistributionSpec(),
+            critic_input_dim=critic_input_dim,
+            critic_input_spec=critic_input_spec,
         )
 
     def load_actor_only(self, state: dict[str, torch.Tensor], *, version: int) -> None:

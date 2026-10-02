@@ -34,6 +34,7 @@ from .policy import (
     burn_in_prefix,
     policy_step,
 )
+from video_to_spider.rl.object_assistance import ToolAssistSpec
 from .ppo import PPOConfig, PPOTrainer
 from .plan_window import plan_window
 from .rollout import FixedBoundaryCollector, valid_prefix
@@ -266,7 +267,14 @@ def _offline_actor_parity(isolation_root: Path) -> tuple[list[dict[str, Any]], b
     return rows, all_passed
 
 
-def _make_core_world(assets: dict[str, Path], boundary: dict[str, Any], seed: int, *, asymmetric: bool):
+def _make_core_world(
+    assets: dict[str, Path],
+    boundary: dict[str, Any],
+    seed: int,
+    *,
+    asymmetric: bool,
+    object_assistance: ToolAssistSpec | None = None,
+):
     return make_world(
         simulator_config=assets["simulator"],
         protocol=assets["protocol"],
@@ -276,6 +284,7 @@ def _make_core_world(assets: dict[str, Path], boundary: dict[str, Any], seed: in
         boundary=boundary,
         seed=seed,
         asymmetric_critic=asymmetric,
+        object_assistance=object_assistance,
     )
 
 
@@ -352,17 +361,28 @@ def _evaluation_arrays(
     boundary_state: dict[str, Any],
     observation_prefix: tuple[Any, ...],
     seed: int,
+    object_assistance: ToolAssistSpec | None = None,
+    assistance_alpha: float = 0.0,
+    zero_residual: bool = False,
 ) -> tuple[dict[str, np.ndarray], dict[str, Any] | None]:
     policy = PolicyBundle.create(worlds=1, with_critic=False)
     policy.load_actor_only(actor_state, version=normalization_version)
     states = burn_in_prefix(policy.actor, observation_prefix)
-    world = _make_core_world(assets, boundary_state, seed, asymmetric=False)
+    world = _make_core_world(
+        assets,
+        boundary_state,
+        seed,
+        asymmetric=False,
+        object_assistance=object_assistance,
+    )
+    world.set_assistance_alpha(assistance_alpha)
     effective_boundary = world.get_env_state()
     world.set_env_state(effective_boundary)
     rows: dict[str, list[Any]] = {name: [] for name in (
         "source_endpoint", "outcome_endpoint", "terminated", "timeout", "tracking_score",
         "position_error", "rotation_error", "reward", "action", "mu", "sigma", "qpos",
         "qvel", "ctrl", "contact_flags",
+        "assistance_alpha", "tool_assistance_wrench",
     )}
     endpoint60: dict[str, Any] | None = None
     for _ in range(40):
@@ -372,6 +392,8 @@ def _evaluation_arrays(
             policy.actor, observation, states, low, high,
             stochastic=False, distribution=policy.distribution,
         )
+        if zero_residual:
+            action = torch.zeros_like(action)
         states = output.rnn_states
         _, reward, done, info = world.step(action, auto_reset=False)
         source = int(info["source_reference_endpoint"][0])
@@ -393,6 +415,10 @@ def _evaluation_arrays(
         rows["qvel"].append(world._mjwp.get_qvel(world.ego_cfg, world.env)[0].detach().cpu().numpy().copy())
         rows["ctrl"].append(world._last_ctrl[0].detach().cpu().numpy().copy())
         rows["contact_flags"].append(np.asarray(info["contact_flags"][0]).copy())
+        rows["assistance_alpha"].append(float(info["assistance_alpha"][0]))
+        rows["tool_assistance_wrench"].append(
+            np.asarray(info["tool_assistance_wrench"][0]).copy()
+        )
         if outcome == 60:
             endpoint60 = {
                 "schema": "egoengine_endpoint60_promotion_candidate_v1",
@@ -1297,6 +1323,56 @@ def main(argv: list[str] | None = None) -> int:
             DEFAULT_TRAIN_CONFIG if args.command in {"train", "evaluate"} else DEFAULT_CONFIG
         )
     )
+    schema = yaml.safe_load(config_path.read_text()).get("schema")
+    if schema == "egoengine_taco_pour_virtual_object_assist_v1":
+        from .virtual_assist import (
+            RUN_DIRECTORY,
+            evaluate_virtual,
+            inspect_virtual,
+            train_virtual,
+            verify_virtual,
+        )
+
+        loaded = yaml.safe_load(config_path.read_text())
+        root = (args.asset_root or Path(loaded["asset_root"])).resolve(strict=True)
+        default_output = root / RUN_DIRECTORY
+        if args.command == "inspect":
+            result = inspect_virtual(config_path, args.asset_root)
+        elif args.command == "verify":
+            if not args.physics:
+                raise ValueError("virtual-assist verification requires --physics")
+            result = verify_virtual(
+                config_path, args.asset_root, args.output or default_output
+            )
+        elif args.command == "train":
+            result = train_virtual(
+                config_path,
+                args.asset_root,
+                args.output or default_output,
+                resume_path=args.resume,
+            )
+        elif args.command == "evaluate":
+            if args.checkpoint is None:
+                raise ValueError("evaluate requires --checkpoint")
+            result = evaluate_virtual(
+                config_path,
+                args.asset_root,
+                args.checkpoint,
+                args.output or default_output / "evaluation_manual",
+            )
+        else:
+            raise ValueError("virtual-assist config does not support plan-window")
+        print(json.dumps(result, indent=2, sort_keys=True))
+        return 0 if result["status"] in {
+            "INSPECT_OK",
+            "VIRTUAL_ASSIST_TRAINING_CHAIN_VERIFIED",
+            "STRICT_WINDOW_SUCCESS",
+            "STRICT_WINDOW_FAILED",
+            "STRICT_UNASSISTED_WINDOW_SUCCESS",
+            "COMPLETED_NO_STRICT_WINDOW_SUCCESS",
+            "ASSISTED_TAIL_COVERAGE_NOT_ESTABLISHED",
+            "ASSISTANCE_NOT_OPENING_TAIL",
+        } else 2
     if args.command == "inspect":
         result = inspect(config_path, args.asset_root)
     elif args.command == "verify":

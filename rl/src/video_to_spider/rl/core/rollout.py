@@ -10,6 +10,7 @@ import torch
 
 from .policy import (
     ACTOR_OBSERVATION_DIM,
+    ASSISTED_CRITIC_INPUT_DIM,
     CRITIC_INPUT_DIM,
     PRIVILEGED_EXTRA_DIM,
     PolicyBundle,
@@ -25,6 +26,7 @@ def make_critic_input(
     *,
     window_start: int = 40,
     window_end: int = 80,
+    assistance_alpha: torch.Tensor | None = None,
 ) -> torch.Tensor:
     """Assemble the task-informed critic input in raw observation units."""
     if actor_obs_raw.ndim != 2 or actor_obs_raw.shape[1] != ACTOR_OBSERVATION_DIM:
@@ -47,8 +49,20 @@ def make_critic_input(
         raise ValueError("critic phase endpoint is outside the declared window")
     phase = (source_endpoints - window_start).to(dtype=actor_obs_raw.dtype)
     phase = (phase / float(window_end - window_start)).unsqueeze(-1)
-    result = torch.cat((actor_obs_raw, privileged_raw, phase), dim=-1)
-    if result.shape != (actor_obs_raw.shape[0], CRITIC_INPUT_DIM):
+    components = [actor_obs_raw, privileged_raw, phase]
+    expected_dimension = CRITIC_INPUT_DIM
+    if assistance_alpha is not None:
+        alpha = assistance_alpha.to(
+            dtype=actor_obs_raw.dtype, device=actor_obs_raw.device
+        ).reshape(-1, 1)
+        if alpha.shape != (actor_obs_raw.shape[0], 1):
+            raise ValueError("assistance alpha must contain one value per critic row")
+        if not bool(torch.isfinite(alpha).all()) or bool(((alpha < 0.0) | (alpha > 1.0)).any()):
+            raise ValueError("assistance alpha is outside [0, 1]")
+        components.append(alpha)
+        expected_dimension = ASSISTED_CRITIC_INPUT_DIM
+    result = torch.cat(components, dim=-1)
+    if result.shape != (actor_obs_raw.shape[0], expected_dimension):
         raise RuntimeError("assembled critic input dimension changed")
     return result
 
@@ -66,6 +80,11 @@ class RolloutBatch:
     observations: torch.Tensor
     critic_observations: torch.Tensor
     critic_phase: torch.Tensor
+    assistance_alpha: torch.Tensor
+    assistance_wrench: torch.Tensor
+    assistance_force_cap_count: torch.Tensor
+    assistance_torque_cap_count: torch.Tensor
+    contact_flags: torch.Tensor
     rewards: torch.Tensor
     tracking_reward: torch.Tensor
     contact_bonus: torch.Tensor
@@ -102,7 +121,7 @@ class RolloutBatch:
             "action_high": 36,
             "raw_location": 36,
             "observations": 236,
-            "critic_observations": CRITIC_INPUT_DIM,
+            "critic_observations": self.critic_observations.shape[1],
         }
         for name, width in vector_names.items():
             if getattr(self, name).shape != (batch, width):
@@ -119,9 +138,15 @@ class RolloutBatch:
             "reward_reference_endpoint", "next_goal_reference_endpoint", "rollout_step",
             "world_index", "episode_serial", "ppo_flat_index",
             "critic_phase",
+            "assistance_alpha",
+            "assistance_force_cap_count", "assistance_torque_cap_count",
         ):
             if getattr(self, name).shape != (batch,):
                 raise ValueError(f"{name} has the wrong shape")
+        if self.assistance_wrench.shape != (batch, 10, 6):
+            raise ValueError("assistance_wrench has the wrong world-major shape")
+        if self.contact_flags.ndim != 4 or self.contact_flags.shape[0] != batch:
+            raise ValueError("contact_flags has the wrong world-major shape")
         if not torch.equal(
             self.outcome_endpoint, self.source_endpoint + 1
         ) or not torch.equal(self.command_reference_endpoint, self.outcome_endpoint):
@@ -135,6 +160,15 @@ class RolloutBatch:
         expected_phase = (self.source_endpoint - 40).to(torch.float32) / 40.0
         if not torch.equal(self.critic_phase, expected_phase):
             raise ValueError("critic phase does not match the physical source endpoint")
+        if self.critic_observations.shape[1] not in (
+            CRITIC_INPUT_DIM, ASSISTED_CRITIC_INPUT_DIM
+        ):
+            raise ValueError("critic observation has an unsupported width")
+        if self.critic_observations.shape[1] == ASSISTED_CRITIC_INPUT_DIM:
+            if not torch.equal(self.critic_observations[:, -1], self.assistance_alpha):
+                raise ValueError("critic assistance feature differs from rollout dynamics")
+        elif not bool((self.assistance_alpha == 0.0).all()):
+            raise ValueError("legacy critic cannot consume nonzero assistance")
         for world in range(worlds):
             offset = world * horizon
             if not bool(self.episode_start[offset]):
@@ -156,7 +190,7 @@ class RolloutBatch:
             "raw_location", "observations", "critic_observations", "rewards",
             "tracking_reward", "contact_bonus", "lift_reward", "tracking_score",
             "position_error", "rotation_error", "returns",
-            "last_values",
+            "last_values", "assistance_alpha", "assistance_wrench",
         )
         if any(not bool(torch.isfinite(getattr(self, name)).all()) for name in finite_names):
             raise ValueError("rollout contains non-finite values")
@@ -277,7 +311,9 @@ class FixedBoundaryCollector:
         rows: dict[str, list[torch.Tensor]] = {name: [] for name in (
             "actions", "neglogp", "values", "mu", "sigma", "action_low",
             "action_high", "raw_location", "observations", "critic_observations",
-            "critic_phase",
+            "critic_phase", "assistance_alpha", "assistance_wrench",
+            "assistance_force_cap_count", "assistance_torque_cap_count",
+            "contact_flags",
             "rewards", "tracking_reward", "contact_bonus", "lift_reward", "tracking_score",
             "position_error", "rotation_error", "episode_start", "done_after", "terminated", "timeout", "source_endpoint",
             "outcome_endpoint", "command_reference_endpoint", "reward_reference_endpoint",
@@ -300,12 +336,23 @@ class FixedBoundaryCollector:
             observation = torch.as_tensor(observation_raw["obs"], dtype=torch.float32)
             privileged = torch.as_tensor(observation_raw["states"], dtype=torch.float32)
             source_before_action = self.environment.current_reference_endpoints()
+            alpha = torch.full(
+                (worlds,),
+                float(getattr(self.environment, "assistance_alpha", 0.0)),
+                dtype=observation.dtype,
+            )
             critic_observation = make_critic_input(
                 observation,
                 privileged,
                 source_before_action,
                 window_start=self.start_endpoint,
                 window_end=self.end_endpoint,
+                assistance_alpha=(
+                    alpha
+                    if getattr(self.policy, "critic_input_dim", CRITIC_INPUT_DIM)
+                    == ASSISTED_CRITIC_INPUT_DIM
+                    else None
+                ),
             )
             low, high = self.environment.normalized_action_bounds()
             action, output = policy_step(
@@ -350,7 +397,42 @@ class FixedBoundaryCollector:
                 "raw_location": output.raw_location,
                 "observations": observation,
                 "critic_observations": critic_observation,
-                "critic_phase": critic_observation[:, -1],
+                "critic_phase": critic_observation[
+                    :,
+                    -2
+                    if getattr(self.policy, "critic_input_dim", CRITIC_INPUT_DIM)
+                    == ASSISTED_CRITIC_INPUT_DIM
+                    else -1,
+                ],
+                "assistance_alpha": alpha,
+                "assistance_wrench": torch.as_tensor(
+                    info.get(
+                        "tool_assistance_wrench",
+                        np.zeros((worlds, 10, 6), dtype=np.float32),
+                    ),
+                    dtype=torch.float32,
+                ),
+                "assistance_force_cap_count": torch.as_tensor(
+                    info.get(
+                        "tool_assistance_force_cap_count",
+                        np.zeros(worlds, dtype=np.int64),
+                    ),
+                    dtype=torch.int64,
+                ),
+                "assistance_torque_cap_count": torch.as_tensor(
+                    info.get(
+                        "tool_assistance_torque_cap_count",
+                        np.zeros(worlds, dtype=np.int64),
+                    ),
+                    dtype=torch.int64,
+                ),
+                "contact_flags": torch.as_tensor(
+                    info.get(
+                        "contact_flags",
+                        np.zeros((worlds, 2, 2, 5), dtype=bool),
+                    ),
+                    dtype=torch.bool,
+                ),
                 "rewards": torch.as_tensor(reward, dtype=torch.float32),
                 "tracking_reward": torch.as_tensor(info["aggregate_tracking_reward"], dtype=torch.float32),
                 "contact_bonus": torch.as_tensor(info["aggregate_contact_bonus"], dtype=torch.float32),
@@ -367,6 +449,16 @@ class FixedBoundaryCollector:
                 "world_index": torch.arange(worlds, dtype=torch.int64),
                 "episode_serial": episode_serial,
             }
+            reported_alpha = torch.as_tensor(
+                info.get(
+                    "assistance_alpha", np.zeros(worlds, dtype=np.float32)
+                ),
+                dtype=torch.float32,
+            )
+            if not torch.equal(reported_alpha, alpha):
+                raise RuntimeError(
+                    "collector alpha differs from executed environment alpha"
+                )
             for name, value in values_by_name.items():
                 rows[name].append(value.clone())
             rnn_states = output.rnn_states
@@ -389,6 +481,14 @@ class FixedBoundaryCollector:
             next_sources,
             window_start=self.start_endpoint,
             window_end=self.end_endpoint,
+            assistance_alpha=(
+                torch.full(
+                    (worlds,), self.environment.assistance_alpha, dtype=torch.float32
+                )
+                if getattr(self.policy, "critic_input_dim", CRITIC_INPUT_DIM)
+                == ASSISTED_CRITIC_INPUT_DIM
+                else None
+            ),
         )
         last_values = self._critic_value(next_critic_input)
         rewards_tm = torch.stack(rows["rewards"]).unsqueeze(-1)

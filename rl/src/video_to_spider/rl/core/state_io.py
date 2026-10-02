@@ -15,11 +15,17 @@ from typing import Any
 import numpy as np
 import torch
 
-from .policy import CRITIC_INPUT_DIM, CRITIC_INPUT_SPEC
+from .policy import (
+    ASSISTED_CRITIC_INPUT_DIM,
+    ASSISTED_CRITIC_INPUT_SPEC,
+    CRITIC_INPUT_DIM,
+    CRITIC_INPUT_SPEC,
+)
 
 
 CORE_CHECKPOINT_SCHEMA = "egoengine_rl_core_checkpoint_v1"
 TRAINING_CHECKPOINT_SCHEMA = "egoengine_rl_checkpoint_v2"
+ASSISTED_TRAINING_CHECKPOINT_SCHEMA = "egoengine_rl_checkpoint_virtual_assist_v1"
 LEGACY_G_CHECKPOINT_SCHEMA = "taco_pour_algorithmic_benchmark_checkpoint_v1"
 
 
@@ -208,12 +214,18 @@ def build_training_checkpoint(
     if int(next_epoch) < 1:
         raise ValueError("next_epoch must identify a positive training epoch")
     checkpoint_metadata = deepcopy(metadata)
+    critic_spec = str(getattr(policy, "critic_input_spec", CRITIC_INPUT_SPEC))
+    critic_dimension = int(getattr(policy, "critic_input_dim", CRITIC_INPUT_DIM))
     checkpoint_metadata.update({
-        "critic_input_spec": CRITIC_INPUT_SPEC,
-        "critic_input_dimension": CRITIC_INPUT_DIM,
+        "critic_input_spec": critic_spec,
+        "critic_input_dimension": critic_dimension,
     })
     return {
-        "schema": TRAINING_CHECKPOINT_SCHEMA,
+        "schema": (
+            ASSISTED_TRAINING_CHECKPOINT_SCHEMA
+            if critic_dimension == ASSISTED_CRITIC_INPUT_DIM
+            else TRAINING_CHECKPOINT_SCHEMA
+        ),
         "purpose": "epoch_boundary",
         "actor": deepcopy(policy.actor.state_dict()),
         "critic": deepcopy(policy.critic.state_dict()),
@@ -232,8 +244,18 @@ def build_training_checkpoint(
     }
 
 
-def validate_training_checkpoint(payload: dict[str, Any]) -> None:
-    if payload.get("schema") != TRAINING_CHECKPOINT_SCHEMA:
+def validate_training_checkpoint(
+    payload: dict[str, Any],
+    *,
+    expected_critic_input_spec: str = CRITIC_INPUT_SPEC,
+    expected_critic_input_dimension: int = CRITIC_INPUT_DIM,
+) -> None:
+    expected_schema = (
+        ASSISTED_TRAINING_CHECKPOINT_SCHEMA
+        if expected_critic_input_dimension == ASSISTED_CRITIC_INPUT_DIM
+        else TRAINING_CHECKPOINT_SCHEMA
+    )
+    if payload.get("schema") != expected_schema:
         raise ValueError("unsupported training checkpoint schema")
     if payload.get("purpose") != "epoch_boundary":
         raise ValueError("only epoch-boundary checkpoints are supported")
@@ -255,15 +277,15 @@ def validate_training_checkpoint(payload: dict[str, Any]) -> None:
     if int(payload["next_epoch"]) < 1:
         raise ValueError("training checkpoint has an invalid next_epoch")
     metadata = payload["metadata"]
-    if metadata.get("critic_input_spec") != CRITIC_INPUT_SPEC:
+    if metadata.get("critic_input_spec") != expected_critic_input_spec:
         raise ValueError("training checkpoint critic input spec is incompatible")
-    if metadata.get("critic_input_dimension") != CRITIC_INPUT_DIM:
+    if metadata.get("critic_input_dimension") != expected_critic_input_dimension:
         raise ValueError("training checkpoint critic input dimension is incompatible")
     critic = payload["critic"]
     expected_shapes = {
-        "model.a2c_network.actor_mlp.0.weight": (1024, CRITIC_INPUT_DIM),
-        "model.running_mean_std.running_mean": (CRITIC_INPUT_DIM,),
-        "model.running_mean_std.running_var": (CRITIC_INPUT_DIM,),
+        "model.a2c_network.actor_mlp.0.weight": (1024, expected_critic_input_dimension),
+        "model.running_mean_std.running_mean": (expected_critic_input_dimension,),
+        "model.running_mean_std.running_var": (expected_critic_input_dimension,),
     }
     for name, shape in expected_shapes.items():
         value = critic.get(name)
@@ -273,7 +295,15 @@ def validate_training_checkpoint(payload: dict[str, Any]) -> None:
 
 def restore_training_checkpoint(policy: Any, payload: dict[str, Any]) -> None:
     """Restore model/optimizer/RNG state; worlds are rebuilt at the boundary."""
-    validate_training_checkpoint(payload)
+    validate_training_checkpoint(
+        payload,
+        expected_critic_input_spec=getattr(
+            policy, "critic_input_spec", CRITIC_INPUT_SPEC
+        ),
+        expected_critic_input_dimension=getattr(
+            policy, "critic_input_dim", CRITIC_INPUT_DIM
+        ),
+    )
     actor_result = policy.actor.load_state_dict(payload["actor"], strict=True)
     critic_result = policy.critic.load_state_dict(payload["critic"], strict=True)
     if actor_result.missing_keys or actor_result.unexpected_keys:

@@ -1,0 +1,198 @@
+schema: egoengine_taco_pour_virtual_object_assist_v1
+status: authorized_bounded_single_seed_training
+base_branch: 3.2RL
+base_commit: 0975392070bc7dac20d3b4ae7945b09eca3aa746
+experiment: taco_pour_virtual_object_assist_v1
+run_directory: runs/taco_pour_virtual_object_assist_v1
+asset_root: /data_all/zzx/3.2RL
+paper_faithful: false
+training_dynamics_changed: true
+evaluation_dynamics_changed: false
+chunk_commit_enabled: false
+automatic_followon: false
+
+execution:
+  task: TACO_20230927_017
+  device: cpu
+  seed: 0
+  tracking_variant: tool_only
+  source_endpoint: 40
+  final_endpoint: 80
+  worlds: 4
+  horizon: 40
+  sequence_length: 4
+  actor_observation_dim: 236
+  privileged_extra_dim: 108
+  critic_input_dim: 346
+  critic_input_spec: actor236_privileged108_phase1_assist1_v1
+  actions: 36
+  physics_steps_per_control: 10
+  reset_distribution: original_committed_s40_only
+
+assistance:
+  kind: deterministic_tool_com_pose_pd_wrench
+  expected_tool_body_name: right_object
+  verify_body_reference_role: tool
+  body_selection: compiled_model_name_and_free_joint_addresses
+  coordinate_frame: world
+  wrench_order: [Fx, Fy, Fz, Tx, Ty, Tz]
+  application_point: tool_center_of_mass
+  supports_multibody_tool: false
+  natural_frequency_position_per_s: 15.0
+  natural_frequency_rotation_per_s: 10.0
+  damping_ratio: 1.0
+  gravity_compensation: scaled_with_alpha_inside_force_cap
+  translation_force_cap: 3_times_tool_mass_times_gravity_norm
+  rotation_torque_cap: 100_rad_per_s2_times_max_tool_principal_inertia
+  cap: vector_l2_norm
+  scale_order: alpha_times_capped_base_wrench
+  target_interpolation: linear_origin_and_shortest_path_SO3
+  substep_sample_fraction: j_div_10_for_j_0_to_9
+  reference_velocity: derivative_of_same_piecewise_interpolation
+  use_live_substep_state: true
+  update_every_physics_substep: true
+  backend_insertion: after_apply_perturbation_before_mjwarp_step
+  backend_cleanup: restore_original_xfrc_in_finally
+  modify_qpos_or_qvel: false
+  modify_scene_or_solver: false
+  alter_reference_reward_target: false
+  assist_target_plate: false
+  assist_robot: false
+  zero_alpha_path: skip_assistance_and_execute_original_step
+
+curriculum:
+  kind: fixed_epoch_schedule_local_not_DexMachina_auto_curriculum
+  epochs: 250
+  full_strength_through_epoch: 50
+  positive_decay_epochs: [51, 199]
+  decay_equation: '(200 - epoch) / 150.0'
+  zero_strength_epochs: [200, 250]
+  alpha_constant_within_epoch: true
+  all_worlds_same_alpha: true
+  automatic_gain_increase: false
+  early_tail_check:
+    at_epoch: 50
+    measured_epochs: [41, 50]
+    eligible_episodes: first_episode_each_world_each_epoch
+    eligible_episode_count: 40
+    minimum_pass_endpoint70_count: 20
+    insufficient_action: stop_no_tuning_no_extension
+
+optimization:
+  actor_learning_rate: 0.0001
+  critic_learning_rate: 0.00005
+  actor_updates_per_epoch: 1
+  critic_updates_per_epoch: 4
+  gamma: 0.998
+  gae_tau: 0.95
+  ppo_clip: 0.2
+  grad_norm: 1.0
+  internal_value_auxiliary_coefficient: 2.0
+  residual_scale: 0.05
+  actor_initialization: donor_actor_RMS_log_sigma_only
+  critic_initialization: fresh_346_dim
+  optimizer_initialization: fresh
+  observation_rms_commit: after_all_optimizer_updates
+  assistance_alpha_visible_to_actor: false
+  assistance_alpha_visible_to_critic: true
+
+validation:
+  official_evaluation_alpha: 0.0
+  official_epochs: [0, 50, 100, 150, 200, 250]
+  assisted_diagnostic_epochs: [50, 150]
+  formal_start: original_committed_s40_in_fresh_environment
+  preflight_probes:
+    - original_path_donor_alpha0
+    - configured_path_donor_alpha0
+    - configured_path_donor_alpha1
+    - configured_path_zero_residual_alpha1
+    - reset_original_s40_then_donor_alpha0
+  preflight_donor_alpha1_minimum_valid_prefix: 30
+  functional_validation: continuous_epochs1_2_and_cold_resumed_epoch2
+  success_validation:
+    - cold_unassisted_full40_from_s40
+    - cold_unassisted_split_at_actual_s60_with_matching_RNN
+  success_status: STRICT_UNASSISTED_WINDOW_SUCCESS
+  main_no_success_status: COMPLETED_NO_STRICT_WINDOW_SUCCESS
+
+budget:
+  verification_and_all_initialization_physics_steps_max: 16000
+  functional_attempts_max: 2
+  tiny_body_test_physics_steps_max_per_attempt: 200
+  formal_training_physics_steps_max: 400000
+  formal_training_control_intervals_max: 40000
+  fixed_evaluation_physics_steps_max: 3200
+  strict_success_confirmation_physics_steps_reserved: 800
+  all_in_physics_steps_max: 420000
+  formal_actor_optimizer_steps_max: 250
+  formal_critic_optimizer_steps_max: 1000
+  all_in_actor_optimizer_steps_max: 256
+  all_in_critic_optimizer_steps_max: 1024
+  auto_restart_formal_run: false
+  reinvest_early_stop_savings: false
+  all_attempts_share_persistent_ledger: true
+  count_native_setup_and_warmup_steps: true
+
+sources:
+  egoengine: user_provided_27_page_PDF_sections3_2_2_and_appendixC
+  dexmachina_paper: https://arxiv.org/html/2505.24853v1
+  dexmachina_project: https://project-dexmachina.github.io/
+  dexmachina_code: https://github.com/MandiZhao/dexmachina/blob/adae5bf620c57723d185b2757ee3ce9656927c20/dexmachina/envs/curriculum.py
+  spider_paper: https://arxiv.org/html/2511.09484v2
+  mujoco_api: https://mujoco.readthedocs.io/en/stable/APIreference/APItypes.html
+  original_backend_blob_sha: c35e0bd323a61220b271acb638a7bd0a0ea3eb01
+  original_environment_blob_sha: be4a44315a85453ae1f11d541124b24afab2cc5d
+
+assets:
+  protocol:
+    path: configs/taco_pour_algorithmic_reproduction_training_v3_protocol_snapshot.yaml
+    sha256: 1f4a96edfa0bc17ecb578fd5d8ae1514b77099713cc9b9f74adf6813a62873f3
+  objective:
+    path: configs/taco_pour_local_normalized_ellipse_v1.yaml
+    sha256: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+  observation:
+    path: configs/taco_pour_observation_local_236d_v1.yaml
+    sha256: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  action:
+    path: configs/taco_pour_residual_action_scaled_v1.yaml
+    sha256: 71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4
+  distribution:
+    path: configs/taco_pour_support_anchored_bounded_mean_truncated_gaussian_v1.yaml
+    sha256: 24dc3decf62890bd14268539fd875215756ca500e097ccedfede4128d062762f
+  simulator:
+    path: runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml
+    sha256: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+  initialization:
+    path: runs/taco_pour_initialization_protocol_v2/candidate_a/report.json
+    sha256: 9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a
+  donor:
+    path: runs/taco_pour_algorithmic_reproduction_training_v6/training/candidate_D/seed_2/checkpoints/epoch_0125.pt.gz
+    sha256: b4e62f89d68137782809416a15f6d240b139b75dbf6391ba6fa3534f63cb3670
+  boundary:
+    path: runs/taco_pour_candidate_D_strict_success_promotion_v1/committed_boundary_endpoint_40.pt.gz
+    sha256: 7cf90b48a2a16d41b1f055fdb4fa30f1fdb89d32064ffbfc776b0fdc0e1b9090
+  context:
+    path: runs/taco_pour_endpoint60_viability_adjudication_v1/carryover/endpoint40_physics_rnn.pt.gz
+    sha256: 0cc3a0901428fe3091f7420e5fafdd9b0a756f2d30d36ea194875ccefcbeb803
+  original_carryover:
+    path: runs/taco_pour_endpoint60_viability_adjudication_v1/carryover/continuous_20_80.npz
+    sha256: 9e7e6014cf550ba9c3f66a22911dbae9801370d2591dbae92598efd2972eb17c
+  donor_epoch0_trajectory:
+    path: runs/taco_pour_rl_train_v1/evaluations/epoch_0000_trajectory.npz
+    sha256: b4c2b26e75785532e29f5f2052d8e339cb0d232881244ab343f0261ef0fbc171
+  prior_anchor_verification:
+    path: runs/rl_core_refactor_r1/verification.json
+
+checkpoint:
+  schema: egoengine_rl_checkpoint_virtual_assist_v1
+  purpose: epoch_boundary
+  critic_input_spec: actor236_privileged108_phase1_assist1_v1
+  critic_input_dimension: 346
+  resume_resets_all_worlds_to_committed_boundary: true
+
+classification:
+  local_reproduction_experiment: true
+  paper_parameter_recovery: false
+  dexmachina_curriculum_inspiration_only: true
+  spider_contact_guidance_enabled: false
+  chunk_commit_authorized: false
