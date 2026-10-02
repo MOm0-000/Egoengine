@@ -1428,13 +1428,29 @@ def run_pure_checks() -> dict[str, bool]:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--mode",
+        choices=("full-trajectory", "early-contact-origin"),
+        default="full-trajectory",
+    )
     parser.add_argument("--asset-root", type=Path, default=Path("/data_all/zzx/3.2RL"))
+    parser.add_argument(
+        "--trace-root",
+        type=Path,
+        default=Path("/data_all/zzx/3.2RL/runs/taco_pour_replay_0_20_contact_trace_v1"),
+    )
     parser.add_argument(
         "--output",
         type=Path,
         default=Path("/data_all/zzx/3.2RL/runs/taco_pour_hand_object_visual_audit_v1"),
     )
     args = parser.parse_args()
+    if args.mode == "early-contact-origin":
+        from egoengine_repro.early_contact_origin import run_early_contact_origin
+
+        summary = run_early_contact_origin(args.asset_root, args.trace_root, args.output)
+        print(json.dumps({"status": summary["status"], "output": str(args.output)}, indent=2))
+        return
     asset_root = args.asset_root.resolve(strict=True)
     output = args.output.resolve()
     if output.exists():

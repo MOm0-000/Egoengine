@@ -194,3 +194,46 @@ The run is successful only when the report says
   `runs/taco_pour_hand_object_visual_audit_v1/findings.md`; full videos, PNGs,
   tables and hashes:
   `/data_all/zzx/3.2RL/runs/taco_pour_hand_object_visual_audit_v1`.
+
+## `taco_pour_early_contact_origin_v1`
+
+- Type: read-only early-contact origin attribution over the already frozen
+  Replay endpoints 0--20. No replay, environment construction, action,
+  policy, optimizer, IK solve or physics integration was performed.
+- Scope: human GT/targets (H), MINK reference (R), recorded controls (U),
+  recorded state/contact (A), plus static RR/AR/RA/AA geometry combinations.
+  These combinations are explicitly non-executable.
+- Right/bowl: the human/reference phase is index-led rather than a demonstrated
+  stable pinch. Human GT visual distances at endpoint 14 are `70.641 mm`
+  thumb and `32.706 mm` index. The runtime model has 65 explicit thumb--tool
+  and 33 index--tool pairs; only index contact was present in saved solver
+  rows. An execution-posture gap predates large bowl motion, so absent thumb
+  contact is not classified as an H-to-R or recorder bug.
+- Left/tray: human GT starts ring-side nearest (`2.512 mm` versus pinky
+  `12.411 mm`), while the robot reference is pinky-side nearest (`0.168 mm`).
+  More immediately, the custom accepted hand pose differs from reference[0];
+  ring+pinky load the tray at source0/substep0 and tray--floor contact begins
+  one substep later. The tray moves `1.010 mm` by endpoint1 while its reference
+  moves `0.026 mm`.
+- Bowl--tray relation: relative-position error is `4.863 mm` at endpoint10,
+  `10.560 mm` at 15, `24.111 mm` at 16 and `72.675 mm` at 20. This confirms
+  tray drift predates the source14--15 right-index event.
+- Control audit: the 36 direct position targets map to qpos 0--35 with slide
+  versus hinge units separated. Recorded controls at endpoints1--20 match the
+  correct reference endpoints within `1.184e-7`; no command-index bug was
+  found.
+- Execution count: 0 physics steps, 0 control intervals, 0 new actions,
+  0 network forwards, 0 optimizer updates, 0 IK solves and 0 `mj_forward`
+  calls. Static counts: 1,198 runtime-model and 1 reference-model kinematics
+  calls, 61,656 geometry-distance queries and 105 renderer updates.
+- Visual review: complete. Original RGB, human/reference/actual sheet, all
+  frames of both local videos, RR/AR/RA/AA panels and all diagnostic curves
+  were inspected. RGB remains an independent, non-registered camera.
+- Decision: task-relation concern confirmed; downstream viability not
+  established. The next review is the accepted initialization/first-command
+  contact-loading transition (left ring/pinky--tray--floor and right
+  thumb--floor), not a mandatory thumb target, global gain change or new
+  training run.
+- Lightweight report: `runs/taco_pour_early_contact_origin_v1/findings.md`;
+  complete server evidence:
+  `/data_all/zzx/3.2RL/runs/taco_pour_early_contact_origin_v1`.

@@ -1,0 +1,891 @@
+{
+  "array_schemas": {
+    "accepted_initial_state": {
+      "ctrl": {
+        "dtype": "float64",
+        "shape": [
+          36
+        ]
+      },
+      "ctrl_provenance": {
+        "dtype": "<U19",
+        "shape": []
+      },
+      "first_command_reference_index": {
+        "dtype": "int64",
+        "shape": []
+      },
+      "first_command_semantics": {
+        "dtype": "<U39",
+        "shape": []
+      },
+      "hand_qpos_provenance": {
+        "dtype": "<U55",
+        "shape": []
+      },
+      "hand_qvel_provenance": {
+        "dtype": "<U4",
+        "shape": []
+      },
+      "object_constraints_released": {
+        "dtype": "bool",
+        "shape": []
+      },
+      "object_hold_method": {
+        "dtype": "<U44",
+        "shape": []
+      },
+      "object_qpos_provenance": {
+        "dtype": "<U20",
+        "shape": []
+      },
+      "object_qvel_provenance": {
+        "dtype": "<U4",
+        "shape": []
+      },
+      "post_release_validation_steps": {
+        "dtype": "int64",
+        "shape": []
+      },
+      "qpos": {
+        "dtype": "float64",
+        "shape": [
+          50
+        ]
+      },
+      "qvel": {
+        "dtype": "float64",
+        "shape": [
+          48
+        ]
+      },
+      "reference_index": {
+        "dtype": "int64",
+        "shape": []
+      },
+      "release_timing": {
+        "dtype": "<U24",
+        "shape": []
+      },
+      "state_contract_version": {
+        "dtype": "<U36",
+        "shape": []
+      }
+    },
+    "contacts": {
+      "adhesion": {
+        "dtype": "float64",
+        "shape": [
+          8366
+        ]
+      },
+      "command_reference_endpoint": {
+        "dtype": "int64",
+        "shape": [
+          8366
+        ]
+      },
+      "contact_id": {
+        "dtype": "int64",
+        "shape": [
+          8366
+        ]
+      },
+      "dim": {
+        "dtype": "int64",
+        "shape": [
+          8366
+        ]
+      },
+      "dist": {
+        "dtype": "float64",
+        "shape": [
+          8366
+        ]
+      },
+      "efc_address": {
+        "dtype": "int32",
+        "shape": [
+          8366,
+          4
+        ]
+      },
+      "frame": {
+        "dtype": "float32",
+        "shape": [
+          8366,
+          3,
+          3
+        ]
+      },
+      "friction": {
+        "dtype": "float32",
+        "shape": [
+          8366,
+          5
+        ]
+      },
+      "geom1": {
+        "dtype": "int64",
+        "shape": [
+          8366
+        ]
+      },
+      "geom1_name": {
+        "dtype": "<U57",
+        "shape": [
+          8366
+        ]
+      },
+      "geom2": {
+        "dtype": "int64",
+        "shape": [
+          8366
+        ]
+      },
+      "geom2_name": {
+        "dtype": "<U56",
+        "shape": [
+          8366
+        ]
+      },
+      "global_substep": {
+        "dtype": "int64",
+        "shape": [
+          8366
+        ]
+      },
+      "group": {
+        "dtype": "<U21",
+        "shape": [
+          8366
+        ]
+      },
+      "outcome_endpoint": {
+        "dtype": "int64",
+        "shape": [
+          8366
+        ]
+      },
+      "pos": {
+        "dtype": "float32",
+        "shape": [
+          8366,
+          3
+        ]
+      },
+      "role1": {
+        "dtype": "<U16",
+        "shape": [
+          8366
+        ]
+      },
+      "role2": {
+        "dtype": "<U16",
+        "shape": [
+          8366
+        ]
+      },
+      "source_endpoint": {
+        "dtype": "int64",
+        "shape": [
+          8366
+        ]
+      },
+      "substep": {
+        "dtype": "int64",
+        "shape": [
+          8366
+        ]
+      },
+      "worldid": {
+        "dtype": "int64",
+        "shape": [
+          8366
+        ]
+      },
+      "wrench_contact_force_torque": {
+        "dtype": "float32",
+        "shape": [
+          8366,
+          6
+        ]
+      },
+      "wrench_world_force_torque_on_geom2": {
+        "dtype": "float32",
+        "shape": [
+          8366,
+          6
+        ]
+      }
+    },
+    "endpoints": {
+      "A_ctrl": {
+        "dtype": "float32",
+        "shape": [
+          21,
+          36
+        ]
+      },
+      "A_qpos": {
+        "dtype": "float32",
+        "shape": [
+          21,
+          50
+        ]
+      },
+      "A_qvel": {
+        "dtype": "float32",
+        "shape": [
+          21,
+          48
+        ]
+      },
+      "B_ctrl": {
+        "dtype": "float32",
+        "shape": [
+          21,
+          36
+        ]
+      },
+      "B_qpos": {
+        "dtype": "float32",
+        "shape": [
+          21,
+          50
+        ]
+      },
+      "B_qvel": {
+        "dtype": "float32",
+        "shape": [
+          21,
+          48
+        ]
+      },
+      "historical_ctrl": {
+        "dtype": "float32",
+        "shape": [
+          21,
+          36
+        ]
+      },
+      "historical_qpos": {
+        "dtype": "float32",
+        "shape": [
+          21,
+          50
+        ]
+      },
+      "historical_qvel": {
+        "dtype": "float32",
+        "shape": [
+          21,
+          48
+        ]
+      },
+      "reference_endpoint": {
+        "dtype": "int64",
+        "shape": [
+          21
+        ]
+      }
+    },
+    "historical_trajectory": {
+      "command_reference_endpoint": {
+        "dtype": "int32",
+        "shape": [
+          20
+        ]
+      },
+      "ctrl": {
+        "dtype": "float32",
+        "shape": [
+          21,
+          36
+        ]
+      },
+      "effective_residual_after_ctrlrange": {
+        "dtype": "float64",
+        "shape": [
+          20,
+          36
+        ]
+      },
+      "frequency": {
+        "dtype": "float32",
+        "shape": []
+      },
+      "mode": {
+        "dtype": "<U6",
+        "shape": [
+          20
+        ]
+      },
+      "next_observation_goal_reference_endpoint": {
+        "dtype": "int32",
+        "shape": [
+          20
+        ]
+      },
+      "qpos": {
+        "dtype": "float32",
+        "shape": [
+          21,
+          50
+        ]
+      },
+      "qvel": {
+        "dtype": "float32",
+        "shape": [
+          21,
+          48
+        ]
+      },
+      "raw_residual_action": {
+        "dtype": "float32",
+        "shape": [
+          20,
+          36
+        ]
+      },
+      "reference_endpoint": {
+        "dtype": "int32",
+        "shape": [
+          21
+        ]
+      },
+      "requested_residual": {
+        "dtype": "float64",
+        "shape": [
+          20,
+          36
+        ]
+      },
+      "residual_lost_to_ctrlrange": {
+        "dtype": "float64",
+        "shape": [
+          20,
+          36
+        ]
+      },
+      "residual_semantics_schema": {
+        "dtype": "<U31",
+        "shape": []
+      },
+      "reward_reference_endpoint": {
+        "dtype": "int32",
+        "shape": [
+          20
+        ]
+      },
+      "transition_source_endpoint": {
+        "dtype": "int32",
+        "shape": [
+          20
+        ]
+      }
+    },
+    "human_reference": {
+      "T_sim_fingertip_target": {
+        "dtype": "float64",
+        "shape": [
+          198,
+          2,
+          5,
+          4,
+          4
+        ]
+      },
+      "T_sim_object_reference": {
+        "dtype": "float64",
+        "shape": [
+          198,
+          2,
+          4,
+          4
+        ]
+      },
+      "T_sim_world": {
+        "dtype": "float64",
+        "shape": [
+          4,
+          4
+        ]
+      },
+      "T_sim_wrist_target": {
+        "dtype": "float64",
+        "shape": [
+          198,
+          2,
+          4,
+          4
+        ]
+      },
+      "confidence_fingertip": {
+        "dtype": "float64",
+        "shape": [
+          198,
+          2,
+          5
+        ]
+      },
+      "confidence_hand": {
+        "dtype": "float64",
+        "shape": [
+          198,
+          2
+        ]
+      },
+      "fingertip_orientation_source": {
+        "dtype": "<U47",
+        "shape": []
+      },
+      "frame_indices": {
+        "dtype": "int64",
+        "shape": [
+          198
+        ]
+      },
+      "hand_order": {
+        "dtype": "<U5",
+        "shape": [
+          2
+        ]
+      },
+      "joint_positions_sim": {
+        "dtype": "float64",
+        "shape": [
+          198,
+          2,
+          21,
+          3
+        ]
+      },
+      "object_roles": {
+        "dtype": "<U6",
+        "shape": [
+          2
+        ]
+      },
+      "timestamps_s": {
+        "dtype": "float64",
+        "shape": [
+          198
+        ]
+      },
+      "valid_fingertip_orientation": {
+        "dtype": "bool",
+        "shape": [
+          198,
+          2,
+          5
+        ]
+      },
+      "valid_hand": {
+        "dtype": "bool",
+        "shape": [
+          198,
+          2
+        ]
+      }
+    },
+    "robot_reference": {
+      "ctrl": {
+        "dtype": "float64",
+        "shape": [
+          198,
+          36
+        ]
+      },
+      "fingertip_position_error_m": {
+        "dtype": "float64",
+        "shape": [
+          198,
+          2,
+          5
+        ]
+      },
+      "frame_indices": {
+        "dtype": "int64",
+        "shape": [
+          198
+        ]
+      },
+      "frame_velocity_max_ratio": {
+        "dtype": "float64",
+        "shape": [
+          197
+        ]
+      },
+      "frequency": {
+        "dtype": "float64",
+        "shape": []
+      },
+      "hand_order": {
+        "dtype": "<U5",
+        "shape": [
+          2
+        ]
+      },
+      "joint_limit_min_margin": {
+        "dtype": "float64",
+        "shape": [
+          198
+        ]
+      },
+      "object_roles": {
+        "dtype": "<U6",
+        "shape": [
+          2
+        ]
+      },
+      "qpos": {
+        "dtype": "float64",
+        "shape": [
+          198,
+          50
+        ]
+      },
+      "qvel": {
+        "dtype": "float64",
+        "shape": [
+          198,
+          48
+        ]
+      },
+      "self_collision_distance_m": {
+        "dtype": "float64",
+        "shape": [
+          198
+        ]
+      },
+      "timestamps_s": {
+        "dtype": "float64",
+        "shape": [
+          198
+        ]
+      },
+      "wrist_orientation_error_rad": {
+        "dtype": "float64",
+        "shape": [
+          198,
+          2
+        ]
+      }
+    },
+    "substeps": {
+      "actuator_force": {
+        "dtype": "float32",
+        "shape": [
+          200,
+          36
+        ]
+      },
+      "command_reference_endpoint": {
+        "dtype": "int64",
+        "shape": [
+          200
+        ]
+      },
+      "ctrl": {
+        "dtype": "float32",
+        "shape": [
+          200,
+          36
+        ]
+      },
+      "cvel": {
+        "dtype": "float32",
+        "shape": [
+          200,
+          59,
+          6
+        ]
+      },
+      "global_substep": {
+        "dtype": "int64",
+        "shape": [
+          200
+        ]
+      },
+      "nacon": {
+        "dtype": "int64",
+        "shape": [
+          200
+        ]
+      },
+      "outcome_endpoint": {
+        "dtype": "int64",
+        "shape": [
+          200
+        ]
+      },
+      "overflow": {
+        "dtype": "int32",
+        "shape": [
+          200
+        ]
+      },
+      "qacc": {
+        "dtype": "float32",
+        "shape": [
+          200,
+          48
+        ]
+      },
+      "qfrc_actuator": {
+        "dtype": "float32",
+        "shape": [
+          200,
+          48
+        ]
+      },
+      "qfrc_applied": {
+        "dtype": "float32",
+        "shape": [
+          200,
+          48
+        ]
+      },
+      "qfrc_bias": {
+        "dtype": "float32",
+        "shape": [
+          200,
+          48
+        ]
+      },
+      "qfrc_constraint": {
+        "dtype": "float32",
+        "shape": [
+          200,
+          48
+        ]
+      },
+      "qfrc_passive": {
+        "dtype": "float32",
+        "shape": [
+          200,
+          48
+        ]
+      },
+      "qpos_after": {
+        "dtype": "float32",
+        "shape": [
+          200,
+          50
+        ]
+      },
+      "qpos_before": {
+        "dtype": "float32",
+        "shape": [
+          200,
+          50
+        ]
+      },
+      "qvel_after": {
+        "dtype": "float32",
+        "shape": [
+          200,
+          48
+        ]
+      },
+      "qvel_before": {
+        "dtype": "float32",
+        "shape": [
+          200,
+          48
+        ]
+      },
+      "source_endpoint": {
+        "dtype": "int64",
+        "shape": [
+          200
+        ]
+      },
+      "substep": {
+        "dtype": "int64",
+        "shape": [
+          200
+        ]
+      },
+      "subtree_linvel": {
+        "dtype": "float32",
+        "shape": [
+          200,
+          59,
+          3
+        ]
+      },
+      "time_after": {
+        "dtype": "float64",
+        "shape": [
+          200
+        ]
+      },
+      "time_before": {
+        "dtype": "float64",
+        "shape": [
+          200
+        ]
+      },
+      "xfrc_applied": {
+        "dtype": "float32",
+        "shape": [
+          200,
+          59,
+          6
+        ]
+      },
+      "xipos": {
+        "dtype": "float32",
+        "shape": [
+          200,
+          59,
+          3
+        ]
+      },
+      "xpos": {
+        "dtype": "float32",
+        "shape": [
+          200,
+          59,
+          3
+        ]
+      }
+    }
+  },
+  "artifacts": {
+    "accepted_initial_state": {
+      "bytes": 4489,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v2/candidate_a/initial_state.npz",
+      "sha256": "fe0c3b0620a44be47f22174d027c1150622dfd54e4b86407a9259515b95d4f36"
+    },
+    "contact_forces": {
+      "bytes": 1883467,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_replay_0_20_contact_trace_v1/contact_forces.csv",
+      "sha256": "d81757fb70b9fbe680944c2fdc201ab655913ab5615306ece9a5adba6a6cc6b7"
+    },
+    "contacts": {
+      "bytes": 449254,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_replay_0_20_contact_trace_v1/contacts_raw.npz",
+      "sha256": "729b2a0f67fef306488eab8215b29092a9f1bc44847a8fd8231b5fdc7e51084e"
+    },
+    "endpoints": {
+      "bytes": 32671,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_replay_0_20_contact_trace_v1/endpoints.npz",
+      "sha256": "a261dbec6642c92d60b6ebb019aa3383f584bbe75cdcea4ca617a5b3f86bbbdf"
+    },
+    "historical_trajectory": {
+      "bytes": 13872,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_replay_rebase_v1/tool_only/optimized_trajectory.npz",
+      "sha256": "81712fd46d5bade497a2a98e8ce07c6f8f8b2f600510db8de42aed1a952ef4b3"
+    },
+    "human_input_audit": {
+      "bytes": 18459,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/input_audit.json",
+      "sha256": "b5a52e63d3abea96d9c6abbb4aeb797825282298e7e6082122a8f9f3ff697f03"
+    },
+    "human_reference": {
+      "bytes": 333332,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/human_reference.npz",
+      "sha256": "852bda624bb22c9cf0797544294556752d490d11d443eb59a7f1e3e4aaab986a"
+    },
+    "initialization_report": {
+      "bytes": 492898,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v2/candidate_a/report.json",
+      "sha256": "9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a"
+    },
+    "previous_pair_relative": {
+      "bytes": 39009,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_hand_object_visual_audit_v1/object_pair_relative.csv",
+      "sha256": "74defc4a8f7178070e02caf127d1b041443fde6f8e818afaa666b718124661ae"
+    },
+    "previous_visual_geometry": {
+      "bytes": 1723702,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_hand_object_visual_audit_v1/geometry.csv",
+      "sha256": "ede430dc4a2be480915e3bdeae7fdf40da92438f0396641eaa5f2801bf7399f7"
+    },
+    "reference_model": {
+      "bytes": 550431,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_collision_semantics_combined_v1/combined_candidate_scene.xml",
+      "sha256": "cd2600cd195db9086a6a3c6cec5aab49991320c3f300e7fbdd511dc99ab7960f"
+    },
+    "retarget_report": {
+      "bytes": 7198,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_combined_collision_v1/retarget_report.json",
+      "sha256": "bc03d0ca34e2e7b659549aa7236d26fad70a2493c3626e8ce4d6f9f759a8a236"
+    },
+    "rgb": {
+      "bytes": 11991336,
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/rgb/taco_pour_bowl_plate_20230927_017.mp4",
+      "sha256": "9c6bd70041be04f5237613632f508dff2b12cdb2e19941259ad1751c21d8add4"
+    },
+    "robot_reference": {
+      "bytes": 213421,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_combined_collision_v1/robot_reference.npz",
+      "sha256": "cf99b9846a63617ddd5e439e086708c80a1e9b43f614df63168ffb3236a7685c"
+    },
+    "runtime_model": {
+      "bytes": 520044,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate.xml",
+      "sha256": "deb35689ce385aa30f361ddd1907f54bdbd4f55d4fd98a22409b68a9a691a215"
+    },
+    "s0_snapshot": {
+      "bytes": 77741,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_replay_0_20_contact_trace_v1/snapshots/B_s0.pt.gz",
+      "sha256": "ed7724b09a9b681c871ff6e3100459f3d6cbd160e5eab0a924f5bba92e159379"
+    },
+    "substeps": {
+      "bytes": 580079,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_replay_0_20_contact_trace_v1/substeps.npz",
+      "sha256": "196a8523d5d1a4c56d5016ed009daa9bb05236c47ceffc961f72ec9b234ffbdc"
+    },
+    "target_mesh": {
+      "bytes": 7103853,
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/object_models/object_models_released/135_cm.obj",
+      "sha256": "6316aea5b5c29a6231639d4ac8dad2c42ee013cfc55f1ce5a9dc5a38056f52a1"
+    },
+    "tool_mesh": {
+      "bytes": 3848290,
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/object_models/object_models_released/022_cm.obj",
+      "sha256": "35c52d853b85aa521eeadda78abb2bd370975611c8c35cd9a9d4c96746d8418c"
+    },
+    "trace_findings": {
+      "bytes": 7430,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_replay_0_20_contact_trace_v1/findings.md",
+      "sha256": "1678a7f38e74d61152d7bb15e6fc7cbd18143e9737d81f93db8893e3f25f338a"
+    },
+    "trace_manifest": {
+      "bytes": 18044,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_replay_0_20_contact_trace_v1/input_manifest.json",
+      "sha256": "3e3efdb4f733ab0fdaeaaf6dd30c831fa5e8abd19f31a7067b743115275086ae"
+    },
+    "trace_summary": {
+      "bytes": 3328,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_replay_0_20_contact_trace_v1/summary.json",
+      "sha256": "127abb3154a08bacc77cae7a99ffbca4f2d96635cc71bc1df5d726a5338e9602"
+    }
+  },
+  "cost_contract": {
+    "actions": 0,
+    "control": 0,
+    "ik_solve": 0,
+    "network": 0,
+    "optimizer": 0,
+    "physics": 0
+  },
+  "runtime": {
+    "mujoco": "3.7.0",
+    "numpy": "2.5.3",
+    "python": "3.12.13"
+  },
+  "schema": "taco_pour_early_contact_origin_inputs_v1",
+  "source_commit": "7babecb9a4845ab16b958b6ef9187af68604799e",
+  "status": "written_before_static_model_loading",
+  "time_contract": {
+    "command": "source k -> outcome k+1 executes reference_ctrl[k+1]",
+    "endpoint": "saved state at 30 Hz; endpoint k aligns to RGB/reference frame k",
+    "rgb": "one original 30 Hz frame per endpoint; never treated as ten independent substeps",
+    "substep_contact": "solve_for_this_transition paired with qpos_before; qpos_after is post-integrator"
+  }
+}

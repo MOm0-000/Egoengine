@@ -1,0 +1,632 @@
+{
+  "contact_checks": {
+    "unclassified_or_other_hand_contact_roles": [
+      "left_hand:other",
+      "right_hand:other"
+    ]
+  },
+  "contact_episodes_from_saved_solver_rows": {
+    "force_note": "normal-force sums combine saved contact points within one solver substep; they are not summed across time",
+    "left_pinky_target": {
+      "first_global_substep": 1,
+      "first_substep_normal_force_sum_N": 62.32685852050781,
+      "last_global_substep": 200,
+      "max_substep_normal_force_sum_N": 309.0338134765625,
+      "physics_substeps_with_contact": 151,
+      "rows": 1953
+    },
+    "left_ring_target": {
+      "first_global_substep": 1,
+      "first_substep_normal_force_sum_N": 36.97323226928711,
+      "last_global_substep": 105,
+      "max_substep_normal_force_sum_N": 245.75111389160156,
+      "physics_substeps_with_contact": 90,
+      "rows": 1346
+    },
+    "right_index_tool": {
+      "first_global_substep": 148,
+      "first_substep_normal_force_sum_N": 22.65142059326172,
+      "last_global_substep": 200,
+      "max_substep_normal_force_sum_N": 291.49139404296875,
+      "physics_substeps_with_contact": 17,
+      "rows": 160
+    },
+    "right_thumb_floor": {
+      "first_global_substep": 5,
+      "first_substep_normal_force_sum_N": 128.94387817382812,
+      "last_global_substep": 111,
+      "max_substep_normal_force_sum_N": 128.94387817382812,
+      "physics_substeps_with_contact": 107,
+      "rows": 352
+    },
+    "right_thumb_tool": {
+      "first_global_substep": null,
+      "first_substep_normal_force_sum_N": null,
+      "last_global_substep": null,
+      "max_substep_normal_force_sum_N": null,
+      "physics_substeps_with_contact": 0,
+      "rows": 0
+    },
+    "target_floor": {
+      "first_global_substep": 2,
+      "first_substep_normal_force_sum_N": 10.049471855163574,
+      "last_global_substep": 200,
+      "max_substep_normal_force_sum_N": 295.87896728515625,
+      "physics_substeps_with_contact": 194,
+      "rows": 2036
+    }
+  },
+  "execution_counts": {
+    "ik_solves": 0,
+    "mj_forward_calls": 0,
+    "mj_geomDistance_queries": 61656,
+    "mj_kinematics_calls_reference_model": 1,
+    "mj_kinematics_calls_runtime_model": 1198,
+    "network_forwards": 0,
+    "new_actions": 0,
+    "optimizer_updates": 0,
+    "physics_integrator_steps": 0,
+    "renderer_scene_updates": 105,
+    "rgb_frames_read": 21,
+    "simulation_control_intervals": 0
+  },
+  "geometry_checks": {
+    "floor_explicit_pair_counts": {
+      "left_index": 3,
+      "left_middle": 2,
+      "left_palm": 1,
+      "left_pinky": 2,
+      "left_ring": 2,
+      "left_thumb": 3,
+      "right_index": 3,
+      "right_middle": 2,
+      "right_palm": 1,
+      "right_pinky": 2,
+      "right_ring": 2,
+      "right_thumb": 3
+    },
+    "marker_vector_factorization_max_abs_m": 0.0,
+    "object_explicit_pair_counts": {
+      "left_index": 96,
+      "left_middle": 96,
+      "left_palm": 32,
+      "left_pinky": 33,
+      "left_ring": 33,
+      "left_thumb": 96,
+      "right_index": 33,
+      "right_middle": 64,
+      "right_palm": 32,
+      "right_pinky": 64,
+      "right_ring": 64,
+      "right_thumb": 65
+    }
+  },
+  "initialization_and_control": {
+    "endpoints1_20_ctrl_reference_max_abs": 1.1836825031252829e-07,
+    "first_command_left_l2": 0.07857479614473259,
+    "first_command_left_max_abs": 0.04630080581940163,
+    "first_command_reference_index": 1,
+    "first_command_right_l2": 0.044646286609996866,
+    "first_command_right_max_abs": 0.03341676027869178,
+    "first_command_semantics": "reference_endpoint_target_plus_residual",
+    "hand_qpos_provenance": "local_procedure:collision_free_pre_manipulation_pose_v2",
+    "s0_ctrl_vs_reference0_max_abs": 0.05585011548463084,
+    "s0_hand_qpos_vs_reference0_max_abs": 0.05585011548463084,
+    "s0_qpos_matches_accepted_initial_max_abs": 5.7903090100452914e-08
+  },
+  "input_immutability": {
+    "accepted_initial_state": true,
+    "contact_forces": true,
+    "contacts": true,
+    "endpoints": true,
+    "historical_trajectory": true,
+    "human_input_audit": true,
+    "human_reference": true,
+    "initialization_report": true,
+    "previous_pair_relative": true,
+    "previous_visual_geometry": true,
+    "reference_model": true,
+    "retarget_report": true,
+    "rgb": true,
+    "robot_reference": true,
+    "runtime_model": true,
+    "s0_snapshot": true,
+    "substeps": true,
+    "target_mesh": true,
+    "tool_mesh": true,
+    "trace_findings": true,
+    "trace_manifest": true,
+    "trace_summary": true
+  },
+  "left": {
+    "H_to_R_tip_error_mm": {
+      "endpoint0_pinky": 20.734946980238966,
+      "endpoint0_ring": 4.517715416415725,
+      "endpoint0_thumb": 6.215316022820833
+    },
+    "R_to_A_tip_error_mm": {
+      "endpoint0_pinky": 30.968880484655795,
+      "endpoint0_ring": 35.776881590015606,
+      "endpoint0_thumb": 30.93161601488342,
+      "endpoint10_ring": 47.812864069214775
+    },
+    "contact_path": [
+      {
+        "automatic_bitmask_possible_for_any_explicit_pair": false,
+        "counterpart_body_id": 48,
+        "counterpart_role": "target",
+        "explicit_pair_count": 32,
+        "first_observed_global_substep": "",
+        "hand": "left",
+        "last_observed_global_substep": "",
+        "observed_contact_rows_0_20": 0,
+        "observed_geom_pairs": "",
+        "part": "palm",
+        "path_interpretation": "explicit pair path exists",
+        "primary_role": "left_hand:palm"
+      },
+      {
+        "automatic_bitmask_possible_for_any_explicit_pair": false,
+        "counterpart_body_id": 48,
+        "counterpart_role": "target",
+        "explicit_pair_count": 96,
+        "first_observed_global_substep": "",
+        "hand": "left",
+        "last_observed_global_substep": "",
+        "observed_contact_rows_0_20": 0,
+        "observed_geom_pairs": "",
+        "part": "thumb",
+        "path_interpretation": "explicit pair path exists",
+        "primary_role": "left_hand:thumb"
+      },
+      {
+        "automatic_bitmask_possible_for_any_explicit_pair": false,
+        "counterpart_body_id": 48,
+        "counterpart_role": "target",
+        "explicit_pair_count": 96,
+        "first_observed_global_substep": "",
+        "hand": "left",
+        "last_observed_global_substep": "",
+        "observed_contact_rows_0_20": 0,
+        "observed_geom_pairs": "",
+        "part": "index",
+        "path_interpretation": "explicit pair path exists",
+        "primary_role": "left_hand:index"
+      },
+      {
+        "automatic_bitmask_possible_for_any_explicit_pair": false,
+        "counterpart_body_id": 48,
+        "counterpart_role": "target",
+        "explicit_pair_count": 96,
+        "first_observed_global_substep": "",
+        "hand": "left",
+        "last_observed_global_substep": "",
+        "observed_contact_rows_0_20": 0,
+        "observed_geom_pairs": "",
+        "part": "middle",
+        "path_interpretation": "explicit pair path exists",
+        "primary_role": "left_hand:middle"
+      },
+      {
+        "automatic_bitmask_possible_for_any_explicit_pair": false,
+        "counterpart_body_id": 48,
+        "counterpart_role": "target",
+        "explicit_pair_count": 33,
+        "first_observed_global_substep": 1,
+        "hand": "left",
+        "last_observed_global_substep": 105,
+        "observed_contact_rows_0_20": 1346,
+        "observed_geom_pairs": "collision_hand_left_ring_link2_external_exact_mesh <-> left_object_external_exact_sdf",
+        "part": "ring",
+        "path_interpretation": "explicit pair path exists",
+        "primary_role": "left_hand:ring"
+      },
+      {
+        "automatic_bitmask_possible_for_any_explicit_pair": false,
+        "counterpart_body_id": 48,
+        "counterpart_role": "target",
+        "explicit_pair_count": 33,
+        "first_observed_global_substep": 1,
+        "hand": "left",
+        "last_observed_global_substep": 200,
+        "observed_contact_rows_0_20": 1953,
+        "observed_geom_pairs": "collision_hand_left_pinky_link2_external_exact_mesh <-> left_object_external_exact_sdf",
+        "part": "pinky",
+        "path_interpretation": "explicit pair path exists",
+        "primary_role": "left_hand:pinky"
+      },
+      {
+        "automatic_bitmask_possible_for_any_explicit_pair": false,
+        "counterpart_body_id": 0,
+        "counterpart_role": "floor",
+        "explicit_pair_count": 1,
+        "first_observed_global_substep": "",
+        "hand": "left",
+        "last_observed_global_substep": "",
+        "observed_contact_rows_0_20": 0,
+        "observed_geom_pairs": "",
+        "part": "palm",
+        "path_interpretation": "explicit pair path exists",
+        "primary_role": "left_hand:palm"
+      },
+      {
+        "automatic_bitmask_possible_for_any_explicit_pair": false,
+        "counterpart_body_id": 0,
+        "counterpart_role": "floor",
+        "explicit_pair_count": 3,
+        "first_observed_global_substep": "",
+        "hand": "left",
+        "last_observed_global_substep": "",
+        "observed_contact_rows_0_20": 0,
+        "observed_geom_pairs": "",
+        "part": "thumb",
+        "path_interpretation": "explicit pair path exists",
+        "primary_role": "left_hand:thumb"
+      },
+      {
+        "automatic_bitmask_possible_for_any_explicit_pair": false,
+        "counterpart_body_id": 0,
+        "counterpart_role": "floor",
+        "explicit_pair_count": 3,
+        "first_observed_global_substep": "",
+        "hand": "left",
+        "last_observed_global_substep": "",
+        "observed_contact_rows_0_20": 0,
+        "observed_geom_pairs": "",
+        "part": "index",
+        "path_interpretation": "explicit pair path exists",
+        "primary_role": "left_hand:index"
+      },
+      {
+        "automatic_bitmask_possible_for_any_explicit_pair": false,
+        "counterpart_body_id": 0,
+        "counterpart_role": "floor",
+        "explicit_pair_count": 2,
+        "first_observed_global_substep": "",
+        "hand": "left",
+        "last_observed_global_substep": "",
+        "observed_contact_rows_0_20": 0,
+        "observed_geom_pairs": "",
+        "part": "middle",
+        "path_interpretation": "explicit pair path exists",
+        "primary_role": "left_hand:middle"
+      },
+      {
+        "automatic_bitmask_possible_for_any_explicit_pair": false,
+        "counterpart_body_id": 0,
+        "counterpart_role": "floor",
+        "explicit_pair_count": 2,
+        "first_observed_global_substep": "",
+        "hand": "left",
+        "last_observed_global_substep": "",
+        "observed_contact_rows_0_20": 0,
+        "observed_geom_pairs": "",
+        "part": "ring",
+        "path_interpretation": "explicit pair path exists",
+        "primary_role": "left_hand:ring"
+      },
+      {
+        "automatic_bitmask_possible_for_any_explicit_pair": false,
+        "counterpart_body_id": 0,
+        "counterpart_role": "floor",
+        "explicit_pair_count": 2,
+        "first_observed_global_substep": "",
+        "hand": "left",
+        "last_observed_global_substep": "",
+        "observed_contact_rows_0_20": 0,
+        "observed_geom_pairs": "",
+        "part": "pinky",
+        "path_interpretation": "explicit pair path exists",
+        "primary_role": "left_hand:pinky"
+      }
+    ],
+    "human_gt_visual_surface_distance_mm": {
+      "endpoint0_pinky": 12.410501463583335,
+      "endpoint0_ring": 2.5115084837815305,
+      "endpoint0_thumb": 88.34858156146495,
+      "provenance": "fresh triangle-mesh query of human GT landmarks against reference object pose"
+    },
+    "task_phase": "tray remains floor-supported while ring/pinky-side hand approaches/contacts"
+  },
+  "model_compatibility": {
+    "dimensions_equal": true,
+    "joint_names_equal": true,
+    "reference_qpos0_marker_max_abs_m": 0.0
+  },
+  "object_tracking": {
+    "endpoint0": {
+      "actual_target_motion_from_s0_mm": 0.0,
+      "reference_target_motion_from_0_mm": 0.0,
+      "target_position_error_mm": 5.0574035045294185e-06,
+      "target_rotation_error_rad": 3.8206726431492624e-08,
+      "tool_position_error_mm": 1.0695567859948658e-05,
+      "tool_rotation_error_rad": 1.2366100382792498e-08,
+      "tool_target_relative_position_error_mm": 7.450580596923828e-06
+    },
+    "endpoint1": {
+      "actual_target_motion_from_s0_mm": 1.010320265777409,
+      "reference_target_motion_from_0_mm": 0.02603592292213748,
+      "target_position_error_mm": 0.9885448394289357,
+      "target_rotation_error_rad": 0.01585506917333582,
+      "tool_position_error_mm": 1.9721256028590621,
+      "tool_rotation_error_rad": 0.026899660219576134,
+      "tool_target_relative_position_error_mm": 1.3452058174194987
+    },
+    "endpoint10": {
+      "actual_target_motion_from_s0_mm": 4.925239831209183,
+      "reference_target_motion_from_0_mm": 0.08803089250780174,
+      "target_position_error_mm": 4.960197973557704,
+      "target_rotation_error_rad": 0.04539161148162287,
+      "tool_position_error_mm": 1.9559858014111262,
+      "tool_rotation_error_rad": 0.018038293313124665,
+      "tool_target_relative_position_error_mm": 4.862894125634521
+    },
+    "endpoint14": {
+      "actual_target_motion_from_s0_mm": 6.758453324437141,
+      "reference_target_motion_from_0_mm": 0.10210085411905377,
+      "target_position_error_mm": 6.828058793072909,
+      "target_rotation_error_rad": 0.048476464741606586,
+      "tool_position_error_mm": 1.9839144641635806,
+      "tool_rotation_error_rad": 0.017901090159240258,
+      "tool_target_relative_position_error_mm": 6.939552355391505
+    },
+    "endpoint15": {
+      "actual_target_motion_from_s0_mm": 9.580728597939014,
+      "reference_target_motion_from_0_mm": 0.1335438480923572,
+      "target_position_error_mm": 9.669034148391335,
+      "target_rotation_error_rad": 0.05545205029514564,
+      "tool_position_error_mm": 1.9378747684424347,
+      "tool_rotation_error_rad": 0.023685779336388837,
+      "tool_target_relative_position_error_mm": 10.55965514702799
+    },
+    "endpoint16": {
+      "actual_target_motion_from_s0_mm": 13.792702928185463,
+      "reference_target_motion_from_0_mm": 0.1384799231983232,
+      "target_position_error_mm": 13.886271909499001,
+      "target_rotation_error_rad": 0.056690076696880955,
+      "tool_position_error_mm": 12.002905671642292,
+      "tool_rotation_error_rad": 0.09230367435085444,
+      "tool_target_relative_position_error_mm": 24.111110784925266
+    },
+    "endpoint20": {
+      "actual_target_motion_from_s0_mm": 25.21137148141861,
+      "reference_target_motion_from_0_mm": 0.09787967468441822,
+      "target_position_error_mm": 25.284541963387177,
+      "target_rotation_error_rad": 0.06337084675106744,
+      "tool_position_error_mm": 48.83521532454548,
+      "tool_rotation_error_rad": 0.1887352035267075,
+      "tool_target_relative_position_error_mm": 72.67464565953402
+    },
+    "endpoint5": {
+      "actual_target_motion_from_s0_mm": 2.512076171115041,
+      "reference_target_motion_from_0_mm": 0.060674635318728125,
+      "target_position_error_mm": 2.530215416823725,
+      "target_rotation_error_rad": 0.02938241207235564,
+      "tool_position_error_mm": 1.9928782938163805,
+      "tool_rotation_error_rad": 0.018863562399689282,
+      "tool_target_relative_position_error_mm": 1.6874195390554922
+    }
+  },
+  "right": {
+    "H_to_R_tip_error_mm": {
+      "endpoint14_index": 4.241616623932353,
+      "endpoint14_thumb": 9.08353341766536,
+      "endpoint16_index": 6.158934635680346,
+      "endpoint16_thumb": 6.991229664039908
+    },
+    "R_to_A_tip_error_mm": {
+      "endpoint14_index": 15.76069510478888,
+      "endpoint14_thumb": 25.013224055265834,
+      "endpoint16_index": 31.84914294876768,
+      "endpoint16_thumb": 36.65950758089711
+    },
+    "contact_path": [
+      {
+        "automatic_bitmask_possible_for_any_explicit_pair": false,
+        "counterpart_body_id": 37,
+        "counterpart_role": "tool",
+        "explicit_pair_count": 32,
+        "first_observed_global_substep": "",
+        "hand": "right",
+        "last_observed_global_substep": "",
+        "observed_contact_rows_0_20": 0,
+        "observed_geom_pairs": "",
+        "part": "palm",
+        "path_interpretation": "explicit pair path exists",
+        "primary_role": "right_hand:palm"
+      },
+      {
+        "automatic_bitmask_possible_for_any_explicit_pair": false,
+        "counterpart_body_id": 37,
+        "counterpart_role": "tool",
+        "explicit_pair_count": 65,
+        "first_observed_global_substep": "",
+        "hand": "right",
+        "last_observed_global_substep": "",
+        "observed_contact_rows_0_20": 0,
+        "observed_geom_pairs": "",
+        "part": "thumb",
+        "path_interpretation": "explicit pair path exists",
+        "primary_role": "right_hand:thumb"
+      },
+      {
+        "automatic_bitmask_possible_for_any_explicit_pair": false,
+        "counterpart_body_id": 37,
+        "counterpart_role": "tool",
+        "explicit_pair_count": 33,
+        "first_observed_global_substep": 148,
+        "hand": "right",
+        "last_observed_global_substep": 200,
+        "observed_contact_rows_0_20": 160,
+        "observed_geom_pairs": "collision_hand_right_index_rota_link2_external_exact_mesh <-> right_object_external_exact_sdf",
+        "part": "index",
+        "path_interpretation": "explicit pair path exists",
+        "primary_role": "right_hand:index"
+      },
+      {
+        "automatic_bitmask_possible_for_any_explicit_pair": false,
+        "counterpart_body_id": 37,
+        "counterpart_role": "tool",
+        "explicit_pair_count": 64,
+        "first_observed_global_substep": "",
+        "hand": "right",
+        "last_observed_global_substep": "",
+        "observed_contact_rows_0_20": 0,
+        "observed_geom_pairs": "",
+        "part": "middle",
+        "path_interpretation": "explicit pair path exists",
+        "primary_role": "right_hand:middle"
+      },
+      {
+        "automatic_bitmask_possible_for_any_explicit_pair": false,
+        "counterpart_body_id": 37,
+        "counterpart_role": "tool",
+        "explicit_pair_count": 64,
+        "first_observed_global_substep": "",
+        "hand": "right",
+        "last_observed_global_substep": "",
+        "observed_contact_rows_0_20": 0,
+        "observed_geom_pairs": "",
+        "part": "ring",
+        "path_interpretation": "explicit pair path exists",
+        "primary_role": "right_hand:ring"
+      },
+      {
+        "automatic_bitmask_possible_for_any_explicit_pair": false,
+        "counterpart_body_id": 37,
+        "counterpart_role": "tool",
+        "explicit_pair_count": 64,
+        "first_observed_global_substep": "",
+        "hand": "right",
+        "last_observed_global_substep": "",
+        "observed_contact_rows_0_20": 0,
+        "observed_geom_pairs": "",
+        "part": "pinky",
+        "path_interpretation": "explicit pair path exists",
+        "primary_role": "right_hand:pinky"
+      },
+      {
+        "automatic_bitmask_possible_for_any_explicit_pair": false,
+        "counterpart_body_id": 0,
+        "counterpart_role": "floor",
+        "explicit_pair_count": 1,
+        "first_observed_global_substep": "",
+        "hand": "right",
+        "last_observed_global_substep": "",
+        "observed_contact_rows_0_20": 0,
+        "observed_geom_pairs": "",
+        "part": "palm",
+        "path_interpretation": "explicit pair path exists",
+        "primary_role": "right_hand:palm"
+      },
+      {
+        "automatic_bitmask_possible_for_any_explicit_pair": false,
+        "counterpart_body_id": 0,
+        "counterpart_role": "floor",
+        "explicit_pair_count": 3,
+        "first_observed_global_substep": 5,
+        "hand": "right",
+        "last_observed_global_substep": 111,
+        "observed_contact_rows_0_20": 352,
+        "observed_geom_pairs": "floor <-> collision_hand_right_thumb_floor_semantic_03",
+        "part": "thumb",
+        "path_interpretation": "explicit pair path exists",
+        "primary_role": "right_hand:thumb"
+      },
+      {
+        "automatic_bitmask_possible_for_any_explicit_pair": false,
+        "counterpart_body_id": 0,
+        "counterpart_role": "floor",
+        "explicit_pair_count": 3,
+        "first_observed_global_substep": "",
+        "hand": "right",
+        "last_observed_global_substep": "",
+        "observed_contact_rows_0_20": 0,
+        "observed_geom_pairs": "",
+        "part": "index",
+        "path_interpretation": "explicit pair path exists",
+        "primary_role": "right_hand:index"
+      },
+      {
+        "automatic_bitmask_possible_for_any_explicit_pair": false,
+        "counterpart_body_id": 0,
+        "counterpart_role": "floor",
+        "explicit_pair_count": 2,
+        "first_observed_global_substep": "",
+        "hand": "right",
+        "last_observed_global_substep": "",
+        "observed_contact_rows_0_20": 0,
+        "observed_geom_pairs": "",
+        "part": "middle",
+        "path_interpretation": "explicit pair path exists",
+        "primary_role": "right_hand:middle"
+      },
+      {
+        "automatic_bitmask_possible_for_any_explicit_pair": false,
+        "counterpart_body_id": 0,
+        "counterpart_role": "floor",
+        "explicit_pair_count": 2,
+        "first_observed_global_substep": "",
+        "hand": "right",
+        "last_observed_global_substep": "",
+        "observed_contact_rows_0_20": 0,
+        "observed_geom_pairs": "",
+        "part": "ring",
+        "path_interpretation": "explicit pair path exists",
+        "primary_role": "right_hand:ring"
+      },
+      {
+        "automatic_bitmask_possible_for_any_explicit_pair": false,
+        "counterpart_body_id": 0,
+        "counterpart_role": "floor",
+        "explicit_pair_count": 2,
+        "first_observed_global_substep": 122,
+        "hand": "right",
+        "last_observed_global_substep": 195,
+        "observed_contact_rows_0_20": 171,
+        "observed_geom_pairs": "floor <-> collision_hand_right_pinky_floor_semantic_12",
+        "part": "pinky",
+        "path_interpretation": "explicit pair path exists",
+        "primary_role": "right_hand:pinky"
+      }
+    ],
+    "human_gt_visual_surface_distance_mm": {
+      "endpoint14_index": 32.7060767771872,
+      "endpoint14_thumb": 70.64089081335366,
+      "endpoint16_index": 13.62350148874607,
+      "endpoint16_thumb": 47.21094367081567,
+      "endpoint20_index": 6.800130353017116,
+      "endpoint20_thumb": 15.726235928114965,
+      "provenance": "fresh triangle-mesh query of human GT landmarks against reference object pose"
+    },
+    "task_phase": "approach/contact establishment, not demonstrated stable pinch"
+  },
+  "core_conclusions": {
+    "bowl_tray_relation": "confirmed mismatch: relative-position error is 4.863 mm at endpoint10, 10.560 mm at endpoint15, 24.111 mm at endpoint16, and 72.675 mm at endpoint20",
+    "left": {
+      "earliest_observable_mismatch": "H-to-R changes the nearest support landmark from human ring-side to robot pinky-side; actual tray drift then begins in the first control interval under a custom initial hand pose and immediate ring/pinky-to-tray plus tray-to-floor contact",
+      "next_specific_review": "candidate-A initial left-hand pose and source0 first-command transition under ring/pinky-to-tray and tray-to-floor load; separately review whether the H-to-R ring/pinky support-mode change was intended",
+      "root_cause_status": "not uniquely identified"
+    },
+    "right": {
+      "earliest_observable_mismatch": "accepted s0 hand pose differs from reference[0]; execution posture error precedes large bowl motion, while the human/reference phase is already index-led",
+      "next_specific_review": "accepted initial hand pose and first-command transition, including right-thumb/floor loading and the distal index exact-mesh contact location; no mandatory thumb objective is supported",
+      "root_cause_status": "phase plus execution evidence; no missing thumb collision/recorder path"
+    }
+  },
+  "schema": "taco_pour_early_contact_origin_v1",
+  "status": "complete",
+  "visual_review": {
+    "status": "complete",
+    "reviewed_main_sheet": true,
+    "reviewed_all_local_video_frames_via_contact_sheets": true,
+    "reviewed_pose_factorization": true,
+    "reviewed_curves": true
+  },
+  "unchanged_status": {
+    "downstream_viability": "not established",
+    "historical_tracking_criterion": "old tool-only criterion below boundary through endpoint20",
+    "replay_identity": "established by prior trace; not rerun",
+    "task_relation_review": "concern confirmed"
+  }
+}
