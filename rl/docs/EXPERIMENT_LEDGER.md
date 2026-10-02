@@ -106,3 +106,26 @@ The run is successful only when the report says
   `runs/taco_pour_rl_task_informed_critic_v2/server_artifacts.sha256`.
 - This is not author parameter recovery. The missing EgoEngine MPC branch
   remains a method difference for a separately authorized future review.
+
+## `taco_pour_two_chunk_sequence_search_v1`
+
+- Type: one actor-free, local iCEM-inspired open-loop sequence search over the
+  fixed endpoint40-to-80 two-chunk window.
+- Source boundary/donor preflight: zero Replay reproduced `9/40, fail@50`;
+  saved donor reproduced `20/40, fail@61`, all 16 shared historical arrays
+  bitwise, and the repeated donor replay was bitwise identical.
+- Frozen search: seed 0, six generations, 941 candidate slots, 940 unique
+  physical evaluations plus one exact-byte cache reuse, with 6 masked CEM
+  refits and no actor/critic network calls.
+- Result: `COMPLETED_NO_STRICT_WINDOW_SUCCESS`.  Candidate 877 was best at
+  `21/40, fail@62`, score `1.0152033567428589`; it improved the donor by one
+  strict interval but did not satisfy 40/40.
+- Cold validation: the best partial trajectory was bitwise reproduced in a new
+  CPU environment.  The split-at-s60 success validation was correctly skipped
+  because no strict success existed.
+- Cost: 63 preflight + 16,167 search + 22 validation = 16,252 control
+  intervals, or 162,520 physics steps, below the 380,400 all-in ceiling.
+- No training, automatic follow-on, candidate boundary promotion, or chunk
+  commit occurred.  No extra seed/restart/parameter change is authorized.
+- Lightweight report: `runs/taco_pour_two_chunk_sequence_search_v1/summary.md`;
+  server evidence: `/data_all/zzx/3.2RL/runs/taco_pour_two_chunk_sequence_search_v1`.
