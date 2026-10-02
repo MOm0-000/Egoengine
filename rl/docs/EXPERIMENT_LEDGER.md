@@ -171,21 +171,25 @@ The run is successful only when the report says
   continuous donor trajectory.
 - Alignment: endpoint `k` was verified to map directly to prepared frame `k`
   at 30 Hz; no dynamic time warping or best-offset fitting was used. The main
-  executed composite contains s20, saved outcomes 21--40 and saved outcomes
-  41--60; actual endpoints 0--19 and 61--80 remain explicitly missing.
+  executed composite contains a byte-verified committed prefix 0--20, saved
+  outcomes 21--40 and saved outcomes 41--60; only endpoints 61--80 remain
+  explicitly missing from the main trajectory.
 - Execution cost: zero physics integration steps, zero control intervals, zero
   sampled actions, zero actor/critic/vision forwards and zero optimizer
   updates. Static `mj_kinematics` calls were checked not to change `qpos` or
   `data.time`; `mj_forward` was not used.
-- Finding: human GT and MINK reference preserve the broad right-bowl and
-  left-tray relation. The first recorded actual state at endpoint 20 already
-  differs from reference, so earlier onset is censored. A clearer tail
-  divergence appears at endpoint 45--46: saved right-tool contact flags become
-  zero and remain zero while the bowl z error grows to `-109.54 mm` before the
-  formal endpoint-60 failure. Left-target flags persist.
+- Finding: human and robot reference object transforms agree within
+  `9.282e-8`, and executed endpoint 0 agrees with that reference. The recorded
+  bowl-to-tray relative-position error grows from `10.56 mm` at endpoint 15 to
+  `24.11 mm` at 16 and `72.67 mm` at 20, locating an early execution divergence
+  at transition 15--16. A second tail change appears at endpoint 45--46: saved
+  right-tool contact flags become zero and remain zero while the bowl z error
+  grows to `-109.54 mm` before the formal endpoint-60 failure. Left-target
+  flags persist.
 - Interpretation boundary: this identifies an observable pre-failure
-  discrepancy; it does not establish an irrecoverable state or prove that
-  contact loss caused failure. Historical contact force was not saved.
+  discrepancy; it does not establish an irrecoverable state or prove either
+  transition's physical cause. Prefix 0--19 has saved qpos/qvel but no contact
+  flags or forces; its scores are offline recomputations checked against s20.
 - Lightweight report:
   `runs/taco_pour_hand_object_visual_audit_v1/findings.md`; full videos, PNGs,
   tables and hashes:

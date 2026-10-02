@@ -42,7 +42,7 @@ HUMAN_BONES = tuple(
     for start in (1, 5, 9, 13, 17)
     for joint in range(start, start + 4)
 )
-KEY_ENDPOINTS = (20, 30, 40, 45, 50, 55, 58, 59, 60)
+KEY_ENDPOINTS = (0, 5, 10, 15, 16, 17, 18, 19, 20, 30, 40, 45, 50, 55, 58, 59, 60)
 CAMERAS = {
     "oblique": {
         "lookat": (0.60, 0.0, 0.83),
@@ -100,6 +100,16 @@ def transform_to_pose7(transform: np.ndarray) -> np.ndarray:
     transform = np.asarray(transform, dtype=np.float64)
     quaternion = Rotation.from_matrix(transform[:3, :3]).as_quat()
     return np.r_[transform[:3, 3], quaternion[[3, 0, 1, 2]]]
+
+
+def local_tool_tracking_score(actual_qpos: np.ndarray, reference_qpos: np.ndarray) -> float:
+    actual = pose7_to_transform(np.asarray(actual_qpos)[36:43])
+    reference = pose7_to_transform(np.asarray(reference_qpos)[36:43])
+    position_error = np.linalg.norm(actual[:3, 3] - reference[:3, 3])
+    rotation_error = Rotation.from_matrix(
+        reference[:3, :3].T @ actual[:3, :3]
+    ).magnitude()
+    return float(np.hypot(position_error / 0.12, rotation_error / 1.5))
 
 
 def points_in_object(points_world: np.ndarray, object_transform: np.ndarray) -> np.ndarray:
@@ -246,6 +256,18 @@ def validate_model_compatibility(reference: StaticModel, actual: StaticModel) ->
 def build_saved_states(
     asset_root: Path,
 ) -> tuple[dict[int, SavedState], dict[int, SavedState], dict[str, Any]]:
+    first_prefix_path = asset_root / (
+        "runs/taco_pour_corrected_replay_rebase_v1/tool_only/"
+        "optimized_trajectory.npz"
+    )
+    first_prefix_extension_path = asset_root / (
+        "runs/taco_pour_corrected_replay_rebase_v1/tool_and_target/"
+        "optimized_trajectory.npz"
+    )
+    robot_reference_path = asset_root / (
+        "runs/taco_pour_bimanual_mano_fk_combined_collision_v1/"
+        "robot_reference.npz"
+    )
     s20_path = asset_root / (
         "runs/taco_pour_corrected_replay_rebase_v1/tool_only/"
         "committed_boundary_endpoint_20.pt.gz"
@@ -274,12 +296,38 @@ def build_saved_states(
     v40 = _to_numpy(s40["qvel"])[0].astype(np.float64)
     score20 = float(_to_numpy(s20["last_tracking_error"])[0])
     score40 = float(_to_numpy(s40["last_tracking_error"])[0])
-    main: dict[int, SavedState] = {
-        20: SavedState(20, q20, v20, score20, "VALID", "committed_s20_snapshot")
-    }
-    donor: dict[int, SavedState] = {
-        20: SavedState(20, q20, v20, score20, "VALID", "committed_s20_snapshot")
-    }
+    with np.load(robot_reference_path, allow_pickle=False) as reference_archive:
+        reference_qpos = reference_archive["qpos"].copy()
+    with np.load(first_prefix_path, allow_pickle=False) as prefix, np.load(
+        first_prefix_extension_path, allow_pickle=False
+    ) as extension:
+        if prefix["reference_endpoint"].astype(int).tolist() != list(range(21)):
+            raise ValueError("first committed prefix endpoint coverage changed")
+        for key in ("qpos", "qvel", "ctrl", "reference_endpoint"):
+            if not np.array_equal(prefix[key], extension[key]):
+                raise ValueError(f"first-prefix variants differ in {key}")
+        if not np.array_equal(prefix["qpos"][-1], q20.astype(np.float32)):
+            raise ValueError("first committed prefix endpoint20 qpos differs from snapshot")
+        if not np.array_equal(prefix["qvel"][-1], v20.astype(np.float32)):
+            raise ValueError("first committed prefix endpoint20 qvel differs from snapshot")
+        recomputed_score20 = local_tool_tracking_score(prefix["qpos"][-1], reference_qpos[20])
+        if not math.isclose(recomputed_score20, score20, abs_tol=2e-7):
+            raise ValueError("first committed prefix endpoint20 score differs from snapshot")
+        main = {}
+        donor = {}
+        for endpoint in range(20):
+            state = SavedState(
+                endpoint,
+                prefix["qpos"][endpoint].astype(np.float64),
+                prefix["qvel"][endpoint].astype(np.float64),
+                local_tool_tracking_score(prefix["qpos"][endpoint], reference_qpos[endpoint]),
+                "VALID_OFFLINE_SCORE",
+                "committed_replay_prefix_0_20",
+            )
+            main[endpoint] = state
+            donor[endpoint] = state
+    main[20] = SavedState(20, q20, v20, score20, "VALID", "committed_s20_snapshot")
+    donor[20] = SavedState(20, q20, v20, score20, "VALID", "committed_s20_snapshot")
     with np.load(chunk_path, allow_pickle=False) as chunk:
         endpoints = chunk["endpoint"].astype(int)
         if endpoints.tolist() != list(range(21, 41)):
@@ -338,15 +386,21 @@ def build_saved_states(
                 latest["contact_flags"][row].astype(bool),
             )
     checks = {
+        "first_committed_prefix": artifact(first_prefix_path),
+        "first_committed_prefix_extension": artifact(first_prefix_extension_path),
         "s20_snapshot": artifact(s20_path),
         "s40_snapshot": artifact(s40_path),
         "committed_prefix": artifact(chunk_path),
         "donor_continuous": artifact(donor_path),
         "latest_unassisted": artifact(latest_path),
         "committed_s40_snapshot_match": True,
+        "first_prefix_variants_bitwise_equal": True,
+        "first_prefix_endpoint20_snapshot_match": True,
+        "first_prefix_score_semantics": "offline local normalized ellipse; endpoint20 matches saved snapshot",
+        "first_prefix_contact_evidence": "missing; optimized_trajectory did not save contact flags",
         "committed_chunk_equals_donor_endpoints21_40": True,
-        "main_recorded_endpoints": [20, 60],
-        "donor_recorded_endpoints": [20, 80],
+        "main_recorded_endpoints": [0, 60],
+        "donor_recorded_endpoints": [0, 80],
         "donor_first_failure_endpoint": 61,
         "latest_first_failure_endpoint": 60,
     }
@@ -580,7 +634,11 @@ def make_comparison_frame(
     )
     if actual_state is not None:
         score = "missing" if actual_state.tracking_score is None else f"{actual_state.tracking_score:.6f}"
-        color = (90, 255, 120) if actual_state.valid_status == "VALID" else (255, 100, 100)
+        color = (
+            (90, 255, 120)
+            if actual_state.valid_status.startswith("VALID")
+            else (255, 100, 100)
+        )
         actual_panel = annotate_panel(
             actual_panel,
             [
@@ -714,14 +772,14 @@ def write_geometry(
         ),
         (
             "ROBOT_EXECUTED_MAIN",
-            range(20, 61),
+            range(0, 61),
             lambda endpoint: markers["ROBOT_EXECUTED_MAIN"][endpoint],
             lambda endpoint: object_transforms_from_qpos(main[endpoint].qpos),
             lambda endpoint: main[endpoint],
         ),
         (
             "ROBOT_EXECUTED_DONOR",
-            range(20, 81),
+            range(0, 81),
             lambda endpoint: markers["ROBOT_EXECUTED_DONOR"][endpoint],
             lambda endpoint: object_transforms_from_qpos(donor[endpoint].qpos),
             lambda endpoint: donor[endpoint],
@@ -897,6 +955,94 @@ def write_object_tracking(
     figure.suptitle("Recorded tool-pose error against same-endpoint reference")
     figure.tight_layout()
     figure.savefig(output / "curves/object_tracking_errors.png", dpi=150)
+    plt.close(figure)
+    return rows
+
+
+def write_object_pair_relative(
+    output: Path,
+    robot_qpos: np.ndarray,
+    main: dict[int, SavedState],
+    donor: dict[int, SavedState],
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for trajectory, states in (
+        ("ROBOT_EXECUTED_MAIN", main),
+        ("ROBOT_EXECUTED_DONOR", donor),
+    ):
+        for endpoint, state in sorted(states.items()):
+            reference = object_transforms_from_qpos(robot_qpos[endpoint])
+            actual = object_transforms_from_qpos(state.qpos)
+            reference_vector = reference[0, :3, 3] - reference[1, :3, 3]
+            actual_vector = actual[0, :3, 3] - actual[1, :3, 3]
+            error = actual_vector - reference_vector
+            reference_relative_rotation = reference[1, :3, :3].T @ reference[0, :3, :3]
+            actual_relative_rotation = actual[1, :3, :3].T @ actual[0, :3, :3]
+            rows.append(
+                {
+                    "trajectory": trajectory,
+                    "endpoint": endpoint,
+                    "timestamp_s": endpoint / 30.0,
+                    "record_status": state.valid_status,
+                    "actual_tool_minus_target_x_m": actual_vector[0],
+                    "actual_tool_minus_target_y_m": actual_vector[1],
+                    "actual_tool_minus_target_z_m": actual_vector[2],
+                    "reference_tool_minus_target_x_m": reference_vector[0],
+                    "reference_tool_minus_target_y_m": reference_vector[1],
+                    "reference_tool_minus_target_z_m": reference_vector[2],
+                    "relative_position_error_x_m": error[0],
+                    "relative_position_error_y_m": error[1],
+                    "relative_position_error_z_m": error[2],
+                    "relative_position_error_norm_m": np.linalg.norm(error),
+                    "relative_rotation_error_rad": Rotation.from_matrix(
+                        reference_relative_rotation.T @ actual_relative_rotation
+                    ).magnitude(),
+                }
+            )
+    with (output / "object_pair_relative.csv").open("w", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=tuple(rows[0]))
+        writer.writeheader()
+        writer.writerows(rows)
+
+    figure, axes = plt.subplots(2, 1, figsize=(13, 7), sharex=True)
+    colors = {"ROBOT_EXECUTED_MAIN": "#2ca02c", "ROBOT_EXECUTED_DONOR": "#9467bd"}
+    for trajectory, color in colors.items():
+        selected = [row for row in rows if row["trajectory"] == trajectory]
+        endpoints = [row["endpoint"] for row in selected]
+        for component, linestyle in zip(
+            (
+                "relative_position_error_x_m",
+                "relative_position_error_y_m",
+                "relative_position_error_z_m",
+            ),
+            ("-", "--", ":"),
+        ):
+            axes[0].plot(
+                endpoints,
+                [1000.0 * float(row[component]) for row in selected],
+                color=color,
+                linestyle=linestyle,
+                label=f"{trajectory} {component[-3]}",
+            )
+        axes[1].plot(
+            endpoints,
+            [1000.0 * float(row["relative_position_error_norm_m"]) for row in selected],
+            color=color,
+            label=trajectory,
+        )
+    axes[0].axhline(0.0, color="black", linewidth=0.7)
+    axes[0].set_ylabel("tool-target relative\nposition error xyz (mm)")
+    axes[1].set_ylabel("relative position\nerror norm (mm)")
+    axes[1].set_xlabel("endpoint")
+    for axis in axes:
+        axis.axvline(16, color="#ff7f0e", linestyle="--", linewidth=0.8)
+        axis.axvline(60, color="#d62728", linestyle="--", linewidth=0.8)
+        axis.axvline(61, color="#9467bd", linestyle=":", linewidth=0.8)
+        axis.grid(alpha=0.25)
+        axis.legend(loc="best", fontsize=8)
+    figure.suptitle("Recorded bowl(tool)-to-tray(target) relative-position error")
+    figure.tight_layout()
+    figure.savefig(output / "curves/object_pair_relative_error.png", dpi=150)
     plt.close(figure)
     return rows
 
@@ -1090,7 +1236,7 @@ def plot_object_relative_paths(output: Path, rows: list[dict[str, Any]]) -> None
                         finger=finger,
                         object_role="tool",
                     )
-                    if 20 <= int(row["endpoint"]) <= 60
+                    if 0 <= int(row["endpoint"]) <= 60
                 ]
                 axis.plot(
                     [1000.0 * float(row["tip_object_y_m"]) for row in selected],
@@ -1115,7 +1261,7 @@ def plot_object_relative_paths(output: Path, rows: list[dict[str, Any]]) -> None
                 axis.set_xlabel("tool-local y (mm)")
     handles, labels = axes[0, 0].get_legend_handles_labels()
     fig.legend(handles, labels, loc="upper center", ncol=4)
-    fig.suptitle("Fingertip paths in each trajectory's own tool frame, endpoints 20--60", y=1.02)
+    fig.suptitle("Fingertip paths in each trajectory's own tool frame, endpoints 0--60", y=1.02)
     fig.tight_layout()
     fig.savefig(output / "curves/tool_relative_fingertip_paths.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
@@ -1232,7 +1378,7 @@ body {{ background:#17191c; color:#eee; font-family:sans-serif; margin:20px; }}
 figure {{ margin:0; background:#24272b; padding:8px; }} img {{ width:100%; }}
 figcaption {{ padding-top:5px; }}
 </style>
-<h1>Executed main trajectory: endpoint 20 through first failure at 60</h1>
+<h1>Executed main trajectory: endpoint 0 through first failure at 60</h1>
 <p>Click a thumbnail for the full oblique four-column comparison. Endpoint 60 is the
 first failed endpoint; no later latest-policy state is presented as recorded.</p>
 <div class="grid">{''.join(cards)}</div>
@@ -1299,8 +1445,13 @@ def main() -> None:
 
     repository = Path(__file__).resolve().parents[1]
     head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repository, text=True).strip()
-    if head != EXPECTED_BASE_COMMIT:
-        raise RuntimeError(f"expected base {EXPECTED_BASE_COMMIT}, observed {head}")
+    ancestry = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", EXPECTED_BASE_COMMIT, head],
+        cwd=repository,
+        check=False,
+    )
+    if ancestry.returncode != 0:
+        raise RuntimeError(f"required base {EXPECTED_BASE_COMMIT} is not an ancestor of {head}")
 
     checks = run_pure_checks()
     paths = {
@@ -1340,8 +1491,23 @@ def main() -> None:
         raise ValueError("human hand/object role order changed")
     if robot["hand_order"].tolist() != list(HANDS) or robot["object_roles"].tolist() != list(OBJECTS):
         raise ValueError("robot hand/object role order changed")
+    robot_reference_objects = np.stack(
+        [object_transforms_from_qpos(qpos) for qpos in robot["qpos"]]
+    )
+    human_robot_object_transform_max_abs = float(
+        np.max(np.abs(human["T_sim_object_reference"] - robot_reference_objects))
+    )
+    if human_robot_object_transform_max_abs > 1e-7:
+        raise ValueError(
+            "human object transforms and robot reference object qpos disagree: "
+            f"max_abs={human_robot_object_transform_max_abs}"
+        )
 
     main_states, donor_states, trajectory_checks = build_saved_states(asset_root)
+    if trajectory_checks["first_committed_prefix"]["sha256"] != (
+        "81712fd46d5bade497a2a98e8ce07c6f8f8b2f600510db8de42aed1a952ef4b3"
+    ):
+        raise ValueError("first committed prefix hash mismatch")
     input_manifest.update({f"trajectory_{name}": value for name, value in trajectory_checks.items() if isinstance(value, dict)})
     reference_model = StaticModel.load("MINK reference", paths["reference_model"])
     actual_model = StaticModel.load("executed", paths["actual_model"])
@@ -1364,6 +1530,7 @@ def main() -> None:
         (tool_mesh, target_mesh),
     )
     write_object_tracking(output, robot["qpos"], main_states, donor_states)
+    write_object_pair_relative(output, robot["qpos"], main_states, donor_states)
     plot_surface_clearance(output, rows, "tool")
     plot_surface_clearance(output, rows, "target")
     plot_marker_errors(output, rows)
@@ -1411,11 +1578,11 @@ def main() -> None:
                 writers[view].write(cv2.cvtColor(composite, cv2.COLOR_RGB2BGR))
                 if endpoint in KEY_ENDPOINTS:
                     save_rgb(output / f"keyframes/endpoint_{endpoint:03d}_{view}.png", composite)
-                if view == "oblique" and 20 <= endpoint <= 60:
+                if view == "oblique" and 0 <= endpoint <= 60:
                     thumbnail = cv2.resize(composite, (960, 180), interpolation=cv2.INTER_AREA)
                     path = output / f"thumbnails/endpoint_{endpoint:03d}.jpg"
                     cv2.imwrite(str(path), cv2.cvtColor(thumbnail, cv2.COLOR_RGB2BGR), [cv2.IMWRITE_JPEG_QUALITY, 88])
-        for endpoint in (40, 50, 60):
+        for endpoint in (0, 16, 20, 40, 50, 60):
             reference_collision = visualizer.render_reference(
                 robot["qpos"][endpoint], "oblique", collision=True
             )
@@ -1446,10 +1613,10 @@ def main() -> None:
 
     if any(not path.is_file() or path.stat().st_size == 0 for path in video_paths.values()):
         raise RuntimeError("comparison video was not written")
-    write_timeline(output, range(20, 61))
+    write_timeline(output, range(0, 61))
 
     relative_points = []
-    for endpoint in range(20, 61):
+    for endpoint in range(0, 61):
         relative_points.append(points_in_object(
             human["joint_positions_sim"][endpoint].reshape(-1, 3),
             human["T_sim_object_reference"][endpoint, 0],
@@ -1506,9 +1673,9 @@ def main() -> None:
             "fps": 30.0,
             "mapping": "state/reference/human endpoint k equals RGB frame_indices[k]",
             "dynamic_time_warping": False,
-            "main_actual": "s20 snapshot + committed outcomes21--40 + latest unassisted outcomes41--60",
-            "main_missing": "endpoints0--19 and61--80",
-            "donor": "s20 snapshot + saved outcomes21--80; endpoint61 fail;62--80 post-failure history",
+            "main_actual": "committed outcomes0--20 + committed outcomes21--40 + latest unassisted outcomes41--60",
+            "main_missing": "endpoints61--80",
+            "donor": "committed outcomes0--20 + saved outcomes21--80; endpoint61 fail;62--80 post-failure history",
         },
         "coordinate_contract": {
             "hand_order": list(HANDS),
@@ -1517,6 +1684,8 @@ def main() -> None:
             "rgb_camera_extrinsics_available": False,
             "three_dimensional_views": "fixed shared simulation camera; not RGB pixel registration",
             "object_relative": "each trajectory transformed into its own tool pose; no fitted transform",
+            "human_robot_reference_object_transform_max_abs": human_robot_object_transform_max_abs,
+            "human_robot_reference_object_transform_tolerance": 1e-7,
         },
         "model_compatibility": compatibility,
         "model_paths": {
@@ -1546,8 +1715,13 @@ def main() -> None:
         },
         "contact_evidence": {
             "flags": "loaded from saved rollout arrays where present",
+            "prefix_endpoints0_19": "contact flags missing from committed optimized_trajectory",
             "forces": "missing; no historical contact force was saved",
             "isolated_kinematics_contacts_used_as_history": False,
+        },
+        "prefix_score_evidence": {
+            "endpoints0_19": "offline recomputation of frozen tool-only normalized ellipse from saved qpos",
+            "endpoint20_regression": "recomputed score matches committed snapshot within 2e-7",
         },
         "video": video_info,
         "trajectory_checks": trajectory_checks,
