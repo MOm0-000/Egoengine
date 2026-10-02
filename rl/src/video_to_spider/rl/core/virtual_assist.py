@@ -595,6 +595,54 @@ def _coverage_count(batch: Any) -> int:
     return count
 
 
+def _write_server_artifact_hashes(output: Path) -> None:
+    """Hash the immutable server evidence without recursively hashing the list."""
+    target = output / "server_artifacts.sha256"
+    rows = [
+        f"{sha256(path)}  {path.relative_to(output)}"
+        for path in sorted(output.rglob("*"))
+        if path.is_file() and path != target
+    ]
+    target.write_text("\n".join(rows) + "\n")
+
+
+def finalize_virtual_artifacts(output: Path, decision: dict[str, Any]) -> None:
+    """Write the bounded run's required lightweight terminal artifacts."""
+    cost = decision["cost"]
+    write_json(output / "total_cost_accounting.json", cost)
+    official = decision["evaluations"]
+    official_text = ", ".join(
+        f"e{row['epoch']}={row['valid_prefix_intervals']}/40"
+        for row in official
+    )
+    assisted = []
+    for path in sorted((output / "evaluations").glob("assisted_diagnostic_*.json")):
+        row = json.loads(path.read_text())
+        assisted.append(
+            f"e{row['epoch']}@alpha={row['assistance_alpha']:.6g}="
+            f"{row['valid_prefix_intervals']}/40"
+        )
+    assisted_text = ", ".join(assisted) if assisted else "none"
+    (output / "summary.md").write_text(
+        "# Virtual object assist v1\n\n"
+        f"Status: `{decision['status']}`\n\n"
+        "This local, non-paper-faithful experiment changed training dynamics "
+        "with a bounded tool wrench. All official evaluations used the original "
+        "unassisted dynamics from the committed endpoint-40 boundary.\n\n"
+        f"- completed epoch: `{decision['completed_epoch']}`\n"
+        f"- assisted tail coverage at epochs 41--50: "
+        f"`{decision['assisted_tail_eligible_episodes_passing_endpoint70']}/40`\n"
+        f"- official unassisted fixed evaluations: `{official_text}`\n"
+        f"- assisted diagnostics (not success eligible): `{assisted_text}`\n"
+        f"- all-in physics steps: `{cost['all_in_physics_steps']}`\n"
+        f"- actor / critic optimizer steps: "
+        f"`{cost['actor_optimizer_steps']} / {cost['critic_optimizer_steps']}`\n"
+        "- strict chunk commit: `false`\n"
+        "- automatic follow-on: `false`\n"
+    )
+    _write_server_artifact_hashes(output)
+
+
 def train_virtual(
     config_path: Path,
     asset_root: Path | None,
@@ -767,13 +815,7 @@ def train_virtual(
     }
     write_json(output / "decision.json", decision)
     write_json(output / "cost.json", cost)
-    (output / "summary.md").write_text(
-        "# Virtual object assist v1\n\n"
-        f"Status: `{status}`\n\n"
-        f"- completed epoch: `{completed}`\n"
-        f"- assisted tail coverage: `{coverage}/40`\n"
-        f"- strict chunk commit: `false`\n"
-    )
+    finalize_virtual_artifacts(output, decision)
     return decision
 
 

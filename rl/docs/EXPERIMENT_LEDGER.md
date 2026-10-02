@@ -129,3 +129,37 @@ The run is successful only when the report says
   commit occurred.  No extra seed/restart/parameter change is authorized.
 - Lightweight report: `runs/taco_pour_two_chunk_sequence_search_v1/summary.md`;
   server evidence: `/data_all/zzx/3.2RL/runs/taco_pour_two_chunk_sequence_search_v1`.
+
+## `taco_pour_virtual_object_assist_v1`
+
+- Type: one bounded, local, non-paper-faithful virtual-object-assistance
+  curriculum with seed 0. Training dynamics changed; scene assets, solver,
+  reward/reference contract, actor input and official evaluation dynamics did
+  not.
+- Assistance: deterministic world-frame COM pose PD wrench applied only to the
+  tool after the backend perturbation stage. The fixed schedule was alpha 1
+  through epoch 50, linearly faded through epoch 199, and exactly zero for
+  epochs 200--250. This is a local fixed schedule, not the DexMachina automatic
+  curriculum.
+- Critic condition: input `345 -> 346` by appending assistance alpha; actor
+  remained 236-D. Training checkpoints use a distinct assisted schema and are
+  not silently compatible with the old 345-D critic.
+- Verification: alpha-zero configured/original/reset paths were bitwise exact;
+  all 15 shared donor arrays matched history; donor and zero-residual alpha-one
+  probes were both `40/40`; continuous epoch 2 matched cold-resumed epoch 2.
+- Assisted coverage: all `40/40` eligible first episodes in epochs 41--50
+  reached endpoint 70. The assisted fixed evaluation was `40/40` at epoch 50
+  (alpha 1) and `23/40, fail@64` at epoch 150 (alpha 1/3). These are not formal
+  successes.
+- Official unassisted fixed evaluations: `20/19/14/19/20/19` valid intervals
+  at epochs `0/50/100/150/200/250`; final failure was endpoint 60. Terminal
+  status: `COMPLETED_NO_STRICT_WINDOW_SUCCESS`, with assisted experience but no
+  verified handoff.
+- Exact cost: 6,231 verification/initialization + 400,000 formal training +
+  1,810 fixed evaluation = 408,041 all-in physics steps; 250 actor and 1,000
+  critic optimizer steps. All frozen ceilings were respected.
+- No chunk commit, warm start, checkpoint selection, extra seed, gain search,
+  automatic follow-on or success promotion occurred.
+- Lightweight report: `runs/taco_pour_virtual_object_assist_v1/summary.md`;
+  immutable server evidence:
+  `/data_all/zzx/3.2RL/runs/taco_pour_virtual_object_assist_v1`.

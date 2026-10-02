@@ -25,6 +25,7 @@ from video_to_spider.rl.core.state_io import (
     build_training_checkpoint,
     validate_training_checkpoint,
 )
+from video_to_spider.rl.core.virtual_assist import finalize_virtual_artifacts
 
 
 def body() -> ToolBodyInfo:
@@ -176,3 +177,36 @@ def test_assisted_checkpoint_rejects_legacy_345_critic(monkeypatch):
     )
     with pytest.raises(ValueError, match="schema"):
         validate_training_checkpoint(payload)
+
+
+def test_terminal_artifacts_include_cost_summary_and_hashes(tmp_path):
+    evaluations = tmp_path / "evaluations"
+    evaluations.mkdir()
+    (evaluations / "assisted_diagnostic_epoch_0050.json").write_text(
+        '{"epoch": 50, "assistance_alpha": 1.0, "valid_prefix_intervals": 40}'
+    )
+    decision = {
+        "status": "COMPLETED_NO_STRICT_WINDOW_SUCCESS",
+        "completed_epoch": 250,
+        "assisted_tail_eligible_episodes_passing_endpoint70": 40,
+        "evaluations": [
+            {"epoch": 0, "valid_prefix_intervals": 20},
+            {"epoch": 250, "valid_prefix_intervals": 19},
+        ],
+        "cost": {
+            "all_in_physics_steps": 408041,
+            "actor_optimizer_steps": 250,
+            "critic_optimizer_steps": 1000,
+        },
+    }
+
+    finalize_virtual_artifacts(tmp_path, decision)
+
+    assert (tmp_path / "total_cost_accounting.json").is_file()
+    summary = (tmp_path / "summary.md").read_text()
+    assert "e0=20/40, e250=19/40" in summary
+    assert "not success eligible" in summary
+    hashes = (tmp_path / "server_artifacts.sha256").read_text()
+    assert "  total_cost_accounting.json" in hashes
+    assert "  summary.md" in hashes
+    assert "server_artifacts.sha256" not in hashes
