@@ -1,0 +1,52 @@
+{
+  "schema": "taco_pour_replay_0_20_contact_trace_v1",
+  "status": "replay_identity_established_contact_trace_and_visual_review_complete",
+  "historical_tracking_criterion": {
+    "status": "below_old_tool_only_boundary_through_endpoint20",
+    "endpoint20_score": 0.4259672415773009,
+    "scope_warning": "This local tool-only normalized-ellipse result does not evaluate the target or tool-target relation and is not a task-quality certificate."
+  },
+  "replay_identity": {
+    "endpoint_qpos_qvel_ctrl_bitwise_equal_history": true,
+    "observer_B_bitwise_equal_A": true,
+    "B_s20_all_fields_bitwise_equal_A": true,
+    "historical_s20_common_fields": 362,
+    "historical_s20_adjudication": "361 fields bitwise equal; the sole field difference is inactive contact.geomcollisionid padding after nacon=52. All active rows are equal. Upstream MJWarp allocates this field with wp.empty."
+  },
+  "task_relation_review": {
+    "status": "concern_confirmed",
+    "quantitative_divergence_begins": "endpoint1 (no threshold claim)",
+    "visually_and_dynamically_material_transition": "source14 substep7 through source15 substep3",
+    "endpoint15_pair_position_error_mm": 10.55965514702799,
+    "endpoint16_pair_position_error_mm": 24.111110784925266,
+    "endpoint20_pair_position_error_mm": 72.67464565953402,
+    "endpoint20_pair_error_xyz_mm": [46.49269581, 55.78095978, 2.91854143],
+    "endpoint20_tool_error_mm": 48.83521532454548,
+    "endpoint20_target_error_mm": 25.284541963387177
+  },
+  "downstream_viability": {
+    "status": "not_established",
+    "reason": "The prefix satisfies the old tool-only numerical gate but does not preserve the intended two-object relation; no controlled repair was authorized in this diagnostic."
+  },
+  "substep_finding": {
+    "first_right_hand_tool_contact": "global148 = source14 substep7, right index only",
+    "tool_world_impulse_global148_150_Ns": [0.0330597, 0.02160715, 0.05016724],
+    "tool_world_impulse_global151_153_Ns": [0.03145187, 0.02700767, 0.02784645],
+    "right_hand_tool_contact_loss": "global154 = source15 substep3",
+    "tool_no_contact_interval": "global154..159 inclusive",
+    "tool_world_contact_impulse_global154_159_Ns": [0.0, 0.0, 0.0],
+    "tool_velocity_behavior_global154_159": "x/y persist near 0.284/0.206 m/s while z drops by about 0.03278 m/s per substep, consistent with free ballistic motion",
+    "tool_floor_recontact": "global160 = source15 substep9",
+    "right_hand_tool_finger_roles_in_all_0_20_contacts": ["index"],
+    "tool_target_direct_contacts": 0,
+    "interpretation": "The strongest supported explanation is an unstable contact transition: the right index begins pushing the tool late in 14->15, imparts substantial +x/+y momentum, loses contact at 15->16 substep3, and the tool then moves ballistically for six substeps before floor recontact. Simultaneously, the target remains under intermittent left-hand/floor impulses, so both objects contribute to the relative-pose drift.",
+    "not_proven": "This passive trace does not prove one unique root cause such as friction, collision geometry, or controller tuning."
+  },
+  "cost": {
+    "physics_steps_all_attempts_including_setup": 603,
+    "task_control_intervals_all_attempts": 60,
+    "new_action_candidates": 0,
+    "network_forwards": 0,
+    "optimizer_updates": 0
+  }
+}

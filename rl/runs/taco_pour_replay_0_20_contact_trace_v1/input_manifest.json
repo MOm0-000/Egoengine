@@ -1,0 +1,836 @@
+{
+  "actual_cost": {
+    "A_task_physics_steps": 400,
+    "B_task_physics_steps": 200,
+    "actor_or_critic_forwards": 0,
+    "control_intervals": 60,
+    "limit_control_intervals": 80,
+    "limit_physics_steps": 1000,
+    "optimizer_updates": 0,
+    "physics_steps": 603,
+    "setup_native_mj_steps": 3
+  },
+  "authorization": {
+    "actions_or_physics_modified": false,
+    "chunk_commit": false,
+    "diagnostic_only": true,
+    "training": false
+  },
+  "force_semantics": {
+    "api": "installed mujoco_warp.contact_force",
+    "contact_frame_normal": "positive x points geom1 toward geom2",
+    "contact_wrench_order": "force_xyz_then_torque_xyz",
+    "world_wrench_direction": "reported API wrench acts on geom2 by geom1; opposite on geom1"
+  },
+  "git_commit": "4a35c280ff49fbd1bd216042e79bc03d91149221",
+  "historical_trajectory_arrays": {
+    "command_reference_endpoint": {
+      "dtype": "int32",
+      "shape": [
+        20
+      ]
+    },
+    "ctrl": {
+      "dtype": "float32",
+      "shape": [
+        21,
+        36
+      ]
+    },
+    "effective_residual_after_ctrlrange": {
+      "dtype": "float64",
+      "shape": [
+        20,
+        36
+      ]
+    },
+    "frequency": {
+      "dtype": "float32",
+      "shape": []
+    },
+    "mode": {
+      "dtype": "<U6",
+      "shape": [
+        20
+      ]
+    },
+    "next_observation_goal_reference_endpoint": {
+      "dtype": "int32",
+      "shape": [
+        20
+      ]
+    },
+    "qpos": {
+      "dtype": "float32",
+      "shape": [
+        21,
+        50
+      ]
+    },
+    "qvel": {
+      "dtype": "float32",
+      "shape": [
+        21,
+        48
+      ]
+    },
+    "raw_residual_action": {
+      "dtype": "float32",
+      "shape": [
+        20,
+        36
+      ]
+    },
+    "reference_endpoint": {
+      "dtype": "int32",
+      "shape": [
+        21
+      ]
+    },
+    "requested_residual": {
+      "dtype": "float64",
+      "shape": [
+        20,
+        36
+      ]
+    },
+    "residual_lost_to_ctrlrange": {
+      "dtype": "float64",
+      "shape": [
+        20,
+        36
+      ]
+    },
+    "residual_semantics_schema": {
+      "dtype": "<U31",
+      "shape": []
+    },
+    "reward_reference_endpoint": {
+      "dtype": "int32",
+      "shape": [
+        20
+      ]
+    },
+    "transition_source_endpoint": {
+      "dtype": "int32",
+      "shape": [
+        20
+      ]
+    }
+  },
+  "initial_state_arrays": {
+    "ctrl": {
+      "dtype": "float64",
+      "shape": [
+        36
+      ]
+    },
+    "ctrl_provenance": {
+      "dtype": "<U19",
+      "shape": []
+    },
+    "first_command_reference_index": {
+      "dtype": "int64",
+      "shape": []
+    },
+    "first_command_semantics": {
+      "dtype": "<U39",
+      "shape": []
+    },
+    "hand_qpos_provenance": {
+      "dtype": "<U55",
+      "shape": []
+    },
+    "hand_qvel_provenance": {
+      "dtype": "<U4",
+      "shape": []
+    },
+    "object_constraints_released": {
+      "dtype": "bool",
+      "shape": []
+    },
+    "object_hold_method": {
+      "dtype": "<U44",
+      "shape": []
+    },
+    "object_qpos_provenance": {
+      "dtype": "<U20",
+      "shape": []
+    },
+    "object_qvel_provenance": {
+      "dtype": "<U4",
+      "shape": []
+    },
+    "post_release_validation_steps": {
+      "dtype": "int64",
+      "shape": []
+    },
+    "qpos": {
+      "dtype": "float64",
+      "shape": [
+        50
+      ]
+    },
+    "qvel": {
+      "dtype": "float64",
+      "shape": [
+        48
+      ]
+    },
+    "reference_index": {
+      "dtype": "int64",
+      "shape": []
+    },
+    "release_timing": {
+      "dtype": "<U24",
+      "shape": []
+    },
+    "state_contract_version": {
+      "dtype": "<U36",
+      "shape": []
+    }
+  },
+  "inputs": {
+    "action_profile": {
+      "bytes": 1529,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_replay_rebase_v1/tool_only/input_contracts/action_profile.yaml",
+      "sha256": "71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4"
+    },
+    "active_environment_source": {
+      "bytes": 70795,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/src/video_to_spider/rl/mjwp_env.py",
+      "sha256": "8078f9b54e0249aea1856414dc010734420aaf9d0921029419ffcddb8d6462df"
+    },
+    "backend_contract": {
+      "bytes": 1557,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_replay_rebase_v1/tool_only/input_contracts/dual_backend_contract.yaml",
+      "sha256": "897adf078175d7dec126cd4d55bd14e91f5c7723559ac14bb18f001890a68f2e"
+    },
+    "historical_report": {
+      "bytes": 1311675,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_replay_rebase_v1/tool_only/report.json",
+      "sha256": "21b6ceac41df6cae4eca7eee833ad90afc9312f7bc4bd43b55e7eb11c02f99dd"
+    },
+    "historical_s20": {
+      "bytes": 94048,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_replay_rebase_v1/tool_only/committed_boundary_endpoint_20.pt.gz",
+      "sha256": "a3646e24af1ba871e5ecc885669508223a5e0f26d3cf29f0482f02678419e337"
+    },
+    "historical_trajectory": {
+      "bytes": 13872,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_replay_rebase_v1/tool_only/optimized_trajectory.npz",
+      "sha256": "81712fd46d5bade497a2a98e8ce07c6f8f8b2f600510db8de42aed1a952ef4b3"
+    },
+    "initial_state": {
+      "bytes": 4489,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v2/candidate_a/initial_state.npz",
+      "sha256": "fe0c3b0620a44be47f22174d027c1150622dfd54e4b86407a9259515b95d4f36"
+    },
+    "initialization_report": {
+      "bytes": 492898,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v2/candidate_a/report.json",
+      "sha256": "9c1a9eed3b9689727280f7d885421e1832cc30a67c0f33ace172c40227fdc28a"
+    },
+    "mjwp_forward_source": {
+      "bytes": 54759,
+      "path": "/data_all/zzx/3.2RL/.env_mjwp313_overlay/mujoco_warp/_src/forward.py",
+      "sha256": "4eb747b60bc4f6f4572bf52b2cd226eb66734f827f444ff06dccde2718cebf9f"
+    },
+    "mjwp_support_source": {
+      "bytes": 35064,
+      "path": "/data_all/zzx/3.2RL/.env_mjwp313_overlay/mujoco_warp/_src/support.py",
+      "sha256": "c924593f7be8447c76328bcf7dc5b4ce92b6a54458c4afdbf36806cb8e036d46"
+    },
+    "objective_profile": {
+      "bytes": 1246,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_replay_rebase_v1/tool_only/input_contracts/objective_profile.yaml",
+      "sha256": "8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9"
+    },
+    "observation_profile": {
+      "bytes": 2581,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_replay_rebase_v1/tool_only/input_contracts/observation_profile.yaml",
+      "sha256": "8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7"
+    },
+    "protocol": {
+      "bytes": 10409,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_replay_rebase_v1/tool_only/input_contracts/replay_rl_protocol.yaml",
+      "sha256": "262097a3dd2b7768a940ae6dbb82428b94eedb08931af388037a5243097b7807"
+    },
+    "reference": {
+      "bytes": 213421,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_combined_collision_v1/robot_reference.npz",
+      "sha256": "cf99b9846a63617ddd5e439e086708c80a1e9b43f614df63168ffb3236a7685c"
+    },
+    "scene": {
+      "bytes": 520044,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate.xml",
+      "sha256": "deb35689ce385aa30f361ddd1907f54bdbd4f55d4fd98a22409b68a9a691a215"
+    },
+    "simulator_config": {
+      "bytes": 843,
+      "path": "/data_all/zzx/3.2RL/runs/taco_pour_corrected_replay_rebase_v1/tool_only/input_contracts/simulator_config.yaml",
+      "sha256": "0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6"
+    },
+    "spider_backend_source": {
+      "bytes": 85790,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/external/spider_compat/spider/simulators/mjwp.py",
+      "sha256": "19937e20e6d9b979c44dbbf3280c9ea476e39bd622a7704099e4dc07daf28cd5"
+    }
+  },
+  "model": {
+    "body_inertia": [
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.01,
+        0.01,
+        0.01
+      ],
+      [
+        0.01,
+        0.01,
+        0.01
+      ],
+      [
+        0.01,
+        0.01,
+        0.01
+      ],
+      [
+        0.01,
+        0.01,
+        0.01
+      ],
+      [
+        0.01,
+        0.01,
+        0.01
+      ],
+      [
+        0.00067782,
+        0.000491189,
+        0.000335821
+      ],
+      [
+        1.30647e-06,
+        1.29142e-06,
+        5.40953e-07
+      ],
+      [
+        5.62327e-05,
+        4.89801e-05,
+        2.23924e-05
+      ],
+      [
+        9.5465e-06,
+        8.27017e-06,
+        3.92137e-06
+      ],
+      [
+        2.16592e-05,
+        2.09943e-05,
+        3.36803e-06
+      ],
+      [
+        2.05301e-05,
+        1.92461e-05,
+        4.135e-06
+      ],
+      [
+        3.02409e-06,
+        3.01968e-06,
+        9.82703e-07
+      ],
+      [
+        2.05301e-05,
+        1.92461e-05,
+        4.135e-06
+      ],
+      [
+        3.02409e-06,
+        3.01968e-06,
+        9.82703e-07
+      ],
+      [
+        2.05301e-05,
+        1.92461e-05,
+        4.135e-06
+      ],
+      [
+        3.02409e-06,
+        3.01968e-06,
+        9.82702e-07
+      ],
+      [
+        2.05301e-05,
+        1.92461e-05,
+        4.135e-06
+      ],
+      [
+        3.02409e-06,
+        3.01968e-06,
+        9.82703e-07
+      ],
+      [
+        0.01,
+        0.01,
+        0.01
+      ],
+      [
+        0.01,
+        0.01,
+        0.01
+      ],
+      [
+        0.01,
+        0.01,
+        0.01
+      ],
+      [
+        0.01,
+        0.01,
+        0.01
+      ],
+      [
+        0.01,
+        0.01,
+        0.01
+      ],
+      [
+        0.000678163,
+        0.000491768,
+        0.000335587
+      ],
+      [
+        1.30648e-06,
+        1.29142e-06,
+        5.40957e-07
+      ],
+      [
+        5.62164e-05,
+        4.89587e-05,
+        2.23807e-05
+      ],
+      [
+        9.54692e-06,
+        8.2705e-06,
+        3.92141e-06
+      ],
+      [
+        2.16573e-05,
+        2.09935e-05,
+        3.36931e-06
+      ],
+      [
+        2.05301e-05,
+        1.92461e-05,
+        4.135e-06
+      ],
+      [
+        3.02409e-06,
+        3.01968e-06,
+        9.82703e-07
+      ],
+      [
+        2.05301e-05,
+        1.92461e-05,
+        4.135e-06
+      ],
+      [
+        3.02409e-06,
+        3.01968e-06,
+        9.82702e-07
+      ],
+      [
+        2.05301e-05,
+        1.92461e-05,
+        4.13501e-06
+      ],
+      [
+        3.02409e-06,
+        3.01968e-06,
+        9.82703e-07
+      ],
+      [
+        2.05301e-05,
+        1.92461e-05,
+        4.135e-06
+      ],
+      [
+        3.02409e-06,
+        3.01968e-06,
+        9.82702e-07
+      ],
+      [
+        0.00047474990028397633,
+        0.0003010486498981068,
+        0.0002964142464296307
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0033799649772369377,
+        0.0024880905324814414,
+        0.000936267158769464
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ]
+    ],
+    "body_mass": [
+      0.0,
+      0.1,
+      0.1,
+      0.1,
+      0.1,
+      0.1,
+      0.530025,
+      0.00985529,
+      0.153265,
+      0.0374004,
+      0.0677836,
+      0.0630216,
+      0.0179923,
+      0.0630216,
+      0.0179923,
+      0.0630216,
+      0.0179923,
+      0.0630216,
+      0.0179923,
+      0.1,
+      0.1,
+      0.1,
+      0.1,
+      0.1,
+      0.529961,
+      0.00985534,
+      0.153197,
+      0.037401,
+      0.0677836,
+      0.0630216,
+      0.0179923,
+      0.0630216,
+      0.0179923,
+      0.0630216,
+      0.0179923,
+      0.0630216,
+      0.0179923,
+      0.23512083812355627,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.2533925791571645,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "cone": 0,
+    "dof_armature": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "dof_damping": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "integrator": 3,
+    "iterations": 20,
+    "ls_iterations": 50,
+    "nbody": 59,
+    "ngeom": 279,
+    "nq": 50,
+    "nu": 36,
+    "nv": 48,
+    "timestep": 0.0033333333333333335
+  },
+  "paired_retest": {
+    "attempt": 2,
+    "attempt_1_artifacts": "attempts/attempt_1",
+    "fix": "Before capturing reconstructed s0, deterministically initialize current and previous contact.geomcollisionid to the historical -1 sentinel. No action, solver, contact pair, model, reference, reward, or physical state is changed.",
+    "maximum_paired_retests": 1,
+    "prior_attempt_cost": {
+      "A_task_physics_steps": 200,
+      "B_task_physics_steps": 0,
+      "control_intervals": 20,
+      "physics_steps": 201,
+      "setup_native_mj_steps": 1
+    },
+    "reason": "Explicit reconstruction defect: installed MJWarp 3.13 allocates contact.geomcollisionid with wp.empty (upstream TODO: set values). Attempt 1 reproduced all 21 qpos/qvel/ctrl endpoints bitwise and 361/362 complete s20 fields; the sole mismatch was active prev.contact.geomcollisionid, whose arbitrary allocator integers differed from the historical -1 sentinel. The field is unused by this scene's solver and collision sensors are absent, but it remains part of the complete snapshot and is not ignored.",
+    "schema": "taco_pour_replay_0_20_contact_trace_retry_v1"
+  },
+  "physics": {
+    "auto_reset": false,
+    "ctrl_dt": 0.03333333333333333,
+    "ctrl_steps": 10,
+    "diagnostic_stop_endpoint": 20,
+    "historical_horizon_preserved": 197,
+    "nconmax_per_env": 256,
+    "njmax_per_env": 1024,
+    "object_assistance": null,
+    "sim_dt": 0.0033333333333333335
+  },
+  "planned_cost": {
+    "A_physics_steps": 200,
+    "B_physics_steps": 200,
+    "actor_or_critic_forwards": 0,
+    "optimizer_updates": 0,
+    "setup_native_mj_steps": 1,
+    "task_control_intervals": 40,
+    "total_physics_integrations": 401
+  },
+  "recorded": {
+    "endpoints": 21,
+    "raw_contacts": 8366,
+    "snapshots": 8,
+    "substeps": 200
+  },
+  "resume_B": {
+    "additional_authorized_cost": {
+      "B_task_physics_steps": 200,
+      "control_intervals": 20,
+      "setup_native_mj_steps": 1
+    },
+    "all_in_expected": {
+      "control_intervals": 60,
+      "physics_steps": 603
+    },
+    "prior_attempt_cost": {
+      "A_task_physics_steps": 400,
+      "B_task_physics_steps": 0,
+      "control_intervals": 40,
+      "physics_steps": 402,
+      "setup_native_mj_steps": 2
+    },
+    "reason": "Retest A reproduced all endpoint arrays and every active s20 contact/constraint field. Its sole complete-snapshot difference is contact.geomcollisionid padding after nacon=52, allocated by upstream wp.empty and excluded from the valid contact range by contract.",
+    "schema": "taco_pour_replay_0_20_contact_trace_resume_b_v1",
+    "scope": "continue the observer-on B half of the already authorized paired retest; do not execute A again",
+    "third_A_forbidden": true
+  },
+  "runtime": {
+    "device": "cpu",
+    "mujoco": "3.13.0",
+    "mujoco_warp": "3.13.0",
+    "numpy": "2.5.3",
+    "platform": "Linux-6.8.0-111-generic-x86_64-with-glibc2.35",
+    "python": "3.12.13 | packaged by Anaconda, Inc. | (main, Jul  9 2026, 14:38:16) [GCC 14.3.0]",
+    "torch": "2.11.0+cu130",
+    "warp": "1.15.0"
+  },
+  "s0_source": {
+    "historical_full_s0_snapshot_found": false,
+    "kind": "reconstructed_from_historical_initialization_path",
+    "not_claimed": "restoration of a historically serialized full s0",
+    "procedure": "construct original CPU MJWarp world; write accepted initial qpos/qvel/ctrl; zero reset fields and call the historical MJWarp forward path; set last_ctrl; capture complete snapshot immediately"
+  },
+  "schema": "taco_pour_replay_0_20_contact_trace_v1",
+  "status": "replay_identity_established_contact_trace_and_visual_review_complete",
+  "time_semantics": {
+    "solve_for_this_transition": "contact and efc arrays left by forward/solver for state_before and the current control",
+    "state_after": "post-integrator qpos/qvel/time observed by the callback",
+    "state_before": "cached qpos/qvel/time immediately before this MJWarp step"
+  }
+}
