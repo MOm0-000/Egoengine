@@ -33,6 +33,13 @@ from video_to_spider.rl.h2s2r import (
 from video_to_spider.rl.reset_sampler import PreGraspResetSampler, PreGraspSamplerConfig
 from video_to_spider.rl.objective_contract import RuntimeObjective
 from video_to_spider.rl.observation_contract import RuntimeObservationContract
+from video_to_spider.rl.object_assistance import (
+    ToolAssistSpec,
+    ToolBodyInfo,
+    compute_wrench,
+    interpolate_target,
+    resolve_tool_body,
+)
 from egoengine_repro.action.paper_rewards import (
     lifting,
     object_tracking,
@@ -201,6 +208,7 @@ class MJWPVectorEnvConfig:
     object_roles: tuple[str, ...] | None = None
     objective: RuntimeObjective | None = None
     observation: RuntimeObservationContract | None = None
+    object_assistance: ToolAssistSpec | None = None
 
 
 class MJWPVectorEnv:
@@ -343,6 +351,26 @@ class MJWPVectorEnv:
         )
 
         self.env = self._mjwp.setup_env(self.ego_cfg, env_ref_data)
+        self._assistance_alpha = 0.0
+        self._tool_assist_body: ToolBodyInfo | None = None
+        self._last_assistance_wrenches = np.zeros(
+            (self.num_envs, max(int(self.ego_cfg.ctrl_steps), 1), 6),
+            dtype=np.float32,
+        )
+        self._last_assistance_force_cap_count = np.zeros(self.num_envs, dtype=np.int64)
+        self._last_assistance_torque_cap_count = np.zeros(self.num_envs, dtype=np.int64)
+        if self.env_cfg.object_assistance is not None:
+            reference_pose = _object_pose_parts(self.qpos_ref[:1], int(self.ego_cfg.nq_obj))[0]
+            self._tool_assist_body = resolve_tool_body(
+                self.env.model_cpu,
+                spec=self.env_cfg.object_assistance,
+                object_roles=self.object_roles,
+                reference_qpos=self.qpos_ref[0].detach().cpu().numpy(),
+                expected_tool_pose=(
+                    reference_pose[0][0].detach().cpu().numpy(),
+                    reference_pose[1][0].detach().cpu().numpy(),
+                ),
+            )
         self._resolve_sites()
         self._resolve_contact_maps()
         self.obs_dim = self._compute_obs_dim()
@@ -357,6 +385,80 @@ class MJWPVectorEnv:
         """Read the observation at the current physics state without resetting it."""
         obs, privileged = self._build_observations()
         return self._pack_observation(obs, privileged)
+
+    @property
+    def assistance_alpha(self) -> float:
+        return float(self._assistance_alpha)
+
+    def set_assistance_alpha(self, alpha: float) -> None:
+        value = float(alpha)
+        if not np.isfinite(value) or not 0.0 <= value <= 1.0:
+            raise ValueError("assistance alpha must be finite and in [0, 1]")
+        if value != 0.0 and self._tool_assist_body is None:
+            raise RuntimeError("nonzero assistance requested in an unconfigured environment")
+        self._assistance_alpha = value
+
+    def assistance_manifest(self) -> dict[str, Any]:
+        if self.env_cfg.object_assistance is None or self._tool_assist_body is None:
+            return {"configured": False, "alpha": self.assistance_alpha}
+        return {
+            "configured": True,
+            "alpha": self.assistance_alpha,
+            "spec": {
+                name: getattr(self.env_cfg.object_assistance, name)
+                for name in self.env_cfg.object_assistance.__dataclass_fields__
+            },
+            "body": self._tool_assist_body.manifest(),
+        }
+
+    def _external_assistance_wrench(
+        self,
+        source_endpoints: np.ndarray,
+        substep: int,
+    ) -> tuple[torch.Tensor, np.ndarray, np.ndarray]:
+        spec = self.env_cfg.object_assistance
+        body = self._tool_assist_body
+        if spec is None or body is None or self._assistance_alpha == 0.0:
+            raise RuntimeError("zero/unconfigured assistance must use the exact bypass path")
+        qpos = self._mjwp.get_qpos(self.ego_cfg, self.env).detach().cpu().numpy()
+        qvel = self._mjwp.get_qvel(self.ego_cfg, self.env).detach().cpu().numpy()
+        xfrc = wp.to_torch(self.env.data_wp.xfrc_applied)
+        external = torch.zeros_like(xfrc)
+        force_caps = np.zeros(self.num_envs, dtype=np.int64)
+        torque_caps = np.zeros(self.num_envs, dtype=np.int64)
+        fraction = float(substep) / float(spec.substeps)
+        for world, source in enumerate(np.asarray(source_endpoints, dtype=np.int64)):
+            next_endpoint = min(int(source) + 1, self.qpos_ref.shape[0] - 1)
+            current_endpoint = int(source)
+            q0 = self.qpos_ref[current_endpoint].detach().cpu().numpy()
+            q1 = self.qpos_ref[next_endpoint].detach().cpu().numpy()
+            qadr = body.qpos_address
+            target = interpolate_target(
+                q0[qadr : qadr + 3],
+                q0[qadr + 3 : qadr + 7],
+                q1[qadr : qadr + 3],
+                q1[qadr + 3 : qadr + 7],
+                fraction=fraction,
+                control_dt=spec.control_dt,
+                inertial_position=np.asarray(body.inertial_position),
+            )
+            result = compute_wrench(
+                alpha=self._assistance_alpha,
+                spec=spec,
+                body=body,
+                target_com_position=target[0],
+                target_rotation_world=target[1],
+                target_com_velocity=target[2],
+                target_angular_velocity_world=target[3],
+                live_qpos=qpos[world],
+                live_qvel=qvel[world],
+            )
+            external[world, body.body_id] = torch.as_tensor(
+                result.wrench, dtype=external.dtype, device=external.device
+            )
+            force_caps[world] = int(result.force_capped)
+            torque_caps[world] = int(result.torque_capped)
+        return external, force_caps, torque_caps
 
     def step(
         self,
@@ -385,8 +487,34 @@ class MJWPVectorEnv:
         reference_ctrls = self._reference_ctrls(self.time_indices, offset=1)
         delta = torch.as_tensor(actions, dtype=torch.float32, device=str(self.ego_cfg.device))
         full_ctrl = self._apply_residual(reference_ctrls, delta)
-        for substep in range(max(int(self.ego_cfg.ctrl_steps), 1)):
-            self._mjwp.step_env(self.ego_cfg, self.env, full_ctrl)
+        substeps = max(int(self.ego_cfg.ctrl_steps), 1)
+        self._last_assistance_wrenches = np.zeros(
+            (self.num_envs, substeps, 6), dtype=np.float32
+        )
+        self._last_assistance_force_cap_count = np.zeros(self.num_envs, dtype=np.int64)
+        self._last_assistance_torque_cap_count = np.zeros(self.num_envs, dtype=np.int64)
+        for substep in range(substeps):
+            if self._assistance_alpha == 0.0:
+                # Exact original call path: no pose read, wrench construction or
+                # backend optional argument at zero assistance.
+                self._mjwp.step_env(self.ego_cfg, self.env, full_ctrl)
+            else:
+                external, force_caps, torque_caps = self._external_assistance_wrench(
+                    source_endpoints, substep
+                )
+                assert self._tool_assist_body is not None
+                self._last_assistance_wrenches[:, substep] = (
+                    external[:, self._tool_assist_body.body_id]
+                    .detach()
+                    .cpu()
+                    .numpy()
+                    .astype(np.float32, copy=False)
+                )
+                self._last_assistance_force_cap_count += force_caps
+                self._last_assistance_torque_cap_count += torque_caps
+                self._mjwp.step_env(
+                    self.ego_cfg, self.env, full_ctrl, external_wrench=external
+                )
             self.simulation_physics_steps += self.num_envs
             self._check_capacity()
             if substep_observer is not None:
@@ -459,6 +587,16 @@ class MJWPVectorEnv:
             "next_observation_goal_reference_endpoint": (
                 next_observation_goal_reference_endpoints.copy()
             ),
+            "assistance_alpha": np.full(
+                self.num_envs, self._assistance_alpha, dtype=np.float32
+            ),
+            "training_dynamics_label": np.asarray(
+                ["assisted" if self._assistance_alpha > 0.0 else "original_unassisted"]
+                * self.num_envs
+            ),
+            "tool_assistance_wrench": self._last_assistance_wrenches.copy(),
+            "tool_assistance_force_cap_count": self._last_assistance_force_cap_count.copy(),
+            "tool_assistance_torque_cap_count": self._last_assistance_torque_cap_count.copy(),
         }
         return self._pack_observation(obs, next_privileged), reward.cpu().numpy(), done_np, infos
 

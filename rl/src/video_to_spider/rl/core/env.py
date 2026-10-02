@@ -15,6 +15,7 @@ from video_to_spider.rl.action_contract import load_residual_action_profile
 from video_to_spider.rl.mjwp_env import MJWPVectorEnv, MJWPVectorEnvConfig
 from video_to_spider.rl.objective_contract import load_runtime_objective
 from video_to_spider.rl.observation_contract import load_runtime_observation
+from video_to_spider.rl.object_assistance import ToolAssistSpec
 
 from .state_io import validate_physics_snapshot
 
@@ -69,6 +70,7 @@ def make_world(
     boundary: dict[str, Any],
     seed: int,
     asymmetric_critic: bool,
+    object_assistance: ToolAssistSpec | None = None,
 ) -> MJWPVectorEnv:
     config = load_ego_config(simulator_config)
     reference = load_reference(config.data_path)
@@ -92,6 +94,7 @@ def make_world(
             objective=objective,
             observation=observation,
             residual=residual,
+            object_assistance=object_assistance,
         ),
         seed=seed,
     )
@@ -130,6 +133,20 @@ class IndependentWorlds:
                 raise ValueError("independent world reference cursor is not scalar")
             endpoints.append(start + time)
         return torch.cat(endpoints)
+
+    @property
+    def assistance_alpha(self) -> float:
+        values = {world.assistance_alpha for world in self.worlds}
+        if len(values) != 1:
+            raise RuntimeError("independent worlds do not share one assistance alpha")
+        return values.pop()
+
+    def set_assistance_alpha(self, alpha: float) -> None:
+        for world in self.worlds:
+            world.set_assistance_alpha(alpha)
+
+    def assistance_manifests(self) -> list[dict[str, Any]]:
+        return [world.assistance_manifest() for world in self.worlds]
 
     def states(self) -> list[dict[str, Any]]:
         return [world.get_env_state() for world in self.worlds]

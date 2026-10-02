@@ -1471,7 +1471,12 @@ def apply_perturbation(config: Config, env: MJWPEnv):
     return env
 
 
-def step_env(config: Config, env: MJWPEnv, ctrl_mujoco: torch.Tensor):
+def step_env(
+    config: Config,
+    env: MJWPEnv,
+    ctrl_mujoco: torch.Tensor,
+    external_wrench: torch.Tensor | None = None,
+):
     """Step all worlds with provided MuJoCo-format controls of shape (N, nu)."""
     if ctrl_mujoco.dim() == 1:
         ctrl_mujoco = ctrl_mujoco.unsqueeze(0).repeat(env.num_worlds, 1)
@@ -1479,12 +1484,37 @@ def step_env(config: Config, env: MJWPEnv, ctrl_mujoco: torch.Tensor):
     with wp.ScopedDevice(env.device):
         # apply perturbation
         env = apply_perturbation(config, env)
-        # step control
-        wp.copy(env.data_wp.ctrl, wp.from_torch(ctrl_mujoco.to(torch.float32)))
-        if env.graph is None:
-            mjwarp.step(env.model_wp, env.data_wp)
-        else:
-            wp.capture_launch(env.graph)
+        baseline_xfrc = None
+        if external_wrench is not None:
+            xfrc = wp.to_torch(env.data_wp.xfrc_applied)
+            candidate = external_wrench.to(device=xfrc.device, dtype=xfrc.dtype)
+            if candidate.shape != xfrc.shape:
+                raise ValueError(
+                    f"external_wrench shape {tuple(candidate.shape)} does not match "
+                    f"xfrc_applied {tuple(xfrc.shape)}"
+                )
+            if not bool(torch.isfinite(candidate).all()):
+                raise ValueError("external_wrench contains non-finite values")
+            baseline_xfrc = xfrc.clone()
+            wp.copy(
+                env.data_wp.xfrc_applied,
+                wp.from_torch(xfrc + candidate, dtype=env.data_wp.xfrc_applied.dtype),
+            )
+        try:
+            # step control
+            wp.copy(env.data_wp.ctrl, wp.from_torch(ctrl_mujoco.to(torch.float32)))
+            if env.graph is None:
+                mjwarp.step(env.model_wp, env.data_wp)
+            else:
+                wp.capture_launch(env.graph)
+        finally:
+            if baseline_xfrc is not None:
+                wp.copy(
+                    env.data_wp.xfrc_applied,
+                    wp.from_torch(
+                        baseline_xfrc, dtype=env.data_wp.xfrc_applied.dtype
+                    ),
+                )
 
 
 def save_env_params(config: Config, env: MJWPEnv):
