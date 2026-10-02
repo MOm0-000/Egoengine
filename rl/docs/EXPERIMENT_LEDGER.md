@@ -163,3 +163,30 @@ The run is successful only when the report says
 - Lightweight report: `runs/taco_pour_virtual_object_assist_v1/summary.md`;
   immutable server evidence:
   `/data_all/zzx/3.2RL/runs/taco_pour_virtual_object_assist_v1`.
+
+## `taco_pour_hand_object_visual_audit_v1`
+
+- Type: read-only visual and geometric audit of frozen RGB, human targets,
+  MINK reference, committed execution prefix, latest unassisted tail and one
+  continuous donor trajectory.
+- Alignment: endpoint `k` was verified to map directly to prepared frame `k`
+  at 30 Hz; no dynamic time warping or best-offset fitting was used. The main
+  executed composite contains s20, saved outcomes 21--40 and saved outcomes
+  41--60; actual endpoints 0--19 and 61--80 remain explicitly missing.
+- Execution cost: zero physics integration steps, zero control intervals, zero
+  sampled actions, zero actor/critic/vision forwards and zero optimizer
+  updates. Static `mj_kinematics` calls were checked not to change `qpos` or
+  `data.time`; `mj_forward` was not used.
+- Finding: human GT and MINK reference preserve the broad right-bowl and
+  left-tray relation. The first recorded actual state at endpoint 20 already
+  differs from reference, so earlier onset is censored. A clearer tail
+  divergence appears at endpoint 45--46: saved right-tool contact flags become
+  zero and remain zero while the bowl z error grows to `-109.54 mm` before the
+  formal endpoint-60 failure. Left-target flags persist.
+- Interpretation boundary: this identifies an observable pre-failure
+  discrepancy; it does not establish an irrecoverable state or prove that
+  contact loss caused failure. Historical contact force was not saved.
+- Lightweight report:
+  `runs/taco_pour_hand_object_visual_audit_v1/findings.md`; full videos, PNGs,
+  tables and hashes:
+  `/data_all/zzx/3.2RL/runs/taco_pour_hand_object_visual_audit_v1`.
