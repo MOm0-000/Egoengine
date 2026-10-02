@@ -1,0 +1,125 @@
+schema: egoengine_taco_pour_two_chunk_sequence_search_v1
+status: authorized_single_run
+base_branch: 3.2RL
+base_commit: 70d007775b32358089c2122daab1033be03449b7
+paper_faithful: false
+classification: local_icem_inspired_fixed_two_chunk_open_loop_search
+entrypoint: scripts/run_rl.py plan-window
+asset_root: /data_all/zzx/3.2RL
+run_directory: runs/taco_pour_two_chunk_sequence_search_v1
+
+execution:
+  task: TACO_20230927_017
+  tracking_variant: tool_only
+  device: cpu
+  worlds: 1
+  source_endpoint: 40
+  final_endpoint: 80
+  horizon: 40
+  actions: 36
+  physics_steps_per_control: 10
+  auto_reset: false
+  training_enabled: false
+  chunk_commit_enabled: false
+  automatic_followon: false
+
+search:
+  seed: 0
+  rng: numpy_Generator_PCG64
+  proposal: fft_colored_gaussian_then_float32_support_projection
+  noise_beta: 2.5
+  iterations: 6
+  new_candidate_slots: [256, 204, 163, 131, 104, 83]
+  maximum_new_candidate_slots: 941
+  mean_candidate_in_each_generation: true
+  mean_candidate_consumes_slot: true
+  elite_count: 10
+  elite_reuse_count: 3
+  old_moment_weight: 0.1
+  initial_std_half_range_factor: 0.5
+  std_floor_half_range_factor: 0.02
+  fit_only_executed_elite_rows: true
+  minimum_observed_elites_for_row_update: 2
+  time_shift_elites: false
+  freeze_prefix: false
+  rank_infeasible:
+    - valid_prefix_N_desc
+    - first_failure_score_asc
+    - valid_prefix_object_reward_desc
+    - candidate_id_asc
+  stop_on_first_strict_success: true
+
+preflight:
+  seed: 991
+  ordered_probes:
+    - zero_replay
+    - saved_donor_sequence
+    - one_colored_proposal
+    - saved_donor_sequence_repeat
+  maximum_attempts: 2
+  expected_donor_prefix: 20
+  expected_donor_first_failure: 61
+
+budget:
+  preflight_max_control_intervals: 320
+  preflight_max_physics_steps: 3200
+  search_max_control_intervals: 37640
+  search_max_physics_steps: 376400
+  final_validation_reserved_control_intervals: 80
+  final_validation_reserved_physics_steps: 800
+  all_in_max_control_intervals: 38040
+  all_in_max_physics_steps: 380400
+  actor_network_forward_calls: 0
+  critic_network_forward_calls: 0
+  backward_calls: 0
+  actor_optimizer_steps: 0
+  critic_optimizer_steps: 0
+  max_cem_refits: 6
+  reinvest_early_stop_savings: false
+  automatic_formal_restart: false
+
+validation:
+  success: STRICT_WINDOW_SEQUENCE_FOUND
+  no_strict_success: COMPLETED_NO_STRICT_WINDOW_SUCCESS
+  success_replays:
+    - cold_full_window
+    - cold_split_at_actual_endpoint60
+  mismatch_action: stop_no_alternative_candidate_selection
+  snapshot_names:
+    - candidate_boundary_s60.pt.gz
+    - candidate_boundary_s80.pt.gz
+
+sources:
+  egoengine: provided 27-page PDF, Sec 3.2.2 and Appendix C.1-C.3
+  icem_paper: https://proceedings.mlr.press/v155/pinneri21a/pinneri21a.pdf
+  icem_code: https://github.com/martius-lab/iCEM/blob/98c1c1fe2bfc94a87e4658b6c793f4e81bc30203/icem/controllers/icem.py
+  spider_paper: https://arxiv.org/html/2511.09484v2
+  spider_usage: sequence-search motivation only; no virtual guidance or package upgrade
+
+assets:
+  boundary:
+    path: runs/taco_pour_candidate_D_strict_success_promotion_v1/committed_boundary_endpoint_40.pt.gz
+    sha256: 7cf90b48a2a16d41b1f055fdb4fa30f1fdb89d32064ffbfc776b0fdc0e1b9090
+  carryover:
+    path: runs/taco_pour_endpoint60_viability_adjudication_v1/carryover/continuous_20_80.npz
+    sha256: 9e7e6014cf550ba9c3f66a22911dbae9801370d2591dbae92598efd2972eb17c
+  context:
+    path: runs/taco_pour_endpoint60_viability_adjudication_v1/carryover/endpoint40_physics_rnn.pt.gz
+    sha256: 0cc3a0901428fe3091f7420e5fafdd9b0a756f2d30d36ea194875ccefcbeb803
+  protocol:
+    path: configs/taco_pour_algorithmic_reproduction_training_v3_protocol_snapshot.yaml
+    sha256: 1f4a96edfa0bc17ecb578fd5d8ae1514b77099713cc9b9f74adf6813a62873f3
+  objective:
+    path: configs/taco_pour_local_normalized_ellipse_v1.yaml
+    sha256: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+  observation:
+    path: configs/taco_pour_observation_local_236d_v1.yaml
+    sha256: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  action:
+    path: configs/taco_pour_residual_action_scaled_v1.yaml
+    sha256: 71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4
+  simulator:
+    path: runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml
+    sha256: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+
+transitive_asset_requirement: resolve reference/MJCF/includes/meshes from existing frozen contracts and record hashes before physics; no guessed replacements

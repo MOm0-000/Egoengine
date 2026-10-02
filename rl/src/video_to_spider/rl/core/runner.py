@@ -35,6 +35,7 @@ from .policy import (
     policy_step,
 )
 from .ppo import PPOConfig, PPOTrainer
+from .plan_window import plan_window
 from .rollout import FixedBoundaryCollector, valid_prefix
 from .state_io import (
     load_boundary_context,
@@ -56,6 +57,7 @@ from .state_io import (
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_CONFIG = PROJECT_ROOT / "configs/rl_core_refactor_r1.yaml"
 DEFAULT_TRAIN_CONFIG = PROJECT_ROOT / "configs/taco_pour_rl_task_informed_critic_v2.yaml"
+DEFAULT_PLAN_CONFIG = PROJECT_ROOT / "configs/taco_pour_two_chunk_sequence_search_v1.yaml"
 
 
 def _load_config(path: Path, asset_root_override: Path | None) -> tuple[dict[str, Any], Path, dict[str, Path]]:
@@ -1269,7 +1271,9 @@ def verify(config_path: Path, asset_root: Path | None, output: Path, *, physics:
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("inspect", "verify", "train", "evaluate"))
+    parser.add_argument(
+        "command", choices=("inspect", "verify", "train", "evaluate", "plan-window")
+    )
     parser.add_argument("--config", type=Path)
     parser.add_argument("--asset-root", type=Path)
     parser.add_argument("--output", type=Path)
@@ -1289,7 +1293,9 @@ def _training_output(config: dict[str, Any], root: Path) -> Path:
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
     config_path = args.config or (
-        DEFAULT_TRAIN_CONFIG if args.command in {"train", "evaluate"} else DEFAULT_CONFIG
+        DEFAULT_PLAN_CONFIG if args.command == "plan-window" else (
+            DEFAULT_TRAIN_CONFIG if args.command in {"train", "evaluate"} else DEFAULT_CONFIG
+        )
     )
     if args.command == "inspect":
         result = inspect(config_path, args.asset_root)
@@ -1311,17 +1317,20 @@ def main(argv: list[str] | None = None) -> int:
         result = train(
             config_path, args.asset_root, output, resume_path=args.resume
         )
-    else:
+    elif args.command == "evaluate":
         if args.checkpoint is None:
             raise ValueError("evaluate requires --checkpoint")
         train_config, root, config_assets = _load_train_config(config_path, args.asset_root)
         del config_assets
         output = args.output or _training_output(train_config, root) / "evaluation_manual"
         result = evaluate(config_path, args.asset_root, args.checkpoint, output)
+    else:
+        result = plan_window(config_path, args.asset_root, args.output)
     print(json.dumps(result, indent=2, sort_keys=True))
     successful_statuses = {
         "INSPECT_OK", "STRUCTURAL_REFACTOR_VERIFIED", "TRAINING_CHAIN_VERIFIED",
         "STRICT_WINDOW_SUCCESS", "STRICT_WINDOW_SUCCESS_CONFIRMED",
         "STRICT_WINDOW_FAILED", "COMPLETED_NO_STRICT_WINDOW_SUCCESS",
+        "STRICT_WINDOW_SEQUENCE_FOUND",
     }
     return 0 if result["status"] in successful_statuses else 2
