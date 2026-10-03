@@ -1,0 +1,27 @@
+{
+  "schema": "taco_pour_startup_transition_isolation_v1",
+  "formal_run": {
+    "physics_steps": 613,
+    "task_physics_steps": 610,
+    "setup_native_mj_steps": 3,
+    "control_intervals": 61,
+    "actor_or_critic_forwards": 0,
+    "optimizer_updates": 0
+  },
+  "conditions": {
+    "ORIGINAL": {"physics_steps": 200, "control_intervals": 20},
+    "HOLD_1": {"physics_steps": 10, "control_intervals": 1},
+    "BLEND_5": {"physics_steps": 200, "control_intervals": 20},
+    "BLEND_5_COLD": {"physics_steps": 200, "control_intervals": 20}
+  },
+  "setup_accounting": {
+    "interrupted_original_process": 1,
+    "resume_process": 1,
+    "cold_replay_world": 1,
+    "extra_setup_due_to_reporter_interruption": 1
+  },
+  "zero_physics_failed_launches_archived_to_trash": 2,
+  "authorized_200_step_physics_retest_consumed": false,
+  "ceilings": {"physics_steps": 1000, "control_intervals": 81},
+  "within_all_ceilings": true
+}

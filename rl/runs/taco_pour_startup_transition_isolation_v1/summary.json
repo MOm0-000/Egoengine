@@ -1,0 +1,52 @@
+{
+  "schema": "taco_pour_startup_transition_isolation_v1",
+  "status": "complete",
+  "classification": "startup discontinuity is a causal contributor, not a sufficient task-level root cause or repair",
+  "baseline_git_commit": "8b5e941f5a12d8823f53949e070e0efac36b94cc",
+  "implementation_git_commits": [
+    "3c9b506f0a912d01eecd1804f5359fd2cbd9cb67",
+    "8e834aed3d9a454b9c3baf0c9537602e79d42cb8"
+  ],
+  "gates": {
+    "original_historical_trace_bitwise": true,
+    "original_full_s20_bitwise": true,
+    "original_padding_exception_used": false,
+    "blend_cold_replay_bitwise": true,
+    "all_actions_legal": true,
+    "all_commands_nonworsening_within_ctrlrange_tolerance": true,
+    "all_conditions_nonterminated_over_their_declared_horizon": true
+  },
+  "first_cycle": {
+    "blend_minus_original_target_position_at_endpoint1_m": 0.0004094362666364759,
+    "blend_minus_original_tool_position_at_endpoint1_m": 1.1175870895385742e-08,
+    "right_thumb_floor_first_substep_original": 5,
+    "right_thumb_floor_first_substep_blend": 8,
+    "normal_impulse_change_percent": {
+      "left_ring_target": -47.51646631079653,
+      "left_pinky_target": -21.105066607979207,
+      "target_floor": -66.91640101777519,
+      "right_thumb_floor": -63.734903399235066
+    }
+  },
+  "downstream": {
+    "blend_minus_original_tool_position_at_endpoint20_m": 0.003937897272408009,
+    "blend_minus_original_target_position_at_endpoint20_m": 0.014247522689402103,
+    "blend_minus_original_pair_position_at_endpoint20_m": 0.014207371510565281,
+    "original_endpoint20_tool_score": 0.425967241577301,
+    "blend_endpoint20_tool_score": 0.45032164471085856,
+    "original_endpoint20_reference_pair_error_m": 0.07267464565953402,
+    "blend_endpoint20_reference_pair_error_m": 0.0716433521668643
+  },
+  "cost": {
+    "physics_steps": 613,
+    "control_intervals": 61,
+    "authorized_physics_retest_consumed": false
+  },
+  "visual_review": "complete_personally_reviewed",
+  "authorization": {
+    "diagnostic_only": true,
+    "training": false,
+    "chunk_commit": false,
+    "follow_on_experiment": false
+  }
+}
