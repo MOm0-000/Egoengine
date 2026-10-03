@@ -1021,7 +1021,7 @@ def overlap_preflight(
         raise ValueError("A s0 is not endpoint zero")
     parent_status = json.loads((assets["parent_root"] / "status.json").read_text())
     parent_visual = json.loads((assets["parent_root"] / "visual_review.json").read_text())
-    if parent_status.get("status") != "COMPLETE_NO_PROMOTION" or parent_visual.get("status") != "complete":
+    if not _parent_evidence_complete(parent_status, parent_visual):
         raise ValueError("parent numerical/visual evidence is not complete")
     output.mkdir(parents=True)
     erratum = _parent_projection_erratum(assets["parent_root"], output)
@@ -1039,7 +1039,7 @@ def overlap_preflight(
         "assets": {name: manifest_entry(path) for name, path in assets.items() if name != "parent_root"},
         "parent_root": str(assets["parent_root"]),
         "parent_status": parent_status.get("status"),
-        "parent_visual_review": parent_visual.get("status"),
+        "parent_visual_review": parent_visual.get("review_status"),
         "snapshot_contract": {"field_count": 362, "warp_state_field_count": 342},
         "offline_projection_erratum": {
             label: row["aggregate"] for label, row in erratum["conditions"].items()
@@ -1054,6 +1054,15 @@ def overlap_preflight(
         "implementation_commit": _git_head(), "physics_steps": 0,
     })
     return manifest
+
+
+def _parent_evidence_complete(
+    status: Mapping[str, Any], visual_review: Mapping[str, Any],
+) -> bool:
+    return bool(
+        status.get("status") == "COMPLETE_NO_PROMOTION"
+        and visual_review.get("review_status") == "complete"
+    )
 
 
 def _make_world(assets: dict[str, Path], snapshot: dict[str, Any]) -> Any:

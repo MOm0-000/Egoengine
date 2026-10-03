@@ -19,6 +19,7 @@ from video_to_spider.rl.core.startup_planner import (
     rotation_error_rad,
     step_cost_terms,
     trajectory_cost,
+    _parent_evidence_complete,
 )
 
 
@@ -190,3 +191,12 @@ def test_budget_is_external_to_snapshot_and_reserves_before_attempt():
     assert budget.total == 51
     with pytest.raises(RuntimeError):
         budget.reserve("search", 51)
+
+
+def test_parent_visual_evidence_uses_review_status_field():
+    assert _parent_evidence_complete(
+        {"status": "COMPLETE_NO_PROMOTION"}, {"review_status": "complete"},
+    )
+    assert not _parent_evidence_complete(
+        {"status": "COMPLETE_NO_PROMOTION"}, {"status": "complete"},
+    )
