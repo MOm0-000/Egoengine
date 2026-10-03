@@ -17,6 +17,21 @@ python scripts/run_rl.py train --config configs/taco_pour_rl_task_informed_criti
 python scripts/run_rl.py evaluate --config configs/taco_pour_rl_task_informed_critic_v2.yaml --checkpoint PATH
 ```
 
+It also contains the bounded actor-free startup-planning path:
+
+```bash
+python scripts/run_rl.py plan-startup --startup-phase preflight
+python scripts/run_rl.py plan-startup --startup-phase execute
+python scripts/run_rl.py plan-startup --startup-phase analyze
+```
+
+The only authorized `taco_pour_control_aware_startup_v1` execution is complete.
+It used two frozen full-state starts, four replans per start and no network
+forward or RL update. A_PLAN passed the bounded numerical and visual gates;
+L_PLAN remained a trade-off. This result does not authorize rerunning the
+search, promoting a reset, training RL or committing a chunk. See
+`runs/taco_pour_control_aware_startup_v1/summary.md`.
+
 The training command is fail-closed on a successful real two-epoch/cold-resume
 verification report. Its fixed task is TACO `20230927_017`, `tool_only`, CPU,
 source 40 through endpoint 80, four independent worlds, 40 intervals, BPTT 4,

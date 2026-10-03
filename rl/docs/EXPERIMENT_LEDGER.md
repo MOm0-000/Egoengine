@@ -237,3 +237,35 @@ The run is successful only when the report says
 - Lightweight report: `runs/taco_pour_early_contact_origin_v1/findings.md`;
   complete server evidence:
   `/data_all/zzx/3.2RL/runs/taco_pour_early_contact_origin_v1`.
+
+## `taco_pour_control_aware_startup_v1`
+
+- Type: one bounded, actor-free predictive-sampling startup experiment over
+  endpoints 0--40 from the frozen accepted A state and frozen left-aligned L
+  state. The method is a local engineering planner, not author MPC recovery.
+- Search: sources 0/5/10/15, four rounds by 32 slots, 1,024 total slots; every
+  candidate forecasts to endpoint 40 and the source-15 plan supplies a frozen
+  20--40 suffix. No RL policy or critic was constructed.
+- Result: A_REPLAY/A_PLAN costs `101.5364316/12.0096214`; L_REPLAY/L_PLAN costs
+  `86.1600592/28.7125331`. All four conditions executed to endpoint 40 with
+  zero measured ctrlrange loss.
+- Decision: A_PLAN passed every required 0--20/0--40 and endpoint-20/40
+  no-tradeoff metric versus A_REPLAY and passed visual review. L_PLAN improved
+  several tool/relation metrics but worsened early target metrics, so it is a
+  recorded trade-off and did not pass the conservative overall gate.
+- Reproducibility: every selected five-step prefix matched prediction bitwise;
+  both full selected trajectories matched independent cold CPU replays
+  bitwise, including declared contacts.
+- Visual evidence: two 41-frame fixed-view videos, 12 declared keyframes in
+  two views, per-condition source-14-near events, fixed-range curves and all
+  source planning comparisons were reviewed. No gross new artifact or parking
+  strategy was found; RGB remains an independent non-registered camera.
+- Exact cost: 325,320 search + 800 baselines + 800 selected execution + 800
+  cold replay + 4 setup = 327,724 physics substeps, with zero retests. There
+  were 32 planner candidate-retention updates, zero RL optimizer updates and
+  zero actor/critic forwards.
+- No reset/s20/s40 promotion, 0--80 or 198-frame certificate, RL authorization
+  or chunk commit occurred.
+- Lightweight report:
+  `runs/taco_pour_control_aware_startup_v1/summary.md`; complete server evidence:
+  `/data_all/zzx/3.2RL/runs/taco_pour_control_aware_startup_v1`.
