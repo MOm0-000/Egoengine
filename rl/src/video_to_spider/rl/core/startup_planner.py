@@ -49,6 +49,7 @@ REPLAN_SOURCES = (0, 5, 10, 15)
 FINGERS = ("thumb", "index", "middle", "ring", "pinky")
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
 SCHEMA = "taco_pour_control_aware_startup_v1"
+OVERLAP_SCHEMA = "taco_pour_aplan_overlap_continuation_20_60_v1"
 
 
 def _numpy(value: Any) -> np.ndarray:
@@ -77,6 +78,7 @@ def knot_sources(source: int, *, end: int = HORIZON, interval: int = 5) -> np.nd
 def make_noise_schedule(
     *, seed: int = 0, sources: tuple[int, ...] = REPLAN_SOURCES,
     rounds: int = 4, slots: int = 32, dof: int = DOF, std: float = 0.20,
+    end: int = HORIZON,
 ) -> dict[tuple[int, int], np.ndarray]:
     """Pre-generate noise once so A and L consume identical samples."""
     if rounds < 1 or slots < 3 or dof < 1 or not np.isfinite(std) or std <= 0:
@@ -84,7 +86,7 @@ def make_noise_schedule(
     rng = np.random.default_rng(seed)
     schedule = {}
     for source in sources:
-        count = len(knot_sources(source))
+        count = len(knot_sources(source, end=end))
         for round_index in range(rounds):
             schedule[(source, round_index)] = rng.normal(
                 0.0, std, size=(slots - 2, count, dof)
@@ -92,58 +94,85 @@ def make_noise_schedule(
     return schedule
 
 
-def expand_knot_noise(source: int, knot_noise: np.ndarray) -> np.ndarray:
+def expand_knot_noise(
+    source: int, knot_noise: np.ndarray, *, end: int = HORIZON,
+) -> np.ndarray:
     """Linearly interpolate node noise over control indices, not substeps."""
-    knots = knot_sources(source)
+    knots = knot_sources(source, end=end)
     noise = np.asarray(knot_noise, dtype=np.float64)
     if noise.shape != (len(knots), DOF) or not np.isfinite(noise).all():
         raise ValueError("knot noise shape or values changed")
-    rows = np.arange(source, HORIZON, dtype=np.float64)
-    expanded = np.empty((HORIZON - source, DOF), dtype=np.float64)
+    rows = np.arange(source, end, dtype=np.float64)
+    expanded = np.empty((end - source, DOF), dtype=np.float64)
     for index in range(DOF):
         expanded[:, index] = np.interp(rows, knots, noise[:, index])
     return expanded
 
 
-def project_plan(plan: np.ndarray, low: np.ndarray, high: np.ndarray) -> tuple[np.ndarray, int]:
-    """Apply the experiment's sole explicit float32 support projection."""
+def projection_accounting(
+    plan: np.ndarray, low: np.ndarray, high: np.ndarray,
+) -> tuple[np.ndarray, dict[str, np.ndarray]]:
+    """Project without conflating support clipping and float32 roundoff."""
     value = np.asarray(plan)
     lower = np.asarray(low)
     upper = np.asarray(high)
-    if value.shape != (HORIZON, DOF) or lower.shape != value.shape or upper.shape != value.shape:
-        raise ValueError("plan/support arrays must be (40, 36)")
+    if (
+        value.ndim != 2 or value.shape[1] != DOF
+        or lower.shape != value.shape or upper.shape != value.shape
+    ):
+        raise ValueError("plan/support arrays must be (end, 36)")
     if lower.dtype != np.float32 or upper.dtype != np.float32:
         raise ValueError("support must be float32")
     if not all(np.isfinite(row).all() for row in (value, lower, upper)):
         raise ValueError("plan/support must be finite")
     if bool((lower > upper).any()):
         raise ValueError("action support is empty")
-    raw = value.astype(np.float64, copy=False)
-    projected = np.clip(raw, lower.astype(np.float64), upper.astype(np.float64)).astype(np.float32)
-    count = int(np.count_nonzero(projected.astype(np.float64) != raw))
-    return projected, count
+    raw64 = value.astype(np.float64, copy=False)
+    low64 = lower.astype(np.float64)
+    high64 = upper.astype(np.float64)
+    clipped64 = np.clip(raw64, low64, high64)
+    action32 = clipped64.astype(np.float32)
+    support_clip = (raw64 < low64) | (raw64 > high64)
+    roundoff_only = (~support_clip) & (action32.astype(np.float64) != raw64)
+    on_bound = (action32 == lower) | (action32 == upper)
+    return action32, {
+        "support_clip": support_clip,
+        "roundoff_only": roundoff_only,
+        "on_bound": on_bound,
+    }
+
+
+def project_plan(plan: np.ndarray, low: np.ndarray, high: np.ndarray) -> tuple[np.ndarray, int]:
+    """Apply the experiment's sole explicit float32 support projection."""
+    projected, accounting = projection_accounting(plan, low, high)
+    return projected, int(np.count_nonzero(accounting["support_clip"]))
 
 
 def make_round_candidates(
     nominal: np.ndarray, low: np.ndarray, high: np.ndarray, *, source: int,
-    noise: np.ndarray, slots: int = 32,
+    noise: np.ndarray, slots: int = 32, preserve_prefix: bool = False,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Construct nominal, Replay, and thirty noisy candidates in fixed order."""
     nominal = np.asarray(nominal)
+    end = int(nominal.shape[0]) if nominal.ndim == 2 else -1
     noise = np.asarray(noise, dtype=np.float64)
-    if nominal.shape != (HORIZON, DOF) or nominal.dtype != np.float32:
-        raise ValueError("nominal plan must be float32 (40, 36)")
-    if noise.shape != (slots - 2, len(knot_sources(source)), DOF):
+    if end < 1 or nominal.shape != (end, DOF) or nominal.dtype != np.float32:
+        raise ValueError("nominal plan must be float32 (end, 36)")
+    if low.shape != nominal.shape or high.shape != nominal.shape:
+        raise ValueError("support shape does not match nominal plan")
+    if noise.shape != (slots - 2, len(knot_sources(source, end=end)), DOF):
         raise ValueError("round noise does not match the frozen slots/knots")
-    rows = np.empty((slots, HORIZON, DOF), dtype=np.float32)
+    rows = np.empty((slots, end, DOF), dtype=np.float32)
     projection_counts = np.zeros(slots, dtype=np.int32)
     # Slot zero is byte-preserved, not reconstructed through a spline.
     rows[0] = nominal
     rows[1] = 0.0
     rows[1], projection_counts[1] = project_plan(rows[1], low, high)
+    if preserve_prefix:
+        rows[1, :source] = nominal[:source]
     for slot in range(2, slots):
         proposal = nominal.astype(np.float64)
-        proposal[source:] += expand_knot_noise(source, noise[slot - 2])
+        proposal[source:] += expand_knot_noise(source, noise[slot - 2], end=end)
         rows[slot], projection_counts[slot] = project_plan(proposal, low, high)
     if rows[0].tobytes() != nominal.tobytes():
         raise RuntimeError("nominal slot bytes changed")
@@ -353,15 +382,17 @@ class Forecast:
     ctrl_loss_max: float
 
 
-def support_table(world: Any) -> tuple[np.ndarray, np.ndarray]:
+def support_table(world: Any, *, end: int = HORIZON) -> tuple[np.ndarray, np.ndarray]:
     original = np.asarray(world.time_indices).copy()
     start = np.asarray(world.start_indices).copy()
     if start.shape != (1,) or int(start[0]) != 0:
         raise RuntimeError("startup action support requires absolute endpoint cursor")
-    low = np.empty((HORIZON, DOF), dtype=np.float32)
+    if end < 1:
+        raise ValueError("support endpoint must be positive")
+    low = np.empty((end, DOF), dtype=np.float32)
     high = np.empty_like(low)
     try:
-        for source in range(HORIZON):
+        for source in range(end):
             world.time_indices[:] = source
             lo, hi = world.current_normalized_action_bounds()
             low[source] = _numpy(lo).reshape(1, -1)[0]
@@ -391,15 +422,23 @@ def evaluate_plan(
     budget: PhysicsBudget, *, source: int, projection_count: int = 0,
     phase: str = "search", observer: Callable[[int], None] | None = None,
     stop_endpoint: int = HORIZON,
+    snapshot_endpoints: set[int] | None = None,
+    snapshots: dict[int, dict[str, Any]] | None = None,
 ) -> Forecast:
     validate_physics_snapshot(boundary)
     plan = np.asarray(sequence)
-    if plan.shape != (HORIZON, DOF) or plan.dtype != np.float32:
-        raise ValueError("executed startup plan must be float32 (40, 36)")
+    end = int(plan.shape[0]) if plan.ndim == 2 else -1
+    if end < 1 or plan.shape != (end, DOF) or plan.dtype != np.float32:
+        raise ValueError("executed startup plan must be float32 (end, 36)")
+    if low.shape != plan.shape or high.shape != plan.shape:
+        raise ValueError("executed startup plan/support shape mismatch")
     if bool((plan < low).any() or (plan > high).any()):
         raise ValueError("startup plan exceeds original action support")
-    if not source < stop_endpoint <= HORIZON:
+    if not source < stop_endpoint <= end:
         raise ValueError("invalid forecast stop endpoint")
+    capture = set() if snapshot_endpoints is None else {int(value) for value in snapshot_endpoints}
+    if capture and snapshots is None:
+        raise ValueError("snapshot capture requires an output mapping")
     maximum = (stop_endpoint - source) * SUBSTEPS
     budget.reserve(phase, maximum)
     world.set_env_state(boundary)
@@ -437,6 +476,9 @@ def evaluate_plan(
         ):
             raise RuntimeError("startup reward/command endpoint contract changed")
         qpos, qvel, ctrl, tips = _world_row(world)
+        if outcome in capture:
+            assert snapshots is not None
+            snapshots[outcome] = world.get_env_state()
         ctrl_loss = float(np.max(np.abs(ctrl.astype(np.float64) - _numpy(requested)[0].astype(np.float64))))
         maximum_ctrl_loss = max(maximum_ctrl_loss, ctrl_loss)
         if ctrl_loss != 0.0:
@@ -603,7 +645,10 @@ def _save_observer(observer: StartupObserver, directory: Path) -> None:
             })
 
 
-def _save_forecast_group(path: Path, forecasts: list[Forecast], rounds: np.ndarray, slots: np.ndarray) -> None:
+def _save_forecast_group(
+    path: Path, forecasts: list[Forecast], rounds: np.ndarray, slots: np.ndarray,
+    accounting: Mapping[str, np.ndarray] | None = None,
+) -> None:
     maximum = max((len(row.outcome_endpoint) for row in forecasts), default=0)
     count = len(forecasts)
     def padded(shape, dtype, fill): return np.full((count, maximum, *shape), fill, dtype=dtype)
@@ -620,6 +665,10 @@ def _save_forecast_group(path: Path, forecasts: list[Forecast], rounds: np.ndarr
         f"cost_{name}": np.asarray([row.components.get(name, np.nan) for row in forecasts], dtype=np.float64)
         for name in component_names
     }
+    extra = {} if accounting is None else {
+        f"projection_{name}": np.asarray(value, dtype=np.int64)
+        for name, value in accounting.items()
+    }
     np.savez_compressed(
         path, sequence=np.stack([row.sequence for row in forecasts]), round=rounds,
         slot=slots, complete=np.asarray([row.complete for row in forecasts]),
@@ -628,7 +677,7 @@ def _save_forecast_group(path: Path, forecasts: list[Forecast], rounds: np.ndarr
         projection_count=np.asarray([row.projection_count for row in forecasts]),
         ctrl_loss_max=np.asarray([row.ctrl_loss_max for row in forecasts]),
         executed_mask=mask, outcome_endpoint=outcomes, action=actions, qpos=qpos,
-        qvel=qvel, ctrl=ctrl, tracking_score=score, **component_arrays,
+        qvel=qvel, ctrl=ctrl, tracking_score=score, **component_arrays, **extra,
     )
 
 
@@ -662,6 +711,240 @@ def _load_config(config_path: Path, asset_root: Path | None) -> tuple[dict[str, 
     if config.get("planner") != expected_planner:
         raise ValueError("startup planner contract changed")
     return config, root, assets
+
+
+def _load_overlap_config(
+    config_path: Path, asset_root: Path | None,
+) -> tuple[dict[str, Any], Path, dict[str, Path]]:
+    config = yaml.safe_load(config_path.read_text())
+    if config.get("schema") != OVERLAP_SCHEMA or config.get("status") != "authorized_single_run":
+        raise ValueError("overlap continuation is not authorized")
+    if config.get("baseline", {}).get("commit") != "4441edc1c8839280d7bc13625fef140dcf844eb0":
+        raise ValueError("overlap continuation baseline changed")
+    expected = {
+        "start": 20, "end": 60, "replan_sources": [20, 25, 30, 35],
+        "execute_controls_per_replan": 5, "rounds_per_replan": 4,
+        "slots_per_round": 32, "nominal_slot": 0, "zero_residual_slot": 1,
+        "noisy_slots": 30, "seed": 0, "noise_std_normalized": 0.20,
+        "knot_interval_controls": 5, "final_knot_source": 59,
+        "interpolation": "linear_over_control_indices",
+        "projection": "same_clip_then_float32_as_parent_with_corrected_accounting",
+        "candidate_shape": [60, 36], "preserve_sources_0_19": True,
+        "complete_forecast_required": True,
+        "selection": "minimum_cost_then_slot_among_complete",
+        "all_incomplete": "stop_without_extra_sampling",
+    }
+    if config.get("planner") != expected:
+        raise ValueError("overlap planner contract changed")
+    root = (asset_root or Path(config["asset_root"])).resolve(strict=True)
+    parent_root = (root / config["parent"]["run_directory"]).resolve(strict=True)
+    assets: dict[str, Path] = {"parent_root": parent_root}
+    for name in (
+        "trajectory", "substeps", "contacts", "terminal_snapshot", "s0_snapshot",
+        "scene", "reference",
+    ):
+        row = config["parent"][name]
+        assets[name] = verify_artifact(root / row["path"], row["sha256"])
+    parent_manifest = json.loads((parent_root / "input_manifest.json").read_text())
+    for name in ("simulator", "protocol", "objective", "observation", "action"):
+        row = parent_manifest["assets"][name]
+        assets[name] = verify_artifact(Path(row["path"]), row["sha256"])
+    assets.update({
+        "parent_noise": (parent_root / "noise_schedule.npz").resolve(strict=True),
+        "parent_analysis": (parent_root / "analysis.json").resolve(strict=True),
+        "parent_replay": (parent_root / "A_REPLAY/trajectory.npz").resolve(strict=True),
+        "parent_a_support": (parent_root / "A_action_support.npz").resolve(strict=True),
+        "parent_l_support": (parent_root / "L_action_support.npz").resolve(strict=True),
+    })
+    return config, root, assets
+
+
+def _proposal_accounting(
+    nominal: np.ndarray, low: np.ndarray, high: np.ndarray, *, source: int,
+    noise: np.ndarray, preserve_prefix: bool = False,
+) -> tuple[np.ndarray, dict[str, np.ndarray]]:
+    """Rebuild one round plus per-slot clip/roundoff/bound counts."""
+    candidates, _ = make_round_candidates(
+        nominal, low, high, source=source, noise=noise,
+        preserve_prefix=preserve_prefix,
+    )
+    end = nominal.shape[0]
+    names = ("support_clip", "roundoff_only", "on_bound")
+    counts = {name: np.zeros(32, dtype=np.int64) for name in names}
+    # Slots 0/1 are exact float32 nominal/zero proposals by contract.
+    counts["on_bound"][0] = int(np.count_nonzero(
+        (candidates[0, source:] == low[source:]) | (candidates[0, source:] == high[source:])
+    ))
+    counts["on_bound"][1] = int(np.count_nonzero(
+        (candidates[1, source:] == low[source:]) | (candidates[1, source:] == high[source:])
+    ))
+    for slot in range(2, 32):
+        raw = nominal.astype(np.float64)
+        raw[source:] += expand_knot_noise(source, noise[slot - 2], end=end)
+        rebuilt, accounting = projection_accounting(raw, low, high)
+        if rebuilt.tobytes() != candidates[slot].tobytes():
+            raise RuntimeError("projection accounting changed candidate bytes")
+        for name in names:
+            counts[name][slot] = int(np.count_nonzero(accounting[name][source:]))
+    return candidates, counts
+
+
+def _parent_projection_erratum(parent: Path, output: Path) -> dict[str, Any]:
+    with np.load(parent / "noise_schedule.npz", allow_pickle=False) as archive:
+        noise = {name: archive[name].copy() for name in archive.files}
+    conditions: dict[str, Any] = {}
+    for label in ("A_PLAN", "L_PLAN"):
+        support = _trajectory_arrays(parent / f"{label[0]}_action_support.npz")
+        low, high = support["low"], support["high"]
+        nominal = np.zeros((HORIZON, DOF), dtype=np.float32)
+        aggregates = {
+            scope: {name: 0 for name in ("support_clip", "roundoff_only", "on_bound", "denominator")}
+            for scope in ("all_slots", "noisy_slots")
+        }
+        sources: dict[str, Any] = {}
+        winner_order: list[dict[str, int]] = []
+        for source in REPLAN_SOURCES:
+            with np.load(parent / label / "search" / f"source_{source:02d}/candidates.npz", allow_pickle=False) as archive:
+                stored = {name: archive[name].copy() for name in archive.files}
+            source_counts = {
+                scope: {name: 0 for name in ("support_clip", "roundoff_only", "on_bound", "denominator")}
+                for scope in aggregates
+            }
+            for round_index in range(4):
+                key = f"source_{source:02d}_round_{round_index}"
+                candidates, counts = _proposal_accounting(
+                    nominal, low, high, source=source, noise=noise[key],
+                )
+                indices = np.flatnonzero(stored["round"] == round_index)
+                if len(indices) != 32 or not np.array_equal(stored["slot"][indices], np.arange(32)):
+                    raise RuntimeError("parent candidate ordering changed")
+                if candidates.tobytes() != stored["sequence"][indices].tobytes():
+                    raise RuntimeError(f"{label} source {source} round {round_index} candidate bytes differ")
+                complete = np.flatnonzero(stored["complete"][indices])
+                if not len(complete):
+                    raise RuntimeError("parent round unexpectedly has no complete forecast")
+                chosen_local = min(
+                    complete.tolist(), key=lambda slot: (float(stored["cost"][indices[slot]]), slot)
+                )
+                record = json.loads((parent / label / "search" / f"source_{source:02d}" / f"round_{round_index}.json").read_text())
+                if int(record["selected_slot"]) != chosen_local:
+                    raise RuntimeError("parent winner ordering did not reproduce")
+                winner_order.append({"source": source, "round": round_index, "slot": chosen_local})
+                nominal = candidates[chosen_local].copy()
+                for scope, slots in (("all_slots", slice(None)), ("noisy_slots", slice(2, None))):
+                    denominator = (32 if scope == "all_slots" else 30) * (HORIZON - source) * DOF
+                    source_counts[scope]["denominator"] += denominator
+                    for name in ("support_clip", "roundoff_only", "on_bound"):
+                        source_counts[scope][name] += int(counts[name][slots].sum())
+            for scope in aggregates:
+                for name, value in source_counts[scope].items():
+                    aggregates[scope][name] += value
+            sources[str(source)] = source_counts
+        for scope in aggregates:
+            denominator = aggregates[scope]["denominator"]
+            for name in ("support_clip", "roundoff_only", "on_bound"):
+                aggregates[scope][f"{name}_fraction"] = aggregates[scope][name] / denominator
+        conditions[label] = {
+            "candidate_float32_bytes_match_parent": True,
+            "winner_order_matches_parent": True,
+            "forecast_rows_only": True,
+            "aggregate": aggregates,
+            "by_source": sources,
+            "winner_order": winner_order,
+        }
+    report = {
+        "schema": "taco_pour_control_aware_startup_projection_accounting_erratum_v1",
+        "physics_steps": 0,
+        "parent_immutable": True,
+        "old_projection_field_semantics": "support clipping plus float32 roundoff",
+        "corrected_support_clip_semantics": "raw64 < low64 or raw64 > high64",
+        "conditions": conditions,
+    }
+    write_json(output / "projection_accounting_erratum.json", report)
+    lines = [
+        "# Projection accounting erratum", "",
+        "The archived 93.75% field conflated true support clipping with float32 storage roundoff. No parent bytes were changed.", "",
+        "| condition | slots | support clip | roundoff only | final action on bound |",
+        "|---|---|---:|---:|---:|",
+    ]
+    for label, row in conditions.items():
+        for scope, values in row["aggregate"].items():
+            lines.append(
+                f"| {label} | {scope} | {values['support_clip_fraction']:.9%} | "
+                f"{values['roundoff_only_fraction']:.9%} | {values['on_bound_fraction']:.9%} |"
+            )
+    lines.extend(["", "All 1,024 archived candidate sequences and all archived winner choices were reproduced exactly from the frozen noise/support inputs."])
+    (output / "projection_accounting_erratum.md").write_text("\n".join(lines) + "\n")
+    return report
+
+
+def _absolute_metric_rows(data: dict[str, np.ndarray], reference: dict[str, np.ndarray]) -> dict[int, dict[str, float]]:
+    rows: dict[int, dict[str, float]] = {}
+    endpoints = np.asarray(data["endpoint"], dtype=np.int32)
+    for index, endpoint_value in enumerate(endpoints):
+        endpoint = int(endpoint_value)
+        qpos = data["qpos"][index]; qvel = data["qvel"][index]; ref = reference["qpos"][endpoint]
+        values: dict[str, float] = {}
+        for role, velocity_offset in (("tool", 36), ("target", 42)):
+            p, q = object_pose(qpos, role); rp, rq = object_pose(ref, role)
+            values[f"{role}_position_error_m"] = float(np.linalg.norm(p - rp))
+            values[f"{role}_rotation_error_rad"] = rotation_error_rad(q, rq)
+            values[f"{role}_linear_speed_m_s"] = float(np.linalg.norm(qvel[velocity_offset:velocity_offset + 3]))
+            values[f"{role}_angular_speed_rad_s"] = float(np.linalg.norm(qvel[velocity_offset + 3:velocity_offset + 6]))
+        pair_p, pair_r = pair_pose(qpos); ref_pair_p, ref_pair_r = pair_pose(ref)
+        values["pair_translation_error_m"] = float(np.linalg.norm(pair_p - ref_pair_p))
+        values["pair_rotation_error_rad"] = matrix_rotation_error_rad(pair_r, ref_pair_r)
+        values["world_pair_translation_error_m"] = float(np.linalg.norm(
+            (qpos[36:39] - qpos[43:46]) - (ref[36:39] - ref[43:46])
+        ))
+        values["tracking_score"] = float("nan") if endpoint == 0 else float(data["tracking_score"][endpoint - 1])
+        rows[endpoint] = values
+    return rows
+
+
+def _export_parent_absolute_metrics(parent: Path, reference_path: Path, output: Path) -> dict[str, Any]:
+    reference = _trajectory_arrays(reference_path)
+    conditions = {
+        name: _trajectory_arrays(parent / name / "trajectory.npz")
+        for name in ("A_REPLAY", "A_PLAN")
+    }
+    endpoint_rows = {name: _absolute_metric_rows(data, reference) for name, data in conditions.items()}
+    segments = {"0_20": (1, 20), "20_40": (21, 40), "0_40": (1, 40)}
+    records: list[dict[str, Any]] = []
+    summary: dict[str, Any] = {}
+    for name, rows in endpoint_rows.items():
+        summary[name] = {"endpoints": {str(ep): rows[ep] for ep in (20, 40)}, "segments": {}}
+        for endpoint in (20, 40):
+            for metric, value in rows[endpoint].items():
+                records.append({"condition": name, "scope": f"endpoint_{endpoint}", "metric": metric, "statistic": "value", "value": value})
+        metrics = tuple(rows[1])
+        for segment, (first, last) in segments.items():
+            summary[name]["segments"][segment] = {}
+            for metric in metrics:
+                samples = np.asarray([rows[endpoint][metric] for endpoint in range(first, last + 1)], dtype=np.float64)
+                values = {
+                    "mean": float(np.mean(samples)),
+                    "rms": float(np.sqrt(np.mean(np.square(samples)))),
+                    "max": float(np.max(samples)),
+                }
+                summary[name]["segments"][segment][metric] = values
+                for statistic, value in values.items():
+                    records.append({"condition": name, "scope": segment, "metric": metric, "statistic": statistic, "value": value})
+    with (output / "parent_absolute_metrics.csv").open("w", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=("condition", "scope", "metric", "statistic", "value"), lineterminator="\n")
+        writer.writeheader(); writer.writerows(records)
+    lines = ["# Parent A absolute metrics", "", "Existing archived A_REPLAY/A_PLAN arrays only; physics steps: 0.", ""]
+    for name in ("A_REPLAY", "A_PLAN"):
+        lines.extend([f"## {name}", "", "| scope | metric | mean/value | RMS | max |", "|---|---|---:|---:|---:|"])
+        for endpoint in (20, 40):
+            for metric, value in summary[name]["endpoints"][str(endpoint)].items():
+                lines.append(f"| endpoint {endpoint} | {metric} | {value:.9g} |  |  |")
+        for segment in segments:
+            for metric, values in summary[name]["segments"][segment].items():
+                lines.append(f"| {segment} | {metric} | {values['mean']:.9g} | {values['rms']:.9g} | {values['max']:.9g} |")
+        lines.append("")
+    (output / "parent_absolute_metrics.md").write_text("\n".join(lines) + "\n")
+    return summary
 
 
 def _git_head() -> str:
@@ -719,6 +1002,57 @@ def preflight(config_path: Path, asset_root: Path | None, output: Path) -> dict[
     }
     write_json(output / "input_manifest.json", manifest)
     write_json(output / "status.json", {"schema": SCHEMA, "status": "PREFLIGHT_COMPLETE", "implementation_commit": _git_head()})
+    return manifest
+
+
+def overlap_preflight(
+    config_path: Path, asset_root: Path | None, output: Path,
+) -> dict[str, Any]:
+    """Purely offline preflight for the 20->60 overlap continuation."""
+    if output.exists() or output.is_symlink():
+        raise FileExistsError(f"immutable overlap output exists: {output}")
+    config, root, assets = _load_overlap_config(config_path, asset_root)
+    _require_clean_and_baseline(config)
+    snapshot = load_torch_gzip(assets["s0_snapshot"])
+    validate_physics_snapshot(snapshot)
+    if len(snapshot) != 362 or len(snapshot["warp_state_keys"]) != 342:
+        raise ValueError("A s0 complete snapshot field contract changed")
+    if int(snapshot["start_indices"][0] + snapshot["time_indices"][0]) != 0:
+        raise ValueError("A s0 is not endpoint zero")
+    parent_status = json.loads((assets["parent_root"] / "status.json").read_text())
+    parent_visual = json.loads((assets["parent_root"] / "visual_review.json").read_text())
+    if parent_status.get("status") != "COMPLETE_NO_PROMOTION" or parent_visual.get("status") != "complete":
+        raise ValueError("parent numerical/visual evidence is not complete")
+    output.mkdir(parents=True)
+    erratum = _parent_projection_erratum(assets["parent_root"], output)
+    metrics = _export_parent_absolute_metrics(
+        assets["parent_root"], assets["reference"], output,
+    )
+    manifest = {
+        "schema": f"{OVERLAP_SCHEMA}_resolved_inputs",
+        "status": "PREFLIGHT_COMPLETE",
+        "baseline_commit": config["baseline"]["commit"],
+        "implementation_commit": _git_head(),
+        "implementation_worktree_clean": True,
+        "config": manifest_entry(config_path),
+        "asset_root": str(root),
+        "assets": {name: manifest_entry(path) for name, path in assets.items() if name != "parent_root"},
+        "parent_root": str(assets["parent_root"]),
+        "parent_status": parent_status.get("status"),
+        "parent_visual_review": parent_visual.get("status"),
+        "snapshot_contract": {"field_count": 362, "warp_state_field_count": 342},
+        "offline_projection_erratum": {
+            label: row["aggregate"] for label, row in erratum["conditions"].items()
+        },
+        "parent_absolute_metrics_exported": bool(metrics),
+        "physics_steps": 0,
+        "authorization": config["authorization"],
+    }
+    write_json(output / "resolved_inputs.json", manifest)
+    write_json(output / "status.json", {
+        "schema": OVERLAP_SCHEMA, "status": "PREFLIGHT_COMPLETE",
+        "implementation_commit": _git_head(), "physics_steps": 0,
+    })
     return manifest
 
 
@@ -956,6 +1290,223 @@ def _cold_parity(actual: Forecast, actual_observer: StartupObserver, cold: Forec
     }
 
 
+def _combined_observer(
+    world: Any, prefix: StartupObserver, tail: StartupObserver, *, split_source: int,
+) -> StartupObserver:
+    combined = StartupObserver(world)
+    combined.rows = [row for row in prefix.rows if int(row["source_endpoint"]) < split_source]
+    combined.rows.extend(row for row in tail.rows if int(row["source_endpoint"]) >= split_source)
+    combined.contacts = [row for row in prefix.contacts if int(row["source_endpoint"]) < split_source]
+    combined.contacts.extend(row for row in tail.contacts if int(row["source_endpoint"]) >= split_source)
+    return combined
+
+
+def _combine_forecasts(
+    sequence: np.ndarray, parts: list[Forecast], *, expected_start: int,
+) -> Forecast:
+    if not parts:
+        raise ValueError("cannot combine an empty rollout")
+    actions = np.concatenate([row.actions for row in parts])
+    sources = np.concatenate([row.source_endpoint for row in parts])
+    outcomes = np.concatenate([row.outcome_endpoint for row in parts])
+    if not np.array_equal(sources, np.arange(expected_start, expected_start + len(sources))):
+        raise RuntimeError("combined rollout ancestry is not continuous")
+    cost_rows = tuple(item for row in parts for item in row.cost_rows)
+    complete = all(row.complete for row in parts)
+    cost, components = trajectory_cost(list(cost_rows)) if complete else (float("inf"), {})
+    return Forecast(
+        complete=complete, sequence=np.asarray(sequence).copy(), source=expected_start,
+        cost=cost, components=components,
+        first_failure_endpoint=next((row.first_failure_endpoint for row in parts if row.first_failure_endpoint is not None), None),
+        projection_count=sum(row.projection_count for row in parts),
+        actions=actions, source_endpoint=sources, outcome_endpoint=outcomes,
+        qpos=np.concatenate([row.qpos for row in parts]),
+        qvel=np.concatenate([row.qvel for row in parts]),
+        ctrl=np.concatenate([row.ctrl for row in parts]),
+        tips=np.concatenate([row.tips for row in parts]),
+        tracking_score=np.concatenate([row.tracking_score for row in parts]),
+        cost_rows=cost_rows, ctrl_loss_max=max(row.ctrl_loss_max for row in parts),
+    )
+
+
+def _save_overlap_condition(
+    directory: Path, initial: dict[str, Any], result: Forecast,
+    observer: StartupObserver, snapshots: Mapping[int, dict[str, Any]], *, label: str,
+) -> None:
+    directory.mkdir(parents=True, exist_ok=True)
+    qpos0 = _numpy(initial["qpos"]).reshape(1, -1).astype(np.float32)
+    qvel0 = _numpy(initial["qvel"]).reshape(1, -1).astype(np.float32)
+    ctrl0 = _numpy(initial["ctrl"]).reshape(1, -1).astype(np.float32)
+    arrays = {
+        key: np.asarray([row[key] for row in result.cost_rows], dtype=np.float64)
+        for key in (result.cost_rows[0] if result.cost_rows else {})
+    }
+    np.savez_compressed(
+        directory / "trajectory.npz",
+        endpoint=np.asarray([0, *result.outcome_endpoint.tolist()], dtype=np.int32),
+        qpos=np.vstack([qpos0, result.qpos]).astype(np.float32),
+        qvel=np.vstack([qvel0, result.qvel]).astype(np.float32),
+        ctrl=np.vstack([ctrl0, result.ctrl]).astype(np.float32),
+        action=result.actions.astype(np.float32), tracking_score=result.tracking_score,
+        tips=result.tips.astype(np.float32), **arrays,
+    )
+    _save_observer(observer, directory)
+    snapshot_rows = {}
+    for endpoint, snapshot in sorted(snapshots.items()):
+        target = directory / "snapshots" / f"endpoint_{endpoint:02d}.pt.gz"
+        write_torch_gzip_atomic(target, snapshot)
+        snapshot_rows[str(endpoint)] = manifest_entry(target)
+    write_json(directory / "result.json", {
+        "condition": label, "complete_to_60": bool(result.complete and len(result.outcome_endpoint) and result.outcome_endpoint[-1] == 60),
+        "executed_controls": len(result.outcome_endpoint),
+        "first_failure_endpoint": result.first_failure_endpoint,
+        "terminal_endpoint": int(result.outcome_endpoint[-1]) if len(result.outcome_endpoint) else 0,
+        "cost": result.cost if np.isfinite(result.cost) else None,
+        "cost_components": result.components, "ctrl_loss_max": result.ctrl_loss_max,
+        "full_sequence_sha256": _array_digest(result.sequence),
+        "executed_action_sha256": _array_digest(result.actions),
+        "snapshots": snapshot_rows,
+    })
+
+
+def _parent_prefix_parity(
+    parent: Path, baseline: Forecast, baseline_observer: StartupObserver,
+    initial: dict[str, Any], captured_s40: dict[str, Any],
+) -> dict[str, Any]:
+    archived = _trajectory_arrays(parent / "A_PLAN/trajectory.npz")
+    current = {
+        "endpoint": np.arange(41, dtype=np.int32),
+        "qpos": np.vstack([_numpy(initial["qpos"]).reshape(1, -1), baseline.qpos[:40]]).astype(np.float32),
+        "qvel": np.vstack([_numpy(initial["qvel"]).reshape(1, -1), baseline.qvel[:40]]).astype(np.float32),
+        "ctrl": np.vstack([_numpy(initial["ctrl"]).reshape(1, -1), baseline.ctrl[:40]]).astype(np.float32),
+        "action": baseline.actions[:40], "tracking_score": baseline.tracking_score[:40],
+        "tips": baseline.tips[:40],
+    }
+    for key in baseline.cost_rows[0]:
+        current[key] = np.asarray([row[key] for row in baseline.cost_rows[:40]], dtype=np.float64)
+    endpoints = _array_maps_equal(archived, current)
+    parent_substeps = _trajectory_arrays(parent / "A_PLAN/substeps.npz")
+    current_substeps, current_contacts = _observer_map(baseline_observer)
+    current_substeps = {key: value[:40 * SUBSTEPS] for key, value in current_substeps.items()}
+    substeps = _array_maps_equal(parent_substeps, current_substeps)
+    parent_contacts = _trajectory_arrays(parent / "A_PLAN/contacts_raw.npz")
+    if current_contacts:
+        contact_mask = current_contacts["source_endpoint"] < 40
+        current_contacts = {key: value[contact_mask] for key, value in current_contacts.items()}
+    contacts = _array_maps_equal(parent_contacts, current_contacts)
+    archived_s40 = load_torch_gzip(parent / "A_PLAN/execution/endpoint_40.pt.gz")
+    snapshot = _snapshot_equal(archived_s40, captured_s40)
+    return {
+        "endpoint_arrays": endpoints, "substeps": substeps, "contacts": contacts,
+        "complete_s40_snapshot_bitwise_equal": snapshot,
+        "all_bitwise_equal": bool(endpoints["all_equal"] and substeps["all_equal"] and contacts["all_equal"] and snapshot),
+    }
+
+
+def _overlap_search_and_execute(
+    world: Any, s20: dict[str, Any], initial_plan: np.ndarray,
+    low: np.ndarray, high: np.ndarray, reference_qpos: np.ndarray,
+    reference_ctrl: np.ndarray, reference_tips: np.ndarray,
+    noise: dict[tuple[int, int], np.ndarray], budget: PhysicsBudget, output: Path,
+) -> tuple[Forecast, StartupObserver, dict[int, dict[str, Any]], dict[str, Any]]:
+    nominal = np.asarray(initial_plan, dtype=np.float32).copy()
+    frozen_prefix = nominal[:20].copy()
+    boundary = s20
+    parts: list[Forecast] = []
+    selections: list[dict[str, Any]] = []
+    observer = StartupObserver(world)
+    snapshots: dict[int, dict[str, Any]] = {20: s20}
+    directory = output / "OVERLAP_PLAN"
+    directory.mkdir(parents=True, exist_ok=True)
+    for source in (20, 25, 30, 35):
+        if nominal[:20].tobytes() != frozen_prefix.tobytes():
+            raise RuntimeError("overlap planner modified frozen source 0..19 actions")
+        source_dir = directory / "search" / f"source_{source:02d}"
+        source_dir.mkdir(parents=True, exist_ok=True)
+        all_forecasts: list[Forecast] = []
+        rounds: list[int] = []
+        slots: list[int] = []
+        all_accounting = {name: [] for name in ("support_clip", "roundoff_only", "on_bound")}
+        winner: Forecast | None = None
+        for round_index in range(4):
+            candidates, accounting = _proposal_accounting(
+                nominal, low, high, source=source,
+                noise=noise[(source, round_index)], preserve_prefix=True,
+            )
+            if any(candidate[:source].tobytes() != nominal[:source].tobytes() for candidate in candidates):
+                raise RuntimeError("overlap candidate modified an executed prefix")
+            results = [
+                evaluate_plan(
+                    world, boundary, candidates[slot], low, high, reference_qpos,
+                    reference_ctrl, reference_tips, budget, source=source,
+                    projection_count=int(accounting["support_clip"][slot]), phase="search",
+                    stop_endpoint=60,
+                ) for slot in range(32)
+            ]
+            complete = [(row.cost, slot, row) for slot, row in enumerate(results) if row.complete]
+            round_rows = [_forecast_summary(row, round_index=round_index, slot=slot) for slot, row in enumerate(results)]
+            all_forecasts.extend(results); rounds.extend([round_index] * 32); slots.extend(range(32))
+            for name in all_accounting:
+                all_accounting[name].extend(accounting[name].tolist())
+            if not complete:
+                write_json(source_dir / f"round_{round_index}.json", {
+                    "status": "NO_COMPLETE_FORECAST", "candidates": round_rows,
+                })
+                _save_forecast_group(
+                    source_dir / "candidates.npz", all_forecasts,
+                    np.asarray(rounds), np.asarray(slots),
+                    {name: np.asarray(value) for name, value in all_accounting.items()},
+                )
+                raise RuntimeError(f"NO_COMPLETE_FORECAST_AT_SOURCE_{source}")
+            _, selected_slot, winner = min(complete, key=lambda item: (item[0], item[1]))
+            nominal = winner.sequence.copy()
+            selection = {
+                "source": source, "round": round_index, "selected_slot": selected_slot,
+                **_forecast_summary(winner, round_index=round_index, slot=selected_slot),
+            }
+            selections.append(selection)
+            write_json(source_dir / f"round_{round_index}.json", {
+                "status": "COMPLETE", "selected_slot": selected_slot,
+                "candidates": round_rows,
+            })
+        assert winner is not None
+        _save_forecast_group(
+            source_dir / "candidates.npz", all_forecasts,
+            np.asarray(rounds), np.asarray(slots),
+            {name: np.asarray(value) for name, value in all_accounting.items()},
+        )
+        write_torch_gzip_atomic(source_dir / "source_snapshot.pt.gz", boundary)
+        stop = 60 if source == 35 else source + 5
+        capture = {40, 60} & set(range(source + 1, stop + 1))
+        executed = evaluate_plan(
+            world, boundary, nominal, low, high, reference_qpos, reference_ctrl,
+            reference_tips, budget, source=source, phase="execution",
+            observer=observer, stop_endpoint=stop, snapshot_endpoints=capture,
+            snapshots=snapshots,
+        )
+        if not executed.complete:
+            raise RuntimeError(f"selected overlap plan terminated at {executed.first_failure_endpoint}")
+        count = stop - source
+        parity = {
+            name: getattr(executed, name).tobytes() == getattr(winner, name)[:count].tobytes()
+            for name in ("qpos", "qvel", "ctrl", "actions")
+        }
+        if not all(parity.values()):
+            raise RuntimeError(f"overlap forecast/execution mismatch at source {source}: {parity}")
+        parts.append(executed)
+        boundary = world.get_env_state()
+        write_json(directory / "execution" / f"source_{source:02d}_parity.json", parity)
+        write_torch_gzip_atomic(directory / "execution" / f"endpoint_{stop:02d}.pt.gz", boundary)
+        write_json(output / "budget_ledger.json", budget.report())
+    result = _combine_forecasts(nominal, parts, expected_start=20)
+    write_json(directory / "selection.json", {
+        "condition": "OVERLAP_PLAN", "round_selections": selections,
+        "final_cost_20_60": result.cost, "final_components_20_60": result.components,
+        "sequence_sha256": _array_digest(nominal), "prefix_0_19_bitwise_preserved": True,
+    })
+    return result, observer, snapshots, {"selection": selections, "nominal": nominal}
+
+
 def execute(config_path: Path, asset_root: Path | None, output: Path) -> dict[str, Any]:
     """Execute the frozen four-cell experiment and both cold replays."""
     config, _, assets = _load_config(config_path, asset_root)
@@ -1065,6 +1616,165 @@ def execute(config_path: Path, asset_root: Path | None, output: Path) -> dict[st
         },
         "budget": budget.report(), "actor_or_critic_forwards": 0,
         "optimizer_updates": 32, "optimizer_update_semantics": "best_executed_candidate_retention",
+        "rl_optimizer_updates": 0, "chunk_commit": False,
+    }
+    write_json(output / "execution_summary.json", summary)
+    status.update({"status": "PHYSICS_COMPLETE_ANALYSIS_PENDING", "budget": budget.report()})
+    write_json(status_path, status); write_json(output / "budget_ledger.json", budget.report())
+    return summary
+
+
+def _forecast_prefix(row: Forecast, stop_endpoint: int) -> Forecast:
+    count = int(np.searchsorted(row.outcome_endpoint, stop_endpoint, side="right"))
+    if count != stop_endpoint - row.source:
+        raise RuntimeError("requested forecast prefix was not executed")
+    cost_rows = row.cost_rows[:count]
+    cost, components = trajectory_cost(list(cost_rows))
+    return Forecast(
+        complete=True, sequence=row.sequence.copy(), source=row.source, cost=cost,
+        components=components, first_failure_endpoint=None,
+        projection_count=row.projection_count, actions=row.actions[:count].copy(),
+        source_endpoint=row.source_endpoint[:count].copy(), outcome_endpoint=row.outcome_endpoint[:count].copy(),
+        qpos=row.qpos[:count].copy(), qvel=row.qvel[:count].copy(), ctrl=row.ctrl[:count].copy(),
+        tips=row.tips[:count].copy(), tracking_score=row.tracking_score[:count].copy(),
+        cost_rows=cost_rows, ctrl_loss_max=row.ctrl_loss_max,
+    )
+
+
+def execute_overlap(
+    config_path: Path, asset_root: Path | None, output: Path,
+) -> dict[str, Any]:
+    """Execute the single authorized baseline/search/cold-replay attempt."""
+    config, _, assets = _load_overlap_config(config_path, asset_root)
+    _require_clean_and_baseline(config)
+    manifest = json.loads((output / "resolved_inputs.json").read_text())
+    status_path = output / "status.json"
+    status = json.loads(status_path.read_text())
+    if manifest.get("status") != "PREFLIGHT_COMPLETE" or status.get("status") != "PREFLIGHT_COMPLETE":
+        raise RuntimeError("overlap execute requires one unused preflight")
+    if manifest.get("implementation_commit") != _git_head():
+        raise RuntimeError("implementation changed after overlap preflight")
+    for name, recorded in manifest["assets"].items():
+        if manifest_entry(assets[name]) != recorded:
+            raise RuntimeError(f"overlap input changed after preflight: {name}")
+    initial = load_torch_gzip(assets["s0_snapshot"])
+    reference = _trajectory_arrays(assets["reference"])
+    reference_qpos = np.asarray(reference["qpos"], dtype=np.float32)
+    reference_ctrl = np.asarray(reference["ctrl"], dtype=np.float32)
+    parent = _trajectory_arrays(assets["trajectory"])
+    parent_actions = np.asarray(parent["action"], dtype=np.float32)
+    if parent_actions.shape != (40, DOF):
+        raise RuntimeError("parent A_PLAN action shape changed")
+    limits = config["budget"]
+    budget = PhysicsBudget(
+        limits={
+            "search": limits["search_physics_max"], "baseline": limits["baseline_physics_max"],
+            "execution": limits["real_execution_physics_max"], "cold": limits["cold_replay_physics_max"],
+            "retest": limits["implementation_retest_physics_max"], "setup": limits["all_setup_physics_max"],
+        }, all_in_limit=limits["all_in_physics_hard_max"],
+    )
+    sequence = np.zeros((60, DOF), dtype=np.float32)
+    sequence[:40] = parent_actions
+    noise = make_noise_schedule(
+        seed=0, sources=(20, 25, 30, 35), rounds=4, slots=32,
+        std=0.20, end=60,
+    )
+    np.savez_compressed(output / "noise_schedule.npz", **{
+        f"source_{source:02d}_round_{round_index}": value
+        for (source, round_index), value in noise.items()
+    })
+    try:
+        world = _make_world(assets, initial)
+        budget.reserve("setup", 1); budget.charge("setup", 1)
+        if not _snapshot_equal(world.get_env_state(), initial):
+            raise RuntimeError("baseline A s0 full snapshot did not restore bitwise")
+        low, high = support_table(world, end=60)
+        np.savez_compressed(output / "action_support.npz", low=low, high=high)
+        reference_tips = reference_tip_positions(world.env.model_cpu, reference_qpos)
+        baseline_observer = StartupObserver(world)
+        baseline_snapshots: dict[int, dict[str, Any]] = {}
+        baseline = evaluate_plan(
+            world, initial, sequence, low, high, reference_qpos, reference_ctrl,
+            reference_tips, budget, source=0, phase="baseline",
+            observer=baseline_observer, stop_endpoint=60,
+            snapshot_endpoints={20, 40}, snapshots=baseline_snapshots,
+        )
+        if 20 not in baseline_snapshots or 40 not in baseline_snapshots:
+            raise RuntimeError(f"baseline failed before parent endpoint40 at {baseline.first_failure_endpoint}")
+        parent_parity = _parent_prefix_parity(
+            assets["parent_root"], baseline, baseline_observer, initial,
+            baseline_snapshots[40],
+        )
+        write_json(output / "FROZEN_SUFFIX_BASELINE/parent_0_40_parity.json", parent_parity)
+        if not parent_parity["all_bitwise_equal"]:
+            raise RuntimeError("uninterrupted baseline did not reproduce parent A_PLAN 0->40")
+        _save_overlap_condition(
+            output / "FROZEN_SUFFIX_BASELINE", initial, baseline,
+            baseline_observer, baseline_snapshots, label="FROZEN_SUFFIX_BASELINE",
+        )
+        overlap_tail, overlap_observer, overlap_snapshots, meta = _overlap_search_and_execute(
+            world, baseline_snapshots[20], sequence, low, high, reference_qpos,
+            reference_ctrl, reference_tips, noise, budget, output,
+        )
+        prefix = _forecast_prefix(baseline, 20)
+        full = _combine_forecasts(meta["nominal"], [prefix, overlap_tail], expected_start=0)
+        full_observer = _combined_observer(world, baseline_observer, overlap_observer, split_source=20)
+        if full.sequence[:20].tobytes() != parent_actions[:20].tobytes():
+            raise RuntimeError("selected overlap plan changed fixed 0->20 prefix")
+        _save_overlap_condition(
+            output / "OVERLAP_PLAN", initial, full, full_observer,
+            overlap_snapshots, label="OVERLAP_PLAN",
+        )
+        cold_world = _make_world(assets, initial)
+        budget.reserve("setup", 1); budget.charge("setup", 1)
+        cold_low, cold_high = support_table(cold_world, end=60)
+        if cold_low.tobytes() != low.tobytes() or cold_high.tobytes() != high.tobytes():
+            raise RuntimeError("cold overlap action support changed")
+        cold_observer = StartupObserver(cold_world)
+        cold_snapshots: dict[int, dict[str, Any]] = {}
+        cold = evaluate_plan(
+            cold_world, initial, meta["nominal"], low, high, reference_qpos,
+            reference_ctrl, reference_tips, budget, source=0, phase="cold",
+            observer=cold_observer, stop_endpoint=60,
+            snapshot_endpoints={20, 40, 60}, snapshots=cold_snapshots,
+        )
+        _save_overlap_condition(
+            output / "OVERLAP_PLAN_COLD", initial, cold, cold_observer,
+            cold_snapshots, label="OVERLAP_PLAN_COLD",
+        )
+        parity = _cold_parity(full, full_observer, cold, cold_observer)
+        parity["snapshots"] = {
+            str(endpoint): bool(endpoint in overlap_snapshots and endpoint in cold_snapshots and _snapshot_equal(overlap_snapshots[endpoint], cold_snapshots[endpoint]))
+            for endpoint in (20, 40, 60)
+        }
+        parity["all_bitwise_equal"] = bool(
+            parity["all_bitwise_equal"] and all(parity["snapshots"].values())
+        )
+        write_json(output / "cold_replay_parity.json", parity)
+        if not parity["all_bitwise_equal"]:
+            raise RuntimeError("selected overlap plan cold replay diverged")
+        write_json(output / "budget_ledger.json", budget.report())
+    except Exception as error:
+        status.update({"status": "PHYSICS_STOPPED", "error": repr(error), "budget": budget.report()})
+        write_json(status_path, status); write_json(output / "budget_ledger.json", budget.report())
+        raise
+    summary = {
+        "schema": f"{OVERLAP_SCHEMA}_execution",
+        "status": "PHYSICS_COMPLETE_ANALYSIS_PENDING",
+        "baseline": {
+            "completed_to_60": bool(baseline.complete),
+            "first_failure_endpoint": baseline.first_failure_endpoint,
+            "terminal_endpoint": int(baseline.outcome_endpoint[-1]),
+            "parent_0_40_bitwise": parent_parity["all_bitwise_equal"],
+        },
+        "overlap_plan": {
+            "completed_to_60": bool(full.complete),
+            "first_failure_endpoint": full.first_failure_endpoint,
+            "terminal_endpoint": int(full.outcome_endpoint[-1]),
+            "fixed_prefix_bitwise": True,
+        },
+        "cold_parity": parity["all_bitwise_equal"],
+        "budget": budget.report(), "actor_or_critic_forwards": 0,
         "rl_optimizer_updates": 0, "chunk_commit": False,
     }
     write_json(output / "execution_summary.json", summary)
@@ -1247,12 +1957,189 @@ def analyze(config_path: Path, asset_root: Path | None, output: Path) -> dict[st
     return report
 
 
+def _segment_metric_summary(
+    rows: Mapping[int, Mapping[str, float]], first: int, last: int,
+) -> dict[str, dict[str, float]] | None:
+    if any(endpoint not in rows for endpoint in range(first, last + 1)):
+        return None
+    metrics = tuple(rows[first])
+    result: dict[str, dict[str, float]] = {}
+    for metric in metrics:
+        samples = np.asarray([rows[endpoint][metric] for endpoint in range(first, last + 1)], dtype=np.float64)
+        result[metric] = {
+            "mean": float(np.mean(samples)),
+            "rms": float(np.sqrt(np.mean(np.square(samples)))),
+            "max": float(np.max(samples)),
+        }
+    return result
+
+
+def analyze_overlap(
+    config_path: Path, asset_root: Path | None, output: Path,
+) -> dict[str, Any]:
+    config, _, assets = _load_overlap_config(config_path, asset_root)
+    status_path = output / "status.json"
+    status = json.loads(status_path.read_text())
+    if status.get("status") not in {
+        "PHYSICS_COMPLETE_ANALYSIS_PENDING", "ANALYSIS_COMPLETE_VISUAL_REVIEW_PENDING",
+    }:
+        raise RuntimeError("overlap analysis requires completed physical execution")
+    reference = _trajectory_arrays(assets["reference"])
+    trajectories = {
+        "PARENT_A_PLAN": _trajectory_arrays(assets["trajectory"]),
+        "FROZEN_SUFFIX_BASELINE": _trajectory_arrays(output / "FROZEN_SUFFIX_BASELINE/trajectory.npz"),
+        "OVERLAP_PLAN": _trajectory_arrays(output / "OVERLAP_PLAN/trajectory.npz"),
+    }
+    metrics = {name: _absolute_metric_rows(data, reference) for name, data in trajectories.items()}
+    rows: list[dict[str, Any]] = []
+    for name, endpoint_rows in metrics.items():
+        for endpoint in range(61):
+            if endpoint not in endpoint_rows:
+                rows.append({"condition": name, "endpoint": endpoint, "availability": "N/A"})
+            else:
+                rows.append({"condition": name, "endpoint": endpoint, "availability": "measured", **endpoint_rows[endpoint]})
+    fields = sorted({key for row in rows for key in row})
+    with (output / "comparison.csv").open("w", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=fields, lineterminator="\n")
+        writer.writeheader(); writer.writerows(rows)
+    segments = {
+        "0_20": (1, 20), "20_40": (21, 40), "40_60": (41, 60),
+        "20_60": (21, 60), "0_60": (1, 60),
+    }
+    summaries = {
+        name: {segment: _segment_metric_summary(endpoint_rows, *limits) for segment, limits in segments.items()}
+        for name, endpoint_rows in metrics.items()
+    }
+    six = (
+        "tool_position_error_m", "tool_rotation_error_rad",
+        "target_position_error_m", "target_rotation_error_rad",
+        "pair_translation_error_m", "pair_rotation_error_rad",
+    )
+    guard_m = float(config["evaluation"]["numerical_guard_m"])
+    guard_rad = float(config["evaluation"]["numerical_guard_rad"])
+    guard = {metric: guard_m if metric.endswith("_m") else guard_rad for metric in six}
+    overlap_checks: dict[str, Any] = {"segment_20_40": {}, "endpoint_40": {}}
+    for metric in six:
+        overlap_value = summaries["OVERLAP_PLAN"]["20_40"][metric]["rms"]
+        parent_value = summaries["PARENT_A_PLAN"]["20_40"][metric]["rms"]
+        delta = overlap_value - parent_value
+        overlap_checks["segment_20_40"][metric] = {
+            "overlap": overlap_value, "parent": parent_value, "delta": delta,
+            "nonworsening": delta <= guard[metric],
+        }
+        endpoint_value = metrics["OVERLAP_PLAN"][40][metric]
+        endpoint_parent = metrics["PARENT_A_PLAN"][40][metric]
+        endpoint_delta = endpoint_value - endpoint_parent
+        overlap_checks["endpoint_40"][metric] = {
+            "overlap": endpoint_value, "parent": endpoint_parent, "delta": endpoint_delta,
+            "nonworsening": endpoint_delta <= guard[metric],
+        }
+    overlap_preserved = all(
+        row["nonworsening"] for section in overlap_checks.values() for row in section.values()
+    )
+    baseline_complete = 60 in metrics["FROZEN_SUFFIX_BASELINE"]
+    tail_comparison = None
+    tail_no_tradeoff = None
+    if baseline_complete:
+        tail_comparison = {"segment_40_60": {}, "endpoint_60": {}}
+        checks = []
+        for metric in six:
+            candidate = summaries["OVERLAP_PLAN"]["40_60"][metric]["rms"]
+            baseline = summaries["FROZEN_SUFFIX_BASELINE"]["40_60"][metric]["rms"]
+            delta = candidate - baseline
+            ok = delta <= guard[metric]; checks.append(ok)
+            tail_comparison["segment_40_60"][metric] = {
+                "overlap": candidate, "baseline": baseline, "delta": delta, "nonworsening": ok,
+            }
+            candidate = metrics["OVERLAP_PLAN"][60][metric]
+            baseline = metrics["FROZEN_SUFFIX_BASELINE"][60][metric]
+            delta = candidate - baseline
+            ok = delta <= guard[metric]; checks.append(ok)
+            tail_comparison["endpoint_60"][metric] = {
+                "overlap": candidate, "baseline": baseline, "delta": delta, "nonworsening": ok,
+            }
+        tail_no_tradeoff = bool(all(checks))
+    common_end = min(max(metrics["FROZEN_SUFFIX_BASELINE"]), max(metrics["OVERLAP_PLAN"]))
+    execution = json.loads((output / "execution_summary.json").read_text())
+    cold = json.loads((output / "cold_replay_parity.json").read_text())
+    fields_out = {
+        "completed_to_60": 60 in metrics["OVERLAP_PLAN"],
+        "fixed_prefix_bitwise": bool(execution["overlap_plan"]["fixed_prefix_bitwise"]),
+        "overlap_20_40_preserved": overlap_preserved,
+        "tail_baseline_complete": baseline_complete,
+        "tail_no_tradeoff_vs_complete_baseline": tail_no_tradeoff,
+        "cold_parity": bool(cold["all_bitwise_equal"]),
+        "visual_review_status": "pending",
+        "promotion_authorized": False,
+    }
+    if not fields_out["completed_to_60"]:
+        classification = "FINITE_NEGATIVE_OVERLAP_CONTINUATION"
+    elif not overlap_preserved:
+        classification = "COMPLETE_TO_60_WITH_OVERLAP_QUALITY_TRADEOFF"
+    elif not baseline_complete:
+        classification = "NEW_CONTINUOUS_EXTENSION_WITNESS_BASELINE_TAIL_INCOMPLETE"
+    elif tail_no_tradeoff:
+        classification = "CONTINUATION_CANDIDATE_WITH_PREFIX_QUALITY_EVIDENCE"
+    else:
+        classification = "COMPLETE_TO_60_WITH_TAIL_QUALITY_TRADEOFF"
+    report = {
+        "schema": f"{OVERLAP_SCHEMA}_analysis",
+        "status": "ANALYSIS_COMPLETE_VISUAL_REVIEW_PENDING",
+        "endpoint_metrics": {name: {str(key): value for key, value in rows_.items()} for name, rows_ in metrics.items()},
+        "segment_summaries": summaries,
+        "overlap_20_40_comparison": overlap_checks,
+        "tail_comparison": tail_comparison,
+        "common_measured_endpoint": common_end,
+        "result_fields": fields_out, "classification": classification,
+        "budget": execution["budget"],
+        "interpretation_boundaries": {
+            "endpoint60_does_not_certify_endpoint61": True,
+            "not_full_pour_success": True,
+            "planner_cost_is_not_success_criterion": True,
+            "visual_review_required": True,
+            "parent_A_PLAN_remains_unmodified": True,
+            "chunk_commit_or_rl_authorized": False,
+        },
+    }
+    write_json(output / "analysis.json", report)
+    write_json(output / "decision.json", {
+        "schema": f"{OVERLAP_SCHEMA}_decision", "classification": classification,
+        **fields_out, "automatic_follow_on": False,
+    })
+    lines = [
+        "# A_PLAN overlap continuation 20→60 v1", "",
+        f"Classification: **{classification}**.", "",
+        f"- Parent 0→40 replay parity: `{execution['baseline']['parent_0_40_bitwise']}`.",
+        f"- Frozen-suffix baseline: terminal endpoint `{execution['baseline']['terminal_endpoint']}`, first failure `{execution['baseline']['first_failure_endpoint']}`.",
+        f"- OVERLAP_PLAN: terminal endpoint `{execution['overlap_plan']['terminal_endpoint']}`, completed to 60 `{fields_out['completed_to_60']}`.",
+        f"- 20→40 quality preserved under frozen guards: `{overlap_preserved}`.",
+        f"- Cold replay bitwise parity: `{fields_out['cold_parity']}`.",
+        f"- Physics substeps: `{execution['budget']['total_physics_steps']}` / `169000`.",
+        "- Visual review: pending; promotion/chunk commit/RL remain unauthorized.", "",
+        "Endpoint 60 is the hard stop. This result does not certify endpoint 61, endpoint 80, or the full 198-frame task.",
+    ]
+    (output / "summary.md").write_text("\n".join(lines) + "\n")
+    status.update({"status": "ANALYSIS_COMPLETE_VISUAL_REVIEW_PENDING"})
+    write_json(status_path, status)
+    return report
+
+
 def run_phase(
     config_path: Path, asset_root: Path | None, output: Path | None, phase: str,
 ) -> dict[str, Any]:
     config = yaml.safe_load(config_path.read_text())
     root = (asset_root or Path(config["asset_root"])).resolve(strict=True)
     destination = output or root / config["run_directory"]
+    if config.get("schema") == OVERLAP_SCHEMA:
+        if phase == "preflight":
+            return overlap_preflight(config_path, asset_root, destination)
+        if phase == "execute":
+            return execute_overlap(config_path, asset_root, destination)
+        if phase == "analyze":
+            return analyze_overlap(config_path, asset_root, destination)
+        raise ValueError(f"unknown overlap phase: {phase}")
+    if config.get("schema") != SCHEMA:
+        raise ValueError(f"unknown startup schema: {config.get('schema')}")
     if phase == "preflight":
         return preflight(config_path, asset_root, destination)
     if phase == "execute":

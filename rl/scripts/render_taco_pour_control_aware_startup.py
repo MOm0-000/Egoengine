@@ -144,7 +144,7 @@ def comparison_rows(path: Path) -> dict[str, dict[int, dict[str, float]]]:
                 continue
             condition = raw["condition"]
             endpoint = int(raw["endpoint"])
-            result[condition][endpoint] = {
+            result.setdefault(condition, {})[endpoint] = {
                 key: float(value) for key, value in raw.items()
                 if key not in {"condition", "endpoint", "availability"} and value
             }
@@ -254,8 +254,128 @@ def plot_planning_sources(output: Path, trajectories: dict[str, dict[str, np.nda
     return outputs
 
 
+def render_overlap(output: Path) -> dict[str, Any]:
+    """Render the 0->60 overlap continuation with the existing fixed viewer."""
+    status = json.loads((output / "status.json").read_text())
+    if status.get("status") not in {
+        "ANALYSIS_COMPLETE_VISUAL_REVIEW_PENDING", "COMPLETE_NO_PROMOTION",
+    }:
+        raise RuntimeError("overlap rendering requires completed analysis")
+    parity = json.loads((output / "cold_replay_parity.json").read_text())
+    if not parity.get("all_bitwise_equal"):
+        raise RuntimeError("overlap cold replay parity is not bitwise")
+    names = ("FROZEN_SUFFIX_BASELINE", "OVERLAP_PLAN")
+    trajectories = {name: arrays(output / name / "trajectory.npz") for name in names}
+    reference = arrays(ROOT / "runs/taco_pour_bimanual_mano_fk_combined_collision_v1/robot_reference.npz")
+    reference_model = vismod.StaticModel.load(
+        "reference", ROOT / "runs/taco_pour_collision_semantics_combined_v1/combined_candidate_scene.xml"
+    )
+    actual_model = vismod.StaticModel.load(
+        "actual", ROOT / "runs/taco_pour_floor_contact_v1/candidate.xml"
+    )
+    vis = vismod.Visualizer(reference_model, actual_model)
+    visuals = output / "visuals"
+    for child in ("keyframes", "videos", "review_sheets", "curves"):
+        (visuals / child).mkdir(parents=True, exist_ok=True)
+    keys = (0, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60)
+    sheets = {"oblique": [], "top": []}
+    endpoints = {
+        name: {int(endpoint): index for index, endpoint in enumerate(data["endpoint"])}
+        for name, data in trajectories.items()
+    }
+    writers = {}
+    frame_width = vismod.PANEL_WIDTH * 3
+    for view in ("oblique", "top"):
+        writer = cv2.VideoWriter(
+            str(visuals / f"videos/reference_baseline_overlap_{view}.mp4"),
+            cv2.VideoWriter_fourcc(*"mp4v"), 8.0,
+            (frame_width, vismod.PANEL_HEIGHT),
+        )
+        if not writer.isOpened():
+            raise RuntimeError(f"cannot create overlap {view} video")
+        writers[view] = writer
+    try:
+        for endpoint in range(61):
+            for view in ("oblique", "top"):
+                panels = [annotate(
+                    vis.render_reference(reference["qpos"][endpoint], view),
+                    "REFERENCE", f"endpoint {endpoint} | {view}",
+                )]
+                for name in names:
+                    if endpoint in endpoints[name]:
+                        index = endpoints[name][endpoint]
+                        panels.append(annotate(
+                            vis.render_actual(trajectories[name]["qpos"][index], view),
+                            name, f"endpoint {endpoint}",
+                        ))
+                    else:
+                        panels.append(annotate(
+                            vismod.missing_panel(endpoint), name,
+                            f"endpoint {endpoint} not reached",
+                        ))
+                frame = np.concatenate(panels, axis=1)
+                repetitions = 4 if endpoint in {19, 20, 21, 39, 40, 41} else 1
+                for _ in range(repetitions):
+                    writers[view].write(cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
+                if endpoint in keys:
+                    vismod.save_rgb(visuals / f"keyframes/endpoint_{endpoint:03d}_{view}.png", frame)
+                    sheets[view].append(frame)
+    finally:
+        for writer in writers.values():
+            writer.release()
+        vis.close()
+    for view in ("oblique", "top"):
+        save_sheet(sheets[view], visuals / f"review_sheets/keyframes_{view}.png", columns=2)
+
+    table = comparison_rows(output / "comparison.csv")
+    colors = {"FROZEN_SUFFIX_BASELINE": "#6b7280", "OVERLAP_PLAN": "#2563eb"}
+    groups = {
+        "absolute_object_errors": (
+            "tool_position_error_m", "target_position_error_m",
+            "tool_rotation_error_rad", "target_rotation_error_rad",
+        ),
+        "relative_and_tracking": (
+            "pair_translation_error_m", "world_pair_translation_error_m",
+            "pair_rotation_error_rad", "tracking_score",
+        ),
+        "object_speeds": (
+            "tool_linear_speed_m_s", "target_linear_speed_m_s",
+            "tool_angular_speed_rad_s", "target_angular_speed_rad_s",
+        ),
+    }
+    curve_outputs = []
+    for group, metric_names in groups.items():
+        fig, axes = plt.subplots(2, 2, figsize=(12, 7), squeeze=False)
+        for axis, metric in zip(axes.flat, metric_names):
+            for name in names:
+                x = sorted(table[name])
+                y = [table[name][endpoint].get(metric, np.nan) for endpoint in x]
+                axis.plot(x, y, label=name, color=colors[name], linewidth=1.7)
+            axis.set_title(metric); axis.grid(alpha=0.25); axis.set_xlim(0, 60)
+        handles, labels = axes.flat[0].get_legend_handles_labels()
+        fig.legend(handles, labels, loc="upper center", ncol=2)
+        fig.tight_layout(rect=(0, 0, 1, 0.94))
+        relative = f"curves/{group}.png"
+        fig.savefig(visuals / relative, dpi=160); plt.close(fig)
+        curve_outputs.append(relative)
+    result = {
+        "schema": "taco_pour_aplan_overlap_continuation_visuals_v1",
+        "offline_only": True, "physics_steps": 0,
+        "rendered_endpoints": list(keys), "video_endpoints": [0, 60],
+        "fixed_views": ["oblique", "top"],
+        "columns": ["reference", *names],
+        "transition_slowdowns": ["18..22", "38..42"],
+        "curve_outputs": curve_outputs, "render_updates": vis.render_updates,
+        "human_review_status": "complete" if (output / "visual_review.json").is_file() else "pending",
+    }
+    (visuals / "index.json").write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
+    return result
+
+
 def render(output: Path) -> dict[str, Any]:
     status = json.loads((output / "status.json").read_text())
+    if status.get("schema") == "taco_pour_aplan_overlap_continuation_20_60_v1":
+        return render_overlap(output)
     if status.get("status") not in {
         "ANALYSIS_COMPLETE_VISUAL_REVIEW_PENDING",
         "COMPLETE_NO_PROMOTION",

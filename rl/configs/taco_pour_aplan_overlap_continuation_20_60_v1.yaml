@@ -1,0 +1,93 @@
+schema: taco_pour_aplan_overlap_continuation_20_60_v1
+status: authorized_single_run
+baseline:
+  repository: MOm0-000/Egoengine
+  branch: 3.2RL
+  commit: 4441edc1c8839280d7bc13625fef140dcf844eb0
+asset_root: /data_all/zzx/3.2RL
+run_directory: runs/taco_pour_aplan_overlap_continuation_20_60_v1
+parent:
+  config: configs/taco_pour_control_aware_startup_v1.yaml
+  run_directory: runs/taco_pour_control_aware_startup_v1
+  trajectory:
+    path: runs/taco_pour_control_aware_startup_v1/A_PLAN/trajectory.npz
+    sha256: e2f5cf71e4517804226f907853fc3ba069df37c683c101381a84cc89ef67db1d
+  substeps:
+    path: runs/taco_pour_control_aware_startup_v1/A_PLAN/substeps.npz
+    sha256: ba9fcb873f7c28d9938c3e3b895d51663d0f1c0a824664eb83f325594db75d20
+  contacts:
+    path: runs/taco_pour_control_aware_startup_v1/A_PLAN/contacts_raw.npz
+    sha256: d6a93d6ebf7224fee6c11259ad2dacb8feab0df35518ddcc401b00f014756981
+  terminal_snapshot:
+    path: runs/taco_pour_control_aware_startup_v1/A_PLAN/execution/endpoint_40.pt.gz
+    sha256: aea6bc8c58e128453ce4f190697a147236a578eb30c773dce1e56beeb0d76263
+  s0_snapshot:
+    path: runs/taco_pour_replay_0_20_contact_trace_v1/snapshots/A_s0_reconstructed.pt.gz
+    sha256: 462e98cd86ec14e42689b00ad42e75171f45fea13ab5b6adcaf58375a225a4a3
+  scene:
+    path: runs/taco_pour_floor_contact_v1/candidate.xml
+    sha256: deb35689ce385aa30f361ddd1907f54bdbd4f55d4fd98a22409b68a9a691a215
+  reference:
+    path: runs/taco_pour_bimanual_mano_fk_combined_collision_v1/robot_reference.npz
+    sha256: cf99b9846a63617ddd5e439e086708c80a1e9b43f614df63168ffb3236a7685c
+runtime:
+  device: cpu
+  num_worlds_at_once: 1
+  object_assistance: null
+  auto_reset: false
+  sim_dt_s: 0.0033333333333333335
+  ctrl_dt_s: 0.03333333333333333
+  physics_steps_per_control: 10
+  preserve_absolute_snapshot_cursor: true
+planner:
+  start: 20
+  end: 60
+  replan_sources: [20, 25, 30, 35]
+  execute_controls_per_replan: 5
+  rounds_per_replan: 4
+  slots_per_round: 32
+  nominal_slot: 0
+  zero_residual_slot: 1
+  noisy_slots: 30
+  seed: 0
+  noise_std_normalized: 0.20
+  knot_interval_controls: 5
+  final_knot_source: 59
+  interpolation: linear_over_control_indices
+  projection: same_clip_then_float32_as_parent_with_corrected_accounting
+  candidate_shape: [60, 36]
+  preserve_sources_0_19: true
+  complete_forecast_required: true
+  selection: minimum_cost_then_slot_among_complete
+  all_incomplete: stop_without_extra_sampling
+cost:
+  inherit_parent_step_cost_terms: true
+  outcome_reference_index: source_plus_1
+  terminal_endpoint: 60
+  previous_ctrl: actual_snapshot_ctrl
+evaluation:
+  endpoint_summaries: [0, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
+  numerical_guard_m: 0.000001
+  numerical_guard_rad: 0.00001
+  visual_review_required: true
+  cold_replay: one_fresh_cpu_world_from_original_s0
+  snapshot_endpoints: [20, 40, 60]
+budget:
+  search_physics_max: 166400
+  baseline_physics_max: 600
+  real_execution_physics_max: 400
+  cold_replay_physics_max: 600
+  implementation_retest_physics_max: 400
+  all_setup_physics_max: 100
+  summed_phase_physics_max: 168500
+  all_in_physics_hard_max: 169000
+authorization:
+  new_mink_solve: false
+  L_physics: false
+  actor_critic_forward: 0
+  rl_optimizer_steps: 0
+  distillation: false
+  chunk_commit: false
+  reference_physics_reward_change: false
+  automatic_follow_on: false
+  force_push: false

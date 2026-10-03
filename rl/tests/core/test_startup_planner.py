@@ -14,6 +14,7 @@ from video_to_spider.rl.core.startup_planner import (
     make_noise_schedule,
     make_round_candidates,
     pair_pose,
+    projection_accounting,
     project_plan,
     rotation_error_rad,
     step_cost_terms,
@@ -46,6 +47,11 @@ def test_knot_schedule_and_control_index_interpolation():
     assert expanded[5, 0] == 1.0
     assert expanded[-1, 0] == 5.0
 
+    np.testing.assert_array_equal(knot_sources(20, end=60), [20, 25, 30, 35, 40, 45, 50, 55, 59])
+    np.testing.assert_array_equal(knot_sources(35, end=60), [35, 40, 45, 50, 55, 59])
+    long_nodes = np.zeros((len(knot_sources(25, end=60)), DOF))
+    assert expand_knot_noise(25, long_nodes, end=60).shape == (35, DOF)
+
 
 def test_nominal_bytes_are_preserved_and_zero_slot_is_projected_once():
     low, high = support()
@@ -69,6 +75,33 @@ def test_projection_counts_components_and_requires_float32_support():
     assert projected[3, 7] == high[3, 7]
     with pytest.raises(ValueError):
         project_plan(proposal, low.astype(np.float64), high)
+
+
+def test_projection_accounting_separates_roundoff_from_support_clip():
+    low, high = support()
+    proposal = np.zeros((HORIZON, DOF), dtype=np.float64)
+    proposal[0, 0] = 0.1
+    proposal[0, 1] = 1.2
+    projected, accounting = projection_accounting(proposal, low, high)
+    assert not accounting["support_clip"][0, 0]
+    assert accounting["roundoff_only"][0, 0]
+    assert accounting["support_clip"][0, 1]
+    assert not accounting["roundoff_only"][0, 1]
+    assert projected[0, 1] == high[0, 1]
+
+
+def test_overlap_candidates_preserve_prefix_and_use_absolute_endpoint_59():
+    end = 60
+    low = np.full((end, DOF), -0.75, dtype=np.float32)
+    high = np.full((end, DOF), 0.80, dtype=np.float32)
+    nominal = np.linspace(-0.5, 0.5, end * DOF, dtype=np.float32).reshape(end, DOF)
+    noise = make_noise_schedule(sources=(20,), rounds=1, end=end)[(20, 0)]
+    rows, _ = make_round_candidates(
+        nominal, low, high, source=20, noise=noise, preserve_prefix=True,
+    )
+    assert rows.shape == (32, 60, DOF)
+    assert all(row[:20].tobytes() == nominal[:20].tobytes() for row in rows)
+    assert rows[1, 20:].tobytes() == np.zeros_like(rows[1, 20:]).tobytes()
 
 
 def test_incomplete_forecast_cannot_win_and_all_failed_is_explicit():
