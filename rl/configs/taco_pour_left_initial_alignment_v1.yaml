@@ -1,0 +1,121 @@
+schema: taco_pour_left_initial_alignment_v1
+status: authorized_bounded_diagnostic
+baseline:
+  repository: MOm0-000/Egoengine
+  branch: 3.2RL
+  commit: 9c595ec2ad2e11cff3cc7f2f8083cebd2bff34b1
+  result_reference_commit: 90a0bb1ff6ecc0d0a72093d8d696fb8a8127d07c
+scope:
+  hypothesis: reference_aligned_legal_left_initialization_may_reduce_early_tray_drift
+  new_initial_state_candidates: 1
+  subsequent_reference_and_commands_unchanged: true
+  right_hand_initial_state_unchanged: true
+  object_initial_states_unchanged: true
+  initial_velocities_unchanged: true
+  initial_left_ctrl: matched_to_new_left_qpos
+  derived_state: freshly_recomputed_for_consistent_new_initialization
+  forbidden:
+    - random_initialization_or_action_search
+    - physics_outcome_based_candidate_selection
+    - blend_or_duration_sweep
+    - reference_or_frame_alignment_changes
+    - physics_parameter_changes
+    - object_assistance_or_object_hold_preroll
+    - policy_or_critic_forward
+    - rl_training
+    - chunk_commit
+    - automatic_follow_on
+inputs:
+  resolve_from_existing_manifests: true
+  source_runs:
+    - runs/taco_pour_initialization_protocol_v2
+    - runs/taco_pour_bimanual_mano_fk_combined_collision_v1
+    - runs/taco_pour_early_contact_origin_v1
+    - runs/taco_pour_replay_0_20_contact_trace_v1
+    - runs/taco_pour_startup_transition_isolation_v1
+  original_s0: resolve_exact_full_snapshot_and_verify_hash
+  original_hold_1: reuse_previous_verified_archive_only
+  candidate_seed: accepted_A_initial_hand_pose
+  goal_source: existing_robot_reference_endpoint_0_FK
+  expected_hashes:
+    accepted_A_initial_state: fe0c3b0620a44be47f22174d027c1150622dfd54e4b86407a9259515b95d4f36
+    runtime_scene: deb35689ce385aa30f361ddd1907f54bdbd4f55d4fd98a22409b68a9a691a215
+    robot_reference: cf99b9846a63617ddd5e439e086708c80a1e9b43f614df63168ffb3236a7685c
+    simulator_config: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+    historical_trajectory: 81712fd46d5bade497a2a98e8ce07c6f8f8b2f600510db8de42aed1a952ef4b3
+static_solver:
+  backend: installed_pinned_MINK_DAQP
+  seed_separate_from_target: true
+  stop_merely_because_seed_is_feasible: false
+  moving_hand: left
+  moving_dofs: resolve_left_18_scalar_dofs_by_model_names
+  freeze: [right_hand, tool, target]
+  targets:
+    left_fingertips:
+      names: [thumb, index, middle, ring, pinky]
+      position_cost: 10.0
+      orientation_cost: 1.0
+      lm_damping: 0.001
+    left_wrist:
+      frame: left_hand_link
+      position_cost: 0.0
+      orientation_cost: 3.0
+      lm_damping: 0.001
+  qp_damping: 0.00001
+  primal_tolerance: 0.000001
+  dual_tolerance: 0.000001
+  numerical_dt_s: 0.004166666666666667
+  max_qp_calls: 128
+  max_noninitial_geometry_checks: 128
+  extra_seeds: 0
+  constraints: inherited_declared_and_native_t0_geometry_no_relaxation
+  candidate_selection:
+    order: [increasing_installed_task_merit, increasing_iteration]
+    require_full_geometry_validation: true
+    require_lower_weighted_task_merit: true
+    require_lower_left_tip_position_rms: true
+    require_ring_and_pinky_position_errors_nonworsening: true
+    position_numerical_guard_m: 0.000001
+    merit_numerical_guard_relative: 1.0e-10
+    evaluate_both_float64_and_runtime_float32: true
+    no_distmax_as_clearance: true
+    no_physics_based_selection: true
+    freeze_before_replay: true
+runtime:
+  backend: CPU_MuJoCo_Warp
+  same_versions_threads_and_dtype_as_verified_replay: true
+  object_assistance: null
+  action_for_replay: zero_residual
+  reference_index_offset: 1
+  sim_dt_s: 0.0033333333333333335
+  ctrl_dt_s: 0.03333333333333333
+  substeps_per_control: 10
+  auto_reset: false
+matrix:
+  - {name: ORIGINAL, start: original_full_s0, control: original_zero_residual_replay, controls: 20}
+  - {name: LEFT_ALIGNED_HOLD_1, start: new_full_s0L, control: hold_new_initial_ctrl_using_existing_residual_mapping, controls: 1}
+  - {name: LEFT_ALIGNED_REPLAY, start: restore_new_full_s0L, control: original_zero_residual_replay, controls: 20}
+  - {name: LEFT_ALIGNED_COLD, start: fresh_world_restore_new_full_s0L, control: identical_saved_zero_residual_sequence, controls: 20}
+analysis:
+  primary_window_endpoints: [0, 10]
+  persistence_window_endpoints: [0, 20]
+  summary_endpoints: [0, 1, 5, 10, 14, 15, 16, 20]
+  save_all_endpoints_and_substeps: true
+  require_actual_visual_review: true
+budget:
+  nominal_task_controls: 61
+  nominal_task_physics_steps: 610
+  max_task_controls_all_attempts: 81
+  max_task_physics_steps_all_attempts: 810
+  max_setup_physics_steps_all_attempts: 50
+  max_all_in_physics_steps: 1000
+  allowed_implementation_retests: 1
+  max_retest_controls: 20
+  reserve_before_calls: true
+  reserve_cold_replay_before_experiments: true
+output:
+  directory: /data_all/zzx/3.2RL/runs/taco_pour_left_initial_alignment_v1
+  preserve_old_runs_and_boundaries: true
+  full_data_on_server_lightweight_evidence_in_git: true
+  plain_push_only: true
+  stop_after_report: true

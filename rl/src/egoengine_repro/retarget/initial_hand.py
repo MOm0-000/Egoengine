@@ -11,6 +11,235 @@ from .collision_audit import collision_families, distances, hand_ids, validate_q
 from .mink import _StrictCollisionLimit, _enable_planning_collision_masks, _joint_velocity_limits
 
 
+_FINGERS = ("thumb", "index", "middle", "ring", "pinky")
+
+
+def scalar_hand_coordinates(model):
+    """Resolve the two 18-DoF scalar hands from names and model addresses."""
+    result = {}
+    for side, prefixes in {
+        "right": ("R_", "right_hand_"),
+        "left": ("L_", "left_hand_"),
+    }.items():
+        rows = []
+        for joint_id in range(model.njnt):
+            name = model.joint(joint_id).name or ""
+            if not name.startswith(prefixes):
+                continue
+            qpos_address = int(model.jnt_qposadr[joint_id])
+            dof_address = int(model.jnt_dofadr[joint_id])
+            qpos_width = (int(model.jnt_qposadr[joint_id + 1]) - qpos_address
+                          if joint_id + 1 < model.njnt else model.nq - qpos_address)
+            dof_width = (int(model.jnt_dofadr[joint_id + 1]) - dof_address
+                         if joint_id + 1 < model.njnt else model.nv - dof_address)
+            if qpos_width != 1 or dof_width != 1:
+                raise ValueError(f"{side} hand joint {name} is not scalar")
+            rows.append((qpos_address, dof_address, name))
+        rows.sort()
+        if len(rows) != 18:
+            raise ValueError(f"expected 18 scalar {side} hand joints, found {len(rows)}")
+        result[side] = {
+            "qpos": np.asarray([row[0] for row in rows], dtype=np.int64),
+            "dofs": np.asarray([row[1] for row in rows], dtype=np.int64),
+            "joints": [row[2] for row in rows],
+        }
+    if set(result["right"]["qpos"]) & set(result["left"]["qpos"]):
+        raise ValueError("left and right hand qpos mappings overlap")
+    return result
+
+
+def _frame_matrix(data, frame_id, frame_type):
+    transform = np.eye(4)
+    if frame_type == "site":
+        transform[:3, :3] = data.site_xmat[frame_id].reshape(3, 3)
+        transform[:3, 3] = data.site_xpos[frame_id]
+    elif frame_type == "body":
+        transform[:3, :3] = data.xmat[frame_id].reshape(3, 3)
+        transform[:3, 3] = data.xpos[frame_id]
+    else:
+        raise ValueError(frame_type)
+    return transform
+
+
+def _left_reference_task_metrics(model, data, target_data, tasks):
+    position, orientation = {}, {}
+    for finger in _FINGERS:
+        site = model.site(f"left_{finger}_tip").id
+        position[finger] = float(np.linalg.norm(data.site_xpos[site] - target_data.site_xpos[site]))
+        relative = data.site_xmat[site].reshape(3, 3).T @ target_data.site_xmat[site].reshape(3, 3)
+        orientation[finger] = float(Rotation.from_matrix(relative).magnitude())
+    wrist = model.body("left_hand_link").id
+    wrist_relative = data.xmat[wrist].reshape(3, 3).T @ target_data.xmat[wrist].reshape(3, 3)
+    errors = [np.asarray(task.compute_error(mink.Configuration(model, q=data.qpos.copy())))
+              for task in tasks]
+    # Use the installed MINK task cost exactly as the local weighted merit.
+    merit = float(sum(np.square(np.asarray(task.cost) * error).sum()
+                      for task, error in zip(tasks, errors)))
+    return {
+        "weighted_task_merit": merit,
+        "tip_position_error_m": position,
+        "tip_position_rms_m": float(np.sqrt(np.mean(np.square(list(position.values()))))),
+        "tip_orientation_error_rad": orientation,
+        "wrist_orientation_error_rad": float(Rotation.from_matrix(wrist_relative).magnitude()),
+    }
+
+
+def solve_left_reference_aligned_initial(
+    model,
+    seed_qpos,
+    reference_qpos,
+    velocity_settings,
+    *,
+    max_qp_calls=128,
+    numerical_dt=1 / 240,
+    planning_collision_buffer=2e-6,
+    solver_primal_tolerance=1e-6,
+    solver_dual_tolerance=1e-6,
+    depenetration_step=0.002,
+):
+    """Run one deterministic left-only IK trajectory toward robot reference[0].
+
+    The seed and target are deliberately separate.  This helper never selects a
+    state using physics outcomes and never exits merely because the seed is
+    already collision-feasible.
+    """
+    seed_qpos = validate_qpos(model, np.asarray(seed_qpos, dtype=float))
+    reference_qpos = validate_qpos(model, np.asarray(reference_qpos, dtype=float))
+    if (model.nq, model.nv, model.nu) != (50, 48, 36):
+        raise ValueError("expected two scalar-coordinate hands and two free objects")
+    if max_qp_calls < 1 or not np.isfinite(numerical_dt) or numerical_dt <= 0:
+        raise ValueError("positive QP budget and numerical dt required")
+    mapping = scalar_hand_coordinates(model)
+    left_qpos = mapping["left"]["qpos"]
+    left_dofs = mapping["left"]["dofs"]
+    right_qpos = mapping["right"]["qpos"]
+    right_dofs = mapping["right"]["dofs"]
+    locked_dofs = np.asarray(sorted(set(range(model.nv)) - set(left_dofs)), dtype=np.int64)
+    locked_qpos = np.asarray(sorted(set(range(model.nq)) - set(left_qpos)), dtype=np.int64)
+
+    target_data = mujoco.MjData(model)
+    target_data.qpos[:] = reference_qpos
+    mujoco.mj_forward(model, target_data)
+    tasks = []
+    task_labels = []
+    for finger in _FINGERS:
+        name = f"left_{finger}_tip"
+        task = mink.FrameTask(name, "site", position_cost=10.0,
+                              orientation_cost=1.0, lm_damping=1e-3)
+        task.set_target(mink.SE3.from_matrix(
+            _frame_matrix(target_data, model.site(name).id, "site")
+        ))
+        tasks.append(task)
+        task_labels.append(name)
+    wrist_task = mink.FrameTask("left_hand_link", "body", position_cost=0.0,
+                                orientation_cost=3.0, lm_damping=1e-3)
+    wrist_task.set_target(mink.SE3.from_matrix(
+        _frame_matrix(target_data, model.body("left_hand_link").id, "body")
+    ))
+    tasks.append(wrist_task)
+    task_labels.append("left_hand_link_orientation")
+
+    families = collision_families(model)
+    constrained_names = ("self_explicit", "hand_tool", "hand_target", "hand_floor")
+    pairs = sorted({tuple(sorted(pair)) for name in constrained_names for pair in families[name]})
+    fixed_pairs = families["tool_target"] + families["tool_floor"] + families["target_floor"]
+    config = mink.Configuration(model, q=seed_qpos)
+    if (distances(model, config.data, fixed_pairs) < -1e-6).any():
+        raise ValueError("fixed object geometry is illegal before left-only solve")
+    hands = hand_ids(model)
+    others = sorted({geom for pair in pairs for geom in pair} - set(hands))
+    _enable_planning_collision_masks(model, hands, others)
+    groups = [([model.geom(a).name], [model.geom(b).name]) for a, b in pairs]
+    inner = mink.CollisionAvoidanceLimit(
+        model,
+        groups,
+        minimum_distance_from_collisions=planning_collision_buffer,
+        collision_detection_distance=0.02,
+        include_explicit_pairs=True,
+    )
+    if set(inner.geom_id_pairs) != set(pairs):
+        raise ValueError("MINK and declared initialization collision pairs differ")
+    collision = _StrictCollisionLimit(
+        inner, mujoco, minimum_distance=planning_collision_buffer,
+        depenetration_step=depenetration_step,
+    )
+    collision.enabled = True
+    speeds = _joint_velocity_limits(model, mujoco, velocity_settings)
+    limits = [mink.ConfigurationLimit(model), collision, mink.VelocityLimit(model, speeds)]
+    constraints = [mink.DofFreezingTask(model, locked_dofs.tolist())]
+
+    states = []
+    q_trace = []
+
+    def record(iteration, *, step_norm=None, lock_residual=None):
+        metrics = _left_reference_task_metrics(model, config.data, target_data, tasks)
+        pair_distance = distances(model, config.data, pairs)
+        states.append({
+            "iteration": int(iteration),
+            **metrics,
+            "minimum_declared_distance_m": float(pair_distance.min()),
+            "declared_penetrating_pair_count": int(np.count_nonzero(pair_distance < -1e-6)),
+            "weighted_step_norm": step_norm,
+            "maximum_locked_dof_velocity": lock_residual,
+        })
+        q_trace.append(config.q.copy())
+
+    record(0)
+    reason = "qp_budget_exhausted"
+    qp_attempts = 0
+    for call in range(max_qp_calls):
+        qp_attempts += 1
+        try:
+            velocity = mink.solve_ik(
+                config, tasks, numerical_dt, solver="daqp", damping=1e-5,
+                limits=limits, constraints=constraints,
+                primal_tol=solver_primal_tolerance, dual_tol=solver_dual_tolerance,
+            )
+        except Exception as error:
+            reason = f"qp_failed:{type(error).__name__}:{error}"
+            break
+        if not np.isfinite(velocity).all():
+            reason = "nonfinite_qp_velocity"
+            break
+        lock_residual = float(np.max(np.abs(velocity[locked_dofs])))
+        if lock_residual > 1e-8:
+            reason = "locked_dof_residual_exceeded"
+            break
+        velocity[locked_dofs] = 0.0
+        candidate = config.q.copy()
+        candidate[left_qpos] += velocity[left_dofs] * numerical_dt
+        if not np.array_equal(candidate[locked_qpos], seed_qpos[locked_qpos]):
+            raise RuntimeError("left-only numerical update changed a locked coordinate")
+        step_norm = float(np.linalg.norm(candidate[left_qpos] - config.q[left_qpos]))
+        config.update(candidate)
+        record(call + 1, step_norm=step_norm, lock_residual=lock_residual)
+        if step_norm < 1e-10:
+            reason = "no_further_numerical_progress"
+            break
+
+    return np.asarray(q_trace), {
+        "termination_reason": reason,
+        "qp_calls": qp_attempts,
+        "states": states,
+        "task_labels": task_labels,
+        "left_qpos_addresses": left_qpos.tolist(),
+        "left_dof_addresses": left_dofs.tolist(),
+        "right_qpos_addresses": right_qpos.tolist(),
+        "right_dof_addresses": right_dofs.tolist(),
+        "locked_qpos_addresses": locked_qpos.tolist(),
+        "locked_dof_addresses": locked_dofs.tolist(),
+        "locked_coordinates_byte_identical": bool(
+            np.array_equal(np.asarray(q_trace)[:, locked_qpos], seed_qpos[locked_qpos])
+        ),
+        "seed_is_target": bool(np.array_equal(seed_qpos, reference_qpos)),
+        "numerical_dt_s": float(numerical_dt),
+        "planning_collision_buffer_m": float(planning_collision_buffer),
+        "solver_primal_tolerance": float(solver_primal_tolerance),
+        "solver_dual_tolerance": float(solver_dual_tolerance),
+        "objective_provenance": "local left-only robot-reference[0] task-space alignment; not a published reset recipe",
+    }
+
+
 def state_summary(model, qpos, *, tolerance=1e-6):
     qpos = validate_qpos(model, qpos)
     if not np.isfinite(tolerance) or tolerance < 0:
