@@ -256,6 +256,9 @@ The run is successful only when the report says
 - Reproducibility: every selected five-step prefix matched prediction bitwise;
   both full selected trajectories matched independent cold CPU replays
   bitwise, including declared contacts.
+- Control-use caveat: `93.75%` of noisy search-population components required
+  support projection, while the selected A/L trajectories had only
+  `4.653%/4.028%` action-bound fractions and zero actuator ctrlrange loss.
 - Visual evidence: two 41-frame fixed-view videos, 12 declared keyframes in
   two views, per-condition source-14-near events, fixed-range curves and all
   source planning comparisons were reviewed. No gross new artifact or parking

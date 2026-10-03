@@ -45,6 +45,11 @@ hidden behind the lower planner cost.
 Both selected 40-control sequences reproduced bitwise in newly constructed
 CPU MuJoCo-Warp worlds, including saved state, control and declared contact
 evidence. Every selected five-step prefix also matched its forecast bitwise.
+Across the noisy search population, `93.75%` of proposed action components
+required projection into state-feasible support. The final executed action
+bound fractions were much lower (`4.653%` for A_PLAN and `4.028%` for L_PLAN),
+and the final actuator ctrlrange loss was exactly zero. The high search
+projection rate remains an explicit candidate-generator caveat.
 
 ## Visual review
 
