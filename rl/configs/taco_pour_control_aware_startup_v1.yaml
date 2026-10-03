@@ -1,0 +1,130 @@
+schema: taco_pour_control_aware_startup_v1
+status: authorized_single_run
+baseline:
+  repository: MOm0-000/Egoengine
+  branch: 3.2RL
+  commit: 0a51b1624189770022c369a62b3dbc265b1aea56
+asset_root: /data_all/zzx/3.2RL
+run_directory: runs/taco_pour_control_aware_startup_v1
+assets:
+  a_snapshot:
+    path: runs/taco_pour_replay_0_20_contact_trace_v1/snapshots/A_s0_reconstructed.pt.gz
+    sha256: 462e98cd86ec14e42689b00ad42e75171f45fea13ab5b6adcaf58375a225a4a3
+  l_snapshot:
+    path: runs/taco_pour_left_initial_alignment_v1/s0_left_aligned.pt.gz
+    sha256: 05aff0bb9ae96b60efcc9947aaa43571805ca68daeb88fd6c4dadd5c382bb23d
+  replay_trace_manifest:
+    path: runs/taco_pour_replay_0_20_contact_trace_v1/input_manifest.json
+  replay_trace_parity:
+    path: runs/taco_pour_replay_0_20_contact_trace_v1/replay_parity.json
+  left_alignment_manifest:
+    path: runs/taco_pour_left_initial_alignment_v1/resolved_inputs.json
+  left_alignment_status:
+    path: runs/taco_pour_left_initial_alignment_v1/status.json
+  left_alignment_parity:
+    path: runs/taco_pour_left_initial_alignment_v1/cold_replay_parity.json
+  simulator:
+    path: runs/taco_pour_corrected_replay_rebase_v1/tool_only/input_contracts/simulator_config.yaml
+    sha256: 0176ff8dfc126aa3f4326b7987191b481d2b571642a31cbf88fef348c7c159b6
+  protocol:
+    path: runs/taco_pour_corrected_replay_rebase_v1/tool_only/input_contracts/replay_rl_protocol.yaml
+    sha256: 262097a3dd2b7768a940ae6dbb82428b94eedb08931af388037a5243097b7807
+  objective:
+    path: runs/taco_pour_corrected_replay_rebase_v1/tool_only/input_contracts/objective_profile.yaml
+    sha256: 8907109c75eab02186010a22082f3eed84a38ce12fda4f1fd7c83aae100e9dc9
+  observation:
+    path: runs/taco_pour_corrected_replay_rebase_v1/tool_only/input_contracts/observation_profile.yaml
+    sha256: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7
+  action:
+    path: runs/taco_pour_corrected_replay_rebase_v1/tool_only/input_contracts/action_profile.yaml
+    sha256: 71aa614996337982e7b6e322721915229daf17eaa273254a3cb5b4270e29bbc4
+  scene:
+    path: runs/taco_pour_floor_contact_v1/candidate.xml
+    sha256: deb35689ce385aa30f361ddd1907f54bdbd4f55d4fd98a22409b68a9a691a215
+  reference:
+    path: runs/taco_pour_bimanual_mano_fk_combined_collision_v1/robot_reference.npz
+    sha256: cf99b9846a63617ddd5e439e086708c80a1e9b43f614df63168ffb3236a7685c
+upstream:
+  mjpc:
+    checkout: /data_all/zzx/egoengine_research_sources/mujoco_mpc
+    commit: ff572a21e7c2bf9fda62e1862a758da7e9a8719b
+    license_sha256: cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30
+  regrind:
+    checkout: /data_all/zzx/egoengine_research_sources/regrind
+    commit: 38347a9e30184620df04e19c63c7c72378cae103
+    license_sha256: 0c6b9d81a7567f132dbae09eb9642eb6682a730154f3658195163efab05901fd
+runtime:
+  device: cpu
+  num_worlds_at_once: 1
+  reference_start: 0
+  evaluation_end: 40
+  sim_dt_s: 0.0033333333333333335
+  ctrl_dt_s: 0.03333333333333333
+  physics_steps_per_control: 10
+  auto_reset: false
+  object_assistance: null
+  preserve_existing_physics_and_action_support: true
+planner:
+  replan_sources: [0, 5, 10, 15]
+  terminal_reference_endpoint: 40
+  execute_controls_per_replan: 5
+  suffix_20_to_40: frozen_from_last_plan_no_more_optimization
+  rounds_per_replan: 4
+  slots_per_round: 32
+  nominal_slot: 0
+  zero_residual_replay_slot: 1
+  noisy_slots: 30
+  seed: 0
+  rng: numpy_default_rng_separate_from_world_and_torch
+  noise_shared_between_initial_states: true
+  knot_interval_controls: 5
+  final_knot_source: 39
+  interpolation: linear_over_control_indices
+  normalized_noise_std: 0.20
+  residual_scale: 0.05
+  candidate_projection: once_to_original_float32_support
+  preserve_nominal_actual_action_bytes: true
+  complete_forecast_required_for_execution: true
+  all_failed: stop_arm_without_extra_sampling
+  terminate_resampling: false
+  covariance_refitting: false
+  averaging_candidate_actions: false
+cost:
+  provenance: local_planner_objective_not_paper_TACO_reward
+  outcome_reference_index: source_plus_1
+  object_position_scale_m: 0.020
+  object_rotation_scale_rad: 0.20
+  object_weight: 1.0
+  pair_frame: inverse_target_times_tool
+  pair_weight: 1.0
+  hand_relation_scale_m: 0.030
+  hand_relation_weight: 0.05
+  hand_relation_landmarks: calibrated_five_tips_per_hand
+  hand_primary_object: {right: tool, left: target}
+  control_weight: 0.01
+  control_component_scales: {slide_m: 0.05, hinge_rad: 0.05}
+  terminal_weight_on_object_and_pair: 1.0
+evaluation:
+  four_cells: [A_REPLAY, L_REPLAY, A_PLAN, L_PLAN]
+  segments: [[0, 10], [0, 20], [20, 40]]
+  endpoint_summaries: [1, 5, 10, 14, 15, 16, 20, 25, 30, 35, 40]
+  numerical_guard_m: 0.000001
+  numerical_guard_rad: 0.00001
+  visual_review_required: true
+  cold_replay_per_completed_arm: 1
+budget:
+  search_physics_max: 332800
+  baseline_physics_max: 800
+  real_execution_physics_max: 800
+  cold_replay_physics_max: 800
+  implementation_retest_physics_max: 400
+  all_setup_physics_max: 100
+  summed_phase_physics_max: 335700
+  all_in_physics_hard_max: 336000
+  attempt_cost_never_refunded: true
+  reserve_before_candidate: true
+authorization:
+  actor_critic_forward: 0
+  rl_training: false
+  chunk_commit: false
+  automatic_follow_on: false

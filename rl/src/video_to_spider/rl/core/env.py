@@ -105,6 +105,56 @@ def make_world(
     return world
 
 
+def make_startup_world(
+    *,
+    simulator_config: str | Path,
+    protocol: str | Path,
+    objective_profile: str | Path,
+    observation_profile: str | Path,
+    action_profile: str | Path,
+    boundary: dict[str, Any],
+    seed: int = 0,
+) -> MJWPVectorEnv:
+    """Build the actor-free endpoint-0 world used by startup planning.
+
+    Unlike :func:`make_world`, this path intentionally does not install a
+    source-40 chunk-reset contract.  The supplied complete snapshot owns the
+    reference cursor and episode horizon, and is restored without rebuilding
+    any contact or solver state.
+    """
+    config = load_ego_config(simulator_config)
+    reference = load_reference(config.data_path)
+    objective = load_runtime_objective(
+        Path(protocol), Path(objective_profile), tracking_variant="tool_only",
+        require_run_ready=False,
+    )
+    observation = load_runtime_observation(
+        Path(protocol), Path(observation_profile), require_run_ready=False,
+    )
+    residual, _ = load_residual_action_profile(Path(action_profile))
+    world = MJWPVectorEnv(
+        config,
+        reference,
+        num_envs=1,
+        env_config=MJWPVectorEnvConfig(
+            reference_start_index=0,
+            asymmetric_critic=False,
+            max_episode_length=len(reference[0]) - 1,
+            tracked_object_indices=(0,),
+            object_roles=("tool", "target"),
+            objective=objective,
+            observation=observation,
+            residual=residual,
+            object_assistance=None,
+        ),
+        seed=seed,
+    )
+    validate_physics_snapshot(boundary)
+    world.set_env_state(boundary)
+    world.enable_state_feasible_action_contract(reference_snap_tolerance=2.0e-7)
+    return world
+
+
 class IndependentWorlds:
     """Four actual single-world instances; no packed contact buffer."""
 

@@ -59,6 +59,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_CONFIG = PROJECT_ROOT / "configs/rl_core_refactor_r1.yaml"
 DEFAULT_TRAIN_CONFIG = PROJECT_ROOT / "configs/taco_pour_rl_task_informed_critic_v2.yaml"
 DEFAULT_PLAN_CONFIG = PROJECT_ROOT / "configs/taco_pour_two_chunk_sequence_search_v1.yaml"
+DEFAULT_STARTUP_CONFIG = PROJECT_ROOT / "configs/taco_pour_control_aware_startup_v1.yaml"
 
 
 def _load_config(path: Path, asset_root_override: Path | None) -> tuple[dict[str, Any], Path, dict[str, Path]]:
@@ -1298,7 +1299,7 @@ def verify(config_path: Path, asset_root: Path | None, output: Path, *, physics:
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "command", choices=("inspect", "verify", "train", "evaluate", "plan-window")
+        "command", choices=("inspect", "verify", "train", "evaluate", "plan-window", "plan-startup")
     )
     parser.add_argument("--config", type=Path)
     parser.add_argument("--asset-root", type=Path)
@@ -1306,6 +1307,10 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--physics", action="store_true", help="run bounded real MJWP verification")
     parser.add_argument("--checkpoint", type=Path, help="epoch-boundary checkpoint for evaluate")
     parser.add_argument("--resume", type=Path, help="explicit epoch-boundary checkpoint for train")
+    parser.add_argument(
+        "--startup-phase", choices=("preflight", "execute", "analyze"),
+        default="preflight", help="bounded control-aware startup experiment phase",
+    )
     return parser.parse_args(argv)
 
 
@@ -1319,10 +1324,21 @@ def _training_output(config: dict[str, Any], root: Path) -> Path:
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
     config_path = args.config or (
+        DEFAULT_STARTUP_CONFIG if args.command == "plan-startup" else (
         DEFAULT_PLAN_CONFIG if args.command == "plan-window" else (
             DEFAULT_TRAIN_CONFIG if args.command in {"train", "evaluate"} else DEFAULT_CONFIG
-        )
+        ))
     )
+    if args.command == "plan-startup":
+        from .startup_planner import run_phase
+        result = run_phase(
+            config_path, args.asset_root, args.output, args.startup_phase,
+        )
+        print(json.dumps(result, indent=2, sort_keys=True))
+        return 0 if result.get("status") in {
+            "PREFLIGHT_COMPLETE", "PHYSICS_COMPLETE_ANALYSIS_PENDING",
+            "ANALYSIS_COMPLETE_VISUAL_REVIEW_PENDING",
+        } else 2
     schema = yaml.safe_load(config_path.read_text()).get("schema")
     if schema == "egoengine_taco_pour_virtual_object_assist_v1":
         from .virtual_assist import (
