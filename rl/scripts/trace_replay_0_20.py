@@ -88,7 +88,7 @@ def write_json(path: Path, value: Any) -> None:
 
 
 def _json_default(value: Any) -> Any:
-    if isinstance(value, (np.integer, np.floating)):
+    if isinstance(value, (np.bool_, np.integer, np.floating)):
         return value.item()
     if isinstance(value, np.ndarray):
         return value.tolist()

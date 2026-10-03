@@ -82,3 +82,14 @@ def test_replay_command_is_zero_residual_from_reference_one_and_na_is_not_pass()
     analysis = source[source.index("def analyze"):source.index("def hashes")]
     assert '"availability": "N/A"' in analysis
     assert "endpoint >= len" in analysis
+
+
+def test_static_recovery_never_reruns_mink_or_uses_physics_for_selection():
+    source = RUNNER.read_text()
+    recovery = source[source.index("def recover_selection"):source.index("def _candidate_initial")]
+    assert "solver_trace.npz" in recovery
+    assert "initial_left_aligned.npz" in recovery
+    assert "mink.solve_ik" not in recovery
+    assert "world.step" not in recovery
+    assert '"mink_rerun": False' in recovery
+    assert '"physics_outcomes_used_for_selection": False' in recovery

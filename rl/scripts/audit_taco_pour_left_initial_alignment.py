@@ -22,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ASSET_ROOT = Path("/data_all/zzx/3.2RL")
 OUTPUT = ASSET_ROOT / "runs/taco_pour_left_initial_alignment_v1"
 BASELINE = "9c595ec2ad2e11cff3cc7f2f8083cebd2bff34b1"
+STATIC_SOLVE_SERIALIZATION_FAILURE_COMMIT = "8a8ce76c79a694f38ef4477ff9b033fc4a4243a2"
 CONFIG = ROOT / "configs/taco_pour_left_initial_alignment_v1.yaml"
 INITIAL_PROTOCOL = ROOT / "configs/taco_pour_initialization_protocol_v2.yaml"
 SUMMARY_ENDPOINTS = (0, 1, 5, 10, 14, 15, 16, 20)
@@ -310,6 +311,155 @@ def static_solve(output: Path) -> None:
     status["status"] = "static_candidate_frozen_pending_physics"
     status["selected_iteration"] = selected
     status["selected_state_sha256"] = selection["selected_state"]["sha256"]
+    write_json(status_path, status)
+
+
+def recover_selection(output: Path) -> None:
+    """Recover a frozen selection after the known final JSON failure."""
+    require_clean()
+    require_baseline()
+    status_path = output / "status.json"
+    status = json.loads(status_path.read_text())
+    resolved_path = output / "resolved_inputs.json"
+    resolved = json.loads(resolved_path.read_text())
+    if resolved["implementation_git_commit"] != STATIC_SOLVE_SERIALIZATION_FAILURE_COMMIT:
+        raise RuntimeError("recovery is only valid for the recorded serialization failure")
+    if status.get("status") != "preflight_complete_no_solver_or_physics_executed":
+        raise RuntimeError("static selection recovery requires the untouched failed status")
+    required = ("solver_trace.npz", "cost_report.json", "initial_left_aligned.npz")
+    if any(not (output / name).is_file() for name in required) or (output / "selection.json").exists():
+        raise RuntimeError("static recovery artifacts are incomplete or selection already exists")
+    budget = json.loads((output / "budget_ledger.json").read_text())
+    if budget.get("qp_calls") != 128 or budget.get("geometry_checks") != 244:
+        raise RuntimeError("failed static attempt does not have the recorded bounded ledger")
+
+    paths = input_paths()
+    for name, row in resolved["inputs"].items():
+        if name == "runner_source":
+            continue
+        if trace.artifact(paths[name]) != row:
+            raise RuntimeError(f"input changed before static recovery: {name}")
+    solver_trace = arrays(output / "solver_trace.npz")
+    candidate_state = arrays(output / "initial_left_aligned.npz")
+    report = json.loads((output / "cost_report.json").read_text())
+    trace_qpos = solver_trace["qpos"]
+    hits = np.flatnonzero(np.all(trace_qpos == candidate_state["qpos"][None, :], axis=1))
+    if len(hits) != 1 or int(hits[0]) == 0:
+        raise RuntimeError("frozen candidate is not one distinct solver-trace state")
+    selected = int(hits[0])
+    states = report["states"]
+    order = sorted(range(1, len(states)), key=lambda i: (states[i]["weighted_task_merit"], i))
+    rank = order.index(selected)
+    if 2 + 2 * (rank + 1) != budget["geometry_checks"]:
+        raise RuntimeError("frozen candidate rank contradicts the persisted geometry-check count")
+    baseline = states[0]
+    candidate_metrics = states[selected]
+    contract = yaml.safe_load(CONFIG.read_text())
+    selection_cfg = contract["static_solver"]["candidate_selection"]
+    guard = float(selection_cfg["position_numerical_guard_m"])
+    merit_guard = float(selection_cfg["merit_numerical_guard_relative"]) * max(
+        1.0, abs(float(baseline["weighted_task_merit"]))
+    )
+    static_checks = {
+        "lower_weighted_task_merit": candidate_metrics["weighted_task_merit"] < baseline["weighted_task_merit"] - merit_guard,
+        "lower_tip_position_rms": candidate_metrics["tip_position_rms_m"] < baseline["tip_position_rms_m"] - guard,
+        "ring_nonworsening": candidate_metrics["tip_position_error_m"]["ring"] <= baseline["tip_position_error_m"]["ring"] + guard,
+        "pinky_nonworsening": candidate_metrics["tip_position_error_m"]["pinky"] <= baseline["tip_position_error_m"]["pinky"] + guard,
+    }
+    if not all(static_checks.values()):
+        raise RuntimeError("frozen candidate no longer satisfies static selection guards")
+
+    initial_protocol = yaml.safe_load(INITIAL_PROTOCOL.read_text())
+    reference = arrays(paths["reference"])
+    validation_model = _compile(paths)
+    meshes, _ = visual_meshes(paths["scene"], validation_model)
+    q64 = candidate_state["qpos"]
+    reference32 = {key: value.copy() for key, value in reference.items()}
+    reference32["qpos"] = reference32["qpos"].astype(np.float32).astype(np.float64)
+    gate64 = t0_legality_gate(
+        validation_model, q64, reference,
+        {"candidate": "left_aligned_recovery_float64"}, initial_protocol, meshes,
+    )
+    gate32 = t0_legality_gate(
+        validation_model, q64.astype(np.float32).astype(np.float64), reference32,
+        {"candidate": "left_aligned_recovery_runtime_float32"}, initial_protocol, meshes,
+    )
+    if not gate64["passed"] or not gate32["passed"]:
+        raise RuntimeError("frozen candidate did not reproduce its legality result")
+
+    initial = trace.load_initial(paths)
+    if not np.array_equal(q64[:18], initial["qpos"][:18]) or not np.array_equal(q64[36:], initial["qpos"][36:]):
+        raise RuntimeError("recovered candidate changed right hand or objects")
+    control_delta = q64[:36] - reference["ctrl"][1]
+    control_rows = []
+    for actuator_id in range(validation_model.nu):
+        joint_id = int(validation_model.actuator_trnid[actuator_id, 0])
+        joint_type = int(validation_model.jnt_type[joint_id])
+        unit = "m" if joint_type == int(mujoco.mjtJoint.mjJNT_SLIDE) else "rad"
+        control_rows.append({
+            "actuator": validation_model.actuator(actuator_id).name,
+            "joint": validation_model.joint(joint_id).name,
+            "side": "right" if actuator_id < 18 else "left",
+            "unit": unit,
+            "candidate_initial_ctrl": float(q64[actuator_id]),
+            "reference_ctrl_endpoint1": float(reference["ctrl"][1, actuator_id]),
+            "delta": float(control_delta[actuator_id]),
+        })
+    selected_artifact = trace.artifact(output / "initial_left_aligned.npz")
+    selection = {
+        "schema": "taco_pour_left_initial_alignment_selection_v1",
+        "status": "SELECTED_LEGAL_DISTINCT_STATE",
+        "physics_outcomes_used_for_selection": False,
+        "baseline_iteration": 0,
+        "selected_iteration": selected,
+        "selected_rank_zero_based": rank,
+        "ordered_noninitial_iterations": order,
+        "selected_metrics": candidate_metrics,
+        "selected_state": selected_artifact,
+        "right_hand_qpos_byte_identical": True,
+        "objects_qpos_byte_identical": True,
+        "validations": [{
+            "iteration": selected,
+            "static_checks": static_checks,
+            "float64_gate": gate64,
+            "runtime_float32_gate": gate32,
+            "full_geometry_passed": True,
+            "evidence_recovered_after_json_serialization_failure": True,
+        }],
+        "selection_recovery": {
+            "static_solver_implementation_git_commit": STATIC_SOLVE_SERIALIZATION_FAILURE_COMMIT,
+            "recovery_implementation_git_commit": head(),
+            "mink_rerun": False,
+            "ranking_rerun": False,
+            "physics_executed_before_freeze": False,
+            "preceding_ranked_states_rejected_before_serialization_failure": rank,
+            "original_geometry_checks": budget["geometry_checks"],
+            "recovery_geometry_checks": 2,
+            "lost_detail": "per-state rejected gate payloads were not durable before the JSON failure",
+        },
+        "initial_control_to_reference_endpoint1": {
+            "per_actuator": control_rows,
+            "left_translation_max_abs_m": float(np.max(np.abs(control_delta[18:21]))),
+            "left_angular_max_abs_rad": float(np.max(np.abs(control_delta[21:36]))),
+        },
+    }
+    write_json(output / "selection.json", selection)
+    budget["recovery_geometry_checks"] = 2
+    budget["total_geometry_checks_all_attempts"] = budget["geometry_checks"] + 2
+    budget["status"] = "static_solve_and_serialization_recovery_complete"
+    write_json(output / "budget_ledger.json", budget)
+    resolved["preflight_implementation_git_commit"] = resolved["implementation_git_commit"]
+    resolved["implementation_git_commit"] = head()
+    resolved["inputs"]["runner_source"] = trace.artifact(paths["runner_source"])
+    write_json(resolved_path, resolved)
+    status.update({
+        "status": "static_candidate_frozen_pending_physics",
+        "static_solver_implementation_git_commit": STATIC_SOLVE_SERIALIZATION_FAILURE_COMMIT,
+        "implementation_git_commit": head(),
+        "selected_iteration": selected,
+        "selected_state_sha256": selected_artifact["sha256"],
+        "selection_recovered_without_mink_or_physics_rerun": True,
+    })
     write_json(status_path, status)
 
 
@@ -707,11 +857,15 @@ def hashes(output: Path) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("phase", choices=("preflight", "solve", "physics", "analyze", "hashes"))
+    parser.add_argument(
+        "phase",
+        choices=("preflight", "solve", "recover-selection", "physics", "analyze", "hashes"),
+    )
     parser.add_argument("--output", type=Path, default=OUTPUT)
     args = parser.parse_args()
     if args.phase == "preflight": preflight(args.output)
     elif args.phase == "solve": static_solve(args.output)
+    elif args.phase == "recover-selection": recover_selection(args.output)
     elif args.phase == "physics": physics(args.output)
     elif args.phase == "analyze": analyze(args.output)
     else: hashes(args.output)
