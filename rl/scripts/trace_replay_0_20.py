@@ -41,6 +41,7 @@ from video_to_spider.rl.replay_contact_trace import (
     classify_geom_role,
     clone_array,
     control_unit_labels,
+    exact_array_equal,
     startup_control_sequences,
     transition_indices,
 )
@@ -291,9 +292,14 @@ def equality_report(left: Any, right: Any) -> dict[str, Any]:
     if isinstance(left, np.ndarray) or isinstance(right, np.ndarray):
         a, b = np.asarray(left), np.asarray(right)
         same_shape = a.shape == b.shape
-        equal = same_shape and a.dtype == b.dtype and np.array_equal(a, b, equal_nan=True)
+        numeric = np.issubdtype(a.dtype, np.number) and np.issubdtype(b.dtype, np.number)
+        equal = (
+            same_shape
+            and a.dtype == b.dtype
+            and exact_array_equal(a, b)
+        )
         result: dict[str, Any] = {"equal": bool(equal), "shape_left": list(a.shape), "shape_right": list(b.shape), "dtype_left": str(a.dtype), "dtype_right": str(b.dtype)}
-        if same_shape and np.issubdtype(a.dtype, np.number) and np.issubdtype(b.dtype, np.number):
+        if same_shape and numeric:
             diff = np.abs(a.astype(np.float64) - b.astype(np.float64))
             result["max_abs"] = float(np.nanmax(diff)) if diff.size else 0.0
             result["unequal_count"] = int(np.count_nonzero(~np.isclose(a, b, rtol=0, atol=0, equal_nan=True)))
@@ -1061,16 +1067,30 @@ def _historical_original_parity(
     snapshots: dict[int, dict[str, Any]],
     observer: Observer,
 ) -> dict[str, Any]:
+    rows, contacts, efc = _observer_arrays(observer)
+    return _historical_original_parity_arrays(
+        output, paths, endpoints, rows, contacts, efc, snapshots[20]
+    )
+
+
+def _historical_original_parity_arrays(
+    output: Path,
+    paths: dict[str, Path],
+    endpoints: dict[str, np.ndarray],
+    rows: dict[str, np.ndarray],
+    contacts: dict[str, np.ndarray],
+    efc: dict[str, np.ndarray],
+    s20: dict[str, Any],
+) -> dict[str, Any]:
     historical_endpoints = _npz_arrays(paths["trace_endpoints"])
     expected_endpoints = {
         name: historical_endpoints[f"B_{name}"] for name in ("qpos", "qvel", "ctrl")
     }
     endpoint_parity = _compare_array_maps(endpoints, expected_endpoints)
-    rows, contacts, efc = _observer_arrays(observer)
     substep_parity = _compare_array_maps(rows, _npz_arrays(paths["trace_substeps"]))
     contact_parity = _compare_array_maps(contacts, _npz_arrays(paths["trace_contacts"]))
     efc_parity = _compare_array_maps(efc, _npz_arrays(paths["trace_efc_force"]))
-    s20_parity = compare_snapshots(snapshots[20], torch_gzip_read(paths["trace_s20_b"]))
+    s20_parity = compare_snapshots(s20, torch_gzip_read(paths["trace_s20_b"]))
     report = {
         "schema": STARTUP_SCHEMA,
         "historical_trace": artifact(paths["trace_manifest"]),
@@ -1210,6 +1230,164 @@ def startup_execute(output: Path) -> None:
         "task_physics_steps": 610,
         "actor_or_critic_forwards": 0,
         "optimizer_updates": 0,
+    }
+    manifest["s0_input_immutable"] = True
+    write_json(manifest_path, manifest)
+
+
+def startup_resume_after_original(output: Path) -> None:
+    """Resume after a zero-intervention parity-reporter failure.
+
+    ORIGINAL is never rerun.  Its fully saved evidence is adjudicated first;
+    only then may a newly constructed world execute HOLD_1 and the two BLEND_5
+    conditions.  The external ledger includes the already spent setup/Replay.
+    """
+    manifest_path = output / "input_manifest.json"
+    authorization_path = output / "resume_after_original_authorization.json"
+    if not (manifest_path.is_file() and authorization_path.is_file()):
+        raise RuntimeError("startup resume requires manifest and explicit authorization")
+    manifest = json.loads(manifest_path.read_text())
+    authorization = json.loads(authorization_path.read_text())
+    if manifest.get("status") != "preflight_complete_no_environment_constructed":
+        raise RuntimeError("startup resume expected the interrupted preflight status")
+    if authorization.get("schema") != "taco_pour_startup_resume_after_original_v1":
+        raise RuntimeError("unexpected startup resume authorization schema")
+    if authorization.get("resume_implementation_git_commit") != _git_head():
+        raise RuntimeError("startup resume implementation HEAD is not authorized")
+    if authorization.get("original_implementation_git_commit") != manifest.get(
+        "implementation_git_commit"
+    ):
+        raise RuntimeError("startup resume does not refer to the interrupted implementation")
+    if subprocess.check_output(["git", "status", "--porcelain"], cwd=repo_root(), text=True).strip():
+        raise RuntimeError("startup resume requires a clean worktree")
+    paths = startup_input_paths()
+    for name, row in manifest["inputs"].items():
+        if artifact(paths[name]) != row:
+            raise RuntimeError(f"startup input changed before resume: {name}")
+    original_directory = output / "conditions/ORIGINAL"
+    for name, row in authorization["saved_original_artifacts"].items():
+        if artifact(original_directory / name) != row:
+            raise RuntimeError(f"saved ORIGINAL artifact changed before resume: {name}")
+    if any((output / "conditions" / label).exists() for label in ("HOLD_1", "BLEND_5", "BLEND_5_COLD")):
+        raise RuntimeError("startup resume found an intervention condition already present")
+
+    original_endpoints = _npz_arrays(original_directory / "endpoints.npz")
+    original_rows = _npz_arrays(original_directory / "substeps.npz")
+    original_contacts = _npz_arrays(original_directory / "contacts_raw.npz")
+    original_efc = _npz_arrays(original_directory / "efc_force_by_substep.npz")
+    original_s20 = torch_gzip_read(original_directory / "snapshots/s20.pt.gz")
+    parity = _historical_original_parity_arrays(
+        output,
+        paths,
+        original_endpoints,
+        original_rows,
+        original_contacts,
+        original_efc,
+        original_s20,
+    )
+    if not parity["all_bitwise_equal"]:
+        manifest["status"] = "saved_original_identity_failed_stopped"
+        manifest["actual_cost"] = authorization["prior_attempt_cost"]
+        write_json(manifest_path, manifest)
+        raise RuntimeError("saved ORIGINAL did not reproduce the historical trace bitwise")
+
+    prior = authorization["prior_attempt_cost"]
+    if prior != {
+        "physics_steps": 201,
+        "control_intervals": 20,
+        "setup_native_mj_steps": 1,
+        "task_physics_steps": 200,
+    }:
+        raise RuntimeError("startup resume prior cost is not the observed ORIGINAL-only cost")
+    ledger = BudgetLedger(
+        physics_steps=int(prior["physics_steps"]),
+        control_intervals=int(prior["control_intervals"]),
+        limit_physics_steps=1000,
+        limit_control_intervals=81,
+    )
+    ledger.require_capacity(physics_steps=412, control_intervals=41)
+    s0 = torch_gzip_read(paths["trace_s0_reconstructed"])
+    frozen_plan = _npz_arrays(output / "control_plan.npz")
+    saved_controls = _npz_arrays(output / "control_sequences.npz")
+    world = make_world(paths, load_initial(paths))
+    ledger.charge(physics_steps=1, control_intervals=0)
+    controls, control_report = _validate_startup_controls(world, s0, frozen_plan)
+    saved_comparison = _compare_array_maps(controls, saved_controls)
+    if not saved_comparison["all_equal"]:
+        raise RuntimeError("saved validated control sequences changed before resume")
+    control_report["resume_revalidation"] = {
+        "all_saved_arrays_bitwise_equal": True,
+        "implementation_git_commit": _git_head(),
+    }
+    write_json(output / "control_validation_resume.json", control_report)
+
+    ledger.require_capacity(physics_steps=411, control_intervals=41)
+    hold = _run_startup_condition(
+        world, s0, "HOLD_1", controls["hold_1_residual_action"],
+        controls["HOLD_1_realized_ctrl"], ledger,
+    )
+    _save_condition(output, "HOLD_1", *hold)
+    ledger.require_capacity(physics_steps=401, control_intervals=40)
+    blend = _run_startup_condition(
+        world, s0, "BLEND_5", controls["blend_5_residual_action"],
+        controls["BLEND_5_realized_ctrl"], ledger,
+    )
+    _save_condition(output, "BLEND_5", *blend)
+
+    ledger.require_capacity(physics_steps=201, control_intervals=20)
+    cold_world = make_world(paths, load_initial(paths))
+    ledger.charge(physics_steps=1, control_intervals=0)
+    cold = _run_startup_condition(
+        cold_world, s0, "BLEND_5_COLD", controls["blend_5_residual_action"],
+        controls["BLEND_5_realized_ctrl"], ledger,
+    )
+    _save_condition(output, "BLEND_5_COLD", *cold)
+
+    blend_rows, blend_contacts, blend_efc = _observer_arrays(blend[2])
+    cold_rows, cold_contacts, cold_efc = _observer_arrays(cold[2])
+    cold_parity = {
+        "schema": STARTUP_SCHEMA,
+        "saved_action_array_sha256": _array_sha256(controls["blend_5_residual_action"]),
+        "endpoints": _compare_array_maps(blend[0], cold[0]),
+        "substeps": _compare_array_maps(blend_rows, cold_rows),
+        "contacts": _compare_array_maps(blend_contacts, cold_contacts),
+        "efc_force": _compare_array_maps(blend_efc, cold_efc),
+        "full_s20_snapshot": compare_snapshots(blend[1][20], cold[1][20]),
+    }
+    cold_parity["all_bitwise_equal"] = bool(
+        cold_parity["endpoints"]["all_equal"]
+        and cold_parity["substeps"]["all_equal"]
+        and cold_parity["contacts"]["all_equal"]
+        and cold_parity["efc_force"]["all_equal"]
+        and cold_parity["full_s20_snapshot"]["all_common_equal"]
+        and not cold_parity["full_s20_snapshot"]["only_current"]
+        and not cold_parity["full_s20_snapshot"]["only_historical"]
+    )
+    write_json(output / "cold_replay_parity.json", cold_parity)
+    if not cold_parity["all_bitwise_equal"]:
+        manifest["status"] = "cold_replay_parity_failed_stopped"
+        manifest["actual_cost"] = vars(ledger)
+        write_json(manifest_path, manifest)
+        raise RuntimeError("BLEND_5 cold replay did not reproduce bitwise")
+
+    original_result = json.loads((original_directory / "result.json").read_text())
+    manifest["status"] = "physics_complete_analysis_and_visual_review_pending"
+    manifest["implementation_git_commit_at_resume"] = _git_head()
+    manifest["resume_after_original"] = authorization
+    manifest["results"] = {
+        "ORIGINAL": original_result,
+        "HOLD_1": hold[3],
+        "BLEND_5": blend[3],
+        "BLEND_5_COLD": cold[3],
+    }
+    manifest["actual_cost"] = {
+        **vars(ledger),
+        "setup_native_mj_steps": 3,
+        "task_physics_steps": 610,
+        "actor_or_critic_forwards": 0,
+        "optimizer_updates": 0,
+        "authorized_physics_retest_consumed": False,
+        "extra_setup_due_to_reporter_interruption": 1,
     }
     manifest["s0_input_immutable"] = True
     write_json(manifest_path, manifest)
@@ -1471,7 +1649,7 @@ def main() -> None:
         "stage",
         choices=(
             "preflight", "run", "resume-b", "hashes",
-            "startup-preflight", "startup-run", "startup-analyze",
+            "startup-preflight", "startup-run", "startup-resume", "startup-analyze",
         ),
     )
     parser.add_argument("--output", type=Path, default=None)
@@ -1488,6 +1666,8 @@ def main() -> None:
         startup_preflight(output)
     elif args.stage == "startup-run":
         startup_execute(output)
+    elif args.stage == "startup-resume":
+        startup_resume_after_original(output)
     elif args.stage == "startup-analyze":
         startup_analyze(output)
     else:

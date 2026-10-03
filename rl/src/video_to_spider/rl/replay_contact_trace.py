@@ -169,6 +169,15 @@ def clone_array(value: object) -> np.ndarray:
     return result
 
 
+def exact_array_equal(left: object, right: object) -> bool:
+    """Bitwise array equality with NaN equivalence only for numeric dtypes."""
+    a, b = np.asarray(left), np.asarray(right)
+    if a.shape != b.shape or a.dtype != b.dtype:
+        return False
+    numeric = np.issubdtype(a.dtype, np.number) and np.issubdtype(b.dtype, np.number)
+    return bool(np.array_equal(a, b, equal_nan=True if numeric else False))
+
+
 def valid_contact_prefix(value: object, nacon: int) -> np.ndarray:
     """Copy only active contact rows and never expose allocator padding."""
     result = clone_array(value)

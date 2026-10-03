@@ -10,6 +10,7 @@ from video_to_spider.rl.replay_contact_trace import (
     control_unit_labels,
     encode_desired_residual,
     endpoint_sample_or_none,
+    exact_array_equal,
     quintic_blend_weights,
     reference_decode_elliptic,
     reference_decode_pyramidal,
@@ -34,6 +35,16 @@ def test_clone_array_has_no_alias():
     source[:] = -1
     assert np.array_equal(cloned, np.arange(5))
     assert cloned.flags.owndata
+
+
+def test_contact_string_arrays_support_exact_equality_without_nan_semantics():
+    # The live reporter uses NumPy string arrays for geom/role names.  They are
+    # exact-comparison fields, but NumPy's equal_nan path is numeric-only.
+    left = np.asarray(["left_hand:ring", "target"])
+    right = left.copy()
+    assert exact_array_equal(left, right)
+    assert not exact_array_equal(left, np.asarray(["left_hand:pinky", "target"]))
+    assert exact_array_equal(np.asarray([np.nan]), np.asarray([np.nan]))
 
 
 def test_contact_decode_rotation_sign_condim_and_invalid_address():
