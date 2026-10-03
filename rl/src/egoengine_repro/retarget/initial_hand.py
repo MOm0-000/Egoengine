@@ -229,7 +229,10 @@ def solve_left_reference_aligned_initial(
         "locked_qpos_addresses": locked_qpos.tolist(),
         "locked_dof_addresses": locked_dofs.tolist(),
         "locked_coordinates_byte_identical": bool(
-            np.array_equal(np.asarray(q_trace)[:, locked_qpos], seed_qpos[locked_qpos])
+            np.array_equal(
+                np.asarray(q_trace)[:, locked_qpos],
+                np.broadcast_to(seed_qpos[locked_qpos], (len(q_trace), len(locked_qpos))),
+            )
         ),
         "seed_is_target": bool(np.array_equal(seed_qpos, reference_qpos)),
         "numerical_dt_s": float(numerical_dt),

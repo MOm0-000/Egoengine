@@ -48,6 +48,7 @@ def test_static_solver_separates_seed_target_and_writes_only_left_coordinates():
     assert "candidate[left_qpos] +=" in source
     assert "candidate[locked_qpos]" in source
     assert "seed_is_target" in source
+    assert "np.broadcast_to(seed_qpos[locked_qpos]" in source
     assert "world.step" not in source
 
 
