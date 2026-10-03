@@ -40,6 +40,8 @@ from video_to_spider.rl.replay_contact_trace import (
     canonical_contact_group,
     classify_geom_role,
     clone_array,
+    control_unit_labels,
+    startup_control_sequences,
     transition_indices,
 )
 
@@ -58,6 +60,12 @@ EXPECTED = {
 TRACE_SCHEMA = "taco_pour_replay_0_20_contact_trace_v1"
 SUBSTEPS = 10
 ENDPOINTS = 20
+STARTUP_OUTPUT = ASSET_ROOT / "runs/taco_pour_startup_transition_isolation_v1"
+STARTUP_SCHEMA = "taco_pour_startup_transition_isolation_v1"
+STARTUP_BASELINE = "8b5e941f5a12d8823f53949e070e0efac36b94cc"
+STARTUP_TRACE = OUTPUT
+STARTUP_SNAPSHOT = STARTUP_TRACE / "snapshots/A_s0_reconstructed.pt.gz"
+STARTUP_KEYS = (0, 1, 5, 10, 14, 15, 16, 20)
 
 
 def sha256(path: Path) -> str:
@@ -686,6 +694,769 @@ def resume_observer_b(output: Path) -> None:
     write_json(manifest_path, manifest)
 
 
+# ---------------------------------------------------------------------------
+# Startup-transition isolation mode.  This is deliberately local to the
+# already-audited Replay tracer: it reuses the exact observer and snapshot
+# machinery without widening the active RL core.
+# ---------------------------------------------------------------------------
+
+
+def _array_sha256(value: np.ndarray) -> str:
+    value = np.ascontiguousarray(value)
+    digest = hashlib.sha256()
+    digest.update(str(value.dtype).encode())
+    digest.update(np.asarray(value.shape, dtype=np.int64).tobytes())
+    digest.update(value.tobytes())
+    return digest.hexdigest()
+
+
+def startup_input_paths() -> dict[str, Path]:
+    paths = input_paths()
+    paths.update(
+        {
+            "startup_contract": repo_root() / "configs/taco_pour_startup_transition_isolation_v1.yaml",
+            "trace_manifest": STARTUP_TRACE / "input_manifest.json",
+            "trace_replay_parity": STARTUP_TRACE / "replay_parity.json",
+            "trace_endpoints": STARTUP_TRACE / "endpoints.npz",
+            "trace_substeps": STARTUP_TRACE / "substeps.npz",
+            "trace_contacts": STARTUP_TRACE / "contacts_raw.npz",
+            "trace_efc_force": STARTUP_TRACE / "efc_force_by_substep.npz",
+            "trace_s0_reconstructed": STARTUP_SNAPSHOT,
+            "trace_s0_a": STARTUP_TRACE / "snapshots/A_s0.pt.gz",
+            "trace_s0_b": STARTUP_TRACE / "snapshots/B_s0.pt.gz",
+            "trace_s20_b": STARTUP_TRACE / "snapshots/B_s20.pt.gz",
+        }
+    )
+    return paths
+
+
+def _git_head() -> str:
+    return subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=repo_root(), text=True
+    ).strip()
+
+
+def _require_baseline_ancestor(head: str) -> None:
+    result = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", STARTUP_BASELINE, head],
+        cwd=repo_root(),
+        check=False,
+    )
+    if result.returncode:
+        raise RuntimeError(f"startup audit baseline {STARTUP_BASELINE} is not an ancestor of {head}")
+
+
+def startup_preflight(output: Path) -> None:
+    """Freeze inputs and controls without constructing a physics environment."""
+    if output.exists():
+        raise FileExistsError(f"immutable startup diagnostic output already exists: {output}")
+    if subprocess.check_output(["git", "status", "--porcelain"], cwd=repo_root(), text=True).strip():
+        raise RuntimeError("startup preflight requires a clean implementation worktree")
+    head = _git_head()
+    _require_baseline_ancestor(head)
+    paths = startup_input_paths()
+    artifacts = {name: artifact(path) for name, path in paths.items()}
+    trace_manifest = json.loads(paths["trace_manifest"].read_text())
+    trace_parity = json.loads(paths["trace_replay_parity"].read_text())
+    if not trace_parity.get("B_endpoint_arrays_bitwise_equal_historical"):
+        raise RuntimeError("historical Replay 0->20 identity is not established")
+    if trace_manifest.get("status") != "replay_identity_established_contact_trace_and_visual_review_complete":
+        raise RuntimeError("historical Replay trace has not completed review")
+
+    s0 = torch_gzip_read(paths["trace_s0_reconstructed"])
+    s0_a = torch_gzip_read(paths["trace_s0_a"])
+    s0_b = torch_gzip_read(paths["trace_s0_b"])
+    a_parity = compare_snapshots(s0, s0_a)
+    b_parity = compare_snapshots(s0, s0_b)
+    if not (
+        a_parity["all_common_equal"]
+        and b_parity["all_common_equal"]
+        and not a_parity["only_current"]
+        and not a_parity["only_historical"]
+        and not b_parity["only_current"]
+        and not b_parity["only_historical"]
+    ):
+        raise RuntimeError("the three saved trace s0 snapshots are not bitwise identical")
+    with np.load(paths["reference"], allow_pickle=False) as archive:
+        reference_ctrl = archive["ctrl"].astype(np.float32)
+    initial_ctrl = s0["ctrl"].detach().cpu().numpy()[0].astype(np.float32, copy=True)
+    controls = startup_control_sequences(initial_ctrl, reference_ctrl)
+
+    output.mkdir(parents=True)
+    np.savez_compressed(output / "control_plan.npz", **controls)
+    manifest = {
+        "schema": STARTUP_SCHEMA,
+        "status": "preflight_complete_no_environment_constructed",
+        "baseline_git_commit": STARTUP_BASELINE,
+        "implementation_git_commit": head,
+        "inputs": artifacts,
+        "s0_provenance": {
+            "selected": artifacts["trace_s0_reconstructed"],
+            "origin": trace_manifest["s0_source"],
+            "complete_snapshot_field_count": len(s0),
+            "A_s0_reconstructed_equals_A_s0_bitwise": True,
+            "A_s0_reconstructed_equals_B_s0_bitwise": True,
+            "comparison_A": a_parity,
+            "comparison_B": b_parity,
+        },
+        "control_plan": {
+            name: {
+                "shape": list(value.shape),
+                "dtype": str(value.dtype),
+                "sha256": _array_sha256(value),
+            }
+            for name, value in controls.items()
+        },
+        "fixed_order": ["ORIGINAL", "HOLD_1", "BLEND_5", "BLEND_5_COLD"],
+        "planned_cost": {
+            "setup_native_mj_steps": 2,
+            "ORIGINAL_physics_steps": 200,
+            "HOLD_1_physics_steps": 10,
+            "BLEND_5_physics_steps": 200,
+            "BLEND_5_COLD_physics_steps": 200,
+            "total_physics_steps": 612,
+            "task_control_intervals": 61,
+            "physics_ceiling": 1000,
+            "control_interval_ceiling": 81,
+        },
+        "runtime_contract": {
+            "device": "cpu",
+            "actor_or_critic_forwards": 0,
+            "optimizer_updates": 0,
+            "object_assistance": None,
+            "action_noise": 0.0,
+            "auto_reset": False,
+            "tracking_variant": "tool_only",
+            "diagnostic_only": True,
+            "chunk_commit": False,
+        },
+    }
+    write_json(output / "input_manifest.json", manifest)
+
+
+def _npz_arrays(path: Path) -> dict[str, np.ndarray]:
+    with np.load(path, allow_pickle=False) as archive:
+        return {name: archive[name].copy() for name in archive.files}
+
+
+def _compare_array_maps(left: dict[str, np.ndarray], right: dict[str, np.ndarray]) -> dict[str, Any]:
+    keys = sorted(set(left) | set(right))
+    fields = {
+        key: equality_report(left[key], right[key])
+        for key in keys
+        if key in left and key in right
+    }
+    return {
+        "all_equal": (
+            set(left) == set(right) and all(row["equal"] for row in fields.values())
+        ),
+        "only_left": sorted(set(left) - set(right)),
+        "only_right": sorted(set(right) - set(left)),
+        "unequal_fields": {key: row for key, row in fields.items() if not row["equal"]},
+        "field_count": len(fields),
+    }
+
+
+def _observer_arrays(observer: Observer) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray], dict[str, np.ndarray]]:
+    rows = {
+        key: np.stack([np.asarray(row[key]) for row in observer.rows])
+        for key in observer.rows[0]
+    }
+    contacts: dict[str, np.ndarray] = {}
+    for key in (
+        "source_endpoint", "outcome_endpoint", "command_reference_endpoint", "substep",
+        "global_substep", "contact_id", "worldid", "geom1", "geom2", "pos", "frame",
+        "dist", "dim", "friction", "efc_address", "adhesion",
+        "wrench_contact_force_torque", "wrench_world_force_torque_on_geom2",
+    ):
+        contacts[key] = (
+            np.stack([np.asarray(row[key]) for row in observer.contacts])
+            if observer.contacts else np.empty((0,))
+        )
+    for key in ("geom1_name", "geom2_name", "role1", "role2", "group"):
+        contacts[key] = np.asarray([row[key] for row in observer.contacts])
+    efc = {"efc_force": np.stack(observer.efc_force)}
+    return rows, contacts, efc
+
+
+def _save_condition(
+    output: Path,
+    label: str,
+    endpoints: dict[str, np.ndarray],
+    snapshots: dict[int, dict[str, Any]],
+    observer: Observer,
+    result: dict[str, Any],
+) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray], dict[str, np.ndarray]]:
+    directory = output / "conditions" / label
+    directory.mkdir(parents=True)
+    np.savez_compressed(directory / "endpoints.npz", **endpoints)
+    rows, contacts, efc = _observer_arrays(observer)
+    np.savez_compressed(directory / "substeps.npz", **rows)
+    np.savez_compressed(directory / "contacts_raw.npz", **contacts)
+    np.savez_compressed(directory / "efc_force_by_substep.npz", **efc)
+    write_contact_csv(observer.contacts, directory / "contact_forces.csv")
+    for endpoint, state in snapshots.items():
+        torch_gzip_write(directory / "snapshots" / f"s{endpoint}.pt.gz", state)
+    write_json(directory / "result.json", result)
+    return rows, contacts, efc
+
+
+def _exact_snapshot_restored(world: MJWPVectorEnv, s0: dict[str, Any]) -> dict[str, Any]:
+    world.set_env_state(s0)
+    comparison = compare_snapshots(world.get_env_state(), s0)
+    if not (
+        comparison["all_common_equal"]
+        and not comparison["only_current"]
+        and not comparison["only_historical"]
+    ):
+        raise RuntimeError("full s0 did not restore bitwise")
+    return comparison
+
+
+def _run_startup_condition(
+    world: MJWPVectorEnv,
+    s0: dict[str, Any],
+    label: str,
+    actions: np.ndarray,
+    expected_ctrl: np.ndarray,
+    ledger: BudgetLedger,
+) -> tuple[dict[str, np.ndarray], dict[int, dict[str, Any]], Observer, dict[str, Any]]:
+    restore = _exact_snapshot_restored(world, s0)
+    s0_after_restore = world.get_env_state()
+    rows = [endpoint_row(world)]
+    snapshots = {0: s0_after_restore}
+    observer = Observer(world)
+    infos: list[dict[str, Any]] = []
+    terminated = False
+    failure_endpoint: int | None = None
+    for source in range(len(actions)):
+        observer.begin(source)
+        _, _, done, info = world.step(
+            actions[source : source + 1], auto_reset=False, substep_observer=observer
+        )
+        ledger.charge(physics_steps=SUBSTEPS, control_intervals=1)
+        rows.append(endpoint_row(world))
+        infos.append({key: clone_array(value) for key, value in info.items()})
+        if not np.array_equal(rows[-1]["ctrl"], expected_ctrl[source], equal_nan=True):
+            raise RuntimeError(f"{label} realized ctrl differs from its validated command at source {source}")
+        endpoint = source + 1
+        if endpoint in STARTUP_KEYS:
+            snapshots[endpoint] = world.get_env_state()
+        if bool(done[0]):
+            terminated = True
+            failure_endpoint = endpoint
+            break
+    endpoints = {
+        name: np.stack([row[name] for row in rows]) for name in rows[0]
+    }
+    if len(observer.rows) != (len(rows) - 1) * SUBSTEPS:
+        raise RuntimeError(f"{label} observer substep count is incomplete")
+    result = {
+        "schema": STARTUP_SCHEMA,
+        "condition": label,
+        "requested_control_intervals": int(len(actions)),
+        "executed_control_intervals": int(len(rows) - 1),
+        "physics_steps": int((len(rows) - 1) * SUBSTEPS),
+        "terminated": terminated,
+        "failure_endpoint": failure_endpoint,
+        "full_s0_restore_bitwise": True,
+        "s0_restore_comparison": restore,
+        "actor_or_critic_forwards": 0,
+        "optimizer_updates": 0,
+    }
+    return endpoints, snapshots, observer, result
+
+
+def _validate_startup_controls(
+    world: MJWPVectorEnv,
+    s0: dict[str, Any],
+    frozen_plan: dict[str, np.ndarray],
+) -> tuple[dict[str, np.ndarray], dict[str, Any]]:
+    reference = world.ctrl_ref[: ENDPOINTS + 1].detach().cpu().numpy().astype(np.float32)
+    initial = s0["ctrl"].detach().cpu().numpy()[0].astype(np.float32, copy=True)
+    plan = startup_control_sequences(initial, reference)
+    for name, value in frozen_plan.items():
+        if name not in plan or not np.array_equal(value, plan[name], equal_nan=True):
+            raise RuntimeError(f"runtime control plan changed after preflight: {name}")
+    model = world.env.model_cpu
+    indices = np.asarray(world.env_cfg.residual.hand_control_indices, dtype=np.int64)
+    if not np.array_equal(indices, np.arange(model.nu)):
+        raise RuntimeError("startup audit requires all 36 actuator controls in canonical order")
+    limited = np.asarray(model.actuator_ctrllimited, dtype=bool)[indices]
+    ranges = np.asarray(model.actuator_ctrlrange, dtype=np.float64)[indices]
+    joint_ids = np.asarray(model.actuator_trnid, dtype=np.int64)[indices, 0]
+    joint_types = np.asarray(model.jnt_type, dtype=np.int64)[joint_ids]
+    units = control_unit_labels(
+        joint_types,
+        slide_type=int(mujoco.mjtJoint.mjJNT_SLIDE),
+        hinge_type=int(mujoco.mjtJoint.mjJNT_HINGE),
+    )
+    slide = joint_types == int(mujoco.mjtJoint.mjJNT_SLIDE)
+    hinge = joint_types == int(mujoco.mjtJoint.mjJNT_HINGE)
+    if int(slide.sum()) != 6 or int(hinge.sum()) != 30:
+        raise RuntimeError("actuator unit partition changed from 6 slide + 30 hinge")
+
+    realized: dict[str, np.ndarray] = {}
+    report: dict[str, Any] = {
+        "residual_scale": float(world.env_cfg.residual.residual_scale),
+        "residual_clip": float(world.env_cfg.residual.residual_clip),
+        "slide_components_m": int(slide.sum()),
+        "hinge_components_rad": int(hinge.sum()),
+        "per_component_units": units.tolist(),
+        "conditions": {},
+    }
+    mapping = {
+        "ORIGINAL": (plan["original_desired_ctrl"], plan["original_residual_action"], reference[1:21]),
+        "HOLD_1": (plan["hold_1_desired_ctrl"], plan["hold_1_residual_action"], reference[1:2]),
+        "BLEND_5": (plan["blend_5_desired_ctrl"], plan["blend_5_residual_action"], reference[1:21]),
+    }
+    for label, (desired, action, base) in mapping.items():
+        action_tensor = torch.as_tensor(action, dtype=torch.float32)
+        base_tensor = torch.as_tensor(base, dtype=torch.float32)
+        actual = world._apply_residual(base_tensor, action_tensor).detach().cpu().numpy()
+        residual = actual - base
+        error = actual.astype(np.float64) - desired.astype(np.float64)
+        if not np.isfinite(action).all() or float(np.max(np.abs(action))) > 1.0:
+            raise RuntimeError(f"{label} action leaves normalized support")
+        if float(np.max(np.abs(residual))) > 0.05 + 1e-8:
+            raise RuntimeError(f"{label} physical residual leaves +/-0.05")
+        below = np.maximum(ranges[None, :, 0] - actual.astype(np.float64), 0.0)
+        above = np.maximum(actual.astype(np.float64) - ranges[None, :, 1], 0.0)
+        violation = np.maximum(below, above)[:, limited]
+        base_below = np.maximum(ranges[None, :, 0] - base.astype(np.float64), 0.0)
+        base_above = np.maximum(base.astype(np.float64) - ranges[None, :, 1], 0.0)
+        base_violation = np.maximum(base_below, base_above)[:, limited]
+        maximum_violation = float(np.max(violation)) if violation.size else 0.0
+        if maximum_violation > 2e-7 or np.any(violation > base_violation + 1e-12):
+            raise RuntimeError(f"{label} desired control leaves or worsens actuator ctrlrange")
+        slide_error = float(np.max(np.abs(error[:, slide])))
+        hinge_error = float(np.max(np.abs(error[:, hinge])))
+        if slide_error > 2e-7 or hinge_error > 2e-7:
+            raise RuntimeError(f"{label} residual encoding exceeds 2e-7 tolerance")
+        realized[label] = actual.astype(np.float32, copy=True)
+        report["conditions"][label] = {
+            "action_min": float(action.min()),
+            "action_max": float(action.max()),
+            "maximum_absolute_normalized_action": float(np.max(np.abs(action))),
+            "maximum_absolute_physical_residual": float(np.max(np.abs(residual))),
+            "maximum_encoding_error_slide_m": slide_error,
+            "maximum_encoding_error_hinge_rad": hinge_error,
+            "normalized_support_clips": 0,
+            "physical_residual_clips": 0,
+            "ctrlrange_clips": 0,
+            "baseline_tolerance_level_ctrlrange_components": int(np.count_nonzero(violation)),
+            "maximum_ctrlrange_violation": maximum_violation,
+        }
+    if not np.array_equal(realized["ORIGINAL"], reference[1:21]):
+        raise RuntimeError("ORIGINAL is not exact zero-residual Replay")
+    if not np.array_equal(plan["blend_5_desired_ctrl"][4:], reference[5:21]):
+        raise RuntimeError("BLEND_5 is not exact Replay from source4->5 onward")
+    return {**plan, **{f"{key}_realized_ctrl": value for key, value in realized.items()}}, report
+
+
+def _historical_original_parity(
+    output: Path,
+    paths: dict[str, Path],
+    endpoints: dict[str, np.ndarray],
+    snapshots: dict[int, dict[str, Any]],
+    observer: Observer,
+) -> dict[str, Any]:
+    historical_endpoints = _npz_arrays(paths["trace_endpoints"])
+    expected_endpoints = {
+        name: historical_endpoints[f"B_{name}"] for name in ("qpos", "qvel", "ctrl")
+    }
+    endpoint_parity = _compare_array_maps(endpoints, expected_endpoints)
+    rows, contacts, efc = _observer_arrays(observer)
+    substep_parity = _compare_array_maps(rows, _npz_arrays(paths["trace_substeps"]))
+    contact_parity = _compare_array_maps(contacts, _npz_arrays(paths["trace_contacts"]))
+    efc_parity = _compare_array_maps(efc, _npz_arrays(paths["trace_efc_force"]))
+    s20_parity = compare_snapshots(snapshots[20], torch_gzip_read(paths["trace_s20_b"]))
+    report = {
+        "schema": STARTUP_SCHEMA,
+        "historical_trace": artifact(paths["trace_manifest"]),
+        "endpoints": endpoint_parity,
+        "substeps": substep_parity,
+        "contacts": contact_parity,
+        "efc_force": efc_parity,
+        "full_s20_snapshot": s20_parity,
+        "all_bitwise_equal": bool(
+            endpoint_parity["all_equal"]
+            and substep_parity["all_equal"]
+            and contact_parity["all_equal"]
+            and efc_parity["all_equal"]
+            and s20_parity["all_common_equal"]
+            and not s20_parity["only_current"]
+            and not s20_parity["only_historical"]
+        ),
+        "padding_exception_used": False,
+    }
+    write_json(output / "replay_parity.json", report)
+    return report
+
+
+def startup_execute(output: Path) -> None:
+    manifest_path = output / "input_manifest.json"
+    if not manifest_path.is_file():
+        raise RuntimeError("startup preflight must run before integration")
+    manifest = json.loads(manifest_path.read_text())
+    if manifest.get("status") != "preflight_complete_no_environment_constructed":
+        raise RuntimeError("startup output is not an unused preflight")
+    if _git_head() != manifest["implementation_git_commit"]:
+        raise RuntimeError("implementation HEAD changed after startup preflight")
+    if subprocess.check_output(["git", "status", "--porcelain"], cwd=repo_root(), text=True).strip():
+        raise RuntimeError("startup integration requires a clean worktree")
+    paths = startup_input_paths()
+    for name, row in manifest["inputs"].items():
+        if artifact(paths[name]) != row:
+            raise RuntimeError(f"startup input changed after preflight: {name}")
+    frozen_plan = _npz_arrays(output / "control_plan.npz")
+    for name, row in manifest["control_plan"].items():
+        if _array_sha256(frozen_plan[name]) != row["sha256"]:
+            raise RuntimeError(f"startup control plan hash changed: {name}")
+
+    s0 = torch_gzip_read(paths["trace_s0_reconstructed"])
+    s0_before = {key: value.clone() if torch.is_tensor(value) else value for key, value in s0.items()}
+    ledger = BudgetLedger(limit_physics_steps=1000, limit_control_intervals=81)
+    ledger.require_capacity(physics_steps=612, control_intervals=61)
+    world = make_world(paths, load_initial(paths))
+    ledger.charge(physics_steps=1, control_intervals=0)
+    controls, control_report = _validate_startup_controls(world, s0, frozen_plan)
+    np.savez_compressed(output / "control_sequences.npz", **controls)
+    write_json(output / "control_validation.json", control_report)
+
+    results: dict[str, Any] = {}
+    recorded: dict[str, tuple[dict[str, np.ndarray], dict[int, dict[str, Any]], Observer]] = {}
+    ledger.require_capacity(physics_steps=611, control_intervals=61)
+    original = _run_startup_condition(
+        world, s0, "ORIGINAL", controls["original_residual_action"],
+        controls["ORIGINAL_realized_ctrl"], ledger,
+    )
+    recorded["ORIGINAL"] = original[:3]
+    results["ORIGINAL"] = original[3]
+    _save_condition(output, "ORIGINAL", *original)
+    parity = _historical_original_parity(output, paths, *original[:3])
+    if not parity["all_bitwise_equal"]:
+        manifest["status"] = "original_identity_failed_stopped"
+        manifest["actual_cost"] = vars(ledger)
+        write_json(manifest_path, manifest)
+        raise RuntimeError("ORIGINAL did not reproduce the historical trace bitwise")
+
+    ledger.require_capacity(physics_steps=411, control_intervals=41)
+    hold = _run_startup_condition(
+        world, s0, "HOLD_1", controls["hold_1_residual_action"],
+        controls["HOLD_1_realized_ctrl"], ledger,
+    )
+    recorded["HOLD_1"] = hold[:3]
+    results["HOLD_1"] = hold[3]
+    _save_condition(output, "HOLD_1", *hold)
+
+    ledger.require_capacity(physics_steps=401, control_intervals=40)
+    blend = _run_startup_condition(
+        world, s0, "BLEND_5", controls["blend_5_residual_action"],
+        controls["BLEND_5_realized_ctrl"], ledger,
+    )
+    recorded["BLEND_5"] = blend[:3]
+    results["BLEND_5"] = blend[3]
+    _save_condition(output, "BLEND_5", *blend)
+
+    ledger.require_capacity(physics_steps=201, control_intervals=20)
+    cold_world = make_world(paths, load_initial(paths))
+    ledger.charge(physics_steps=1, control_intervals=0)
+    cold = _run_startup_condition(
+        cold_world, s0, "BLEND_5_COLD", controls["blend_5_residual_action"],
+        controls["BLEND_5_realized_ctrl"], ledger,
+    )
+    recorded["BLEND_5_COLD"] = cold[:3]
+    results["BLEND_5_COLD"] = cold[3]
+    _save_condition(output, "BLEND_5_COLD", *cold)
+
+    blend_rows, blend_contacts, blend_efc = _observer_arrays(blend[2])
+    cold_rows, cold_contacts, cold_efc = _observer_arrays(cold[2])
+    cold_parity = {
+        "schema": STARTUP_SCHEMA,
+        "saved_action_array_sha256": _array_sha256(controls["blend_5_residual_action"]),
+        "endpoints": _compare_array_maps(blend[0], cold[0]),
+        "substeps": _compare_array_maps(blend_rows, cold_rows),
+        "contacts": _compare_array_maps(blend_contacts, cold_contacts),
+        "efc_force": _compare_array_maps(blend_efc, cold_efc),
+        "full_s20_snapshot": compare_snapshots(blend[1][20], cold[1][20]),
+    }
+    cold_parity["all_bitwise_equal"] = bool(
+        cold_parity["endpoints"]["all_equal"]
+        and cold_parity["substeps"]["all_equal"]
+        and cold_parity["contacts"]["all_equal"]
+        and cold_parity["efc_force"]["all_equal"]
+        and cold_parity["full_s20_snapshot"]["all_common_equal"]
+        and not cold_parity["full_s20_snapshot"]["only_current"]
+        and not cold_parity["full_s20_snapshot"]["only_historical"]
+    )
+    write_json(output / "cold_replay_parity.json", cold_parity)
+    if not cold_parity["all_bitwise_equal"]:
+        manifest["status"] = "cold_replay_parity_failed_stopped"
+        manifest["actual_cost"] = vars(ledger)
+        write_json(manifest_path, manifest)
+        raise RuntimeError("BLEND_5 cold replay did not reproduce bitwise")
+
+    # set_env_state must treat the saved source snapshot as immutable input.
+    s0_after = torch_gzip_read(paths["trace_s0_reconstructed"])
+    s0_immutable = compare_snapshots(s0_after, s0_before)
+    if not s0_immutable["all_common_equal"]:
+        raise RuntimeError("saved s0 input mutated during startup comparison")
+    manifest["status"] = "physics_complete_analysis_and_visual_review_pending"
+    manifest["results"] = results
+    manifest["actual_cost"] = {
+        **vars(ledger),
+        "setup_native_mj_steps": 2,
+        "task_physics_steps": 610,
+        "actor_or_critic_forwards": 0,
+        "optimizer_updates": 0,
+    }
+    manifest["s0_input_immutable"] = True
+    write_json(manifest_path, manifest)
+
+
+def _object_metrics(qpos: np.ndarray, reference: np.ndarray) -> dict[str, float]:
+    tool_error = qpos[36:39] - reference[36:39]
+    target_error = qpos[43:46] - reference[43:46]
+    pair_error = (qpos[36:39] - qpos[43:46]) - (
+        reference[36:39] - reference[43:46]
+    )
+    tool_rotation = rotation_error(qpos[39:43], reference[39:43])
+    target_rotation = rotation_error(qpos[46:50], reference[46:50])
+    return {
+        "tool_error_x_m": float(tool_error[0]),
+        "tool_error_y_m": float(tool_error[1]),
+        "tool_error_z_m": float(tool_error[2]),
+        "tool_position_error_m": float(np.linalg.norm(tool_error)),
+        "tool_rotation_error_rad": tool_rotation,
+        "tool_ellipse_score": float(
+            np.hypot(np.linalg.norm(tool_error) / 0.12, tool_rotation / 1.5)
+        ),
+        "target_error_x_m": float(target_error[0]),
+        "target_error_y_m": float(target_error[1]),
+        "target_error_z_m": float(target_error[2]),
+        "target_position_error_m": float(np.linalg.norm(target_error)),
+        "target_rotation_error_rad": target_rotation,
+        "pair_error_x_m": float(pair_error[0]),
+        "pair_error_y_m": float(pair_error[1]),
+        "pair_error_z_m": float(pair_error[2]),
+        "pair_position_error_m": float(np.linalg.norm(pair_error)),
+    }
+
+
+def _force_on_recipient(
+    contacts: dict[str, np.ndarray], row: int, recipient: str
+) -> np.ndarray:
+    world_force = contacts["wrench_world_force_torque_on_geom2"][row, :3].astype(np.float64)
+    if str(contacts["role2"][row]) == recipient:
+        return world_force
+    if str(contacts["role1"][row]) == recipient:
+        return -world_force
+    raise RuntimeError(f"contact row does not contain recipient {recipient}")
+
+
+def _pair_contact_stats(
+    contacts: dict[str, np.ndarray], role_a: str, role_b: str, recipient: str
+) -> dict[str, Any]:
+    mask = (
+        ((contacts["role1"] == role_a) & (contacts["role2"] == role_b))
+        | ((contacts["role1"] == role_b) & (contacts["role2"] == role_a))
+    )
+    rows = np.flatnonzero(mask)
+    first = None
+    if len(rows):
+        index = int(rows[np.argmin(contacts["global_substep"][rows])])
+        first = {
+            "source_endpoint": int(contacts["source_endpoint"][index]),
+            "outcome_endpoint": int(contacts["outcome_endpoint"][index]),
+            "substep": int(contacts["substep"][index]),
+            "global_substep": int(contacts["global_substep"][index]),
+            "time_s": float(contacts["global_substep"][index] / 300.0),
+        }
+    dt = 1.0 / 300.0
+
+    def window(selected: np.ndarray) -> dict[str, Any]:
+        if not len(selected):
+            return {
+                "contact_rows": 0,
+                "active_substeps": 0,
+                "normal_impulse_Ns": 0.0,
+                "signed_impulse_on_recipient_Ns": [0.0, 0.0, 0.0],
+                "peak_summed_normal_force_N": 0.0,
+            }
+        impulse = sum(
+            (_force_on_recipient(contacts, int(row), recipient) for row in selected),
+            np.zeros(3, dtype=np.float64),
+        ) * dt
+        peak = 0.0
+        for step in np.unique(contacts["global_substep"][selected]):
+            local = selected[contacts["global_substep"][selected] == step]
+            peak = max(
+                peak,
+                float(contacts["wrench_contact_force_torque"][local, 0].sum()),
+            )
+        return {
+            "contact_rows": int(len(selected)),
+            "active_substeps": int(len(np.unique(contacts["global_substep"][selected]))),
+            "normal_impulse_Ns": float(
+                contacts["wrench_contact_force_torque"][selected, 0].sum() * dt
+            ),
+            "signed_impulse_on_recipient_Ns": impulse.tolist(),
+            "peak_summed_normal_force_N": peak,
+        }
+
+    return {
+        "roles": [role_a, role_b],
+        "signed_force_recipient": recipient,
+        "first_occurrence": first,
+        "first_control_cycle": window(rows[contacts["global_substep"][rows] <= 10]),
+        "full_0_20": window(rows),
+    }
+
+
+def startup_analyze(output: Path) -> None:
+    manifest_path = output / "input_manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    if manifest.get("status") != "physics_complete_analysis_and_visual_review_pending":
+        raise RuntimeError("startup analysis requires completed physics and cold parity")
+    paths = startup_input_paths()
+    with np.load(paths["reference"], allow_pickle=False) as archive:
+        reference_qpos = archive["qpos"].copy()
+    conditions: dict[str, dict[str, np.ndarray]] = {}
+    substeps: dict[str, dict[str, np.ndarray]] = {}
+    contacts: dict[str, dict[str, np.ndarray]] = {}
+    for label in ("ORIGINAL", "HOLD_1", "BLEND_5", "BLEND_5_COLD"):
+        directory = output / "conditions" / label
+        conditions[label] = _npz_arrays(directory / "endpoints.npz")
+        substeps[label] = _npz_arrays(directory / "substeps.npz")
+        contacts[label] = _npz_arrays(directory / "contacts_raw.npz")
+
+    fields = [
+        "condition", "endpoint", "availability", "tool_error_x_m", "tool_error_y_m",
+        "tool_error_z_m", "tool_position_error_m", "tool_rotation_error_rad",
+        "tool_ellipse_score", "target_error_x_m", "target_error_y_m", "target_error_z_m",
+        "target_position_error_m", "target_rotation_error_rad", "pair_error_x_m",
+        "pair_error_y_m", "pair_error_z_m", "pair_position_error_m",
+    ]
+    rows: list[dict[str, Any]] = []
+    endpoint_metrics: dict[str, dict[str, Any]] = {}
+    for label, arrays in conditions.items():
+        endpoint_metrics[label] = {}
+        for endpoint in range(ENDPOINTS + 1):
+            if endpoint >= len(arrays["qpos"]):
+                rows.append({"condition": label, "endpoint": endpoint, "availability": "N/A"})
+                endpoint_metrics[label][str(endpoint)] = None
+                continue
+            metrics = _object_metrics(arrays["qpos"][endpoint], reference_qpos[endpoint])
+            rows.append(
+                {"condition": label, "endpoint": endpoint, "availability": "measured", **metrics}
+            )
+            endpoint_metrics[label][str(endpoint)] = metrics
+    with (output / "comparison.csv").open("w", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=fields, lineterminator="\n", extrasaction="ignore")
+        writer.writeheader()
+        writer.writerows(rows)
+
+    first_cycle_fields = [
+        "condition", "substep", "time_s", "tool_position_delta_vs_original_m",
+        "target_position_delta_vs_original_m", "pair_position_delta_vs_original_m",
+        "maximum_qpos_delta_vs_original",
+    ]
+    first_cycle_rows: list[dict[str, Any]] = []
+    original_sub = substeps["ORIGINAL"]
+    for label in ("ORIGINAL", "HOLD_1", "BLEND_5", "BLEND_5_COLD"):
+        current = substeps[label]
+        for step in range(10):
+            qpos = current["qpos_after"][step]
+            baseline = original_sub["qpos_after"][step]
+            first_cycle_rows.append(
+                {
+                    "condition": label,
+                    "substep": step,
+                    "time_s": float(current["time_after"][step]),
+                    "tool_position_delta_vs_original_m": float(np.linalg.norm(qpos[36:39] - baseline[36:39])),
+                    "target_position_delta_vs_original_m": float(np.linalg.norm(qpos[43:46] - baseline[43:46])),
+                    "pair_position_delta_vs_original_m": float(
+                        np.linalg.norm((qpos[36:39] - qpos[43:46]) - (baseline[36:39] - baseline[43:46]))
+                    ),
+                    "maximum_qpos_delta_vs_original": float(np.max(np.abs(qpos - baseline))),
+                }
+            )
+    with (output / "first_cycle_comparison.csv").open("w", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=first_cycle_fields, lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(first_cycle_rows)
+
+    pair_specs = {
+        "left_ring_target": ("left_hand:ring", "target", "target"),
+        "left_pinky_target": ("left_hand:pinky", "target", "target"),
+        "target_floor": ("target", "floor", "target"),
+        "right_thumb_floor": ("right_hand:thumb", "floor", "right_hand:thumb"),
+    }
+    contact_summary = {
+        label: {
+            name: _pair_contact_stats(contacts[label], *spec)
+            for name, spec in pair_specs.items()
+        }
+        for label in conditions
+    }
+
+    blend_delta: dict[str, Any] = {}
+    for endpoint in (1, 5, 10, 14, 15, 16, 20):
+        oq = conditions["ORIGINAL"]["qpos"][endpoint]
+        bq = conditions["BLEND_5"]["qpos"][endpoint]
+        blend_delta[str(endpoint)] = {
+            "maximum_absolute_qpos_delta": float(np.max(np.abs(bq - oq))),
+            "tool_position_delta_m": float(np.linalg.norm(bq[36:39] - oq[36:39])),
+            "target_position_delta_m": float(np.linalg.norm(bq[43:46] - oq[43:46])),
+            "pair_position_delta_m": float(
+                np.linalg.norm((bq[36:39] - bq[43:46]) - (oq[36:39] - oq[43:46]))
+            ),
+        }
+    analysis = {
+        "schema": STARTUP_SCHEMA,
+        "endpoint_metrics": endpoint_metrics,
+        "contact_pairs": contact_summary,
+        "blend_minus_original": blend_delta,
+        "first_cycle": {
+            "blend_maximum_qpos_delta_vs_original": max(
+                row["maximum_qpos_delta_vs_original"]
+                for row in first_cycle_rows if row["condition"] == "BLEND_5"
+            ),
+            "hold_maximum_qpos_delta_vs_original": max(
+                row["maximum_qpos_delta_vs_original"]
+                for row in first_cycle_rows if row["condition"] == "HOLD_1"
+            ),
+        },
+        "windows": {
+            "startup_endpoints_1_5": {
+                "blend_max_tool_position_delta_m": max(blend_delta[str(i)]["tool_position_delta_m"] for i in (1, 5)),
+                "blend_max_target_position_delta_m": max(blend_delta[str(i)]["target_position_delta_m"] for i in (1, 5)),
+            },
+            "downstream_endpoints_10_20": {
+                "blend_max_tool_position_delta_m": max(blend_delta[str(i)]["tool_position_delta_m"] for i in (10, 14, 15, 16, 20)),
+                "blend_max_target_position_delta_m": max(blend_delta[str(i)]["target_position_delta_m"] for i in (10, 14, 15, 16, 20)),
+            },
+        },
+        "hold_endpoint_gt_1_semantics": "N/A: HOLD_1 intentionally stops after one control interval",
+        "tracking_relation": {
+            label: json.loads((output / "conditions" / label / "result.json").read_text())
+            for label in conditions
+        },
+    }
+    write_json(output / "analysis.json", analysis)
+    manifest["status"] = "physics_and_analysis_complete_visual_review_pending"
+    manifest["recorded"] = {
+        label: {
+            "endpoints": int(len(conditions[label]["qpos"])),
+            "substeps": int(len(substeps[label]["qpos_after"])),
+            "active_contact_rows": int(len(contacts[label]["role1"])),
+        }
+        for label in conditions
+    }
+    write_json(manifest_path, manifest)
+
+
 def hashes(output: Path) -> None:
     rows = {}
     for path in sorted(output.rglob("*")):
@@ -696,16 +1467,29 @@ def hashes(output: Path) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("stage", choices=("preflight", "run", "resume-b", "hashes"))
-    parser.add_argument("--output", type=Path, default=OUTPUT)
+    parser.add_argument(
+        "stage",
+        choices=(
+            "preflight", "run", "resume-b", "hashes",
+            "startup-preflight", "startup-run", "startup-analyze",
+        ),
+    )
+    parser.add_argument("--output", type=Path, default=None)
     args = parser.parse_args()
-    output = args.output.resolve()
+    default_output = STARTUP_OUTPUT if args.stage.startswith("startup-") else OUTPUT
+    output = (args.output or default_output).resolve()
     if args.stage == "preflight":
         preflight(output)
     elif args.stage == "run":
         execute(output)
     elif args.stage == "resume-b":
         resume_observer_b(output)
+    elif args.stage == "startup-preflight":
+        startup_preflight(output)
+    elif args.stage == "startup-run":
+        startup_execute(output)
+    elif args.stage == "startup-analyze":
+        startup_analyze(output)
     else:
         hashes(output)
 

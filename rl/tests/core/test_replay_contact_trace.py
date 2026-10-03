@@ -7,9 +7,14 @@ from video_to_spider.rl.replay_contact_trace import (
     classify_geom_role,
     clone_array,
     contact_frame_wrench_to_world,
+    control_unit_labels,
+    encode_desired_residual,
+    endpoint_sample_or_none,
+    quintic_blend_weights,
     reference_decode_elliptic,
     reference_decode_pyramidal,
     replay_command,
+    startup_control_sequences,
     transition_indices,
     valid_contact_prefix,
 )
@@ -88,3 +93,52 @@ def test_budget_is_external_and_cannot_be_rolled_back_by_snapshot_state():
     ledger.charge(physics_steps=200, control_intervals=20)
     with pytest.raises(RuntimeError):
         ledger.charge(physics_steps=1, control_intervals=0)
+
+
+def test_startup_quintic_controls_are_exact_and_inputs_are_immutable():
+    initial = np.linspace(-0.02, 0.02, 36, dtype=np.float32)
+    reference = np.zeros((21, 36), dtype=np.float32)
+    for endpoint in range(21):
+        reference[endpoint] = np.float32(endpoint / 1000.0)
+    initial_before, reference_before = initial.copy(), reference.copy()
+    controls = startup_control_sequences(initial, reference)
+
+    np.testing.assert_array_equal(
+        quintic_blend_weights(), [0.05792, 0.31744, 0.68256, 0.94208, 1.0]
+    )
+    assert controls["hold_1_desired_ctrl"].shape == (1, 36)
+    np.testing.assert_array_equal(controls["hold_1_desired_ctrl"][0], initial)
+    np.testing.assert_array_equal(controls["blend_5_desired_ctrl"][4:], reference[5:21])
+    assert np.flatnonzero(np.any(controls["blend_5_residual_action"] != 0, axis=1)).tolist() == [0, 1, 2, 3]
+    assert np.max(np.abs(controls["hold_1_residual_action"])) <= 1.0
+    assert np.max(np.abs(controls["blend_5_residual_action"])) <= 1.0
+    np.testing.assert_array_equal(initial, initial_before)
+    np.testing.assert_array_equal(reference, reference_before)
+
+
+def test_startup_residual_encoding_and_unit_partition_are_explicit():
+    reference = np.zeros((2, 4), dtype=np.float32)
+    desired = np.asarray([[0.05, -0.05, 0.025, -0.025], [0, 0, 0, 0]], dtype=np.float32)
+    action = encode_desired_residual(desired, reference)
+    np.testing.assert_array_equal(action[0], [1.0, -1.0, 0.5, -0.5])
+    realized = reference + np.float32(0.05) * action
+    np.testing.assert_allclose(realized, desired, rtol=0, atol=2e-7)
+    np.testing.assert_array_equal(control_unit_labels(np.asarray([2, 2, 3, 3])), ["m", "m", "rad", "rad"])
+    with pytest.raises(ValueError):
+        control_unit_labels(np.asarray([1, 3]))
+
+
+def test_startup_hold_endpoint_after_one_is_explicit_na_and_budget_reservation_is_fail_closed():
+    hold = np.arange(2 * 3, dtype=np.float32).reshape(2, 3)
+    np.testing.assert_array_equal(endpoint_sample_or_none(hold, 1), hold[1])
+    assert endpoint_sample_or_none(hold, 2) is None
+    with pytest.raises(ValueError):
+        endpoint_sample_or_none(hold, -1)
+
+    ledger = BudgetLedger(limit_physics_steps=1000, limit_control_intervals=81)
+    ledger.charge(physics_steps=1, control_intervals=0)
+    ledger.require_capacity(physics_steps=611, control_intervals=61)
+    with pytest.raises(RuntimeError):
+        ledger.require_capacity(physics_steps=1000, control_intervals=1)
+    assert ledger.physics_steps == 1
+    assert ledger.control_intervals == 0

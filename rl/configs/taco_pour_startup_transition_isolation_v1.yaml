@@ -1,0 +1,67 @@
+schema: taco_pour_startup_transition_isolation_v1
+paper_faithful: false
+purpose: >-
+  Bounded local diagnostic of whether the endpoint-0 control discontinuity
+  influences the deterministic Replay trajectory through endpoint 20.
+
+baseline_git_commit: 8b5e941f5a12d8823f53949e070e0efac36b94cc
+device: cpu
+tracking_variant: tool_only
+start_endpoint: 0
+stop_endpoint: 20
+control_substeps: 10
+residual_scale: 0.05
+residual_clip: 0.05
+object_assistance: null
+random_action: false
+training: false
+chunk_commit: false
+
+conditions:
+  order: [ORIGINAL, HOLD_1, BLEND_5, BLEND_5_COLD]
+  ORIGINAL:
+    controls: 20
+    command: reference_t_plus_1
+  HOLD_1:
+    controls: 1
+    command: saved_initial_ctrl
+    later_endpoints: N/A
+  BLEND_5:
+    controls: 20
+    weights: [0.05792, 0.31744, 0.68256, 0.94208, 1.0]
+    exact_reference_from_transition: source_4_to_endpoint_5
+  BLEND_5_COLD:
+    controls: 20
+    action_array: exact_saved_BLEND_5_array
+    environment: fresh_cpu_world
+
+state_contract:
+  source: /data_all/zzx/3.2RL/runs/taco_pour_replay_0_20_contact_trace_v1/snapshots/A_s0_reconstructed.pt.gz
+  complete_snapshot_required: true
+  restore_before_every_condition: true
+  original_identity_required_before_interventions: true
+
+budget:
+  task_control_intervals: 61
+  task_physics_steps: 610
+  setup_native_mj_steps: 2
+  total_physics_steps: 612
+  control_interval_ceiling: 81
+  physics_step_ceiling: 1000
+  authorized_retest_physics_steps: 200
+  retest_requires_separate_justification: true
+
+gates:
+  maximum_encoding_error_slide_m: 2.0e-7
+  maximum_encoding_error_hinge_rad: 2.0e-7
+  normalized_action_support: [-1.0, 1.0]
+  physical_residual_support: [-0.05, 0.05]
+  actuator_ctrlrange_required: true
+  original_historical_trace_parity: bitwise
+  blend_cold_replay_parity: bitwise
+
+authorization:
+  diagnostic_only: true
+  follow_on_experiment: false
+  training: false
+  chunk_commit: false

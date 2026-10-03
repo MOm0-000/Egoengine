@@ -30,6 +30,114 @@ class BudgetLedger:
         self.physics_steps = new_physics
         self.control_intervals = new_control
 
+    def require_capacity(self, *, physics_steps: int, control_intervals: int) -> None:
+        """Fail before a run when its complete declared remainder will not fit."""
+        if physics_steps < 0 or control_intervals < 0:
+            raise ValueError("budget reservations must be nonnegative")
+        if (
+            self.physics_steps + physics_steps > self.limit_physics_steps
+            or self.control_intervals + control_intervals > self.limit_control_intervals
+        ):
+            raise RuntimeError("Replay contact-trace budget cannot cover the declared remainder")
+
+
+STARTUP_BLEND_WEIGHTS = np.asarray(
+    [0.05792, 0.31744, 0.68256, 0.94208, 1.0], dtype=np.float64
+)
+
+
+def quintic_blend_weights(cycles: int = 5) -> np.ndarray:
+    """Return the frozen quintic smoothstep samples for the startup audit."""
+    if cycles != 5:
+        raise ValueError("startup transition isolation is frozen to five blend cycles")
+    x = np.arange(1, cycles + 1, dtype=np.float64) / float(cycles)
+    weights = 10.0 * x**3 - 15.0 * x**4 + 6.0 * x**5
+    if not np.allclose(weights, STARTUP_BLEND_WEIGHTS, rtol=0.0, atol=5e-16):
+        raise RuntimeError("quintic blend weights no longer match the frozen contract")
+    # The serialized contract uses the exact decimal values above, not the
+    # slightly different last bits produced by a platform's pow operations.
+    return STARTUP_BLEND_WEIGHTS.copy()
+
+
+def encode_desired_residual(
+    desired_ctrl: np.ndarray,
+    reference_ctrl: np.ndarray,
+    *,
+    residual_scale: float = 0.05,
+) -> np.ndarray:
+    """Encode a desired control target through the active residual interface."""
+    desired = np.asarray(desired_ctrl, dtype=np.float32)
+    reference = np.asarray(reference_ctrl, dtype=np.float32)
+    if desired.shape != reference.shape or desired.ndim != 2:
+        raise ValueError("desired/reference controls must be equal-shape 2-D arrays")
+    if residual_scale != 0.05:
+        raise ValueError("startup transition isolation is frozen to residual_scale=0.05")
+    return ((desired - reference) / np.float32(residual_scale)).astype(np.float32)
+
+
+def startup_control_sequences(
+    initial_ctrl: np.ndarray,
+    reference_ctrl: np.ndarray,
+    *,
+    endpoints: int = 20,
+) -> dict[str, np.ndarray]:
+    """Build the frozen ORIGINAL, HOLD_1 and BLEND_5 control/action arrays.
+
+    Reference row ``t+1`` is the base command for source ``t``.  BLEND_5 uses
+    quintic samples for its first four transitions and copies reference row 5
+    byte-for-byte at the fifth, so every later command is also exact Replay.
+    """
+    initial = np.asarray(initial_ctrl, dtype=np.float32)
+    reference = np.asarray(reference_ctrl, dtype=np.float32)
+    if initial.ndim != 1 or reference.ndim != 2 or reference.shape[1:] != initial.shape:
+        raise ValueError("invalid initial/reference control shapes")
+    if endpoints != 20 or len(reference) <= endpoints:
+        raise ValueError("startup transition isolation is frozen to endpoints 0->20")
+    replay = reference[1 : endpoints + 1].copy()
+    hold = initial[None].copy()
+    blend = replay.copy()
+    for source, weight in enumerate(quintic_blend_weights()[:-1]):
+        # Float32 is part of the active action/control contract.
+        blend[source] = (
+            np.float32(1.0 - weight) * initial
+            + np.float32(weight) * reference[source + 1]
+        ).astype(np.float32)
+    # Do not rely on arithmetic at weight 1: exact reference bytes are required.
+    blend[4:] = reference[5 : endpoints + 1]
+    return {
+        "original_desired_ctrl": replay,
+        "original_residual_action": np.zeros_like(replay),
+        "hold_1_desired_ctrl": hold,
+        "hold_1_residual_action": encode_desired_residual(hold, reference[1:2]),
+        "blend_5_desired_ctrl": blend,
+        "blend_5_residual_action": encode_desired_residual(blend, replay),
+        "blend_5_weights": quintic_blend_weights(),
+    }
+
+
+def endpoint_sample_or_none(values: np.ndarray, endpoint: int) -> np.ndarray | None:
+    """Return an owned endpoint sample, or ``None`` for an intentional N/A."""
+    array = np.asarray(values)
+    if endpoint < 0:
+        raise ValueError("endpoint must be nonnegative")
+    if endpoint >= len(array):
+        return None
+    return array[endpoint].copy()
+
+
+def control_unit_labels(
+    joint_types: np.ndarray, *, slide_type: int = 2, hinge_type: int = 3
+) -> np.ndarray:
+    """Label position-target components without mixing metres and radians."""
+    joint_types = np.asarray(joint_types)
+    labels = np.empty(joint_types.shape, dtype="U3")
+    labels[joint_types == slide_type] = "m"
+    labels[joint_types == hinge_type] = "rad"
+    known = (joint_types == slide_type) | (joint_types == hinge_type)
+    if not np.all(known):
+        raise ValueError("startup action contains a non-slide/non-hinge actuator")
+    return labels
+
 
 def transition_indices(source_endpoint: int, substep: int, *, ctrl_steps: int = 10) -> dict[str, int]:
     if source_endpoint < 0 or not 0 <= substep < ctrl_steps:
