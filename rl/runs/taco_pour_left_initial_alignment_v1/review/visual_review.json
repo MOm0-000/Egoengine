@@ -1,0 +1,27 @@
+{
+  "schema": "taco_pour_left_initial_alignment_visual_review_v1",
+  "reviewer": "Codex visual inspection",
+  "status": "reviewed",
+  "reviewed_assets": [
+    "initial/s0_four_panel.png",
+    "initial/s0_left_tray_top.png",
+    "sheets/first_cycle.png",
+    "sheets/keyframes.png",
+    "keyframes/endpoint_001_top.png",
+    "keyframes/endpoint_005_top.png",
+    "keyframes/endpoint_010_top.png",
+    "keyframes/endpoint_016_top.png",
+    "keyframes/endpoint_020_top.png",
+    "collision/endpoint_000.png",
+    "collision/endpoint_010.png",
+    "collision/endpoint_020.png"
+  ],
+  "observations": [
+    "The new s0L has a visible but modest left-hand pose change toward robot reference endpoint 0; the right hand and both objects begin in the same rendered poses.",
+    "No gross new interpenetration is visually apparent in the reviewed collision overlays; formal legality is determined by the float64 and runtime-float32 native gates, not by rendering.",
+    "Differences during the first control cycle and endpoints 1-10 are subtle and do not support a claim of uniformly better early tray position tracking.",
+    "At endpoints 14-20, and especially endpoint 20 in the top view, LEFT_ALIGNED_REPLAY is visibly closer to the reference tray pose than ORIGINAL, consistent with the measured position and rotation errors.",
+    "The skipped HOLD panels correctly disclose that the new initial control cannot be encoded inside the frozen residual support."
+  ],
+  "adjudication": "Visual evidence supports a mixed early response and a clearer endpoint-20 improvement; it does not establish a deployable reset or full-task feasibility."
+}
