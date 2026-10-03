@@ -6,6 +6,12 @@ of the formal Replay-to-RL input chain. Do not place active models, references,
 GT, reports, or reproducibility evidence here without first recording why they
 were superseded.
 
+`retired_tail_source_diagnostics_2026-10-03` indexes the 23 obsolete
+endpoint-44--58/source-by-source/Gate A--L run records removed from the active
+Git `runs/` surface after the investigation moved to the startup transition.
+Their complete server copies are recoverable from the dated server `TRASH/`
+batch recorded in that index; Git history was not rewritten.
+
 `rejected_candidates/2026-09-20_collision_semantics_repair_v2_self_guard`
 contains the rejected sphere, convex and hybrid left palm/thumb guard fits and
 their local CoACD asset. They are retained only as negative audit evidence:

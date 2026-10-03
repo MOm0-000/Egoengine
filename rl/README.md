@@ -13,8 +13,10 @@ OMP_NUM_THREADS=4 \
 Use `scripts/run_rl.py verify --physics` only for the bounded structural
 verification. It has no long-training mode and cannot commit a chunk. The
 retired Candidate/PpoAgent orchestration is recoverable under
-`TRASH/rl_core_refactor_r1_legacy_2026-10-01/`; immutable historical run
-artifacts remain in `runs/` as inputs and provenance, not as active code.
+`TRASH/rl_core_refactor_r1_legacy_2026-10-01/`. `runs/` now retains current
+inputs and decision evidence rather than every superseded source-by-source
+diagnostic; retired server artifacts remain recoverable from dated `TRASH/`
+batches and Git history.
 
 See [`docs/ACTIVE_RUNTIME.md`](docs/ACTIVE_RUNTIME.md) and
 [`runs/rl_core_refactor_r1/summary.md`](runs/rl_core_refactor_r1/summary.md).
@@ -52,8 +54,8 @@ does not claim an exact reproduction of the paper's three-mode cost comparison.
 
 Start with [`docs/ACTIVE_RUNTIME.md`](docs/ACTIVE_RUNTIME.md) for the current
 technical handoff. Historical discussion, candidate protocols and their source
-remain recoverable in Git history, `runs/`, and the dated `TRASH/` archive; they
-are not active runtime contracts.
+remain recoverable in Git history and the dated server/repository `TRASH/`
+archives; they are not active runtime contracts.
 
 ## What is included
 
