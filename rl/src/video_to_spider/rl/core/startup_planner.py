@@ -1609,7 +1609,10 @@ def execute(config_path: Path, asset_root: Path | None, output: Path) -> dict[st
             status.update({"status": f"{arm}_COMPLETE", "budget": budget.report()})
             write_json(status_path, status)
     except Exception as error:
-        status.update({"status": "PHYSICS_STOPPED", "error": repr(error), "budget": budget.report()})
+        status.update({
+            "status": "PHYSICS_STOPPED", "error": repr(error),
+            "budget": budget.report(), "physics_steps": budget.total,
+        })
         write_json(status_path, status); write_json(output / "budget_ledger.json", budget.report())
         raise
     if budget.physics["search"] > limits["search_physics_max"] or budget.total > limits["all_in_physics_hard_max"]:
@@ -1628,7 +1631,10 @@ def execute(config_path: Path, asset_root: Path | None, output: Path) -> dict[st
         "rl_optimizer_updates": 0, "chunk_commit": False,
     }
     write_json(output / "execution_summary.json", summary)
-    status.update({"status": "PHYSICS_COMPLETE_ANALYSIS_PENDING", "budget": budget.report()})
+    status.update({
+        "status": "PHYSICS_COMPLETE_ANALYSIS_PENDING",
+        "budget": budget.report(), "physics_steps": budget.total,
+    })
     write_json(status_path, status); write_json(output / "budget_ledger.json", budget.report())
     return summary
 
@@ -1764,7 +1770,10 @@ def execute_overlap(
             raise RuntimeError("selected overlap plan cold replay diverged")
         write_json(output / "budget_ledger.json", budget.report())
     except Exception as error:
-        status.update({"status": "PHYSICS_STOPPED", "error": repr(error), "budget": budget.report()})
+        status.update({
+            "status": "PHYSICS_STOPPED", "error": repr(error),
+            "budget": budget.report(), "physics_steps": budget.total,
+        })
         write_json(status_path, status); write_json(output / "budget_ledger.json", budget.report())
         raise
     summary = {
@@ -1787,7 +1796,10 @@ def execute_overlap(
         "rl_optimizer_updates": 0, "chunk_commit": False,
     }
     write_json(output / "execution_summary.json", summary)
-    status.update({"status": "PHYSICS_COMPLETE_ANALYSIS_PENDING", "budget": budget.report()})
+    status.update({
+        "status": "PHYSICS_COMPLETE_ANALYSIS_PENDING",
+        "budget": budget.report(), "physics_steps": budget.total,
+    })
     write_json(status_path, status); write_json(output / "budget_ledger.json", budget.report())
     return summary
 

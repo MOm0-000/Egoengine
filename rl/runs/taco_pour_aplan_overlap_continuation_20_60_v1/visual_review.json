@@ -1,0 +1,63 @@
+{
+  "schema": "taco_pour_aplan_overlap_continuation_visual_review_v1",
+  "review_status": "complete",
+  "reviewed_by": "Codex direct visual inspection",
+  "review_scope": {
+    "fixed_views": [
+      "oblique",
+      "top"
+    ],
+    "key_endpoints": [
+      0,
+      10,
+      15,
+      20,
+      25,
+      30,
+      35,
+      40,
+      45,
+      50,
+      55,
+      60
+    ],
+    "conditions": [
+      "REFERENCE",
+      "FROZEN_SUFFIX_BASELINE",
+      "OVERLAP_PLAN"
+    ],
+    "curve_groups": [
+      "absolute_object_errors",
+      "relative_and_tracking",
+      "object_speeds"
+    ]
+  },
+  "observations": [
+    "Both measured trajectories are visually continuous through endpoint 60; no simulation explosion, missing endpoint, or obvious support-plane penetration was observed in either fixed view.",
+    "The shared source0-19 prefix is visually identical, consistent with the bitwise numerical parity evidence.",
+    "After endpoint 40 the bowl/tool increasingly lags the reference pose in both measured trajectories. OVERLAP_PLAN does not merely freeze the scene, but it does not remove the growing tool pose discrepancy.",
+    "OVERLAP_PLAN keeps the plate/target visibly closer to the reference than the frozen-suffix baseline late in the window, consistent with the target position and rotation metrics.",
+    "OVERLAP_PLAN exhibits a materially larger tool angular-speed excursion near endpoint 48 (6.178 rad/s maximum) and worse tool/pair rotation errors over the protected overlap and tail. This is a task-quality concern, not a rendering artifact.",
+    "At endpoint 60 both conditions remain geometrically plausible but close to the formal tracking boundary; the images do not establish robustness beyond endpoint 60."
+  ],
+  "condition_decisions": {
+    "FROZEN_SUFFIX_BASELINE": {
+      "continuous_to_60": true,
+      "visual_geometry_coherent": true,
+      "promotion_authorized": false
+    },
+    "OVERLAP_PLAN": {
+      "continuous_to_60": true,
+      "visual_geometry_coherent": true,
+      "overlap_quality_tradeoff_visible_and_numerically_confirmed": true,
+      "promotion_authorized": false
+    }
+  },
+  "interpretation_boundaries": {
+    "render_is_offline_kinematics_not_pixel_registered_rgb": true,
+    "tool_tracking_boundary_is_not_full_task_success": true,
+    "endpoint60_does_not_certify_endpoint61": true,
+    "visual_coherence_does_not_override_failed_overlap_quality_gate": true,
+    "chunk_commit_or_rl_authorized": false
+  }
+}
