@@ -669,7 +669,10 @@ def _metrics(qpos: np.ndarray, qvel: np.ndarray, reference: np.ndarray, s0: np.n
 def analyze(output: Path) -> None:
     status_path = output / "status.json"
     status = json.loads(status_path.read_text())
-    if status.get("status") != "physics_complete_analysis_pending":
+    if status.get("status") not in (
+        "physics_complete_analysis_pending",
+        "physics_and_analysis_complete_visual_review_pending",
+    ):
         raise RuntimeError("analysis requires completed physics")
     paths = input_paths()
     reference = arrays(paths["reference"])
@@ -770,6 +773,28 @@ def analyze(output: Path) -> None:
         and early["LEFT_ALIGNED_REPLAY"]["object_frame_pair_translation_error_mean_m"]
         < early["ORIGINAL"]["object_frame_pair_translation_error_mean_m"]
     )
+    early_components = {
+        "target_position_mean_improved": bool(
+            all(early_complete.values())
+            and early["LEFT_ALIGNED_REPLAY"]["target_position_error_mean_m"]
+            < early["ORIGINAL"]["target_position_error_mean_m"]
+        ),
+        "target_position_max_improved": bool(
+            all(early_complete.values())
+            and early["LEFT_ALIGNED_REPLAY"]["target_position_error_max_m"]
+            < early["ORIGINAL"]["target_position_error_max_m"]
+        ),
+        "target_rotation_mean_improved": bool(
+            all(early_complete.values())
+            and early["LEFT_ALIGNED_REPLAY"]["target_rotation_error_mean_rad"]
+            < early["ORIGINAL"]["target_rotation_error_mean_rad"]
+        ),
+        "object_frame_pair_translation_mean_improved": bool(
+            all(early_complete.values())
+            and early["LEFT_ALIGNED_REPLAY"]["object_frame_pair_translation_error_mean_m"]
+            < early["ORIGINAL"]["object_frame_pair_translation_error_mean_m"]
+        ),
+    }
     original20 = endpoint_metrics["ORIGINAL"]["20"]
     aligned20 = endpoint_metrics["LEFT_ALIGNED_REPLAY"]["20"]
     endpoint20_better = bool(
@@ -783,14 +808,18 @@ def analyze(output: Path) -> None:
         "EARLY_AND_ENDPOINT20_IMPROVEMENT_SUPPORTS_LEFT_INITIALIZATION_REDESIGN"
         if candidate_better_early and endpoint20_better else
         "EARLY_LOCAL_EFFECT_NOT_PERSISTENT" if candidate_better_early else
+        "MIXED_EARLY_RESPONSE_WITH_ENDPOINT20_POSITION_ROTATION_IMPROVEMENT"
+        if endpoint20_better and any(early_components.values()) else
         "REFERENCE_CLOSER_LEFT_INITIALIZATION_DID_NOT_IMPROVE_EARLY_RELATION"
     )
     analysis = {
         "schema": "taco_pour_left_initial_alignment_analysis_v1",
+        "analysis_git_commit": head(),
         "endpoint_metrics": endpoint_metrics,
         "summary_endpoints": summary_metrics,
         "early_0_10": early,
         "early_0_10_complete": early_complete,
+        "early_0_10_component_comparison": early_components,
         "contact_pairs": contact_summary,
         "historical_original_hold_1": original_hold,
         "conclusion": conclusion,
@@ -825,7 +854,9 @@ def analyze(output: Path) -> None:
     if early_original is not None and early_aligned is not None:
         findings.extend([
             f"- Early target position mean, ORIGINAL → LEFT_ALIGNED: `{early_original['target_position_error_mean_m']:.9f} → {early_aligned['target_position_error_mean_m']:.9f} m`.",
+            f"- Early target position maximum: `{early_original['target_position_error_max_m']:.9f} → {early_aligned['target_position_error_max_m']:.9f} m`.",
             f"- Early target rotation mean: `{early_original['target_rotation_error_mean_rad']:.9f} → {early_aligned['target_rotation_error_mean_rad']:.9f} rad`.",
+            f"- Early object-frame pair translation mean: `{early_original['object_frame_pair_translation_error_mean_m']:.9f} → {early_aligned['object_frame_pair_translation_error_mean_m']:.9f} m`.",
         ])
     else:
         findings.append("- The 0→10 early window is incomplete; unavailable endpoints are N/A and were not counted as passing.")
