@@ -1,0 +1,101 @@
+{
+  "cases": {
+    "material_penetration_1mm": {
+      "aabb_overlap": true,
+      "cavity_policy": "exact_concave_visual_mesh; no convex hull or filled cavity",
+      "certified": true,
+      "classification": "MATERIAL_PENETRATION_CONFIRMED",
+      "fcl_contact_count": 64,
+      "link_watertight": true,
+      "maximum_fcl_penetration_depth_m": 0.04,
+      "maximum_sampled_containment_m": 0.0010000001639127731,
+      "nearest_points_world_m": [
+        [
+          0.019,
+          0.02,
+          0.02
+        ],
+        [
+          0.019,
+          0.02,
+          0.02
+        ]
+      ],
+      "sampled_inside_over_threshold": 2,
+      "sampled_points": 20,
+      "surface_crossing": true,
+      "surface_distance_m": 0.0,
+      "threshold_m": 5e-05,
+      "tray_is_volume": true,
+      "tray_watertight": true
+    },
+    "near_contact_25um": {
+      "aabb_overlap": false,
+      "cavity_policy": "exact_concave_visual_mesh; no convex hull or filled cavity",
+      "certified": true,
+      "classification": "NEAR_CONTACT_NO_MATERIAL_PENETRATION",
+      "link_watertight": true,
+      "maximum_sampled_containment_m": 0.0,
+      "nearest_points_world_m": [
+        [
+          0.02,
+          -0.02,
+          0.02
+        ],
+        [
+          0.020024999999999998,
+          -0.02,
+          0.02
+        ]
+      ],
+      "surface_crossing": false,
+      "surface_distance_m": 2.4999999999997247e-05,
+      "threshold_m": 5e-05,
+      "tray_is_volume": true,
+      "tray_watertight": true
+    },
+    "separated": {
+      "aabb_overlap": false,
+      "cavity_policy": "exact_concave_visual_mesh; no convex hull or filled cavity",
+      "certified": true,
+      "classification": "CLEAR_SEPARATED",
+      "link_watertight": true,
+      "maximum_sampled_containment_m": 0.0,
+      "nearest_points_world_m": [
+        [
+          0.02,
+          0.02,
+          -0.02
+        ],
+        [
+          0.08,
+          0.02,
+          -0.02
+        ]
+      ],
+      "surface_crossing": false,
+      "surface_distance_m": 0.06,
+      "threshold_m": 5e-05,
+      "tray_is_volume": true,
+      "tray_watertight": true
+    },
+    "unknown_open_tray": {
+      "cavity_policy": "exact_concave_visual_mesh; no convex hull or filled cavity",
+      "certified": false,
+      "classification": "UNKNOWN_NOT_CERTIFIED",
+      "link_watertight": true,
+      "reason": "tray visual mesh is not a certified watertight material volume",
+      "threshold_m": 5e-05,
+      "tray_is_volume": false,
+      "tray_watertight": false
+    }
+  },
+  "expected": {
+    "material_penetration_1mm": "MATERIAL_PENETRATION_CONFIRMED",
+    "near_contact_25um": "NEAR_CONTACT_NO_MATERIAL_PENETRATION",
+    "separated": "CLEAR_SEPARATED",
+    "unknown_open_tray": "UNKNOWN_NOT_CERTIFIED"
+  },
+  "passed": true,
+  "schema": "taco_pour_shape_geometry_regression_v1"
+}

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import numpy as np
@@ -125,7 +126,10 @@ def test_contract_task_manifest_cannot_silently_enable_unused_posture_weight():
 
 
 def test_completed_run_contract_when_artifacts_exist():
-    run = Path("/data_all/zzx/3.2RL/runs/taco_pour_shape_aware_initialization_v1")
+    run_root = os.environ.get("EGOENGINE_SHAPE_AWARE_RUN")
+    if run_root is None:
+        pytest.skip("set EGOENGINE_SHAPE_AWARE_RUN to audit a completed bounded run")
+    run = Path(run_root)
     if not (run / "decision.json").is_file():
         pytest.skip("bounded integration run has not been executed")
     import json
