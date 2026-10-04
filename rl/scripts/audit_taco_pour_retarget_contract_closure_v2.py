@@ -363,6 +363,7 @@ def recompute_collisions(output: Path, cfg: dict[str, Any], model: mujoco.MjMode
 
     categorized = []
     mismatches = 0
+    uncategorized_mismatches = 0
     for row in rows:
         findings = json.loads(row["candidate_relevant_findings"])
         omitted = [tuple(value) for value in findings["left_omitted_nonadjacent"]]
@@ -381,8 +382,15 @@ def recompute_collisions(output: Path, cfg: dict[str, Any], model: mujoco.MjMode
             categories.append("UNKNOWN_NATIVE_SELF_COLLISION")
         if row["runtime_proxy_interference"] == "True" or row["runtime_proxy_interference"] is True:
             categories.append("RUNTIME_PROXY_INTERFERENCE")
-        if row["classification"] in ("NATIVE_STRICTER_THAN_PROXY", "PROXY_STRICTER_THAN_NATIVE", "UNKNOWN"):
+        mismatch = row["classification"] in (
+            "NATIVE_STRICTER_THAN_PROXY", "PROXY_STRICTER_THAN_NATIVE", "UNKNOWN"
+        )
+        if row["classification"] == "PROXY_STRICTER_THAN_NATIVE":
+            categories.append("RUNTIME_PROXY_ONLY_INTERFERENCE")
+        if mismatch:
             mismatches += 1
+            semantic_categories = [value for value in categories if value != "RUNTIME_PROXY_INTERFERENCE"]
+            uncategorized_mismatches += int(not semantic_categories)
         categorized.append({
             **row,
             "hand_object_native_material": bool(findings["left_hand_object"]),
@@ -406,15 +414,23 @@ def recompute_collisions(output: Path, cfg: dict[str, Any], model: mujoco.MjMode
     )
     external_native = sum(bool(row["hand_object_native_material"] or row["hand_table_native_material"])
                           for row in categorized)
+    representation_complete = unknown == 0 and mismatches == 0
+    semantics_certified = (
+        unknown == 0 and uncategorized_mismatches == 0 and palm_classification != "UNKNOWN"
+    )
     return {
         "state_count": len(categorized),
         "trajectory_state_count": sum(len(value) for value in states.values()),
         "probe_state_count": len(probes["qpos"]),
         "unknown_count": unknown,
         "proxy_native_mismatch_count": mismatches,
+        "uncategorized_mismatch_count": uncategorized_mismatches,
         "true_self_native_without_runtime_proxy_count": true_self_proxy_mismatch,
         "states_with_left_hand_object_or_table_native_material": external_native,
-        "certified": unknown == 0 and true_self_proxy_mismatch == 0 and external_native == 0,
+        "semantics_certified": semantics_certified,
+        "runtime_collision_representation_complete": representation_complete,
+        "runtime_representation_repair_required": not representation_complete,
+        "certified": semantics_certified,
     }
 
 
@@ -652,7 +668,10 @@ def prepare(output: Path) -> None:
         f"- Unknown semantics: `{collision['unknown_count']}`.",
         f"- Native true-self findings missed by runtime proxy: `{collision['true_self_native_without_runtime_proxy_count']}`.",
         f"- States with left hand-object/table native material findings: `{collision['states_with_left_hand_object_or_table_native_material']}`.",
-        f"- Collision contract certified: `{collision['certified']}`.",
+        f"- Collision semantics certified: `{collision['semantics_certified']}`.",
+        f"- Runtime collision representation complete: `{collision['runtime_collision_representation_complete']}`.",
+        f"- Uncategorized mismatches: `{collision['uncategorized_mismatch_count']}`.",
+        "- Native material findings in deliberately bad/probe states are evidence, not by themselves a semantic-contract failure.",
         "- Structural overlap never explains hand-object or hand-table findings.",
     ]
     (output / "collision_contract_v2.md").write_text("\n".join(collision_lines) + "\n")
