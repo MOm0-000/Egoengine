@@ -65,6 +65,8 @@ def _json_default(value: Any) -> Any:
         return value.item()
     if isinstance(value, np.ndarray):
         return value.tolist()
+    if isinstance(value, Path):
+        return str(value)
     raise TypeError(type(value).__name__)
 
 

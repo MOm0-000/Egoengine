@@ -13,6 +13,7 @@ from audit_left_ring_pinky_tray_geometry import (
     geometry_regression,
     input_paths,
     load_contract,
+    write_json,
 )
 from build_taco_pour_initialization_candidates import visual_meshes
 from egoengine_repro.retarget.shape_aware import (
@@ -61,6 +62,12 @@ def test_geometry_checker_regressions_and_unknown_fail_closed():
     assert report["passed"]
     assert report["cases"]["unknown_open_tray"]["certified"] is False
     assert report["cases"]["unknown_open_tray"]["classification"] == "UNKNOWN_NOT_CERTIFIED"
+
+
+def test_reports_serialize_path_provenance(tmp_path):
+    target = tmp_path / "report.json"
+    write_json(target, {"mesh": Path("relative/mesh.obj")})
+    assert '"relative/mesh.obj"' in target.read_text()
 
 
 def test_current_frozen_endpoint0_classification_stable(frozen_inputs):
