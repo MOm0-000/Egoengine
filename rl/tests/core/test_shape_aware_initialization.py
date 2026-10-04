@@ -131,9 +131,19 @@ def test_completed_run_contract_when_artifacts_exist():
     import json
 
     static = json.loads((run / "candidate_static_gate.json").read_text())
+    decision = json.loads((run / "decision.json").read_text())
+    visual = json.loads((run / "visual_review.json").read_text())
+    if not static["passed"]:
+        accounting = json.loads((run / "cost_accounting.json").read_text())
+        assert decision["classification"] == "STATIC_GATE_FAILED_NO_PHYSICS"
+        assert accounting["physics_steps"] == 0
+        assert not (run / "cold_replay_parity.json").exists()
+        assert not (run / "comparison.csv").exists()
+        assert visual["endpoint"] == 0
+        assert len(list((run / "static_review").glob("endpoint_*.png"))) == 6
+        return
     cold = json.loads((run / "cold_replay_parity.json").read_text())
     control = json.loads((run / "control_validation.json").read_text())
-    visual = json.loads((run / "visual_review.json").read_text())
     assert static["checks"]["object_qpos_byte_identical"]
     assert static["checks"]["right_hand_byte_identical"]
     assert control["executed_ctrl_rows_1_20_byte_identical_A_vs_shape"]
