@@ -1,0 +1,55 @@
+schema: taco_pour_retarget_contract_closure_v2
+status: ZERO_PHYSICS_CONTRACT_CLOSURE_ONLY
+expected_baseline: 32e0bbe27ac2c3c6844d409654f34f4fe6e13f50
+
+authorization:
+  physics: false
+  control: false
+  candidate: false
+  planner: false
+  actor_critic: false
+  rl: false
+  promotion: false
+
+inputs:
+  prior_audit: /data_all/zzx/3.2RL/runs/taco_pour_retarget_contract_fidelity_audit_v1
+  human_reference: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/human_reference.npz
+  old_mink_reference: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_combined_collision_v1/robot_reference.npz
+  accepted_a_replay: /data_all/zzx/3.2RL/runs/taco_pour_replay_0_20_contact_trace_v1/endpoints.npz
+  shape_aware_candidate: /data_all/zzx/3.2RL/runs/taco_pour_shape_aware_initialization_v1/shape_aware_initial_state.npz
+  interaction_v1_candidate: /data_all/zzx/3.2RL/runs/taco_pour_left_interaction_retarget_v1/candidate_reference.npz
+  active_scene: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate.xml
+  simulator_config: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml
+  hand_joints: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017/hand_joints.npy
+  camera_extrinsics: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/camera/Egocentric_Camera_Parameters/(pour in some, bowl, plate)/20230927_017/egocentric_frame_extrinsic.npy
+  camera_intrinsics: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/camera/Egocentric_Camera_Parameters/(pour in some, bowl, plate)/20230927_017/egocentric_intrinsic.txt
+  rgb_video: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/rgb/taco_pour_bowl_plate_20230927_017.mp4
+  input_audit: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/input_audit.json
+
+frames:
+  trajectories: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+  rgb_reconciliation: [0, 14, 15, 16, 17, 20]
+
+collision:
+  runtime_minimum_distance_m: -1.0e-6
+  numerical_tolerance_m: 2.0e-7
+  native_material_reporting_threshold_m: 5.0e-5
+  palm_thumb_sweep:
+    bend_samples: [0.0, 0.305, 0.61, 0.915, 1.22, 1.525, 1.83]
+    rota1_samples: [-1.05, -0.788, -0.526, -0.264, -0.002, 0.26, 0.522, 0.784, 1.046, 1.308, 1.57]
+
+objective:
+  analytic_tolerance: 1.0e-10
+  finite_difference_rad: 1.0e-4
+
+rgb:
+  projection_convention: released_extrinsic_is_T_camera_world
+  overlay_hand: left
+  required_landmarks: [wrist, ring_mcp, ring_pip, ring_dip, ring_tip, pinky_mcp, pinky_pip, pinky_dip, pinky_tip]
+
+final_classifications:
+  - RETARGET_CONTRACT_V2_CERTIFIED_NO_CANDIDATE
+  - COLLISION_SEMANTICS_BLOCKER_REMAINS
+  - OBJECTIVE_SEMANTICS_BLOCKER_REMAINS
+  - SOURCE_RGB_ALIGNMENT_BLOCKER
+  - MULTIPLE_CONTRACT_BLOCKERS_REMAIN
