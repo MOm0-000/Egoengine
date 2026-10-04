@@ -132,7 +132,7 @@ def endpoint_status(
         return "NOT RECORDED"
     if first_failure_endpoint is not None and endpoint >= first_failure_endpoint:
         return "OLD TRACKING TERMINATED" if endpoint == first_failure_endpoint else "POST TERMINATION RECORDED"
-    return "旧 tracking 未越界，任务关系未认证"
+    return "LEGACY TRACKING BELOW BOUNDARY; TASK RELATION NOT CERTIFIED"
 
 
 def video_frame_map(
