@@ -1,0 +1,75 @@
+schema: taco_pour_shape_aware_initialization_v1
+baseline:
+  repository: MOm0-000/Egoengine
+  branch: 3.2RL
+  commit: 6a6091817a7b7b00c5488d442f02fc2b86df0146
+scope:
+  hand: left
+  fingers: [ring, pinky]
+  movable_joints:
+    - left_hand_ring_joint1
+    - left_hand_ring_joint2
+    - left_hand_pinky_joint1
+    - left_hand_pinky_joint2
+  objects_frozen: true
+  right_hand_frozen: true
+  reference_timeline_frozen: true
+  physics_frozen: true
+inputs:
+  accepted_initial_state: /data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v2/candidate_a/initial_state.npz
+  robot_reference: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_combined_collision_v1/robot_reference.npz
+  human_reference: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/human_reference.npz
+  scene: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate.xml
+  simulator_config: /data_all/zzx/3.2RL/runs/taco_pour_floor_contact_v1/candidate_ppo_config.yaml
+  retarget_report: /data_all/zzx/3.2RL/runs/taco_pour_bimanual_mano_fk_combined_collision_v1/retarget_report.json
+  builder_report: /data_all/zzx/3.2RL/runs/taco_pour_initialization_protocol_v2/candidate_a/builder_report.json
+  visual_manifest: /data_all/zzx/3.2RL/runs/taco_pour_visual_evidence_standard_v1/input_manifest.json
+  archived_replay_trace: /data_all/zzx/3.2RL/runs/taco_pour_replay_0_20_contact_trace_v1
+geometry:
+  material_reporting_threshold_m: 5.0e-5
+  runtime_near_contact_threshold_m: 5.0e-5
+  unknown_is_pass: false
+  require_tray_watertight_for_containment: true
+shape_fit:
+  source_frames: [0, 1, 2, 3, 4]
+  endpoint_frame: 0
+  human_two_link_mapping:
+    proximal: [mcp, pip]
+    distal: [pip, fingertip]
+  residual_components:
+    - proximal_unit_direction_in_palm_frame
+    - distal_unit_direction_in_palm_frame
+    - fingertip_position_normalized_by_robot_finger_length
+  component_weights: [1.0, 1.0, 1.0]
+  method: deterministic_single_start_slsqp
+  max_iterations: 200
+  ftol: 1.0e-12
+  declared_pair_min_distance_m: -1.0e-6
+  fingertip_nonworsening_tolerance_m: 1.0e-9
+static_phase:
+  reconcile_geometry_first: true
+  one_candidate_only: true
+  no_weight_sweep: true
+  no_multistart: true
+physical_phase:
+  conditions: [A_ORIGINAL_REPLAY, SHAPE_AWARE_REPLAY, SHAPE_AWARE_COLD]
+  endpoint_start: 0
+  endpoint_end: 20
+  zero_residual_replay: true
+  planner: false
+  rl: false
+visuals:
+  standardized_evidence: true
+  views: [oblique, top]
+  every_endpoint: true
+  closeup_endpoints: [0, 1, 5, 10, 14, 15, 16, 20]
+  controlled_rgb_when_permitted: true
+budget:
+  physics_hard_max: 850
+  static_solver_calls: 1
+  automatic_follow_on: false
+authorization:
+  reset_promotion: false
+  chunk_commit: false
+  rl_training: false
+  planner_continuation: false
