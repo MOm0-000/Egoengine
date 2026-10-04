@@ -1,0 +1,88 @@
+{
+  "data_supported_interpretations": [
+    {
+      "classification": "INTERPRETATION",
+      "statement": "Endpoint 0 is not the source of the apparent bowl/tray offset: both saved actual conditions match the kinematic reference to numerical precision at endpoint 0. The first material relative-configuration review interval is 15-17, where target-frame tool/target translation error rises from 17.46 mm at endpoint 15 to 25.37 mm at endpoint 16 and the first recorded right-index/tool contact appears at 16 then disappears at 17."
+    },
+    {
+      "classification": "INTERPRETATION",
+      "statement": "The visible disagreement after endpoint 23 is accumulated tracking divergence rather than a rendered teleport. The trajectories and saved substeps evolve continuously; FROZEN_SUFFIX_BASELINE and OVERLAP_PLAN begin to separate after the declared overlap boundary."
+    },
+    {
+      "classification": "INTERPRETATION",
+      "statement": "OVERLAP_PLAN reduces late target/tray absolute error relative to FROZEN_SUFFIX_BASELINE, but it does not uniformly improve bowl pose or bowl/tray relative pose. At endpoint 60 the saved legacy scores remain below 1 (0.9518 candidate, 0.9889 baseline), which is neutral legacy-tracking evidence and not a visual task-success certification."
+    }
+  ],
+  "earliest_suspicious_intervals": {
+    "left_hand_target": {
+      "first_suspicious_interval_inclusive": [25, 27],
+      "last_clearly_plausible_endpoint": 24,
+      "statement": "No unequivocal left-hand/tray geometric failure is visible in 0-24. The first clearly growing reference-vs-actual tray separation is 25-27, coincident with the largest early target-position increments. This is a review interval, not a failure declaration."
+    },
+    "right_hand_tool": {
+      "first_suspicious_interval_inclusive": [15, 17],
+      "last_clearly_plausible_endpoint": 15,
+      "statement": "The first recorded right-index/tool contact appears at endpoint 16 and disappears at 17 while tool rotation error rises. The images remain physically continuous, so this is a contact/motion turning point rather than proof of a bad grasp."
+    },
+    "tool_target": {
+      "first_suspicious_interval_inclusive": [15, 17],
+      "last_clearly_plausible_endpoint": 15,
+      "statement": "The first material saved tool/target relative-pose change occurs across 15-17. Endpoint 0 is aligned and 0-14 shows only gradual millimetre-scale drift; no abrupt initial bowl/tray relocation is visible."
+    }
+  },
+  "hypotheses": [
+    {
+      "classification": "HYPOTHESIS",
+      "statement": "The 15-17 transition may be where early contact timing begins to seed the later bowl/tray relative-pose divergence. The current visual package does not establish causality."
+    },
+    {
+      "classification": "HYPOTHESIS",
+      "statement": "The user's apparent early bowl/tray mismatch may partly reflect comparing an independent RGB camera with fixed simulator top/oblique cameras. Camera calibration or independent 3-D object pose evidence is required before treating cross-column pixel displacement as a physical mismatch."
+    }
+  ],
+  "image_manifest_sha256": "f73275c18ab78fe547045db61ce7935fb210c310046a279a6ccaaed8661ddbf6",
+  "limitations": [
+    "REAL RGB is time-aligned but uses an independent, uncalibrated camera; it is not pixel-registered to either simulator view.",
+    "Endpoint images and sheets cannot prove fingertip contact under occlusion. Semantic contact transitions come from saved contact records and remain navigation evidence.",
+    "Substep RGB uses the nearest real frame and the kinematic reference is held at an endpoint; both limitations are labelled in every substep image.",
+    "Saved contact force is reported numerically, but no force vector is drawn because solve-time geometry correspondence was not independently established.",
+    "The review covers only saved endpoints 0-60 and the predeclared saved-substep windows; it does not authorize or infer behavior outside that range."
+  ],
+  "next_minimum_evidence": "For a stronger claim about the apparent early bowl/tray mismatch, obtain calibrated RGB camera extrinsics or an independent synchronized 3-D pose check for endpoints 15-17. For contact causality, preserve solve-time contact geometry aligned to the saved wrench. Neither requires rerunning this visual package.",
+  "observations": [
+    {
+      "classification": "OBSERVATION",
+      "statement": "All 61 endpoints were reviewed in both fixed views using all 14 contact sheets; early, middle, and late full-resolution frames and six saved-substep comparisons were opened separately."
+    },
+    {
+      "classification": "OBSERVATION",
+      "statement": "At endpoint 0, ROBOT REFERENCE, FROZEN_SUFFIX_BASELINE, and OVERLAP_PLAN are visually coincident; saved tool, target, and world-pair translation errors are at numerical-noise scale."
+    },
+    {
+      "classification": "OBSERVATION",
+      "statement": "Across endpoints 0-14, the simulated tray remains left of the bowl and both hands retain the expected object roles. No discontinuous relocation, floor penetration, or object explosion is visible in either fixed view."
+    },
+    {
+      "classification": "OBSERVATION",
+      "statement": "Endpoints 15-20 show a continuous but more dynamic hand/object transition. At endpoint 16 the saved target-frame tool/target translation error is 25.37 mm and right-index/tool contact appears; the contact disappears at endpoint 17."
+    },
+    {
+      "classification": "OBSERVATION",
+      "statement": "Between endpoints 23-32, actual/reference separation grows smoothly and the two actual conditions start to diverge. No frame-to-frame teleport is visible in endpoint or saved-substep panels."
+    },
+    {
+      "classification": "OBSERVATION",
+      "statement": "Between endpoints 43-60, bowl tracking and bowl/tray relative-pose disagreement become visually obvious. OVERLAP_PLAN generally keeps the tray closer to reference late in the window, while its bowl rotation error is not uniformly better."
+    }
+  ],
+  "old_review_inherited": false,
+  "reviewer": "Codex visual review (OpenAI), 2026-10-04",
+  "schema": "taco_pour_visual_evidence_standard_v1_review",
+  "status": "COMPLETE",
+  "viewed_coverage": [
+    "contact sheets: oblique pages 000-006 and top pages 000-006 (endpoints 0-60)",
+    "full-resolution endpoint frames: oblique 14, 20, 30, 55; top 14, 15, 16, 17, 18, 19, 20, 30, 55, 60",
+    "saved-substep frames: source 14 substeps 1 and 10; source 25 substeps 1 and 10; source 52 substeps 1 and 10 (oblique)",
+    "curves: absolute object errors, object speeds, relative pose and tracking score"
+  ]
+}
