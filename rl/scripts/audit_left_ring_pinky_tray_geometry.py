@@ -689,6 +689,84 @@ def load_visual_module():
     return module
 
 
+def render_static(output: Path) -> None:
+    """Render endpoint-0 material/collision evidence without entering physics."""
+    vismod = load_visual_module()
+    contract = load_contract()
+    paths = input_paths(contract)
+    accepted = arrays(paths["accepted_initial_state"])["qpos"]
+    candidate = arrays(output / "shape_aware_initial_state.npz")["qpos"]
+    actual = vismod.StaticModel.load("actual", paths["scene"])
+    reference = vismod.StaticModel.load(
+        "reference", ASSET_ROOT / "runs/taco_pour_collision_semantics_combined_v1/combined_candidate_scene.xml"
+    )
+    vis = vismod.Visualizer(reference, actual, width=960, height=720)
+    updates = 0
+    try:
+        for view in VIEWS:
+            for representation, collision in (("visual", False), ("collision", True)):
+                panels = []
+                for label, qpos in (("A ORIGINAL", accepted), ("STATIC CANDIDATE (NOT AUTHORIZED)", candidate)):
+                    image = vis.render_actual(qpos, view, collision=collision)
+                    panels.append(
+                        vismod.annotate_panel(
+                            image,
+                            [
+                                label,
+                                f"endpoint 0 | {representation} geometry",
+                                "left ring/pinky link1+link2 vs tray",
+                            ],
+                        )
+                    )
+                    updates += 1
+                frame = np.concatenate(panels, axis=1)
+                path = output / "static_review" / f"endpoint_000000_{view}_{representation}.png"
+                path.parent.mkdir(parents=True, exist_ok=True)
+                cv2.imwrite(str(path), cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
+
+            tray = accepted[43:46]
+            settings = {
+                "lookat": tray.tolist(),
+                "distance": 0.30,
+                "azimuth": 90.0 if view == "top" else 132.0,
+                "elevation": -89.0 if view == "top" else -25.0,
+            }
+            camera = vismod.camera_object(settings)
+            panels = []
+            for label, qpos in (("A ORIGINAL", accepted), ("STATIC CANDIDATE (FAILED GATE)", candidate)):
+                vis.actual.set_qpos(qpos)
+                vis.actual_renderer.update_scene(
+                    vis.actual.data, camera=camera, scene_option=vismod.scene_option()
+                )
+                panels.append(
+                    vismod.annotate_panel(
+                        vis.actual_renderer.render().copy(),
+                        [label, "close-up: left ring/pinky/tray", "render is not a signed material test"],
+                    )
+                )
+                updates += 1
+            close = np.concatenate(panels, axis=1)
+            path = output / "static_review" / f"endpoint_000000_{view}_closeup.png"
+            cv2.imwrite(str(path), cv2.cvtColor(close, cv2.COLOR_RGB2BGR))
+    finally:
+        vis.close()
+    write_json(
+        output / "visual_review.json",
+        {
+            "status": "static_images_generated_review_pending",
+            "implementation_git_commit": head(),
+            "endpoint": 0,
+            "views": list(VIEWS),
+            "representations": ["visual", "collision"],
+            "render_updates": updates,
+            "candidate_physics_authorized": False,
+        },
+    )
+    accounting = json.loads((output / "cost_accounting.json").read_text())
+    accounting["render_updates"] = updates
+    write_json(output / "cost_accounting.json", accounting)
+
+
 def render(output: Path) -> None:
     vismod = load_visual_module()
     contract = load_contract()
@@ -772,6 +850,35 @@ def render(output: Path) -> None:
 
 def finalize(output: Path, *, visual_status: str, visual_note: str) -> None:
     static = json.loads((output / "candidate_static_gate.json").read_text())
+    if not static["passed"]:
+        visual = json.loads((output / "visual_review.json").read_text())
+        visual.update(status=visual_status, reviewer_note=visual_note)
+        write_json(output / "visual_review.json", visual)
+        decision = json.loads((output / "decision.json").read_text())
+        fit = json.loads((output / "shape_mapping.json").read_text())["robot_fit"]
+        old = json.loads((output / "geometry_reconciliation.json").read_text())["accepted_A"]
+        summary = f"""# TACO Pour shape-aware initialization v1
+
+- Old endpoint-0 geometry: `{old['classification']}`; no certified visual-material penetration, runtime minimum distance `{old['runtime_collision_geometry']['minimum_distance_m']:.9g} m`.
+- The apparent contradiction is resolved as a shape/near-contact blind spot: the old gate certified material legality, not human-like intermediate-phalanx shape.
+- Exactly one deterministic four-joint candidate was generated.
+- Static result: `FAIL`; classification `{decision['classification']}`.
+- Ring joints: `{fit['accepted_joint_values_rad'][:2]}` -> `{fit['candidate_joint_values_rad'][:2]}` rad.
+- Pinky joints: `{fit['accepted_joint_values_rad'][2:]}` -> `{fit['candidate_joint_values_rad'][2:]}` rad.
+- Ring fingertip error: `{fit['accepted_descriptor']['ring']['fingertip_error_m']:.9g}` -> `{fit['candidate_descriptor']['ring']['fingertip_error_m']:.9g} m`.
+- Pinky fingertip error: `{fit['accepted_descriptor']['pinky']['fingertip_error_m']:.9g}` -> `{fit['candidate_descriptor']['pinky']['fingertip_error_m']:.9g} m` (worsened; fail-closed).
+- No candidate physics was run; physics steps remain zero.
+- No reset promotion, RL, planner continuation, or chunk commit is authorized.
+"""
+        (output / "summary.md").write_text(summary)
+        files = sorted(
+            path for path in output.rglob("*")
+            if path.is_file() and path.name != "server_artifacts.sha256"
+        )
+        (output / "server_artifacts.sha256").write_text(
+            "".join(f"{sha256(path)}  {path.relative_to(output)}\n" for path in files)
+        )
+        return
     cold = json.loads((output / "cold_replay_parity.json").read_text())
     visual = json.loads((output / "visual_review.json").read_text())
     visual.update(status=visual_status, reviewer_note=visual_note)
@@ -838,7 +945,7 @@ def finalize(output: Path, *, visual_status: str, visual_note: str) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("phase", choices=("static", "physics", "render", "finalize"))
+    parser.add_argument("phase", choices=("static", "physics", "render-static", "render", "finalize"))
     parser.add_argument("--output", type=Path, default=OUTPUT)
     parser.add_argument("--visual-status", default="review_complete_shape_improved_no_obvious_material_penetration")
     parser.add_argument("--visual-note", default="")
@@ -847,6 +954,8 @@ def main() -> None:
         preflight_and_static(args.output)
     elif args.phase == "physics":
         physics(args.output)
+    elif args.phase == "render-static":
+        render_static(args.output)
     elif args.phase == "render":
         render(args.output)
     else:
