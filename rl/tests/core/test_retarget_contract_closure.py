@@ -92,3 +92,36 @@ def test_closure_runner_contains_no_runtime_or_candidate_generation():
     assert '"physics": 0' in source
     assert '"candidate": 0' in source
     assert '"promotion": 0' in source
+
+
+def test_frozen_closure_evidence_closes_a_and_b_but_fails_closed_on_c():
+    evidence = ROOT / "runs/taco_pour_retarget_contract_closure_v2"
+    decision = json.loads((evidence / "decision.json").read_text())
+    phases = json.loads((evidence / "phase_contract.json").read_text())
+    overlap = json.loads((evidence / "structural_overlap_policy.json").read_text())
+    objective = json.loads((evidence / "objective_component_semantics.json").read_text())
+    rgb = json.loads((evidence / "rgb_reconciliation.json").read_text())
+    assert decision["classification"] == "SOURCE_RGB_ALIGNMENT_BLOCKER"
+    assert decision["blockers"] == ["SOURCE_RGB_ALIGNMENT_BLOCKER"]
+    assert phases["phase_A_collision"]["closed"] is True
+    assert phases["phase_A_collision"]["summary"]["runtime_collision_representation_complete"] is False
+    assert phases["phase_A_collision"]["summary"]["uncategorized_mismatch_count"] == 0
+    assert phases["phase_B_objective"]["closed"] is True
+    assert phases["phase_C_source_rgb"]["closed"] is False
+    assert not any(phases["runtime_counts"].values())
+    assert overlap["pair_classification"]["classification"] == "TRUE_SELF_COLLISION"
+    assert overlap["structural_overlap_allowlist"] == []
+    assert objective["certified"] is True
+    assert rgb["pixel_reprojection_error"] is None
+    assert rgb["manual_offset_applied"] is False
+    assert not (evidence / "retarget_v2_contract.yaml").exists()
+
+    hashes = {
+        relative: expected for expected, relative in (
+            line.split(maxsplit=1)
+            for line in (evidence / "server_artifacts.sha256").read_text().splitlines()
+        )
+    }
+    for relative in ("decision.json", "phase_contract.json", "summary.md", "collision_semantics_v2.csv"):
+        digest = __import__("hashlib").sha256((evidence / relative).read_bytes()).hexdigest()
+        assert digest == hashes[relative]

@@ -1,0 +1,584 @@
+{
+  "P070_interpretation": "The 1/8 holistic agreement is not a semantic failure: each component has a narrower duty, and endpoint-0 near-interaction metrics are phase-inapplicable.",
+  "P072_P075_interpretation": "All 48 applicable component comparisons identify the visibly degraded interaction candidates.",
+  "certified": true,
+  "components": [
+    {
+      "checks": {
+        "common_rigid_transform_invariant": true,
+        "identity_zero": true,
+        "known_displacement": true,
+        "monotonic_magnitude": true
+      },
+      "classification": "SEMANTICALLY_CERTIFIED",
+      "component": "fingertip_position_error_m",
+      "duty": "fingertip Cartesian position only",
+      "evidence": {
+        "larger_case": 1.63707055437449,
+        "unit_case": 0.818535277187245,
+        "zero": 0.0
+      },
+      "joint_anchor_landmark_contract_certified": true
+    },
+    {
+      "checks": {
+        "common_rigid_transform_invariant": true,
+        "identity_zero": true,
+        "known_vector_difference": true
+      },
+      "classification": "SEMANTICALLY_CERTIFIED",
+      "component": "wrist_to_tip_vector_error_m",
+      "duty": "finger vector relative to its wrist",
+      "evidence": {
+        "known_difference": 0.818535277187245,
+        "zero": 0.0
+      },
+      "joint_anchor_landmark_contract_certified": true
+    },
+    {
+      "checks": {
+        "common_rigid_transform_invariant": true,
+        "identity_zero": true,
+        "known_vector_difference": true
+      },
+      "classification": "SEMANTICALLY_CERTIFIED",
+      "component": "thumb_to_tip_vector_error_m",
+      "duty": "finger vector relative to thumb tip",
+      "evidence": {
+        "known_difference": 0.818535277187245,
+        "zero": 0.0
+      },
+      "joint_anchor_landmark_contract_certified": true
+    },
+    {
+      "checks": {
+        "common_rotation_invariant": true,
+        "identity_zero": true,
+        "known_quarter_turn": true
+      },
+      "classification": "SEMANTICALLY_CERTIFIED",
+      "component": "fingertip_orientation_error_rad",
+      "duty": "fingertip/distal orientation only",
+      "evidence": {
+        "quarter_turn_rad": 1.5707963267948963,
+        "zero": 0.0
+      },
+      "joint_anchor_landmark_contract_certified": true
+    },
+    {
+      "checks": {
+        "common_rotation_invariant": true,
+        "identity_zero": true,
+        "known_quarter_turn": true
+      },
+      "classification": "SEMANTICALLY_CERTIFIED",
+      "component": "direct_proximal_orientation_error_rad",
+      "duty": "proximal finger shape only",
+      "evidence": {
+        "quarter_turn_rad": 1.5707963267948966,
+        "zero": 0.0
+      },
+      "joint_anchor_landmark_contract_certified": true
+    },
+    {
+      "checks": {
+        "common_rotation_invariant": true,
+        "identity_zero": true,
+        "known_quarter_turn": true
+      },
+      "classification": "SEMANTICALLY_CERTIFIED",
+      "component": "direct_distal_orientation_error_rad",
+      "duty": "distal finger shape only",
+      "evidence": {
+        "quarter_turn_rad": 1.5707963267948966,
+        "zero": 0.0
+      },
+      "joint_anchor_landmark_contract_certified": true
+    },
+    {
+      "checks": {
+        "common_rigid_transform_invariant": true,
+        "identity_zero": true,
+        "relative_offset_sensitive": true
+      },
+      "classification": "SEMANTICALLY_CERTIFIED",
+      "component": "near_interaction_position_error_m",
+      "duty": "finger segment position relative to tray",
+      "evidence": {
+        "relative_offset": 0.8185352771872451,
+        "transformed": 0.8185352771872445,
+        "zero": 0.0
+      },
+      "joint_anchor_landmark_contract_certified": true
+    },
+    {
+      "checks": {
+        "common_rigid_transform_invariant": true,
+        "identity_zero": true,
+        "known_relative_rotation": true
+      },
+      "classification": "SEMANTICALLY_CERTIFIED",
+      "component": "near_interaction_orientation_error_rad",
+      "duty": "finger segment orientation relative to tray",
+      "evidence": {
+        "quarter_turn_rad": 1.5707963267948966,
+        "transformed": 1.5707963267948963,
+        "zero": 0.0
+      },
+      "joint_anchor_landmark_contract_certified": true
+    },
+    {
+      "checks": {
+        "common_rigid_transform_invariant": true,
+        "identity_zero": true,
+        "relative_offset_sensitive": true
+      },
+      "classification": "SEMANTICALLY_CERTIFIED",
+      "component": "wrist_tray_position_error_m",
+      "duty": "wrist position relative to tray",
+      "evidence": {
+        "relative_offset": 0.8185352771872451,
+        "transformed": 0.8185352771872445
+      },
+      "joint_anchor_landmark_contract_certified": true
+    },
+    {
+      "checks": {
+        "common_rotation_invariant": true,
+        "identity_zero": true,
+        "known_quarter_turn": true
+      },
+      "classification": "SEMANTICALLY_CERTIFIED",
+      "component": "wrist_orientation_error_rad",
+      "duty": "wrist orientation only",
+      "evidence": {
+        "quarter_turn_rad": 1.5707963267948963,
+        "zero": 0.0
+      },
+      "joint_anchor_landmark_contract_certified": true
+    },
+    {
+      "checks": {
+        "monotonic_magnitude": true,
+        "nominal_zero": true,
+        "symmetric": true
+      },
+      "classification": "SEMANTICALLY_CERTIFIED",
+      "component": "joint_nominal_deviation_rad_l2",
+      "duty": "limit deviation from OLD_MINK nominal",
+      "evidence": {
+        "magnitudes": [
+          0.0,
+          0.3741657386773941,
+          0.7483314773547883
+        ]
+      },
+      "joint_anchor_landmark_contract_certified": true
+    },
+    {
+      "checks": {
+        "monotonic_magnitude": true,
+        "symmetric": true,
+        "unchanged_zero": true
+      },
+      "classification": "SEMANTICALLY_CERTIFIED",
+      "component": "temporal_joint_change_rad_l2",
+      "duty": "frame-to-frame continuity only",
+      "evidence": {
+        "magnitudes": [
+          0.0,
+          0.37416573867739417,
+          0.7483314773547883
+        ]
+      },
+      "joint_anchor_landmark_contract_certified": true
+    }
+  ],
+  "global_E_IM_role": "DIAGNOSTIC_ONLY",
+  "global_E_bone_role": "DIAGNOSTIC_ONLY",
+  "sample_type_separation": [
+    {
+      "applicable_holistic_comparisons": 8,
+      "blind_id": "P070",
+      "comparisons_matching_holistic_label": 1,
+      "component_outcomes": [
+        {
+          "component": "direct_proximal_orientation_error_rad",
+          "delta": 0.00903426473536642,
+          "finger": "ring",
+          "matches_holistic_label": false
+        },
+        {
+          "component": "direct_distal_orientation_error_rad",
+          "delta": 0.1529944307291369,
+          "finger": "ring",
+          "matches_holistic_label": false
+        },
+        {
+          "component": "fingertip_position_error_m",
+          "delta": 0.03138734503772053,
+          "finger": "ring",
+          "matches_holistic_label": false
+        },
+        {
+          "component": "fingertip_orientation_error_rad",
+          "delta": 0.04078032652088748,
+          "finger": "ring",
+          "matches_holistic_label": false
+        },
+        {
+          "component": "direct_proximal_orientation_error_rad",
+          "delta": -0.03746600002501349,
+          "finger": "pinky",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "direct_distal_orientation_error_rad",
+          "delta": 0.016104479868005506,
+          "finger": "pinky",
+          "matches_holistic_label": false
+        },
+        {
+          "component": "fingertip_position_error_m",
+          "delta": 0.020302588402697285,
+          "finger": "pinky",
+          "matches_holistic_label": false
+        },
+        {
+          "component": "fingertip_orientation_error_rad",
+          "delta": 0.01087840711930746,
+          "finger": "pinky",
+          "matches_holistic_label": false
+        }
+      ],
+      "sample_type": "endpoint0_shape_aware_positive"
+    },
+    {
+      "applicable_holistic_comparisons": 12,
+      "blind_id": "P072",
+      "comparisons_matching_holistic_label": 12,
+      "component_outcomes": [
+        {
+          "component": "direct_proximal_orientation_error_rad",
+          "delta": 0.5440491609960976,
+          "finger": "ring",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "direct_distal_orientation_error_rad",
+          "delta": 1.2431852688145912,
+          "finger": "ring",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "fingertip_position_error_m",
+          "delta": 0.049401212083232116,
+          "finger": "ring",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "fingertip_orientation_error_rad",
+          "delta": 1.2464190351190587,
+          "finger": "ring",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "direct_proximal_orientation_error_rad",
+          "delta": 0.2324347161400453,
+          "finger": "pinky",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "direct_distal_orientation_error_rad",
+          "delta": 0.45321523028283783,
+          "finger": "pinky",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "fingertip_position_error_m",
+          "delta": 0.02600029961675267,
+          "finger": "pinky",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "fingertip_orientation_error_rad",
+          "delta": 0.45485710133251467,
+          "finger": "pinky",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "near_interaction_position_error_m",
+          "delta": 0.02547279959107123,
+          "finger": "ring",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "near_interaction_orientation_error_rad",
+          "delta": 0.8835107124506041,
+          "finger": "ring",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "near_interaction_position_error_m",
+          "delta": 0.02015094201575584,
+          "finger": "pinky",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "near_interaction_orientation_error_rad",
+          "delta": 0.25358422803179126,
+          "finger": "pinky",
+          "matches_holistic_label": true
+        }
+      ],
+      "sample_type": "interaction_v1_negative"
+    },
+    {
+      "applicable_holistic_comparisons": 12,
+      "blind_id": "P073",
+      "comparisons_matching_holistic_label": 12,
+      "component_outcomes": [
+        {
+          "component": "direct_proximal_orientation_error_rad",
+          "delta": 0.47425083291226455,
+          "finger": "ring",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "direct_distal_orientation_error_rad",
+          "delta": 1.2310254398941123,
+          "finger": "ring",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "fingertip_position_error_m",
+          "delta": 0.05064519931572639,
+          "finger": "ring",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "fingertip_orientation_error_rad",
+          "delta": 1.2521679481958747,
+          "finger": "ring",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "direct_proximal_orientation_error_rad",
+          "delta": 0.18297554126011428,
+          "finger": "pinky",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "direct_distal_orientation_error_rad",
+          "delta": 0.4584136869577805,
+          "finger": "pinky",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "fingertip_position_error_m",
+          "delta": 0.026580659521364222,
+          "finger": "pinky",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "fingertip_orientation_error_rad",
+          "delta": 0.4548088301566823,
+          "finger": "pinky",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "near_interaction_position_error_m",
+          "delta": 0.024773626834645665,
+          "finger": "ring",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "near_interaction_orientation_error_rad",
+          "delta": 0.8851753404717423,
+          "finger": "ring",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "near_interaction_position_error_m",
+          "delta": 0.01931638527264604,
+          "finger": "pinky",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "near_interaction_orientation_error_rad",
+          "delta": 0.25954406245087136,
+          "finger": "pinky",
+          "matches_holistic_label": true
+        }
+      ],
+      "sample_type": "interaction_v1_negative"
+    },
+    {
+      "applicable_holistic_comparisons": 12,
+      "blind_id": "P074",
+      "comparisons_matching_holistic_label": 12,
+      "component_outcomes": [
+        {
+          "component": "direct_proximal_orientation_error_rad",
+          "delta": 0.4099627845576873,
+          "finger": "ring",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "direct_distal_orientation_error_rad",
+          "delta": 1.1878504767549534,
+          "finger": "ring",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "fingertip_position_error_m",
+          "delta": 0.052009677993854614,
+          "finger": "ring",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "fingertip_orientation_error_rad",
+          "delta": 1.234473635992889,
+          "finger": "ring",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "direct_proximal_orientation_error_rad",
+          "delta": 0.15024825619411264,
+          "finger": "pinky",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "direct_distal_orientation_error_rad",
+          "delta": 0.46277512605490945,
+          "finger": "pinky",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "fingertip_position_error_m",
+          "delta": 0.028089176422847636,
+          "finger": "pinky",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "fingertip_orientation_error_rad",
+          "delta": 0.46344208592056424,
+          "finger": "pinky",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "near_interaction_position_error_m",
+          "delta": 0.024506957765147275,
+          "finger": "ring",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "near_interaction_orientation_error_rad",
+          "delta": 0.8727399639619904,
+          "finger": "ring",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "near_interaction_position_error_m",
+          "delta": 0.01914815366884896,
+          "finger": "pinky",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "near_interaction_orientation_error_rad",
+          "delta": 0.2809596444215805,
+          "finger": "pinky",
+          "matches_holistic_label": true
+        }
+      ],
+      "sample_type": "interaction_v1_negative"
+    },
+    {
+      "applicable_holistic_comparisons": 12,
+      "blind_id": "P075",
+      "comparisons_matching_holistic_label": 12,
+      "component_outcomes": [
+        {
+          "component": "direct_proximal_orientation_error_rad",
+          "delta": 0.29835872024257093,
+          "finger": "ring",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "direct_distal_orientation_error_rad",
+          "delta": 1.0664809361173673,
+          "finger": "ring",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "fingertip_position_error_m",
+          "delta": 0.050303472230669534,
+          "finger": "ring",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "fingertip_orientation_error_rad",
+          "delta": 1.1797401861086616,
+          "finger": "ring",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "direct_proximal_orientation_error_rad",
+          "delta": 0.12780026622260648,
+          "finger": "pinky",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "direct_distal_orientation_error_rad",
+          "delta": 0.540721136611266,
+          "finger": "pinky",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "fingertip_position_error_m",
+          "delta": 0.030959844651664258,
+          "finger": "pinky",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "fingertip_orientation_error_rad",
+          "delta": 0.5488864570205798,
+          "finger": "pinky",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "near_interaction_position_error_m",
+          "delta": 0.020970771670755013,
+          "finger": "ring",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "near_interaction_orientation_error_rad",
+          "delta": 0.8491141151111604,
+          "finger": "ring",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "near_interaction_position_error_m",
+          "delta": 0.01645395796883278,
+          "finger": "pinky",
+          "matches_holistic_label": true
+        },
+        {
+          "component": "near_interaction_orientation_error_rad",
+          "delta": 0.42217686790868947,
+          "finger": "pinky",
+          "matches_holistic_label": true
+        }
+      ],
+      "sample_type": "interaction_v1_negative"
+    }
+  ],
+  "scalar_weight_fit_performed": false,
+  "schema": "taco_pour_objective_component_semantics_v2",
+  "small_probe_evidence": {
+    "probe_count": 60,
+    "role": "DETERMINISTIC_FK_DUTY_PROBES_NOT_HOLISTIC_RANKING",
+    "unambiguous_holistic_visual_labels": 0
+  }
+}
