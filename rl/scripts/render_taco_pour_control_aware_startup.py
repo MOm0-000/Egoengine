@@ -851,7 +851,8 @@ def _zip_tree(root: Path, archive: Path, include_dirs: tuple[str, ...]) -> None:
     selected = [
         "README.md", "VISUAL_INDEX.md", "index.html", "frame_map.csv", "events.csv",
         "completeness.json", "render_accounting.json", "visual_review.json", "findings.md",
-        "image_manifest.json", "input_manifest.json", "video_frame_map.csv", "artifacts.sha256",
+        "image_manifest.json", "input_manifest.json", "video_frame_map.csv",
+        "publication_validation.json", "artifacts.sha256",
     ]
     with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=6) as bundle:
         for relative in selected:
@@ -861,6 +862,13 @@ def _zip_tree(root: Path, archive: Path, include_dirs: tuple[str, ...]) -> None:
         for directory in include_dirs:
             for path in sorted((root / directory).rglob("*")):
                 if path.is_file():
+                    if directory == "keyframes":
+                        try:
+                            endpoint = int(path.stem.split("_")[-1])
+                        except ValueError:
+                            continue
+                        if endpoint % 5:
+                            continue
                     bundle.write(path, str(path.relative_to(root)))
 
 
@@ -1136,15 +1144,17 @@ def render_visual_standard(config_path: Path, output: Path) -> dict[str, Any]:
     for name in ("frame_map.csv", "events.csv", "completeness.json", "render_accounting.json", "visual_review.json",
                  "findings.md", "image_manifest.json", "input_manifest.json", "video_frame_map.csv", "README.md", "SOURCE_NOTES.md"):
         shutil.copy2(output / name, output / "public" / name)
+    validation = validate_publication(output, endpoint_count=61, views=("oblique", "top"), expected_sheet_count=14)
+    public_validation = validate_publication(output / "public", endpoint_count=61, views=("oblique", "top"), expected_sheet_count=14)
+    publication_validation = {"controlled": validation, "public": public_validation}
+    _write_json(output / "publication_validation.json", publication_validation)
+    _write_json(output / "public" / "publication_validation.json", publication_validation)
+    if not validation["valid"] or not public_validation["valid"]:
+        raise RuntimeError("publication validation failed")
     _write_hashes(output / "public")
     _write_hashes(output)
     _zip_tree(output, output / "handoff" / "visual_review_light_controlled.zip", ("previews", "sheets", "keyframes", "curves"))
     _zip_tree(output / "public", output / "handoff" / "visual_review_light_public.zip", ("previews", "sheets", "keyframes"))
-    validation = validate_publication(output, endpoint_count=61, views=("oblique", "top"), expected_sheet_count=14)
-    public_validation = validate_publication(output / "public", endpoint_count=61, views=("oblique", "top"), expected_sheet_count=14)
-    _write_json(output / "publication_validation.json", {"controlled": validation, "public": public_validation})
-    if not validation["valid"] or not public_validation["valid"]:
-        raise RuntimeError("publication validation failed")
     return {**completeness, "output": str(output), "image_manifest_sha256": image_hash, "publication_validation": True}
 
 
