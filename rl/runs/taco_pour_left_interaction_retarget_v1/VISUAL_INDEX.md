@@ -1,0 +1,25 @@
+# Visual evidence index
+
+Manifest SHA-256: `d28d55509b9da5802c29a89fbb960a53703d58a8d21c683e24a25b6da8cdddc3`
+
+- endpoint 0: [oblique](visuals/oblique/endpoint_000.png) · [top](visuals/top/endpoint_000.png)
+- endpoint 1: [oblique](visuals/oblique/endpoint_001.png) · [top](visuals/top/endpoint_001.png)
+- endpoint 2: [oblique](visuals/oblique/endpoint_002.png) · [top](visuals/top/endpoint_002.png)
+- endpoint 3: [oblique](visuals/oblique/endpoint_003.png) · [top](visuals/top/endpoint_003.png)
+- endpoint 4: [oblique](visuals/oblique/endpoint_004.png) · [top](visuals/top/endpoint_004.png)
+- endpoint 5: [oblique](visuals/oblique/endpoint_005.png) · [top](visuals/top/endpoint_005.png)
+- endpoint 6: [oblique](visuals/oblique/endpoint_006.png) · [top](visuals/top/endpoint_006.png)
+- endpoint 7: [oblique](visuals/oblique/endpoint_007.png) · [top](visuals/top/endpoint_007.png)
+- endpoint 8: [oblique](visuals/oblique/endpoint_008.png) · [top](visuals/top/endpoint_008.png)
+- endpoint 9: [oblique](visuals/oblique/endpoint_009.png) · [top](visuals/top/endpoint_009.png)
+- endpoint 10: [oblique](visuals/oblique/endpoint_010.png) · [top](visuals/top/endpoint_010.png)
+- endpoint 11: [oblique](visuals/oblique/endpoint_011.png) · [top](visuals/top/endpoint_011.png)
+- endpoint 12: [oblique](visuals/oblique/endpoint_012.png) · [top](visuals/top/endpoint_012.png)
+- endpoint 13: [oblique](visuals/oblique/endpoint_013.png) · [top](visuals/top/endpoint_013.png)
+- endpoint 14: [oblique](visuals/oblique/endpoint_014.png) · [top](visuals/top/endpoint_014.png)
+- endpoint 15: [oblique](visuals/oblique/endpoint_015.png) · [top](visuals/top/endpoint_015.png)
+- endpoint 16: [oblique](visuals/oblique/endpoint_016.png) · [top](visuals/top/endpoint_016.png)
+- endpoint 17: [oblique](visuals/oblique/endpoint_017.png) · [top](visuals/top/endpoint_017.png)
+- endpoint 18: [oblique](visuals/oblique/endpoint_018.png) · [top](visuals/top/endpoint_018.png)
+- endpoint 19: [oblique](visuals/oblique/endpoint_019.png) · [top](visuals/top/endpoint_019.png)
+- endpoint 20: [oblique](visuals/oblique/endpoint_020.png) · [top](visuals/top/endpoint_020.png)

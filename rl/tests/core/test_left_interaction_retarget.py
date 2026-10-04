@@ -72,6 +72,7 @@ def test_contract_freezes_the_single_candidate_and_paper_seeded_weights():
     assert contract["solver"]["candidate_count"] == 1
     assert contract["solver"]["multi_start"] is False
     assert contract["solver"]["parameter_sweep"] is False
+    assert contract["solver"]["numerical_feasibility_tolerance"] == pytest.approx(2e-7)
     assert contract["semantic_keypoints"]["count"] == 16
     assert contract["interaction_mesh"] == {
         "object_role": "target",

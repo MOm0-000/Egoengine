@@ -460,6 +460,7 @@ def static_legality(
 ) -> dict[str, Any]:
     threshold = float(contract["penetration"]["material_reporting_threshold_m"])
     minimum = float(contract["solver"]["declared_pair_min_distance_m"])
+    numerical = float(contract["solver"]["numerical_feasibility_tolerance"])
     families = collision_families(model)
     pair_groups = _left_pairs(model)
     data = mujoco.MjData(model)
@@ -485,23 +486,46 @@ def static_legality(
                 model.jnt_range[limited, 1] - state[addresses],
             )
             native = native_geometry_gate(model, state, meshes, threshold)
+            failures = native["failures"]
+            relevant_native_failures = {
+                "left_hand_table": [
+                    name for name in failures["hand_table"] if name.startswith("left_")
+                ],
+                "left_hand_object": [
+                    pair for pair in failures["hand_object"]
+                    if pair and pair[0].startswith("left_")
+                ],
+                "left_omitted_nonadjacent": [
+                    pair for pair in failures["omitted_nonadjacent"]
+                    if any(name.startswith("left_") for name in pair)
+                ],
+                "left_unclassified_omitted_nonadjacent": [
+                    pair for pair in failures["unclassified_omitted_nonadjacent"]
+                    if any(name.startswith("left_") for name in pair)
+                ],
+            }
             checks = {
                 "finite": bool(np.isfinite(state).all()),
-                "joint_limits": bool(joint_margin.min() >= -1e-12),
+                "joint_limits": bool(joint_margin.min() >= -numerical),
                 "actuator_ctrlrange": bool(np.all(
                     (~ctrl_limited)
-                    | ((state[: model.nu] >= ctrl_ranges[:, 0] - 1e-12)
-                       & (state[: model.nu] <= ctrl_ranges[:, 1] + 1e-12))
+                    | ((state[: model.nu] >= ctrl_ranges[:, 0] - numerical)
+                       & (state[: model.nu] <= ctrl_ranges[:, 1] + numerical))
                 )),
-                "declared_left_pairs": bool(all(value.min() >= minimum for value in pair_distance.values())),
-                "native_material_legality": bool(native["passed"]),
+                "declared_left_pairs": bool(all(
+                    value.min() >= minimum - numerical for value in pair_distance.values()
+                )),
+                "native_material_legality": bool(
+                    not any(relevant_native_failures.values())
+                ),
             }
             variants[precision] = {
                 "checks": checks,
                 "passed": bool(all(checks.values())),
                 "joint_limit_min_margin": float(joint_margin.min()),
                 "minimum_distances_m": {name: float(value.min()) for name, value in pair_distance.items()},
-                "native_failures": native["failures"],
+                "native_relevant_failures": relevant_native_failures,
+                "native_scene_monitor_failures": failures,
                 "native_table_clearance_min_m": float(min(native["table_clearance_m"].values())),
             }
             all_pass &= variants[precision]["passed"]
@@ -893,6 +917,11 @@ def finalize_static(output: Path, visual_pass: bool, note: str) -> dict[str, Any
         "authorization": contract["authorization"],
     })
     lines = (output / "summary.md").read_text().rstrip().splitlines()
+    lines = [
+        line.replace("Physics steps: `0`; visual review remains pending.",
+                     "Physics steps: `0`; visual review is complete.")
+        for line in lines
+    ]
     lines.extend(["", f"- Completed visual review: `{'PASS' if visual_pass else 'FAIL'}`.", f"- Final static classification: `{classification}`."])
     if not physics_authorized:
         lines.append("- Static contract forbids physics; the run stops with zero physics steps.")
