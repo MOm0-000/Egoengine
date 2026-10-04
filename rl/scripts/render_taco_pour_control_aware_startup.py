@@ -948,6 +948,12 @@ def render_visual_standard(config_path: Path, output: Path) -> dict[str, Any]:
     server_width, server_height = map(int, config["render"]["server_panel_image_size"])
     preview_width, preview_height = map(int, config["render"]["preview_panel_image_size"])
     high_width, high_height = map(int, config["render"]["high_resolution_panel_image_size"])
+    # Renderer size is a visual-only property of these fresh StaticModel copies.
+    # Raise the offscreen framebuffer before constructing any renderer so the
+    # 960x720 keyframes are native renders rather than enlarged 640x480 pixels.
+    for model in (reference_model.model, actual_model.model):
+        model.vis.global_.offwidth = max(server_width, high_width)
+        model.vis.global_.offheight = max(server_height, high_height)
     static_calls = 0
     main_vis = vismod.Visualizer(reference_model, actual_model, width=server_width, height=server_height)
     try:
