@@ -52,4 +52,3 @@ bit-identical. It was rejected by the static gate because:
 The resulting classification is `STATIC_GATE_FAILED_NO_PHYSICS`. In accordance
 with the frozen contract, no second fit, tolerance adjustment, physics rollout,
 promotion, RL run, planner continuation, or chunk commit was performed.
-
