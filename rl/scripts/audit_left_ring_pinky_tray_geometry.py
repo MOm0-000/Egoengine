@@ -700,7 +700,9 @@ def render_static(output: Path) -> None:
     reference = vismod.StaticModel.load(
         "reference", ASSET_ROOT / "runs/taco_pour_collision_semantics_combined_v1/combined_candidate_scene.xml"
     )
-    vis = vismod.Visualizer(reference, actual, width=960, height=720)
+    # The frozen scene declares a 640x480 offscreen framebuffer.  Reuse that
+    # exact standardized panel size instead of mutating the scene for review.
+    vis = vismod.Visualizer(reference, actual, width=640, height=480)
     updates = 0
     try:
         for view in VIEWS:
