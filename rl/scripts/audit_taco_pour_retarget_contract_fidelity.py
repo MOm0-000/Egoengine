@@ -881,11 +881,13 @@ def objective_fidelity(
             ("ring", "direct_proximal_orientation_error_rad"),
             ("ring", "direct_distal_orientation_error_rad"),
             ("ring", "fingertip_position_error_m"),
+            ("ring", "fingertip_orientation_error_rad"),
         ],
         "pinky_shape": [
             ("pinky", "direct_proximal_orientation_error_rad"),
             ("pinky", "direct_distal_orientation_error_rad"),
             ("pinky", "fingertip_position_error_m"),
+            ("pinky", "fingertip_orientation_error_rad"),
         ],
         "wrist_palm_height_phase": [("ALL", "wrist_tray_position_error_m")],
         "tray_rim_spatial_relation": [
@@ -961,6 +963,8 @@ def finalize(output: Path) -> None:
     if not labels_path.is_file():
         raise RuntimeError("sealed blinded labels are missing")
     labels = json.loads(labels_path.read_text())
+    if labels.get("sealed") is not True:
+        raise RuntimeError("blinded labels must be explicitly sealed before metric reveal")
     visual_hash = sha256(output / "visual_manifest.json")
     if labels.get("visual_manifest_sha256") != visual_hash:
         raise RuntimeError("labels are not bound to the visual manifest")
@@ -1018,6 +1022,13 @@ def finalize(output: Path) -> None:
             f"- `{name}`: {row['passed_comparisons']}/{row['applicable_unambiguous_comparisons']} "
             f"comparisons; certified `{row['certified_for_v2']}`."
         )
+    report_lines.extend([
+        "",
+        "## Missing or failed required evidence",
+        "",
+        f"- No unambiguous visual evidence: `{objective['required_components_without_unambiguous_evidence']}`.",
+        f"- Failed at least one applicable comparison: `{objective['required_components_failed']}`.",
+    ])
     report_lines.extend(["", "## Collision representation", "",
                          f"- Mismatches/unknowns: `{collision['mismatch_count']}`.",
                          f"- Proxy-stricter lower-wrist findings: `{collision['proxy_stricter_lower_wrist_count']}`."])
@@ -1057,7 +1068,11 @@ def finalize(output: Path) -> None:
     ]
     (output / "summary.md").write_text("\n".join(lines) + "\n")
     status = json.loads((output / "visual_review_status.json").read_text())
-    status.update(status="SEALED_AND_REVEALED", blinded_labels_sha256=sha256(labels_path))
+    status.update(
+        status="SEALED_AND_REVEALED",
+        blinded_labels_sha256=sha256(labels_path),
+        objective_metrics_must_remain_unread=False,
+    )
     write_json(output / "visual_review_status.json", status)
     files = sorted(path for path in output.rglob("*") if path.is_file() and path.name != "server_artifacts.sha256")
     (output / "server_artifacts.sha256").write_text(

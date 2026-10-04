@@ -122,3 +122,5 @@ def test_audit_runner_contains_no_simulator_step_or_optimizer_call():
     assert "minimize(" not in source
     assert "optimizer_generated_candidates\": 0" in source
     assert "stop_after_semantic_blocker" in source
+    assert 'labels.get("sealed") is not True' in source
+    assert "objective_metrics_must_remain_unread=False" in source
