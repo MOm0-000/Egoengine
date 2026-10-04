@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from pathlib import Path
+import hashlib
+import json
 
 import mujoco
 import numpy as np
@@ -124,3 +126,37 @@ def test_audit_runner_contains_no_simulator_step_or_optimizer_call():
     assert "stop_after_semantic_blocker" in source
     assert 'labels.get("sealed") is not True' in source
     assert "objective_metrics_must_remain_unread=False" in source
+
+
+def test_frozen_fidelity_evidence_fails_closed_without_a_v2_contract():
+    evidence = ROOT / "runs/taco_pour_retarget_contract_fidelity_audit_v1"
+    decision = json.loads((evidence / "decision.json").read_text())
+    accounting = json.loads((evidence / "cost_accounting.json").read_text())
+    status = json.loads((evidence / "visual_review_status.json").read_text())
+    labels = json.loads((evidence / "blinded_visual_labels.json").read_text())
+    assert decision["classification"] == "MULTIPLE_UPSTREAM_BLOCKERS"
+    assert decision["semantic_landmarks_certified"] is True
+    assert decision["objective_components_certified"] is False
+    assert decision["collision_contract_certified"] is False
+    assert decision["retarget_v2_contract_written"] is False
+    assert not (evidence / "retarget_v2_contract.yaml").exists()
+    for key in (
+        "physics_steps", "control_intervals", "planner_calls",
+        "actor_critic_forwards", "optimizer_generated_candidates",
+        "rl_updates", "chunk_commits",
+    ):
+        assert accounting[key] == 0
+    assert labels["sealed"] is True
+    assert status["status"] == "SEALED_AND_REVEALED"
+    assert status["objective_metrics_must_remain_unread"] is False
+
+    rows = {
+        relative: expected
+        for expected, relative in (
+            line.split(maxsplit=1)
+            for line in (evidence / "server_artifacts.sha256").read_text().splitlines()
+        )
+    }
+    for relative in ("decision.json", "summary.md", "blinded_visual_labels.json"):
+        digest = hashlib.sha256((evidence / relative).read_bytes()).hexdigest()
+        assert digest == rows[relative]
