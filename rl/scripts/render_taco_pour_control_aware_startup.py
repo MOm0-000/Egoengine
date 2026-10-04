@@ -661,7 +661,7 @@ def _compose_frame(
         ),
         _panel(
             reference_image,
-            "ROBOT REFERENCE · KINEMATIC REFERENCE",
+            "ROBOT REFERENCE - KINEMATIC REFERENCE",
             [f"endpoint {endpoint} | t_ref={float(frame_row['reference_time_s']):.6f}s", "static FK; not a physics rollout"],
         ),
     ]
