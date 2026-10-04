@@ -514,14 +514,25 @@ def letterbox(image: np.ndarray, width: int, height: int) -> np.ndarray:
 
 
 class Visualizer:
-    def __init__(self, reference: StaticModel, actual: StaticModel):
+    def __init__(
+        self,
+        reference: StaticModel,
+        actual: StaticModel,
+        *,
+        width: int = PANEL_WIDTH,
+        height: int = PANEL_HEIGHT,
+    ):
         self.reference = reference
         self.actual = actual
+        self.width = int(width)
+        self.height = int(height)
+        if self.width <= 0 or self.height <= 0:
+            raise ValueError("render dimensions must be positive")
         self.reference_renderer = mujoco.Renderer(
-            reference.model, height=PANEL_HEIGHT, width=PANEL_WIDTH, max_geom=10000
+            reference.model, height=self.height, width=self.width, max_geom=10000
         )
         self.actual_renderer = mujoco.Renderer(
-            actual.model, height=PANEL_HEIGHT, width=PANEL_WIDTH, max_geom=10000
+            actual.model, height=self.height, width=self.width, max_geom=10000
         )
         self.render_updates = 0
 

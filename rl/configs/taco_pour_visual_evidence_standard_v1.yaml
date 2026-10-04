@@ -1,0 +1,155 @@
+schema: taco_pour_visual_evidence_standard_v1
+status: draft_requires_local_renderer_implementation
+baseline:
+  repository: MOm0-000/Egoengine
+  branch: 3.2RL
+  commit: a4e9d01b8cef986aa38cd2cb6ecde73d666b616c
+asset_root: /data_all/zzx/3.2RL
+source_run: runs/taco_pour_aplan_overlap_continuation_20_60_v1
+output_run: runs/taco_pour_visual_evidence_standard_v1
+preserve_source_run: true
+
+inputs:
+  reference: runs/taco_pour_bimanual_mano_fk_combined_collision_v1/robot_reference.npz
+  reference_scene: runs/taco_pour_collision_semantics_combined_v1/combined_candidate_scene.xml
+  actual_scene: runs/taco_pour_floor_contact_v1/candidate.xml
+  rgb_video: data/taco_v1/pour_bowl_plate/rgb/taco_pour_bowl_plate_20230927_017.mp4
+  optional_human_gt: runs/taco_pour_bimanual_mano_fk_bilateral_guard_v1/human_reference.npz
+  provenance:
+    - runs/taco_pour_aplan_overlap_continuation_20_60_v1/resolved_inputs.json
+    - runs/taco_pour_aplan_overlap_continuation_20_60_v1/server_artifacts.sha256
+    - runs/taco_pour_aplan_overlap_continuation_20_60_v1/cold_replay_parity.json
+  metrics: runs/taco_pour_aplan_overlap_continuation_20_60_v1/comparison.csv
+  conditions:
+    - id: FROZEN_SUFFIX_BASELINE
+      trajectory: runs/taco_pour_aplan_overlap_continuation_20_60_v1/FROZEN_SUFFIX_BASELINE/trajectory.npz
+      substeps: runs/taco_pour_aplan_overlap_continuation_20_60_v1/FROZEN_SUFFIX_BASELINE/substeps.npz
+      contacts: runs/taco_pour_aplan_overlap_continuation_20_60_v1/FROZEN_SUFFIX_BASELINE/contacts_raw.npz
+    - id: OVERLAP_PLAN
+      trajectory: runs/taco_pour_aplan_overlap_continuation_20_60_v1/OVERLAP_PLAN/trajectory.npz
+      substeps: runs/taco_pour_aplan_overlap_continuation_20_60_v1/OVERLAP_PLAN/substeps.npz
+      contacts: runs/taco_pour_aplan_overlap_continuation_20_60_v1/OVERLAP_PLAN/contacts_raw.npz
+
+time_alignment:
+  endpoint_range_inclusive: [0, 60]
+  endpoint_lookup: actual_endpoint_field_not_row_number
+  reference_frequency_expected_hz: 30.0
+  frame_mapping_fields_to_resolve: [frame_indices, timestamps_s]
+  require_mapping_provenance: true
+  allow_unverified_identity_mapping: false
+  sequential_video_decode: true
+  pts_probe: use_installed_ffprobe_or_existing_decoder
+  timestamp_only_match_limit: half_local_frame_interval
+  fail_complete_label_on_unresolved_alignment: true
+  allow_partial_output_with_explicit_placeholder: true
+  rgb_camera_pixel_registered: false
+  allow_rgb_interpolation_or_synthesized_view: false
+
+render:
+  columns: [REAL_RGB, ROBOT_REFERENCE, FROZEN_SUFFIX_BASELINE, OVERLAP_PLAN]
+  views: [oblique, top]
+  # Camera values copied from the inspected existing StaticModel visual helper.
+  # Do not reframe per condition or per endpoint.
+  cameras:
+    oblique:
+      lookat: [0.60, 0.0, 0.83]
+      distance: 0.82
+      azimuth: 128.0
+      elevation: -24.0
+    top:
+      lookat: [0.60, 0.0, 0.80]
+      distance: 0.86
+      azimuth: 90.0
+      elevation: -89.0
+  preserve_aspect_ratio: true
+  headers_and_metrics_outside_image: true
+  server_panel_image_size: [640, 480]
+  preview_panel_image_size: [480, 360]
+  high_resolution_panel_image_size: [960, 720]
+  save_every_endpoint: true
+  preview_format: jpg
+  preview_jpeg_quality: 85
+  server_frame_format: png
+  high_resolution_key_interval: 5
+  static_model_only: true
+  allow_live_environment_construction: false
+  allow_physics_forward_for_contact_reconstruction: false
+  rendering_style: shared_across_conditions_declared_in_manifest
+  optional_human_gt_page: only_if_needed_and_available
+  annotate_legacy_tracking_as_task_success: false
+
+video:
+  realtime: true
+  realtime_fps: validated_reference_frequency
+  slowdown_factor: 4
+  selective_unmarked_frame_repetition: false
+  output_frame_map_required: true
+  encoder: reuse_installed_encoder_record_version
+
+navigation:
+  html: standalone_embedded_data_relative_paths_no_CDN
+  markdown_index: true
+  sheet_endpoints_per_page: 10
+  all_endpoint_links_required: true
+  events:
+    positive_error_increments_per_metric: 3
+    speed_markers: [global_max, largest_positive_increment]
+    include_all_recorded_role_contact_transitions: true
+    contact_id_is_semantic_identity: false
+    context_endpoints_each_side: 2
+    complete_curves_preserved: true
+    automatic_task_failure_classification: false
+  first_review_endpoint_windows_inclusive: [[12, 20], [23, 32], [43, 55]]
+
+substep_review:
+  enabled_only_for_saved_data: true
+  source_ranges_half_open: [[14, 18], [25, 30], [46, 53]]
+  expected_physics_substeps_per_control: 10
+  expand_all_recorded_substeps_in_selected_intervals: true
+  reference_interpolation_default: false
+  rgb_policy: nearest_or_bracketing_real_frame_with_time_gap_label
+  contact_wrench_overlay: saved_wrench_with_verified_solve_time_geometry_only
+  missing_prestate_or_force: explicit_unknown_no_invented_overlay
+  additional_existing_windows_after_review: allowed_offline_only
+
+publication:
+  ordinary_git_images_required: true
+  expected_endpoint_preview_count: 122
+  expected_sheet_count: 14
+  git_include_all_endpoint_previews: true
+  git_include_selected_high_resolution_keyframes: true
+  git_include_full_raw_video_or_models: false
+  same_authorized_data_visibility: true
+  respect_rgb_derivative_distribution_permissions: true
+  rgb_distribution_unavailable: controlled_delivery_and_explicit_public_placeholder
+  recommended_light_image_budget_mib: 80
+  skip_endpoints_to_reduce_size: false
+  clean_checkout_validation: required_without_physics
+  remote_publication_verification: required_or_explicitly_incomplete
+  chat_uploadable_light_zip: true
+
+review:
+  initial_status: PENDING
+  infer_review_complete_from_file_existence: false
+  bind_to_image_manifest_hash: true
+  actual_viewing_required: true
+  separate_render_completion_and_review_completion: true
+  earliest_onset_requires_reviewed_coverage: true
+  relations: [right_hand_tool, left_hand_target, tool_target]
+  findings_separate_observation_inference_hypothesis: true
+  modify_parent_experiment_decision: false
+
+execution_limits:
+  physics_steps: 0
+  control_intervals: 0
+  action_candidates: 0
+  mink_solve_calls: 0
+  actor_critic_forward: 0
+  vision_estimation_forward: 0
+  optimizer_steps: 0
+  chunk_commit: false
+  automatic_new_experiment: false
+  new_git_clone: false
+  dependency_upgrades: false
+  allow_offline_render_retries: true
+  report_static_FK_render_decode_encode_counts_and_bytes: true
