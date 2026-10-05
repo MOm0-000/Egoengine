@@ -15,6 +15,7 @@ import hashlib
 import json
 import os
 import shutil
+import sys
 from itertools import product
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -24,6 +25,12 @@ import trimesh
 
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+
+from egoengine_repro.scene.support_surface import (  # noqa: E402
+    horizontal_floor_position,
+    taco_project_sample_support_contract,
+)
 UPSTREAM_TEMPLATE = Path(
     "/data_all/zzx/egoengine/spider/example_datasets/processed/"
     "oakink/xhand/bimanual/wipe_board/scene_act.xml"
@@ -98,7 +105,7 @@ def _replace_object_assets(root: ET.Element, assets: Path, objects: dict) -> Non
             _mesh(asset, name=f"{side}_{path.stem}", filename=str(relative / spec["collision_subdir"] / path.name))
 
 
-def _replace_object_geoms(root: ET.Element) -> None:
+def _replace_object_geoms(root: ET.Element, *, simulator_support) -> None:
     worldbody = root.find("worldbody")
     if worldbody is None:
         raise ValueError("template has no <worldbody> section")
@@ -167,7 +174,8 @@ def _replace_object_geoms(root: ET.Element) -> None:
             geom.set("condim", "3")
             geom.set("friction", "1 0.1 0")
         if name == "floor":
-            geom.set("pos", "0 0 0.72")
+            position = horizontal_floor_position(simulator_support)
+            geom.set("pos", " ".join(map(str, position)))
 
 
 def _replace_contacts(root: ET.Element) -> dict:
@@ -313,9 +321,12 @@ def build(template: Path, output: Path, assets: Path, *, objects: dict | None = 
         raise ValueError("template lacks compiler mesh directory")
     compiler.set("meshdir", os.path.relpath(assets.resolve(), output.resolve().parent))
     objects = objects or selected_objects()
+    support_contract = taco_project_sample_support_contract(
+        target_id=objects["left"]["object_id"]
+    )
     root.set("model", model_name)
     _replace_object_assets(root, assets, objects)
-    _replace_object_geoms(root)
+    _replace_object_geoms(root, simulator_support=support_contract.simulator)
     collision_policy = _replace_contacts(root)
     _remove_object_actuators(root)
     inertials = _set_object_inertials(root, objects)
@@ -325,7 +336,8 @@ def build(template: Path, output: Path, assets: Path, *, objects: dict | None = 
     ET.indent(tree, space="  ")
     tree.write(output, encoding="utf-8", xml_declaration=False)
     report = dict(template=str(template.resolve()), template_sha256=hashlib.sha256(template.read_bytes()).hexdigest(),
-                  upstream_template=str(UPSTREAM_TEMPLATE), table_height_m=0.72,
+                  upstream_template=str(UPSTREAM_TEMPLATE),
+                  support_surface_contract=support_contract.to_dict(),
                   object_roles={"right_object": f"tool_{objects['right']['object_id']}",
                                 "left_object": f"target_{objects['left']['object_id']}"},
                   passive_objects=True, hand_control_dof=36,

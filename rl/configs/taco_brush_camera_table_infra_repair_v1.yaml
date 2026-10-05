@@ -1,0 +1,68 @@
+schema: taco_brush_camera_table_infra_repair_v1
+baseline_commit: e945b9ccc03089756de176f58348b01282c9b45e
+paper_faithful: false
+
+sample:
+  triplet: "(brush, brush, bowl)"
+  sequence: "(brush, brush, bowl)/20230927_027"
+  sequence_name: "20230927_027"
+  target_role: target
+  target_id: "146"
+  tool_id: "071"
+  frames: 209
+
+support_surface:
+  schema: support_surface_contract_v1
+  provenance: PROJECT_SAMPLE_CONTRACT
+  source_frame: world
+  source:
+    method: support_entity_extreme_surface
+    frame_index: 0
+    entity_role: target
+    entity_id: "146"
+    direction_world: [0.0, 0.0, 1.0]
+    extremum: minimum
+  simulator:
+    normal: [0.0, 0.0, 1.0]
+    offset_m: 0.72
+    frame: simulator
+
+horizontal_alignment:
+  provenance: LOCAL_ALIGNMENT_CONVENTION_UNCHANGED
+  scene_center_xy_target_m: [0.6, 0.0]
+  rotation_sim_world: identity
+
+camera_image_domain:
+  decision: UNDISTORTED_PINHOLE
+  certification: PINNED_OFFICIAL_CODE_BEHAVIOR
+  distortion_policy: distortion_not_applied_because_release_image_domain_is_already_rectified
+
+authorization:
+  refactor_camera_contract: true
+  refactor_support_surface_contract: true
+  delete_yellow_grid_gate: true
+  recompute_static_attribution: true
+  physics: false
+  replay: false
+  mpc: false
+  rl: false
+  new_retarget_candidate: false
+  promotion: false
+  chunk_commit: false
+
+hard_rules:
+  no_posthoc_z_offset: true
+  no_camera_parameter_tuning: true
+  no_distortion_scale_tuning: true
+  no_visual_table_gate: true
+  no_second_support_plane_definition: true
+
+paths:
+  data_root: /data_all/zzx/3.2RL/data/taco_v1/dev4
+  allocentric_cache: /data_all/zzx/3.2RL/data/taco_v1/brush_table_alignment_attribution_v1
+  official_taco_checkout: /data_all/zzx/3.2RL/third_party/TACO-Instructions-b385ac1e89f35214bfbbef0d63e6df0ac8dac02e
+  official_projection_chumpy_dependency: /data_all/zzx/deximit_isolated/DexImit-Open-c5749809/third_party/chumpy
+  mano_model_dir: /data_all/zzx/3.2RL/data/taco_v1/hand_poses_v1/mano_v1_2/models
+  scene: /data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_brush_brush_bowl_20230927_027/scene_source_contacts_mass.xml
+  frozen_baseline_run: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_brush_bowl_paper_baseline_v1
+  output: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_camera_table_infra_repair_v1

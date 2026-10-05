@@ -26,6 +26,11 @@ from video_to_spider.manifest import RunManifest, stage_cache_key
 from video_to_spider.schemas import SCHEMA_VERSION, validate_transforms
 
 from ..artifacts import artifact_record
+from ..scene.support_surface import (
+    build_taco_scene_alignment,
+    make_taco_support_contract,
+    resolve_support_surface,
+)
 
 
 @dataclass(frozen=True)
@@ -617,19 +622,25 @@ def freeze_taco_base_frame(
         }
     centers = np.stack([poses[role][start, :3, 3] for role in ("tool", "target")])
     object_pair_center = centers.mean(axis=0)
-    target_vertices = meshes["target"].vertices
-    T_world_target = poses["target"][start]
-    target_world = (
-        target_vertices @ T_world_target[:3, :3].T + T_world_target[:3, 3]
-    )
-    source_table_height = float(np.min(target_world[:, 2]))
     base = spec.data["base_frame"]
     offset = float(base["workspace_offset_m"])
     table_height = float(base["table_height_m"])
-    desired_center_xy = np.asarray([offset, 0.0], dtype=np.float64)
-    T_sim_world = np.eye(4, dtype=np.float64)
-    T_sim_world[:2, 3] = desired_center_xy - object_pair_center[:2]
-    T_sim_world[2, 3] = table_height - source_table_height
+    target_id = Path(members["target"]).stem.split("_", 1)[1]
+    support_contract = make_taco_support_contract(
+        target_id=target_id, simulator_offset_m=table_height,
+        frame_index=start, provenance="PROJECT_SAMPLE_CONTRACT",
+    )
+    support = resolve_support_surface(support_contract, {
+        "target": {"vertices": meshes["target"].vertices,
+                   "poses": poses["target"]},
+    })
+    desired_center = object_pair_center.copy()
+    desired_center[:2] = [offset, 0.0]
+    T_sim_world = build_taco_scene_alignment(
+        support,
+        source_scene_center=object_pair_center,
+        desired_scene_center_sim=desired_center,
+    )
     destination = Path(output_path).resolve()
     if destination.exists() and not overwrite:
         raise FileExistsError(destination)
@@ -641,7 +652,7 @@ def freeze_taco_base_frame(
         desired_object_pair_center_sim=np.asarray([
             offset, 0.0, object_pair_center[2] + T_sim_world[2, 3],
         ]),
-        source_table_height_world=np.asarray(source_table_height),
+        source_table_height_world=np.asarray(support.source.offset),
         table_height_sim=np.asarray(table_height),
         source_frame_index=np.asarray(start),
         sequence_id=np.asarray(sequence_id),
@@ -658,6 +669,8 @@ def freeze_taco_base_frame(
         "table_height_m": table_height,
         "axis_convention": "object-pair center at simulator x=+offset, y=0; +Z up",
         "axis_disclosure": "paper publishes magnitude/table height but not the complete axis convention",
+        "support_surface_contract": support_contract.to_dict(),
+        "resolved_support_surface": support.to_dict(),
         "source_frame_index": start,
         "uses_ground_truth": True,
         "ground_truth_role": "dataset_scene_calibration_only",

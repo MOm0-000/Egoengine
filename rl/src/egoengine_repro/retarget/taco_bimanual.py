@@ -23,6 +23,11 @@ from .mink import (_FrameDisplacementLimit, _StrictCollisionLimit,
                    _joint_velocity_limits)
 from .collision_audit import audit_intrahand_trajectory, explicit_hand_pairs, distances
 from .schema import validate_human_reference
+from ..scene.support_surface import (
+    build_taco_scene_alignment,
+    resolve_support_surface,
+    taco_project_sample_support_contract,
+)
 
 SIDES = ("right", "left")
 FINGERS = ("thumb", "index", "middle", "ring", "pinky")
@@ -175,12 +180,25 @@ def prepare(dev4: Path, scene: Path, sequence: str, episode: str, output: Path,
         raise ValueError(f"RGB has {count} frames/{fps} fps, GT has {n}; explicit alignment needed")
     inputs.append(video)
 
-    # Same fixed pseudo-base convention as the copied freeze_taco_base_frame.
-    target_world = meshes[1].vertices @ objects[0, 1, :3, :3].T + objects[0, 1, :3, 3]
-    transform = np.eye(4)
-    transform[:2, 3] = [0.6, 0.0] - objects[0, :, :2, 3].mean(axis=0)
-    transform[2, 3] = 0.72 - target_world[:, 2].min()
-    joints_sim = joints[:, [1, 0]] + transform[:3, 3]
+    # Resolve vertical support and world->sim alignment through the shared
+    # project contract.  The unpublished horizontal +X convention is retained
+    # unchanged and remains separately disclosed below.
+    target_id = sorted(object_dir.glob("target_*.npy"))[0].stem.split("_", 1)[1]
+    support_contract = taco_project_sample_support_contract(target_id=target_id)
+    support = resolve_support_surface(support_contract, {
+        "target": {"vertices": meshes[1].vertices, "poses": objects[:, 1]},
+    })
+    object_pair_center = objects[0, :, :3, 3].mean(axis=0)
+    desired_center = object_pair_center.copy()
+    desired_center[:2] = [0.6, 0.0]
+    transform = build_taco_scene_alignment(
+        support,
+        source_scene_center=object_pair_center,
+        desired_scene_center_sim=desired_center,
+    )
+    joints_sim = np.einsum(
+        "ij,thnj->thni", transform[:3, :3], joints[:, [1, 0]]
+    ) + transform[:3, 3]
     objects_sim = np.einsum("ij,tojk->toik", transform, objects)
 
     model = mujoco.MjModel.from_xml_path(str(scene))
@@ -237,7 +255,9 @@ def prepare(dev4: Path, scene: Path, sequence: str, episode: str, output: Path,
                   hand_pkl_joint_translation_max_error_m=translation_errors,
                   T_sim_world=transform.tolist(), depth_not_used=True,
                   coordinate_source="TACO world metric GT; fixed shared transform, not per-frame camera coordinates",
-                  axis_convention="object pair center at x=0.6,y=0; +Z up; target initial bottom at table z=0.72",
+                  axis_convention="object pair center at x=0.6,y=0; support plane from PROJECT_SAMPLE_CONTRACT",
+                  support_surface_contract=support_contract.to_dict(),
+                  resolved_support_surface=support.to_dict(),
                   orientation_source="MANO rotational FK for fingertips; unchanged landmark wrist targets; fixed model calibrations are not published author offsets",
                   fingertip_orientation_audit=orientation_audit,
                   table_alignment_independently_calibrated=False,
