@@ -13,7 +13,7 @@ import trimesh
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 from egoengine_repro.retarget.paper_audit import (
-    alignment_invariants, artifact, input_status, project_world, support_clearance,
+    alignment_invariants, artifact, input_status, support_clearance,
     transform_report, video_info,
 )
 
@@ -85,12 +85,16 @@ def audit_episode(dev4, task, episode, sequence, row, *, video_kinds=None):
     if len(set(counts[k] for k in ("hands", "tool", "target", "camera"))) != 1:
         raise ValueError(f"GT arrays require explicit alignment: {counts}")
     objects = np.stack(poses, axis=1)
-    image_size = [videos["rgb"]["width"], videos["rgb"]["height"]]
-    projections = dict(
-        released_as_T_camera_world=project_world(joints, camera, intrinsic, image_size),
-        inverse_diagnostic_only=project_world(joints, np.linalg.inv(camera), intrinsic, image_size))
-    camera_report = dict(transforms=transform_report(camera), hand_projection=projections,
-                         camera_modified=False, inverse_selected=False)
+    camera_report = dict(
+        transforms=transform_report(camera),
+        hand_projection=None,
+        camera_modified=False,
+        inverse_selected=False,
+        projection_status=(
+            "retired: TACO projection is exclusively audited by the pinned official "
+            "project_pose_to_egocentric_view.py path"
+        ),
+    )
 
     # Reproduce the EXISTING convention for audit, not a new calibration/reset.
     target_bottom = support_clearance(meshes[1].vertices, poses[1][:1], 0.0)[0]
@@ -114,8 +118,7 @@ def audit_episode(dev4, task, episode, sequence, row, *, video_kinds=None):
     hand_valid = bool(np.isfinite(joints).all()) and all(
         r["source_ids_contiguous_one_based"] and r["wrist_translation_error_m"] < 1e-5
         for r in hand_audit.values())
-    status = input_status(counts, rigid, hand_valid,
-                          projections["released_as_T_camera_world"]["positive_depth_fraction"] == 1)
+    status = input_status(counts, rigid, hand_valid, camera_front=None)
     return dict(task=task, episode=episode, sequence=sequence, counts=counts,
                 metadata={k: row[k] for k in ("action", "tool", "object", "n_frames", "fps", "calib_status")},
                 hands=hand_audit, objects=object_reports, videos=videos,

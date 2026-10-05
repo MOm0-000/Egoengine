@@ -70,5 +70,6 @@ RGB、相机参数、物体 GT 和 MANO GT。深度严格按
 
 - 桌面报告：`runs/taco_pour_raw_depth_table_audit_v2/report.json`
 - 表面配准报告：`runs/taco_pour_depth_registration_v1/report.json`
-- 桌面脚本：`scripts/audit_taco_pour_raw_depth_table.py`
-- 表面配准脚本：`scripts/audit_taco_pour_depth_registration.py`
+- 历史桌面脚本已从 active source 移除；其投影实现不得再用于 TACO 证据。
+- 历史表面配准脚本已从 active source 移除；新审计只允许固定的官方
+  `dataset_utils/project_pose_to_egocentric_view.py` / `Pyt3DWrapper` 路径。

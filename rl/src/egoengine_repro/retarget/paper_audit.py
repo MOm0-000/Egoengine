@@ -94,23 +94,6 @@ def transform_report(transforms: np.ndarray) -> dict:
                 rigid_within_float32_tolerance=max(orthogonal, determinant, homogeneous) < 1e-5)
 
 
-def project_world(points, extrinsics, intrinsic, image_size) -> dict:
-    points = np.asarray(points, dtype=float).reshape(len(extrinsics), -1, 3)
-    camera = np.einsum("tij,tkj->tki", extrinsics[:, :3, :3], points)
-    camera += extrinsics[:, None, :3, 3]
-    projected = camera @ intrinsic.T
-    valid = np.abs(projected[..., 2]) > 1e-12
-    uv = np.full(projected.shape[:-1] + (2,), np.nan)
-    np.divide(projected[..., :2], projected[..., 2:3], out=uv, where=valid[..., None])
-    front = camera[..., 2] > 0
-    width, height = image_size
-    inside = front & (uv[..., 0] >= 0) & (uv[..., 0] < width)
-    inside &= (uv[..., 1] >= 0) & (uv[..., 1] < height)
-    return dict(positive_depth_fraction=float(front.mean()),
-                front_and_in_image_fraction=float(inside.mean()),
-                camera_z_range_m=[float(camera[..., 2].min()), float(camera[..., 2].max())])
-
-
 def alignment_invariants(joints, objects, camera, transform) -> dict:
     """Check change-of-frame algebra, not accuracy of the original calibration."""
     aligned_objects = transform @ objects
@@ -136,13 +119,15 @@ def support_clearance(vertices, poses, table_height) -> np.ndarray:
                        for pose in poses])
 
 
-def input_status(counts, rigid_valid, hand_order_valid, camera_front) -> dict:
+def input_status(counts, rigid_valid, hand_order_valid, camera_front=None) -> dict:
     gt_counts = [counts[k] for k in ("hands", "tool", "target", "camera")]
     gt_ready = len(set(gt_counts)) == 1 and rigid_valid and hand_order_valid
     media_aligned = len(set(counts.values())) == 1
     return dict(gt_structurally_usable=bool(gt_ready),
                 media_frame_counts_match=media_aligned,
-                released_camera_front_check_passed=bool(camera_front),
+                released_camera_front_check_passed=(
+                    None if camera_front is None else bool(camera_front)
+                ),
                 frame_count_match_is_not_temporal_correspondence_proof=True,
                 physical_compatibility="unvalidated",
                 task_success="not_evaluated")

@@ -51,22 +51,6 @@ def prior_native_stricter_breakdown(rows: Iterable[dict[str, str]]) -> dict[str,
     return result
 
 
-def project_world_points(points: np.ndarray, intrinsic: np.ndarray,
-                         camera_from_world: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    """Project world points with the released T_camera_world convention."""
-    points = np.asarray(points, dtype=np.float64)
-    intrinsic = np.asarray(intrinsic, dtype=np.float64)
-    transform = np.asarray(camera_from_world, dtype=np.float64)
-    if points.ndim != 2 or points.shape[1] != 3:
-        raise ValueError("expected (N,3) world points")
-    camera = points @ transform[:3, :3].T + transform[:3, 3]
-    if np.any(camera[:, 2] <= 0):
-        raise ValueError("projection contains a point behind the released camera")
-    homogeneous = camera @ intrinsic.T
-    pixels = homogeneous[:, :2] / homogeneous[:, 2:3]
-    return pixels, camera[:, 2]
-
-
 def _angle(first: np.ndarray, second: np.ndarray) -> float:
     first = np.asarray(first, dtype=np.float64)
     second = np.asarray(second, dtype=np.float64)

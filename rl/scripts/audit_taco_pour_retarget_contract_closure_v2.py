@@ -40,7 +40,6 @@ from egoengine_repro.retarget.contract_closure import (
     final_classification,
     objective_semantic_unit_tests,
     prior_native_stricter_breakdown,
-    project_world_points,
 )
 from egoengine_repro.retarget.paper_audit import artifact, scene_mesh_artifacts, verify_artifacts
 from video_to_spider.rl.physics_contract import compile_mujoco_model
@@ -501,101 +500,34 @@ def objective_audit(output: Path, cfg: dict[str, Any], prior: Path) -> dict[str,
 
 
 def rgb_reconciliation(output: Path, cfg: dict[str, Any], paths: dict[str, Path]) -> dict[str, Any]:
-    human = arrays(paths["human_reference"])
-    raw = np.load(paths["hand_joints"])
-    extrinsics = np.load(paths["camera_extrinsics"])
-    intrinsic = np.loadtxt(paths["camera_intrinsics"])
-    transform = human["T_sim_world"]
-    transformed = raw[0] @ transform[:3, :3].T + transform[:3, 3]
-    mapping_error = np.asarray([
-        [np.max(np.abs(transformed[source] - human["joint_positions_sim"][0, target]))
-         for target in range(2)] for source in range(2)
-    ])
-    raw_left = int(np.argmin(mapping_error[:, int(np.flatnonzero(human["hand_order"] == "left")[0])]))
-    indices = [0, 13, 14, 15, 16, 17, 18, 19, 20]
-    names = cfg["rgb"]["required_landmarks"]
-    cap = cv2.VideoCapture(str(paths["rgb_video"]))
-    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    fps = float(cap.get(cv2.CAP_PROP_FPS))
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    requested = set(cfg["frames"]["rgb_reconciliation"])
-    projection_rows = []
-    overlay_files = []
-    frame = 0
-    while True:
-        ok, image = cap.read()
-        if not ok:
-            break
-        if frame in requested:
-            points = raw[frame, raw_left, indices].astype(np.float64)
-            pixels, depth = project_world_points(points, intrinsic, extrinsics[frame])
-            for name, pixel, z in zip(names, pixels, depth, strict=True):
-                projection_rows.append({
-                    "endpoint": frame, "rgb_frame_zero_based": frame,
-                    "timestamp_s": float(human["timestamps_s"][frame]),
-                    "landmark": name, "pixel_x": float(pixel[0]), "pixel_y": float(pixel[1]),
-                    "camera_depth_m": float(z),
-                    "inside_image": bool(0 <= pixel[0] < width and 0 <= pixel[1] < height),
-                    "independent_2d_ground_truth_available": False,
-                    "reprojection_error_px": "",
-                })
-            ring, pinky = pixels[1:5], pixels[5:9]
-            for chain, color in ((ring, (60, 40, 240)), (pinky, (40, 210, 80))):
-                for first, second in zip(chain[:-1], chain[1:], strict=True):
-                    cv2.line(image, tuple(np.rint(first).astype(int)), tuple(np.rint(second).astype(int)), color, 4)
-                for pixel in chain:
-                    cv2.circle(image, tuple(np.rint(pixel).astype(int)), 7, color, -1)
-            cv2.circle(image, tuple(np.rint(pixels[0]).astype(int)), 8, (255, 180, 20), -1)
-            cv2.putText(image, f"raw frame {frame} | t={human['timestamps_s'][frame]:.6f}s",
-                        (35, 55), cv2.FONT_HERSHEY_SIMPLEX, 1.1, (255, 255, 255), 3, cv2.LINE_AA)
-            path = output / "rgb_overlays" / f"endpoint_{frame:03d}_left_ring_pinky.png"
-            path.parent.mkdir(parents=True, exist_ok=True)
-            cv2.imwrite(str(path), image)
-            overlay_files.append(str(path.relative_to(output)))
-        frame += 1
-    cap.release()
-    write_csv(output / "rgb_projection_coordinates.csv", projection_rows)
-    input_audit = json.loads(paths["input_audit"].read_text())
-    exact_frame_contract = bool(
-        frame_count == len(raw) == len(extrinsics) == len(human["frame_indices"])
-        and np.array_equal(human["frame_indices"], np.arange(len(raw)))
-        and np.allclose(human["timestamps_s"], np.arange(len(raw)) / 30.0, atol=1e-12)
-        and abs(fps - 30.0) <= 1e-12
-    )
-    all_inside = all(bool(row["inside_image"]) for row in projection_rows)
     report = {
-        "classification": "RGB_3D_SOURCE_ALIGNMENT_UNRESOLVED",
-        "endpoint0_mapping": {
-            "rgb_frame_zero_based": 0, "timestamp_s": float(human["timestamps_s"][0]),
-            "human_3d_frame_zero_based": 0, "camera_frame_zero_based": 0,
-        },
-        "frame_contract_exact": exact_frame_contract,
-        "video": {"frames": frame_count, "fps": fps, "width": width, "height": height},
-        "array_counts": {"hand_3d": len(raw), "camera": len(extrinsics), "human_reference": len(human["frame_indices"])},
-        "released_camera_convention": cfg["rgb"]["projection_convention"],
-        "raw_hand_index_for_left": raw_left,
-        "raw_to_sim_hand_mapping_max_abs_error_m": float(mapping_error[raw_left, int(np.flatnonzero(human["hand_order"] == "left")[0])]),
-        "projected_landmarks_all_in_image": all_inside,
-        "overlay_files": overlay_files,
+        "classification": "SUPERSEDED_BY_TACO_OFFICIAL_PROJECTION_V2",
+        "endpoint0_mapping": {"rgb_frame_zero_based": 0, "timestamp_s": 0.0},
+        "frame_contract_exact": None,
+        "video": None,
+        "array_counts": None,
+        "released_camera_convention": None,
+        "raw_hand_index_for_left": None,
+        "raw_to_sim_hand_mapping_max_abs_error_m": None,
+        "projected_landmarks_all_in_image": None,
+        "overlay_files": [],
         "pixel_reprojection_error": None,
         "unresolved_reason": (
-            "The release contains no independent 2D hand landmarks, masks, or equivalent pixel labels. "
-            "A projected point cannot be compared to itself to manufacture a reprojection error."
+            "This historical closure runner no longer performs TACO projection. Use "
+            "audit_taco_source_alignment_official_projection_v2.py, which pins and calls the "
+            "official project_pose_to_egocentric_view.py implementation."
         ),
         "camera_modified": False,
         "manual_offset_applied": False,
-        "source_input_audit_camera_front_check": input_audit["status"]["released_camera_front_check_passed"],
+        "source_input_audit_camera_front_check": None,
     }
     lines = [
         "# Endpoint-0 source RGB reconciliation", "",
         f"- Classification: `{report['classification']}`.",
         f"- Endpoint 0 maps to RGB/3D/camera row 0 at `{report['endpoint0_mapping']['timestamp_s']:.6f} s`.",
-        f"- All RGB, hand-3D, camera, and reference streams have `{frame_count}` rows at `{fps:g} fps`.",
-        "- Released extrinsics are used exactly as `T_camera_world`; no inverse, offset, rotation, or frame shift was fitted.",
-        f"- All projected wrist/ring/pinky points for frames {sorted(requested)} lie inside the 1920×1080 image: `{all_inside}`.",
-        "- Pixel reprojection error is deliberately `null`: the release has no independent 2D landmark truth.",
-        "- Overlays are diagnostic evidence, not a numeric source-alignment certificate.",
+        "- This historical runner no longer evaluates camera projection.",
+        "- Use `audit_taco_source_alignment_official_projection_v2.py`; it pins and invokes "
+        "TACO's official PyTorch3D projection path without local camera math.",
     ]
     (output / "endpoint0_source_rgb_reconciliation.md").write_text("\n".join(lines) + "\n")
     write_json(output / "rgb_reconciliation.json", report)

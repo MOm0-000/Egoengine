@@ -1,0 +1,63 @@
+schema: taco_source_alignment_official_projection_v2
+status: ZERO_PHYSICS_SOURCE_ALIGNMENT_ONLY
+expected_baseline: 777bbb841adafb62b2f55579e352824cc56abf31
+
+authorization:
+  physics: false
+  control: false
+  retarget_candidate: false
+  planner: false
+  reinforcement_learning: false
+  promotion: false
+  chunk_commit: false
+
+official:
+  repository: https://github.com/leolyliu/TACO-Instructions.git
+  commit: b385ac1e89f35214bfbbef0d63e6df0ac8dac02e
+  checkout: /data_all/zzx/3.2RL/third_party/TACO-Instructions-b385ac1e89f35214bfbbef0d63e6df0ac8dac02e
+  entrypoint: dataset_utils/project_pose_to_egocentric_view.py
+  device: cuda:0
+
+sequence:
+  triplet: "(pour in some, bowl, plate)"
+  name: "20230927_017"
+  frame_count: 198
+  fps: 30
+  endpoint_zero_is_frame_zero: true
+  focus_frames: [0, 14, 15, 16, 17, 20]
+  allocentric_frames: [0, 15, 20]
+  timing_offsets: [-1, 0, 1]
+
+inputs:
+  root: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate
+  rgb_video: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/rgb/taco_pour_bowl_plate_20230927_017.mp4
+  depth_video: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/depth_original/taco_pour_bowl_plate_20230927_017.avi
+  egocentric_intrinsic: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/camera/Egocentric_Camera_Parameters/(pour in some, bowl, plate)/20230927_017/egocentric_intrinsic.txt
+  egocentric_extrinsic: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/camera/Egocentric_Camera_Parameters/(pour in some, bowl, plate)/20230927_017/egocentric_frame_extrinsic.npy
+  hand_pose_dir: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017
+  mano_model_dir: /data_all/zzx/3.2RL/data/taco_v1/hand_poses_v1/mano_v1_2/models
+  object_pose_dir: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/object_poses/Object_Poses/(pour in some, bowl, plate)/20230927_017
+  object_model_dir: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/object_models/object_models_released
+  allocentric_video_dir: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/allocentric/Marker_Removed_Allocentric_RGB_Videos/(pour in some, bowl, plate)/20230927_017
+  allocentric_calibration: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/allocentric/Allocentric_Camera_Parameters/(pour in some, bowl, plate)/20230927_017/calibration.json
+  segmentation_archive: /data_all/intern02/egoengine/video_to_spider/datasets/taco_v1/2D_Segmentation.zip
+  segmentation_prefix: 2D_Segmentation/(pour in some, bowl, plate)/20230927_017
+
+objects:
+  tool:
+    id: "022"
+    name: bowl
+  target:
+    id: "135"
+    name: plate
+
+analysis:
+  depth_scale: 4000.0
+  interior_erosion_px: 5
+  front_surface_tolerance_m: 0.001
+  minimum_valid_pixels: 64
+  minimum_valid_pixel_fraction_per_rigid_pair: 0.50
+  maximum_median_of_medians_absolute_error_mm: 20.0
+  allocentric_mask_rate_hz: 6
+
+output: /data_all/zzx/3.2RL/runs/taco_source_alignment_official_projection_v2

@@ -3,15 +3,12 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import numpy as np
-import pytest
 import yaml
 
 from egoengine_repro.retarget.contract_closure import (
     final_classification,
     objective_semantic_unit_tests,
     prior_native_stricter_breakdown,
-    project_world_points,
 )
 
 
@@ -59,17 +56,6 @@ def test_objective_components_pass_their_own_duties():
     assert {row["component"] for row in rows} == expected
     assert all(row["classification"] == "SEMANTICALLY_CERTIFIED" for row in rows)
     assert all(all(row["checks"].values()) for row in rows)
-
-
-def test_released_camera_projection_has_no_implicit_inverse_or_offset():
-    points = np.asarray([[0.0, 0.0, 2.0], [1.0, 0.0, 2.0]])
-    intrinsic = np.asarray([[100.0, 0.0, 50.0], [0.0, 100.0, 40.0], [0.0, 0.0, 1.0]])
-    transform = np.eye(4)
-    pixels, depth = project_world_points(points, intrinsic, transform)
-    assert np.allclose(pixels, [[50.0, 40.0], [100.0, 40.0]])
-    assert np.allclose(depth, [2.0, 2.0])
-    with pytest.raises(ValueError, match="behind"):
-        project_world_points([[0, 0, -1]], intrinsic, transform)
 
 
 def test_final_decision_fails_closed_and_never_hides_multiple_blockers():
