@@ -1,5 +1,33 @@
 # Active RL runtime
 
+## Next primary TACO sample
+
+New reproduction work is now directed at the exact EgoEngine showcase sample
+`(brush, brush, bowl)/20230927_027`.  The frozen selection contract is
+`configs/taco_primary_sample_brush_brush_bowl_v1.yaml`.
+
+This selection is a stronger source-data prior, not a claim that the local
+robot trajectory is already valid.  The released row is complete and marked
+`good`, and the exact sequence appears in both the website's visual-generation
+and action-generation showcases.  Locally, however, the current bimanual MINK
+result remains a kinematic candidate: its collision audit is not a strict pass
+and it has not been physics validated.  Brush training and chunk commit remain
+disabled until the sample-specific promotion gates in the selection contract
+pass.
+
+The first from-scratch paper-baseline rebuild is recorded in
+`runs/taco_brush_brush_bowl_paper_baseline_v1/`.  The released inputs and
+official 209-frame projection pass, the bowl cavity remains free, and the one
+authorized MINK candidate is kinematically feasible.  The run stops before
+physics with `BRUSH_INITIALIZATION_STATIC_BLOCKER`: endpoint 0 has native
+hand/brush material below the 0.72 m table plane.  Replay, MPC, RL and chunk
+commit were not run.
+
+The Pour runtime below is retained only to reproduce and inspect immutable
+historical evidence.  It is no longer the default target for new experiments,
+and its task-specific contracts must not be relabeled or reused as Brush
+contracts.
+
 The sole development entrypoint is:
 
 ```bash

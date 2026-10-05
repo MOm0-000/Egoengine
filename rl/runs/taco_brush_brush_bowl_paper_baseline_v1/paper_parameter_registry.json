@@ -1,0 +1,74 @@
+{
+  "AUTHOR_PUBLISHED": {
+    "action_abstraction": "floating Cartesian wrist/base plus XHand",
+    "action_smoothness_reward": false,
+    "brush_rotation_threshold_rad": 1.2,
+    "chunk_control_steps": 20,
+    "contact_bonus_semantics": "thumb plus at least one non-thumb finger on manipulated object",
+    "domain_randomization": false,
+    "evaluation": "object tracking only",
+    "human_mimic_reward": false,
+    "lifting_reward_semantics": "only when vertical lifting is needed",
+    "lookahead_chunks": 2,
+    "retarget_backend": "MINK",
+    "retarget_constraints": "joint limits and self collision",
+    "retarget_tasks": "five fingertip positions/orientations plus wrist orientation",
+    "rl_policy": "residual added to reference/base action; optimized with PPO",
+    "robot_base_scene_offset_magnitude_m": 0.6,
+    "solver_order": [
+      "Replay",
+      "MPC",
+      "RL"
+    ],
+    "table_height_m": 0.72,
+    "taco_base_alignment": "fixed-offset heuristic; no AprilTag"
+  },
+  "EXTERNAL_REFERENCE_ONLY": {
+    "explicitly_not_adopted": [
+      "Cp=0.10 m",
+      "contact bonus=2.0",
+      "non-author PPO settings",
+      "non-author residual bounds"
+    ],
+    "other_cross_references": [
+      "facebookresearch/spider@44717007...",
+      "unidex-ai/UniDex@97d869e0...",
+      "physercoe/egoengine-repro (non-official reproduction)"
+    ],
+    "rsl_rl_defaults": {
+      "clip": 0.2,
+      "desired_kl": 0.01,
+      "entropy": 0.01,
+      "epochs": 5,
+      "gae_lambda": 0.95,
+      "gamma": 0.99,
+      "learning_rate": 0.001,
+      "max_grad_norm": 1.0,
+      "minibatches": 4,
+      "schedule": "adaptive",
+      "value_loss_coefficient": 1.0
+    },
+    "rsl_rl_pin": "857de6165c5fd479726ec8ac5c9303a497766f30",
+    "status": "REFERENCE_ONLY_NOT_AUTHORIZED"
+  },
+  "UNPUBLISHED_OR_LOCAL": {
+    "brush_position_threshold_m": null,
+    "episode_length": null,
+    "mink_numeric_task_weights": null,
+    "mpc_iterations": null,
+    "mpc_samples": null,
+    "object_position_weight": null,
+    "object_rotation_weight": null,
+    "ppo_clip": null,
+    "ppo_entropy_coefficient": null,
+    "ppo_epochs": null,
+    "ppo_gae_lambda": null,
+    "ppo_gamma": null,
+    "ppo_learning_rate": null,
+    "ppo_minibatches": null,
+    "ppo_network": null,
+    "residual_noise_schedule": null,
+    "taco_contact_bonus": null
+  },
+  "schema": "taco_brush_paper_parameter_registry_v1"
+}

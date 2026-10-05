@@ -1,0 +1,89 @@
+schema: taco_brush_brush_bowl_paper_baseline_v1
+status: PRETRAINING_EVIDENCE_REBUILD
+paper_faithful: false
+
+sample:
+  triplet: "(brush, brush, bowl)"
+  sequence: "(brush, brush, bowl)/20230927_027"
+  episode: taco_brush_brush_bowl_20230927_027
+  expected_frames: 209
+  fps: 30.0
+  tool: {name: brush, id: "071"}
+  target: {name: bowl, id: "146"}
+
+authorization:
+  source_audit: true
+  visualization: true
+  mink_retarget_candidates: 1
+  static_collision_audit: true
+  cold_replay_count: 1
+  mpc: false
+  rl_training: false
+  domain_randomization: false
+  reference_promotion: false
+  chunk_commit: false
+
+paths:
+  data_root: /data_all/zzx/3.2RL/data/taco_v1/dev4
+  mano_model_dir: /data_all/zzx/3.2RL/data/taco_v1/hand_poses_v1/mano_v1_2/models
+  scene: /data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_brush_brush_bowl_20230927_027/scene_source_contacts_mass.xml
+  retarget_settings: /data_all/zzx/3.2RL/src/egoengine_repro/configs/paper_faithful_taco.yaml
+  paper_pdf: /data_all/zzx/3.2RL/paper/EgoEngine From Egocentric Human Videos to High-Fidelity Dexterous Robot Demonstrations.pdf
+  official_taco_checkout: /data_all/zzx/3.2RL/third_party/TACO-Instructions-b385ac1e89f35214bfbbef0d63e6df0ac8dac02e
+  official_projection_chumpy_dependency: /data_all/zzx/deximit_isolated/DexImit-Open-c5749809/third_party/chumpy
+  selection_contract: /data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_primary_sample_brush_brush_bowl_v1.yaml
+  active_runtime_document: /data_all/zzx/Egoengine_upload_3_2/rl/docs/ACTIVE_RUNTIME.md
+  output: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_brush_bowl_paper_baseline_v1
+
+pins:
+  official_taco: b385ac1e89f35214bfbbef0d63e6df0ac8dac02e
+  mink: ab45779fea46933832dee1c240f94103633347a1
+  spider: 4bd2756720ea95b9da126d98da3bf414fe964849
+  rsl_rl_reference_only: 857de6165c5fd479726ec8ac5c9303a497766f30
+
+paper_published:
+  chunk_control_steps: 20
+  lookahead_chunks: 2
+  solver_order: [Replay, MPC, RL]
+  taco_domain_randomization: false
+  taco_human_mimic_reward: false
+  taco_action_smoothness_reward: false
+  brush_rotation_threshold_rad: 1.2
+  evaluation_object_tracking_only: true
+  table_height_m: 0.72
+  robot_base_scene_offset_magnitude_m: 0.6
+
+paper_unpublished:
+  brush_position_threshold_m: null
+  object_position_weight: null
+  object_rotation_weight: null
+  taco_contact_bonus: null
+  residual_noise_schedule: null
+  episode_length: null
+  ppo_learning_rate: null
+  ppo_epochs: null
+  ppo_minibatches: null
+  ppo_clip: null
+  ppo_gamma: null
+  ppo_gae_lambda: null
+  ppo_entropy_coefficient: null
+  ppo_network: null
+  mpc_samples: null
+  mpc_iterations: null
+  mink_numeric_task_weights: null
+
+visualization:
+  official_device: cuda:0
+  overlay_fps: 30.0
+  periodic_keyframe_stride: 10
+
+static_gate:
+  material_penetration_tolerance_m: 0.00005
+  bowl_cavity_grid_spacing_m: 0.002
+  unknown_is_failure: true
+
+replay:
+  control_steps: 209
+  chunk_control_steps: 20
+  brush_rotation_threshold_rad: 1.2
+  brush_position_threshold_m: null

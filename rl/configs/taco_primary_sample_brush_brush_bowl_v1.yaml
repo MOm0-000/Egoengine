@@ -1,0 +1,76 @@
+schema: taco_primary_sample_selection_v1
+status: selected_pending_physics_promotion
+paper_faithful: false
+
+sample:
+  task: taco_brush_brush_bowl_20230927_027
+  sequence: "(brush, brush, bowl)/20230927_027"
+  episode: "20230927_027"
+  split: test_3
+  frames: 209
+  fps: 30.0
+  tool:
+    role: brush
+    object_id: "071"
+  target:
+    role: bowl
+    object_id: "146"
+
+selection_contract:
+  primary_for_new_work: true
+  supersedes_pour_as_next_reproduction_target: true
+  existing_pour_evidence_remains_immutable: true
+  new_pour_experiments_authorized: false
+  brush_training_authorized: false
+  brush_chunk_commit_authorized: false
+
+official_showcase_evidence:
+  project_page: https://egoengine.github.io/
+  exact_sequence_id_match: true
+  visual_generation_showcase: true
+  action_generation_showcase: true
+  interpretation: >-
+    Strong positive prior that the released sequence is compatible with the
+    authors' complete pipeline; not an independent proof of annotation error.
+
+released_data_evidence:
+  taco_info: /data_all/zzx/3.2RL/data/taco_v1/dev4/taco_info.csv
+  availability_label: good
+  rgb_available: true
+  depth_available: true
+  hand_pose_available: true
+  object_pose_available: true
+  segmentation_available: true
+  egocentric_camera_available: true
+  allocentric_camera_available: true
+  hand_object_frames: 209
+
+local_evidence:
+  rgb: /data_all/zzx/3.2RL/data/taco_v1/dev4/rgb/taco_brush_brush_bowl_20230927_027.mp4
+  input_audit: /data_all/zzx/3.2RL/runs/taco_brush_bimanual_gt_v4/input_audit.json
+  retarget_report: /data_all/zzx/3.2RL/runs/taco_brush_bimanual_gt_v4/retarget_report.json
+  collision_audit: /data_all/zzx/3.2RL/runs/taco_brush_bimanual_gt_v4/collision_audit.json
+  scene: /data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_brush_brush_bowl_20230927_027/scene_source_contacts_mass.xml
+  reference: /data_all/zzx/3.2RL/runs/taco_brush_bimanual_gt_v4/robot_reference.npz
+  input_status: GT_input_not_robot_demonstration
+  retarget_status: MINK_kinematic_candidate_not_physics_validated
+  collision_strict_gate_passed: false
+  physics_validated: false
+
+required_before_training:
+  - official-projection visual alignment audit over the full sequence
+  - task-specific retarget and action-semantics audit
+  - complete self/external/floor collision attribution
+  - deterministic initialization and passive-release gate
+  - replay feasibility under a brush-specific objective contract
+
+latest_paper_baseline:
+  run: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_brush_bowl_paper_baseline_v1
+  classification: BRUSH_INITIALIZATION_STATIC_BLOCKER
+  mink_candidates: 1
+  physics_steps: 0
+  replay_runs: 0
+  blocker: >-
+    Endpoint-0 native material penetrates the table: seven hand bodies and the
+    brush. The task contract forbids initialization post-correction, so Replay
+    was not authorized.
