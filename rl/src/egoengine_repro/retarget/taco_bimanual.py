@@ -22,8 +22,13 @@ from .mink import (_FrameDisplacementLimit, _StrictCollisionLimit,
                    _enable_planning_collision_masks, _explicit_collision_groups,
                    _joint_velocity_limits)
 from .collision_audit import audit_intrahand_trajectory, explicit_hand_pairs, distances
+from .support_plane_limit import (
+    NativeSupportPlaneLimit,
+    native_hand_visual_geom_ids,
+)
 from .schema import validate_human_reference
 from ..scene.support_surface import (
+    Plane,
     build_taco_scene_alignment,
     resolve_support_surface,
     taco_project_sample_support_contract,
@@ -363,12 +368,49 @@ def retarget(scene: Path, human_path: Path, settings: dict, output: Path) -> dic
     collision_pairs = tuple(sorted(constrained_pairs))
     velocity_map = _joint_velocity_limits(model, mujoco, settings["velocity_limits"])
     displacement = _FrameDisplacementLimit(model, mujoco, velocity_map, mink.Constraint)
+    native_support_settings = settings.get("native_support_plane_limit")
+    native_support_limit = None
+    native_support_tolerance = None
+    if native_support_settings is not None:
+        native_support_plane = Plane(
+            normal=native_support_settings["normal"],
+            offset=float(native_support_settings["offset_m"]),
+            frame=native_support_settings.get("frame", "simulator"),
+        )
+        native_support_tolerance = float(
+            native_support_settings["validation_tolerance_m"]
+        )
+        if (
+            not np.isfinite(native_support_tolerance)
+            or native_support_tolerance < 0.0
+        ):
+            raise ValueError("native support validation tolerance must be nonnegative")
+        native_support_limit = NativeSupportPlaneLimit(
+            model=model,
+            mujoco=mujoco,
+            plane=native_support_plane,
+            visual_geom_ids=native_hand_visual_geom_ids(model, mujoco),
+            minimum_clearance_m=float(
+                native_support_settings["minimum_clearance_m"]
+            ),
+            activation_distance_m=native_support_settings.get(
+                "activation_distance_m"
+            ),
+            gain=float(native_support_settings["gain"]),
+            depenetration_step_m=float(
+                native_support_settings["depenetration_step_m"]
+            ),
+            constraint_type=mink.Constraint,
+        )
     limits = [mink.ConfigurationLimit(model), *collisions, displacement]
+    if native_support_limit is not None:
+        limits.append(native_support_limit)
     locks = [mink.DofFreezingTask(model, list(range(36, 48)))]
     qpos = np.empty((n, model.nq))
     tip_errors = np.empty((n, 2, 5))
     wrist_errors = np.empty((n, 2))
     self_distances = np.empty(n)
+    native_support_distances = np.full(n, np.nan)
     worst_pairs = []
     previous = None
     substeps = int(settings["max_iterations_per_frame"])
@@ -384,6 +426,10 @@ def retarget(scene: Path, human_path: Path, settings: dict, output: Path) -> dic
         report = dict(status="failed_kinematic_candidate", failed_frame=frame,
                       reason=reason, scene=str(scene.resolve()), scene_sha256=sha256(scene),
                       self_min_distance_m=float(distances(model, config.data, pairs).min()),
+                      native_support_min_distance_m=(
+                          None if native_support_limit is None
+                          else float(native_support_limit.minimum_distance(config))
+                      ),
                       strict_gate_passed=False, rl_validation_completed=False)
         (output / "retarget_failure.json").write_text(json.dumps(report, indent=2) + "\n")
         raise RuntimeError(reason)
@@ -421,6 +467,14 @@ def retarget(scene: Path, human_path: Path, settings: dict, output: Path) -> dic
             config.integrate_inplace(velocity, dt / substeps)
         else:
             fail(frame, f"self-collision feasibility projection failed at frame {frame}")
+        if native_support_limit is not None:
+            native_support_distances[frame] = native_support_limit.minimum_distance(config)
+            if native_support_distances[frame] < -native_support_tolerance:
+                fail(
+                    frame,
+                    "native support-plane feasibility failed at frame "
+                    f"{frame}: {native_support_distances[frame]} m",
+                )
         qpos[frame] = config.q
         previous = config.q.copy()
         for h, side in enumerate(SIDES):
@@ -449,13 +503,24 @@ def retarget(scene: Path, human_path: Path, settings: dict, output: Path) -> dic
                               ranges[:, 1] - qpos[:, addresses]).min(axis=1)
     velocity_ratio = np.abs(np.diff(qpos[:, addresses], axis=0)) / (dt * speeds)
     output.mkdir(parents=True, exist_ok=True)
-    np.savez_compressed(output / "robot_reference.npz", qpos=qpos, qvel=qvel, ctrl=qpos[:, :36],
-                        frequency=1.0 / dt, frame_indices=human["frame_indices"],
-                        timestamps_s=human["timestamps_s"], hand_order=np.asarray(SIDES),
-                        object_roles=np.asarray(["tool", "target"]),
-                        fingertip_position_error_m=tip_errors, wrist_orientation_error_rad=wrist_errors,
-                        self_collision_distance_m=self_distances, joint_limit_min_margin=joint_margin,
-                        frame_velocity_max_ratio=velocity_ratio.max(axis=1))
+    reference = dict(
+        qpos=qpos,
+        qvel=qvel,
+        ctrl=qpos[:, :36],
+        frequency=1.0 / dt,
+        frame_indices=human["frame_indices"],
+        timestamps_s=human["timestamps_s"],
+        hand_order=np.asarray(SIDES),
+        object_roles=np.asarray(["tool", "target"]),
+        fingertip_position_error_m=tip_errors,
+        wrist_orientation_error_rad=wrist_errors,
+        self_collision_distance_m=self_distances,
+        joint_limit_min_margin=joint_margin,
+        frame_velocity_max_ratio=velocity_ratio.max(axis=1),
+    )
+    if native_support_limit is not None:
+        reference["native_support_min_distance_m"] = native_support_distances
+    np.savez_compressed(output / "robot_reference.npz", **reference)
     intrahand_path = output / "intrahand_collision_audit.json"
     intrahand_artifact = dict(
         scene=str(scene.resolve()), scene_sha256=sha256(scene),
@@ -507,6 +572,20 @@ def retarget(scene: Path, human_path: Path, settings: dict, output: Path) -> dic
                   collision_policy="explicit_runtime_pairs; source_intrahand_full_interhand_and_local_surface_guard",
                   self_collision_resolution="strict separating QP, fixed per-frame velocity envelope",
                   model_self_collision_passed=bool((self_distances >= -1e-6 - acceptance_slack).all()),
+                  native_support_plane_limit=(
+                      None if native_support_limit is None else {
+                          "extension": "LOCAL_ENVIRONMENT_NONPENETRATION_EXTENSION",
+                          "plane": native_support_limit.plane.to_dict(),
+                          "minimum_clearance_m": native_support_limit.minimum_clearance_m,
+                          "activation_distance_m": native_support_limit.activation_distance_m,
+                          "gain": native_support_limit.gain,
+                          "depenetration_step_m": native_support_limit.depenetration_step_m,
+                          "validation_tolerance_m": native_support_tolerance,
+                          "always_active": True,
+                          "native_geom_count": len(native_support_limit.geoms),
+                          "trajectory_minimum_distance_m": float(native_support_distances.min()),
+                      }
+                  ),
                   intrahand_collision_audit_path=str(intrahand_path.resolve()),
                   intrahand_collision_summary=dict(
                       pair_count=intrahand_audit["pair_count"],

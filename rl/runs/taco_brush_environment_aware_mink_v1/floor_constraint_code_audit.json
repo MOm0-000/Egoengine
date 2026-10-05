@@ -1,0 +1,19 @@
+{
+  "active_callsites": [
+    "rl/src/egoengine_repro/configs/taco_dynamics_legal_nominal.yaml:58:  floor_collision_avoidance: true",
+    "rl/src/egoengine_repro/retarget/mink.py:836:    floor_collision_avoidance = bool(settings.get(\"floor_collision_avoidance\", False))",
+    "rl/src/egoengine_repro/retarget/mink.py:1174:    if floor_collision_avoidance:",
+    "rl/src/egoengine_repro/retarget/mink.py:1688:    if floor_collision_avoidance:",
+    "rl/src/egoengine_repro/retarget/mink.py:1689:        output[\"floor_collision_avoidance\"] = np.asarray(True)",
+    "rl/src/egoengine_repro/retarget/mink.py:1747:            None if not floor_collision_avoidance",
+    "rl/src/egoengine_repro/retarget/mink.py:1750:        \"floor_collision_avoidance\": floor_collision_avoidance,"
+  ],
+  "active_use_count": 7,
+  "audit_self_references_excluded": 2,
+  "brush_candidate_pass_gate": "NATIVE_VISUAL_SUPPORT_PLANE_ONLY",
+  "decision": "RETAINED_ACTIVE_GENERIC_PROXY_ONLY",
+  "legacy_proxy_path": "floor_collision_avoidance",
+  "proxy_used_as_pass_gate": false,
+  "reason": "generic runtime configurations still reference the proxy path",
+  "schema": "taco_brush_floor_constraint_code_audit_v1"
+}

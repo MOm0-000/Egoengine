@@ -1,0 +1,62 @@
+schema: taco_brush_environment_aware_mink_v1
+baseline_commit: b1ae493c4d5b129dacbf2da935d9afaf47f6eb56
+paper_faithful: false
+extension: LOCAL_ENVIRONMENT_NONPENETRATION_EXTENSION
+
+sample:
+  triplet: "(brush, brush, bowl)"
+  sequence: "20230927_027"
+  frames: 209
+
+authorization:
+  new_retarget_candidates: 1
+  physics: false
+  replay: false
+  mpc: false
+  rl: false
+  promotion: false
+  chunk_commit: false
+
+environment_constraint:
+  type: native_visual_support_plane
+  support_surface_contract: active_project_contract
+  minimum_clearance_m: 0.0
+  activation_distance_m: null
+  gain: 0.85
+  gain_provenance: inherited_from_StrictCollisionLimit
+  depenetration_step_m: 0.002
+  depenetration_provenance: inherited_from_StrictCollisionLimit
+  validation_tolerance_m: 0.00005
+  modify_reference_targets: false
+  post_correction: false
+  use_collision_hand_proxy_as_pass_gate: false
+
+frozen_from_baseline:
+  mink_tasks: true
+  mink_task_weights: true
+  joint_limits: true
+  self_collision_contract: true
+  velocity_limits: true
+  frame_displacement_limits: true
+  solver: true
+  solver_tolerances: true
+  frame_order: true
+  object_locking: true
+
+hard_rules:
+  no_z_offset: true
+  no_weight_sweep: true
+  no_target_shift: true
+  no_second_candidate: true
+  independent_native_floor_audit_required: true
+
+cleanup:
+  trash_if_unreferenced:
+    - rl/runs/taco_brush_bimanual_gt_v3
+    - rl/runs/taco_brush_contact_geometry_candidate_v1
+
+paths:
+  baseline_run: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_brush_bowl_paper_baseline_v1
+  infra_run: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_camera_table_infra_repair_v1
+  scene: /data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_brush_brush_bowl_20230927_027/scene_source_contacts_mass.xml
+  output: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_environment_aware_mink_v1
