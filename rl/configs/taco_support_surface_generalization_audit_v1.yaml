@@ -1,0 +1,66 @@
+schema: taco_support_surface_generalization_audit_v1
+status: REGISTRATION_FIRST_ZERO_RUNTIME_AUDIT
+minimum_baseline: b79d40e7598f500b5895d6ade1354c1f31a946c0
+paper_faithful: false
+
+authorization:
+  mink_candidates: 0
+  physics: false
+  replay: false
+  mpc: false
+  reinforcement_learning: false
+  promotion: false
+  chunk_commit: false
+  active_support_contract_replacement: false
+
+official:
+  repository: https://github.com/leolyliu/TACO-Instructions.git
+  commit: b385ac1e89f35214bfbbef0d63e6df0ac8dac02e
+  checkout: /data_all/zzx/3.2RL/third_party/TACO-Instructions-b385ac1e89f35214bfbbef0d63e6df0ac8dac02e
+  entrypoint: dataset_utils/project_pose_to_egocentric_view.py
+  device: cuda:0
+
+sample:
+  triplet: "(brush, brush, bowl)"
+  sequence_name: "20230927_027"
+  expected_frames: 209
+  endpoint_zero_is_frame_zero: true
+  tool_id: "071"
+  target_id: "146"
+  focus_frames: [0, 42, 83, 125, 166, 208]
+  timing_offsets: [-1, 0, 1]
+
+inputs:
+  data_root: /data_all/zzx/3.2RL/data/taco_v1/dev4
+  rgb_video: /data_all/zzx/3.2RL/data/taco_v1/dev4/rgb/taco_brush_brush_bowl_20230927_027.mp4
+  depth_video: /data_all/zzx/3.2RL/data/taco_v1/dev4/depth_original/taco_brush_brush_bowl_20230927_027.avi
+  egocentric_intrinsic: /data_all/zzx/3.2RL/data/taco_v1/dev4/camera/Egocentric_Camera_Parameters/(brush, brush, bowl)/20230927_027/egocentric_intrinsic.txt
+  egocentric_extrinsic: /data_all/zzx/3.2RL/data/taco_v1/dev4/camera/Egocentric_Camera_Parameters/(brush, brush, bowl)/20230927_027/egocentric_frame_extrinsic.npy
+  hand_joints: /data_all/zzx/3.2RL/data/taco_v1/dev4/hand_poses/Hand_Poses/(brush, brush, bowl)/20230927_027/hand_joints.npy
+  object_pose_dir: /data_all/zzx/3.2RL/data/taco_v1/dev4/object_poses/Object_Poses/(brush, brush, bowl)/20230927_027
+  object_model_dir: /data_all/zzx/3.2RL/data/taco_v1/dev4/object_models/object_models_released
+  official_projection_manifest: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_brush_bowl_paper_baseline_v1/official_projection_manifest.json
+  official_projection_visual_review: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_brush_bowl_paper_baseline_v1/official_projection_visual_review.json
+  active_support_contract: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_camera_table_infra_repair_v1/support_surface_contract.yaml
+
+registration:
+  depth_width: 1920
+  depth_height: 1080
+  depth_dtype: uint16
+  depth_scale: 4000.0
+  interior_erosion_px: 5
+  front_surface_tolerance_m: 0.001
+  minimum_valid_pixels_per_pair: 64
+  minimum_valid_pixel_fraction_per_pair: 0.50
+  maximum_median_of_medians_absolute_error_mm: 20.0
+  threshold_provenance: REUSED_FROZEN_FROM_TACO_SOURCE_ALIGNMENT_OFFICIAL_PROJECTION_V2
+  timing_offsets_are_diagnostic_not_selected: true
+
+multi_sample:
+  root: /data_all/zzx/3.2RL/data/taco_v1/dev4
+  minimum_complete_samples: 4
+  selection: CURRENT_BRUSH_PLUS_STABLE_SHA256_ORDER
+  required_depth_resolution: [1920, 1080]
+  required_equal_frame_counts: true
+
+output: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_support_surface_generalization_audit_v1

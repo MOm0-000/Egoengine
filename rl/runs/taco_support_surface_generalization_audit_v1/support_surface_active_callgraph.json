@@ -1,0 +1,29 @@
+{
+  "active_chain": [
+    "build_taco_bimanual_scene.build",
+    "selected_objects(target id 146 for Brush)",
+    "taco_project_sample_support_contract(target_id=146)",
+    "make_taco_support_contract(source target frame0 minimum world +Z, simulator z=0.72)",
+    "scene XML floor geom + recorded SupportSurfaceContract"
+  ],
+  "answers": {
+    "active_call_site": "rl/scripts/build_taco_bimanual_scene.py:build",
+    "all_current_consumers_share_contract": true,
+    "deciding_function": "egoengine_repro.scene.support_surface.taco_project_sample_support_contract",
+    "other_implicit_active_table_source": false,
+    "target_id_flow": "selected Brush target id 146 -> contract factory entity_id",
+    "why_bowl_bottom": "Brush target 146 is the bowl; frame-0 minimum along world +Z is its bottom"
+  },
+  "classification": "ONE_SEMANTIC_SUPPORT_SOURCE_MULTIPLE_CONSISTENT_MATERIALIZATIONS",
+  "consumers": [
+    "camera/table infra audit resolves and checks the same target-bottom contract",
+    "environment-aware MINK v2 loads the persisted contract as a Plane",
+    "both retarget and static audits consume that same Plane"
+  ],
+  "duplicate_materializations": {
+    "count_as_independent_sources": false,
+    "reason": "builder, infra audit, and v2 are producer/checker/consumer stages for one semantic contract"
+  },
+  "generalization": "sample-specific target-bottom contract, not an observation-derived estimator",
+  "schema": "taco_support_surface_active_callgraph_v1"
+}

@@ -1,0 +1,38 @@
+{
+  "active_support_contract_changed": false,
+  "artifacts_intentionally_absent": [
+    "support_plane_estimates.jsonl",
+    "support_plane_consensus.json",
+    "brush_holdout_validation.json",
+    "multi_sample_support_summary.json"
+  ],
+  "classification": "TACO_RGBD_REGISTRATION_BLOCKER",
+  "collision_code_or_topology_changed": false,
+  "executed": {
+    "phase_a": true,
+    "phase_b": true,
+    "phase_c": true,
+    "phase_d_estimator": false,
+    "phase_e_holdout": false,
+    "phase_f_multi_sample_estimation": false
+  },
+  "next_step": "Resolve TACO RGB/depth/camera registration before estimating a support plane.",
+  "reason": "RGB and depth containers have conflicting timebases, and pinned official rigid-object projections do not satisfy the frozen raw-depth registration gate. The evidence is not adequate for background support-plane inference.",
+  "registration": {
+    "aggregate_median_absolute_error_mm": 14.827370643615723,
+    "aggregate_minimum_valid_pixel_fraction": 0.21274811294380766,
+    "target_median_absolute_error_mm": 20.94985580444336,
+    "target_minimum_valid_pixel_fraction": 0.21274811294380766
+  },
+  "runtime_counts": {
+    "chunk_commit": 0,
+    "mink_candidates": 0,
+    "mpc": 0,
+    "physics": 0,
+    "promotion": 0,
+    "replay": 0,
+    "rl": 0
+  },
+  "schema": "taco_support_surface_generalization_decision_v1",
+  "stop_phase": "PHASE_C_RGB_DEPTH_CAMERA_REGISTRATION"
+}

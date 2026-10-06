@@ -1,0 +1,147 @@
+{
+  "camera": {
+    "consumer": "pinned official TACO Pyt3DWrapper; no inverse/transpose search",
+    "extrinsic": "/data_all/zzx/3.2RL/data/taco_v1/dev4/camera/Egocentric_Camera_Parameters/(brush, brush, bowl)/20230927_027/egocentric_frame_extrinsic.npy",
+    "extrinsic_semantics": "world_to_camera",
+    "intrinsic": "/data_all/zzx/3.2RL/data/taco_v1/dev4/camera/Egocentric_Camera_Parameters/(brush, brush, bowl)/20230927_027/egocentric_intrinsic.txt"
+  },
+  "complete_sample_count": 3,
+  "depth": {
+    "dtype": "uint16",
+    "metres": "raw / 4000",
+    "resolution": [
+      1920,
+      1080
+    ],
+    "scale": 4000.0,
+    "source": "/data_all/zzx/3.2RL/data/taco_v1/dev4/depth_original/taco_brush_brush_bowl_20230927_027.avi"
+  },
+  "estimator_forbidden_inputs": [
+    "bowl/target bottom",
+    "brush/tool bottom",
+    "expected table height",
+    "current support offset",
+    "brush -1.311 mm residual"
+  ],
+  "foreground_exclusion_if_estimator_runs": {
+    "forbidden": [
+      "cyan table mask",
+      "sample rectangle",
+      "target bottom",
+      "tool bottom"
+    ],
+    "method": "pinned official hand/tool/target projection masks",
+    "status": "NOT_EXECUTED_UNTIL_REGISTRATION_PASS"
+  },
+  "future_phase_f_classification_if_reached": "INSUFFICIENT_MULTI_SAMPLE_VALIDATION_DATA",
+  "historical_table_audits": [
+    {
+      "artifact": "rl/runs/taco_pour_table_calibration_v1/report.json",
+      "why_not_adopted": "Original metric depth was unavailable; resized H264 depth was not metric, and the task-specific cyan/stereo mask lacked stable static matches."
+    },
+    {
+      "artifact": "rl/runs/taco_pour_table_calibration_v2/report.json",
+      "why_not_adopted": "Raw depth became available, but the cyan/stereo selection remained task-specific and the audit was superseded by the raw-depth check."
+    },
+    {
+      "artifact": "rl/runs/taco_pour_raw_depth_table_audit_v2/report.json",
+      "why_not_adopted": "It still used a task-specific cyan table mask and found centimetre-scale depth/GT/table disagreement; it explicitly made no scene change."
+    }
+  ],
+  "local_sample_inventory": [
+    {
+      "complete": true,
+      "counts": {
+        "depth": 209,
+        "extrinsic": 209,
+        "hand": 209,
+        "rgb": 209,
+        "target_146": 209,
+        "tool_071": 209
+      },
+      "depth_resolution": [
+        1920,
+        1080
+      ],
+      "required_paths_exist": true,
+      "rgb_resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "20230927_027",
+      "stable_selection_key": "985e8a5befc2ae44dd878fc00a6733b67969f6cc6acdad4170fc640461ba92b1",
+      "triplet": "(brush, brush, bowl)"
+    },
+    {
+      "complete": false,
+      "counts": {
+        "depth": 356,
+        "extrinsic": 361,
+        "hand": 361,
+        "rgb": 358,
+        "target_005": 361,
+        "tool_033": 361
+      },
+      "depth_resolution": [
+        1024,
+        768
+      ],
+      "required_paths_exist": true,
+      "rgb_resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "20230917_020",
+      "stable_selection_key": "59ae5e2b342d99344912a8e375d73e65919dc3ae5fd46b8e5981e489c40d823b",
+      "triplet": "(cut, spatula, plate)"
+    },
+    {
+      "complete": true,
+      "counts": {
+        "depth": 400,
+        "extrinsic": 400,
+        "hand": 400,
+        "rgb": 400,
+        "target_019": 400,
+        "tool_033": 400
+      },
+      "depth_resolution": [
+        1920,
+        1080
+      ],
+      "required_paths_exist": true,
+      "rgb_resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "20230926_004",
+      "stable_selection_key": "40a828a7bd74bd0a28067d77d15d581ea3107f18f017794e83292300cc11a0d2",
+      "triplet": "(skim off, spatula, plate)"
+    },
+    {
+      "complete": true,
+      "counts": {
+        "depth": 90,
+        "extrinsic": 90,
+        "hand": 90,
+        "rgb": 90,
+        "target_087": 90,
+        "tool_078": 90
+      },
+      "depth_resolution": [
+        1920,
+        1080
+      ],
+      "required_paths_exist": true,
+      "rgb_resolution": [
+        1920,
+        1080
+      ],
+      "sequence": "20231103_071",
+      "stable_selection_key": "fa10f230b3dd2b9ea98ae6f038de90b5a37bcd7c7d0d5dc95fd0e7629f650c9d",
+      "triplet": "(smear, eraser, box)"
+    }
+  ],
+  "minimum_complete_samples": 4,
+  "schema": "taco_support_surface_input_contract_v1"
+}
