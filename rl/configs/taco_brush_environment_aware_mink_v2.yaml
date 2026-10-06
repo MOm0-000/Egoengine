@@ -1,0 +1,77 @@
+schema: taco_brush_environment_aware_mink_v2
+baseline_commit: bdf5ed34df39e061e53b17786012cc2fc730f036
+
+sample:
+  triplet: "(brush, brush, bowl)"
+  sequence: "20230927_027"
+  frames: 209
+
+architecture_gate:
+  require_unique_active_callgraph: true
+  require_zero_unknown_active_settings: true
+  require_zero_unused_active_settings: true
+  require_runtime_derived_effective_contract: true
+  forbid_taco_bimanual_import_generic_mink_retargeter: true
+  forbid_retarget_action_config_dependency: true
+  require_refactor_equivalence_before_candidate: true
+  move_historical_dead_code_out_of_active_tree: true
+
+active_retarget_semantics:
+  backend: MINK_FIXED_NOT_CONFIGURABLE
+  wrist_position_task: ABSENT
+  posture_task: ABSENT
+  configuration_limit: REQUIRED
+  self_collision: REQUIRED
+  frame_displacement_limit: REQUIRED
+  source_dt: HUMAN_REFERENCE_TIMELINE
+
+frozen_native_support:
+  minimum_clearance_m: 0.0
+  validation_tolerance_m: 0.00005
+  gain: 0.85
+  depenetration_step_m: 0.002
+  activation_distance_m: null
+
+unified_feasibility:
+  max_iterations: 128
+  budget_provenance: INHERITED_EXISTING_FEASIBILITY_PROJECTION_BUDGET
+  check_self_collision: true
+  check_native_support: true
+  check_joint_limits: true
+  check_frame_displacement: true
+  solve_with_tracking_tasks: false
+  direct_qpos_edit: false
+
+authorization:
+  architecture_refactor: true
+  new_retarget_candidates: 1
+  physics: false
+  replay: false
+  mpc: false
+  rl: false
+  promotion: false
+  chunk_commit: false
+
+only_scientific_algorithm_change:
+  from: SELF_ONLY_FINAL_FEASIBILITY
+  to: UNIFIED_SELF_AND_NATIVE_SUPPORT_FEASIBILITY
+
+hard_rules:
+  no_tolerance_change: true
+  no_gain_change: true
+  no_depenetration_change: true
+  no_substep_change: true
+  no_task_weight_change: true
+  no_target_shift: true
+  no_z_offset: true
+  no_second_candidate: true
+  per_frame_full_native_acceptance_required: true
+
+paths:
+  retarget_settings: /data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_bimanual_mink_local_v1.yaml
+  scene: /data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_brush_brush_bowl_20230927_027/scene_source_contacts_mass.xml
+  human_reference: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_brush_bowl_paper_baseline_v1/human_reference.npz
+  paper_baseline: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_brush_bowl_paper_baseline_v1
+  v1_run: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_environment_aware_mink_v1
+  support_surface_contract: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_camera_table_infra_repair_v1/support_surface_contract.yaml
+  output: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_environment_aware_mink_v2

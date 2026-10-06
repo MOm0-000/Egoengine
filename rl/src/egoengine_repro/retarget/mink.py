@@ -22,6 +22,13 @@ from ..action.geometry import physical_object_geom_ids
 from ..config import ReproConfig
 from .schema import validate_human_reference, validate_robot_reference
 from .collision_audit import audit_intrahand_trajectory
+from .kinematic_limits import (
+    FrameDisplacementLimit,
+    StrictCollisionLimit,
+    enable_planning_collision_masks,
+    explicit_collision_groups,
+    joint_velocity_limits,
+)
 
 
 FINGER_NAMES = tuple(f"{finger}_tip" for finger in XHAND_FINGER_ORDER)
@@ -49,140 +56,6 @@ class _VelocityLock:
         return self.constraint_type(matrix, np.zeros(12, dtype=np.float64))
 
 
-class _FrameDisplacementLimit:
-    """Enforce one physical velocity envelope across all IK sub-iterations.
-
-    MINK's stock velocity limit applies to each solver call independently.
-    Contact/collision cleanup adds calls, so the aggregate frame-to-frame
-    displacement can silently exceed the declared joint speed.  This limit is
-    anchored to the previous accepted frame and cannot be reset by extra QPs.
-    """
-
-    def __init__(
-        self, model: Any, mujoco: Any, velocity_map: dict[str, float],
-        constraint_type: Any,
-    ) -> None:
-        dofs: list[int] = []
-        qpos_addresses: list[int] = []
-        speeds: list[float] = []
-        for joint in range(int(model.njnt)):
-            name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_JOINT, joint) or ""
-            if name not in velocity_map:
-                continue
-            if int(model.jnt_type[joint]) not in (
-                int(mujoco.mjtJoint.mjJNT_HINGE), int(mujoco.mjtJoint.mjJNT_SLIDE),
-            ):
-                raise ValueError(f"frame displacement limit requires a 1-DoF joint: {name}")
-            dofs.append(int(model.jnt_dofadr[joint]))
-            qpos_addresses.append(int(model.jnt_qposadr[joint]))
-            speeds.append(float(velocity_map[name]))
-        self.model = model
-        self.constraint_type = constraint_type
-        self.dofs = np.asarray(dofs, dtype=np.int64)
-        self.qpos_addresses = np.asarray(qpos_addresses, dtype=np.int64)
-        self.speeds = np.asarray(speeds, dtype=np.float64)
-        self.lower: np.ndarray | None = None
-        self.upper: np.ndarray | None = None
-
-    def set_previous(self, qpos: np.ndarray | None, dt: float | None = None) -> None:
-        if qpos is None:
-            self.lower = self.upper = None
-            return
-        if dt is None or not np.isfinite(dt) or dt <= 0.0:
-            raise ValueError("frame displacement limit requires a positive frame dt")
-        center = np.asarray(qpos, dtype=np.float64)[self.qpos_addresses]
-        radius = self.speeds * float(dt)
-        # QP feasibility tolerances can otherwise put the integrated endpoint
-        # a few 1e-7 beyond an exact bound.  Reserve at most one micrometre/
-        # microradian per source interval (and at most 1% of tiny intervals),
-        # so the independently recomputed physical velocity remains legal.
-        radius -= np.minimum(1.0e-6, 0.01 * radius)
-        self.lower = center - radius
-        self.upper = center + radius
-
-    def compute_qp_inequalities(self, configuration: Any, _dt: float) -> Any:
-        if self.lower is None or self.upper is None or not len(self.dofs):
-            return self.constraint_type()
-        projection = np.eye(self.model.nv, dtype=np.float64)[self.dofs]
-        current = np.asarray(configuration.q, dtype=np.float64)[self.qpos_addresses]
-        matrix = np.vstack([projection, -projection])
-        bounds = np.concatenate([self.upper - current, current - self.lower])
-        return self.constraint_type(matrix, bounds)
-
-
-class _StrictCollisionLimit:
-    """Turn MINK's one-sided collision brake into a feasibility constraint.
-
-    Upstream MINK stops *additional* motion when a pair already penetrates, but
-    it does not require the pair to leave penetration.  That behavior is fine
-    for a collision-free seed and wrong for per-frame object GT updates.  This
-    adapter keeps MINK's Jacobian and pair filtering, removes its ``/dt``
-    relaxation, and requires a bounded separating displacement while invalid.
-    """
-
-    def __init__(
-        self, inner: Any, mujoco: Any, *, minimum_distance: float,
-        depenetration_step: float, gain: float = 0.85,
-        deepest_invalid_only: bool = False,
-    ) -> None:
-        self.inner = inner
-        self.mujoco = mujoco
-        self.minimum_distance = float(minimum_distance)
-        self.depenetration_step = float(depenetration_step)
-        self.gain = float(gain)
-        self.deepest_invalid_only = bool(deepest_invalid_only)
-        self.geom_id_pairs = inner.geom_id_pairs
-        # Dynamic contact-timing limits disable this collision family on GT
-        # contact frames.  Static self/object/floor limits remain active.
-        self.active = True
-        self.enabled = False
-
-    def compute_qp_inequalities(self, configuration: Any, dt: float) -> Any:
-        constraint = self.inner.compute_qp_inequalities(configuration, dt)
-        if not self.active:
-            return type(constraint)()
-        if not self.enabled:
-            return constraint
-        if constraint.inactive or constraint.G is None or constraint.h is None:
-            return constraint
-        h = np.asarray(constraint.h, dtype=np.float64).copy()
-        matrix = np.asarray(constraint.G, dtype=np.float64).copy()
-        fromto = np.empty(6, dtype=np.float64)
-        detection = float(self.inner.collision_detection_distance)
-        invalid: list[tuple[float, int, np.ndarray]] = []
-        for index, (geom_a, geom_b) in enumerate(self.geom_id_pairs):
-            distance = float(self.mujoco.mj_geomDistance(
-                configuration.model, configuration.data,
-                geom_a, geom_b, detection, fromto,
-            ))
-            if abs(distance - detection) < 1e-12:
-                continue
-            residual = distance - self.minimum_distance
-            if residual >= 0.0:
-                h[index] = self.gain * residual
-            else:
-                # Keep all currently invalid pairs approximately stationary,
-                # then actively resolve only the deepest one.  Demanding a
-                # finite separating step from many opposing contact normals in
-                # the same linearized QP is commonly infeasible.
-                row = matrix[index].copy()
-                if self.deepest_invalid_only:
-                    matrix[index] = 0.0
-                    h[index] = np.inf
-                else:
-                    h[index] = 1e-5
-                invalid.append((residual, index, row))
-        if invalid:
-            residual, index, row = min(invalid, key=lambda item: item[0])
-            if self.deepest_invalid_only:
-                matrix[index] = row
-            h[index] = -min(
-                self.depenetration_step,
-                self.gain * (-residual),
-            )
-        return type(constraint)(matrix, h)
-
-
 def _wxyz(rotation: np.ndarray) -> np.ndarray:
     xyzw = Rotation.from_matrix(rotation).as_quat()
     return xyzw[[3, 0, 1, 2]]
@@ -190,82 +63,6 @@ def _wxyz(rotation: np.ndarray) -> np.ndarray:
 
 def _pose_to_se3(mink: Any, transform: np.ndarray) -> Any:
     return mink.SE3(wxyz_xyz=np.concatenate([_wxyz(transform[:3, :3]), transform[:3, 3]]))
-
-
-def _joint_velocity_limits(model: Any, mujoco: Any, settings: dict[str, float]) -> dict[str, float]:
-    try:
-        category_limits = {
-            key: float(settings[key])
-            for key in ("base_translation", "base_rotation", "finger")
-        }
-    except (KeyError, TypeError, ValueError) as error:
-        raise ValueError(
-            "velocity_limits must define numeric base_translation, base_rotation, and finger values"
-        ) from error
-    if any(not np.isfinite(value) or value <= 0.0 for value in category_limits.values()):
-        raise ValueError("all joint velocity limits must be finite and positive")
-    limits: dict[str, float] = {}
-    for joint_id in range(model.njnt):
-        name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_JOINT, joint_id)
-        if name is None or "object" in name or int(model.jnt_type[joint_id]) == int(mujoco.mjtJoint.mjJNT_FREE):
-            continue
-        if any(token in name for token in ("_tx_", "_ty_", "_tz_")):
-            limits[name] = category_limits["base_translation"]
-        elif any(token in name for token in ("roll", "pitch", "yaw")):
-            limits[name] = category_limits["base_rotation"]
-        else:
-            limits[name] = category_limits["finger"]
-    return limits
-
-
-def _enable_planning_collision_masks(
-    model: Any, hand_geom_ids: list[int], object_geom_ids: list[int],
-) -> None:
-    """Make specified geoms visible to MINK's collision-pair enumerator.
-
-    SPIDER's scene XML uses explicit MuJoCo ``<pair>`` elements for physical
-    hand--object contact and consequently leaves the default geom collision
-    masks at ``0/0``.  MuJoCo honors those explicit pairs at execution, but
-    MINK's *planning* collision limit deliberately filters on the default
-    masks, producing an empty constraint set.  This modifies only the private
-    MjModel used while solving IK; it neither changes XML nor rollout physics.
-    """
-    for geom_id in set(hand_geom_ids) | set(object_geom_ids):
-        model.geom_contype[geom_id] |= 1
-        model.geom_conaffinity[geom_id] |= 1
-
-
-def _explicit_collision_groups(
-    model: Any, mujoco: Any, *, hand_geom_ids: set[int],
-    object_geom_ids: set[int] | None = None,
-) -> list[tuple[list[str], list[str]]]:
-    """Return one MINK group per collision pair present in the runtime XML.
-
-    A broad ``hand x hand`` Cartesian product is not equivalent to SPIDER's
-    explicit runtime contact model: it includes deliberately overlapping
-    adjacent link shells and fixed bases.  Reusing ``model.pair_geom*`` keeps
-    planning and execution collision semantics identical.
-    """
-    groups: list[tuple[list[str], list[str]]] = []
-    object_ids = None if object_geom_ids is None else set(object_geom_ids)
-    for pair_id in range(int(model.npair)):
-        geom_a = int(model.pair_geom1[pair_id])
-        geom_b = int(model.pair_geom2[pair_id])
-        if object_ids is None:
-            selected = geom_a in hand_geom_ids and geom_b in hand_geom_ids
-        else:
-            selected = (
-                (geom_a in hand_geom_ids and geom_b in object_ids)
-                or (geom_b in hand_geom_ids and geom_a in object_ids)
-            )
-        if not selected:
-            continue
-        name_a = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_GEOM, geom_a)
-        name_b = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_GEOM, geom_b)
-        if name_a is None or name_b is None:
-            raise ValueError("explicit collision pair contains an unnamed geom")
-        groups.append(([name_a], [name_b]))
-    return groups
 
 
 def _shrink_finger_joint_ranges(
@@ -1030,22 +827,22 @@ def retarget_with_mink(
     limits: list[Any] = []
     if settings.get("joint_position_limits", True):
         limits.append(mink.ConfigurationLimit(model))
-    velocity_map = _joint_velocity_limits(model, mujoco, settings["velocity_limits"])
+    velocity_map = joint_velocity_limits(model, mujoco, settings["velocity_limits"])
     velocity_limit = None
     frame_displacement_limit = None
     if settings.get("joint_velocity_limits", True):
         velocity_limit = mink.VelocityLimit(model, velocity_map)
         limits.append(velocity_limit)
         if settings.get("frame_displacement_limits", False):
-            frame_displacement_limit = _FrameDisplacementLimit(
+            frame_displacement_limit = FrameDisplacementLimit(
                 model, mujoco, velocity_map, mink.limits.Constraint,
             )
             limits.append(frame_displacement_limit)
     collision_limit = None
     object_collision_limit = None
-    precontact_limits: dict[int, _StrictCollisionLimit] = {}
+    precontact_limits: dict[int, StrictCollisionLimit] = {}
     floor_collision_limit = None
-    strict_collision_limits: list[_StrictCollisionLimit] = []
+    strict_collision_limits: list[StrictCollisionLimit] = []
     object_collision_pairs: list[tuple[int, int]] = []
     floor_collision_pairs: list[tuple[int, int]] = []
     collision_geoms = [
@@ -1063,10 +860,10 @@ def retarget_with_mink(
     # enabled *before* either collision limit is constructed.  The old order
     # silently created an empty self-collision constraint.
     if settings.get("self_collision", True) and hand_geom_ids:
-        _enable_planning_collision_masks(model, hand_geom_ids, [])
+        enable_planning_collision_masks(model, hand_geom_ids, [])
     if settings.get("self_collision", True):
         if collision_geoms:
-            self_collision_groups = _explicit_collision_groups(
+            self_collision_groups = explicit_collision_groups(
                 model, mujoco, hand_geom_ids=set(hand_geom_ids),
             )
             if not self_collision_groups:
@@ -1084,7 +881,7 @@ def retarget_with_mink(
                     "self-collision was requested but MINK enumerated zero hand pairs"
                 )
             if strict_collision_resolution:
-                collision_limit = _StrictCollisionLimit(
+                collision_limit = StrictCollisionLimit(
                     collision_limit, mujoco,
                     minimum_distance=collision_minimum,
                     depenetration_step=depenetration_step,
@@ -1107,13 +904,13 @@ def retarget_with_mink(
         ]
         if not collision_geoms or not object_collision_geoms:
             raise ValueError("object_collision_avoidance requires hand and object collision geoms")
-        _enable_planning_collision_masks(model, hand_geom_ids, [
+        enable_planning_collision_masks(model, hand_geom_ids, [
             model.geom(name).id for name in object_collision_geoms
         ])
         object_geom_id_set = {
             model.geom(name).id for name in object_collision_geoms
         }
-        object_collision_groups = _explicit_collision_groups(
+        object_collision_groups = explicit_collision_groups(
             model, mujoco, hand_geom_ids=set(hand_geom_ids),
             object_geom_ids=object_geom_id_set,
         )
@@ -1129,7 +926,7 @@ def retarget_with_mink(
         if not object_collision_pairs:
             raise ValueError("no hand-object collision pairs passed MuJoCo filtering")
         if strict_collision_resolution:
-            object_collision_limit = _StrictCollisionLimit(
+            object_collision_limit = StrictCollisionLimit(
                 object_collision_limit, mujoco,
                 minimum_distance=object_collision_clearance,
                 depenetration_step=depenetration_step,
@@ -1150,7 +947,7 @@ def retarget_with_mink(
                         ) or ""
                     )
                 }
-                groups = _explicit_collision_groups(
+                groups = explicit_collision_groups(
                     model, mujoco, hand_geom_ids=finger_geom_ids,
                     object_geom_ids=object_geom_id_set,
                 )
@@ -1163,7 +960,7 @@ def retarget_with_mink(
                     minimum_distance_from_collisions=precontact_clearance,
                     collision_detection_distance=object_collision_detection,
                 )
-                strict = _StrictCollisionLimit(
+                strict = StrictCollisionLimit(
                     inner, mujoco,
                     minimum_distance=precontact_clearance,
                     depenetration_step=depenetration_step,
@@ -1180,8 +977,8 @@ def retarget_with_mink(
         }
         if not floor_geom_ids:
             raise ValueError("floor collision avoidance requested but no floor geom exists")
-        _enable_planning_collision_masks(model, hand_geom_ids, list(floor_geom_ids))
-        floor_collision_groups = _explicit_collision_groups(
+        enable_planning_collision_masks(model, hand_geom_ids, list(floor_geom_ids))
+        floor_collision_groups = explicit_collision_groups(
             model, mujoco, hand_geom_ids=set(hand_geom_ids),
             object_geom_ids=floor_geom_ids,
         )
@@ -1204,7 +1001,7 @@ def retarget_with_mink(
         if not floor_collision_pairs:
             raise ValueError("no hand-floor collision pairs passed MuJoCo filtering")
         if strict_collision_resolution:
-            floor_collision_limit = _StrictCollisionLimit(
+            floor_collision_limit = StrictCollisionLimit(
                 floor_collision_limit, mujoco,
                 minimum_distance=floor_collision_clearance,
                 depenetration_step=depenetration_step,

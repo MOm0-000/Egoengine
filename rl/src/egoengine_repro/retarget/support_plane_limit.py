@@ -214,6 +214,26 @@ class NativeSupportPlaneLimit:
     def minimum_distance(self, configuration: Any) -> float:
         return min(row["distance_m"] for row in self.rows(configuration))
 
+    def full_mesh_rows(self, data: Any) -> list[dict[str, Any]]:
+        """Independent material-mesh support values for acceptance gates."""
+        result: list[dict[str, Any]] = []
+        for geom in self.geoms:
+            vertices = geom_world_vertices(data, geom, full=True)
+            distances = np.asarray(
+                self.plane.signed_distance(vertices), dtype=np.float64
+            )
+            index = int(np.argmin(distances))
+            result.append({
+                "geom": geom,
+                "vertex_index": index,
+                "point_world": vertices[index].copy(),
+                "distance_m": float(distances[index]),
+            })
+        return result
+
+    def full_mesh_minimum(self, data: Any) -> float:
+        return min(row["distance_m"] for row in self.full_mesh_rows(data))
+
     def compute_qp_inequalities(self, configuration: Any, _dt: float) -> Any:
         matrices: list[np.ndarray] = []
         bounds: list[float] = []

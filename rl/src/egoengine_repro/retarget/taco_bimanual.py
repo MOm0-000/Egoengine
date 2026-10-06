@@ -1,601 +1,529 @@
-"""TACO world-GT ingestion and two-hand MINK candidates, without physics claims."""
+"""Minimal active TACO bimanual MINK retarget runtime."""
 
 from __future__ import annotations
 
 import hashlib
 import json
-import pickle
 from pathlib import Path
+from typing import Any
 
-import cv2
 import mink
 import mujoco
 import numpy as np
-import trimesh
 from scipy.spatial.transform import Rotation
 
-from ..evaluation.taco_surface import (
-    MANO21_SOURCE, MANO_TIP_VERTICES, _load_model_data,
-    load_taco_mano_sequence, reconstruct_taco_mano,
-)
-from .mink import (_FrameDisplacementLimit, _StrictCollisionLimit,
-                   _enable_planning_collision_masks, _explicit_collision_groups,
-                   _joint_velocity_limits)
-from .collision_audit import audit_intrahand_trajectory, explicit_hand_pairs, distances
-from .support_plane_limit import (
-    NativeSupportPlaneLimit,
-    native_hand_visual_geom_ids,
+from .collision_audit import audit_intrahand_trajectory, distances, explicit_hand_pairs
+from .kinematic_limits import (
+    FrameDisplacementLimit,
+    StrictCollisionLimit,
+    enable_planning_collision_masks,
+    explicit_collision_groups,
+    joint_velocity_limits,
 )
 from .schema import validate_human_reference
-from ..scene.support_surface import (
-    Plane,
-    build_taco_scene_alignment,
-    resolve_support_surface,
-    taco_project_sample_support_contract,
+from .support_plane_limit import NativeSupportPlaneLimit, native_hand_visual_geom_ids
+from .taco_bimanual_settings import (
+    SELF_ONLY_FINAL_FEASIBILITY,
+    UNIFIED_SELF_AND_NATIVE_SUPPORT_FEASIBILITY,
+    TacoBimanualRetargetSettings,
 )
+from ..scene.support_surface import Plane
+
 
 SIDES = ("right", "left")
 FINGERS = ("thumb", "index", "middle", "ring", "pinky")
-TIPS = (4, 8, 12, 16, 20)
-DIPS = (3, 7, 11, 15, 19)
-MANO_DISTALS = (15, 3, 6, 12, 9)
 
 
 def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def geometric_frame(normal: np.ndarray, direction: np.ndarray) -> np.ndarray:
-    z = np.array(direction, dtype=np.float64, copy=True)
-    if np.linalg.norm(z) < 1e-8:
-        raise ValueError("degenerate distal bone direction")
-    z /= np.linalg.norm(z)
-    x = np.array(normal, dtype=np.float64, copy=True)
-    x -= np.dot(x, z) * z
-    if np.linalg.norm(x) < 1e-8:
-        raise ValueError("degenerate palm normal")
-    x /= np.linalg.norm(x)
-    return np.column_stack([x, np.cross(z, x), z])
-
-
-def mano_fingertip_frames(pose_path: Path, shape_path: Path, model_path: Path,
-                         side: str, expected_joints: np.ndarray) -> tuple[np.ndarray, dict]:
-    """Transport fixed neutral fingertip axes with the released MANO rotations."""
-    import smplx
-    import torch
-    from smplx.utils import Struct
-    from smplx.lbs import batch_rigid_transform
-
-    poses, _, _, keys = load_taco_mano_sequence(pose_path, shape_path)
-    _, recovered, _, _, reconstructed_keys = reconstruct_taco_mano(
-        pose_path, shape_path, model_path, side=side)
-    expected = np.asarray(expected_joints, dtype=float)
-    if expected.shape != recovered.shape or not np.isfinite(expected).all():
-        raise ValueError("released joint reference must match reconstructed MANO shape")
-    if keys != reconstructed_keys or [int(k) for k in keys] != list(range(1, len(expected) + 1)):
-        raise ValueError("MANO pose keys do not match released joint rows")
-    error = float(np.linalg.norm(recovered - expected, axis=-1).max())
-    if error > 1e-6:
-        raise ValueError(f"MANO rotations do not reproduce released joint GT: {error} m")
-
-    # Calibration is a model convention: zero betas and zero joint rotations,
-    # never the episode's first pose or a per-frame palm-normal projection.
-    layer = smplx.MANO("unused", data_struct=Struct(**_load_model_data(model_path)),
-                       is_rhand=side == "right", use_pca=False, flat_hand_mean=True,
-                       create_transl=False)
-    with torch.no_grad():
-        neutral = layer(global_orient=torch.zeros(1, 3), hand_pose=torch.zeros(1, 45),
-                        betas=torch.zeros(1, 10))
-    joints = torch.cat([neutral.joints, neutral.vertices[:, MANO_TIP_VERTICES[side]]], 1)
-    points = joints[0, MANO21_SOURCE].numpy().astype(float)
-    normal = np.cross(points[5] - points[0], points[17] - points[0])
-    if side == "left":
-        normal = -normal
-    calibration = np.stack([geometric_frame(normal, points[t] - points[d]) for t, d in zip(TIPS, DIPS)])
-    rotations = Rotation.from_rotvec(poses.astype(float).reshape(-1, 3)).as_matrix().reshape(-1, 16, 3, 3)
-    with torch.no_grad():
-        _, transforms = batch_rigid_transform(
-            torch.from_numpy(rotations), torch.zeros(len(poses), 16, 3, dtype=torch.float64), layer.parents)
-    global_distal = transforms.numpy()[:, MANO_DISTALS, :3, :3]
-    frames = global_distal @ calibration
-    directions = expected[:, TIPS] - expected[:, DIPS]
-    directions /= np.linalg.norm(directions, axis=-1, keepdims=True)
-    direction_error = np.rad2deg(np.arccos(np.clip((directions * frames[..., 2]).sum(-1), -1, 1)))
-    step = Rotation.from_matrix((frames[:-1].swapaxes(-1, -2) @ frames[1:]).reshape(-1, 3, 3)).magnitude()
-    report = dict(source="released_MANO_local_rotations_via_smplx_rigid_FK",
-        neutral_calibration="MANO_v1.2_zero_betas_flat_mean_identity_pose; palm/distal_axes",
-        calibration_fitted_to_episode=False, per_frame_palm_projection=False,
-        distal_joint_indices=list(MANO_DISTALS), neutral_distal_frames=calibration.tolist(),
-        reconstructed_joint_max_error_m=error,
-        distal_axis_vs_observed_bone_p95_deg=np.percentile(direction_error, 95, axis=0).tolist(),
-        distal_axis_vs_observed_bone_max_deg=direction_error.max(axis=0).tolist(),
-        max_frame_rotation_step_deg=float(np.rad2deg(step).max()),
-        source_frame_keys=list(keys),
-        inputs=[dict(path=str(p.resolve()), sha256=sha256(p)) for p in (pose_path, shape_path, model_path)])
-    return frames, report
-
-
 def pose7(transform: np.ndarray) -> np.ndarray:
-    q = Rotation.from_matrix(transform[:3, :3]).as_quat()
-    return np.r_[transform[:3, 3], q[[3, 0, 1, 2]]]
+    quaternion = Rotation.from_matrix(transform[:3, :3]).as_quat()
+    return np.r_[transform[:3, 3], quaternion[[3, 0, 1, 2]]]
 
 
-def differentiate(model: mujoco.MjModel, qpos: np.ndarray, dt: float) -> np.ndarray:
-    if len(qpos) < 2 or dt <= 0:
+def differentiate(
+    model: mujoco.MjModel, qpos: np.ndarray, dt: float,
+) -> np.ndarray:
+    if len(qpos) < 2 or dt <= 0.0:
         raise ValueError("differentiation requires at least two frames and positive dt")
-    qvel = np.empty((len(qpos), model.nv))
-    for i in range(len(qpos)):
-        first, last = max(0, i - 1), min(len(qpos) - 1, i + 1)
-        mujoco.mj_differentiatePos(model, qvel[i], (last - first) * dt, qpos[first], qpos[last])
+    qvel = np.empty((len(qpos), model.nv), dtype=np.float64)
+    for index in range(len(qpos)):
+        first, last = max(0, index - 1), min(len(qpos) - 1, index + 1)
+        mujoco.mj_differentiatePos(
+            model, qvel[index], (last - first) * dt,
+            qpos[first], qpos[last],
+        )
     return qvel
 
 
-def prepare(dev4: Path, scene: Path, sequence: str, episode: str, output: Path,
-            *, mano_model_dir: Path) -> Path:
-    """Preserve source rows; fail on mismatched modalities instead of truncating."""
-    if output.exists():
-        raise FileExistsError(output)
-    hands_dir = dev4 / "hand_poses/Hand_Poses" / sequence
-    object_dir = dev4 / "object_poses/Object_Poses" / sequence
-    joints_path = hands_dir / "hand_joints.npy"
-    joints = np.load(joints_path, allow_pickle=False).astype(np.float64)
-    if joints.ndim != 4 or joints.shape[1:] != (2, 21, 3) or not np.isfinite(joints).all():
-        raise ValueError("TACO joints must be finite (T,2,21,3), left then right")
-    n = len(joints)
-    inputs = [joints_path, scene]
-    translation_errors = {}
-    for hand_index, side in enumerate(("left", "right")):
-        path = hands_dir / f"{side}_hand.pkl"
-        with path.open("rb") as stream:
-            data = pickle.load(stream)
-        keys = sorted(data, key=int)
-        if [int(key) for key in keys] != list(range(1, n + 1)):
-            raise ValueError(f"{side} PKL source frame IDs do not match joint rows")
-        translation = np.stack([np.asarray(data[key]["hand_trans"]) for key in keys])
-        error = float(np.linalg.norm(translation - joints[:, hand_index, 0], axis=-1).max())
-        if error > 1e-5:
-            raise ValueError(f"{side} hand order/world frame disagreement: {error} m")
-        translation_errors[side] = error
-        inputs.append(path)
-
-    objects, meshes = [], []
-    for role in ("tool", "target"):
-        paths = sorted(object_dir.glob(f"{role}_*.npy"))
-        if len(paths) != 1:
-            raise ValueError(f"expected exactly one {role} GT file")
-        poses = np.load(paths[0], allow_pickle=False).astype(np.float64)
-        if poses.shape != (n, 4, 4):
-            raise ValueError(f"{role} frame count differs from hand GT")
-        objects.append(poses)
-        object_id = paths[0].stem.split("_", 1)[1]
-        mesh_path = dev4 / "object_models/object_models_released" / f"{object_id}_cm.obj"
-        mesh = trimesh.load_mesh(mesh_path, process=False)
-        mesh.apply_scale(0.01)
-        meshes.append(mesh)
-        inputs.extend([paths[0], mesh_path])
-    objects = np.stack(objects, axis=1)
-    video = dev4 / "rgb" / f"{episode}.mp4"
-    cap = cv2.VideoCapture(str(video))
-    fps = cap.get(cv2.CAP_PROP_FPS)
-    count = 0
-    while cap.grab():
-        count += 1
-    cap.release()
-    if count != n or not np.isclose(fps, 30.0):
-        raise ValueError(f"RGB has {count} frames/{fps} fps, GT has {n}; explicit alignment needed")
-    inputs.append(video)
-
-    # Resolve vertical support and world->sim alignment through the shared
-    # project contract.  The unpublished horizontal +X convention is retained
-    # unchanged and remains separately disclosed below.
-    target_id = sorted(object_dir.glob("target_*.npy"))[0].stem.split("_", 1)[1]
-    support_contract = taco_project_sample_support_contract(target_id=target_id)
-    support = resolve_support_surface(support_contract, {
-        "target": {"vertices": meshes[1].vertices, "poses": objects[:, 1]},
-    })
-    object_pair_center = objects[0, :, :3, 3].mean(axis=0)
-    desired_center = object_pair_center.copy()
-    desired_center[:2] = [0.6, 0.0]
-    transform = build_taco_scene_alignment(
-        support,
-        source_scene_center=object_pair_center,
-        desired_scene_center_sim=desired_center,
-    )
-    joints_sim = np.einsum(
-        "ij,thnj->thni", transform[:3, :3], joints[:, [1, 0]]
-    ) + transform[:3, 3]
-    objects_sim = np.einsum("ij,tojk->toik", transform, objects)
-
-    model = mujoco.MjModel.from_xml_path(str(scene))
-    zero = mujoco.MjData(model)
-    mujoco.mj_forward(model, zero)
-    wrists = np.tile(np.eye(4), (n, 2, 1, 1))
-    tips = np.tile(np.eye(4), (n, 2, 5, 1, 1))
-    orientation_audit = {}
-    for h, side in enumerate(SIDES):
-        shape_path = hands_dir / f"{side}_hand_shape.pkl"
-        model_path = mano_model_dir / f"MANO_{side.upper()}.pkl"
-        distal_frames, orientation_audit[side] = mano_fingertip_frames(
-            hands_dir / f"{side}_hand.pkl", shape_path, model_path, side, joints[:, 1 - h])
-        inputs.extend([shape_path, model_path])
-        palm = model.site(f"{side}_palm").id
-        root = model.body(f"{side}_hand_link").id
-        middle = model.body(f"{side}_hand_mid_link1").id
-        robot_frame = geometric_frame(zero.site_xmat[palm].reshape(3, 3)[:, 0],
-                                      zero.xpos[middle] - zero.xpos[root])
-        wrist_offset = robot_frame.T @ zero.xmat[root].reshape(3, 3)
-        local_tip_frames = []
-        for finger in FINGERS:
-            site = model.site(f"{side}_{finger}_tip").id
-            distal = zero.site_xpos[site] - zero.xpos[model.site_bodyid[site]]
-            local_tip_frames.append(zero.site_xmat[site].reshape(3, 3).T @
-                                    geometric_frame(robot_frame[:, 0], distal))
-        for frame in range(n):
-            points = joints_sim[frame, h]
-            normal = np.cross(points[5] - points[0], points[17] - points[0])
-            if side == "left":
-                normal = -normal
-            human_frame = geometric_frame(normal, points[9] - points[0])
-            wrists[frame, h, :3, :3] = human_frame @ wrist_offset
-            wrists[frame, h, :3, 3] = points[0]
-            for k, tip in enumerate(TIPS):
-                tips[frame, h, k, :3, :3] = transform[:3, :3] @ distal_frames[frame, k] @ local_tip_frames[k].T
-                tips[frame, h, k, :3, 3] = points[tip]
-    arrays = dict(frame_indices=np.arange(n), timestamps_s=np.arange(n) / fps,
-                  hand_order=np.asarray(SIDES), object_roles=np.asarray(["tool", "target"]),
-                  T_sim_world=transform, joint_positions_sim=joints_sim,
-                  T_sim_wrist_target=wrists, T_sim_fingertip_target=tips,
-                  T_sim_object_reference=objects_sim, valid_hand=np.ones((n, 2), dtype=bool),
-                  valid_fingertip_orientation=np.ones((n, 2, 5), dtype=bool),
-                  confidence_hand=np.ones((n, 2)), confidence_fingertip=np.ones((n, 2, 5)))
-    arrays["fingertip_orientation_source"] = np.asarray("MANO_rotational_FK_fixed_neutral_calibration_v1")
-    validate_human_reference(arrays)
-    if output.exists():
-        raise FileExistsError(output)
-    output.mkdir(parents=True)
-    path = output / "human_reference.npz"
-    np.savez_compressed(path, **arrays)
-    report = dict(status="GT_input_not_robot_demonstration", episode=episode, frames=n, fps=fps,
-                  hand_order=list(SIDES), object_roles=["tool", "target"],
-                  hand_pkl_joint_translation_max_error_m=translation_errors,
-                  T_sim_world=transform.tolist(), depth_not_used=True,
-                  coordinate_source="TACO world metric GT; fixed shared transform, not per-frame camera coordinates",
-                  axis_convention="object pair center at x=0.6,y=0; support plane from PROJECT_SAMPLE_CONTRACT",
-                  support_surface_contract=support_contract.to_dict(),
-                  resolved_support_surface=support.to_dict(),
-                  orientation_source="MANO rotational FK for fingertips; unchanged landmark wrist targets; fixed model calibrations are not published author offsets",
-                  fingertip_orientation_audit=orientation_audit,
-                  table_alignment_independently_calibrated=False,
-                  code_inputs=[dict(path=str(p.resolve()), sha256=sha256(p)) for p in
-                               (Path(__file__), Path(__file__).parents[1] / "evaluation/taco_surface.py")],
-                  inputs=[dict(path=str(p.resolve()), sha256=sha256(p)) for p in inputs])
-    (output / "input_audit.json").write_text(json.dumps(report, indent=2) + "\n")
-    return path
+def _write_json(path: Path, value: Any) -> None:
+    path.write_text(json.dumps(value, indent=2, sort_keys=True, allow_nan=False) + "\n")
 
 
-def retarget(scene: Path, human_path: Path, settings: dict, output: Path) -> dict:
+def _write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
+    path.write_text("".join(
+        json.dumps(row, sort_keys=True, allow_nan=False) + "\n" for row in rows
+    ))
+
+
+def _joint_state(
+    model: Any, configuration: Any, addresses: np.ndarray, ranges: np.ndarray,
+) -> tuple[float, bool]:
+    current = np.asarray(configuration.q)[addresses]
+    margin = float(np.minimum(
+        current - ranges[:, 0], ranges[:, 1] - current,
+    ).min())
+    return margin, margin >= -1e-6
+
+
+def _runtime_contract(
+    *, settings: TacoBimanualRetargetSettings, dt: float,
+    tasks: list[Any], configuration_limit: Any,
+    displacement: FrameDisplacementLimit, collisions: list[StrictCollisionLimit],
+    collision_pair_count: int, locks: list[Any],
+    native_support: NativeSupportPlaneLimit | None,
+) -> dict[str, Any]:
+    wrist_tasks = [task for task in tasks if task.frame_name.endswith("_hand_link")]
+    fingertip_tasks = [task for task in tasks if task.frame_name.endswith("_tip")]
+    return {
+        "schema": "taco_bimanual_effective_retarget_contract_v1",
+        "algorithm": "MINK",
+        "tasks": {
+            "wrist": {
+                "count": len(wrist_tasks),
+                "position": "ABSENT",
+                "orientation_cost": settings.wrist_orientation_cost,
+            },
+            "fingertips": {
+                "count": len(fingertip_tasks),
+                "count_per_hand": len(fingertip_tasks) // len(SIDES),
+                "position_cost": settings.fingertip_position_cost,
+                "orientation_cost": settings.fingertip_orientation_cost,
+            },
+            "posture": "ABSENT",
+        },
+        "hard_limits": {
+            "configuration_limit": type(configuration_limit).__name__,
+            "frame_displacement_limit": type(displacement).__name__,
+            "self_collision": {
+                "present": bool(collisions),
+                "implementation": type(collisions[0]).__name__ if collisions else None,
+                "explicit_pair_count": collision_pair_count,
+                "minimum_accepted_distance_m": (
+                    settings.accepted_min_self_collision_distance_m
+                ),
+                "acceptance_slack_m": (
+                    settings.collision_acceptance_numerical_slack_m
+                ),
+            },
+            "native_support": None if native_support is None else {
+                "present": True,
+                "implementation": type(native_support).__name__,
+                "native_geom_count": len(native_support.geoms),
+                **settings.native_support.to_dict(),
+            },
+        },
+        "constraints": {
+            "object_dofs_frozen": bool(locks),
+            "frozen_dof_count": 12,
+        },
+        "timeline": {
+            "source_dt_s": dt,
+            "iterations_per_frame": settings.max_iterations_per_frame,
+            "first_frame_iterations": max(80, settings.max_iterations_per_frame),
+            "qp_integration_dt_s": dt / settings.max_iterations_per_frame,
+        },
+        "solver": {
+            "name": "daqp",
+            "damping": 1e-5,
+            "primal_tolerance": settings.solver_primal_tolerance,
+            "dual_tolerance": settings.solver_dual_tolerance,
+        },
+        "final_feasibility": {
+            "algorithm": settings.final_feasibility_algorithm,
+            "max_iterations": settings.max_feasibility_iterations,
+            "tracking_tasks_during_closure": False,
+            "direct_qpos_edit": False,
+        },
+        "action_optimization_config_dependencies": [],
+    }
+
+
+def retarget(
+    scene: Path,
+    human_path: Path,
+    settings: TacoBimanualRetargetSettings,
+    output: Path,
+    *,
+    expected_effective_contract: dict[str, Any] | None = None,
+    frame_count: int | None = None,
+) -> dict[str, Any]:
+    """Run the typed, single-path TACO bimanual retargeter."""
+    if not isinstance(settings, TacoBimanualRetargetSettings):
+        raise TypeError("retarget requires TacoBimanualRetargetSettings")
     model = mujoco.MjModel.from_xml_path(str(scene))
     if (model.nq, model.nv, model.nu) != (50, 48, 36):
-        raise ValueError("expected two 18-DoF floating hands and two passive free objects")
-    with np.load(human_path, allow_pickle=False) as data:
-        human = dict(data)
+        raise ValueError("expected two 18-DoF floating hands and two passive objects")
+    with np.load(human_path, allow_pickle=False) as archive:
+        human = dict(archive)
     validate_human_reference(human)
     dt = float(np.diff(human["timestamps_s"])[0])
-    n = len(human["frame_indices"])
-    primal_tolerance = float(settings.get("solver_primal_tolerance", 1e-9))
-    dual_tolerance = float(settings.get("solver_dual_tolerance", 1e-9))
-    planning_buffer = float(settings.get("planning_collision_buffer_m", 0.0))
-    accepted_min_distance = float(
-        settings.get("accepted_min_self_collision_distance_m", -1e-6)
-    )
-    acceptance_slack = float(
-        settings.get("collision_acceptance_numerical_slack_m", 1e-12)
-    )
-    local_projection_buffer = float(
-        settings.get("local_surface_guard_projection_buffer_m", 0.0)
-    )
-    if (not np.isfinite(primal_tolerance) or primal_tolerance <= 0.0
-            or not np.isfinite(dual_tolerance) or dual_tolerance <= 0.0):
-        raise ValueError("solver tolerances must be positive and finite")
-    if not np.isfinite(planning_buffer) or planning_buffer < 0.0:
-        raise ValueError("planning collision buffer must be finite and nonnegative")
-    if not np.isfinite(accepted_min_distance) or accepted_min_distance > 0.0:
-        raise ValueError("accepted minimum self-collision distance must be finite and nonpositive")
-    if (not np.isfinite(acceptance_slack) or acceptance_slack < 0.0
-            or acceptance_slack > 1e-9):
-        raise ValueError("collision acceptance numerical slack must be in [0, 1e-9] m")
-    if (not np.isfinite(local_projection_buffer) or local_projection_buffer < 0.0
-            or local_projection_buffer > 1e-6):
-        raise ValueError("local surface-guard projection buffer must be in [0, 1e-6] m")
-    local_minimum_distance = accepted_min_distance + local_projection_buffer
-    if local_minimum_distance > 0.0:
-        raise ValueError("local surface-guard projection target must remain nonpositive")
-    config = mink.Configuration(model)
-    tasks = []
+    total_frames = len(human["frame_indices"])
+    count = total_frames if frame_count is None else int(frame_count)
+    if not 2 <= count <= total_frames:
+        raise ValueError("frame_count must be in [2, source frame count]")
+    output.mkdir(parents=True, exist_ok=True)
+
+    configuration = mink.Configuration(model)
+    tasks: list[Any] = []
     for side in SIDES:
-        tasks.append(mink.FrameTask(f"{side}_hand_link", "body", position_cost=0.0,
-                                   orientation_cost=settings["wrist_orientation_cost"], lm_damping=1e-3))
-        tasks.extend(mink.FrameTask(f"{side}_{finger}_tip", "site",
-                                   position_cost=settings["fingertip_position_cost"],
-                                   orientation_cost=settings["fingertip_orientation_cost"], lm_damping=1e-3)
-                     for finger in FINGERS)
-    hand_geoms = [i for i in range(model.ngeom) if (model.geom(i).name or "").startswith("collision_hand_")]
-    pairs = explicit_hand_pairs(model)
-    if not pairs:
-        raise ValueError("retargeting requires an audited explicit runtime self-collision contract")
-    _enable_planning_collision_masks(model, hand_geoms, [])
-    groups = _explicit_collision_groups(model, mujoco, hand_geom_ids=set(hand_geoms))
-    local_guard_token = "_palm_thumb_surface_guard_"
-    local_groups = [group for group in groups if any(
-        local_guard_token in name for side in group for name in side
-    )]
-    standard_groups = [group for group in groups if group not in local_groups]
-    collisions = []
-    if standard_groups:
+        tasks.append(mink.FrameTask(
+            f"{side}_hand_link", "body", position_cost=0.0,
+            orientation_cost=settings.wrist_orientation_cost, lm_damping=1e-3,
+        ))
+        tasks.extend(mink.FrameTask(
+            f"{side}_{finger}_tip", "site",
+            position_cost=settings.fingertip_position_cost,
+            orientation_cost=settings.fingertip_orientation_cost,
+            lm_damping=1e-3,
+        ) for finger in FINGERS)
+
+    hand_geoms = [
+        geom for geom in range(model.ngeom)
+        if (model.geom(geom).name or "").startswith("collision_hand_")
+    ]
+    runtime_pairs = explicit_hand_pairs(model)
+    if not runtime_pairs:
+        raise ValueError("an audited explicit self-collision contract is required")
+    enable_planning_collision_masks(model, hand_geoms, [])
+    groups = explicit_collision_groups(
+        model, mujoco, hand_geom_ids=set(hand_geoms)
+    )
+    collisions: list[StrictCollisionLimit] = []
+    if groups:
         inner = mink.CollisionAvoidanceLimit(
-            model, standard_groups,
-            minimum_distance_from_collisions=planning_buffer,
+            model, groups,
+            minimum_distance_from_collisions=settings.planning_collision_buffer_m,
             collision_detection_distance=0.02,
             include_explicit_pairs=True,
         )
-        collision = _StrictCollisionLimit(
-            inner, mujoco, minimum_distance=planning_buffer,
+        collision = StrictCollisionLimit(
+            inner, mujoco,
+            minimum_distance=settings.planning_collision_buffer_m,
             depenetration_step=0.002,
         )
         collision.enabled = True
         collisions.append(collision)
-    if local_groups:
-        # Tiny convex mesh pairs can return an exact zero without a positive
-        # separation witness.  A +2 um planning buffer would activate hundreds
-        # of such non-contact rows.  Keep the same runtime pairs in MINK, but
-        # activate this local family only after actual penetration and enforce
-        # the independently declared -1 um acceptance bound.
-        local_inner = mink.CollisionAvoidanceLimit(
-            model, local_groups,
-            minimum_distance_from_collisions=local_minimum_distance,
-            collision_detection_distance=0.0,
-            include_explicit_pairs=True,
-        )
-        local_collision = _StrictCollisionLimit(
-            local_inner, mujoco, minimum_distance=local_minimum_distance,
-            depenetration_step=0.002, deepest_invalid_only=True,
-        )
-        local_collision.enabled = True
-        collisions.append(local_collision)
-    constrained_pairs = set().union(*(set(limit.geom_id_pairs) for limit in collisions))
-    if constrained_pairs != set(pairs):
-        raise ValueError("MINK filtered out runtime self pairs; IK/physics contract differs")
+    constrained_pairs = set().union(*(
+        set(limit.geom_id_pairs) for limit in collisions
+    ))
+    if constrained_pairs != set(runtime_pairs):
+        raise ValueError("MINK filtered runtime self pairs")
     collision_pairs = tuple(sorted(constrained_pairs))
-    velocity_map = _joint_velocity_limits(model, mujoco, settings["velocity_limits"])
-    displacement = _FrameDisplacementLimit(model, mujoco, velocity_map, mink.Constraint)
-    native_support_settings = settings.get("native_support_plane_limit")
-    native_support_limit = None
-    native_support_tolerance = None
-    if native_support_settings is not None:
-        native_support_plane = Plane(
-            normal=native_support_settings["normal"],
-            offset=float(native_support_settings["offset_m"]),
-            frame=native_support_settings.get("frame", "simulator"),
-        )
-        native_support_tolerance = float(
-            native_support_settings["validation_tolerance_m"]
-        )
-        if (
-            not np.isfinite(native_support_tolerance)
-            or native_support_tolerance < 0.0
-        ):
-            raise ValueError("native support validation tolerance must be nonnegative")
-        native_support_limit = NativeSupportPlaneLimit(
+
+    velocity_map = joint_velocity_limits(
+        model, mujoco, settings.velocity_limits
+    )
+    displacement = FrameDisplacementLimit(
+        model, mujoco, velocity_map, mink.Constraint
+    )
+    configuration_limit = mink.ConfigurationLimit(model)
+    native_support = None
+    native_tolerance = None
+    if settings.native_support is not None:
+        support = settings.native_support
+        native_tolerance = support.validation_tolerance_m
+        native_support = NativeSupportPlaneLimit(
             model=model,
             mujoco=mujoco,
-            plane=native_support_plane,
+            plane=Plane(
+                normal=support.normal, offset=support.offset_m,
+                frame=support.frame,
+            ),
             visual_geom_ids=native_hand_visual_geom_ids(model, mujoco),
-            minimum_clearance_m=float(
-                native_support_settings["minimum_clearance_m"]
-            ),
-            activation_distance_m=native_support_settings.get(
-                "activation_distance_m"
-            ),
-            gain=float(native_support_settings["gain"]),
-            depenetration_step_m=float(
-                native_support_settings["depenetration_step_m"]
-            ),
+            minimum_clearance_m=support.minimum_clearance_m,
+            activation_distance_m=support.activation_distance_m,
+            gain=support.gain,
+            depenetration_step_m=support.depenetration_step_m,
             constraint_type=mink.Constraint,
         )
-    limits = [mink.ConfigurationLimit(model), *collisions, displacement]
-    if native_support_limit is not None:
-        limits.append(native_support_limit)
+    limits: list[Any] = [configuration_limit, *collisions, displacement]
+    if native_support is not None:
+        limits.append(native_support)
     locks = [mink.DofFreezingTask(model, list(range(36, 48)))]
-    qpos = np.empty((n, model.nq))
-    tip_errors = np.empty((n, 2, 5))
-    wrist_errors = np.empty((n, 2))
-    self_distances = np.empty(n)
-    native_support_distances = np.full(n, np.nan)
-    worst_pairs = []
-    previous = None
-    substeps = int(settings["max_iterations_per_frame"])
-    if substeps < 1:
-        raise ValueError("max_iterations_per_frame must be positive")
+    effective_contract = _runtime_contract(
+        settings=settings, dt=dt, tasks=tasks,
+        configuration_limit=configuration_limit, displacement=displacement,
+        collisions=collisions, collision_pair_count=len(collision_pairs),
+        locks=locks, native_support=native_support,
+    )
+    _write_json(output / "effective_retarget_contract.json", effective_contract)
+    if (
+        expected_effective_contract is not None
+        and expected_effective_contract != effective_contract
+    ):
+        _write_json(output / "effective_contract_mismatch.json", {
+            "expected": expected_effective_contract,
+            "constructed": effective_contract,
+        })
+        raise RuntimeError("effective retarget contract mismatch")
 
-    def fail(frame, reason):
-        output.mkdir(parents=True, exist_ok=True)
-        np.savez_compressed(output / "failed_kinematic_prefix.npz",
-                            qpos=np.vstack([qpos[:frame], config.q]),
-                            frame_indices=human["frame_indices"][:frame + 1],
-                            failed_frame=frame)
-        report = dict(status="failed_kinematic_candidate", failed_frame=frame,
-                      reason=reason, scene=str(scene.resolve()), scene_sha256=sha256(scene),
-                      self_min_distance_m=float(distances(model, config.data, pairs).min()),
-                      native_support_min_distance_m=(
-                          None if native_support_limit is None
-                          else float(native_support_limit.minimum_distance(config))
-                      ),
-                      strict_gate_passed=False, rl_validation_completed=False)
-        (output / "retarget_failure.json").write_text(json.dumps(report, indent=2) + "\n")
+    qpos = np.empty((count, model.nq), dtype=np.float64)
+    tip_errors = np.empty((count, 2, 5), dtype=np.float64)
+    wrist_errors = np.empty((count, 2), dtype=np.float64)
+    self_distances = np.empty(count, dtype=np.float64)
+    native_distances = np.full(count, np.nan, dtype=np.float64)
+    acceptance_rows: list[dict[str, Any]] = []
+    closure_rows: list[dict[str, Any]] = []
+    previous = None
+    substeps = settings.max_iterations_per_frame
+    addresses = np.asarray([
+        int(model.joint(name).qposadr[0]) for name in velocity_map
+    ], dtype=np.int64)
+    speeds = np.asarray(list(velocity_map.values()), dtype=np.float64)
+    ranges = np.asarray([
+        model.joint(name).range for name in velocity_map
+    ], dtype=np.float64)
+
+    def hard_state() -> dict[str, Any]:
+        self_minimum = float(distances(
+            model, configuration.data, collision_pairs
+        ).min())
+        joint_margin, joint_pass = _joint_state(
+            model, configuration, addresses, ranges
+        )
+        displacement_margin = displacement.minimum_margin(configuration)
+        displacement_pass = displacement_margin >= -1e-6
+        if native_support is None:
+            support_minimum = None
+            support_geom = None
+            support_vertex = None
+            support_pass = True
+        else:
+            native_rows = native_support.full_mesh_rows(configuration.data)
+            worst = min(native_rows, key=lambda row: row["distance_m"])
+            support_minimum = float(worst["distance_m"])
+            support_geom = worst["geom"].name
+            support_vertex = int(worst["vertex_index"])
+            support_pass = support_minimum >= -float(native_tolerance)
+        self_pass = self_minimum >= (
+            settings.accepted_min_self_collision_distance_m
+            - settings.collision_acceptance_numerical_slack_m
+        )
+        return {
+            "self_minimum_m": self_minimum,
+            "self_pass": self_pass,
+            "native_minimum_m": support_minimum,
+            "native_geom": support_geom,
+            "native_vertex_index": support_vertex,
+            "native_pass": support_pass,
+            "joint_minimum_margin": joint_margin,
+            "joint_pass": joint_pass,
+            "frame_displacement_minimum_margin": (
+                None if np.isinf(displacement_margin) else displacement_margin
+            ),
+            "frame_displacement_pass": displacement_pass,
+            "all_pass": self_pass and support_pass and joint_pass and displacement_pass,
+        }
+
+    def flush_traces() -> None:
+        _write_jsonl(output / "per_frame_native_acceptance.jsonl", acceptance_rows)
+        _write_jsonl(output / "feasibility_closure_trace.jsonl", closure_rows)
+
+    def fail(frame: int, reason: str) -> None:
+        np.savez_compressed(
+            output / "failed_kinematic_prefix.npz",
+            qpos=np.vstack([qpos[:frame], configuration.q]),
+            frame_indices=human["frame_indices"][:frame + 1],
+            failed_frame=frame,
+        )
+        flush_traces()
+        state = hard_state()
+        _write_json(output / "retarget_failure.json", {
+            "status": "failed_kinematic_candidate",
+            "failed_frame": frame,
+            "reason": reason,
+            "hard_state": state,
+            "scene": str(scene.resolve()),
+            "scene_sha256": sha256(scene),
+            "strict_gate_passed": False,
+            "rl_validation_completed": False,
+        })
         raise RuntimeError(reason)
 
-    def solve(tracking_tasks):
+    def solve(frame: int, tracking_tasks: tuple[Any, ...] | list[Any]) -> np.ndarray:
         try:
-            return mink.solve_ik(config, tracking_tasks, dt / substeps, solver="daqp",
-                                 damping=1e-5, limits=limits, constraints=locks,
-                                 primal_tol=primal_tolerance, dual_tol=dual_tolerance)
+            return mink.solve_ik(
+                configuration, tracking_tasks, dt / substeps,
+                solver="daqp", damping=1e-5, limits=limits,
+                constraints=locks,
+                primal_tol=settings.solver_primal_tolerance,
+                dual_tol=settings.solver_dual_tolerance,
+            )
         except Exception as error:
             fail(frame, f"QP failed at frame {frame}: {error}")
+            raise AssertionError("unreachable")
 
-    for frame in range(n):
-        q = config.q.copy()
-        for h, side in enumerate(SIDES):
-            objadr = int(model.joint(f"{side}_object_joint").qposadr[0])
-            q[objadr:objadr + 7] = pose7(human["T_sim_object_reference"][frame, h])
-            wrist = human["T_sim_wrist_target"][frame, h]
+    for frame in range(count):
+        q = configuration.q.copy()
+        for hand, side in enumerate(SIDES):
+            object_address = int(
+                model.joint(f"{side}_object_joint").qposadr[0]
+            )
+            q[object_address:object_address + 7] = pose7(
+                human["T_sim_object_reference"][frame, hand]
+            )
+            wrist = human["T_sim_wrist_target"][frame, hand]
             if frame == 0:
-                q[h * 18:h * 18 + 3] = wrist[:3, 3]
+                q[hand * 18:hand * 18 + 3] = wrist[:3, 3]
                 angles = Rotation.from_matrix(wrist[:3, :3]).as_euler("ZXY")
-                q[h * 18 + 3:h * 18 + 6] = angles * [1, 1, -1]
-            for k, target in enumerate([wrist, *human["T_sim_fingertip_target"][frame, h]]):
-                tasks[h * 6 + k].set_target(mink.SE3.from_matrix(target))
-        config.update(q)
+                q[hand * 18 + 3:hand * 18 + 6] = angles * [1, 1, -1]
+            targets = [wrist, *human["T_sim_fingertip_target"][frame, hand]]
+            for index, target in enumerate(targets):
+                tasks[hand * 6 + index].set_target(mink.SE3.from_matrix(target))
+        configuration.update(q)
         displacement.set_previous(previous, dt if previous is not None else None)
-        for _ in range(max(80, substeps) if frame == 0 else substeps):
-            velocity = solve(tasks)
-            config.integrate_inplace(velocity, dt / substeps)
-        for _ in range(128):
-            if (distances(model, config.data, pairs).min()
-                    >= accepted_min_distance - acceptance_slack):
+        tracking_iterations = max(80, substeps) if frame == 0 else substeps
+        for _ in range(tracking_iterations):
+            velocity = solve(frame, tasks)
+            configuration.integrate_inplace(velocity, dt / substeps)
+
+        closure_count = 0
+        for iteration in range(settings.max_feasibility_iterations + 1):
+            before = hard_state()
+            if settings.final_feasibility_algorithm == SELF_ONLY_FINAL_FEASIBILITY:
+                done = before["self_pass"]
+            else:
+                done = before["all_pass"]
+            if done:
                 break
-            velocity = solve(())
-            config.integrate_inplace(velocity, dt / substeps)
-        else:
-            fail(frame, f"self-collision feasibility projection failed at frame {frame}")
-        if native_support_limit is not None:
-            native_support_distances[frame] = native_support_limit.minimum_distance(config)
-            if native_support_distances[frame] < -native_support_tolerance:
-                fail(
-                    frame,
-                    "native support-plane feasibility failed at frame "
-                    f"{frame}: {native_support_distances[frame]} m",
+            if iteration == settings.max_feasibility_iterations:
+                reason = (
+                    "self-collision feasibility projection failed"
+                    if settings.final_feasibility_algorithm
+                    == SELF_ONLY_FINAL_FEASIBILITY
+                    else "unified hard-feasibility closure exhausted"
                 )
-        qpos[frame] = config.q
-        previous = config.q.copy()
-        for h, side in enumerate(SIDES):
-            for k, finger in enumerate(FINGERS):
+                acceptance_rows.append({"frame": frame, **before, "accepted": False})
+                fail(frame, f"{reason} at frame {frame}")
+            velocity = solve(frame, ())
+            configuration.integrate_inplace(velocity, dt / substeps)
+            after = hard_state()
+            closure_rows.append({
+                "frame": frame,
+                "iteration": iteration,
+                "algorithm": settings.final_feasibility_algorithm,
+                "before": before,
+                "after": after,
+                "support_vertex_switched": (
+                    before["native_geom"], before["native_vertex_index"]
+                ) != (after["native_geom"], after["native_vertex_index"]),
+            })
+            closure_count += 1
+
+        state = hard_state()
+        acceptance_rows.append({
+            "frame": frame,
+            **state,
+            "closure_iterations": closure_count,
+            "accepted": state["all_pass"],
+        })
+        if not state["native_pass"]:
+            fail(
+                frame,
+                f"native support-plane feasibility failed at frame {frame}: "
+                f"{state['native_minimum_m']} m",
+            )
+        if settings.final_feasibility_algorithm == UNIFIED_SELF_AND_NATIVE_SUPPORT_FEASIBILITY:
+            if not state["all_pass"]:
+                fail(frame, f"unified hard-feasibility acceptance failed at frame {frame}")
+
+        qpos[frame] = configuration.q
+        previous = configuration.q.copy()
+        native_distances[frame] = (
+            np.nan if state["native_minimum_m"] is None
+            else state["native_minimum_m"]
+        )
+        self_distances[frame] = state["self_minimum_m"]
+        for hand, side in enumerate(SIDES):
+            for finger_index, finger in enumerate(FINGERS):
                 site = model.site(f"{side}_{finger}_tip").id
-                tip_errors[frame, h, k] = np.linalg.norm(config.data.site_xpos[site] - human["T_sim_fingertip_target"][frame, h, k, :3, 3])
+                tip_errors[frame, hand, finger_index] = np.linalg.norm(
+                    configuration.data.site_xpos[site]
+                    - human["T_sim_fingertip_target"][
+                        frame, hand, finger_index, :3, 3
+                    ]
+                )
             body = model.body(f"{side}_hand_link").id
-            relative = config.data.xmat[body].reshape(3, 3).T @ human["T_sim_wrist_target"][frame, h, :3, :3]
-            wrist_errors[frame, h] = Rotation.from_matrix(relative).magnitude()
-        self_distances[frame] = min((mujoco.mj_geomDistance(model, config.data, a, b, 0.05, None)
-                                    for a, b in collision_pairs), default=0.05)
-        if frame == 0 or self_distances[frame] < self_distances[:frame].min():
-            worst_pairs = sorted((dict(geom1=model.geom(a).name, geom2=model.geom(b).name,
-                                       distance_m=float(mujoco.mj_geomDistance(model, config.data, a, b, 0.05, None)))
-                                  for a, b in collision_pairs), key=lambda item: item["distance_m"])[:12]
+            relative = (
+                configuration.data.xmat[body].reshape(3, 3).T
+                @ human["T_sim_wrist_target"][frame, hand, :3, :3]
+            )
+            wrist_errors[frame, hand] = Rotation.from_matrix(relative).magnitude()
         if frame % 25 == 0:
-            print(f"MINK {frame + 1}/{n}: tip mean {tip_errors[frame].mean():.4f} m; self clearance {self_distances[frame]:.6f} m", flush=True)
+            print(
+                f"MINK {frame + 1}/{count}: tip mean "
+                f"{tip_errors[frame].mean():.4f} m; self clearance "
+                f"{self_distances[frame]:.6f} m",
+                flush=True,
+            )
+
+    flush_traces()
     qvel = differentiate(model, qpos, dt)
-    if not np.isfinite(qpos).all() or not np.isfinite(qvel).all():
-        raise ValueError("nonfinite MINK candidate")
-    intrahand_audit = audit_intrahand_trajectory(model, qpos)
-    addresses = np.array([int(model.joint(name).qposadr[0]) for name in velocity_map])
-    speeds = np.array(list(velocity_map.values()))
-    ranges = np.array([model.joint(name).range for name in velocity_map])
-    joint_margin = np.minimum(qpos[:, addresses] - ranges[:, 0],
-                              ranges[:, 1] - qpos[:, addresses]).min(axis=1)
+    joint_margin = np.minimum(
+        qpos[:, addresses] - ranges[:, 0],
+        ranges[:, 1] - qpos[:, addresses],
+    ).min(axis=1)
     velocity_ratio = np.abs(np.diff(qpos[:, addresses], axis=0)) / (dt * speeds)
-    output.mkdir(parents=True, exist_ok=True)
-    reference = dict(
-        qpos=qpos,
-        qvel=qvel,
-        ctrl=qpos[:, :36],
-        frequency=1.0 / dt,
-        frame_indices=human["frame_indices"],
-        timestamps_s=human["timestamps_s"],
-        hand_order=np.asarray(SIDES),
-        object_roles=np.asarray(["tool", "target"]),
-        fingertip_position_error_m=tip_errors,
-        wrist_orientation_error_rad=wrist_errors,
-        self_collision_distance_m=self_distances,
-        joint_limit_min_margin=joint_margin,
-        frame_velocity_max_ratio=velocity_ratio.max(axis=1),
-    )
-    if native_support_limit is not None:
-        reference["native_support_min_distance_m"] = native_support_distances
+    reference = {
+        "qpos": qpos,
+        "qvel": qvel,
+        "ctrl": qpos[:, :36],
+        "frequency": 1.0 / dt,
+        "frame_indices": human["frame_indices"][:count],
+        "timestamps_s": human["timestamps_s"][:count],
+        "hand_order": np.asarray(SIDES),
+        "object_roles": np.asarray(["tool", "target"]),
+        "fingertip_position_error_m": tip_errors,
+        "wrist_orientation_error_rad": wrist_errors,
+        "self_collision_distance_m": self_distances,
+        "joint_limit_min_margin": joint_margin,
+        "frame_velocity_max_ratio": velocity_ratio.max(axis=1),
+        "native_support_min_distance_m": native_distances,
+    }
     np.savez_compressed(output / "robot_reference.npz", **reference)
-    intrahand_path = output / "intrahand_collision_audit.json"
-    intrahand_artifact = dict(
-        scene=str(scene.resolve()), scene_sha256=sha256(scene),
-        human_reference=str(human_path.resolve()),
-        human_reference_sha256=sha256(human_path), **intrahand_audit)
-    intrahand_path.write_text(json.dumps(intrahand_artifact, indent=2) + "\n")
-    report = dict(status="MINK_kinematic_candidate_not_physics_validated", frames=n,
-                  scene=str(scene.resolve()), scene_sha256=sha256(scene),
-                  human_reference=str(human_path.resolve()), human_reference_sha256=sha256(human_path),
-                  mink_module=str(Path(mink.__file__).resolve()), inherited_settings=settings,
-                  effective_settings=dict(source_dt_s=dt, qp_integration_dt_s=dt / substeps,
-                                          iterations_per_frame=substeps, first_frame_iterations=max(80, substeps),
-                                          wrist_orientation_cost=settings["wrist_orientation_cost"],
-                                          fingertip_position_cost=settings["fingertip_position_cost"],
-                                          fingertip_orientation_cost=settings["fingertip_orientation_cost"],
-                                          posture_cost=0.0,
-                                          planning_collision_buffer_m=planning_buffer,
-                                          standard_self_collision_pair_count=len(standard_groups),
-                                          local_surface_guard_pair_count=len(local_groups),
-                                          local_surface_guard_collision_detection_distance_m=(
-                                              0.0 if local_groups else None
-                                          ),
-                                          local_surface_guard_minimum_distance_m=(
-                                              local_minimum_distance if local_groups else None
-                                          ),
-                                          local_surface_guard_projection_buffer_m=(
-                                              local_projection_buffer if local_groups else None
-                                          ),
-                                          local_surface_guard_deepest_invalid_only=bool(local_groups),
-                                          accepted_min_self_collision_distance_m=accepted_min_distance,
-                                          collision_acceptance_numerical_slack_m=acceptance_slack),
-                  solver_primal_tolerance=primal_tolerance,
-                  solver_dual_tolerance=dual_tolerance,
-                  wrist_position_cost=0.0, object_dofs_locked_during_ik=True,
-                  object_dofs_actuated_in_physics=False, hand_order=list(SIDES),
-                  fingertip_mean_error_m=tip_errors.mean(axis=(0, 2)).tolist(),
-                  fingertip_max_error_m=tip_errors.max(axis=(0, 2)).tolist(),
-                  wrist_mean_error_rad=wrist_errors.mean(axis=0).tolist(),
-                  self_collision_min_distance_m=float(self_distances.min()),
-                  self_penetrating_frames=int((self_distances < -5e-5).sum()),
-                  self_collision_pair_count=len(pairs),
-                  joint_limit_min_margin=float(joint_margin.min()),
-                  joint_limit_violating_frames=int((joint_margin < -1e-6).sum()),
-                  frame_velocity_max_ratio=float(velocity_ratio.max()),
-                  frame_velocity_violating_intervals=int((velocity_ratio.max(axis=1) > 1 + 1e-6).sum()),
-                  kinematic_model_feasible=bool((self_distances >= accepted_min_distance - acceptance_slack).all()
-                                                and (joint_margin >= -1e-6).all()
-                                                and (velocity_ratio <= 1 + 1e-6).all()),
-                  collision_policy="explicit_runtime_pairs; source_intrahand_full_interhand_and_local_surface_guard",
-                  self_collision_resolution="strict separating QP, fixed per-frame velocity envelope",
-                  model_self_collision_passed=bool((self_distances >= -1e-6 - acceptance_slack).all()),
-                  native_support_plane_limit=(
-                      None if native_support_limit is None else {
-                          "extension": "LOCAL_ENVIRONMENT_NONPENETRATION_EXTENSION",
-                          "plane": native_support_limit.plane.to_dict(),
-                          "minimum_clearance_m": native_support_limit.minimum_clearance_m,
-                          "activation_distance_m": native_support_limit.activation_distance_m,
-                          "gain": native_support_limit.gain,
-                          "depenetration_step_m": native_support_limit.depenetration_step_m,
-                          "validation_tolerance_m": native_support_tolerance,
-                          "always_active": True,
-                          "native_geom_count": len(native_support_limit.geoms),
-                          "trajectory_minimum_distance_m": float(native_support_distances.min()),
-                      }
-                  ),
-                  intrahand_collision_audit_path=str(intrahand_path.resolve()),
-                  intrahand_collision_summary=dict(
-                      pair_count=intrahand_audit["pair_count"],
-                      counts=intrahand_audit["counts"],
-                      by_classification=intrahand_audit["by_classification"],
-                      min_distance_m=intrahand_audit["min_distance_m"],
-                      penetrating_frames=intrahand_audit["penetrating_frames"],
-                      tolerance_m=intrahand_audit["tolerance_m"]),
-                  complete_intrahand_geometry_coverage=False,
-                  worst_self_collision_pairs=worst_pairs,
-                  strict_gate_passed=False, rl_validation_completed=False)
-    (output / "retarget_report.json").write_text(json.dumps(report, indent=2) + "\n")
+    intrahand = audit_intrahand_trajectory(model, qpos)
+    _write_json(output / "intrahand_collision_audit.json", {
+        "scene": str(scene.resolve()),
+        "scene_sha256": sha256(scene),
+        "human_reference": str(human_path.resolve()),
+        "human_reference_sha256": sha256(human_path),
+        **intrahand,
+    })
+    report = {
+        "status": "MINK_kinematic_candidate_not_physics_validated",
+        "frames": count,
+        "source_total_frames": total_frames,
+        "scene": str(scene.resolve()),
+        "scene_sha256": sha256(scene),
+        "human_reference": str(human_path.resolve()),
+        "human_reference_sha256": sha256(human_path),
+        "effective_retarget_contract": effective_contract,
+        "fingertip_mean_error_m": tip_errors.mean(axis=(0, 2)).tolist(),
+        "fingertip_max_error_m": tip_errors.max(axis=(0, 2)).tolist(),
+        "wrist_mean_error_rad": wrist_errors.mean(axis=0).tolist(),
+        "self_collision_min_distance_m": float(self_distances.min()),
+        "joint_limit_min_margin": float(joint_margin.min()),
+        "joint_limit_violating_frames": int((joint_margin < -1e-6).sum()),
+        "frame_velocity_max_ratio": float(velocity_ratio.max()),
+        "frame_velocity_violating_intervals": int(
+            (velocity_ratio.max(axis=1) > 1.0 + 1e-6).sum()
+        ),
+        "native_support_minimum_distance_m": float(np.nanmin(native_distances)),
+        "strict_gate_passed": False,
+        "rl_validation_completed": False,
+    }
+    _write_json(output / "retarget_report.json", report)
     return report
