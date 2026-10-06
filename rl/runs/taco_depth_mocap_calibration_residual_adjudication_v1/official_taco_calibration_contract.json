@@ -1,0 +1,50 @@
+{
+  "author_published": {
+    "depth_release": {
+      "source": "/data_all/zzx/3.2RL/third_party/TACO-Instructions-b385ac1e89f35214bfbbef0d63e6df0ac8dac02e/README.md",
+      "value": "1920x1080 uint16; scale 4000"
+    },
+    "egocentric_extrinsic_semantics": {
+      "source": "/data_all/zzx/3.2RL/third_party/TACO-Instructions-b385ac1e89f35214bfbbef0d63e6df0ac8dac02e/dataset_utils/project_pose_to_egocentric_view.py",
+      "value": "egocentric_frame_extrinsic.npy is consumed as world_to_camera"
+    },
+    "intended_common_world": {
+      "source": "https://openaccess.thecvf.com/content/CVPR2024/papers/Liu_TACO_Benchmarking_Generalizable_Bimanual_Tool-ACtion-Object_Understanding_CVPR_2024_paper.pdf",
+      "value": "NOKOV mocap tracks marked objects and the head-mounted L515; camera and mocap operate at 30 Hz"
+    },
+    "rgb_extrinsic_calibration": {
+      "source": "https://openaccess.thecvf.com/content/CVPR2024/supplemental/Liu_TACO_Benchmarking_Generalizable_CVPR_2024_supplemental.pdf",
+      "value": "12 scene markers; <1 mm mocap 3-D marker error; manual RGB pixels; PnP world-to-camera extrinsic"
+    },
+    "same_date_world": {
+      "source": "https://github.com/leolyliu/TACO-Instructions/issues/8",
+      "value": "same-date sequences share a world; 20231002 origin is on table, other dates on ground; +Z up; right-handed"
+    },
+    "timestamp_matching": {
+      "source": "https://openaccess.thecvf.com/content/CVPR2024/supplemental/Liu_TACO_Benchmarking_Generalizable_CVPR_2024_supplemental.pdf",
+      "value": "nearest UTC timestamp; reported maximum mismatch approximately 17 ms"
+    }
+  },
+  "community_reports": [
+    {
+      "claim": "a user reports visibly wrong extrinsics in some sequences",
+      "classification": "COMMUNITY_REPORT_IN_OFFICIAL_TRACKER",
+      "source": "https://github.com/leolyliu/TACO-Instructions/issues/18"
+    },
+    {
+      "claim": "a user reports many possible calibration issues; no author confirmation is present",
+      "classification": "COMMUNITY_REPORT_IN_OFFICIAL_TRACKER",
+      "source": "https://github.com/leolyliu/TACO-Instructions/issues/20"
+    }
+  ],
+  "local_interpretation": {
+    "depth_pixel_plus_rgb_intrinsic_to_camera_point": "LOCAL_EVIDENCE_BACKED_INTERPRETATION",
+    "extrinsic_inverse_or_transpose_search": "FORBIDDEN_BY_FROZEN_OFFICIAL_CODE_SEMANTICS"
+  },
+  "not_published_clearly": {
+    "depth_optical_to_rgb_color_rigid_extrinsic": null,
+    "released_depth_registration_to_rgb_pixel_grid": null
+  },
+  "paper_faithful_correction_recovered": false,
+  "schema": "official_taco_calibration_contract_v1"
+}

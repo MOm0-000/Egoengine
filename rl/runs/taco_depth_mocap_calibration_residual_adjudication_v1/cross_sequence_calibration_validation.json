@@ -1,0 +1,431 @@
+{
+  "fold_definition": "fit one complete 20230927 tool sequence; validate the other unseen sequence",
+  "limited_same_date_sample_count": true,
+  "models": {
+    "CAMERA_LOCAL": {
+      "cross_sequence_passed": true,
+      "folds": [
+        {
+          "fit_sequence": "brush_brush_bowl_20230927_027",
+          "frozen_correction": {
+            "fit_contract": {
+              "bound_provenance": "NUMERICAL_SAFETY_BOUND",
+              "loss": "soft_l1",
+              "maximum_function_evaluations": 80,
+              "maximum_rotation_deg": 10.0,
+              "maximum_translation_m": 0.1,
+              "minimum_points": 64,
+              "robust_scale_m": 0.01
+            },
+            "fit_metrics": {
+              "absolute_median_m": 0.002814379520714283,
+              "absolute_p90_m": 0.018361286073923126,
+              "absolute_p95_m": 0.048138534650206476,
+              "point_count": 9720,
+              "signed_median_m": -0.0008621908200439066
+            },
+            "identity_metrics": {
+              "absolute_median_m": 0.005397253204137087,
+              "absolute_p90_m": 0.02903428375720979,
+              "absolute_p95_m": 0.057968976721167374,
+              "point_count": 9720,
+              "signed_median_m": -0.0053835774306207895
+            },
+            "model": "CAMERA_LOCAL",
+            "optimizer": {
+              "cost": 0.5481568454195783,
+              "function_evaluations": 29,
+              "message": "`ftol` termination condition is satisfied.",
+              "optimality": 0.013726611816172733,
+              "status": 2,
+              "success": true
+            },
+            "parameters_translation_m_then_rotvec_rad": [
+              0.024449394690463724,
+              -0.0034587456033873657,
+              0.016939089093533997,
+              -0.0008431418911634325,
+              -0.02804536756834064,
+              -0.01124324397848953
+            ],
+            "rotation_angle_deg": 1.7318724536878412,
+            "transform": [
+              [
+                0.9995435581658614,
+                0.011253354177324268,
+                -0.028036357625220446,
+                0.024449394690463724
+              ],
+              [
+                -0.011229709753411607,
+                0.9999364441275767,
+                0.0010006619569471581,
+                -0.0034587456033873657
+              ],
+              [
+                0.028045836553465302,
+                -0.0006853650542941023,
+                0.9996064032041606,
+                0.016939089093533997
+              ],
+              [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            ],
+            "translation_norm_m": 0.029944424542771055
+          },
+          "validation_baseline": {
+            "absolute_median_m": 0.0042108953930437565,
+            "absolute_p90_m": 0.0122331565245986,
+            "absolute_p95_m": 0.018991116806864723,
+            "point_count": 13645,
+            "signed_median_m": -0.003347837133333087
+          },
+          "validation_corrected": {
+            "absolute_median_m": 0.003770195646211505,
+            "absolute_p90_m": 0.008471792377531531,
+            "absolute_p95_m": 0.011236463487148275,
+            "point_count": 13645,
+            "signed_median_m": -0.00022926474048290402
+          },
+          "validation_improvement": {
+            "absolute_change_m": {
+              "absolute_median_m": -0.00044069974683225155,
+              "absolute_p90_m": -0.0037613641470670683,
+              "absolute_p95_m": -0.007754653319716448
+            },
+            "absolute_signed_median_change_m": -0.003118572392850183,
+            "all_required_metrics_improved": true,
+            "checks": {
+              "absolute_median_m": true,
+              "absolute_p90_m": true,
+              "absolute_p95_m": true,
+              "absolute_signed_median": true
+            }
+          },
+          "validation_sequence": "pour_bowl_plate_20230927_017"
+        },
+        {
+          "fit_sequence": "pour_bowl_plate_20230927_017",
+          "frozen_correction": {
+            "fit_contract": {
+              "bound_provenance": "NUMERICAL_SAFETY_BOUND",
+              "loss": "soft_l1",
+              "maximum_function_evaluations": 80,
+              "maximum_rotation_deg": 10.0,
+              "maximum_translation_m": 0.1,
+              "minimum_points": 64,
+              "robust_scale_m": 0.01
+            },
+            "fit_metrics": {
+              "absolute_median_m": 0.0026941965334117413,
+              "absolute_p90_m": 0.0070318711921572696,
+              "absolute_p95_m": 0.012393386103212823,
+              "point_count": 13645,
+              "signed_median_m": 0.0012386151356622577
+            },
+            "identity_metrics": {
+              "absolute_median_m": 0.0042108953930437565,
+              "absolute_p90_m": 0.0122331565245986,
+              "absolute_p95_m": 0.018991116806864723,
+              "point_count": 13645,
+              "signed_median_m": -0.003347837133333087
+            },
+            "model": "CAMERA_LOCAL",
+            "optimizer": {
+              "cost": 0.25974591091714905,
+              "function_evaluations": 55,
+              "message": "`xtol` termination condition is satisfied.",
+              "optimality": 0.015305222785334421,
+              "status": 3,
+              "success": true
+            },
+            "parameters_translation_m_then_rotvec_rad": [
+              -0.007070314971382922,
+              -0.01631252862443155,
+              0.00852940109721795,
+              -0.029633211955913685,
+              0.01429758403557676,
+              -8.05284326696377e-05
+            ],
+            "rotation_angle_deg": 1.885157092269834,
+            "transform": [
+              [
+                0.9998977955236185,
+                -0.0001313086548816443,
+                0.01429619757295834,
+                -0.007070314971382922
+              ],
+              [
+                -0.00029233646298415544,
+                0.9995609727402341,
+                0.029627290021012866,
+                -0.01631252862443155
+              ],
+              [
+                -0.014293811472113262,
+                -0.029628441279182266,
+                0.9994587747480962,
+                0.00852940109721795
+              ],
+              [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            ],
+            "translation_norm_m": 0.01971899153087406
+          },
+          "validation_baseline": {
+            "absolute_median_m": 0.005397253204137087,
+            "absolute_p90_m": 0.02903428375720979,
+            "absolute_p95_m": 0.057968976721167374,
+            "point_count": 9720,
+            "signed_median_m": -0.0053835774306207895
+          },
+          "validation_corrected": {
+            "absolute_median_m": 0.0022506791865453124,
+            "absolute_p90_m": 0.024015817418694498,
+            "absolute_p95_m": 0.05414073858410117,
+            "point_count": 9720,
+            "signed_median_m": -0.000425218851887621
+          },
+          "validation_improvement": {
+            "absolute_change_m": {
+              "absolute_median_m": -0.0031465740175917745,
+              "absolute_p90_m": -0.005018466338515291,
+              "absolute_p95_m": -0.0038282381370662033
+            },
+            "absolute_signed_median_change_m": -0.0049583585787331685,
+            "all_required_metrics_improved": true,
+            "checks": {
+              "absolute_median_m": true,
+              "absolute_p90_m": true,
+              "absolute_p95_m": true,
+              "absolute_signed_median": true
+            }
+          },
+          "validation_sequence": "brush_brush_bowl_20230927_027"
+        }
+      ]
+    },
+    "WORLD_FIXED": {
+      "cross_sequence_passed": true,
+      "folds": [
+        {
+          "fit_sequence": "brush_brush_bowl_20230927_027",
+          "frozen_correction": {
+            "fit_contract": {
+              "bound_provenance": "NUMERICAL_SAFETY_BOUND",
+              "loss": "soft_l1",
+              "maximum_function_evaluations": 80,
+              "maximum_rotation_deg": 10.0,
+              "maximum_translation_m": 0.1,
+              "minimum_points": 64,
+              "robust_scale_m": 0.01
+            },
+            "fit_metrics": {
+              "absolute_median_m": 0.0028282898711040616,
+              "absolute_p90_m": 0.01790067385882142,
+              "absolute_p95_m": 0.048098644986748665,
+              "point_count": 9720,
+              "signed_median_m": -0.001053295680321753
+            },
+            "identity_metrics": {
+              "absolute_median_m": 0.005397253204137087,
+              "absolute_p90_m": 0.02903428375720979,
+              "absolute_p95_m": 0.057968976721167374,
+              "point_count": 9720,
+              "signed_median_m": -0.0053835774306207895
+            },
+            "model": "WORLD_FIXED",
+            "optimizer": {
+              "cost": 0.5468704946738624,
+              "function_evaluations": 38,
+              "message": "`xtol` termination condition is satisfied.",
+              "optimality": 0.019242475220371653,
+              "status": 3,
+              "success": true
+            },
+            "parameters_translation_m_then_rotvec_rad": [
+              -0.005117290200815938,
+              -0.00892837537722883,
+              -0.015878472837141566,
+              -0.026023771099338625,
+              0.015330695921452525,
+              0.0054321607508094
+            ],
+            "rotation_angle_deg": 1.7583133500413581,
+            "transform": [
+              [
+                0.9998677410764081,
+                -0.005630773750857155,
+                0.015257612582826666,
+                -0.005117290200815938
+              ],
+              [
+                0.00523184253950716,
+                0.9996466552159274,
+                0.0260613226688607,
+                -0.00892837537722883
+              ],
+              [
+                -0.015398966796599564,
+                -0.025978050399814982,
+                0.9995439023469763,
+                -0.015878472837141566
+              ],
+              [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            ],
+            "translation_norm_m": 0.018921639609608767
+          },
+          "validation_baseline": {
+            "absolute_median_m": 0.0042108953930437565,
+            "absolute_p90_m": 0.0122331565245986,
+            "absolute_p95_m": 0.018991116806864723,
+            "point_count": 13645,
+            "signed_median_m": -0.003347837133333087
+          },
+          "validation_corrected": {
+            "absolute_median_m": 0.0032309754751622677,
+            "absolute_p90_m": 0.009025847539305687,
+            "absolute_p95_m": 0.011839933320879936,
+            "point_count": 13645,
+            "signed_median_m": -0.0009000414283946157
+          },
+          "validation_improvement": {
+            "absolute_change_m": {
+              "absolute_median_m": -0.0009799199178814888,
+              "absolute_p90_m": -0.0032073089852929122,
+              "absolute_p95_m": -0.007151183485984787
+            },
+            "absolute_signed_median_change_m": -0.0024477957049384713,
+            "all_required_metrics_improved": true,
+            "checks": {
+              "absolute_median_m": true,
+              "absolute_p90_m": true,
+              "absolute_p95_m": true,
+              "absolute_signed_median": true
+            }
+          },
+          "validation_sequence": "pour_bowl_plate_20230927_017"
+        },
+        {
+          "fit_sequence": "pour_bowl_plate_20230927_017",
+          "frozen_correction": {
+            "fit_contract": {
+              "bound_provenance": "NUMERICAL_SAFETY_BOUND",
+              "loss": "soft_l1",
+              "maximum_function_evaluations": 80,
+              "maximum_rotation_deg": 10.0,
+              "maximum_translation_m": 0.1,
+              "minimum_points": 64,
+              "robust_scale_m": 0.01
+            },
+            "fit_metrics": {
+              "absolute_median_m": 0.0028004904743283987,
+              "absolute_p90_m": 0.006921189557760954,
+              "absolute_p95_m": 0.01226247325539587,
+              "point_count": 13645,
+              "signed_median_m": 0.0012309785233810544
+            },
+            "identity_metrics": {
+              "absolute_median_m": 0.0042108953930437565,
+              "absolute_p90_m": 0.0122331565245986,
+              "absolute_p95_m": 0.018991116806864723,
+              "point_count": 13645,
+              "signed_median_m": -0.003347837133333087
+            },
+            "model": "WORLD_FIXED",
+            "optimizer": {
+              "cost": 0.2596158938993067,
+              "function_evaluations": 52,
+              "message": "Both `ftol` and `xtol` termination conditions are satisfied.",
+              "optimality": 0.00949934269731913,
+              "status": 4,
+              "success": true
+            },
+            "parameters_translation_m_then_rotvec_rad": [
+              0.020133854579388284,
+              0.0005744258346892301,
+              -0.013193952532754778,
+              -0.0024072350229685656,
+              -0.026086904469788227,
+              -0.009822153908048628
+            ],
+            "rotation_angle_deg": 1.6030495682009052,
+            "transform": [
+              [
+                0.9996115246962992,
+                0.009852269107818,
+                -0.02607167980332964,
+                0.020133854579388284
+              ],
+              [
+                -0.009789475894087912,
+                0.9999488685916615,
+                0.0025350274111552713,
+                0.0005744258346892301
+              ],
+              [
+                0.02609532249387394,
+                -0.0022788145346587583,
+                0.999656861702183,
+                -0.013193952532754778
+              ],
+              [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            ],
+            "translation_norm_m": 0.024078672070944843
+          },
+          "validation_baseline": {
+            "absolute_median_m": 0.005397253204137087,
+            "absolute_p90_m": 0.02903428375720979,
+            "absolute_p95_m": 0.057968976721167374,
+            "point_count": 9720,
+            "signed_median_m": -0.0053835774306207895
+          },
+          "validation_corrected": {
+            "absolute_median_m": 0.0024108884390443563,
+            "absolute_p90_m": 0.02258078660815955,
+            "absolute_p95_m": 0.053653534874320015,
+            "point_count": 9720,
+            "signed_median_m": -0.0003792232892010361
+          },
+          "validation_improvement": {
+            "absolute_change_m": {
+              "absolute_median_m": -0.0029863647650927305,
+              "absolute_p90_m": -0.00645349714905024,
+              "absolute_p95_m": -0.004315441846847359
+            },
+            "absolute_signed_median_change_m": -0.005004354141419753,
+            "all_required_metrics_improved": true,
+            "checks": {
+              "absolute_median_m": true,
+              "absolute_p90_m": true,
+              "absolute_p95_m": true,
+              "absolute_signed_median": true
+            }
+          },
+          "validation_sequence": "brush_brush_bowl_20230927_027"
+        }
+      ]
+    }
+  },
+  "schema": "taco_cross_sequence_calibration_validation_v1",
+  "selected_model": null,
+  "selection_rule": "one model passes while the other fails, or one threshold-free dominates all required held-out metrics in both folds"
+}
