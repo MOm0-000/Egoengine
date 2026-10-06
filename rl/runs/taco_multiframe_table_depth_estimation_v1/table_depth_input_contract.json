@@ -1,0 +1,66 @@
+{
+  "active_old_support": {
+    "provenance": "PROJECT_SAMPLE_CONTRACT",
+    "schema": "support_surface_contract_v1",
+    "simulator": {
+      "equation": "normal dot x = offset",
+      "frame": "simulator",
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "offset_m": 0.72
+    },
+    "source": {
+      "direction_world": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "entity_id": "146",
+      "entity_role": "target",
+      "extremum": "minimum",
+      "frame_index": 0,
+      "method": "support_entity_extreme_surface"
+    },
+    "source_frame": "world"
+  },
+  "camera": {
+    "backprojection": "inverse rigid transform",
+    "extrinsic": "world_to_camera"
+  },
+  "checks": {
+    "active_old_support_is_target_bottom": true,
+    "active_simulator_plane_still_0p72": true,
+    "container_pts_not_logical_time": true,
+    "depth_scale_4000": true,
+    "frame_mapping_index_aligned": true,
+    "logical_rate_30_hz": true,
+    "upstream_authorizes_separate_estimator": true,
+    "upstream_registration_resolved": true
+  },
+  "depth": {
+    "invalid": "raw == 0; discarded without interpolation",
+    "logical_rate_hz": 30,
+    "mapping": "INDEX_ALIGNED",
+    "scale": 4000
+  },
+  "estimator_forbidden_inputs": [
+    "target/bowl bottom",
+    "tool/brush bottom",
+    "historical brush-floor residual",
+    "active sample support offset",
+    "simulator z=0.72",
+    "table colour"
+  ],
+  "passed": true,
+  "schema": "taco_table_depth_input_contract_v1",
+  "world": {
+    "up": [
+      0,
+      0,
+      1
+    ]
+  }
+}
