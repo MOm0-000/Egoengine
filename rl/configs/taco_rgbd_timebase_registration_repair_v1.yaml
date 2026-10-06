@@ -1,0 +1,118 @@
+schema: taco_rgbd_timebase_registration_repair_v1
+status: ZERO_RUNTIME_RGBD_TIMEBASE_AND_REGISTRATION_REPAIR
+minimum_baseline: cdf9d6018e02a59fbb70d9d0a063b22b8aa89f4c
+paper_faithful: false
+
+authorization:
+  support_plane_estimation: false
+  active_support_contract_replacement: false
+  mink: false
+  physics: false
+  replay: false
+  mpc: false
+  reinforcement_learning: false
+  promotion: false
+  chunk_commit: false
+
+official:
+  paper_url: https://openaccess.thecvf.com/content/CVPR2024/papers/Liu_TACO_Benchmarking_Generalizable_Bimanual_Tool-ACtion-Object_Understanding_CVPR_2024_paper.pdf
+  repository: https://github.com/leolyliu/TACO-Instructions.git
+  commit: b385ac1e89f35214bfbbef0d63e6df0ac8dac02e
+  checkout: /data_all/zzx/3.2RL/third_party/TACO-Instructions-b385ac1e89f35214bfbbef0d63e6df0ac8dac02e
+  projection_entrypoint: dataset_utils/project_pose_to_egocentric_view.py
+  available_sequences: data_lists/v1_egocentric_data_available_sequences.txt
+  depth_issue_url: https://github.com/leolyliu/TACO-Instructions/issues/15
+  hardware_issue_url: https://github.com/leolyliu/TACO-Instructions/issues/7
+  scale_fix_commit: c06f82cec2c79b9e443f19b9f9cdb83031908559
+  scale_fix_url: https://github.com/leolyliu/TACO-Instructions/commit/c06f82cec2c79b9e443f19b9f9cdb83031908559
+  device: cuda:0
+
+timeline:
+  logical_rate_hz: 30
+  encoded_depth_rate_hz: 15
+  official_decode_rate_hz: 30
+  depth_width: 1920
+  depth_height: 1080
+  depth_dtype: uint16
+  depth_scale: 4000.0
+  h3_minimum_exact_pair_fraction: 0.90
+  container_timestamp_minimum_native_usage_fraction: 0.90
+  hypotheses: [INDEX_ALIGNED, NATIVE_15_TO_30, CURRENT_FILE_ALREADY_EXPANDED, SEQUENCE_MAPPING_UNRESOLVED]
+
+registration:
+  uniform_frame_count: 12
+  minimum_samples_with_high_coverage_anchors: 2
+  interior_erosion_px: 5
+  front_surface_tolerance_m: 0.001
+  minimum_valid_pixels: 64
+  high_depth_coverage_fraction: 0.50
+  maximum_median_absolute_error_mm: 20.0
+  threshold_provenance: REUSED_FROZEN_FROM_TACO_SOURCE_ALIGNMENT_OFFICIAL_PROJECTION_V2
+
+samples:
+  - key: brush_brush_bowl_20230927_027
+    triplet: "(brush, brush, bowl)"
+    sequence: "20230927_027"
+    expected_frames: 209
+    tool_id: "071"
+    target_id: "146"
+    root: /data_all/zzx/3.2RL/data/taco_v1/dev4
+    rgb_video: /data_all/zzx/3.2RL/data/taco_v1/dev4/rgb/taco_brush_brush_bowl_20230927_027.mp4
+    depth_video: /data_all/zzx/3.2RL/data/taco_v1/dev4/depth_original/taco_brush_brush_bowl_20230927_027.avi
+    release_depth_source: /data_all/zzx/egoengine_new/data/taco_v1/depth_original/(brush, brush, bowl)/egocentric_depth.avi
+    release_manifest: /data_all/zzx/egoengine_new/data/taco_v1/depth_original/selected_original_depth_manifest.json
+    intrinsic: /data_all/zzx/3.2RL/data/taco_v1/dev4/camera/Egocentric_Camera_Parameters/(brush, brush, bowl)/20230927_027/egocentric_intrinsic.txt
+    extrinsic: /data_all/zzx/3.2RL/data/taco_v1/dev4/camera/Egocentric_Camera_Parameters/(brush, brush, bowl)/20230927_027/egocentric_frame_extrinsic.npy
+    hand_joints: /data_all/zzx/3.2RL/data/taco_v1/dev4/hand_poses/Hand_Poses/(brush, brush, bowl)/20230927_027/hand_joints.npy
+    object_pose_dir: /data_all/zzx/3.2RL/data/taco_v1/dev4/object_poses/Object_Poses/(brush, brush, bowl)/20230927_027
+    object_model_dir: /data_all/zzx/3.2RL/data/taco_v1/dev4/object_models/object_models_released
+  - key: pour_bowl_plate_20230927_017
+    triplet: "(pour in some, bowl, plate)"
+    sequence: "20230927_017"
+    expected_frames: 198
+    tool_id: "022"
+    target_id: "135"
+    root: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate
+    rgb_video: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/rgb/taco_pour_bowl_plate_20230927_017.mp4
+    depth_video: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/depth_original/taco_pour_bowl_plate_20230927_017.avi
+    release_depth_source: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/depth_original/taco_pour_bowl_plate_20230927_017.avi
+    release_manifest: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/depth_original/original_depth_manifest.json
+    intrinsic: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/camera/Egocentric_Camera_Parameters/(pour in some, bowl, plate)/20230927_017/egocentric_intrinsic.txt
+    extrinsic: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/camera/Egocentric_Camera_Parameters/(pour in some, bowl, plate)/20230927_017/egocentric_frame_extrinsic.npy
+    hand_joints: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/hand_poses/Hand_Poses/(pour in some, bowl, plate)/20230927_017/hand_joints.npy
+    object_pose_dir: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/object_poses/Object_Poses/(pour in some, bowl, plate)/20230927_017
+    object_model_dir: /data_all/zzx/3.2RL/data/taco_v1/pour_bowl_plate/object_models/object_models_released
+  - key: skim_spatula_plate_20230926_004
+    triplet: "(skim off, spatula, plate)"
+    sequence: "20230926_004"
+    expected_frames: 400
+    tool_id: "033"
+    target_id: "019"
+    root: /data_all/zzx/3.2RL/data/taco_v1/dev4
+    rgb_video: /data_all/zzx/3.2RL/data/taco_v1/dev4/rgb/taco_skim_spatula_plate_20230926_004.mp4
+    depth_video: /data_all/zzx/3.2RL/data/taco_v1/dev4/depth_original/taco_skim_spatula_plate_20230926_004.avi
+    release_depth_source: /data_all/zzx/egoengine_new/data/taco_v1/depth_original/(skim off, spatula, plate)/egocentric_depth.avi
+    release_manifest: /data_all/zzx/egoengine_new/data/taco_v1/depth_original/selected_original_depth_manifest.json
+    intrinsic: /data_all/zzx/3.2RL/data/taco_v1/dev4/camera/Egocentric_Camera_Parameters/(skim off, spatula, plate)/20230926_004/egocentric_intrinsic.txt
+    extrinsic: /data_all/zzx/3.2RL/data/taco_v1/dev4/camera/Egocentric_Camera_Parameters/(skim off, spatula, plate)/20230926_004/egocentric_frame_extrinsic.npy
+    hand_joints: /data_all/zzx/3.2RL/data/taco_v1/dev4/hand_poses/Hand_Poses/(skim off, spatula, plate)/20230926_004/hand_joints.npy
+    object_pose_dir: /data_all/zzx/3.2RL/data/taco_v1/dev4/object_poses/Object_Poses/(skim off, spatula, plate)/20230926_004
+    object_model_dir: /data_all/zzx/3.2RL/data/taco_v1/dev4/object_models/object_models_released
+  - key: smear_eraser_box_20231103_071
+    triplet: "(smear, eraser, box)"
+    sequence: "20231103_071"
+    expected_frames: 90
+    tool_id: "078"
+    target_id: "087"
+    root: /data_all/zzx/3.2RL/data/taco_v1/dev4
+    rgb_video: /data_all/zzx/3.2RL/data/taco_v1/dev4/rgb/taco_smear_eraser_box_20231103_071.mp4
+    depth_video: /data_all/zzx/3.2RL/data/taco_v1/dev4/depth_original/taco_smear_eraser_box_20231103_071.avi
+    release_depth_source: /data_all/zzx/egoengine_new/data/taco_v1/depth_original/(smear, eraser, box)/egocentric_depth.avi
+    release_manifest: /data_all/zzx/egoengine_new/data/taco_v1/depth_original/selected_original_depth_manifest.json
+    intrinsic: /data_all/zzx/3.2RL/data/taco_v1/dev4/camera/Egocentric_Camera_Parameters/(smear, eraser, box)/20231103_071/egocentric_intrinsic.txt
+    extrinsic: /data_all/zzx/3.2RL/data/taco_v1/dev4/camera/Egocentric_Camera_Parameters/(smear, eraser, box)/20231103_071/egocentric_frame_extrinsic.npy
+    hand_joints: /data_all/zzx/3.2RL/data/taco_v1/dev4/hand_poses/Hand_Poses/(smear, eraser, box)/20231103_071/hand_joints.npy
+    object_pose_dir: /data_all/zzx/3.2RL/data/taco_v1/dev4/object_poses/Object_Poses/(smear, eraser, box)/20231103_071
+    object_model_dir: /data_all/zzx/3.2RL/data/taco_v1/dev4/object_models/object_models_released
+
+output: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_rgbd_timebase_registration_repair_v1

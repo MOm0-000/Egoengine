@@ -1,0 +1,51 @@
+{
+  "all_samples_officially_egocentric_available": true,
+  "available_sequence_list": {
+    "bytes": 79460,
+    "path": "/data_all/zzx/3.2RL/third_party/TACO-Instructions-b385ac1e89f35214bfbbef0d63e6df0ac8dac02e/data_lists/v1_egocentric_data_available_sequences.txt",
+    "sha256": "8c6b15a272e93efa3af0d0d58f79a9fb0e4aeffc2b4ff8c09ef9278aced63354"
+  },
+  "facts": [
+    {
+      "fact": "TACO uses Intel RealSense L515; camera and mocap systems run at 30 Hz; egocentric resolution is 1920x1080.",
+      "source": "https://openaccess.thecvf.com/content/CVPR2024/papers/Liu_TACO_Benchmarking_Generalizable_Bimanual_Tool-ACtion-Object_Understanding_CVPR_2024_paper.pdf"
+    },
+    {
+      "commit": "b385ac1e89f35214bfbbef0d63e6df0ac8dac02e",
+      "entrypoint": "dataset_utils/project_pose_to_egocentric_view.py",
+      "fact": "Pinned official projection code uses object, hand, extrinsic, and RGB by the same frame index.",
+      "source": "https://github.com/leolyliu/TACO-Instructions.git"
+    },
+    {
+      "fact": "A TACO maintainer states that depth AVI encoding used input framerate 15 with FFV1.",
+      "issue": 15,
+      "source": "https://github.com/leolyliu/TACO-Instructions/issues/15"
+    },
+    {
+      "commit": "b385ac1e89f35214bfbbef0d63e6df0ac8dac02e",
+      "fact": "The official README decodes depth with the fps=30 filter and specifies uint16 1920x1080 depth with scale 4000.",
+      "source": "https://github.com/leolyliu/TACO-Instructions.git"
+    },
+    {
+      "commit": "c06f82cec2c79b9e443f19b9f9cdb83031908559",
+      "fact": "The official scale documentation was corrected from 1000 to 4000.",
+      "source": "https://github.com/leolyliu/TACO-Instructions/commit/c06f82cec2c79b9e443f19b9f9cdb83031908559"
+    },
+    {
+      "fact": "FFmpeg's fps filter duplicates or drops frames to obtain a constant requested frame rate.",
+      "source": "https://ffmpeg.org/ffmpeg-filters.html#fps"
+    },
+    {
+      "fact": "TACO maintainers acknowledge hardware-related egocentric modality mismatch in some sequences and point users to the available-sequence list.",
+      "issue": 7,
+      "source": "https://github.com/leolyliu/TACO-Instructions/issues/7"
+    }
+  ],
+  "predeclared_sample_membership": {
+    "brush_brush_bowl_20230927_027": true,
+    "pour_bowl_plate_20230927_017": true,
+    "skim_spatula_plate_20230926_004": true,
+    "smear_eraser_box_20231103_071": true
+  },
+  "schema": "official_taco_rgbd_contract_v1"
+}

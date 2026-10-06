@@ -1,0 +1,77 @@
+{
+  "active_taco_depth_scale_bug": false,
+  "active_taco_metric_depth_contract": "uint16 raw / 4000 metres",
+  "all_matches": [
+    "rl/configs/taco_support_surface_generalization_audit_v1.yaml:50:  depth_scale: 4000.0",
+    "rl/configs/taco_pour_algorithmic_reproduction_training_v3_protocol_snapshot.yaml:34:  original_depth_status: decoded_uint16_scale_4000_all_198_frames",
+    "rl/configs/taco_pour_algorithmic_reproduction_training_v3_protocol_snapshot.yaml:692:      actual_tool_displacement_world_mm: [0.03904104232788086, 0.2776980400085449, 0.050008296966552734]",
+    "rl/configs/taco_pour_rl_train_v1.yaml:40:  control_intervals: 40000",
+    "rl/configs/taco_pour_rl_train_v1.yaml:41:  training_physics_steps: 400000",
+    "rl/scripts/audit_taco_support_surface_generalization_v1.py:166:        \"-pix_fmt\", \"gray16le\", \"-\",",
+    "rl/scripts/audit_taco_support_surface_generalization_v1.py:253:        rasterizer.raster_settings, max_faces_per_bin=400000,",
+    "rl/scripts/audit_taco_support_surface_generalization_v1.py:369:            \"depth_decode\": \"ffmpeg gray16le; uint16 / 4000 metres\",",
+    "rl/scripts/audit_taco_support_surface_generalization_v1.py:512:        \"depth\": {\"resolution\": [1920, 1080], \"dtype\": \"uint16\", \"scale\": 4000.0,",
+    "rl/scripts/audit_taco_support_surface_generalization_v1.py:513:                  \"metres\": \"raw / 4000\", \"source\": str(paths[\"depth_video\"])},",
+    "rl/configs/taco_pour_endpoint40_optimizer_review_v1.yaml:93:  maximum_physics_steps_per_seed: 400000",
+    "rl/configs/taco_pour_rl_task_informed_critic_v2.yaml:42:  control_intervals: 40000",
+    "rl/configs/taco_pour_rl_task_informed_critic_v2.yaml:43:  training_physics_steps: 400000",
+    "rl/configs/taco_rgbd_timebase_registration_repair_v1.yaml:37:  depth_scale: 4000.0",
+    "rl/scripts/run_contact_geometry_candidate.py:334:    report = run(args.task, args.output, threshold_m=args.contact_threshold_mm / 1000.0)",
+    "rl/configs/taco_pour_progressive_chunk_execution_v1.yaml:35:    - {name: 400k, epoch: 250, physics_steps: 400000}",
+    "rl/configs/taco_pour_progressive_chunk_execution_v1.yaml:37:  maximum_physics_steps_per_restart: 400000",
+    "rl/scripts/audit_taco_rgbd_timebase_registration_repair_v1.py:137:    if float(cfg[\"timeline\"][\"depth_scale\"]) != 4000.0:",
+    "rl/scripts/audit_taco_rgbd_timebase_registration_repair_v1.py:138:        raise ValueError(\"TACO metric depth scale must be 4000\")",
+    "rl/scripts/audit_taco_rgbd_timebase_registration_repair_v1.py:289:            {\"fact\": \"The official README decodes depth with the fps=30 filter and specifies uint16 1920x1080 depth with scale 4000.\", \"source\": official[\"repository\"], \"commit\": official[\"commit\"]},",
+    "rl/scripts/audit_taco_rgbd_timebase_registration_repair_v1.py:290:            {\"fact\": \"The official scale documentation was corrected from 1000 to 4000.\", \"source\": official[\"scale_fix_url\"], \"commit\": official[\"scale_fix_commit\"]},",
+    "rl/scripts/audit_taco_rgbd_timebase_registration_repair_v1.py:399:        rasterizer.raster_settings = replace(rasterizer.raster_settings, max_faces_per_bin=400000)",
+    "rl/scripts/audit_taco_rgbd_timebase_registration_repair_v1.py:501:        \"rg\", \"-n\", r\"(/\\s*1000|/1000|\\*\\s*0\\.001|depth_scale\\s*[:=]\\s*1000|millimeter|gray16|4000)\",",
+    "rl/scripts/audit_taco_rgbd_timebase_registration_repair_v1.py:519:        \"active_taco_metric_depth_contract\": \"uint16 raw / 4000 metres\",",
+    "rl/scripts/audit_taco_rgbd_timebase_registration_repair_v1.py:650:            \"logical_timestamp\": \"frame_index / 30\", \"depth_scale\": 4000,",
+    "rl/scripts/audit_taco_rgbd_timebase_registration_repair_v1.py:689:11. **active scale1000 bug\uff1a** \u672a\u53d1\u73b0\u3002active TACO metric-depth \u8def\u5f84\u662f `uint16 raw / 4000`\uff1b\u68c0\u51fa\u7684 `/1000` \u662f\u975e\u6df1\u5ea6\u51e0\u4f55\u5355\u4f4d\u6362\u7b97\uff0c\u5386\u53f2 artifact/TRASH \u672a\u7be1\u6539\u3002",
+    "rl/configs/taco_pour_virtual_object_assist_v1.yaml:122:  formal_training_physics_steps_max: 400000",
+    "rl/configs/taco_pour_virtual_object_assist_v1.yaml:123:  formal_training_control_intervals_max: 40000",
+    "rl/configs/replay_rl_protocol.yaml:34:  original_depth_status: decoded_uint16_scale_4000_all_198_frames",
+    "rl/configs/replay_rl_protocol.yaml:692:      actual_tool_displacement_world_mm: [0.03904104232788086, 0.2776980400085449, 0.050008296966552734]",
+    "rl/configs/replay_rl_protocol.yaml:1744:        samples_per_seed: 40000",
+    "rl/scripts/audit_taco_remaining_contacts.py:71:            records[\"intersection_bounds_m\"] = (intersection.bounds / 1000).tolist()",
+    "rl/scripts/audit_taco_brush_paper_baseline_v1.py:440:        rasterizer.raster_settings, max_faces_per_bin=400000,",
+    "rl/scripts/audit_taco_brush_paper_baseline_v1.py:517:        \"rasterizer_capacity_only\": {\"max_faces_per_bin\": 400000,",
+    "rl/src/video_to_spider/rl/core/virtual_assist.py:108:        \"formal_training_physics_steps_max\": 400000,",
+    "rl/src/video_to_spider/rl/core/virtual_assist.py:109:        \"formal_training_control_intervals_max\": 40000,",
+    "rl/src/video_to_spider/rl/core/virtual_assist.py:679:    worst_case = verification_physics + 400000 + 3200 + 800",
+    "rl/src/video_to_spider/rl/core/runner.py:128:        \"epochs\": 250, \"control_intervals\": 40000,",
+    "rl/src/video_to_spider/rl/core/runner.py:129:        \"training_physics_steps\": 400000, \"actor_optimizer_steps\": 250,",
+    "rl/src/egoengine_repro/evaluation/taco_depth.py:38:def raw_depth_to_metres(raw: np.ndarray, *, scale: float = 4000.0) -> np.ndarray:",
+    "rl/src/egoengine_repro/evaluation/taco_depth.py:93:    command += [\"-f\", \"rawvideo\", \"-pix_fmt\", \"gray16le\", \"-\"]",
+    "rl/src/egoengine_repro/evaluation/taco_depth.py:126:def frame_record(index: int, raw: np.ndarray, *, scale: float = 4000.0) -> dict:",
+    "rl/src/egoengine_repro/experiments/taco_depth_calibration.py:175:                stage[\"stderr_tail\"] = result.stderr[-4000:]"
+  ],
+  "historical_artifacts_and_TRASH_not_rewritten": true,
+  "scale_1000_like_matches": [
+    {
+      "classification": "NON_DEPTH_GEOMETRY_MILLIMETRE_TO_METRE_CONVERSION",
+      "match": "rl/scripts/run_contact_geometry_candidate.py:334:    report = run(args.task, args.output, threshold_m=args.contact_threshold_mm / 1000.0)"
+    },
+    {
+      "classification": "REVIEWED_NON_TACO_METRIC_DEPTH_PATH",
+      "match": "rl/scripts/audit_taco_rgbd_timebase_registration_repair_v1.py:501:        \"rg\", \"-n\", r\"(/\\s*1000|/1000|\\*\\s*0\\.001|depth_scale\\s*[:=]\\s*1000|millimeter|gray16|4000)\","
+    },
+    {
+      "classification": "REVIEWED_NON_TACO_METRIC_DEPTH_PATH",
+      "match": "rl/scripts/audit_taco_rgbd_timebase_registration_repair_v1.py:689:11. **active scale1000 bug\uff1a** \u672a\u53d1\u73b0\u3002active TACO metric-depth \u8def\u5f84\u662f `uint16 raw / 4000`\uff1b\u68c0\u51fa\u7684 `/1000` \u662f\u975e\u6df1\u5ea6\u51e0\u4f55\u5355\u4f4d\u6362\u7b97\uff0c\u5386\u53f2 artifact/TRASH \u672a\u7be1\u6539\u3002"
+    },
+    {
+      "classification": "NON_DEPTH_GEOMETRY_MILLIMETRE_TO_METRE_CONVERSION",
+      "match": "rl/scripts/audit_taco_remaining_contacts.py:71:            records[\"intersection_bounds_m\"] = (intersection.bounds / 1000).tolist()"
+    }
+  ],
+  "schema": "taco_active_depth_code_audit_v1",
+  "search_command": [
+    "rg",
+    "-n",
+    "(/\\s*1000|/1000|\\*\\s*0\\.001|depth_scale\\s*[:=]\\s*1000|millimeter|gray16|4000)",
+    "rl/src",
+    "rl/scripts",
+    "rl/configs"
+  ]
+}
