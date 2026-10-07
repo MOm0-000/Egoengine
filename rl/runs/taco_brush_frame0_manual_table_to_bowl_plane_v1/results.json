@@ -1,0 +1,360 @@
+{
+  "all_selected_points_signed_distance_mm": {
+    "mean": 18.951024822072043,
+    "negative_count": 5305,
+    "p00": -237.2058247754645,
+    "p01": -3.41120967109515,
+    "p05": 0.6284501799854736,
+    "p100": 67.47923255547505,
+    "p25": 8.169997602175572,
+    "p50": 17.996793977105742,
+    "p75": 28.166079962063357,
+    "p95": 41.62301136817498,
+    "p99": 52.73865328701815,
+    "positive_count": 123731,
+    "positive_fraction": 0.9588874422641743,
+    "std": 13.328748301922925,
+    "zero_count": 0
+  },
+  "config": {
+    "bytes": 2863,
+    "path": "/data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_frame0_manual_table_to_bowl_plane_v1.yaml",
+    "sha256": "fc63534d99d067d7eb018c582221042634501ea642b2c2b01d7853db6bea33a2"
+  },
+  "fixed_bowl_support_plane": {
+    "equation": "normal dot world_point = offset",
+    "normal": [
+      0.003529859428565972,
+      0.04436892570337393,
+      0.9990089782000677
+    ],
+    "offset_m": 0.5498199185386494,
+    "refitted": false
+  },
+  "inputs": {
+    "depth_video": {
+      "bytes": 53219728,
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/depth_original/taco_brush_brush_bowl_20230927_027.avi",
+      "sha256": "3ade4d9a7597e88d7d962b9e9e3dbecc59443ed1404c7566066dae1975403a22"
+    },
+    "extrinsic": {
+      "bytes": 13504,
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/camera/Egocentric_Camera_Parameters/(brush, brush, bowl)/20230927_027/egocentric_frame_extrinsic.npy",
+      "sha256": "979bce3ebf09a4e719cb539138bc129277f42cbb386cba401052383af4255ea2"
+    },
+    "fixed_bowl_support_plane": {
+      "bytes": 9964,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_bowl_frame0_support_plane_v1/results.json",
+      "sha256": "e63e336db956ea81ee21daa5059be04cf5d1d2b079050d3c856623e7476512ff"
+    },
+    "intrinsic": {
+      "bytes": 225,
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/camera/Egocentric_Camera_Parameters/(brush, brush, bowl)/20230927_027/egocentric_intrinsic.txt",
+      "sha256": "f791adc426a186c3a13849e83a18c6104fdafc9edef295c3f850ffd10cadd3ce"
+    },
+    "rgb_video": {
+      "bytes": 12225693,
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/rgb/taco_brush_brush_bowl_20230927_027.mp4",
+      "sha256": "6dad055163a24af85c2eb3797a081717dd7668853c35434f6a40f27e00bf3212"
+    }
+  },
+  "integrity": {
+    "active_support_contract_modified": false,
+    "active_support_sha256_after": "ff7dd7316a25510936e6c326ae34ab72e0006077e456ff4fb80e4e760bf8fcc3",
+    "active_support_sha256_before": "ff7dd7316a25510936e6c326ae34ab72e0006077e456ff4fb80e4e760bf8fcc3",
+    "source_data_modified": false
+  },
+  "measurement_contract": {
+    "calibration_algorithm": false,
+    "distance_based_point_rejection": false,
+    "horizontal_prior": false,
+    "refit_reference_plane": false,
+    "report_every_valid_selected_depth_point": true,
+    "sign_convention": "positive is the side pointed to by the fixed bowl-plane normal",
+    "signed_distance_equation": "fixed_normal dot world_point - fixed_offset",
+    "signed_distance_truncation": false
+  },
+  "repository_head": "fc612bd7f5e33fabedb558f64c8a9001d87f8e05",
+  "sample": {
+    "frame": 0,
+    "sequence": "20230927_027",
+    "target_id": "146",
+    "triplet": "(brush, brush, bowl)"
+  },
+  "schema": "taco_brush_frame0_manual_table_to_bowl_plane_v1",
+  "selection": {
+    "basis": "FRAME0_RGB_VISUAL_INSPECTION_ONLY",
+    "invalid_selected_depth_pixel_count": 17125,
+    "policy": "Conservative polygons visibly inside the turquoise table surface, away from the bowl, brush, both hands, table boundary, object/hand shadow boundaries, and uncertain narrow gaps. Polygons were frozen before any signed distance was computed.",
+    "polygon_count": 6,
+    "polygons_xy_px": {
+      "A_top_left": [
+        [
+          520,
+          220
+        ],
+        [
+          750,
+          190
+        ],
+        [
+          760,
+          315
+        ],
+        [
+          550,
+          335
+        ]
+      ],
+      "B_top_mid": [
+        [
+          800,
+          170
+        ],
+        [
+          1010,
+          175
+        ],
+        [
+          1000,
+          325
+        ],
+        [
+          800,
+          325
+        ]
+      ],
+      "C_top_right": [
+        [
+          1080,
+          220
+        ],
+        [
+          1230,
+          260
+        ],
+        [
+          1270,
+          350
+        ],
+        [
+          1130,
+          340
+        ]
+      ],
+      "D_left_mid": [
+        [
+          350,
+          540
+        ],
+        [
+          470,
+          530
+        ],
+        [
+          480,
+          700
+        ],
+        [
+          340,
+          710
+        ]
+      ],
+      "F_lower_mid": [
+        [
+          760,
+          720
+        ],
+        [
+          980,
+          720
+        ],
+        [
+          970,
+          880
+        ],
+        [
+          770,
+          880
+        ]
+      ],
+      "G_right_mid": [
+        [
+          1220,
+          400
+        ],
+        [
+          1310,
+          420
+        ],
+        [
+          1320,
+          560
+        ],
+        [
+          1200,
+          570
+        ]
+      ]
+    },
+    "rejected_by_distance_count": 0,
+    "selected_polygon_pixel_count": 146161,
+    "spatial_stride_px": 1,
+    "valid_selected_depth_point_count": 129036
+  },
+  "spatial_descriptors_only_not_a_plane_fit": {
+    "per_region": [
+      {
+        "invalid_depth_pixel_count": 5368,
+        "polygon_pixel_count": 27241,
+        "region": "A_top_left",
+        "signed_distance_mm": {
+          "mean": 29.942570376691993,
+          "p00": -56.050440055065266,
+          "p01": -0.3581959665126444,
+          "p05": 11.762122594778136,
+          "p100": 67.47923255547505,
+          "p25": 21.673809272423018,
+          "p50": 30.076270858172215,
+          "p75": 37.75152927993686,
+          "p95": 49.84077029142513,
+          "p99": 59.62066955402578,
+          "std": 12.357841460843282
+        },
+        "valid_depth_point_count": 21873,
+        "world_xyz_range_m": [
+          0.15226593331483734,
+          0.13051636671849504,
+          0.12609845916714735
+        ]
+      },
+      {
+        "invalid_depth_pixel_count": 6731,
+        "polygon_pixel_count": 31636,
+        "region": "B_top_mid",
+        "signed_distance_mm": {
+          "mean": 24.91902709432357,
+          "p00": -237.2058247754645,
+          "p01": -7.150266536278074,
+          "p05": 5.70647057939131,
+          "p100": 61.70229781357794,
+          "p25": 18.489478471569008,
+          "p50": 24.752847613234042,
+          "p75": 32.75279029181499,
+          "p95": 44.069129499784566,
+          "p99": 54.42267930007481,
+          "std": 13.381868737636383
+        },
+        "valid_depth_point_count": 24905,
+        "world_xyz_range_m": [
+          0.15703227155653188,
+          0.24017024673788318,
+          0.3071718636431632
+        ]
+      },
+      {
+        "invalid_depth_pixel_count": 4835,
+        "polygon_pixel_count": 14351,
+        "region": "C_top_right",
+        "signed_distance_mm": {
+          "mean": 24.817641346226075,
+          "p00": -128.5184308473749,
+          "p01": -1.105577447123346,
+          "p05": 4.6621087587777055,
+          "p100": 61.85122864879467,
+          "p25": 15.848099916866254,
+          "p50": 24.377983554038973,
+          "p75": 34.07724031425258,
+          "p95": 46.33425786576706,
+          "p99": 53.02650823461068,
+          "std": 13.186548994933755
+        },
+        "valid_depth_point_count": 9516,
+        "world_xyz_range_m": [
+          0.12443471094368878,
+          0.15637550947449685,
+          0.19624722948366452
+        ]
+      },
+      {
+        "invalid_depth_pixel_count": 128,
+        "polygon_pixel_count": 22401,
+        "region": "D_left_mid",
+        "signed_distance_mm": {
+          "mean": 19.67383581199205,
+          "p00": -5.029202227355367,
+          "p01": 2.4620134249617065,
+          "p05": 5.661651020517125,
+          "p100": 41.79348256576632,
+          "p25": 13.553998716230641,
+          "p50": 19.278426368221858,
+          "p75": 25.897194675975733,
+          "p95": 33.153464633568426,
+          "p99": 39.74482273640096,
+          "std": 8.412672157670663
+        },
+        "valid_depth_point_count": 22273,
+        "world_xyz_range_m": [
+          0.09826429773745513,
+          0.11115665574492017,
+          0.04471930042059802
+        ]
+      },
+      {
+        "invalid_depth_pixel_count": 0,
+        "polygon_pixel_count": 33971,
+        "region": "F_lower_mid",
+        "signed_distance_mm": {
+          "mean": 6.093221621966029,
+          "p00": -6.542721609212765,
+          "p01": -3.428358715280422,
+          "p05": -1.557216833275199,
+          "p100": 25.565463016446245,
+          "p25": 2.876081542023956,
+          "p50": 5.992305338072046,
+          "p75": 8.93989516935212,
+          "p95": 14.172672153198063,
+          "p99": 17.016277301699652,
+          "std": 4.706257826336592
+        },
+        "valid_depth_point_count": 33971,
+        "world_xyz_range_m": [
+          0.12479995766022482,
+          0.09967772004202048,
+          0.030521218513313908
+        ]
+      },
+      {
+        "invalid_depth_pixel_count": 63,
+        "polygon_pixel_count": 16561,
+        "region": "G_right_mid",
+        "signed_distance_mm": {
+          "mean": 17.485111861824564,
+          "p00": -16.574956564862852,
+          "p01": -5.502026384465671,
+          "p05": 1.517902210690076,
+          "p100": 46.25181879006934,
+          "p25": 10.341296754843409,
+          "p50": 17.48315424196212,
+          "p75": 24.57256076676581,
+          "p95": 33.584566478808895,
+          "p99": 38.216251639858676,
+          "std": 9.908992105655706
+        },
+        "valid_depth_point_count": 16498,
+        "world_xyz_range_m": [
+          0.07230980303285883,
+          0.11988913866008113,
+          0.06473478219220974
+        ]
+      }
+    ],
+    "regional_median_max_mm": 30.076270858172215,
+    "regional_median_min_mm": 5.992305338072046,
+    "regional_median_span_mm": 24.08396552010017,
+    "spearman_signed_distance_vs_pixel_u": -0.1289224554388849,
+    "spearman_signed_distance_vs_pixel_v": -0.6457034177505233,
+    "spearman_signed_distance_vs_world_x": -0.23064103382107431,
+    "spearman_signed_distance_vs_world_y": 0.5905138676262006
+  }
+}
