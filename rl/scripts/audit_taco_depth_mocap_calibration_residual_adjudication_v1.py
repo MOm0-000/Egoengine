@@ -33,6 +33,9 @@ from egoengine_repro.evaluation.taco_depth import (  # noqa: E402
 from egoengine_repro.evaluation.taco_official_projection import (  # noqa: E402
     TacoOfficialProjector, load_official_hand_sequence,
 )
+from egoengine_repro.evaluation.taco_calibration_visibility import (  # noqa: E402
+    measured_target_selector, target_visibility_mask,
+)
 from egoengine_repro.scene.support_surface import Plane  # noqa: E402
 from egoengine_repro.scene.support_surface_estimation import (  # noqa: E402
     PlaneEstimate, aggregate_support_planes, backproject_metric_depth,
@@ -43,6 +46,9 @@ from egoengine_repro.scene.support_surface_estimation import (  # noqa: E402
 
 DEFAULT_CONFIG = RL_ROOT / "configs/taco_depth_mocap_calibration_residual_adjudication_v1.yaml"
 METRIC_KEYS = ("absolute_median_m", "absolute_p90_m", "absolute_p95_m")
+# Visibility-order tolerance only.  Eight TACO depth quanta provide a
+# conservative tie band without changing the calibration residual objective.
+OCCLUSION_VISIBILITY_UNCERTAINTY_M = 8.0 / 4000.0
 
 
 def _default(value: Any) -> Any:
@@ -370,11 +376,43 @@ def _selected_depth_frames(sample: dict[str, Any], cfg: dict[str, Any], selected
     return result
 
 
+def _calibration_occluders(cfg: dict[str, Any], sample: dict[str, Any]) -> dict[str, Any]:
+    """Load only nominal, release-available geometry used for visibility."""
+    chumpy = str(Path(cfg["official"]["chumpy_dependency"]).resolve(strict=True))
+    if chumpy not in sys.path:
+        sys.path.insert(0, chumpy)
+    dataset_utils = Path(cfg["official"]["checkout"]) / "dataset_utils"
+    hands: dict[str, dict[str, np.ndarray]] = {}
+    for side in ("left", "right"):
+        vertices, _, faces, _ = load_official_hand_sequence(
+            dataset_utils=dataset_utils,
+            pose_path=sample[f"{side}_hand"],
+            shape_path=sample[f"{side}_shape"],
+            side=side,
+            device=cfg["official"]["device"],
+        )
+        if vertices.shape[0] != sample["expected_frames"]:
+            raise ValueError(f"{sample['key']}: nominal {side} hand frame count mismatch")
+        hands[side] = {"vertices": vertices, "faces": faces}
+    target = trimesh.load_mesh(sample["target_mesh"], process=False)
+    target.apply_scale(0.01)
+    target_poses = np.load(sample["target_pose"], mmap_mode="r")
+    if target_poses.shape != (sample["expected_frames"], 4, 4):
+        raise ValueError(f"{sample['key']}: nominal target pose frame count mismatch")
+    return {
+        "hands": hands,
+        "target_vertices": np.asarray(target.vertices),
+        "target_faces": np.asarray(target.faces),
+        "target_poses": target_poses,
+    }
+
+
 def extract_anchors(cfg: dict[str, Any], sample: dict[str, Any]) -> dict[str, Any]:
     mesh = trimesh.load_mesh(sample["tool_mesh"], process=False)
     mesh.apply_scale(0.01)
     vertices, faces = np.asarray(mesh.vertices), np.asarray(mesh.faces)
     surface = TriangleSurface(vertices, faces)
+    occluders = _calibration_occluders(cfg, sample)
     poses = np.load(sample["tool_pose"], mmap_mode="r")
     extrinsic = np.load(sample["extrinsic"], mmap_mode="r")
     intrinsic = np.loadtxt(sample["intrinsic"])
@@ -389,14 +427,36 @@ def extract_anchors(cfg: dict[str, Any], sample: dict[str, Any]) -> dict[str, An
     )
     rasterizer = projector.official_wrapper.renderer.renderer.rasterizer
     rasterizer.raster_settings = replace(rasterizer.raster_settings, max_faces_per_bin=400000)
-    kernel_size = 2 * cfg["anchors"]["interior_erosion_px"] + 1
-    kernel = np.ones((kernel_size, kernel_size), dtype=np.uint8)
     observations, manifest = [], []
     for frame in frames:
         projector.set_camera(intrinsic, extrinsic[frame])
         rendered = projector.render_depth([_mesh(vertices, faces, poses[frame])])
-        interior = cv2.erode((rendered > 0).astype(np.uint8), kernel) > 0
-        valid = interior & np.isfinite(depths[frame]) & (depths[frame] > 0)
+        nominal_occluder_depths = [
+            projector.render_depth([
+                trimesh.Trimesh(
+                    vertices=occluders["hands"][side]["vertices"][frame],
+                    faces=occluders["hands"][side]["faces"], process=False,
+                )
+            ])
+            for side in ("left", "right")
+        ]
+        nominal_occluder_depths.append(projector.render_depth([_mesh(
+            occluders["target_vertices"], occluders["target_faces"],
+            occluders["target_poses"][frame],
+        )]))
+        visible = target_visibility_mask(
+            rendered, nominal_occluder_depths,
+            uncertainty_margin_m=OCCLUSION_VISIBILITY_UNCERTAINTY_M,
+        )
+        valid = measured_target_selector(
+            depths[frame], rendered, nominal_occluder_depths,
+            uncertainty_margin_m=OCCLUSION_VISIBILITY_UNCERTAINTY_M,
+            erosion_px=cfg["anchors"]["interior_erosion_px"],
+        )
+        interior = cv2.erode(
+            visible.astype(np.uint8),
+            np.ones((2 * cfg["anchors"]["interior_erosion_px"] + 1,) * 2, dtype=np.uint8),
+        ) > 0
         coverage = float(valid.sum() / max(int(interior.sum()), 1))
         qualified = (
             coverage >= cfg["anchors"]["minimum_valid_depth_fraction"]
@@ -411,6 +471,10 @@ def extract_anchors(cfg: dict[str, Any], sample: dict[str, Any]) -> dict[str, An
             "sample": sample["key"], "sequence": sample["sequence"], "frame": frame,
             "role": "tool", "object_id": sample["tool_id"],
             "selection": "uniform before geometry", "interior_erosion_px": cfg["anchors"]["interior_erosion_px"],
+            "visibility_selection": "NOMINAL_TARGET_FIRST_SURFACE",
+            "visibility_uncertainty_margin_m": OCCLUSION_VISIBILITY_UNCERTAINTY_M,
+            "target_projected_pixels_before_occlusion": int(np.sum(rendered > 0)),
+            "target_pixels_excluded_by_nominal_occluders": int(np.sum((rendered > 0) & ~visible)),
             "interior_pixels": int(interior.sum()), "valid_depth_pixels": int(valid.sum()),
             "valid_depth_fraction": coverage, "qualified": qualified,
             "sampled_point_count": int(len(points)),

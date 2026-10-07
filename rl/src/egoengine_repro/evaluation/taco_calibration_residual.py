@@ -188,6 +188,7 @@ def fit_surface_correction(
     maximum_rotation_deg: float = 10.0,
     maximum_function_evaluations: int = 80,
     minimum_points: int = 64,
+    finite_difference_relative_step: float | None = 1e-3,
 ) -> dict[str, Any]:
     """Fit one fixed SE(3) correction; safety bounds are not task thresholds."""
     return fit_multi_surface_correction(
@@ -198,6 +199,7 @@ def fit_surface_correction(
         maximum_rotation_deg=maximum_rotation_deg,
         maximum_function_evaluations=maximum_function_evaluations,
         minimum_points=minimum_points,
+        finite_difference_relative_step=finite_difference_relative_step,
     )
 
 
@@ -211,6 +213,7 @@ def fit_multi_surface_correction(
     maximum_rotation_deg: float = 10.0,
     maximum_function_evaluations: int = 80,
     minimum_points: int = 64,
+    finite_difference_relative_step: float | None = 1e-3,
 ) -> dict[str, Any]:
     """Fit one correction shared by multiple independently posed surfaces."""
     groups = [(list(rows), surface) for rows, surface in datasets]
@@ -222,6 +225,11 @@ def fit_multi_surface_correction(
         raise ValueError(f"unknown correction model: {model}")
     if robust_scale_m <= 0 or maximum_translation_m <= 0 or maximum_rotation_deg <= 0:
         raise ValueError("fit scales and safety bounds must be positive")
+    if finite_difference_relative_step is not None and (
+        not np.isfinite(finite_difference_relative_step)
+        or finite_difference_relative_step <= 0
+    ):
+        raise ValueError("finite_difference_relative_step must be positive or None")
     rotation_bound = np.deg2rad(maximum_rotation_deg)
     lower = np.array([-maximum_translation_m] * 3 + [-rotation_bound] * 3)
     upper = -lower
@@ -233,6 +241,16 @@ def fit_multi_surface_correction(
             for rows, surface in groups
         ])
 
+    # ``TriangleSurface`` uses Open3D's float32 raycasting distance field.  The
+    # SciPy default finite-difference perturbation is sized for float64 and can
+    # therefore be rounded away inside the distance query.  Keep ``None`` as a
+    # reproducible legacy path, but use an explicit step for the corrected
+    # implementation.  This changes numerical differentiation only; the
+    # residual, robust loss and optimizer family are unchanged.
+    difference_options = (
+        {} if finite_difference_relative_step is None
+        else {"diff_step": finite_difference_relative_step}
+    )
     result = least_squares(
         objective,
         np.zeros(6, dtype=np.float64),
@@ -242,6 +260,7 @@ def fit_multi_surface_correction(
         x_scale=np.array([0.02, 0.02, 0.02, 0.05, 0.05, 0.05]),
         max_nfev=maximum_function_evaluations,
         method="trf",
+        **difference_options,
     )
     correction = transform_from_parameters(result.x)
     rotation_deg = float(np.degrees(np.linalg.norm(result.x[3:])))
@@ -277,6 +296,8 @@ def fit_multi_surface_correction(
             "bound_provenance": "NUMERICAL_SAFETY_BOUND",
             "maximum_function_evaluations": maximum_function_evaluations,
             "minimum_points": minimum_points,
+            "finite_difference_relative_step": finite_difference_relative_step,
+            "distance_field_precision": "float32",
         },
         "fit_metrics": residual_metrics(objective(result.x)),
         "identity_metrics": residual_metrics(objective(np.zeros(6))),

@@ -6,13 +6,10 @@ import trimesh
 from scipy.spatial.transform import Rotation
 
 from egoengine_repro.evaluation.taco_calibration_residual import (
-    SurfaceObservation,
-    TriangleSurface,
-    apply_transform,
-    fit_surface_correction,
-    invert_transform,
-    surface_residuals,
-    transform_from_parameters,
+    SurfaceObservation, TriangleSurface, fit_surface_correction, surface_residuals,
+)
+from egoengine_repro.evaluation.calibration_known_answer import (
+    independent_apply, independent_inverse, independent_transform, transform_error,
 )
 
 
@@ -36,10 +33,7 @@ def _surface_points(mesh: trimesh.Trimesh) -> np.ndarray:
 
 
 def _pose(translation, rotvec) -> np.ndarray:
-    value = np.eye(4)
-    value[:3, :3] = Rotation.from_rotvec(rotvec).as_matrix()
-    value[:3, 3] = translation
-    return value
+    return independent_transform(translation, rotvec)
 
 
 def _observations(model: str, correction: np.ndarray, camera_indices=(0, 1, 2, 3)):
@@ -55,13 +49,13 @@ def _observations(model: str, correction: np.ndarray, camera_indices=(0, 1, 2, 3
             [0.02 * index, -0.01 * index, 0.12],
             [-0.04 * index, 0.025 * index, -0.01 * index],
         )
-        true_world = apply_transform(local, object_to_world)
+        true_world = independent_apply(local, object_to_world)
         if model == "WORLD_FIXED":
-            raw_world = apply_transform(true_world, invert_transform(correction))
-            raw_camera = apply_transform(raw_world, world_to_camera)
+            raw_world = independent_apply(true_world, independent_inverse(correction))
+            raw_camera = independent_apply(raw_world, world_to_camera)
         else:
-            true_camera = apply_transform(true_world, world_to_camera)
-            raw_camera = apply_transform(true_camera, invert_transform(correction))
+            true_camera = independent_apply(true_world, world_to_camera)
+            raw_camera = independent_apply(true_camera, independent_inverse(correction))
         rows.append(SurfaceObservation(
             raw_camera, world_to_camera, object_to_world, sequence="synthetic", frame=index,
         ))
@@ -70,7 +64,7 @@ def _observations(model: str, correction: np.ndarray, camera_indices=(0, 1, 2, 3
 
 @pytest.mark.parametrize("model", ["WORLD_FIXED", "CAMERA_LOCAL"])
 def test_recovers_synthetic_correction_across_unseen_camera_pose(model):
-    expected = transform_from_parameters([0.006, -0.004, 0.008, 0.015, -0.012, 0.010])
+    expected = independent_transform([0.006, -0.004, 0.008], [0.015, -0.012, 0.010])
     _, surface, train = _observations(model, expected, camera_indices=(0, 1, 2))
     _, _, validation = _observations(model, expected, camera_indices=(4, 5))
     fit = fit_surface_correction(
@@ -78,10 +72,34 @@ def test_recovers_synthetic_correction_across_unseen_camera_pose(model):
         maximum_function_evaluations=120, minimum_points=24,
     )
     recovered = np.asarray(fit["transform"])
+    direct = transform_error(recovered, expected)
     before = np.median(np.abs(surface_residuals(validation, surface, np.eye(4), model)))
     after = np.median(np.abs(surface_residuals(validation, surface, recovered, model)))
     assert after < 2e-4
     assert after < before * 0.05
+    assert direct["translation_error_mm"] < 0.1
+    assert direct["rotation_error_deg"] < 0.01
+
+
+@pytest.mark.parametrize("model", ["WORLD_FIXED", "CAMERA_LOCAL"])
+def test_explicit_float32_finite_difference_step_repairs_known_answer(model):
+    expected = independent_transform([0.006, -0.004, 0.008], [0.015, -0.012, 0.010])
+    _, surface, rows = _observations(model, expected, camera_indices=(0, 1, 2, 3, 4, 5))
+    legacy = fit_surface_correction(
+        rows, surface, model, robust_scale_m=0.002,
+        maximum_function_evaluations=240, minimum_points=24,
+        finite_difference_relative_step=None,
+    )
+    fixed = fit_surface_correction(
+        rows, surface, model, robust_scale_m=0.002,
+        maximum_function_evaluations=240, minimum_points=24,
+        finite_difference_relative_step=0.001,
+    )
+    legacy_error = transform_error(np.asarray(legacy["transform"]), expected)
+    fixed_error = transform_error(np.asarray(fixed["transform"]), expected)
+    assert fixed_error["translation_error_mm"] < legacy_error["translation_error_mm"] * 0.01
+    assert fixed_error["rotation_error_deg"] < legacy_error["rotation_error_deg"]
+    assert fixed_error["rotation_error_deg"] < 0.01
 
 
 @pytest.mark.parametrize("model", ["WORLD_FIXED", "CAMERA_LOCAL"])
