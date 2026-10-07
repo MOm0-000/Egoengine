@@ -18,6 +18,7 @@ import sys
 from typing import Any
 
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 import yaml
 
@@ -247,6 +248,7 @@ def main() -> int:
             "negative_count": int(np.sum(signed_m < 0)),
             "zero_count": int(np.sum(signed_m == 0)),
             "positive_count": int(np.sum(signed_m > 0)),
+            "positive_fraction": float(np.mean(signed_m > 0)),
         },
         "spatial_descriptors_only_not_a_plane_fit": {
             "per_region": rows,
@@ -334,6 +336,30 @@ def main() -> int:
         selected_image[valid_selected & (region_labels == label)] = palette[(label - 1) % len(palette)]
     cv2.imwrite(str(output / "frame0_selected_depth_pixels.png"), selected_image)
 
+    figure, axes = plt.subplots(1, 2, figsize=(13, 4.8), constrained_layout=True)
+    axes[0].hist(all_mm, bins=200, color="#315a9a", alpha=0.9)
+    axes[0].axvline(float(np.median(all_mm)), color="#c43131", linewidth=2, label="median")
+    axes[0].axvline(0.0, color="black", linewidth=1, linestyle="--", label="bowl plane")
+    axes[0].set_title("All selected valid raw-depth points (no truncation)")
+    axes[0].set_xlabel("Signed distance to fixed bowl support plane (mm)")
+    axes[0].set_ylabel("Point count")
+    axes[0].legend()
+    region_y = np.arange(len(rows))
+    medians = np.asarray([row["signed_distance_mm"]["p50"] for row in rows])
+    p05 = np.asarray([row["signed_distance_mm"]["p05"] for row in rows])
+    p95 = np.asarray([row["signed_distance_mm"]["p95"] for row in rows])
+    axes[1].errorbar(
+        medians, region_y, xerr=np.vstack([medians - p05, p95 - medians]),
+        fmt="o", color="#315a9a", capsize=4,
+    )
+    axes[1].axvline(0.0, color="black", linewidth=1, linestyle="--")
+    axes[1].set_yticks(region_y, [row["region"] for row in rows])
+    axes[1].invert_yaxis()
+    axes[1].set_title("Spatial regions: median and P05–P95")
+    axes[1].set_xlabel("Signed distance (mm)")
+    figure.savefig(output / "signed_distance_distribution.png", dpi=160)
+    plt.close(figure)
+
     overall = results["all_selected_points_signed_distance_mm"]
     summary_lines = [
         "# Brush frame-0 raw table depth vs fixed bowl support plane",
@@ -354,6 +380,7 @@ def main() -> int:
         f"- All points min / P05 / median / P95 / max: `{overall['p00']:.3f} / {overall['p05']:.3f} / {overall['p50']:.3f} / {overall['p95']:.3f} / {overall['p100']:.3f} mm`.",
         f"- Mean / standard deviation: `{overall['mean']:.3f} / {overall['std']:.3f} mm`.",
         f"- Negative / zero / positive: `{overall['negative_count']} / {overall['zero_count']} / {overall['positive_count']}`.",
+        f"- Positive fraction: `{overall['positive_fraction'] * 100:.3f}%`.",
         f"- Per-region median range: `{regional_medians.min():.3f}` to `{regional_medians.max():.3f} mm` (span `{np.ptp(regional_medians):.3f} mm`).",
         "",
         "## Per-region medians",
@@ -364,6 +391,10 @@ def main() -> int:
             f"- `{row['region']}`: n=`{row['valid_depth_point_count']}`, median=`{row['signed_distance_mm']['p50']:.3f} mm`, P05/P95=`{row['signed_distance_mm']['p05']:.3f}/{row['signed_distance_mm']['p95']:.3f} mm`."
         )
     summary_lines += [
+        "",
+        "## Interpretation",
+        "",
+        "The raw table points do not coincide with the fixed bowl-bottom support plane. Most points lie on the positive-normal side by roughly centimetres, and the regional medians change systematically across the image. This is strong evidence of a geometric inconsistency between the Depth/camera chain and the object-pose/mesh chain; this audit alone does not assign the error to either side.",
         "",
         "These are direct measurements against the previously frozen bowl geometry plane, not a replacement table estimate.",
         "",
