@@ -50,12 +50,19 @@ class Plane:
     frame: str
 
     def __post_init__(self) -> None:
-        normal = _unit_vector(self.normal, name="plane normal")
-        offset = float(self.offset)
-        if not np.isfinite(offset) or not self.frame:
+        raw_normal = np.asarray(self.normal, dtype=np.float64)
+        if raw_normal.shape != (3,) or not np.isfinite(raw_normal).all():
+            raise ValueError("plane normal must be a finite 3-vector")
+        norm = float(np.linalg.norm(raw_normal))
+        if norm <= 1e-12:
+            raise ValueError("plane normal must be nonzero")
+        raw_offset = float(self.offset)
+        if not np.isfinite(raw_offset) or not self.frame:
             raise ValueError("plane offset/frame must be finite and nonempty")
-        object.__setattr__(self, "normal", normal)
-        object.__setattr__(self, "offset", offset)
+        # The plane equation is n·x=d.  Normalizing n without normalizing d
+        # moves the plane whenever callers provide a non-unit normal.
+        object.__setattr__(self, "normal", raw_normal / norm)
+        object.__setattr__(self, "offset", raw_offset / norm)
 
     def signed_distance(self, points: Any) -> np.ndarray:
         values = np.asarray(points, dtype=np.float64)

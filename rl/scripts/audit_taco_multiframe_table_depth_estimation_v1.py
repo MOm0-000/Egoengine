@@ -29,7 +29,7 @@ from egoengine_repro.evaluation.taco_official_projection import (  # noqa: E402
 )
 from egoengine_repro.scene.support_surface import Plane  # noqa: E402
 from egoengine_repro.scene.support_surface_estimation import (  # noqa: E402
-    PlaneEstimate, aggregate_support_planes, evaluate_plane_on_points,
+    PlaneEstimate, aggregate_support_planes, evaluate_validation_evidence,
     fit_horizontal_support_plane, foreground_excluded_background_points,
 )
 
@@ -326,22 +326,15 @@ def estimate_sample(cfg: dict[str, Any], sample: dict[str, Any]) -> dict[str, An
         validation = None
     else:
         held = np.concatenate(validation_points, axis=0)
-        all_background = evaluate_plane_on_points(consensus, held)
-        residual = consensus.signed_distance(held)
-        table_selector = np.abs(residual) <= float(cfg["plane_fit"]["inlier_distance_m"])
-        if int(table_selector.sum()) < int(cfg["plane_fit"]["minimum_candidate_points"]):
-            status = "INSUFFICIENT_TABLE_DEPTH_EVIDENCE"
-            validation = {"all_background": all_background, "table_support": None,
-                          "table_support_point_count": int(table_selector.sum())}
-        else:
-            table_support = evaluate_plane_on_points(consensus, held[table_selector])
-            validation = {
-                "all_background": all_background, "table_support": table_support,
-                "table_support_point_count": int(table_selector.sum()),
-                "table_support_fraction": float(table_selector.mean()),
-                "selection": "absolute consensus-plane distance <= frozen RANSAC inlier distance",
-            }
-            status = "STABLE_TABLE_PLANE" if stable else "TABLE_PLANE_ESTIMATOR_UNSTABLE"
+        validation = evaluate_validation_evidence(
+            consensus, held,
+            independent_table_region_available=False,
+            absolute_position_reference_available=False,
+        )
+        status = (
+            "STABLE_TABLE_PLANE_WITHOUT_INDEPENDENT_VALIDATION"
+            if stable else "TABLE_PLANE_ESTIMATOR_UNSTABLE"
+        )
     return {
         "sample": sample["key"], "status": status, "rows": rows,
         "successful_fit_frames": len(fit_estimates),
@@ -380,18 +373,18 @@ def brush_geometry_holdout(
 ) -> dict[str, Any]:
     plane_data = result["consensus"]["plane"]
     plane = Plane(normal=np.asarray(plane_data["normal"]), offset=plane_data["offset_m"], frame="world")
-    uncertainty = result["holdout_validation"]["table_support"]
     bowl = transformed_minimum(primary["target_mesh"], primary["target_pose"], plane)
     brush = transformed_minimum(primary["tool_mesh"], primary["tool_pose"], plane)
-    low, high = uncertainty["signed_residual_p05_m"], uncertainty["signed_residual_p95_m"]
-    bowl_status = "WITHIN_ESTIMATOR_UNCERTAINTY" if low <= bowl <= high else "OUTSIDE_ESTIMATOR_UNCERTAINTY"
     return {
         "schema": "taco_brush_table_geometry_holdout_v1",
         "estimator_frozen_before_object_bottom_read": True,
         "frozen_consensus_artifact": consensus_artifact,
-        "uncertainty_source": "validation-frame measured table-support depth signed residual p05..p95",
-        "uncertainty_interval_m": [low, high],
-        "bowl_bottom_signed_distance_m": bowl, "bowl_status": bowl_status,
+        "uncertainty_source": None,
+        "uncertainty_interval_m": None,
+        "independent_table_validation": "NOT_COMPLETED_NO_INDEPENDENT_TABLE_REGION",
+        "absolute_position_precision": "NOT_VERIFIED_NO_ABSOLUTE_REFERENCE",
+        "bowl_bottom_signed_distance_m": bowl,
+        "bowl_status": "NOT_ASSESSED_NO_ABSOLUTE_REFERENCE",
         "brush_bottom_signed_distance_m": brush,
         "historical_minus_1p311mm_used_by_estimator": False,
         "interpretation": "Object bottoms are post-freeze validators only and cannot alter the estimate.",
@@ -475,7 +468,7 @@ def main() -> int:
     else:
         consensus_pin = None
 
-    if primary["status"] == "STABLE_TABLE_PLANE" and consensus_pin is not None:
+    if primary["status"] == "STABLE_TABLE_PLANE_WITHOUT_INDEPENDENT_VALIDATION" and consensus_pin is not None:
         geometry_holdout = brush_geometry_holdout(primary_sample, primary, consensus_pin)
         write_json(output / "brush_table_holdout_validation.json", geometry_holdout)
     else:
@@ -487,34 +480,25 @@ def main() -> int:
         "samples": [{key: value for key, value in result.items() if key != "holdout_validation"}
                     for result in results],
         "status_counts": {status: sum(result["status"] == status for result in results) for status in (
-            "STABLE_TABLE_PLANE", "INSUFFICIENT_TABLE_DEPTH_EVIDENCE", "TABLE_PLANE_ESTIMATOR_UNSTABLE",
+            "STABLE_TABLE_PLANE_WITHOUT_INDEPENDENT_VALIDATION",
+            "INSUFFICIENT_TABLE_DEPTH_EVIDENCE", "TABLE_PLANE_ESTIMATOR_UNSTABLE",
         )},
     }
     write_json(output / "multi_sample_table_estimation_summary.json", multi)
 
-    stable_count = sum(result["status"] == "STABLE_TABLE_PLANE" for result in results)
+    stable_count = sum(
+        result["status"] == "STABLE_TABLE_PLANE_WITHOUT_INDEPENDENT_VALIDATION"
+        for result in results
+    )
     any_unstable = any(result["status"] == "TABLE_PLANE_ESTIMATOR_UNSTABLE" for result in results)
     if primary["status"] == "INSUFFICIENT_TABLE_DEPTH_EVIDENCE":
         classification = "INSUFFICIENT_TABLE_DEPTH_EVIDENCE"
     elif primary["status"] == "TABLE_PLANE_ESTIMATOR_UNSTABLE" or any_unstable:
         classification = "TABLE_PLANE_ESTIMATOR_UNSTABLE"
-    elif geometry_holdout is None or geometry_holdout["bowl_status"] != "WITHIN_ESTIMATOR_UNCERTAINTY":
-        classification = "BRUSH_TABLE_HOLDOUT_MISMATCH"
     elif stable_count < int(cfg["plane_fit"]["minimum_samples_with_stable_plane"]):
         classification = "INSUFFICIENT_TABLE_DEPTH_EVIDENCE"
     else:
-        classification = "MULTIFRAME_TABLE_PLANE_CANDIDATE_VALIDATED"
-
-    if classification == "MULTIFRAME_TABLE_PLANE_CANDIDATE_VALIDATED":
-        write_json(output / "candidate_support_surface_contract.json", {
-            "schema": "candidate_support_surface_contract_v1",
-            "method": "MULTIFRAME_RGBD_TABLE_PLANE_ESTIMATE",
-            "provenance": "LOCAL_EVIDENCE_BACKED_ESTIMATOR",
-            "status": "CANDIDATE_NOT_ACTIVE",
-            "source_frame": "world", "plane": primary["consensus"]["plane"],
-            "frozen_consensus_artifact": consensus_pin,
-            "active_contract_replaced": False,
-        })
+        classification = "MULTIFRAME_TABLE_PLANE_CANDIDATE_UNVALIDATED"
 
     write_json(output / "source_pins.json", source_pins(cfg_path, cfg, upstream, samples))
     write_json(output / "config_consumption_audit.json", {
@@ -526,7 +510,7 @@ def main() -> int:
         "schema": "taco_multiframe_table_depth_decision_v1", "classification": classification,
         "primary_sample_status": primary["status"], "stable_sample_count": stable_count,
         "bowl_holdout_status": None if geometry_holdout is None else geometry_holdout["bowl_status"],
-        "candidate_contract_created": classification == "MULTIFRAME_TABLE_PLANE_CANDIDATE_VALIDATED",
+        "candidate_contract_created": False,
         "active_support_contract_changed": False,
         "runtime_counts": {"mink": 0, "physics": 0, "replay": 0, "mpc": 0, "rl": 0,
                            "promotion": 0, "chunk_commit": 0, "active_support_replacement": 0},
@@ -551,13 +535,13 @@ def main() -> int:
 2. **使用多少帧？** 四个样本共处理 `{total_frames}` 帧 native Depth；Brush 的 fit/holdout 划分严格由 `frame % 5` 决定。
 3. **去前景后候选点：** 空间 stride=8 后四样本累计 `{total_candidates}` 个真实背景深度点；没有插值或单目补洞。
 4. **逐帧稳定性：** Brush 状态为 `{primary['status']}`；fit offset MAD 为 `{primary.get('consensus', {}).get('offset_mad_m', 'N/A')}` m。
-5. **最终桌面：** normal=`{normal_text}`，world-plane offset/高度=`{offset_text}`。
-6. **真实 Depth holdout：** `{json.dumps(primary.get('holdout_validation'), default=_default, ensure_ascii=False)}`
-7. **冻结后 bowl bottom 距离：** `{bowl_text}`；状态 `{None if geometry_holdout is None else geometry_holdout['bowl_status']}`。
+5. **最终桌面：** normal=`{normal_text}`，world-plane offset=`{offset_text}`（倾斜平面的 offset 不称为单一高度）。
+6. **背景相对候选平面的偏差：** `{json.dumps(primary.get('holdout_validation'), default=_default, ensure_ascii=False)}`。背景不等于独立桌面区域；独立桌面验证未完成，绝对位置精度未验证。
+7. **冻结后 bowl bottom 距离：** `{bowl_text}`；只报告几何距离，不再拿筛选后的 ±10 mm 残差区间判断真实精度；状态 `{None if geometry_holdout is None else geometry_holdout['bowl_status']}`。
 8. **brush bottom 距离：** `{brush_text}`。
 9. **旧 -1.311 mm：** 没有作为真值或输入延续；应由上面的新独立测量取代。
 10. **其他样本：** `{json.dumps({result['sample']: result['status'] for result in results}, ensure_ascii=False)}`，全部使用同一算法和参数。
-11. **能否下一任务替换 active contract？** `{'已生成候选，但仍需下一项独立 integration/promotion 任务' if classification == 'MULTIFRAME_TABLE_PLANE_CANDIDATE_VALIDATED' else '不能；当前分类未通过候选验证'}`。
+11. **能否下一任务替换 active contract？** 不能；没有独立桌面区域与绝对位置参考，当前只有未验证候选。
 
 本轮 MINK、physics、Replay、MPC、RL、promotion、chunk commit 和 active support replacement 均为 0。
 """

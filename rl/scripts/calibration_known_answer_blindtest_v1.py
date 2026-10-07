@@ -34,7 +34,8 @@ from egoengine_repro.evaluation.calibration_known_answer import (  # noqa: E402
     transform_error, write_json, write_public_case,
 )
 from egoengine_repro.evaluation.taco_calibration_residual import (  # noqa: E402
-    SurfaceObservation, TriangleSurface, fit_surface_correction,
+    CalibrationCandidateRejected, SurfaceObservation, TriangleSurface,
+    fit_surface_correction,
 )
 from egoengine_repro.evaluation.taco_calibration_visibility import (  # noqa: E402
     eroded_target_mask, measured_target_selector,
@@ -268,10 +269,15 @@ def _observations(case: dict[str, np.ndarray], selector: str) -> tuple[list[Surf
             mask = eroded_target_mask(target > 0, erosion_px=int(case["erosion_px"]))
             mask &= measured > 0
         elif selector == "occlusion_aware":
+            occluders = case["occluder_nominal_depths_m"][index]
+            forbidden = np.any(
+                np.isfinite(occluders) & (occluders > 0), axis=0,
+            )
             mask = measured_target_selector(
-                measured, target, case["occluder_nominal_depths_m"][index],
+                measured, target, occluders,
                 uncertainty_margin_m=float(case["visibility_uncertainty_margin_m"]),
                 erosion_px=int(case["erosion_px"]),
+                forbidden_mask=forbidden,
             )
         else:
             raise ValueError(f"unknown selector: {selector}")
@@ -316,6 +322,12 @@ def solve_cases(cfg: dict[str, Any], input_dir: Path, output_dir: Path, *, versi
                         finite_difference_relative_step=diff_step,
                     )
                     model_rows.append({"model": model, "status": "OUTPUT", "fit": fit})
+                except CalibrationCandidateRejected as error:
+                    model_rows.append({
+                        "model": model, "status": "REJECTED_CANDIDATE",
+                        "reason": error.reason_code, "candidate": error.candidate,
+                        "accepted_for_use": False,
+                    })
                 except (ValueError, RuntimeError) as error:
                     model_rows.append({"model": model, "status": "STOPPED", "reason": str(error)})
         except (ValueError, RuntimeError) as error:

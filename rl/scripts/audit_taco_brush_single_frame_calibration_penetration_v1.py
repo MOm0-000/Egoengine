@@ -30,8 +30,9 @@ REPO_ROOT = RL_ROOT.parent
 sys.path.insert(0, str(RL_ROOT / "src"))
 
 from egoengine_repro.evaluation.taco_calibration_residual import (  # noqa: E402
-    SurfaceObservation, TriangleSurface, apply_transform,
+    CalibrationCandidateRejected, SurfaceObservation, TriangleSurface,
     fit_single_surface_correction,
+    invert_transform,
 )
 from egoengine_repro.evaluation.open3d_calibration import (  # noqa: E402
     fit_open3d_single_frame, official_uniform_sampled_surface,
@@ -48,7 +49,7 @@ from egoengine_repro.evaluation.taco_official_projection import (  # noqa: E402
 )
 from egoengine_repro.scene.support_surface import Plane  # noqa: E402
 from egoengine_repro.scene.support_surface_estimation import (  # noqa: E402
-    backproject_metric_depth, camera_points_to_world,
+    backproject_metric_depth,
     fit_horizontal_support_plane, foreground_excluded_background_points,
 )
 
@@ -222,19 +223,28 @@ def load_geometry(taco: dict[str, Any], sample: dict[str, Any]) -> dict[str, Any
     return {"hands": hands, "objects": objects, "dataset_utils": dataset_utils}
 
 
-def correction_points_world(
-    points_camera: np.ndarray,
+def correction_world_transform(
+    world_to_camera: np.ndarray, correction: np.ndarray, model: str,
+) -> np.ndarray:
+    """Express the recorded correction in world coordinates."""
+    if model == "WORLD_FIXED":
+        return np.asarray(correction, dtype=np.float64)
+    if model == "CAMERA_LOCAL":
+        return invert_transform(world_to_camera) @ correction @ world_to_camera
+    raise ValueError(f"unknown correction model: {model}")
+
+
+def transform_same_baseline_plane(
+    baseline_plane: Plane,
     world_to_camera: np.ndarray,
     correction: np.ndarray,
     model: str,
-) -> np.ndarray:
-    values = points_camera
-    if model == "CAMERA_LOCAL":
-        values = apply_transform(values, correction)
-    world = camera_points_to_world(values, world_to_camera)
-    if model == "WORLD_FIXED":
-        world = apply_transform(world, correction)
-    return world
+) -> Plane:
+    """Transform the exact baseline plane; never estimate a replacement plane."""
+    return baseline_plane.transform(
+        correction_world_transform(world_to_camera, correction, model),
+        target_frame="world",
+    )
 
 
 def fit_plane(points: np.ndarray, table: dict[str, Any]) -> Any:
@@ -292,8 +302,6 @@ def open3d_fit_kwargs(current: dict[str, Any]) -> dict[str, Any]:
 
 
 def adapt_open3d_fit(value: dict[str, Any]) -> dict[str, Any]:
-    if value["raw_solver_status"] != "OUTPUT":
-        raise ValueError(value["raw_solver_reason"])
     transform = np.asarray(value["transform"], dtype=np.float64)
     parameters = np.concatenate([
         transform[:3, 3], Rotation.from_matrix(transform[:3, :3]).as_rotvec(),
@@ -309,19 +317,25 @@ def _failure_text(error: Exception) -> str:
     return f"{type(error).__name__}: {error}"
 
 
-def plane_fields(prefix: str, estimate: Any | None) -> dict[str, Any]:
-    if estimate is None:
+def plane_fields(prefix: str, plane: Plane | None, estimate: Any | None = None) -> dict[str, Any]:
+    if plane is None:
         return {
+            f"{prefix}_plane_normal_x": None,
+            f"{prefix}_plane_normal_y": None,
+            f"{prefix}_plane_normal_z": None,
             f"{prefix}_plane_offset_m": None,
             f"{prefix}_plane_tilt_deg": None,
             f"{prefix}_plane_inlier_count": None,
             f"{prefix}_plane_inlier_fraction": None,
         }
     return {
-        f"{prefix}_plane_offset_m": estimate.plane.offset,
-        f"{prefix}_plane_tilt_deg": estimate.tilt_from_world_z_deg,
-        f"{prefix}_plane_inlier_count": estimate.inlier_count,
-        f"{prefix}_plane_inlier_fraction": estimate.inlier_fraction,
+        f"{prefix}_plane_normal_x": float(plane.normal[0]),
+        f"{prefix}_plane_normal_y": float(plane.normal[1]),
+        f"{prefix}_plane_normal_z": float(plane.normal[2]),
+        f"{prefix}_plane_offset_m": plane.offset,
+        f"{prefix}_plane_tilt_deg": float(np.degrees(np.arccos(np.clip(plane.normal[2], -1, 1)))),
+        f"{prefix}_plane_inlier_count": None if estimate is None else estimate.inlier_count,
+        f"{prefix}_plane_inlier_fraction": None if estimate is None else estimate.inlier_fraction,
     }
 
 
@@ -382,11 +396,14 @@ def process(
             for side in ("left", "right")
         }
         nominal_tool_depth = projector.render_depth([tool_mesh])
-        occluder_depths = [
+        hand_depths = [
             projector.render_depth([hand_meshes["left"]]),
             projector.render_depth([hand_meshes["right"]]),
-            projector.render_depth([target_mesh]),
         ]
+        occluder_depths = [projector.render_depth([target_mesh])]
+        forbidden_hand_mask = np.logical_or.reduce([
+            np.isfinite(value) & (value > 0) for value in hand_depths
+        ])
         visible = target_visibility_mask(
             nominal_tool_depth, occluder_depths,
             uncertainty_margin_m=VISIBILITY_UNCERTAINTY_M,
@@ -396,6 +413,7 @@ def process(
             depth, nominal_tool_depth, occluder_depths,
             uncertainty_margin_m=VISIBILITY_UNCERTAINTY_M,
             erosion_px=erosion,
+            forbidden_mask=forbidden_hand_mask,
         )
         interior = cv2.erode(
             visible.astype(np.uint8), np.ones((2 * erosion + 1,) * 2, dtype=np.uint8),
@@ -408,7 +426,6 @@ def process(
         ])
         baseline_estimate = None
         baseline_reason = ""
-        table_camera = np.empty((0, 3), dtype=np.float64)
         try:
             table_world, table_counts = foreground_excluded_background_points(
                 depth, intrinsic, extrinsic[frame], foreground,
@@ -416,7 +433,6 @@ def process(
                 interaction_roi_scale=float(table["roi"]["interaction_roi_scale"]),
                 spatial_stride_px=int(table["sampling"]["spatial_stride_px"]),
             )
-            table_camera = apply_transform(table_world, extrinsic[frame])
             baseline_estimate = fit_plane(table_world, table)
         except ValueError as error:
             table_counts = {}
@@ -424,6 +440,7 @@ def process(
 
         for model in MODELS:
             fit = None
+            candidate = None
             fit_status = "OUTPUT"
             fit_reason = ""
             try:
@@ -434,50 +451,67 @@ def process(
                     sequence=sample["key"], frame=frame,
                 )
                 if open3d_method is None:
-                    fit = fit_single_surface_correction(
+                    candidate = fit_single_surface_correction(
                         observation, surface, model, **fits,
                     )
                 else:
-                    fit = adapt_open3d_fit(fit_open3d_single_frame(
+                    candidate = adapt_open3d_fit(fit_open3d_single_frame(
                         observation, sampled_surface, model,
                         method=open3d_method, **fits,
                     ))
+                if candidate.get("accepted_for_use", True):
+                    fit = candidate
+                else:
+                    fit_status = "REJECTED_CANDIDATE"
+                    fit_reason = str(candidate["candidate_status"])
+            except CalibrationCandidateRejected as error:
+                candidate = error.candidate
+                fit_status = "REJECTED_CANDIDATE"
+                fit_reason = error.reason_code
             except (ValueError, RuntimeError) as error:
                 fit_status = "FAILED"
                 fit_reason = _failure_text(error)
 
-            corrected_estimate = None
+            corrected_plane = None
             corrected_reason = ""
             if fit is not None and baseline_estimate is not None:
                 try:
-                    corrected_world = correction_points_world(
-                        table_camera, extrinsic[frame], np.asarray(fit["transform"]), model,
+                    corrected_plane = transform_same_baseline_plane(
+                        baseline_estimate.plane,
+                        extrinsic[frame],
+                        np.asarray(fit["transform"]),
+                        model,
                     )
-                    corrected_estimate = fit_plane(corrected_world, table)
                 except ValueError as error:
                     corrected_reason = _failure_text(error)
             elif fit is None:
-                corrected_reason = "correction unavailable"
+                corrected_reason = (
+                    "candidate exists but is not authorized for application"
+                    if candidate is not None else "correction unavailable"
+                )
             else:
                 corrected_reason = "uncorrected table estimate unavailable"
 
-            effective = baseline_estimate is not None and corrected_estimate is not None
+            effective = baseline_estimate is not None and corrected_plane is not None
             baseline_distances = (
                 entity_distances(baseline_estimate.plane, geometry, frame)
                 if effective else {key: None for key in ENTITIES}
             )
             corrected_distances = (
-                entity_distances(corrected_estimate.plane, geometry, frame)
+                entity_distances(corrected_plane, geometry, frame)
                 if effective else {key: None for key in ENTITIES}
             )
-            parameters = None if fit is None else np.asarray(
-                fit["parameters_translation_m_then_rotvec_rad"], dtype=np.float64,
+            parameters = None if candidate is None else np.asarray(
+                candidate["parameters_translation_m_then_rotvec_rad"], dtype=np.float64,
             )
             row: dict[str, Any] = {
                 "frame": frame,
                 "coordinate_model": model,
                 "fit_status": fit_status,
                 "fit_reason": fit_reason,
+                "candidate_exists": candidate is not None,
+                "candidate_status": None if candidate is None else candidate.get("candidate_status"),
+                "accepted_for_use": fit is not None,
                 "tool_projected_pixels": int(np.sum(nominal_tool_depth > 0)),
                 "tool_visible_pixels": int(visible.sum()),
                 "tool_selected_depth_pixels": int(selected.sum()),
@@ -485,20 +519,27 @@ def process(
                 "tool_valid_depth_fraction": float(selected.sum() / max(int(interior.sum()), 1)),
                 "baseline_table_status": "OUTPUT" if baseline_estimate is not None else "FAILED",
                 "baseline_table_reason": baseline_reason,
-                "corrected_table_status": "OUTPUT" if corrected_estimate is not None else "FAILED",
+                "corrected_table_status": "OUTPUT" if corrected_plane is not None else "FAILED",
                 "corrected_table_reason": corrected_reason,
+                "corrected_plane_source": (
+                    "RIGID_TRANSFORM_OF_SAME_BASELINE_PLANE"
+                    if corrected_plane is not None else None
+                ),
                 "effective_comparison": effective,
                 "table_sampled_candidate_points": table_counts.get("sampled_candidate_points"),
                 "translation_x_mm": None if parameters is None else parameters[0] * 1000.0,
                 "translation_y_mm": None if parameters is None else parameters[1] * 1000.0,
                 "translation_z_mm": None if parameters is None else parameters[2] * 1000.0,
-                "translation_norm_mm": None if fit is None else fit["translation_norm_m"] * 1000.0,
+                "translation_norm_mm": None if candidate is None else candidate["translation_norm_m"] * 1000.0,
                 "rotation_rotvec_x_deg": None if parameters is None else np.degrees(parameters[3]),
                 "rotation_rotvec_y_deg": None if parameters is None else np.degrees(parameters[4]),
                 "rotation_rotvec_z_deg": None if parameters is None else np.degrees(parameters[5]),
-                "rotation_angle_deg": None if fit is None else fit["rotation_angle_deg"],
-                **plane_fields("before", baseline_estimate if effective else None),
-                **plane_fields("after", corrected_estimate if effective else None),
+                "rotation_angle_deg": None if candidate is None else candidate["rotation_angle_deg"],
+                **plane_fields(
+                    "before", baseline_estimate.plane if effective else None,
+                    baseline_estimate if effective else None,
+                ),
+                **plane_fields("after", corrected_plane if effective else None),
             }
             for entity in ENTITIES:
                 before = baseline_distances[entity]
@@ -514,10 +555,12 @@ def process(
             rows.append(row)
             corrections[model].append({
                 "frame": frame, "status": fit_status, "reason": fit_reason,
-                "transform": None if fit is None else fit["transform"],
-                "parameters": None if fit is None else fit["parameters_translation_m_then_rotvec_rad"],
-                "fit_metrics": None if fit is None else fit["fit_metrics"],
-                "identity_metrics": None if fit is None else fit["identity_metrics"],
+                "accepted_for_use": fit is not None,
+                "candidate_status": None if candidate is None else candidate.get("candidate_status"),
+                "transform": None if candidate is None else candidate["transform"],
+                "parameters": None if candidate is None else candidate["parameters_translation_m_then_rotvec_rad"],
+                "fit_metrics": None if candidate is None else candidate["fit_metrics"],
+                "identity_metrics": None if candidate is None else candidate["identity_metrics"],
             })
         if (frame + 1) % 10 == 0 or frame + 1 == count:
             print(f"{sample['key']}: {frame + 1}/{count}", flush=True)
@@ -556,11 +599,30 @@ def classify_model(rows: list[dict[str, Any]], frame_count: int) -> dict[str, An
         after_values = [row[f"{entity}_after_mm"] for row in effective]
         before_count = sum(bool(row[f"{entity}_before_penetrating"]) for row in effective)
         after_count = sum(bool(row[f"{entity}_after_penetrating"]) for row in effective)
+        before_minimum = None if not before_values else float(min(before_values))
+        after_minimum = None if not after_values else float(min(after_values))
+        count_delta = after_count - before_count
+        minimum_delta = (
+            None if before_minimum is None or after_minimum is None
+            else after_minimum - before_minimum
+        )
+        improved = count_delta < 0 or (minimum_delta is not None and minimum_delta > 0)
+        worsened = count_delta > 0 or (minimum_delta is not None and minimum_delta < 0)
         entity_summary[entity] = {
+            "common_comparison_frames": len(effective),
+            "missing_or_unchecked_frames": unavailable,
             "before_penetrating_frames": before_count,
             "after_penetrating_frames": after_count,
-            "before_minimum_mm": None if not before_values else float(min(before_values)),
-            "after_minimum_mm": None if not after_values else float(min(after_values)),
+            "before_minimum_mm": before_minimum,
+            "after_minimum_mm": after_minimum,
+            "penetrating_frame_count_delta": count_delta,
+            "minimum_distance_delta_mm": minimum_delta,
+            "interpretation": (
+                "MIXED_WITHIN_ENTITY" if improved and worsened
+                else "IMPROVED" if improved
+                else "WORSENED" if worsened
+                else "UNCHANGED"
+            ),
         }
     any_before = sum(any(bool(row[f"{entity}_before_penetrating"]) for entity in ("brush", "bowl", "hand")) for row in effective)
     any_after = sum(any(bool(row[f"{entity}_after_penetrating"]) for entity in ("brush", "bowl", "hand")) for row in effective)
@@ -572,16 +634,20 @@ def classify_model(rows: list[dict[str, Any]], frame_count: int) -> dict[str, An
         ]
         value, frame, entity = min(candidates)
         deepest = {"frame": frame, "entity": entity, "minimum_distance_mm": float(value)}
+    primary_entities = [entity_summary[key] for key in ("brush", "bowl", "hand")]
+    any_improved = any(row["interpretation"] in {"IMPROVED", "MIXED_WITHIN_ENTITY"}
+                       for row in primary_entities)
+    any_worsened = any(row["interpretation"] in {"WORSENED", "MIXED_WITHIN_ENTITY"}
+                       for row in primary_entities)
     if not effective:
         classification = "UNABLE_TO_DETERMINE"
     elif unavailable == 0 and any_after == 0:
         classification = "PENETRATION_ELIMINATED"
-    elif any_after > 0 and (
-        any_after < any_before
-        or min(row["brush_after_mm"] for row in effective) > min(row["brush_before_mm"] for row in effective)
-        or min(row["bowl_after_mm"] for row in effective) > min(row["bowl_before_mm"] for row in effective)
-        or min(row["hand_after_mm"] for row in effective) > min(row["hand_before_mm"] for row in effective)
-    ):
+    elif any_improved and any_worsened:
+        classification = "MIXED_LOCAL_IMPROVEMENT_AND_DETERIORATION"
+    elif any_worsened:
+        classification = "PENETRATION_WORSENED_OR_REMAINS"
+    elif any_improved:
         classification = "PENETRATION_REDUCED_BUT_REMAINS"
     elif unavailable > 0 and any_after == 0:
         classification = "UNABLE_TO_DETERMINE_FULL_SEQUENCE"
@@ -598,6 +664,12 @@ def classify_model(rows: list[dict[str, Any]], frame_count: int) -> dict[str, An
         "frame_count": frame_count,
         "correction_output_frames": len(successes),
         "correction_failed_frames": frame_count - len(successes),
+        "rejected_candidate_frames": sum(
+            row["fit_status"] == "REJECTED_CANDIDATE" for row in rows
+        ),
+        "frames_without_saved_candidate": sum(
+            not bool(row.get("candidate_exists")) for row in rows
+        ),
         "effective_comparison_frames": len(effective),
         "unchecked_frames": unavailable,
         "any_entity_before_penetrating_frames": any_before,
@@ -630,10 +702,16 @@ def write_corrections(path: Path, corrections: dict[str, list[dict[str, Any]]]) 
         transforms = np.full((len(records), 4, 4), np.nan, dtype=np.float64)
         parameters = np.full((len(records), 6), np.nan, dtype=np.float64)
         success = np.zeros(len(records), dtype=bool)
+        candidate_exists = np.zeros(len(records), dtype=bool)
+        accepted_for_use = np.zeros(len(records), dtype=bool)
         reasons = []
+        statuses = []
         for index, row in enumerate(records):
             success[index] = row["status"] == "OUTPUT"
+            candidate_exists[index] = row["transform"] is not None
+            accepted_for_use[index] = bool(row["accepted_for_use"])
             reasons.append(row["reason"])
+            statuses.append(row["candidate_status"] or "NO_CANDIDATE")
             if row["transform"] is not None:
                 transforms[index] = np.asarray(row["transform"])
                 parameters[index] = np.asarray(row["parameters"])
@@ -641,6 +719,9 @@ def write_corrections(path: Path, corrections: dict[str, list[dict[str, Any]]]) 
         arrays[f"{prefix}_transform"] = transforms
         arrays[f"{prefix}_parameters_translation_m_then_rotvec_rad"] = parameters
         arrays[f"{prefix}_success"] = success
+        arrays[f"{prefix}_candidate_exists"] = candidate_exists
+        arrays[f"{prefix}_accepted_for_use"] = accepted_for_use
+        arrays[f"{prefix}_candidate_status"] = np.asarray(statuses, dtype="U96")
         arrays[f"{prefix}_failure_reason"] = np.asarray(reasons, dtype="U512")
     arrays["frame"] = np.arange(len(corrections[MODELS[0]]), dtype=np.int64)
     np.savez_compressed(path, **arrays)
@@ -677,14 +758,16 @@ def summary_markdown(summary: dict[str, Any]) -> str:
     for model in MODELS:
         lines += [
             f"### {model}", "",
-            "| 实体 | 修正前穿透帧 | 修正后穿透帧 | 修正前最小距离 mm | 修正后最小距离 mm |",
-            "|---|---:|---:|---:|---:|",
+            "| 实体 | 共同帧/缺失 | 修正前穿透帧 | 修正后穿透帧 | 修正前最小距离 mm | 修正后最小距离 mm | 判读 |",
+            "|---|---:|---:|---:|---:|---:|---|",
         ]
         for entity in ("brush", "bowl", "left_hand", "right_hand", "hand"):
             row = summary["models"][model]["entities"][entity]
             lines.append(
-                f"| {entity} | {row['before_penetrating_frames']} | {row['after_penetrating_frames']} | "
-                f"{row['before_minimum_mm']:.3f} | {row['after_minimum_mm']:.3f} |"
+                f"| {entity} | {row['common_comparison_frames']}/{row['missing_or_unchecked_frames']} | "
+                f"{row['before_penetrating_frames']} | {row['after_penetrating_frames']} | "
+                f"{row['before_minimum_mm']:.3f} | {row['after_minimum_mm']:.3f} | "
+                f"{row['interpretation']} |"
             )
         frame0 = summary["models"][model]["frame0"]
         lines += ["", "第 0 帧："]
@@ -710,7 +793,7 @@ def summary_markdown(summary: dict[str, Any]) -> str:
     lines += [
         "", "## 解释边界", "",
         "- 部分帧改善不能视为全程通过。",
-        "- 穿透减轻只说明该临时点云解释改变了估计桌面，不证明标定正确。",
+        "- 穿透减轻只说明已保存修正改变了实体相对同一张桌面的几何距离，不证明标定正确。",
         "- correction objective 只使用可见刷子表面深度；桌面、碗底和刷子底部距离均未参与拟合。碗只作事后验证。",
         "- 本轮没有把任何 correction 或桌面写入 active runtime。",
     ]
@@ -755,6 +838,10 @@ def main() -> int:
         overall = "UNABLE_TO_DETERMINE_ALL_CORRECTIONS_FAILED"
     elif all(value == "PENETRATION_ELIMINATED" for value in classifications):
         overall = "PENETRATION_ELIMINATED"
+    elif any(value == "MIXED_LOCAL_IMPROVEMENT_AND_DETERIORATION" for value in classifications):
+        overall = "MIXED_LOCAL_IMPROVEMENT_AND_DETERIORATION"
+    elif any(value == "PENETRATION_WORSENED_OR_REMAINS" for value in classifications):
+        overall = "PENETRATION_WORSENED_OR_REMAINS"
     elif any(value == "PENETRATION_REDUCED_BUT_REMAINS" for value in classifications):
         overall = "PENETRATION_REDUCED_BUT_REMAINS"
     elif any(value == "PENETRATION_REMAINS" for value in classifications):
@@ -769,7 +856,9 @@ def main() -> int:
         ),
         "classification_options": [
             "PENETRATION_ELIMINATED", "PENETRATION_REDUCED_BUT_REMAINS",
-            "PENETRATION_REMAINS", "UNABLE_TO_DETERMINE_FULL_SEQUENCE",
+            "MIXED_LOCAL_IMPROVEMENT_AND_DETERIORATION",
+            "PENETRATION_WORSENED_OR_REMAINS", "PENETRATION_REMAINS",
+            "UNABLE_TO_DETERMINE_FULL_SEQUENCE",
         ],
         "overall_classification": overall,
         "sample": sample["key"],
@@ -845,6 +934,9 @@ def main() -> int:
             "interior_erosion_px": taco["anchors"]["interior_erosion_px"],
             "spatial_stride_px": taco["anchors"]["spatial_stride_px"],
             "occluders": ["left_hand", "right_hand", "target_bowl"],
+            "forbidden_pixel_sources": ["nominal_left_hand", "nominal_right_hand"],
+            "independent_hand_or_uncertainty_mask": "NOT_AVAILABLE",
+            "limitation": "nominal hand projection cannot exclude contamination outside the projected silhouette",
         },
         "table_parameters": {
             "foreground": table["foreground"], "roi": table["roi"],

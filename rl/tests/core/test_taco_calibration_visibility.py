@@ -58,6 +58,7 @@ def test_measured_selector_cannot_pass_occluder_depth_inside_target_silhouette()
     measured = np.minimum(target, np.where(hand > 0, hand, np.inf))
     selected = measured_target_selector(
         measured, target, [hand], uncertainty_margin_m=0.002, erosion_px=0,
+        forbidden_mask=hand > 0,
     )
     assert not selected[2:5, 2:5].any()
     assert selected[0, 0]
@@ -68,7 +69,37 @@ def test_complete_occlusion_returns_empty_instead_of_zero_contamination_claim():
     hand = np.full((4, 4), 0.7)
     selected = measured_target_selector(
         hand, target, [hand], uncertainty_margin_m=0.002, erosion_px=0,
+        forbidden_mask=hand > 0,
     )
+    assert not selected.any()
+
+
+def test_forbidden_pixels_are_excluded_even_when_nominal_hand_is_behind():
+    target = np.full((4, 4), 1.0)
+    hand_behind = np.zeros((4, 4)); hand_behind[1, 1] = 1.2
+    independent_uncertainty = np.zeros((4, 4), dtype=bool)
+    independent_uncertainty[2, 2] = True
+    forbidden = (hand_behind > 0) | independent_uncertainty
+    selected = measured_target_selector(
+        target, target, [hand_behind], uncertainty_margin_m=0.002,
+        erosion_px=0, forbidden_mask=forbidden,
+    )
+    assert not selected[1, 1]
+    assert not selected[2, 2]
+    assert selected.sum() == 14
+
+
+def test_forbidden_mask_is_mandatory_and_empty_selection_is_not_filled():
+    target = np.ones((2, 2))
+    with pytest.raises(TypeError):
+        measured_target_selector(
+            target, target, [], uncertainty_margin_m=0.0, erosion_px=0,
+        )
+    selected = measured_target_selector(
+        target, target, [], uncertainty_margin_m=0.0, erosion_px=0,
+        forbidden_mask=np.ones((2, 2), dtype=bool),
+    )
+    assert selected.shape == (2, 2)
     assert not selected.any()
 
 

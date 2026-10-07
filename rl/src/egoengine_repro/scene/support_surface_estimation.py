@@ -240,6 +240,49 @@ def fit_horizontal_support_plane(
     )
 
 
+def evaluate_validation_evidence(
+    plane: Plane,
+    validation_points: Any,
+    *,
+    independent_table_region_available: bool,
+    absolute_position_reference_available: bool,
+) -> dict[str, Any]:
+    """Describe validation evidence without selecting points by candidate residual.
+
+    Background points can include non-table surfaces.  They are therefore
+    reported only as deviations from the candidate plane.  This routine does
+    not manufacture an independent table region or an absolute accuracy
+    certificate when neither was supplied.
+    """
+    points = np.asarray(validation_points, dtype=np.float64)
+    if points.ndim != 2 or points.shape[1] != 3 or not np.isfinite(points).all():
+        raise ValueError("validation points must be finite Nx3")
+    if not len(points):
+        raise ValueError("validation points cannot be empty")
+    background = evaluate_plane_on_points(plane, points)
+    return {
+        "background_relative_to_candidate": background,
+        "background_point_count": int(len(points)),
+        "background_is_not_asserted_to_be_all_table": True,
+        "candidate_residual_filter_applied": False,
+        "independent_table_validation": {
+            "status": (
+                "AVAILABLE_BUT_NOT_IMPLEMENTED"
+                if independent_table_region_available
+                else "NOT_COMPLETED_NO_INDEPENDENT_TABLE_REGION"
+            ),
+        },
+        "absolute_position_precision": {
+            "status": (
+                "AVAILABLE_BUT_NOT_IMPLEMENTED"
+                if absolute_position_reference_available
+                else "NOT_VERIFIED_NO_ABSOLUTE_REFERENCE"
+            ),
+            "uncertainty_interval_m": None,
+        },
+    }
+
+
 def aggregate_support_planes(estimates: Iterable[PlaneEstimate]) -> Plane:
     values = list(estimates)
     if not values:
@@ -274,4 +317,5 @@ def evaluate_plane_on_points(plane: Plane, points_world: Any) -> dict[str, float
         "signed_residual_p95_m": float(np.percentile(residual, 95)),
         "absolute_residual_median_m": float(np.median(absolute)),
         "absolute_residual_p95_m": float(np.percentile(absolute, 95)),
+        "absolute_residual_maximum_m": float(np.max(absolute)),
     }

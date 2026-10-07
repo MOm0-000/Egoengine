@@ -154,8 +154,31 @@ def test_zero_correspondence_is_not_reported_as_successful_identity():
         minimum_correspondences=24,
     )
     assert result["raw_solver_status"] == "INSUFFICIENT_CORRESPONDENCES"
+    assert result["candidate_status"] == "INSUFFICIENT_CORRESPONDENCES"
+    assert result["accepted_for_use"] is False
     assert result["registration_result"]["correspondence_count"] == 0
     assert np.array_equal(np.asarray(result["transform"]), np.eye(4))
+
+
+def test_out_of_range_open3d_candidate_is_preserved_but_not_authorized():
+    mesh = _mesh()
+    sampled = official_uniform_sampled_surface(
+        mesh.vertices, mesh.faces, number_of_points=4000, random_seed=123,
+    )
+    expected = independent_transform([0.004, -0.003, 0.005], [0.012, -0.008, 0.006])
+    source = independent_apply(sampled.points_local[::4], independent_inverse(expected))
+    result = fit_open3d_single_frame(
+        _observation(source), sampled, "CAMERA_LOCAL",
+        method="OPEN3D_OFFICIAL_SINGLE_FRAME", minimum_correspondences=24,
+        advisory_maximum_translation_m=1e-6,
+        advisory_maximum_rotation_deg=1e-6,
+    )
+    assert result["raw_solver_status"] == "OUTPUT"
+    assert result["candidate_status"] == "CANDIDATE_ACCEPTANCE_BOUND_EXCEEDED"
+    assert result["accepted_for_use"] is False
+    assert np.isfinite(np.asarray(result["transform"])).all()
+    assert result["safety_advisory"]["affects_raw_output_status"] is False
+    assert result["safety_advisory"]["affects_formal_application"] is True
 
 
 @pytest.mark.parametrize("scenario", ["complex_zero", "independent_sampling", "noise"])

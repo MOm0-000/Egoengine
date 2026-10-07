@@ -6,6 +6,7 @@ import pytest
 from egoengine_repro.scene.support_surface_estimation import (
     backproject_metric_depth,
     camera_points_to_world,
+    evaluate_validation_evidence,
     fit_horizontal_support_plane,
     foreground_excluded_background_points,
 )
@@ -95,3 +96,27 @@ def test_invalid_inputs_fail_closed() -> None:
     wall = np.column_stack([np.zeros(100), np.linspace(-1, 1, 100), np.linspace(0, 1, 100)])
     with pytest.raises(ValueError):
         _fit(wall)
+
+
+def test_validation_keeps_large_deviation_and_does_not_issue_accuracy_certificate() -> None:
+    from egoengine_repro.scene.support_surface import Plane
+
+    deviations_m = np.array([0.0, 0.001, 0.002, 0.030])
+    points = np.column_stack([np.zeros(4), np.zeros(4), 0.55 + deviations_m])
+    result = evaluate_validation_evidence(
+        Plane([0, 0, 1], 0.55, "world"), points,
+        independent_table_region_available=False,
+        absolute_position_reference_available=False,
+    )
+    metrics = result["background_relative_to_candidate"]
+    assert metrics["point_count"] == 4
+    assert metrics["absolute_residual_maximum_m"] == pytest.approx(0.030)
+    assert result["candidate_residual_filter_applied"] is False
+    assert result["background_is_not_asserted_to_be_all_table"] is True
+    assert result["independent_table_validation"]["status"] == (
+        "NOT_COMPLETED_NO_INDEPENDENT_TABLE_REGION"
+    )
+    assert result["absolute_position_precision"]["status"] == (
+        "NOT_VERIFIED_NO_ABSOLUTE_REFERENCE"
+    )
+    assert result["absolute_position_precision"]["uncertainty_interval_m"] is None

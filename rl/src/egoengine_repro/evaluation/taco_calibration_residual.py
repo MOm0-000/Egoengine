@@ -18,6 +18,20 @@ from scipy.spatial.transform import Rotation
 CorrectionModel = Literal["WORLD_FIXED", "CAMERA_LOCAL"]
 
 
+class CalibrationCandidateRejected(ValueError):
+    """A finite solver candidate that is not authorized for application."""
+
+    def __init__(self, reason_code: str, candidate: dict[str, Any]) -> None:
+        self.reason_code = reason_code
+        self.candidate = candidate
+        super().__init__(
+            f"calibration candidate rejected: {reason_code}; "
+            f"solver_success={candidate['optimizer']['success']}, "
+            f"translation_m={candidate['translation_norm_m']}, "
+            f"rotation_deg={candidate['rotation_angle_deg']}"
+        )
+
+
 def _rigid(value: Any, label: str) -> np.ndarray:
     matrix = np.asarray(value, dtype=np.float64)
     if matrix.shape != (4, 4) or not np.isfinite(matrix).all():
@@ -319,13 +333,16 @@ def fit_multi_surface_correction(
         translation_m <= maximum_translation_m + 1e-12
         and rotation_deg <= maximum_rotation_deg + 1e-9
     )
-    if not result.success or not inside_safety_bound:
-        raise ValueError(
-            "calibration fit failed or reached the numerical safety boundary: "
-            f"success={result.success}, translation={translation_m}, rotation_deg={rotation_deg}"
-        )
-    return {
+    if not result.success:
+        candidate_status = "SOLVER_NOT_CONVERGED"
+    elif not inside_safety_bound:
+        candidate_status = "CANDIDATE_ACCEPTANCE_BOUND_EXCEEDED"
+    else:
+        candidate_status = "ACCEPTED_FOR_USE"
+    candidate = {
         "model": model,
+        "candidate_status": candidate_status,
+        "accepted_for_use": candidate_status == "ACCEPTED_FOR_USE",
         "parameters_translation_m_then_rotvec_rad": result.x.tolist(),
         "transform": correction.tolist(),
         "translation_norm_m": translation_m,
@@ -348,7 +365,18 @@ def fit_multi_surface_correction(
             "minimum_points": minimum_points,
             "finite_difference_relative_step": finite_difference_relative_step,
             "distance_field_precision": "float32",
+            "component_search_bounds": {
+                "translation_each_axis_m": [-maximum_translation_m, maximum_translation_m],
+                "rotation_vector_each_axis_rad": [-rotation_bound, rotation_bound],
+            },
+            "candidate_acceptance_bounds": {
+                "translation_vector_norm_m": maximum_translation_m,
+                "rotation_vector_norm_deg": maximum_rotation_deg,
+            },
         },
         "fit_metrics": residual_metrics(objective(result.x)),
         "identity_metrics": residual_metrics(objective(np.zeros(6))),
     }
+    if candidate_status != "ACCEPTED_FOR_USE":
+        raise CalibrationCandidateRejected(candidate_status, candidate)
+    return candidate

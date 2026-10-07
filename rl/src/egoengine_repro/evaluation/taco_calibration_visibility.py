@@ -69,14 +69,24 @@ def measured_target_selector(
     *,
     uncertainty_margin_m: float,
     erosion_px: int,
+    forbidden_mask: object,
 ) -> np.ndarray:
-    """Select valid measured depth only where the nominal target is visible."""
+    """Select measured target depth outside every explicitly forbidden pixel.
+
+    ``forbidden_mask`` is mandatory so real-data callers cannot silently treat
+    a missing hand/uncertainty mask as an all-clear image.  It is independent
+    of nominal depth ordering: a projected hand pixel remains forbidden even
+    when the hand model is nominally behind the target.
+    """
     measured = _depth_map(measured_depth_m, "measured_depth_m")
     target = _depth_map(target_depth_m, "target_depth_m")
     if measured.shape != target.shape:
         raise ValueError("measured and target depth maps must have equal shapes")
+    forbidden = np.asarray(forbidden_mask)
+    if forbidden.dtype != np.bool_ or forbidden.shape != measured.shape:
+        raise ValueError("forbidden_mask must be a boolean mask matching depth")
     visible = target_visibility_mask(
         target, occluder_depths_m, uncertainty_margin_m=uncertainty_margin_m,
     )
     interior = eroded_target_mask(visible, erosion_px=erosion_px)
-    return interior & np.isfinite(measured) & (measured > 0)
+    return interior & ~forbidden & np.isfinite(measured) & (measured > 0)

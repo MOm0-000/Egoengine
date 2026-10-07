@@ -247,6 +247,16 @@ def fit_open3d_single_frame(
         registration_result["correspondence_set"] = correspondence_set.tolist()
     return {
         "model": model,
+        "candidate_status": (
+            "INSUFFICIENT_CORRESPONDENCES"
+            if raw_status != "OUTPUT"
+            else (
+                "ACCEPTED_FOR_USE"
+                if within_advisory_bounds
+                else "CANDIDATE_ACCEPTANCE_BOUND_EXCEEDED"
+            )
+        ),
+        "accepted_for_use": bool(raw_status == "OUTPUT" and within_advisory_bounds),
         "transform": transform.tolist(),
         "translation_norm_m": translation_m,
         "rotation_angle_deg": rotation_deg,
@@ -281,5 +291,7 @@ def fit_open3d_single_frame(
             "maximum_translation_m": float(advisory_maximum_translation_m),
             "maximum_rotation_deg": float(advisory_maximum_rotation_deg),
             "affects_raw_output_status": False,
+            "affects_formal_application": True,
+            "out_of_range_use": "DIAGNOSTIC_ONLY_NOT_AUTHORIZED_FOR_APPLICATION",
         },
     }

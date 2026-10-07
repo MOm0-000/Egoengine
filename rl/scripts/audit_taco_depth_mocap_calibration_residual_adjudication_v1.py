@@ -39,7 +39,7 @@ from egoengine_repro.evaluation.taco_calibration_visibility import (  # noqa: E4
 from egoengine_repro.scene.support_surface import Plane  # noqa: E402
 from egoengine_repro.scene.support_surface_estimation import (  # noqa: E402
     PlaneEstimate, aggregate_support_planes, backproject_metric_depth,
-    camera_points_to_world, evaluate_plane_on_points, fit_horizontal_support_plane,
+    camera_points_to_world, evaluate_validation_evidence, fit_horizontal_support_plane,
     foreground_excluded_background_points,
 )
 
@@ -431,7 +431,7 @@ def extract_anchors(cfg: dict[str, Any], sample: dict[str, Any]) -> dict[str, An
     for frame in frames:
         projector.set_camera(intrinsic, extrinsic[frame])
         rendered = projector.render_depth([_mesh(vertices, faces, poses[frame])])
-        nominal_occluder_depths = [
+        nominal_hand_depths = [
             projector.render_depth([
                 trimesh.Trimesh(
                     vertices=occluders["hands"][side]["vertices"][frame],
@@ -440,18 +440,23 @@ def extract_anchors(cfg: dict[str, Any], sample: dict[str, Any]) -> dict[str, An
             ])
             for side in ("left", "right")
         ]
-        nominal_occluder_depths.append(projector.render_depth([_mesh(
+        nominal_occluder_depths = [projector.render_depth([_mesh(
             occluders["target_vertices"], occluders["target_faces"],
             occluders["target_poses"][frame],
-        )]))
+        )])]
+        forbidden_hand_mask = np.logical_or.reduce([
+            np.isfinite(value) & (value > 0) for value in nominal_hand_depths
+        ])
         visible = target_visibility_mask(
             rendered, nominal_occluder_depths,
             uncertainty_margin_m=OCCLUSION_VISIBILITY_UNCERTAINTY_M,
         )
+        visible &= ~forbidden_hand_mask
         valid = measured_target_selector(
             depths[frame], rendered, nominal_occluder_depths,
             uncertainty_margin_m=OCCLUSION_VISIBILITY_UNCERTAINTY_M,
             erosion_px=cfg["anchors"]["interior_erosion_px"],
+            forbidden_mask=forbidden_hand_mask,
         )
         interior = cv2.erode(
             visible.astype(np.uint8),
@@ -720,15 +725,18 @@ def corrected_table_estimate(cfg: dict[str, Any], sample: dict[str, Any], correc
         return {"status": "INSUFFICIENT_CORRECTED_TABLE_EVIDENCE", "failed_frames": failures}
     plane = aggregate_support_planes(estimates)
     held = np.concatenate(validation_points)
-    selector = np.abs(plane.signed_distance(held)) <= table_cfg["plane_fit"]["inlier_distance_m"]
-    validation = evaluate_plane_on_points(plane, held[selector])
+    validation = evaluate_validation_evidence(
+        plane, held,
+        independent_table_region_available=False,
+        absolute_position_reference_available=False,
+    )
     offsets = np.asarray([row.plane.offset for row in estimates])
     return {
-        "status": "STABLE_CORRECTED_TABLE_PLANE",
+        "status": "STABLE_CORRECTED_TABLE_PLANE_WITHOUT_INDEPENDENT_VALIDATION",
         "same_frozen_estimator_parameters": True, "failed_frames": failures,
         "successful_fit_frames": len(estimates), "successful_validation_frames": len(validation_points),
         "plane": plane.to_dict(), "offset_mad_m": float(np.median(np.abs(offsets - np.median(offsets)))),
-        "validation_table_support": validation,
+        "validation_evidence": validation,
     }
 
 
@@ -741,15 +749,15 @@ def bottom_holdout(sample: dict[str, Any], table: dict[str, Any], frozen_table_a
         mesh.apply_scale(0.01)
         pose = np.load(sample[f"{role}_pose"], mmap_mode="r")[0]
         values[f"{name}_bottom_signed_distance_m"] = plane.minimum_signed_distance(np.asarray(mesh.vertices), pose)
-    interval = table["validation_table_support"]
-    low, high = interval["signed_residual_p05_m"], interval["signed_residual_p95_m"]
     return {
         "schema": "taco_brush_object_bottom_final_holdout_v1",
         "correction_and_table_frozen_before_bottom_read": True,
         "frozen_corrected_table_artifact": frozen_table_artifact,
-        "table_uncertainty_interval_m": [low, high], **values,
-        "bowl_within_table_uncertainty": low <= values["bowl_bottom_signed_distance_m"] <= high,
-        "brush_within_table_uncertainty": low <= values["brush_bottom_signed_distance_m"] <= high,
+        "table_uncertainty_interval_m": None, **values,
+        "independent_table_validation": "NOT_COMPLETED_NO_INDEPENDENT_TABLE_REGION",
+        "absolute_position_precision": "NOT_VERIFIED_NO_ABSOLUTE_REFERENCE",
+        "bowl_within_table_uncertainty": None,
+        "brush_within_table_uncertainty": None,
     }
 
 
@@ -865,10 +873,10 @@ def main() -> int:
         }
         write_json(output / "corrected_table_holdout_validation.json", corrected_table)
         corrected_table_pin = artifact(output / "corrected_table_holdout_validation.json")
-        if corrected_table["status"] == "STABLE_CORRECTED_TABLE_PLANE":
+        if corrected_table["status"] == "STABLE_CORRECTED_TABLE_PLANE_WITHOUT_INDEPENDENT_VALIDATION":
             bottom = bottom_holdout(primary, corrected_table, corrected_table_pin)
             bottom["status"] = "FINAL_HOLDOUT_EVALUATED"
-            final_candidate = bottom["bowl_within_table_uncertainty"] and bottom["brush_within_table_uncertainty"]
+            final_candidate = False
     else:
         write_json(output / "corrected_table_holdout_validation.json", corrected_table)
     write_json(output / "brush_object_bottom_final_holdout.json", bottom)

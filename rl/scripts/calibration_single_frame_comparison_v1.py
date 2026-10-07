@@ -58,7 +58,7 @@ from egoengine_repro.evaluation.open3d_calibration import (  # noqa: E402
     official_uniform_sampled_surface,
 )
 from egoengine_repro.evaluation.taco_calibration_residual import (  # noqa: E402
-    SurfaceObservation,
+    CalibrationCandidateRejected, SurfaceObservation,
     TriangleSurface,
     fit_single_surface_correction,
 )
@@ -423,12 +423,17 @@ def prepare_cases(cfg: dict[str, Any], input_dir: Path, prepared_dir: Path) -> N
         else:
             for frame_id, measured in enumerate(case["measured_depth_m"]):
                 preprocessing_started = time.perf_counter()
+                occluders = case["occluder_nominal_depths_m"][frame_id]
+                forbidden = np.any(
+                    np.isfinite(occluders) & (occluders > 0), axis=0,
+                )
                 mask = measured_target_selector(
                     measured,
                     case["target_nominal_depth_m"][frame_id],
-                    case["occluder_nominal_depths_m"][frame_id],
+                    occluders,
                     uncertainty_margin_m=float(case["visibility_uncertainty_margin_m"]),
                     erosion_px=int(case["erosion_px"]),
+                    forbidden_mask=forbidden,
                 )
                 row, pixels = backproject_metric_depth(
                     measured,
@@ -535,6 +540,7 @@ def solve_frame(
         started = time.perf_counter()
         rss_before = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
         fit = None
+        application_status = "UNAVAILABLE"
         if not len(points):
             raw_status = "STOPPED_NO_TARGET_EVIDENCE"
             raw_reason = "common preprocessing produced zero target points"
@@ -562,6 +568,7 @@ def solve_frame(
                         finite_difference_relative_step=float(contract["finite_difference_relative_step"]),
                     )
                     raw_status, raw_reason = "OUTPUT", ""
+                    application_status = "AUTHORIZED"
                 else:
                     fit = fit_open3d_single_frame(
                         observation,
@@ -582,6 +589,15 @@ def solve_frame(
                         else "STOPPED_INSUFFICIENT_CORRESPONDENCES"
                     )
                     raw_reason = fit["raw_solver_reason"]
+                    application_status = (
+                        "AUTHORIZED" if fit["accepted_for_use"]
+                        else "DIAGNOSTIC_ONLY_REJECTED_CANDIDATE"
+                    )
+            except CalibrationCandidateRejected as error:
+                fit = error.candidate
+                raw_status = "REJECTED_CANDIDATE"
+                raw_reason = error.reason_code
+                application_status = "DIAGNOSTIC_ONLY_REJECTED_CANDIDATE"
             except (ValueError, RuntimeError) as error:
                 fit = None
                 raw_status = "NUMERICAL_FAILURE"
@@ -592,6 +608,7 @@ def solve_frame(
             "raw_solver_status": raw_status,
             "raw_solver_reason": raw_reason,
             "input_evidence_status": input_status,
+            "formal_application_status": application_status,
             "fit": fit,
             "solve_seconds": float(time.perf_counter() - started),
             "peak_rss_delta_kib": int(
