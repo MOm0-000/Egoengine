@@ -442,15 +442,15 @@ def score_cases(
 
     for version, rows in comparisons.items():
         with (output_dir / f"{version}_comparison.csv").open("w", newline="", encoding="utf-8") as stream:
-            writer = csv.DictWriter(stream, fieldnames=COMPARISON_FIELDS)
+            writer = csv.DictWriter(stream, fieldnames=COMPARISON_FIELDS, lineterminator="\n")
             writer.writeheader(); writer.writerows(rows)
     combined_rows = comparisons["baseline"] + comparisons["fixed"]
     with (output_dir / "comparison.csv").open("w", newline="", encoding="utf-8") as stream:
-        writer = csv.DictWriter(stream, fieldnames=COMPARISON_FIELDS)
+        writer = csv.DictWriter(stream, fieldnames=COMPARISON_FIELDS, lineterminator="\n")
         writer.writeheader(); writer.writerows(combined_rows)
     visibility_fields = list(visibility[0]) if visibility else []
     with (output_dir / "occlusion_comparison.csv").open("w", newline="", encoding="utf-8") as stream:
-        writer = csv.DictWriter(stream, fieldnames=visibility_fields)
+        writer = csv.DictWriter(stream, fieldnames=visibility_fields, lineterminator="\n")
         writer.writeheader(); writer.writerows(visibility)
     shutil.copy2(output_dir / "occlusion_comparison.csv", output_dir / "visibility_comparison.csv")
     raw = output_dir / "raw_predictions"
