@@ -1,0 +1,60 @@
+{
+  "coordinate_model_selection_performed": false,
+  "coordinate_models_both_reported": true,
+  "exact_key_validation": true,
+  "fit_parameters": {
+    "advisory_maximum_rotation_deg": 10.0,
+    "advisory_maximum_translation_m": 0.1,
+    "huber_delta_m": 0.01,
+    "maximum_correspondence_distance_m": 0.05,
+    "maximum_iterations": 60,
+    "minimum_correspondences": 24,
+    "relative_fitness_tolerance": 1e-06,
+    "relative_rmse_tolerance": 1e-06
+  },
+  "forbidden_fit_inputs": [
+    "table",
+    "bowl bottom",
+    "brush bottom"
+  ],
+  "parameter_sweep_count": 0,
+  "schema": "taco_brush_open3d_single_frame_calibration_penetration_config_consumption_v1",
+  "single_run": true,
+  "solver": {
+    "method": "OPEN3D_OFFICIAL_SINGLE_FRAME"
+  },
+  "table_parameters": {
+    "foreground": {
+      "dilation_px": 5,
+      "provenance": "LOCAL_REUSED_FROM_EXISTING_PROJECTION_AUDIT"
+    },
+    "plane_fit": {
+      "inlier_distance_m": 0.01,
+      "maximum_consensus_offset_mad_m": 0.01,
+      "maximum_iterations": 64,
+      "maximum_tilt_from_world_z_deg": 10.0,
+      "minimum_candidate_points": 128,
+      "minimum_samples_with_stable_plane": 2,
+      "provenance": "LOCAL_ENGINEERING_VALUES_FROZEN_BEFORE_RUN",
+      "random_seed": 0
+    },
+    "roi": {
+      "interaction_roi_scale": 1.5,
+      "provenance": "LOCAL_ENGINEERING_VALUE_FROZEN_BEFORE_RUN"
+    },
+    "sampling": {
+      "provenance": "LOCAL_ENGINEERING_VALUE_FROZEN_BEFORE_RUN",
+      "spatial_stride_px": 8
+    }
+  },
+  "visibility_parameters": {
+    "interior_erosion_px": 5,
+    "occluders": [
+      "left_hand",
+      "right_hand",
+      "target_bowl"
+    ],
+    "spatial_stride_px": 8,
+    "uncertainty_margin_m": 0.002
+  }
+}
