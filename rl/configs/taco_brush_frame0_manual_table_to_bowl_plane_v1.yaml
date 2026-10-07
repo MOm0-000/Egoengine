@@ -1,0 +1,71 @@
+schema: taco_brush_frame0_manual_table_to_bowl_plane_v1
+status: READ_ONLY_RAW_DEPTH_TO_FIXED_BOWL_SUPPORT_PLANE
+minimum_baseline: 5220a2dae3c309a014ef205e32c9926ec229efe1
+paper_faithful: false
+
+sample:
+  triplet: "(brush, brush, bowl)"
+  sequence: "20230927_027"
+  frame: 0
+  target_id: "146"
+
+inputs:
+  rgb_video: /data_all/zzx/3.2RL/data/taco_v1/dev4/rgb/taco_brush_brush_bowl_20230927_027.mp4
+  depth_video: /data_all/zzx/3.2RL/data/taco_v1/dev4/depth_original/taco_brush_brush_bowl_20230927_027.avi
+  intrinsic: /data_all/zzx/3.2RL/data/taco_v1/dev4/camera/Egocentric_Camera_Parameters/(brush, brush, bowl)/20230927_027/egocentric_intrinsic.txt
+  extrinsic: /data_all/zzx/3.2RL/data/taco_v1/dev4/camera/Egocentric_Camera_Parameters/(brush, brush, bowl)/20230927_027/egocentric_frame_extrinsic.npy
+  fixed_bowl_support_plane: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_bowl_frame0_support_plane_v1/results.json
+
+integrity_protected:
+  active_support_contract: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_camera_table_infra_repair_v1/support_surface_contract.yaml
+
+depth:
+  width: 1920
+  height: 1080
+  scale_raw_units_per_metre: 4000.0
+  frame_mapping: INDEX_ALIGNED
+  invalid_raw_value: 0
+  spatial_stride_px: 1
+
+manual_selection:
+  basis: FRAME0_RGB_VISUAL_INSPECTION_ONLY
+  image_size_px: [1920, 1080]
+  policy: >-
+    Conservative polygons visibly inside the turquoise table surface, away
+    from the bowl, brush, both hands, table boundary, object/hand shadow
+    boundaries, and uncertain narrow gaps. Polygons were frozen before any
+    signed distance was computed.
+  polygons_xy_px:
+    A_top_left: [[520, 220], [750, 190], [760, 315], [550, 335]]
+    B_top_mid: [[800, 170], [1010, 175], [1000, 325], [800, 325]]
+    C_top_right: [[1080, 220], [1230, 260], [1270, 350], [1130, 340]]
+    D_left_mid: [[350, 540], [470, 530], [480, 700], [340, 710]]
+    F_lower_mid: [[760, 720], [980, 720], [970, 880], [770, 880]]
+    G_right_mid: [[1220, 400], [1310, 420], [1320, 560], [1200, 570]]
+
+measurement_contract:
+  refit_reference_plane: false
+  horizontal_prior: false
+  distance_based_point_rejection: false
+  signed_distance_truncation: false
+  calibration_algorithm: false
+  report_every_valid_selected_depth_point: true
+  signed_distance_equation: "fixed_normal dot world_point - fixed_offset"
+  sign_convention: "positive is the side pointed to by the fixed bowl-plane normal"
+
+authorization:
+  read_raw_rgb: true
+  read_raw_depth: true
+  read_official_camera_parameters: true
+  read_fixed_bowl_support_plane: true
+  modify_source_data: false
+  modify_active_support_contract: false
+  table_plane_estimation: false
+  calibration: false
+  mink: false
+  physics: false
+  replay: false
+  mpc: false
+  reinforcement_learning: false
+
+output: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_frame0_manual_table_to_bowl_plane_v1
