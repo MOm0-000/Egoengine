@@ -1,16 +1,17 @@
-"""Open3D 0.20 point-to-plane calibration with grouped correspondences.
+"""Official Open3D 0.20 single-frame calibration wrappers.
 
-The only project-specific part is correspondence grouping: measurements from a
-frame may query only the sampled public model surface for that same frame.  The
-rigid update itself is computed by Open3D's official
-``TransformationEstimationPointToPlane.compute_transformation`` implementation.
+The active Open3D path performs input conversion and exactly one call to
+``open3d.pipelines.registration.registration_icp`` per frame and coordinate
+expression. Correspondence search, rigid updates, iteration and convergence
+are owned by Open3D; this module contains no project ICP loop.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
 import time
-from typing import Any, Iterable, Literal
+from typing import Any, Literal
 
 import numpy as np
 from scipy.spatial.transform import Rotation
@@ -23,79 +24,10 @@ from .taco_calibration_residual import (
 )
 
 
-Open3DMethod = Literal["OPEN3D_POINT_TO_PLANE", "OPEN3D_ROBUST_POINT_TO_PLANE"]
-
-
-@dataclass(frozen=True)
-class SampledSurface:
-    """A deterministic point-and-normal representation of a public mesh."""
-
-    points_local: np.ndarray
-    normals_local: np.ndarray
-    sampled_face_indices: np.ndarray
-    points_per_face: int
-
-    def __post_init__(self) -> None:
-        points = np.asarray(self.points_local, dtype=np.float64)
-        normals = np.asarray(self.normals_local, dtype=np.float64)
-        indices = np.asarray(self.sampled_face_indices, dtype=np.int64)
-        if points.ndim != 2 or points.shape[1] != 3 or not np.isfinite(points).all():
-            raise ValueError("sampled surface points must be finite Nx3")
-        if normals.shape != points.shape or not np.isfinite(normals).all():
-            raise ValueError("sampled surface normals must match points")
-        lengths = np.linalg.norm(normals, axis=1)
-        if not len(points) or not np.allclose(lengths, 1.0, atol=1e-8):
-            raise ValueError("sampled surface normals must be unit length")
-        if indices.ndim != 1 or len(indices) * int(self.points_per_face) != len(points):
-            raise ValueError("sampled face metadata is inconsistent")
-        object.__setattr__(self, "points_local", points)
-        object.__setattr__(self, "normals_local", normals)
-        object.__setattr__(self, "sampled_face_indices", indices)
-
-
-def deterministic_sampled_surface(
-    vertices: Any,
-    faces: Any,
-    *,
-    maximum_faces: int = 4096,
-    points_per_face: int = 3,
-) -> SampledSurface:
-    """Sample public triangles without randomness or access to observations."""
-    vertices = np.asarray(vertices, dtype=np.float64)
-    faces = np.asarray(faces, dtype=np.int64)
-    if vertices.ndim != 2 or vertices.shape[1] != 3 or not np.isfinite(vertices).all():
-        raise ValueError("vertices must be finite Nx3")
-    if faces.ndim != 2 or faces.shape[1] != 3 or not len(faces):
-        raise ValueError("faces must be nonempty Mx3")
-    if faces.min() < 0 or faces.max() >= len(vertices):
-        raise ValueError("face index is outside the vertex array")
-    if maximum_faces <= 0 or points_per_face not in (1, 3):
-        raise ValueError("invalid deterministic sampling contract")
-    if len(faces) > maximum_faces:
-        chosen = np.unique(
-            np.rint(np.linspace(0, len(faces) - 1, maximum_faces)).astype(np.int64)
-        )
-    else:
-        chosen = np.arange(len(faces), dtype=np.int64)
-    triangles = vertices[faces[chosen]]
-    edges_a = triangles[:, 1] - triangles[:, 0]
-    edges_b = triangles[:, 2] - triangles[:, 0]
-    face_normals = np.cross(edges_a, edges_b)
-    lengths = np.linalg.norm(face_normals, axis=1)
-    if np.any(lengths <= 1e-12):
-        raise ValueError("sampled mesh contains a degenerate triangle")
-    face_normals = face_normals / lengths[:, None]
-    weights = (
-        np.asarray([[1 / 3, 1 / 3, 1 / 3]], dtype=np.float64)
-        if points_per_face == 1
-        else np.asarray(
-            [[0.60, 0.20, 0.20], [0.20, 0.60, 0.20], [0.20, 0.20, 0.60]],
-            dtype=np.float64,
-        )
-    )
-    points = np.concatenate([weights @ triangle for triangle in triangles])
-    normals = np.repeat(face_normals, len(weights), axis=0)
-    return SampledSurface(points, normals, chosen, points_per_face)
+Open3DSingleFrameMethod = Literal[
+    "OPEN3D_OFFICIAL_SINGLE_FRAME",
+    "OPEN3D_HUBER_SINGLE_FRAME",
+]
 
 
 def _open3d() -> Any:
@@ -106,252 +38,248 @@ def _open3d() -> Any:
     return o3d
 
 
-def _pcd(o3d: Any, points: np.ndarray, normals: np.ndarray | None = None) -> Any:
-    cloud = o3d.geometry.PointCloud()
-    cloud.points = o3d.utility.Vector3dVector(np.asarray(points, dtype=np.float64))
-    if normals is not None:
-        cloud.normals = o3d.utility.Vector3dVector(np.asarray(normals, dtype=np.float64))
-    return cloud
+def _finite_points(value: Any, label: str) -> np.ndarray:
+    points = np.asarray(value, dtype=np.float64)
+    if points.ndim != 2 or points.shape[1] != 3 or not np.isfinite(points).all():
+        raise ValueError(f"{label} must be finite Nx3")
+    if not len(points):
+        raise ValueError(f"{label} cannot be empty")
+    return points
 
 
-def _rotation_angle(transform: np.ndarray) -> float:
-    return float(np.linalg.norm(Rotation.from_matrix(transform[:3, :3]).as_rotvec()))
+def _unit_normals(value: Any, point_count: int) -> np.ndarray:
+    normals = np.asarray(value, dtype=np.float64)
+    if normals.shape != (point_count, 3) or not np.isfinite(normals).all():
+        raise ValueError("sampled normals must be finite and match sampled points")
+    lengths = np.linalg.norm(normals, axis=1)
+    if np.any(lengths <= 1e-12):
+        raise ValueError("sampled normals must be nonzero")
+    return normals / lengths[:, None]
 
 
-def grouped_point_to_plane_icp(
-    source_groups: Iterable[np.ndarray],
-    target_groups: Iterable[np.ndarray],
-    target_normal_groups: Iterable[np.ndarray],
+def _surface_hash(points: np.ndarray, normals: np.ndarray) -> str:
+    digest = hashlib.sha256()
+    digest.update(np.ascontiguousarray(points, dtype="<f8").tobytes())
+    digest.update(np.ascontiguousarray(normals, dtype="<f8").tobytes())
+    return digest.hexdigest()
+
+
+@dataclass(frozen=True)
+class OfficialSampledSurface:
+    """Point-and-triangle-normal output of Open3D uniform mesh sampling."""
+
+    points_local: np.ndarray
+    normals_local: np.ndarray
+    number_of_points: int
+    random_seed: int
+    sha256: str
+
+    def __post_init__(self) -> None:
+        points = _finite_points(self.points_local, "sampled points")
+        normals = np.asarray(self.normals_local, dtype=np.float64)
+        if normals.shape != (len(points), 3) or not np.isfinite(normals).all():
+            raise ValueError("sampled normals must be finite and match sampled points")
+        lengths = np.linalg.norm(normals, axis=1)
+        if np.any(lengths <= 1e-12) or not np.allclose(lengths, 1.0, rtol=0.0, atol=1e-12):
+            raise ValueError("sampled normals must be unit length")
+        if self.number_of_points != len(points) or self.number_of_points <= 0:
+            raise ValueError("sampled point-count metadata is inconsistent")
+        if self.random_seed < 0:
+            raise ValueError("sampling seed must be nonnegative")
+        expected = _surface_hash(points, normals)
+        if self.sha256 != expected:
+            raise ValueError("sampled surface hash mismatch")
+        object.__setattr__(self, "points_local", points)
+        object.__setattr__(self, "normals_local", normals)
+
+
+def official_uniform_sampled_surface(
+    vertices: Any,
+    faces: Any,
     *,
-    method: Open3DMethod,
-    maximum_correspondence_distance_m: float,
-    maximum_iterations: int,
-    relative_fitness_tolerance: float,
-    relative_rmse_tolerance: float,
-    huber_delta_m: float,
-    minimum_correspondences: int,
-    maximum_translation_m: float,
-    maximum_rotation_deg: float,
-) -> dict[str, Any]:
-    """Run grouped ICP while delegating every SE(3) update to Open3D."""
+    number_of_points: int = 50_000,
+    random_seed: int = 20261007,
+) -> OfficialSampledSurface:
+    """Sample a public mesh with Open3D's official uniform sampler."""
     o3d = _open3d()
-    sources = [np.asarray(row, dtype=np.float64) for row in source_groups]
-    targets = [np.asarray(row, dtype=np.float64) for row in target_groups]
-    normals = [np.asarray(row, dtype=np.float64) for row in target_normal_groups]
-    if not sources or not (len(sources) == len(targets) == len(normals)):
-        raise ValueError("source, target and normal groups must be nonempty and aligned")
-    for source, target, normal in zip(sources, targets, normals, strict=True):
-        if source.ndim != 2 or source.shape[1] != 3 or not np.isfinite(source).all():
-            raise ValueError("source groups must contain finite Nx3 points")
-        if target.ndim != 2 or target.shape[1] != 3 or not np.isfinite(target).all():
-            raise ValueError("target groups must contain finite Nx3 points")
-        if normal.shape != target.shape or not np.isfinite(normal).all():
-            raise ValueError("target normal groups must match target points")
-        if not len(source) or not len(target):
-            raise ValueError("ICP groups cannot be empty")
-        if not np.allclose(np.linalg.norm(normal, axis=1), 1.0, atol=1e-8):
-            raise ValueError("target normals must be unit length")
-    positive = (
-        maximum_correspondence_distance_m,
-        relative_fitness_tolerance,
-        relative_rmse_tolerance,
-        huber_delta_m,
-        maximum_translation_m,
-        maximum_rotation_deg,
+    vertices_array = _finite_points(vertices, "vertices")
+    faces_array = np.asarray(faces, dtype=np.int32)
+    if faces_array.ndim != 2 or faces_array.shape[1] != 3 or not len(faces_array):
+        raise ValueError("faces must be nonempty Mx3")
+    if faces_array.min() < 0 or faces_array.max() >= len(vertices_array):
+        raise ValueError("face index is outside the vertex array")
+    if number_of_points <= 0 or random_seed < 0:
+        raise ValueError("sampling count and seed must be valid")
+    mesh = o3d.geometry.TriangleMesh(
+        o3d.utility.Vector3dVector(vertices_array),
+        o3d.utility.Vector3iVector(faces_array),
     )
-    if any(not np.isfinite(value) or value <= 0 for value in positive):
-        raise ValueError("ICP scales, tolerances and safety bounds must be positive")
-    if maximum_iterations <= 0 or minimum_correspondences < 6:
-        raise ValueError("invalid ICP iteration or correspondence budget")
-    if method == "OPEN3D_POINT_TO_PLANE":
-        estimator = o3d.pipelines.registration.TransformationEstimationPointToPlane()
-    elif method == "OPEN3D_ROBUST_POINT_TO_PLANE":
-        estimator = o3d.pipelines.registration.TransformationEstimationPointToPlane(
-            o3d.pipelines.registration.HuberLoss(k=float(huber_delta_m))
-        )
-    else:
-        raise ValueError(f"unknown Open3D method: {method}")
-
-    target_clouds = [_pcd(o3d, target, normal) for target, normal in zip(targets, normals, strict=True)]
-    trees = [o3d.geometry.KDTreeFlann(cloud) for cloud in target_clouds]
-    target_offsets = np.cumsum([0] + [len(row) for row in targets[:-1]])
-    target_all = np.concatenate(targets)
-    normal_all = np.concatenate(normals)
-    target_all_cloud = _pcd(o3d, target_all, normal_all)
-    total_source = sum(len(row) for row in sources)
-    distance_sq = float(maximum_correspondence_distance_m) ** 2
-
-    def match(transform: np.ndarray) -> tuple[np.ndarray, np.ndarray, float, float, list[int]]:
-        transformed_groups = [apply_transform(row, transform) for row in sources]
-        transformed = np.concatenate(transformed_groups)
-        pairs: list[list[int]] = []
-        squared: list[float] = []
-        per_group: list[int] = []
-        source_offset = 0
-        for group_index, (points, tree) in enumerate(zip(transformed_groups, trees, strict=True)):
-            count = 0
-            for local_source, point in enumerate(points):
-                found, indices, distances = tree.search_knn_vector_3d(point, 1)
-                if found and float(distances[0]) <= distance_sq:
-                    pairs.append([
-                        source_offset + local_source,
-                        int(target_offsets[group_index]) + int(indices[0]),
-                    ])
-                    squared.append(float(distances[0]))
-                    count += 1
-            per_group.append(count)
-            source_offset += len(points)
-        correspondence = np.asarray(pairs, dtype=np.int32).reshape(-1, 2)
-        fitness = len(correspondence) / total_source
-        rmse = float(np.sqrt(np.mean(squared))) if squared else float("inf")
-        return transformed, correspondence, fitness, rmse, per_group
-
-    started = time.perf_counter()
-    transform = np.eye(4, dtype=np.float64)
-    transformed, correspondence, fitness, rmse, per_group = match(transform)
-    if len(correspondence) < minimum_correspondences:
-        raise ValueError(
-            f"too few grouped correspondences: {len(correspondence)} < {minimum_correspondences}"
-        )
-    iterations: list[dict[str, Any]] = []
-    converged = False
-    for iteration in range(maximum_iterations):
-        source_cloud = _pcd(o3d, transformed)
-        delta = np.asarray(
-            estimator.compute_transformation(
-                source_cloud,
-                target_all_cloud,
-                o3d.utility.Vector2iVector(correspondence),
-            ),
-            dtype=np.float64,
-        )
-        if delta.shape != (4, 4) or not np.isfinite(delta).all():
-            raise ValueError("Open3D returned a non-finite transformation")
-        transform = delta @ transform
-        translation = float(np.linalg.norm(transform[:3, 3]))
-        rotation_deg = float(np.degrees(_rotation_angle(transform)))
-        if translation > maximum_translation_m + 1e-12 or rotation_deg > maximum_rotation_deg + 1e-9:
-            raise ValueError(
-                "Open3D calibration reached the numerical safety boundary: "
-                f"translation={translation}, rotation_deg={rotation_deg}"
-            )
-        previous_fitness, previous_rmse = fitness, rmse
-        transformed, correspondence, fitness, rmse, per_group = match(transform)
-        if len(correspondence) < minimum_correspondences:
-            raise ValueError(
-                f"too few grouped correspondences after update: {len(correspondence)}"
-            )
-        relative_fitness = abs(fitness - previous_fitness) / max(abs(previous_fitness), 1e-12)
-        relative_rmse = abs(rmse - previous_rmse) / max(abs(previous_rmse), 1e-12)
-        iterations.append({
-            "iteration": iteration + 1,
-            "correspondence_count": int(len(correspondence)),
-            "correspondences_per_group": per_group,
-            "fitness": float(fitness),
-            "inlier_rmse_m": float(rmse),
-            "increment_translation_m": float(np.linalg.norm(delta[:3, 3])),
-            "increment_rotation_deg": float(np.degrees(_rotation_angle(delta))),
-            "relative_fitness_change": float(relative_fitness),
-            "relative_rmse_change": float(relative_rmse),
-            "cross_group_correspondence_count": 0,
-        })
-        if relative_fitness <= relative_fitness_tolerance and relative_rmse <= relative_rmse_tolerance:
-            converged = True
-            break
-    elapsed = time.perf_counter() - started
-    return {
-        "transform": transform.tolist(),
-        "translation_norm_m": float(np.linalg.norm(transform[:3, 3])),
-        "rotation_angle_deg": float(np.degrees(_rotation_angle(transform))),
-        "optimizer": {
-            "backend": "Open3D TransformationEstimationPointToPlane.compute_transformation",
-            "open3d_version": o3d.__version__,
-            "method": method,
-            "converged": converged,
-            "iterations": len(iterations),
-            "maximum_iterations": maximum_iterations,
-            "correspondence_count": int(len(correspondence)),
-            "correspondences_per_group": per_group,
-            "fitness": float(fitness),
-            "inlier_rmse_m": float(rmse),
-            "elapsed_seconds": float(elapsed),
-            "cross_group_correspondence_count": 0,
-            "iteration_trace": iterations,
-        },
-        "fit_contract": {
-            "adapter": "PROJECT_GROUPED_CORRESPONDENCE_OFFICIAL_OPEN3D_UPDATE",
-            "maximum_correspondence_distance_m": maximum_correspondence_distance_m,
-            "relative_fitness_tolerance": relative_fitness_tolerance,
-            "relative_rmse_tolerance": relative_rmse_tolerance,
-            "huber_delta_m": huber_delta_m if method == "OPEN3D_ROBUST_POINT_TO_PLANE" else None,
-            "minimum_correspondences": minimum_correspondences,
-            "maximum_translation_m": maximum_translation_m,
-            "maximum_rotation_deg": maximum_rotation_deg,
-            "bound_provenance": "NUMERICAL_SAFETY_BOUND",
-        },
-    }
+    o3d.utility.random.seed(int(random_seed))
+    sampled = mesh.sample_points_uniformly(
+        number_of_points=int(number_of_points),
+        use_triangle_normal=True,
+    )
+    points = np.asarray(sampled.points, dtype=np.float64).copy()
+    normals = _unit_normals(np.asarray(sampled.normals, dtype=np.float64), len(points))
+    return OfficialSampledSurface(
+        points_local=points,
+        normals_local=normals,
+        number_of_points=len(points),
+        random_seed=int(random_seed),
+        sha256=_surface_hash(points, normals),
+    )
 
 
-def fit_open3d_surface_correction(
-    observations: Iterable[SurfaceObservation],
-    sampled_surface: SampledSurface,
+def _cloud(o3d: Any, points: np.ndarray, normals: np.ndarray | None = None) -> Any:
+    result = o3d.geometry.PointCloud()
+    result.points = o3d.utility.Vector3dVector(np.asarray(points, dtype=np.float64))
+    if normals is not None:
+        result.normals = o3d.utility.Vector3dVector(np.asarray(normals, dtype=np.float64))
+    return result
+
+
+def _rotation_angle_deg(transform: np.ndarray) -> float:
+    rotation = np.array(transform[:3, :3], dtype=np.float64, copy=True, order="C")
+    return float(
+        np.degrees(np.linalg.norm(Rotation.from_matrix(rotation).as_rotvec()))
+    )
+
+
+def fit_open3d_single_frame(
+    observation: SurfaceObservation,
+    sampled_surface: OfficialSampledSurface,
     model: CorrectionModel,
     *,
-    method: Open3DMethod,
+    method: Open3DSingleFrameMethod,
     maximum_correspondence_distance_m: float = 0.05,
     maximum_iterations: int = 60,
     relative_fitness_tolerance: float = 1e-6,
     relative_rmse_tolerance: float = 1e-6,
     huber_delta_m: float = 0.01,
     minimum_correspondences: int = 24,
-    maximum_translation_m: float = 0.10,
-    maximum_rotation_deg: float = 10.0,
+    advisory_maximum_translation_m: float = 0.10,
+    advisory_maximum_rotation_deg: float = 10.0,
+    include_correspondence_set: bool = False,
 ) -> dict[str, Any]:
-    """Estimate one correction shared by all frames using official Open3D updates."""
-    rows = list(observations)
-    if len(rows) < 2:
-        raise ValueError("at least two camera observations are required")
-    points = np.concatenate([row.points_camera for row in rows])
-    if len(points) < minimum_correspondences:
-        raise ValueError("too few calibration surface points")
-    singular = np.linalg.svd(points - points.mean(axis=0), compute_uv=False)
-    if singular[-1] <= max(singular[0], 1e-12) * 1e-5:
-        raise ValueError("calibration point geometry is degenerate")
+    """Run one complete official ``registration_icp`` call for one frame."""
+    if not isinstance(observation, SurfaceObservation):
+        raise TypeError("observation must be a SurfaceObservation")
     if model not in ("WORLD_FIXED", "CAMERA_LOCAL"):
         raise ValueError(f"unknown correction model: {model}")
-
-    source_groups, target_groups, normal_groups = [], [], []
-    for row in rows:
-        if model == "WORLD_FIXED":
-            source = apply_transform(row.points_camera, invert_transform(row.world_to_camera))
-            target_transform = row.object_to_world
-        else:
-            source = row.points_camera
-            target_transform = row.world_to_camera @ row.object_to_world
-        target = apply_transform(sampled_surface.points_local, target_transform)
-        target_normals = sampled_surface.normals_local @ target_transform[:3, :3].T
-        target_normals /= np.linalg.norm(target_normals, axis=1, keepdims=True)
-        source_groups.append(source)
-        target_groups.append(target)
-        normal_groups.append(target_normals)
-    result = grouped_point_to_plane_icp(
-        source_groups,
-        target_groups,
-        normal_groups,
-        method=method,
-        maximum_correspondence_distance_m=maximum_correspondence_distance_m,
-        maximum_iterations=maximum_iterations,
-        relative_fitness_tolerance=relative_fitness_tolerance,
-        relative_rmse_tolerance=relative_rmse_tolerance,
-        huber_delta_m=huber_delta_m,
-        minimum_correspondences=minimum_correspondences,
-        maximum_translation_m=maximum_translation_m,
-        maximum_rotation_deg=maximum_rotation_deg,
+    positive = (
+        maximum_correspondence_distance_m,
+        relative_fitness_tolerance,
+        relative_rmse_tolerance,
+        huber_delta_m,
+        advisory_maximum_translation_m,
+        advisory_maximum_rotation_deg,
     )
-    result["model"] = model
-    result["sampled_surface"] = {
-        "point_count": int(len(sampled_surface.points_local)),
-        "sampled_face_count": int(len(sampled_surface.sampled_face_indices)),
-        "points_per_face": sampled_surface.points_per_face,
+    if any(not np.isfinite(value) or value <= 0 for value in positive):
+        raise ValueError("ICP parameters must be finite and positive")
+    if maximum_iterations <= 0 or minimum_correspondences < 1:
+        raise ValueError("iteration and correspondence budgets must be positive")
+
+    o3d = _open3d()
+    if model == "WORLD_FIXED":
+        source = apply_transform(
+            observation.points_camera,
+            invert_transform(observation.world_to_camera),
+        )
+        target_transform = observation.object_to_world
+    else:
+        source = observation.points_camera
+        target_transform = observation.world_to_camera @ observation.object_to_world
+    source = _finite_points(source, "source points")
+    target = apply_transform(sampled_surface.points_local, target_transform)
+    target_normals = sampled_surface.normals_local @ target_transform[:3, :3].T
+    target_normals = _unit_normals(target_normals, len(target))
+
+    if method == "OPEN3D_OFFICIAL_SINGLE_FRAME":
+        estimator = o3d.pipelines.registration.TransformationEstimationPointToPlane()
+        robust_kernel = None
+    elif method == "OPEN3D_HUBER_SINGLE_FRAME":
+        estimator = o3d.pipelines.registration.TransformationEstimationPointToPlane(
+            o3d.pipelines.registration.HuberLoss(k=float(huber_delta_m))
+        )
+        robust_kernel = {"name": "HuberLoss", "k_m": float(huber_delta_m)}
+    else:
+        raise ValueError(f"unknown Open3D method: {method}")
+
+    criteria = o3d.pipelines.registration.ICPConvergenceCriteria(
+        relative_fitness=float(relative_fitness_tolerance),
+        relative_rmse=float(relative_rmse_tolerance),
+        max_iteration=int(maximum_iterations),
+    )
+    started = time.perf_counter()
+    result = o3d.pipelines.registration.registration_icp(
+        _cloud(o3d, source),
+        _cloud(o3d, target, target_normals),
+        float(maximum_correspondence_distance_m),
+        np.eye(4, dtype=np.float64),
+        estimator,
+        criteria,
+    )
+    elapsed = time.perf_counter() - started
+    transform = np.asarray(result.transformation, dtype=np.float64)
+    if transform.shape != (4, 4) or not np.isfinite(transform).all():
+        raise ValueError("Open3D returned a non-finite transformation")
+    correspondence_set = np.asarray(result.correspondence_set, dtype=np.int64).reshape(-1, 2)
+    correspondence_count = int(len(correspondence_set))
+    raw_status = (
+        "OUTPUT"
+        if correspondence_count >= int(minimum_correspondences)
+        else "INSUFFICIENT_CORRESPONDENCES"
+    )
+    translation_m = float(np.linalg.norm(transform[:3, 3]))
+    rotation_deg = _rotation_angle_deg(transform)
+    within_advisory_bounds = (
+        translation_m <= advisory_maximum_translation_m + 1e-12
+        and rotation_deg <= advisory_maximum_rotation_deg + 1e-9
+    )
+    registration_result = {
+        "fitness": float(result.fitness),
+        "inlier_rmse_m": float(result.inlier_rmse),
+        "correspondence_count": correspondence_count,
+        "converged": "NOT_EXPOSED_BY_OPEN3D",
+        "iteration_count": "NOT_EXPOSED_BY_OPEN3D",
     }
-    return result
+    if include_correspondence_set:
+        registration_result["correspondence_set"] = correspondence_set.tolist()
+    return {
+        "model": model,
+        "transform": transform.tolist(),
+        "translation_norm_m": translation_m,
+        "rotation_angle_deg": rotation_deg,
+        "raw_solver_status": raw_status,
+        "raw_solver_reason": (
+            ""
+            if raw_status == "OUTPUT"
+            else f"{correspondence_count} correspondences < {minimum_correspondences}"
+        ),
+        "registration_result": registration_result,
+        "optimizer": {
+            "backend": "open3d.pipelines.registration.registration_icp",
+            "open3d_version": o3d.__version__,
+            "method": method,
+            "official_full_interface_call_count": 1,
+            "elapsed_seconds": float(elapsed),
+        },
+        "fit_contract": {
+            "initial_transform": "identity",
+            "maximum_correspondence_distance_m": float(maximum_correspondence_distance_m),
+            "relative_fitness_tolerance": float(relative_fitness_tolerance),
+            "relative_rmse_tolerance": float(relative_rmse_tolerance),
+            "maximum_iterations": int(maximum_iterations),
+            "minimum_correspondences": int(minimum_correspondences),
+            "robust_kernel": robust_kernel,
+            "sampled_surface_sha256": sampled_surface.sha256,
+            "sampled_surface_point_count": sampled_surface.number_of_points,
+            "sampled_surface_seed": sampled_surface.random_seed,
+        },
+        "safety_advisory": {
+            "within_bounds": bool(within_advisory_bounds),
+            "maximum_translation_m": float(advisory_maximum_translation_m),
+            "maximum_rotation_deg": float(advisory_maximum_rotation_deg),
+            "affects_raw_output_status": False,
+        },
+    }

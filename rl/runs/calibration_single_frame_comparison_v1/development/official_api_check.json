@@ -1,0 +1,38 @@
+{
+  "implementation_tolerance": {
+    "rtol": 0.0,
+    "simple_and_huber_atol": 1e-14,
+    "stress_case_atol": 1e-13
+  },
+  "implementation_tolerance_is_exam_threshold": false,
+  "open3d_version": "0.20.0",
+  "schema": "calibration_single_frame_official_api_check_v1",
+  "standalone_official_smoke": {
+    "command": "/data_all/zzx/calibration_open3d_v0200/env/bin/python /data_all/zzx/Egoengine_upload_3_2/rl/tests/open3d_comparison/official_registration_icp_smoke.py",
+    "elapsed_seconds": 0.6553296893835068,
+    "exit_code": 0,
+    "output": "{\"correspondence_count\": 1000, \"fitness\": 1.0, \"inlier_rmse_m\": 5.491175748507417e-16, \"open3d_version\": \"0.20.0\", \"registration_icp_calls\": 1, \"translation_m\": [0.003999999999999827, -0.0030000000000005842, 0.0049999999999999255]}\n",
+    "output_sha256": "f500575f319d3fdea5ab98fd81fb71034796e8f50715e87c400d8a8a704fc7c4"
+  },
+  "static_active_source_audit": {
+    "contains_compute_transformation": false,
+    "contains_grouped_point_to_plane_icp": false,
+    "contains_kdtreeflann": false,
+    "contains_project_iteration_loop": false,
+    "registration_icp_call_expressions": 1
+  },
+  "wrapper_and_scoring_pytest": {
+    "command": "/data_all/zzx/calibration_open3d_v0200/env/bin/python -m pytest -q /data_all/zzx/Egoengine_upload_3_2/rl/tests/open3d_comparison/test_open3d_single_frame.py /data_all/zzx/Egoengine_upload_3_2/rl/tests/open3d_comparison/test_single_frame_scoring.py",
+    "elapsed_seconds": 1.562265306711197,
+    "exit_code": 0,
+    "output": "......................                                                   [100%]\n22 passed in 0.70s\n",
+    "output_sha256": "0f0fe3b13b3d919a8a60eed4969aacb8c35ca18cbb22cc34236317f768fc936a"
+  },
+  "wrapper_equivalence_covered_for_plain_and_huber": true,
+  "wrapper_stress_cases": [
+    "complex_mesh_zero_correction",
+    "independent_sampling",
+    "noisy_points",
+    "zero_correspondences"
+  ]
+}

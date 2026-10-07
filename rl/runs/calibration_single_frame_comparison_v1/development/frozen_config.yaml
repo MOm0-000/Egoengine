@@ -1,0 +1,131 @@
+schema: calibration_single_frame_comparison_v1
+status: PUBLIC_DEVELOPMENT_ONLY
+formal_exam_executed: false
+
+authorization:
+  synthetic_known_answer_generation: true
+  public_regression: true
+  official_open3d_single_frame: true
+  current_single_frame_entry: true
+  formal_secret_generation_by_codex: false
+  real_taco_refit: false
+  real_taco_source_mutation: false
+  physics: false
+  replay: false
+  reinforcement_learning: false
+  chunk_commit: false
+
+methods:
+  - CURRENT_FIXED_SINGLE_FRAME
+  - OPEN3D_OFFICIAL_SINGLE_FRAME
+  - OPEN3D_HUBER_SINGLE_FRAME
+
+current_fixed_single_frame:
+  source_baseline_commit: 4e9ad4a8cfb593e6584b332f151939778416510e
+  residual_module_sha256: 4fe92e9d08d7cf2445cd09a13d87c2a2bcde00e944811d9716d7833c761d40d9
+  known_answer_module_sha256: d90ccf18b816acecc9c516a3f658f153ee722d3b8ded493edfade1c4cba4d6c8
+  python: /data_all/zzx/deximit_isolated/env-py311-cu118/bin/python
+  open3d_version: 0.18.0
+  robust_loss: soft_l1
+  robust_scale_m: 0.01
+  finite_difference_relative_step: 0.001
+  maximum_function_evaluations: 120
+  optimizer: scipy.optimize.least_squares_trf
+
+open3d:
+  repository: https://github.com/isl-org/Open3D
+  tag: v0.20.0
+  tag_commit: b6c5e196384ad71e75b6e6f9c5da22d046221f1d
+  license: MIT
+  python: /data_all/zzx/calibration_open3d_v0200/env/bin/python
+  wheel: /data_all/zzx/calibration_open3d_v0200/wheels/open3d_cpu-0.20.0-cp311-cp311-manylinux_2_35_x86_64.whl
+  wheel_sha256: 5b7b6ecd566e12fc7d55b1de476b5b35461deb632b40216ad52894cf402aed90
+  device: CPU
+  maximum_threads: 4
+  solver_api: open3d.pipelines.registration.registration_icp
+  sampler_api: open3d.geometry.TriangleMesh.sample_points_uniformly
+  reference_point_count: 50000
+  reference_sampling_seed: 20261007
+  use_triangle_normal: true
+
+common_preprocessing:
+  visibility_selector: nominal_first_surface_occlusion_aware
+  input_unit: metre
+  image_depth_definition: camera_z
+  uint16_depth_scale: 4000.0
+
+fit:
+  initial_transform: identity
+  advisory_maximum_translation_m: 0.10
+  advisory_maximum_rotation_deg: 10.0
+  minimum_points: 24
+  maximum_correspondence_distance_m: 0.05
+  maximum_iterations: 60
+  relative_fitness_tolerance: 1.0e-6
+  relative_rmse_tolerance: 1.0e-6
+  huber_delta_m: 0.01
+
+shapes:
+  taco:
+    path: /data_all/zzx/3.2RL/data/taco_v1/dev4/object_models/object_models_released/071_cm.obj
+    scale: 0.01
+
+image:
+  width: 96
+  height: 72
+  fx: 105.0
+  fy: 105.0
+  depth_scale: 4000.0
+  erosion_px: 1
+  spatial_stride_px: 2
+  visibility_uncertainty_margin_m: 0.002
+
+public_development:
+  seed: 202610072
+  group_count: 22
+  direct_clean:
+    groups: 8
+    frames_per_group: 2
+  direct_degraded:
+    groups: 6
+    frames_per_group: 2
+  image:
+    groups: 4
+    frames_per_group: 2
+  varying_recovery:
+    groups: 2
+    frames_per_group: 3
+  insufficient:
+    groups: 2
+    frames_per_group: 2
+
+formal_exam:
+  group_count: 96
+  expected_frame_count: 448
+  direct_clean:
+    groups: 48
+    frames_per_group: 5
+  direct_degraded:
+    groups: 24
+    frames_per_group: 5
+  image:
+    groups: 16
+    frames_per_group: 3
+  varying_recovery:
+    groups: 4
+    frames_per_group: 5
+  insufficient:
+    groups: 4
+    frames_per_group: 5
+  secret_seed_must_be_external: true
+  solver_network: disabled
+  answer_mount_in_solver: forbidden
+  other_frames_mount_in_single_frame_solver: forbidden
+  output_timeout_seconds_per_method: 7200
+
+scoring:
+  precision_pass_threshold_defined: false
+  compare_both_coordinate_expressions: true
+  sequence_variation_is_diagnostic_only: true
+
+output: /data_all/zzx/Egoengine_upload_3_2/rl/runs/calibration_single_frame_comparison_v1/development

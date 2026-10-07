@@ -166,9 +166,16 @@ def residual_metrics(residuals: Any) -> dict[str, float | int]:
     }
 
 
-def _geometry_guard(observations: list[SurfaceObservation], minimum_points: int) -> None:
-    if len(observations) < 2:
-        raise ValueError("at least two camera observations are required")
+def _geometry_guard(
+    observations: list[SurfaceObservation],
+    minimum_points: int,
+    *,
+    minimum_observations: int,
+) -> None:
+    if len(observations) < minimum_observations:
+        if minimum_observations == 2:
+            raise ValueError("at least two camera observations are required")
+        raise ValueError("at least one camera observation is required")
     points = np.concatenate([row.points_camera for row in observations])
     if len(points) < minimum_points:
         raise ValueError("too few calibration surface points")
@@ -203,6 +210,42 @@ def fit_surface_correction(
     )
 
 
+def fit_single_surface_correction(
+    observation: SurfaceObservation,
+    surface: TriangleSurface,
+    model: CorrectionModel,
+    *,
+    robust_loss: str = "soft_l1",
+    robust_scale_m: float = 0.01,
+    maximum_translation_m: float = 0.10,
+    maximum_rotation_deg: float = 10.0,
+    maximum_function_evaluations: int = 80,
+    minimum_points: int = 64,
+    finite_difference_relative_step: float | None = 1e-3,
+) -> dict[str, Any]:
+    """Fit one correction from exactly one observation.
+
+    This entry point changes only the observation-count contract.  It delegates
+    to the same triangle-surface residual, SciPy ``trf`` least-squares solve,
+    robust loss, finite-difference settings and numerical safety bounds as the
+    frozen multi-frame implementation.
+    """
+    if not isinstance(observation, SurfaceObservation):
+        raise TypeError("observation must be a SurfaceObservation")
+    return fit_multi_surface_correction(
+        [([observation], surface)],
+        model,
+        robust_loss=robust_loss,
+        robust_scale_m=robust_scale_m,
+        maximum_translation_m=maximum_translation_m,
+        maximum_rotation_deg=maximum_rotation_deg,
+        maximum_function_evaluations=maximum_function_evaluations,
+        minimum_points=minimum_points,
+        finite_difference_relative_step=finite_difference_relative_step,
+        _minimum_observations=1,
+    )
+
+
 def fit_multi_surface_correction(
     datasets: Iterable[tuple[Iterable[SurfaceObservation], TriangleSurface]],
     model: CorrectionModel,
@@ -214,13 +257,20 @@ def fit_multi_surface_correction(
     maximum_function_evaluations: int = 80,
     minimum_points: int = 64,
     finite_difference_relative_step: float | None = 1e-3,
+    _minimum_observations: int = 2,
 ) -> dict[str, Any]:
     """Fit one correction shared by multiple independently posed surfaces."""
     groups = [(list(rows), surface) for rows, surface in datasets]
     if not groups:
         raise ValueError("at least one calibration surface dataset is required")
     all_rows = [row for rows, _ in groups for row in rows]
-    _geometry_guard(all_rows, minimum_points)
+    if _minimum_observations not in (1, 2):
+        raise ValueError("unsupported observation-count contract")
+    _geometry_guard(
+        all_rows,
+        minimum_points,
+        minimum_observations=_minimum_observations,
+    )
     if model not in ("WORLD_FIXED", "CAMERA_LOCAL"):
         raise ValueError(f"unknown correction model: {model}")
     if robust_scale_m <= 0 or maximum_translation_m <= 0 or maximum_rotation_deg <= 0:
