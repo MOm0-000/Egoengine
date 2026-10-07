@@ -33,6 +33,9 @@ from egoengine_repro.evaluation.taco_calibration_residual import (  # noqa: E402
     SurfaceObservation, TriangleSurface, apply_transform,
     fit_single_surface_correction,
 )
+from egoengine_repro.evaluation.open3d_calibration import (  # noqa: E402
+    fit_open3d_single_frame, official_uniform_sampled_surface,
+)
 from egoengine_repro.evaluation.taco_calibration_visibility import (  # noqa: E402
     measured_target_selector, target_visibility_mask,
 )
@@ -98,10 +101,13 @@ def exact_keys(value: dict[str, Any], expected: set[str], label: str) -> None:
 
 def load_contracts(config_path: Path) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
     cfg = yaml.safe_load(config_path.read_text(encoding="utf-8"))
-    exact_keys(cfg, {
+    root_keys = {
         "schema", "status", "minimum_baseline", "paper_faithful", "authorization",
         "sample_key", "upstream", "evaluation", "output",
-    }, "root")
+    }
+    if cfg.get("schema") == "taco_brush_open3d_single_frame_calibration_penetration_v1":
+        root_keys.add("solver")
+    exact_keys(cfg, root_keys, "root")
     exact_keys(cfg["authorization"], {
         "temporary_depth_point_correction", "static_penetration_audit",
         "raw_depth_modification", "camera_parameter_modification",
@@ -117,7 +123,10 @@ def load_contracts(config_path: Path) -> tuple[dict[str, Any], dict[str, Any], d
         "coordinate_models", "penetration_tolerance_m", "require_same_effective_frames",
         "choose_best_coordinate_model",
     }, "evaluation")
-    if cfg["schema"] != "taco_brush_single_frame_calibration_penetration_v1":
+    if cfg["schema"] not in {
+        "taco_brush_single_frame_calibration_penetration_v1",
+        "taco_brush_open3d_single_frame_calibration_penetration_v1",
+    }:
         raise ValueError("unexpected schema")
     if cfg["status"] != "TEMPORARY_SINGLE_FRAME_CALIBRATION_STATIC_AUDIT":
         raise ValueError("unexpected status")
@@ -136,6 +145,10 @@ def load_contracts(config_path: Path) -> tuple[dict[str, Any], dict[str, Any], d
         "choose_best_coordinate_model": False,
     }:
         raise ValueError("frozen evaluation contract changed")
+    if "solver" in cfg:
+        exact_keys(cfg["solver"], {"method"}, "solver")
+        if cfg["solver"]["method"] != "OPEN3D_OFFICIAL_SINGLE_FRAME":
+            raise ValueError("this audit authorizes only official Open3D point-to-plane")
     subprocess.run(
         ["git", "merge-base", "--is-ancestor", cfg["minimum_baseline"], git_head(REPO_ROOT)],
         cwd=REPO_ROOT, check=True,
@@ -264,6 +277,34 @@ def fit_kwargs(current: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def open3d_fit_kwargs(current: dict[str, Any]) -> dict[str, Any]:
+    fit = current["fit"]
+    return {
+        "maximum_correspondence_distance_m": float(fit["maximum_correspondence_distance_m"]),
+        "maximum_iterations": int(fit["maximum_iterations"]),
+        "relative_fitness_tolerance": float(fit["relative_fitness_tolerance"]),
+        "relative_rmse_tolerance": float(fit["relative_rmse_tolerance"]),
+        "huber_delta_m": float(fit["huber_delta_m"]),
+        "minimum_correspondences": int(fit["minimum_points"]),
+        "advisory_maximum_translation_m": float(fit["advisory_maximum_translation_m"]),
+        "advisory_maximum_rotation_deg": float(fit["advisory_maximum_rotation_deg"]),
+    }
+
+
+def adapt_open3d_fit(value: dict[str, Any]) -> dict[str, Any]:
+    if value["raw_solver_status"] != "OUTPUT":
+        raise ValueError(value["raw_solver_reason"])
+    transform = np.asarray(value["transform"], dtype=np.float64)
+    parameters = np.concatenate([
+        transform[:3, 3], Rotation.from_matrix(transform[:3, :3]).as_rotvec(),
+    ])
+    result = dict(value)
+    result["parameters_translation_m_then_rotvec_rad"] = parameters.tolist()
+    result["fit_metrics"] = dict(value["registration_result"])
+    result["identity_metrics"] = {"status": "NOT_COMPUTED_BY_OPEN3D_CONTRACT"}
+    return result
+
+
 def _failure_text(error: Exception) -> str:
     return f"{type(error).__name__}: {error}"
 
@@ -310,8 +351,19 @@ def process(
     rasterizer.raster_settings = replace(rasterizer.raster_settings, max_faces_per_bin=400000)
     tool = geometry["objects"]["tool"]
     target = geometry["objects"]["target"]
-    surface = TriangleSurface(tool["vertices"], tool["faces"])
-    fits = fit_kwargs(current)
+    open3d_method = cfg.get("solver", {}).get("method")
+    if open3d_method is None:
+        surface = TriangleSurface(tool["vertices"], tool["faces"])
+        sampled_surface = None
+        fits = fit_kwargs(current)
+    else:
+        surface = None
+        sampled_surface = official_uniform_sampled_surface(
+            tool["vertices"], tool["faces"],
+            number_of_points=int(current["open3d"]["reference_point_count"]),
+            random_seed=int(current["open3d"]["reference_sampling_seed"]),
+        )
+        fits = open3d_fit_kwargs(current)
     rows: list[dict[str, Any]] = []
     corrections: dict[str, list[dict[str, Any]]] = {model: [] for model in MODELS}
     erosion = int(taco["anchors"]["interior_erosion_px"])
@@ -381,9 +433,15 @@ def process(
                     object_to_world=tool["poses"][frame],
                     sequence=sample["key"], frame=frame,
                 )
-                fit = fit_single_surface_correction(
-                    observation, surface, model, **fits,
-                )
+                if open3d_method is None:
+                    fit = fit_single_surface_correction(
+                        observation, surface, model, **fits,
+                    )
+                else:
+                    fit = adapt_open3d_fit(fit_open3d_single_frame(
+                        observation, sampled_surface, model,
+                        method=open3d_method, **fits,
+                    ))
             except (ValueError, RuntimeError) as error:
                 fit_status = "FAILED"
                 fit_reason = _failure_text(error)
@@ -589,12 +647,15 @@ def write_corrections(path: Path, corrections: dict[str, list[dict[str, Any]]]) 
 
 
 def summary_markdown(summary: dict[str, Any]) -> str:
+    solver_name = summary.get("solver", {}).get(
+        "method", "CURRENT_FIXED_SINGLE_FRAME",
+    )
     lines = [
-        "# Brush 单帧校准临时修正与桌面穿透检查 v1",
+        "# Brush 单帧校准临时修正与桌面穿透检查",
         "",
         f"**最终结论：`{summary['overall_classification']}`。**",
         "",
-        "本轮逐帧独立使用当前修复版自创算法；未修改原始 Depth、相机参数、物体姿态、手轨迹或 active `SupportSurfaceContract`。世界坐标与相机坐标结果均完整保留，未按穿透结果挑选模型。桌面基线来自同一帧未修正原始深度，未使用旧的 bowl-bottom support 定义。",
+        f"本轮逐帧独立使用 `{solver_name}`；未修改原始 Depth、相机参数、物体姿态、手轨迹或 active `SupportSurfaceContract`。世界坐标与相机坐标结果均完整保留，未按穿透结果挑选模型。桌面基线来自同一帧未修正原始深度，未使用旧的 bowl-bottom support 定义。",
         "",
         f"- 穿透门槛：`-{summary['penetration_tolerance_mm']:.3f} mm`（更负才计为穿透）",
         f"- 样本帧数：`{summary['frame_count']}`",
@@ -701,7 +762,11 @@ def main() -> int:
     else:
         overall = "UNABLE_TO_DETERMINE_FULL_SEQUENCE"
     summary = {
-        "schema": "taco_brush_single_frame_calibration_penetration_summary_v1",
+        "schema": (
+            "taco_brush_open3d_single_frame_calibration_penetration_summary_v1"
+            if "solver" in cfg
+            else "taco_brush_single_frame_calibration_penetration_summary_v1"
+        ),
         "classification_options": [
             "PENETRATION_ELIMINATED", "PENETRATION_REDUCED_BUT_REMAINS",
             "PENETRATION_REMAINS", "UNABLE_TO_DETERMINE_FULL_SEQUENCE",
@@ -725,6 +790,7 @@ def main() -> int:
             "hand_trajectories_modified": False,
         },
         "runtime_counts": {"mink": 0, "physics": 0, "replay": 0, "mpc": 0, "rl": 0},
+        "solver": cfg.get("solver", {"method": "CURRENT_FIXED_SINGLE_FRAME"}),
     }
     write_json(output / "summary.json", summary)
     (output / "summary.md").write_text(summary_markdown(summary), encoding="utf-8")
@@ -745,19 +811,35 @@ def main() -> int:
         "left_hand": sample["left_hand"], "right_hand": sample["right_hand"],
         "left_shape": sample["left_shape"], "right_shape": sample["right_shape"],
     }
+    if "solver" in cfg:
+        paths["open3d_calibration_module"] = (
+            RL_ROOT / "src/egoengine_repro/evaluation/open3d_calibration.py"
+        )
+        paths["open3d_wheel"] = Path(current["open3d"]["wheel"])
     write_json(output / "source_pins.json", {
-        "schema": "taco_brush_single_frame_calibration_penetration_source_pins_v1",
+        "schema": (
+            "taco_brush_open3d_single_frame_calibration_penetration_source_pins_v1"
+            if "solver" in cfg
+            else "taco_brush_single_frame_calibration_penetration_source_pins_v1"
+        ),
         "repository_head_before_audit": git_head(REPO_ROOT),
         "artifacts": {key: artifact(path) for key, path in paths.items()},
     })
     write_json(output / "config_consumption_audit.json", {
-        "schema": "taco_brush_single_frame_calibration_penetration_config_consumption_v1",
+        "schema": (
+            "taco_brush_open3d_single_frame_calibration_penetration_config_consumption_v1"
+            if "solver" in cfg
+            else "taco_brush_single_frame_calibration_penetration_config_consumption_v1"
+        ),
         "exact_key_validation": True,
         "single_run": True,
         "parameter_sweep_count": 0,
         "coordinate_models_both_reported": True,
         "coordinate_model_selection_performed": False,
-        "fit_parameters": fit_kwargs(current),
+        "solver": cfg.get("solver", {"method": "CURRENT_FIXED_SINGLE_FRAME"}),
+        "fit_parameters": (
+            open3d_fit_kwargs(current) if "solver" in cfg else fit_kwargs(current)
+        ),
         "visibility_parameters": {
             "uncertainty_margin_m": VISIBILITY_UNCERTAINTY_M,
             "interior_erosion_px": taco["anchors"]["interior_erosion_px"],
