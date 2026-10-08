@@ -198,6 +198,9 @@ def main() -> int:
             "invalid_depth_pixel_count": int(selector.sum() - len(world)),
             "points_rejected_by_distance": 0,
             "normal": fit["normal"].tolist(),
+            "tilt_from_world_z_deg_descriptive_only": float(
+                np.degrees(np.arccos(np.clip(fit["normal"][2], -1.0, 1.0)))
+            ),
             "offset_m": fit["offset_m"],
             "centroid_world_m": fit["centroid_world_m"].tolist(),
             "singular_values_m": fit["singular_values_m"].tolist(),
@@ -234,6 +237,12 @@ def main() -> int:
         row["comparison_to_frame0"]["signed_separation_at_frame0_centroid_mm"]
         for row in frame_data
     ])
+    residual_medians = np.asarray([
+        row["point_to_own_plane_absolute_distance_m"]["median"] for row in frame_data
+    ])
+    residual_p95 = np.asarray([
+        row["point_to_own_plane_absolute_distance_m"]["p95"] for row in frame_data
+    ])
     results = {
         "schema": cfg["schema"],
         "sample": cfg["sample"],
@@ -258,6 +267,10 @@ def main() -> int:
             "frame0_centroid_separation_min_mm": float(frame0_separations.min()),
             "frame0_centroid_separation_max_mm": float(frame0_separations.max()),
             "frame0_centroid_separation_span_mm": float(np.ptp(frame0_separations)),
+            "own_plane_residual_median_min_mm": float(residual_medians.min() * 1000.0),
+            "own_plane_residual_median_max_mm": float(residual_medians.max() * 1000.0),
+            "own_plane_residual_p95_min_mm": float(residual_p95.min() * 1000.0),
+            "own_plane_residual_p95_max_mm": float(residual_p95.max() * 1000.0),
         },
         "integrity": {
             "source_data_modified": False,
@@ -275,7 +288,7 @@ def main() -> int:
     with (output / "per_frame_planes.csv").open("w", newline="", encoding="utf-8") as stream_out:
         writer = csv.writer(stream_out)
         writer.writerow([
-            "frame", "valid_points", "normal_x", "normal_y", "normal_z", "offset_m",
+            "frame", "valid_points", "normal_x", "normal_y", "normal_z", "tilt_world_z_deg", "offset_m",
             "residual_median_mm", "residual_p95_mm", "residual_max_mm",
             "angle_to_frame0_deg", "offset_delta_to_frame0_mm",
             "separation_at_frame0_centroid_mm",
@@ -284,7 +297,8 @@ def main() -> int:
             residual = row["point_to_own_plane_absolute_distance_m"]
             compare = row["comparison_to_frame0"]
             writer.writerow([
-                row["frame"], row["valid_depth_point_count"], *row["normal"], row["offset_m"],
+                row["frame"], row["valid_depth_point_count"], *row["normal"],
+                row["tilt_from_world_z_deg_descriptive_only"], row["offset_m"],
                 residual["median"] * 1000.0, residual["p95"] * 1000.0,
                 residual["maximum"] * 1000.0, compare["normal_angle_deg"],
                 compare["offset_delta_mm"], compare["signed_separation_at_frame0_centroid_mm"],
@@ -335,19 +349,24 @@ def main() -> int:
         f"- Plane offset span: `{consistency['offset_span_mm']:.3f} mm`.",
         f"- Pairwise normal angle median / max: `{consistency['median_pairwise_normal_angle_deg']:.3f} / {consistency['maximum_pairwise_normal_angle_deg']:.3f} deg`.",
         f"- Signed plane separation at the frame-0 plane centroid min / max / span: `{consistency['frame0_centroid_separation_min_mm']:.3f} / {consistency['frame0_centroid_separation_max_mm']:.3f} / {consistency['frame0_centroid_separation_span_mm']:.3f} mm`.",
+        f"- Per-frame own-plane residual median range: `{consistency['own_plane_residual_median_min_mm']:.3f}` to `{consistency['own_plane_residual_median_max_mm']:.3f} mm`; P95 range: `{consistency['own_plane_residual_p95_min_mm']:.3f}` to `{consistency['own_plane_residual_p95_max_mm']:.3f} mm`.",
         "",
         "## Per-frame planes",
         "",
-        "| frame | points | normal | offset (m) | own residual median/P95/max (mm) | angle to f0 (deg) | separation at f0 centroid (mm) |",
-        "|---:|---:|---|---:|---:|---:|---:|",
+        "| frame | points | normal | tilt to +Z (deg; descriptive) | offset (m) | own residual median/P95/max (mm) | angle to f0 (deg) | separation at f0 centroid (mm) |",
+        "|---:|---:|---|---:|---:|---:|---:|---:|",
     ]
     for row in frame_data:
         residual = row["point_to_own_plane_absolute_distance_m"]
         compare = row["comparison_to_frame0"]
         lines.append(
-            f"| {row['frame']} | {row['valid_depth_point_count']} | `[{row['normal'][0]:.6f}, {row['normal'][1]:.6f}, {row['normal'][2]:.6f}]` | {row['offset_m']:.6f} | {residual['median']*1000:.3f}/{residual['p95']*1000:.3f}/{residual['maximum']*1000:.3f} | {compare['normal_angle_deg']:.3f} | {compare['signed_separation_at_frame0_centroid_mm']:.3f} |"
+            f"| {row['frame']} | {row['valid_depth_point_count']} | `[{row['normal'][0]:.6f}, {row['normal'][1]:.6f}, {row['normal'][2]:.6f}]` | {row['tilt_from_world_z_deg_descriptive_only']:.3f} | {row['offset_m']:.6f} | {residual['median']*1000:.3f}/{residual['p95']*1000:.3f}/{residual['maximum']*1000:.3f} | {compare['normal_angle_deg']:.3f} | {compare['signed_separation_at_frame0_centroid_mm']:.3f} |"
         )
     lines += [
+        "",
+        "## Interpretation",
+        "",
+        "The fitted world planes are not the same plane. Their orientations and positions vary far beyond the within-mesh bowl support-plane residuals from the preceding geometry audit. Moreover, many selected raw-depth clouds have large residuals to their own unconstrained fit, so the evidence is not merely a clean plane undergoing rigid extrinsic drift: under the mandated no-rejection contract, several frames are not tightly planar at all. This rules out cross-frame world-plane consistency but does not by itself assign the problem to depth noise, RGB/depth registration, timebase, or camera extrinsics.",
         "",
         "Frame 0 is only the comparison reference; it is not treated as a standard-answer plane.",
         "",
