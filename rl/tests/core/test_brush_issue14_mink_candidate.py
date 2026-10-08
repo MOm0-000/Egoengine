@@ -10,7 +10,10 @@ import yaml
 RL_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RL_ROOT / "scripts"))
 
-from run_taco_brush_issue14_mink_candidate_v1 import pickup_screen  # noqa: E402
+from run_taco_brush_issue14_mink_candidate_v1 import (  # noqa: E402
+    classify_candidate,
+    pickup_screen,
+)
 
 
 def test_candidate_support_is_exact_and_unpromoted() -> None:
@@ -47,3 +50,11 @@ def test_pickup_screen_does_not_confuse_object_lift_with_hand_alignment() -> Non
     assert result["near_frame_count_during_elevation"] == 0
     assert result["screen_pass"] is False
     assert result["interpretation"] == "KINEMATIC_ALIGNMENT_ONLY_NOT_PHYSICAL_LIFT_PROOF"
+
+
+def test_native_mesh_penetration_blocks_normal_pickup_classification() -> None:
+    assert classify_candidate(
+        static_pass=True,
+        selected_native_pass=False,
+        pickup_alignment_pass=True,
+    ) == "MINK_COMPLETE_FIXED_FRAME_HAND_OBJECT_PENETRATION"

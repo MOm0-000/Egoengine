@@ -226,6 +226,73 @@ def frame0_static_audit(
     }
 
 
+def selected_frame_native_hand_object_audit(
+    model: mujoco.MjModel, qpos: np.ndarray, frames: list[int], tolerance_m: float,
+) -> dict[str, Any]:
+    """Check true visual meshes at the already-frozen evidence frames.
+
+    MuJoCo collision shells are convex proxies and can over-report penetration
+    against concave CAD.  This audit deliberately uses the native visual meshes
+    at the same frames selected for visual evidence before the run.
+    """
+    families = collision_families(model)
+    groups = {
+        "brush_right_hand": relevant_pairs(
+            model, families["hand_tool"], "right", "right"),
+        "bowl_left_hand": relevant_pairs(
+            model, families["hand_target"], "left", "left"),
+    }
+    data = mujoco.MjData(model)
+    rows = []
+    for frame in frames:
+        if not 0 <= frame < len(qpos):
+            raise ValueError(f"native audit frame outside candidate: {frame}")
+        data.qpos[:] = qpos[frame]
+        mujoco.mj_forward(model, data)
+        native = native_world_objects(model, data)
+        row: dict[str, Any] = {"frame": frame, "objects": {}}
+        for name, pairs in groups.items():
+            report = pair_group_audit(model, data, native, pairs, tolerance_m)
+            row["objects"][name] = {
+                "minimum_native_distance_m": report["native_minimum"]["distance_m"],
+                "minimum_pair": report["native_minimum"],
+                "penetrating_pair_count": len(report["native_penetrating_pairs"]),
+                "penetrating_pairs": report["native_penetrating_pairs"],
+                "unknown_pair_count": len(report["unknown_pairs"]),
+                "unknown_pairs": report["unknown_pairs"],
+            }
+        rows.append(row)
+    penetrations = sum(
+        value["penetrating_pair_count"]
+        for row in rows for value in row["objects"].values()
+    )
+    unknown = sum(
+        value["unknown_pair_count"]
+        for row in rows for value in row["objects"].values()
+    )
+    return {
+        "frame_selection_source": "PREDECLARED_VISUAL_EVIDENCE_FRAMES",
+        "frames": frames,
+        "tolerance_m": tolerance_m,
+        "rows": rows,
+        "penetrating_pair_observation_count": penetrations,
+        "unknown_pair_observation_count": unknown,
+        "pass": not penetrations and not unknown,
+    }
+
+
+def classify_candidate(
+    *, static_pass: bool, selected_native_pass: bool, pickup_alignment_pass: bool,
+) -> str:
+    if not static_pass:
+        return "MINK_COMPLETE_STATIC_GEOMETRY_GATE_FAIL"
+    if not selected_native_pass:
+        return "MINK_COMPLETE_FIXED_FRAME_HAND_OBJECT_PENETRATION"
+    if pickup_alignment_pass:
+        return "MINK_COMPLETE_KINEMATIC_PICKUP_ALIGNMENT_PASS"
+    return "MINK_COMPLETE_KINEMATIC_PICKUP_ALIGNMENT_INCONCLUSIVE"
+
+
 def render_candidate(
     model: mujoco.MjModel, qpos: np.ndarray, frames: list[int], output: Path,
 ) -> None:
@@ -365,20 +432,24 @@ def main() -> int:
     pickup = trajectory_audit(
         model, qpos, candidate_plane, cfg["kinematic_pickup_screen"], output)
     write_json(output / "kinematic_pickup_alignment.json", pickup)
+    evidence_frames = [
+        int(value) for value in cfg["visual_evidence"]["frame_indices"]
+    ]
+    selected_native = selected_frame_native_hand_object_audit(
+        model, qpos, evidence_frames, support.validation_tolerance_m)
+    write_json(output / "selected_frame_native_hand_object_audit.json", selected_native)
     render_candidate(
-        model, qpos, [int(value) for value in cfg["visual_evidence"]["frame_indices"]],
-        output,
+        model, qpos, evidence_frames, output,
     )
 
     static_pass = bool(
         floor["status"] == "PASS" and self_report["status"] == "PASS" and frame0["pass"]
     )
-    if not static_pass:
-        classification = "MINK_COMPLETE_STATIC_GEOMETRY_GATE_FAIL"
-    elif pickup["all_objects_pass"]:
-        classification = "MINK_COMPLETE_KINEMATIC_PICKUP_ALIGNMENT_PASS"
-    else:
-        classification = "MINK_COMPLETE_KINEMATIC_PICKUP_ALIGNMENT_INCONCLUSIVE"
+    classification = classify_candidate(
+        static_pass=static_pass,
+        selected_native_pass=bool(selected_native["pass"]),
+        pickup_alignment_pass=bool(pickup["all_objects_pass"]),
+    )
     retarget_report = json.loads((output / "retarget_report.json").read_text(encoding="utf-8"))
     result = {
         "schema": SCHEMA,
@@ -400,6 +471,7 @@ def main() -> int:
         "native_floor_status": floor["status"],
         "self_collision_status": self_report["status"],
         "frame0_static_geometry_pass": frame0["pass"],
+        "selected_frame_native_hand_object_audit": selected_native,
         "kinematic_pickup_alignment": pickup,
         "physics_pickup_validated": False,
         "promotion_authorized": False,
@@ -423,6 +495,8 @@ def main() -> int:
         f"- Native hand-table gate: `{floor['status']}`",
         f"- Self-collision gate: `{self_report['status']}`",
         f"- Frame-0 full native static geometry gate: `{'PASS' if frame0['pass'] else 'FAIL'}`",
+        f"- Fixed-frame native hand-object geometry gate: `{'PASS' if selected_native['pass'] else 'FAIL'}`",
+        f"- Fixed-frame native penetrating pair observations: `{selected_native['penetrating_pair_observation_count']}`",
         "- Active SupportSurfaceContract modified: `NO`", "",
         "## Kinematic pickup-alignment screen", "",
         "| object | maximum lift from frame 0 (mm) | elevated frames | near fraction while elevated | minimum relevant-hand proxy distance (mm) | screen |",
@@ -437,7 +511,10 @@ def main() -> int:
             f"{value['minimum_hand_object_proxy_distance_m']*1000:.6f} | "
             f"{'PASS' if value['screen_pass'] else 'INCONCLUSIVE'} |"
         )
-    summary += ["", "This is a fresh kinematic MINK result. Object poses follow the official "
+    summary += ["", "The collision-proxy distance is only a proximity diagnostic. The fixed-frame "
+                "native-mesh audit is the geometry gate; any penetration there prevents this "
+                "candidate from being described as a normal pickup.", "",
+                "This is a fresh kinematic MINK result. Object poses follow the official "
                 "reference and MINK freezes object DOFs; therefore proximity synchronized with "
                 "object lift is evidence of hand-object alignment, not proof that contact forces "
                 "physically lift either object. Physics, Replay, MPC, and RL did not run.", ""]
@@ -447,6 +524,7 @@ def main() -> int:
         "classification": classification,
         "candidate_frames": len(qpos),
         "static_pass": static_pass,
+        "selected_native_hand_object_pass": selected_native["pass"],
         "pickup_screens": pickup["objects"],
     }, indent=2))
     return 0
