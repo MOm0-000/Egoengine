@@ -1,0 +1,63 @@
+schema: taco_brush_bowl_frame0_gravity_settle_v1
+status: READ_ONLY_ISOLATED_PHYSICS_AUDIT
+minimum_baseline: b6079e10bcf9232db880343e8ee3bb9155441cf4
+paper_faithful: false
+
+sample:
+  triplet: "(brush, brush, bowl)"
+  sequence: "(brush, brush, bowl)/20230927_027"
+  frame: 0
+  bowl_role: target
+  bowl_id: "146"
+  source_body: left_object
+  source_joint: left_object_joint
+
+candidate_table:
+  provenance: taco_brush_issue14_frame0_static_penetration_v1
+  simulator_z_m: 0.7173599392270725
+  normal_simulator: [0.0, 0.0, 1.0]
+
+simulation:
+  duration_s: 2.0
+  variants:
+    - recorded_frame0_velocity
+    - zero_initial_velocity
+  integrator_and_timestep: INHERIT_UNMODIFIED_FROM_SOURCE_SCENE
+  gravity: INHERIT_UNMODIFIED_FROM_SOURCE_SCENE
+  object_physics: INHERIT_UNMODIFIED_FROM_SOURCE_SCENE
+  contact_parameters: INHERIT_UNMODIFIED_FROM_SOURCE_SCENE
+
+frozen_stability_criteria:
+  final_window_s: 0.5
+  first_contact_deadline_s: 1.0
+  final_contact_fraction_min: 0.99
+  final_linear_speed_p95_max_m_s: 0.005
+  final_angular_speed_p95_max_rad_s: 0.05
+  final_horizontal_range_max_m: 0.0005
+  final_orientation_range_max_rad: 0.008726646259971648
+  final_collision_penetration_p95_max_m: 0.0005
+  obvious_rebound_upward_speed_m_s: 0.05
+  obvious_rebound_separation_m: 0.001
+  overall_requires_all_variants: true
+  verdicts: [STABLE_SEATING, NOT_STABLE, INDETERMINATE]
+
+paths:
+  source_scene: /data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_brush_brush_bowl_20230927_027/scene_source_contacts_mass.xml
+  robot_reference: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_environment_aware_mink_v2/robot_reference.npz
+  issue14_static_audit: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_issue14_frame0_static_penetration_v1/results.json
+  output: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_bowl_frame0_gravity_settle_v1
+
+authorization:
+  build_isolated_bowl_table_scene: true
+  run_isolated_mujoco_cpu_physics: true
+  modify_original_data: false
+  modify_source_scene: false
+  modify_active_support_contract: false
+  modify_mink_v2_trajectory: false
+  add_auxiliary_constraint: false
+  apply_external_force: false
+  tune_physics: false
+  replay: false
+  mpc: false
+  reinforcement_learning: false
+  promotion: false
