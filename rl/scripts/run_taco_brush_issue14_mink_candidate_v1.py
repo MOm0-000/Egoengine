@@ -8,10 +8,15 @@ import csv
 from dataclasses import replace
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
 from typing import Any
+
+# Formal evidence is rendered on a headless server. Select EGL before importing
+# MuJoCo so the renderer cannot silently depend on an interactive X11 display.
+os.environ.setdefault("MUJOCO_GL", "egl")
 
 import cv2
 import mujoco
