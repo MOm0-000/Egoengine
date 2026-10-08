@@ -367,7 +367,7 @@ def main() -> int:
     np.savez_compressed(output / "all_selected_frame_points.npz", **point_arrays)
 
     with (output / "per_frame_planes.csv").open("w", newline="", encoding="utf-8") as stream_out:
-        writer = csv.writer(stream_out)
+        writer = csv.writer(stream_out, lineterminator="\n")
         writer.writerow([
             "frame", "valid_points", "normal_x", "normal_y", "normal_z", "tilt_world_z_deg", "offset_m",
             "residual_median_mm", "residual_p95_mm", "residual_max_mm",
@@ -434,7 +434,9 @@ def main() -> int:
         "",
         "## Interpretation",
         "",
-        "The fitted world planes are not the same plane. Their orientations and positions vary far beyond the within-mesh bowl support-plane residuals from the preceding geometry audit. Moreover, many selected raw-depth clouds have large residuals to their own unconstrained fit, so the evidence is not merely a clean plane undergoing rigid extrinsic drift: under the mandated no-rejection contract, several frames are not tightly planar at all. This rules out cross-frame world-plane consistency but does not by itself assign the problem to depth noise, RGB/depth registration, timebase, or camera extrinsics.",
+        "**Direct answer under the frozen all-point contract: the twelve Depth-derived world planes are not one stable numerical plane.** Ten of twelve frames (including frame 0) are within about 1.04 degrees of the frame-0 normal, while frames 19 and 38 deviate by 2.36 and 5.45 degrees. All frame-0-centroid separations remain within 4.92 mm.",
+        "",
+        "The corrected per-frame selections do not reproduce the large drift reported by the invalid fixed-polygon v1 experiment. Most fitted world planes form a much tighter cluster, but the twelve raw-Depth fits are still not one stable numerical plane: frames 19 and especially 38 have larger normal deviations, and the all-point clouds have sizeable residuals to their own unconstrained fits. Under the mandated no-rejection contract, this is evidence of remaining cross-frame inconsistency and non-planar/raw-depth contamination, but it does not by itself assign the cause to depth noise, RGB/depth registration, timebase, or camera extrinsics.",
         "",
         "Frame 0 is only the comparison reference; it is not treated as a standard-answer plane.",
         "",
