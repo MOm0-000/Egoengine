@@ -1,0 +1,908 @@
+{
+  "active_support_unchanged_m": 0.72,
+  "candidate_complete": true,
+  "candidate_frames": 209,
+  "candidate_support": {
+    "equation": "normal dot x = offset",
+    "frame": "simulator",
+    "normal": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "offset_m": 0.7173599392270725
+  },
+  "classification": "MINK_COMPLETE_FIXED_FRAME_HAND_OBJECT_PENETRATION",
+  "forbidden_runtime_counts": {
+    "chunk_commit": 0,
+    "mpc": 0,
+    "physics": 0,
+    "promotion": 0,
+    "reinforcement_learning": 0,
+    "replay": 0
+  },
+  "frame0_static_geometry_pass": true,
+  "kinematic_pickup_alignment": {
+    "all_objects_pass": true,
+    "objects": {
+      "bowl": {
+        "elevated_frame_count": 65,
+        "first_elevated_frame": 61,
+        "initial_table_clearance_m": 0.0026400587855358593,
+        "interpretation": "KINEMATIC_ALIGNMENT_ONLY_NOT_PHYSICAL_LIFT_PROOF",
+        "maximum_lift_from_initial_m": 0.06116747907114206,
+        "maximum_table_clearance_m": 0.06380753785667792,
+        "minimum_hand_object_proxy_distance_m": -0.017697346800761474,
+        "near_fraction_during_elevation": 1.0,
+        "near_frame_count_during_elevation": 65,
+        "penetrating_proxy_frame_count": 96,
+        "screen_pass": true
+      },
+      "brush": {
+        "elevated_frame_count": 85,
+        "first_elevated_frame": 38,
+        "initial_table_clearance_m": 0.0013287509765300687,
+        "interpretation": "KINEMATIC_ALIGNMENT_ONLY_NOT_PHYSICAL_LIFT_PROOF",
+        "maximum_lift_from_initial_m": 0.08799605891769102,
+        "maximum_table_clearance_m": 0.08932480989422109,
+        "minimum_hand_object_proxy_distance_m": -0.021067157580750263,
+        "near_fraction_during_elevation": 1.0,
+        "near_frame_count_during_elevation": 85,
+        "penetrating_proxy_frame_count": 130,
+        "screen_pass": true
+      }
+    },
+    "proxy_geometry_caveat": "MuJoCo convex collision proxies are a proximity diagnostic; this screen does not prove contact force or causal lifting.",
+    "screen_contract": {
+      "elevated_near_fraction_min": 0.5,
+      "interpretation": "KINEMATIC_ALIGNMENT_ONLY_NOT_PHYSICAL_LIFT_PROOF",
+      "object_lift_delta_m": 0.01,
+      "relevant_hand_object_near_distance_m": 0.002
+    }
+  },
+  "native_floor_status": "PASS",
+  "only_scientific_change": {
+    "from_support_simulator_z_m": 0.72,
+    "to_support_simulator_z_m": 0.7173599392270725
+  },
+  "physics_pickup_validated": false,
+  "promotion_authorized": false,
+  "repository_head": "bb0bd2d560a5b6f24697889ba0df37864eb9d27f",
+  "retarget_summary": {
+    "fingertip_max_error_m": [
+      0.0603320122550993,
+      0.04586463071570912
+    ],
+    "fingertip_mean_error_m": [
+      0.015458779424427577,
+      0.016166259009634743
+    ],
+    "frame_velocity_max_ratio": 0.9999962500000011,
+    "frame_velocity_violating_intervals": 0,
+    "joint_limit_min_margin": -5.038951887008142e-16,
+    "joint_limit_violating_frames": 0,
+    "native_support_minimum_distance_m": -4.9044499833894584e-05,
+    "self_collision_min_distance_m": -9.970988413595533e-07,
+    "wrist_mean_error_rad": [
+      0.10018273863037465,
+      0.10162795641278527
+    ]
+  },
+  "schema": "taco_brush_issue14_mink_candidate_v1",
+  "selected_frame_native_hand_object_audit": {
+    "frame_selection_source": "PREDECLARED_VISUAL_EVIDENCE_FRAMES",
+    "frames": [
+      0,
+      40,
+      80,
+      120,
+      160,
+      208
+    ],
+    "pass": false,
+    "penetrating_pair_observation_count": 16,
+    "rows": [
+      {
+        "frame": 0,
+        "objects": {
+          "bowl_left_hand": {
+            "minimum_native_distance_m": 0.025286616415971512,
+            "minimum_pair": {
+              "body1": "left_hand_index_rota_link2",
+              "body2": "left_object",
+              "classification": "CLEARANCE",
+              "contact_count": 0,
+              "containment_followup": [],
+              "containment_penetration": false,
+              "distance_m": 0.025286616415971512,
+              "native_visual_geom1": "left_index_rota2_visual",
+              "native_visual_geom2": "left_object_visual",
+              "nearest_points_sim_m": [
+                [
+                  0.48931524338099475,
+                  -0.13236925238530234,
+                  0.7488917532646099
+                ],
+                [
+                  0.48981937183836943,
+                  -0.10976032023055754,
+                  0.7602052412806504
+                ]
+              ],
+              "reported_penetration_depth_m": 0.0,
+              "surface_intersection": false
+            },
+            "penetrating_pair_count": 0,
+            "penetrating_pairs": [],
+            "unknown_pair_count": 0,
+            "unknown_pairs": []
+          },
+          "brush_right_hand": {
+            "minimum_native_distance_m": 0.03268985964670449,
+            "minimum_pair": {
+              "body1": "right_hand_index_rota_link2",
+              "body2": "right_object",
+              "classification": "CLEARANCE",
+              "contact_count": 0,
+              "containment_followup": [],
+              "containment_penetration": false,
+              "distance_m": 0.03268985964670449,
+              "native_visual_geom1": "right_index_rota2_visual",
+              "native_visual_geom2": "right_object_visual",
+              "nearest_points_sim_m": [
+                [
+                  0.770031132262818,
+                  -0.034352330395862905,
+                  0.7357914904249151
+                ],
+                [
+                  0.7467815850501257,
+                  -0.011815974360609632,
+                  0.7312972569220437
+                ]
+              ],
+              "reported_penetration_depth_m": 0.0,
+              "surface_intersection": false
+            },
+            "penetrating_pair_count": 0,
+            "penetrating_pairs": [],
+            "unknown_pair_count": 0,
+            "unknown_pairs": []
+          }
+        }
+      },
+      {
+        "frame": 40,
+        "objects": {
+          "bowl_left_hand": {
+            "minimum_native_distance_m": 0.018882395056726856,
+            "minimum_pair": {
+              "body1": "left_hand_index_rota_link2",
+              "body2": "left_object",
+              "classification": "CLEARANCE",
+              "contact_count": 0,
+              "containment_followup": [],
+              "containment_penetration": false,
+              "distance_m": 0.018882395056726856,
+              "native_visual_geom1": "left_index_rota2_visual",
+              "native_visual_geom2": "left_object_visual",
+              "nearest_points_sim_m": [
+                [
+                  0.44497553872696854,
+                  -0.12054347136814016,
+                  0.7646541403613074
+                ],
+                [
+                  0.45362498249627364,
+                  -0.10509024816184671,
+                  0.7712062284327855
+                ]
+              ],
+              "reported_penetration_depth_m": 0.0,
+              "surface_intersection": false
+            },
+            "penetrating_pair_count": 0,
+            "penetrating_pairs": [],
+            "unknown_pair_count": 0,
+            "unknown_pairs": []
+          },
+          "brush_right_hand": {
+            "minimum_native_distance_m": -0.0024165109313739608,
+            "minimum_pair": {
+              "body1": "right_hand_index_rota_link1",
+              "body2": "right_object",
+              "classification": "PENETRATION",
+              "contact_count": 64,
+              "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+              "deepest_contact_normal": [
+                0.2948804670088886,
+                0.07859566088580701,
+                0.9522962943677472
+              ],
+              "deepest_contact_position_sim_m": [
+                0.719293973140563,
+                0.017164714143648896,
+                0.7938600722059438
+              ],
+              "distance_m": -0.0024165109313739608,
+              "native_visual_geom1": "right_index_rota1_visual",
+              "native_visual_geom2": "right_object_visual",
+              "reported_penetration_depth_m": 0.0024165109313739608,
+              "surface_intersection": true
+            },
+            "penetrating_pair_count": 2,
+            "penetrating_pairs": [
+              {
+                "body1": "right_hand_index_rota_link1",
+                "body2": "right_object",
+                "classification": "PENETRATION",
+                "contact_count": 64,
+                "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+                "deepest_contact_normal": [
+                  0.2948804670088886,
+                  0.07859566088580701,
+                  0.9522962943677472
+                ],
+                "deepest_contact_position_sim_m": [
+                  0.719293973140563,
+                  0.017164714143648896,
+                  0.7938600722059438
+                ],
+                "distance_m": -0.0024165109313739608,
+                "native_visual_geom1": "right_index_rota1_visual",
+                "native_visual_geom2": "right_object_visual",
+                "reported_penetration_depth_m": 0.0024165109313739608,
+                "surface_intersection": true
+              },
+              {
+                "body1": "right_hand_index_rota_link2",
+                "body2": "right_object",
+                "classification": "PENETRATION",
+                "contact_count": 64,
+                "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+                "deepest_contact_normal": [
+                  0.9658919684267484,
+                  0.18579522010757768,
+                  -0.18036862674500204
+                ],
+                "deepest_contact_position_sim_m": [
+                  0.7052378260025354,
+                  0.032703490140532976,
+                  0.7954266024914336
+                ],
+                "distance_m": -0.0020731059380237893,
+                "native_visual_geom1": "right_index_rota2_visual",
+                "native_visual_geom2": "right_object_visual",
+                "reported_penetration_depth_m": 0.0020731059380237893,
+                "surface_intersection": true
+              }
+            ],
+            "unknown_pair_count": 0,
+            "unknown_pairs": []
+          }
+        }
+      },
+      {
+        "frame": 80,
+        "objects": {
+          "bowl_left_hand": {
+            "minimum_native_distance_m": -0.0010544359905849676,
+            "minimum_pair": {
+              "body1": "left_hand_index_rota_link2",
+              "body2": "left_object",
+              "classification": "PENETRATION",
+              "contact_count": 64,
+              "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+              "deepest_contact_normal": [
+                0.2877865996325107,
+                -0.5350561974591697,
+                -0.794288196206195
+              ],
+              "deepest_contact_position_sim_m": [
+                0.471053955966267,
+                -0.0991195608668562,
+                0.8239952422348857
+              ],
+              "distance_m": -0.0010544359905849676,
+              "native_visual_geom1": "left_index_rota2_visual",
+              "native_visual_geom2": "left_object_visual",
+              "reported_penetration_depth_m": 0.0010544359905849676,
+              "surface_intersection": true
+            },
+            "penetrating_pair_count": 2,
+            "penetrating_pairs": [
+              {
+                "body1": "left_hand_index_rota_link1",
+                "body2": "left_object",
+                "classification": "PENETRATION",
+                "contact_count": 64,
+                "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+                "deepest_contact_normal": [
+                  0.20905788940811784,
+                  -0.6311118478811452,
+                  -0.7469890456628328
+                ],
+                "deepest_contact_position_sim_m": [
+                  0.4748733620924133,
+                  -0.09933644550015333,
+                  0.8279051875299818
+                ],
+                "distance_m": -0.0007776456855346225,
+                "native_visual_geom1": "left_index_rota1_visual",
+                "native_visual_geom2": "left_object_visual",
+                "reported_penetration_depth_m": 0.0007776456855346225,
+                "surface_intersection": true
+              },
+              {
+                "body1": "left_hand_index_rota_link2",
+                "body2": "left_object",
+                "classification": "PENETRATION",
+                "contact_count": 64,
+                "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+                "deepest_contact_normal": [
+                  0.2877865996325107,
+                  -0.5350561974591697,
+                  -0.794288196206195
+                ],
+                "deepest_contact_position_sim_m": [
+                  0.471053955966267,
+                  -0.0991195608668562,
+                  0.8239952422348857
+                ],
+                "distance_m": -0.0010544359905849676,
+                "native_visual_geom1": "left_index_rota2_visual",
+                "native_visual_geom2": "left_object_visual",
+                "reported_penetration_depth_m": 0.0010544359905849676,
+                "surface_intersection": true
+              }
+            ],
+            "unknown_pair_count": 0,
+            "unknown_pairs": []
+          },
+          "brush_right_hand": {
+            "minimum_native_distance_m": -0.0032531396474357877,
+            "minimum_pair": {
+              "body1": "right_hand_thumb_rota_link2",
+              "body2": "right_object",
+              "classification": "PENETRATION",
+              "contact_count": 64,
+              "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+              "deepest_contact_normal": [
+                -0.8862335156212964,
+                0.23415759993211985,
+                -0.3997003554958974
+              ],
+              "deepest_contact_position_sim_m": [
+                0.6283368740777022,
+                -0.08561507144839883,
+                0.8453150553861412
+              ],
+              "distance_m": -0.0032531396474357877,
+              "native_visual_geom1": "right_thumb_rota2_visual",
+              "native_visual_geom2": "right_object_visual",
+              "reported_penetration_depth_m": 0.0032531396474357877,
+              "surface_intersection": true
+            },
+            "penetrating_pair_count": 5,
+            "penetrating_pairs": [
+              {
+                "body1": "right_hand_thumb_rota_link2",
+                "body2": "right_object",
+                "classification": "PENETRATION",
+                "contact_count": 64,
+                "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+                "deepest_contact_normal": [
+                  -0.8862335156212964,
+                  0.23415759993211985,
+                  -0.3997003554958974
+                ],
+                "deepest_contact_position_sim_m": [
+                  0.6283368740777022,
+                  -0.08561507144839883,
+                  0.8453150553861412
+                ],
+                "distance_m": -0.0032531396474357877,
+                "native_visual_geom1": "right_thumb_rota2_visual",
+                "native_visual_geom2": "right_object_visual",
+                "reported_penetration_depth_m": 0.0032531396474357877,
+                "surface_intersection": true
+              },
+              {
+                "body1": "right_hand_index_rota_link1",
+                "body2": "right_object",
+                "classification": "PENETRATION",
+                "contact_count": 64,
+                "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+                "deepest_contact_normal": [
+                  -0.3157568430157949,
+                  -0.9336570722716426,
+                  0.1690623774996773
+                ],
+                "deepest_contact_position_sim_m": [
+                  0.6635226762506199,
+                  -0.03264956166119623,
+                  0.8572527661699194
+                ],
+                "distance_m": -0.0017654129491090909,
+                "native_visual_geom1": "right_index_rota1_visual",
+                "native_visual_geom2": "right_object_visual",
+                "reported_penetration_depth_m": 0.0017654129491090909,
+                "surface_intersection": true
+              },
+              {
+                "body1": "right_hand_index_rota_link2",
+                "body2": "right_object",
+                "classification": "PENETRATION",
+                "contact_count": 64,
+                "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+                "deepest_contact_normal": [
+                  0.9896609273755281,
+                  0.017533570521296764,
+                  -0.1423510545482
+                ],
+                "deepest_contact_position_sim_m": [
+                  0.6649086913545399,
+                  -0.04481017346389437,
+                  0.85490437799643
+                ],
+                "distance_m": -0.0022667385637067383,
+                "native_visual_geom1": "right_index_rota2_visual",
+                "native_visual_geom2": "right_object_visual",
+                "reported_penetration_depth_m": 0.0022667385637067383,
+                "surface_intersection": true
+              },
+              {
+                "body1": "right_hand_mid_link2",
+                "body2": "right_object",
+                "classification": "PENETRATION",
+                "contact_count": 64,
+                "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+                "deepest_contact_normal": [
+                  0.9495061287221788,
+                  -0.24593921236861074,
+                  0.19481276995753832
+                ],
+                "deepest_contact_position_sim_m": [
+                  0.6634056612430292,
+                  -0.07771384052275092,
+                  0.8377360178519007
+                ],
+                "distance_m": -0.0014090615384679817,
+                "native_visual_geom1": "right_middle_link2_visual",
+                "native_visual_geom2": "right_object_visual",
+                "reported_penetration_depth_m": 0.0014090615384679817,
+                "surface_intersection": true
+              },
+              {
+                "body1": "right_hand_ring_link2",
+                "body2": "right_object",
+                "classification": "PENETRATION",
+                "contact_count": 21,
+                "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+                "deepest_contact_normal": [
+                  -0.648614875069864,
+                  -0.44591384823382835,
+                  0.6168140593334452
+                ],
+                "deepest_contact_position_sim_m": [
+                  0.6680623022302116,
+                  -0.08115184138791647,
+                  0.8287300333692235
+                ],
+                "distance_m": -0.0008509722507732409,
+                "native_visual_geom1": "right_ring_link2_visual",
+                "native_visual_geom2": "right_object_visual",
+                "reported_penetration_depth_m": 0.0008509722507732409,
+                "surface_intersection": true
+              }
+            ],
+            "unknown_pair_count": 0,
+            "unknown_pairs": []
+          }
+        }
+      },
+      {
+        "frame": 120,
+        "objects": {
+          "bowl_left_hand": {
+            "minimum_native_distance_m": -0.0010360537090711164,
+            "minimum_pair": {
+              "body1": "left_hand_index_rota_link2",
+              "body2": "left_object",
+              "classification": "PENETRATION",
+              "contact_count": 64,
+              "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+              "deepest_contact_normal": [
+                0.599277460763182,
+                0.05603819063149582,
+                -0.7985776394390097
+              ],
+              "deepest_contact_position_sim_m": [
+                0.4687732923568203,
+                -0.0984217038224349,
+                0.8071645400797177
+              ],
+              "distance_m": -0.0010360537090711164,
+              "native_visual_geom1": "left_index_rota2_visual",
+              "native_visual_geom2": "left_object_visual",
+              "reported_penetration_depth_m": 0.0010360537090711164,
+              "surface_intersection": true
+            },
+            "penetrating_pair_count": 1,
+            "penetrating_pairs": [
+              {
+                "body1": "left_hand_index_rota_link2",
+                "body2": "left_object",
+                "classification": "PENETRATION",
+                "contact_count": 64,
+                "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+                "deepest_contact_normal": [
+                  0.599277460763182,
+                  0.05603819063149582,
+                  -0.7985776394390097
+                ],
+                "deepest_contact_position_sim_m": [
+                  0.4687732923568203,
+                  -0.0984217038224349,
+                  0.8071645400797177
+                ],
+                "distance_m": -0.0010360537090711164,
+                "native_visual_geom1": "left_index_rota2_visual",
+                "native_visual_geom2": "left_object_visual",
+                "reported_penetration_depth_m": 0.0010360537090711164,
+                "surface_intersection": true
+              }
+            ],
+            "unknown_pair_count": 0,
+            "unknown_pairs": []
+          },
+          "brush_right_hand": {
+            "minimum_native_distance_m": -0.002176760605673067,
+            "minimum_pair": {
+              "body1": "right_hand_ring_link2",
+              "body2": "right_object",
+              "classification": "PENETRATION",
+              "contact_count": 64,
+              "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+              "deepest_contact_normal": [
+                -0.6485812344458141,
+                0.6564299523074394,
+                0.38528184493743883
+              ],
+              "deepest_contact_position_sim_m": [
+                0.7213725072020238,
+                -0.03614632895866948,
+                0.7897571083989127
+              ],
+              "distance_m": -0.002176760605673067,
+              "native_visual_geom1": "right_ring_link2_visual",
+              "native_visual_geom2": "right_object_visual",
+              "reported_penetration_depth_m": 0.002176760605673067,
+              "surface_intersection": true
+            },
+            "penetrating_pair_count": 6,
+            "penetrating_pairs": [
+              {
+                "body1": "right_hand_index_rota_link1",
+                "body2": "right_object",
+                "classification": "PENETRATION",
+                "contact_count": 64,
+                "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+                "deepest_contact_normal": [
+                  -0.33304190503535425,
+                  -0.9304810794764676,
+                  0.15260422742089882
+                ],
+                "deepest_contact_position_sim_m": [
+                  0.7220503555559481,
+                  0.018032787932660457,
+                  0.8157805367366664
+                ],
+                "distance_m": -0.001950976823980849,
+                "native_visual_geom1": "right_index_rota1_visual",
+                "native_visual_geom2": "right_object_visual",
+                "reported_penetration_depth_m": 0.001950976823980849,
+                "surface_intersection": true
+              },
+              {
+                "body1": "right_hand_index_rota_link2",
+                "body2": "right_object",
+                "classification": "PENETRATION",
+                "contact_count": 64,
+                "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+                "deepest_contact_normal": [
+                  -0.82570590324402,
+                  0.22678356653240006,
+                  -0.516506510412813
+                ],
+                "deepest_contact_position_sim_m": [
+                  0.6879282076455963,
+                  0.0010394567590266482,
+                  0.8094952652867676
+                ],
+                "distance_m": -0.0008786663081200574,
+                "native_visual_geom1": "right_index_rota2_visual",
+                "native_visual_geom2": "right_object_visual",
+                "reported_penetration_depth_m": 0.0008786663081200574,
+                "surface_intersection": true
+              },
+              {
+                "body1": "right_hand_mid_link2",
+                "body2": "right_object",
+                "classification": "PENETRATION",
+                "contact_count": 64,
+                "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+                "deepest_contact_normal": [
+                  0.989049646877463,
+                  -0.047859122002336336,
+                  0.13960766616748257
+                ],
+                "deepest_contact_position_sim_m": [
+                  0.7191775051633489,
+                  -0.025710733819063768,
+                  0.8096677903225298
+                ],
+                "distance_m": -0.0011670814801540974,
+                "native_visual_geom1": "right_middle_link2_visual",
+                "native_visual_geom2": "right_object_visual",
+                "reported_penetration_depth_m": 0.0011670814801540974,
+                "surface_intersection": true
+              },
+              {
+                "body1": "right_hand_ring_link1",
+                "body2": "right_object",
+                "classification": "PENETRATION",
+                "contact_count": 12,
+                "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+                "deepest_contact_normal": [
+                  -0.6925335610709382,
+                  0.24305644820239058,
+                  -0.6792060289614955
+                ],
+                "deepest_contact_position_sim_m": [
+                  0.7222717199208825,
+                  -0.007515496411483717,
+                  0.7768991185250722
+                ],
+                "distance_m": -0.00012099018975808562,
+                "native_visual_geom1": "right_ring_link1_visual",
+                "native_visual_geom2": "right_object_visual",
+                "reported_penetration_depth_m": 0.00012099018975808562,
+                "surface_intersection": true
+              },
+              {
+                "body1": "right_hand_ring_link2",
+                "body2": "right_object",
+                "classification": "PENETRATION",
+                "contact_count": 64,
+                "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+                "deepest_contact_normal": [
+                  -0.6485812344458141,
+                  0.6564299523074394,
+                  0.38528184493743883
+                ],
+                "deepest_contact_position_sim_m": [
+                  0.7213725072020238,
+                  -0.03614632895866948,
+                  0.7897571083989127
+                ],
+                "distance_m": -0.002176760605673067,
+                "native_visual_geom1": "right_ring_link2_visual",
+                "native_visual_geom2": "right_object_visual",
+                "reported_penetration_depth_m": 0.002176760605673067,
+                "surface_intersection": true
+              },
+              {
+                "body1": "right_hand_pinky_link1",
+                "body2": "right_object",
+                "classification": "PENETRATION",
+                "contact_count": 35,
+                "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+                "deepest_contact_normal": [
+                  -0.8765400800581651,
+                  0.3652019917657247,
+                  -0.31353627104686455
+                ],
+                "deepest_contact_position_sim_m": [
+                  0.7306067960725536,
+                  -0.023461621999578162,
+                  0.762060234657756
+                ],
+                "distance_m": -0.0007568101115976722,
+                "native_visual_geom1": "right_pinky_link1_visual",
+                "native_visual_geom2": "right_object_visual",
+                "reported_penetration_depth_m": 0.0007568101115976722,
+                "surface_intersection": true
+              }
+            ],
+            "unknown_pair_count": 0,
+            "unknown_pairs": []
+          }
+        }
+      },
+      {
+        "frame": 160,
+        "objects": {
+          "bowl_left_hand": {
+            "minimum_native_distance_m": 0.022030558812859678,
+            "minimum_pair": {
+              "body1": "left_hand_index_rota_link2",
+              "body2": "left_object",
+              "classification": "CLEARANCE",
+              "contact_count": 0,
+              "containment_followup": [],
+              "containment_penetration": false,
+              "distance_m": 0.022030558812859678,
+              "native_visual_geom1": "left_index_rota2_visual",
+              "native_visual_geom2": "left_object_visual",
+              "nearest_points_sim_m": [
+                [
+                  0.4876234675572501,
+                  -0.10909684615581128,
+                  0.7397732786847953
+                ],
+                [
+                  0.4879671171111433,
+                  -0.09130326164467457,
+                  0.7527584924618578
+                ]
+              ],
+              "reported_penetration_depth_m": 0.0,
+              "surface_intersection": false
+            },
+            "penetrating_pair_count": 0,
+            "penetrating_pairs": [],
+            "unknown_pair_count": 0,
+            "unknown_pairs": []
+          },
+          "brush_right_hand": {
+            "minimum_native_distance_m": 0.023157930532299337,
+            "minimum_pair": {
+              "body1": "right_hand_index_rota_link2",
+              "body2": "right_object",
+              "classification": "CLEARANCE",
+              "contact_count": 0,
+              "containment_followup": [],
+              "containment_penetration": false,
+              "distance_m": 0.023157930532299337,
+              "native_visual_geom1": "right_index_rota2_visual",
+              "native_visual_geom2": "right_object_visual",
+              "nearest_points_sim_m": [
+                [
+                  0.7702023171019708,
+                  -0.05630591732951305,
+                  0.7272772816477667
+                ],
+                [
+                  0.7529270836217334,
+                  -0.04139907471981543,
+                  0.7233222723997637
+                ]
+              ],
+              "reported_penetration_depth_m": 0.0,
+              "surface_intersection": false
+            },
+            "penetrating_pair_count": 0,
+            "penetrating_pairs": [],
+            "unknown_pair_count": 0,
+            "unknown_pairs": []
+          }
+        }
+      },
+      {
+        "frame": 208,
+        "objects": {
+          "bowl_left_hand": {
+            "minimum_native_distance_m": 0.02550450390181186,
+            "minimum_pair": {
+              "body1": "left_hand_index_rota_link2",
+              "body2": "left_object",
+              "classification": "CLEARANCE",
+              "contact_count": 0,
+              "containment_followup": [],
+              "containment_penetration": false,
+              "distance_m": 0.02550450390181186,
+              "native_visual_geom1": "left_index_rota2_visual",
+              "native_visual_geom2": "left_object_visual",
+              "nearest_points_sim_m": [
+                [
+                  0.4885719813464548,
+                  -0.11144258761986878,
+                  0.7369452430035462
+                ],
+                [
+                  0.48894228927441513,
+                  -0.09104524503467663,
+                  0.752251810442993
+                ]
+              ],
+              "reported_penetration_depth_m": 0.0,
+              "surface_intersection": false
+            },
+            "penetrating_pair_count": 0,
+            "penetrating_pairs": [],
+            "unknown_pair_count": 0,
+            "unknown_pairs": []
+          },
+          "brush_right_hand": {
+            "minimum_native_distance_m": 0.020578151000272802,
+            "minimum_pair": {
+              "body1": "right_hand_index_rota_link2",
+              "body2": "right_object",
+              "classification": "CLEARANCE",
+              "contact_count": 0,
+              "containment_followup": [],
+              "containment_penetration": false,
+              "distance_m": 0.020578151000272802,
+              "native_visual_geom1": "right_index_rota2_visual",
+              "native_visual_geom2": "right_object_visual",
+              "nearest_points_sim_m": [
+                [
+                  0.7661986890334409,
+                  -0.05784106191320176,
+                  0.7249114698970479
+                ],
+                [
+                  0.7501445396923213,
+                  -0.04525341293012533,
+                  0.7222141229408866
+                ]
+              ],
+              "reported_penetration_depth_m": 0.0,
+              "surface_intersection": false
+            },
+            "penetrating_pair_count": 0,
+            "penetrating_pairs": [],
+            "unknown_pair_count": 0,
+            "unknown_pairs": []
+          }
+        }
+      }
+    ],
+    "tolerance_m": 5e-05,
+    "unknown_pair_observation_count": 0
+  },
+  "self_collision_status": "PASS",
+  "source_artifacts": {
+    "active_support_contract": {
+      "bytes": 377,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_camera_table_infra_repair_v1/support_surface_contract.yaml",
+      "sha256": "ff7dd7316a25510936e6c326ae34ab72e0006077e456ff4fb80e4e760bf8fcc3"
+    },
+    "candidate_support_contract": {
+      "bytes": 492,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_issue14_candidate_support_v1.yaml",
+      "sha256": "c70752b1eb871d62c4d7d6526137438eb80a66bbb03a81052f1d7f4d61637edf"
+    },
+    "config": {
+      "bytes": 2118,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_issue14_mink_candidate_v1.yaml",
+      "sha256": "e24d11b6fc5881943ad2fa5ddbdba34e8526f54cd289e8e7b7022bfc56310843"
+    },
+    "human_reference": {
+      "bytes": 351067,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_brush_bowl_paper_baseline_v1/human_reference.npz",
+      "sha256": "1c2fe4bcb1ff4e55b959ed1395aa868bdff00fc1516a21d3ee97f242566dc4b3"
+    },
+    "isolated_settling_audit": {
+      "bytes": 11653,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_bowl_frame0_gravity_settle_v1/results.json",
+      "sha256": "eb1ae7fa3d18888cd5dcd0b35f0e0263b6cd58f494d13ecfbbf6df428576d1dc"
+    },
+    "issue14_static_audit": {
+      "bytes": 416471,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_issue14_frame0_static_penetration_v1/results.json",
+      "sha256": "a7dd32ce4bdb53e915242c0214a2dc2bb3df01c013b0e4374336598e4b360e98"
+    },
+    "retarget_settings": {
+      "bytes": 554,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_bimanual_mink_local_v1.yaml",
+      "sha256": "bb10b6c92ca2a2a106035ab3b21ee735e3b70e8007153fac874523d690d988ed"
+    },
+    "scene": {
+      "bytes": 301296,
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_brush_brush_bowl_20230927_027/scene_source_contacts_mass.xml",
+      "sha256": "8bd258147a6782a32c02cce66aecc898e8272e749cd240314ab22e69581d1bfc"
+    }
+  }
+}
