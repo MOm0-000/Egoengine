@@ -520,6 +520,7 @@ def main() -> int:
             "native_pair_penetrating_counts": pair_penetrations,
             "unknown_pair_count": unknown_count,
             "tolerance_m": tolerance,
+            "mujoco_shell_overlap_drives_native_material_decision": False,
             "candidate_support_promoted": False,
             "active_support_modified": False,
         },
@@ -575,18 +576,24 @@ def main() -> int:
             f"{candidate['classification']} | {active['minimum_signed_distance_mm']:.6f} | "
             f"{active['classification']} |"
         )
-    lines += ["", "## Native mesh-pair checks", "",
-              "| group | native body pairs | minimum/classification | penetrating | unknown |",
-              "|---|---:|---|---:|---:|"]
+    lines += ["", "## Native material and MuJoCo shell-pair checks", "",
+              "| group | native pairs | native minimum/status | native penetrating | unknown | shell minimum/status | shell penetrating |",
+              "|---|---:|---|---:|---:|---|---:|"]
     for name, value in pair_groups.items():
         minimum = value["native_minimum"]
         minimum_text = "N/A" if minimum is None else (
             f"{minimum['distance_m']*1000:.6f} mm / {minimum['classification']}"
             if minimum["distance_m"] is not None else minimum["classification"]
         )
+        shell_minimum = value["shell_minimum"]
+        shell_minimum_text = "N/A" if shell_minimum is None else (
+            f"{shell_minimum['distance_m']*1000:.6f} mm / "
+            f"{shell_minimum['classification']}"
+        )
         lines.append(
             f"| {name} | {value['native_body_pair_count']} | {minimum_text} | "
-            f"{len(value['native_penetrating_pairs'])} | {len(value['unknown_pairs'])} |"
+            f"{len(value['native_penetrating_pairs'])} | {len(value['unknown_pairs'])} | "
+            f"{shell_minimum_text} | {value['shell_penetrating_pair_count']} |"
         )
     candidate_pen = report["decision"]["issue14_candidate_has_penetration"]
     active_pen = report["decision"]["active_support_has_penetration"]
@@ -594,7 +601,7 @@ def main() -> int:
               f"- Issue #14 candidate table initialization penetration: `{'YES' if candidate_pen else 'NO'}`.",
               f"- Active support initialization penetration: `{'YES' if active_pen else 'NO'}`.",
               f"- Active-support deepest material penetration is the brush at `{tables['active_support']['entities']['brush']['minimum_signed_distance_mm']:.6f} mm`, native point `{tables['active_support']['entities']['brush']['worst_location']['point_sim_m']}` in simulator coordinates.",
-              "- Every non-table native mesh-pair check completed with zero unknown results; MuJoCo shell overlap is reported separately and is not relabelled as native material penetration.",
+              f"- Every non-table native mesh-pair check completed with zero material penetrations and zero unknown results. The broad non-adjacent MuJoCo shell diagnostic reports `{pair_groups['self_nonadjacent_shells']['shell_penetrating_pair_count']}` proxy overlaps (minimum `{pair_groups['self_nonadjacent_shells']['shell_minimum']['distance_m']*1000:.6f} mm`), while its native triangle surfaces remain separated by `{pair_groups['self_nonadjacent_shells']['native_minimum']['distance_m']*1000:.6f} mm`; proxy overlap is therefore not relabelled as native material penetration.",
               "- This is a static geometry audit only. The candidate support is not promoted, the active contract is unchanged, and no MINK, physics step, Replay, MPC, or RL ran.", ""]
     (output / "summary.md").write_text("\n".join(lines), encoding="utf-8")
     print(json.dumps(report["decision"], indent=2))
