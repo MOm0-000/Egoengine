@@ -32,7 +32,9 @@ support:
   active_support_contract_modified: false
 
 native_geometry_audit:
-  tolerance_m: 0.00005
+  hand_object_and_hand_table_tolerance_m: 0.00005
+  dynamic_object_floor_penetration_limit_m: 0.0005
+  dynamic_object_floor_limit_provenance: taco_brush_bowl_frame0_gravity_settle_v1
   endpoints: [0, 5, 10, 15, 20, 25, 30, 35, 37, 38, 39, 40, 41, 42, 45, 50, 55, 56, 57, 58, 59, 60, 61, 62, 65, 70, 75, 80]
   interaction_pairs:
     - {hand: right, object: brush, role: tool, object_side: right}
@@ -54,7 +56,8 @@ strict_pickup_gate:
   requires_hand_object_force: true
   requires_no_object_floor_force: true
   requires_all_native_samples_nonpenetrating: true
-  requires_zero_proxy_native_mismatches: true
+  requires_zero_proxy_native_geometry_mismatches: true
+  requires_zero_proxy_force_while_native_clear_exposures: true
   requires_both_objects: true
   unknown_is_failure: true
 

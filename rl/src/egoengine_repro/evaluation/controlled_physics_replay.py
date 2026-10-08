@@ -78,3 +78,28 @@ def proxy_native_mismatch(
         return "NATIVE_PENETRATION_WITHOUT_PROXY_FORCE"
     return f"AGREEMENT_{native}_{'FORCE' if proxy_contact else 'NO_FORCE'}"
 
+
+def proxy_native_geometry_relation(
+    *, proxy_distance_m: float, native_distance_m: float, tolerance_m: float
+) -> str:
+    """Compare endpoint proxy and native surface signs without force timing."""
+    if not math.isfinite(proxy_distance_m) or not math.isfinite(native_distance_m):
+        return "UNKNOWN_NONFINITE_GEOMETRY_DISTANCE"
+    if not math.isfinite(tolerance_m) or tolerance_m < 0:
+        raise ValueError("tolerance must be finite and nonnegative")
+
+    def classify(value: float) -> str:
+        if value < -tolerance_m:
+            return "PENETRATION"
+        if value > tolerance_m:
+            return "CLEARANCE"
+        return "CONTACT"
+
+    proxy = classify(proxy_distance_m)
+    native = classify(native_distance_m)
+    if proxy == "PENETRATION" and native == "CLEARANCE":
+        return "PROXY_OVERCOVERAGE_PENETRATION_WHILE_NATIVE_CLEAR"
+    if proxy == "CLEARANCE" and native == "PENETRATION":
+        return "PROXY_MISSED_NATIVE_PENETRATION"
+    return f"GEOMETRY_{proxy}_VS_{native}"
+

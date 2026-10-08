@@ -42,6 +42,7 @@ from audit_taco_brush_issue14_frame0_static_penetration_v1 import (  # noqa: E40
 from egoengine_repro.evaluation.controlled_physics_replay import (  # noqa: E402
     control_substep_schedule,
     longest_true_run,
+    proxy_native_geometry_relation,
     proxy_native_mismatch,
     quaternion_distance_rad,
 )
@@ -458,7 +459,7 @@ def main() -> int:
             audited = native_audit(
                 model, data, plane,
                 list(cfg["native_geometry_audit"]["interaction_pairs"]),
-                float(cfg["native_geometry_audit"]["tolerance_m"]),
+                float(cfg["native_geometry_audit"]["hand_object_and_hand_table_tolerance_m"]),
             )
             native_row = {"endpoint": endpoint, **audited}
             for name, spec in object_specs.items():
@@ -469,9 +470,23 @@ def main() -> int:
                     mismatch = proxy_native_mismatch(
                         proxy_contact=interval[spec["contact"]]["normal_impulse_ns"] > 0.0,
                         native_distance_m=float(minimum["distance_m"]),
-                        tolerance_m=float(cfg["native_geometry_audit"]["tolerance_m"]),
+                        tolerance_m=float(
+                            cfg["native_geometry_audit"]["hand_object_and_hand_table_tolerance_m"]
+                        ),
                     )
-                native_row["interactions"][name]["proxy_native_mismatch"] = mismatch
+                proxy_minimum = native_row["interactions"][name]["proxy_minimum"]
+                if minimum is None or minimum["distance_m"] is None or proxy_minimum is None:
+                    geometry = "UNKNOWN_GEOMETRY_DISTANCE"
+                else:
+                    geometry = proxy_native_geometry_relation(
+                        proxy_distance_m=float(proxy_minimum["distance_m"]),
+                        native_distance_m=float(minimum["distance_m"]),
+                        tolerance_m=float(
+                            cfg["native_geometry_audit"]["hand_object_and_hand_table_tolerance_m"]
+                        ),
+                    )
+                native_row["interactions"][name]["force_native_exposure_classification"] = mismatch
+                native_row["interactions"][name]["proxy_native_geometry_relation"] = geometry
                 native_row["interactions"][name]["preceding_interval_normal_impulse_ns"] = (
                     interval[spec["contact"]]["normal_impulse_ns"]
                 )
@@ -603,7 +618,8 @@ def main() -> int:
             "stable_pickup_pass": run >= stable_needed,
         }
 
-    mismatches = []
+    force_exposure_mismatches = []
+    geometry_mismatches = []
     native_blockers = []
     total_impulse = {"brush": 0.0, "bowl": 0.0}
     mismatch_impulse = {"brush": 0.0, "bowl": 0.0}
@@ -614,7 +630,7 @@ def main() -> int:
             interaction = audited["interactions"][name]
             impulse = float(interaction["preceding_interval_normal_impulse_ns"])
             total_impulse[name] += impulse
-            mismatch = interaction["proxy_native_mismatch"]
+            mismatch = interaction["force_native_exposure_classification"]
             if not mismatch.startswith("AGREEMENT_"):
                 mismatch_row = {
                     "endpoint": endpoint, "object": name, "classification": mismatch,
@@ -629,11 +645,28 @@ def main() -> int:
                         else interaction["proxy_minimum"]["distance_m"]
                     ),
                 }
-                mismatches.append(mismatch_row)
+                force_exposure_mismatches.append(mismatch_row)
                 mismatch_impulse[name] += impulse
                 mismatch_displacement[name] += float(
                     interaction["preceding_interval_object_displacement_m"]
                 )
+            geometry = interaction["proxy_native_geometry_relation"]
+            if geometry.startswith("PROXY_") or geometry.startswith("UNKNOWN_"):
+                geometry_mismatches.append({
+                    "endpoint": endpoint, "object": name, "classification": geometry,
+                    "native_distance_m": (
+                        None if interaction["native_minimum"] is None
+                        else interaction["native_minimum"]["distance_m"]
+                    ),
+                    "proxy_distance_m": (
+                        None if interaction["proxy_minimum"] is None
+                        else interaction["proxy_minimum"]["distance_m"]
+                    ),
+                    "preceding_interval_normal_impulse_ns": impulse,
+                    "preceding_interval_object_displacement_m": (
+                        interaction["preceding_interval_object_displacement_m"]
+                    ),
+                })
             minimum = interaction["native_minimum"]
             if minimum is None or minimum["classification"] in {
                 "PENETRATION", "UNKNOWN_INTERSECTION_DEPTH", "UNKNOWN_CONTAINMENT_OPEN_MESH",
@@ -643,18 +676,27 @@ def main() -> int:
                     "classification": None if minimum is None else minimum["classification"],
                 })
         for entity, table_row in audited["table"].items():
-            if table_row["classification"] == "PENETRATION":
+            limit = (
+                float(cfg["native_geometry_audit"]["dynamic_object_floor_penetration_limit_m"])
+                if entity in {"brush", "bowl"}
+                else float(
+                    cfg["native_geometry_audit"]["hand_object_and_hand_table_tolerance_m"]
+                )
+            )
+            if float(table_row["minimum_signed_distance_m"]) < -limit:
                 native_blockers.append({
                     "endpoint": endpoint, "entity": f"{entity}_table",
                     "classification": table_row["classification"],
                     "distance_m": table_row["minimum_signed_distance_m"],
+                    "limit_m": limit,
                 })
 
     strict_pass = bool(
         hard_stop is None
         and all(row["stable_pickup_pass"] for row in pickup.values())
         and not native_blockers
-        and not mismatches
+        and not force_exposure_mismatches
+        and not geometry_mismatches
         and endpoint_rows[-1]["endpoint"] == 80
     )
     if hard_stop is not None:
@@ -685,7 +727,9 @@ def main() -> int:
         "completed_outcome_endpoint": int(endpoint_rows[-1]["endpoint"]),
         "physics_steps": physics_steps, "hard_stop": hard_stop,
         "pickup": pickup, "native_blockers": native_blockers,
-        "proxy_native_mismatches": mismatches, "proxy_error_dynamic_exposure": proxy_impact,
+        "proxy_native_force_exposure_mismatches": force_exposure_mismatches,
+        "proxy_native_geometry_mismatches": geometry_mismatches,
+        "proxy_error_dynamic_exposure": proxy_impact,
         "maximums": {
             "contact_force_n": max(
                 (row["force_norm_n"] for row in contact_rows), default=0.0,
@@ -748,7 +792,8 @@ def main() -> int:
     lines += [
         "", "## Collision/proxy evidence", "",
         f"- Native blocking observations: `{len(native_blockers)}`",
-        f"- Proxy/native mismatch observations: `{len(mismatches)}`",
+        f"- Endpoint proxy/native geometry mismatch observations: `{len(geometry_mismatches)}`",
+        f"- Preceding-interval proxy-force/native-clear exposure observations: `{len(force_exposure_mismatches)}`",
         f"- Maximum runtime contact force: `{result['maximums']['contact_force_n']:.6f} N`",
         f"- Maximum runtime proxy penetration: `{result['maximums']['proxy_penetration_m']*1000:.6f} mm`",
     ]
@@ -772,7 +817,8 @@ def main() -> int:
         "completed_outcome_endpoint": endpoint_rows[-1]["endpoint"],
         "physics_steps": physics_steps, "hard_stop": hard_stop,
         "pickup": pickup, "native_blockers": len(native_blockers),
-        "proxy_native_mismatches": len(mismatches),
+        "proxy_native_geometry_mismatches": len(geometry_mismatches),
+        "proxy_native_force_exposure_mismatches": len(force_exposure_mismatches),
     }, indent=2, default=json_default))
     return 0
 

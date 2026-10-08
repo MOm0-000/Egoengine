@@ -4,6 +4,7 @@ import pytest
 from egoengine_repro.evaluation.controlled_physics_replay import (
     control_substep_schedule,
     longest_true_run,
+    proxy_native_geometry_relation,
     proxy_native_mismatch,
     quaternion_distance_rad,
 )
@@ -44,4 +45,19 @@ def test_longest_true_run():
 def test_proxy_native_mismatch(proxy, distance, expected):
     assert proxy_native_mismatch(
         proxy_contact=proxy, native_distance_m=distance, tolerance_m=5e-5
+    ) == expected
+
+
+@pytest.mark.parametrize(
+    ("proxy", "native", "expected"),
+    [
+        (-1e-3, 1e-3, "PROXY_OVERCOVERAGE_PENETRATION_WHILE_NATIVE_CLEAR"),
+        (1e-3, -1e-3, "PROXY_MISSED_NATIVE_PENETRATION"),
+        (0.0, -1e-3, "GEOMETRY_CONTACT_VS_PENETRATION"),
+        (1e-3, 2e-3, "GEOMETRY_CLEARANCE_VS_CLEARANCE"),
+    ],
+)
+def test_proxy_native_geometry_relation(proxy, native, expected):
+    assert proxy_native_geometry_relation(
+        proxy_distance_m=proxy, native_distance_m=native, tolerance_m=5e-5
     ) == expected
