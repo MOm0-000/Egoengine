@@ -227,7 +227,9 @@ def render_candidate(
     visual = output / "visuals"
     visual.mkdir()
     data = mujoco.MjData(model)
-    renderer = mujoco.Renderer(model, height=540, width=720)
+    # The source scene keeps MuJoCo's default 640-pixel offscreen framebuffer.
+    # Stay within that immutable model limit instead of mutating the source XML.
+    renderer = mujoco.Renderer(model, height=480, width=640)
     index_lines = ["# Issue #14 MINK candidate visual evidence", "",
                    "Each image shows the fixed front view (left) and top view (right).", ""]
     for frame in frames:
