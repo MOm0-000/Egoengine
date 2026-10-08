@@ -1,0 +1,37 @@
+schema: taco_brush_mink_vs_replay_grasp_attribution_v1
+status: READ_ONLY_REFERENCE_VS_EXECUTION_ATTRIBUTION
+paper_faithful: false
+
+sample:
+  sequence: "(brush, brush, bowl)/20230927_027"
+  brush_endpoints: [15, 41]
+  left_hand_endpoints: [44, 60]
+  bowl_endpoints: [52, 60]
+
+geometry:
+  native_material_tolerance_m: 0.00005
+  diagnostic_near_surface_m: 0.005
+  fingers: [thumb, index, middle, ring, pinky]
+
+paths:
+  scene: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_controlled_physics_replay_v1/experiment_local_scene.xml
+  mink_reference: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_issue14_mink_candidate_v1/robot_reference.npz
+  replay_states: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_replay_failure_attribution_v1/full_endpoint_states.npz
+  replay_parity: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_replay_failure_attribution_v1/observer_parity.json
+  replay_contact_mechanics: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_replay_failure_attribution_v1/results.json
+  output: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_mink_vs_replay_grasp_attribution_v1
+
+authorization:
+  native_mesh_queries: true
+  read_frozen_reference: true
+  read_frozen_replay: true
+  physics_steps: false
+  change_state: false
+  change_commands: false
+  change_geometry: false
+  mink: false
+  mpc: false
+  reinforcement_learning: false
+  promotion: false
+  chunk_commit: false
+
