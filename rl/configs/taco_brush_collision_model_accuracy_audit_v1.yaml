@@ -1,0 +1,59 @@
+schema: taco_brush_collision_model_accuracy_audit_v1
+status: READ_ONLY_EXISTING_COLLISION_MODEL_ACCURACY_AUDIT
+minimum_baseline: 7e03699a0218e91290a52e068429de3a0edc8f07
+paper_faithful: false
+
+sample:
+  sequence: "(brush, brush, bowl)/20230927_027"
+  selected_frames: [40, 80, 120]
+  states: [baseline, local_candidate]
+  interaction_pairs:
+    - {hand: right, object: brush, role: tool, object_side: right}
+    - {hand: left, object: bowl, role: target, object_side: left}
+
+audit:
+  native_material_tolerance_m: 0.00005
+  distance_query_bound_m: 0.10
+  hand_surface_samples: 8192
+  object_surface_samples: 16384
+  local_patch_samples: 512
+  sample_seed: 0
+  signed_coverage_convention: POSITIVE_PROXY_OVERCOVERS_NATIVE_SURFACE_NEGATIVE_PROXY_MISSES_NATIVE_SURFACE
+  no_new_acceptance_epsilon: true
+
+object_representations:
+  brush:
+    object_id: 71
+    active_directory: /data_all/zzx/Egoengine_upload_3_2/rl/models/taco_xhand/assets/objects/071/convex
+    active_parts: 17
+    provenance: null
+    coacd_claim_allowed: false
+  bowl:
+    object_id: 146
+    active_directory: /data_all/zzx/Egoengine_upload_3_2/rl/models/taco_xhand/assets/objects/146/convex_m
+    active_parts: 32
+    provenance: /data_all/zzx/Egoengine_upload_3_2/rl/models/taco_xhand/assets/objects/146/convex_m/provenance.json
+    coacd_claim_allowed: true
+
+paths:
+  scene: /data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_brush_brush_bowl_20230927_027/scene_source_contacts_mass.xml
+  feasibility_results: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_local_hand_object_collision_feasibility_v1/results.json
+  feasibility_states: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_local_hand_object_collision_feasibility_v1/local_candidates.npz
+  output: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_collision_model_accuracy_audit_v1
+
+authorization:
+  read_saved_states: true
+  native_mesh_queries: true
+  existing_proxy_queries: true
+  static_visual_hull_counterfactual: true
+  mink_optimization: false
+  geometry_generation: false
+  coacd_rerun: false
+  parameter_sweep: false
+  physics: false
+  replay: false
+  mpc: false
+  reinforcement_learning: false
+  full_trajectory_retarget: false
+  promotion: false
+
