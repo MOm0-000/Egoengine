@@ -1,0 +1,48 @@
+schema: taco_brush_mano_xhand_object_penetration_attribution_v1
+status: READ_ONLY_GEOMETRY_ATTRIBUTION
+minimum_baseline: c935f2856ca5a9a6a24df546b15af5cb4fcbc349
+paper_faithful: false
+
+sample:
+  sequence: "(brush, brush, bowl)/20230927_027"
+  frames: 209
+  selected_frames: [0, 40, 80, 120, 160, 208]
+  interaction_pairs:
+    - {hand: right, object: brush, role: tool, object_id: "071"}
+    - {hand: left, object: bowl, role: target, object_id: "146"}
+
+geometry_contract:
+  material_penetration_tolerance_m: 0.00005
+  official_hand_geometry: TACO_RELEASED_MANO_V1_2_SURFACE
+  official_object_geometry: TACO_RELEASED_NATIVE_OBJECT_MESH_AND_POSE
+  robot_hand_geometry: XHAND_NATIVE_VISUAL_TRIANGLE_MESH
+  robot_object_geometry: TACO_NATIVE_OBJECT_VISUAL_TRIANGLE_MESH
+  proxy_geometry: MUJOCO_RUNTIME_CONVEX_COLLISION_PIECES
+  correspondence_level: FRAME_AND_INTERACTION_PAIR_NOT_VERTEX_IDENTITY
+
+paths:
+  data_root: /data_all/zzx/3.2RL/data/taco_v1/dev4
+  mano_model_dir: /data_all/zzx/3.2RL/data/taco_v1/hand_poses_v1/mano_v1_2/models
+  scene: /data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_brush_brush_bowl_20230927_027/scene_source_contacts_mass.xml
+  robot_reference: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_issue14_mink_candidate_v1/robot_reference.npz
+  prior_native_audit: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_issue14_mink_candidate_v1/selected_frame_native_hand_object_audit.json
+  prior_proxy_trace: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_issue14_mink_candidate_v1/kinematic_pickup_alignment.csv
+  effective_mink_contract: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_issue14_mink_candidate_v1/effective_retarget_contract.json
+  output: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_mano_xhand_object_penetration_attribution_v1
+
+authorization:
+  read_official_geometry: true
+  read_robot_geometry: true
+  static_distance_queries: true
+  modify_table: false
+  modify_object_pose: false
+  modify_mink: false
+  modify_source_trajectory: false
+  retarget: false
+  physics: false
+  replay: false
+  mpc: false
+  reinforcement_learning: false
+  training_search: false
+  promotion: false
+  chunk_commit: false
