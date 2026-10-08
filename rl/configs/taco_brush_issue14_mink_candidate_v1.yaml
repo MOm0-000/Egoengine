@@ -1,0 +1,55 @@
+schema: taco_brush_issue14_mink_candidate_v1
+status: FRESH_MINK_KINEMATIC_CANDIDATE
+minimum_baseline: 968c6a3c0c6ade7304230d96d1662b68ff266a1d
+paper_faithful: false
+
+sample:
+  triplet: "(brush, brush, bowl)"
+  sequence: "(brush, brush, bowl)/20230927_027"
+  frames: 209
+
+only_scientific_change:
+  from_support_simulator_z_m: 0.72
+  to_support_simulator_z_m: 0.7173599392270725
+
+frozen_native_support:
+  minimum_clearance_m: 0.0
+  validation_tolerance_m: 0.00005
+  gain: 0.85
+  depenetration_step_m: 0.002
+  activation_distance_m: null
+
+kinematic_pickup_screen:
+  object_lift_delta_m: 0.01
+  relevant_hand_object_near_distance_m: 0.002
+  elevated_near_fraction_min: 0.5
+  interpretation: KINEMATIC_ALIGNMENT_ONLY_NOT_PHYSICAL_LIFT_PROOF
+
+visual_evidence:
+  frame_indices: [0, 40, 80, 120, 160, 208]
+  views: [front, top]
+
+paths:
+  retarget_settings: /data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_bimanual_mink_local_v1.yaml
+  candidate_support_contract: /data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_issue14_candidate_support_v1.yaml
+  active_support_contract: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_camera_table_infra_repair_v1/support_surface_contract.yaml
+  issue14_static_audit: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_issue14_frame0_static_penetration_v1/results.json
+  isolated_settling_audit: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_bowl_frame0_gravity_settle_v1/results.json
+  scene: /data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_brush_brush_bowl_20230927_027/scene_source_contacts_mass.xml
+  human_reference: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_brush_bowl_paper_baseline_v1/human_reference.npz
+  output: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_issue14_mink_candidate_v1
+
+authorization:
+  fresh_mink: true
+  static_geometry_audit: true
+  render_kinematic_candidate: true
+  warm_start: false
+  modify_original_data: false
+  modify_active_support_contract: false
+  modify_object_pose: false
+  physics: false
+  replay: false
+  mpc: false
+  reinforcement_learning: false
+  promotion: false
+  chunk_commit: false
