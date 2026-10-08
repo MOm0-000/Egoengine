@@ -299,6 +299,12 @@ def main() -> int:
                     "index_thumb_contact_side_cosine": contact_side_cosine(
                         rows, "index", "thumb",
                     ),
+                    "index_middle_contact_side_cosine": contact_side_cosine(
+                        rows, "index", "middle",
+                    ),
+                    "thumb_middle_contact_side_cosine": contact_side_cosine(
+                        rows, "thumb", "middle",
+                    ),
                     "near_finger_count_5mm": sum(
                         row["distance_m"] <= near for row in rows.values()
                     ),
@@ -461,6 +467,49 @@ def main() -> int:
             for finger in FINGERS
         }
 
+    def side_cosine_summary(object_name: str, state: str) -> dict[str, float]:
+        rows = state_rows(object_name, state)
+        return {
+            name: float(np.median([row[column] for row in rows]))
+            for name, column in (
+                ("index_thumb", "index_thumb_contact_side_cosine"),
+                ("index_middle", "index_middle_contact_side_cosine"),
+                ("thumb_middle", "thumb_middle_contact_side_cosine"),
+            )
+        }
+
+    def tracking_summary(side: str, first: int, last: int) -> dict[str, Any]:
+        result = {}
+        for group in ("wrist_translation", "wrist_rotation", *FINGERS):
+            per_endpoint = []
+            for endpoint in range(first, last + 1):
+                values = [
+                    row["command_minus_actual"] for row in tracking_rows
+                    if row["side"] == side and row["group"] == group
+                    and row["endpoint"] == endpoint
+                ]
+                if values:
+                    per_endpoint.append(float(np.sqrt(np.mean(np.square(values)))))
+            result[group] = {
+                "unit": "m" if group == "wrist_translation" else "rad",
+                "median_endpoint_rms": float(np.median(per_endpoint)),
+                "maximum_endpoint_rms": float(max(per_endpoint)),
+                "last_endpoint_rms": float(per_endpoint[-1]),
+            }
+        return result
+
+    def motion_summary(object_name: str, finger: str) -> dict[str, float]:
+        rows = [row for row in motion_rows
+                if row["object"] == object_name and row["finger"] == finger]
+        return {
+            "median_relative_surface_step_normal_mm": float(np.median([
+                row["relative_surface_step_normal_mm"] for row in rows
+            ])),
+            "median_relative_surface_step_world_z_mm": float(np.median([
+                row["relative_surface_step_world_z_mm"] for row in rows
+            ])),
+        }
+
     brush_reference = state_rows("brush", "mink_reference")
     brush_actual = state_rows("brush", "replay_actual")
     bowl_reference = state_rows("bowl", "mink_reference")
@@ -471,22 +520,31 @@ def main() -> int:
         "brush": {
             "mink_reference_finger_distances": distance_summary("brush", "mink_reference"),
             "replay_actual_finger_distances": distance_summary("brush", "replay_actual"),
+            "mink_contact_side_cosines": side_cosine_summary("brush", "mink_reference"),
+            "replay_contact_side_cosines": side_cosine_summary("brush", "replay_actual"),
             "mink_index_thumb_side_cosine_median": float(np.median([
                 row["index_thumb_contact_side_cosine"] for row in brush_reference
             ])),
             "replay_index_thumb_side_cosine_median": float(np.median([
                 row["index_thumb_contact_side_cosine"] for row in brush_actual
             ])),
+            "mink_reference_surface_motion": {
+                finger: motion_summary("brush", finger) for finger in ("index", "thumb")
+            },
+            "right_hand_tracking_15_41": tracking_summary("right", 15, 41),
         },
         "bowl": {
             "mink_reference_finger_distances": distance_summary("bowl", "mink_reference"),
             "replay_actual_finger_distances": distance_summary("bowl", "replay_actual"),
+            "mink_contact_side_cosines": side_cosine_summary("bowl", "mink_reference"),
+            "replay_contact_side_cosines": side_cosine_summary("bowl", "replay_actual"),
             "mink_near_finger_count_median": float(np.median([
                 row["near_finger_count_5mm"] for row in bowl_reference
             ])),
             "replay_near_finger_count_median": float(np.median([
                 row["near_finger_count_5mm"] for row in bowl_actual
             ])),
+            "left_hand_tracking_52_60": tracking_summary("left", 52, 60),
         },
         "left_hand": {
             "endpoint44_reference_proxy_distance_mm": self_rows[0][
@@ -500,11 +558,31 @@ def main() -> int:
                     row[f"{finger}_rms_error"] ** 2 for finger in FINGERS
                 ]))) for row in self_rows
             },
+            "tracking_44_60": tracking_summary("left", 44, 60),
+            "proxy_overlap_endpoints_actual": [
+                row["endpoint"] for row in self_rows
+                if row["replay_actual_proxy_index_middle_distance_mm"] < 0.0
+            ],
         },
         "mutations": {
             "physics_steps": 0, "state": 0, "commands": 0, "geometry": 0,
             "training_steps": 0, "promotion": 0,
         },
+    }
+    result["mechanism_conclusions"] = {
+        "brush_15_41": (
+            "MINK_REFERENCE_ALREADY_NONOPPOSING_AND_PENETRATING;_REPLAY_EXECUTION_ADDS_"
+            "THUMB_MIDDLE_SEPARATION"
+        ),
+        "bowl_52_60": (
+            "MINK_REFERENCE_HAS_THUMB_INDEX_MIDDLE_PROXIMITY_BUT_SAME_SIDE_PENETRATING_"
+            "GEOMETRY;_REPLAY_LOSES_THUMB_MIDDLE_REACH"
+        ),
+        "left_44_60": (
+            "FALSE_PROXY_COLLISION_IS_EXECUTION_INDUCED_AND_TRANSIENT;_FINGER_TRACKING_"
+            "ERROR_PERSISTS_TO_BOWL_WINDOW"
+        ),
+        "overall": "BOTH_REFERENCE_GEOMETRY_AND_PHYSICAL_TRACKING_ARE_DEFECTIVE",
     }
     write_json(output / "results.json", result)
     manifest = {
@@ -526,12 +604,24 @@ def main() -> int:
         "## Brush 15–41", "",
         f"- MINK median index/thumb side cosine: `{result['brush']['mink_index_thumb_side_cosine_median']:.6f}`",
         f"- Replay median index/thumb side cosine: `{result['brush']['replay_index_thumb_side_cosine_median']:.6f}`", "",
+        "- Reference classification: index/thumb are usually on the same object side; index "
+        "and middle also penetrate the native brush mesh. Replay adds loss of thumb/middle reach.",
+        f"- MINK thumb median relative step: `{result['brush']['mink_reference_surface_motion']['thumb']['median_relative_surface_step_normal_mm']:.6f} mm` along the surface normal and "
+        f"`{result['brush']['mink_reference_surface_motion']['thumb']['median_relative_surface_step_world_z_mm']:.6f} mm` in world Z.", "",
         "## Bowl 52–60", "",
         f"- MINK median fingers within 5 mm: `{result['bowl']['mink_near_finger_count_median']:.3f}`",
         f"- Replay median fingers within 5 mm: `{result['bowl']['replay_near_finger_count_median']:.3f}`", "",
+        "- Reference classification: thumb/index/middle reach the bowl but remain concentrated "
+        "on the same side and include native penetrations. Replay loses thumb and middle reach, "
+        "leaving index-only contact.", "",
         "## Left hand 44–60", "",
         f"- Endpoint 44 MINK proxy index/middle distance: `{result['left_hand']['endpoint44_reference_proxy_distance_mm']:.6f} mm`",
         f"- Endpoint 44 Replay proxy index/middle distance: `{result['left_hand']['endpoint44_actual_proxy_distance_mm']:.6f} mm`", "",
+        f"- Actual proxy-overlap endpoints in 44–60: `{result['left_hand']['proxy_overlap_endpoints_actual']}`.",
+        "- The false overlap is execution-induced and clears after endpoint 45, but finger "
+        "tracking RMS remains material through endpoint 60; this audit does not claim the "
+        "transient collision is the sole cause of every later error.", "",
+        f"- Overall attribution: `{result['mechanism_conclusions']['overall']}`.", "",
         "Contact-side cosine and the 5 mm band are descriptive diagnostics, not pass/fail gates. "
         "See the CSV files for raw native distances, surface locations/normals, and per-actuator errors.", "",
     ]
