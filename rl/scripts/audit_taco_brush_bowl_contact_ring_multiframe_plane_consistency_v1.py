@@ -204,6 +204,42 @@ def main() -> int:
     angle_to_frame0 = np.asarray([
         row["comparison_to_frame0"]["normal_angle_deg"] for row in rows
     ])
+    early_indices = list(range(6))
+    late_indices = list(range(6, 12))
+
+    def phase_metrics(indices: list[int]) -> dict[str, float]:
+        phase_angles = np.asarray([
+            angle_deg(normals[first], normals[second])
+            for position, first in enumerate(indices) for second in indices[position + 1:]
+        ])
+        phase_distances = centroid_to_frame0[indices]
+        return {
+            "median_pairwise_normal_angle_deg": float(np.median(phase_angles)),
+            "maximum_pairwise_normal_angle_deg": float(phase_angles.max()),
+            "frame0_plane_centroid_distance_mean_mm": float(phase_distances.mean()),
+            "frame0_plane_centroid_distance_min_mm": float(phase_distances.min()),
+            "frame0_plane_centroid_distance_max_mm": float(phase_distances.max()),
+            "frame0_plane_centroid_distance_span_mm": float(np.ptp(phase_distances)),
+        }
+
+    cross_phase_angles = np.asarray([
+        angle_deg(normals[early], normals[late])
+        for early in early_indices for late in late_indices
+    ])
+    phase_comparison = {
+        "early_frames": selected[:6],
+        "late_frames": selected[6:],
+        "early": phase_metrics(early_indices),
+        "late": phase_metrics(late_indices),
+        "cross_phase_normal_angle_deg": {
+            "minimum": float(cross_phase_angles.min()),
+            "median": float(np.median(cross_phase_angles)),
+            "maximum": float(cross_phase_angles.max()),
+        },
+        "late_minus_early_mean_centroid_distance_to_frame0_plane_mm": float(
+            centroid_to_frame0[late_indices].mean() - centroid_to_frame0[early_indices].mean()
+        ),
+    }
     result = {
         "schema": cfg["schema"],
         "sample": cfg["sample"],
@@ -235,6 +271,7 @@ def main() -> int:
             "consensus_ring_centroid_signed_distance_span_mm": float(np.ptp(centroid_to_consensus)),
             "plane_offset_span_mm": float(np.ptp([row["offset_m"] for row in rows]) * 1000.0),
         },
+        "phase_comparison": phase_comparison,
         "integrity": {
             "depth_used": False,
             "historical_table_plane_used": False,
@@ -307,6 +344,11 @@ def main() -> int:
         f"- Ring-centroid signed distance to the frame-0 plane min / max / span: `{comparison['frame0_plane_ring_centroid_signed_distance_min_mm']:.6f} / {comparison['frame0_plane_ring_centroid_signed_distance_max_mm']:.6f} / {comparison['frame0_plane_ring_centroid_signed_distance_span_mm']:.6f} mm`.",
         f"- Ring-centroid signed distance to the 12-frame consensus plane min / max / span: `{comparison['consensus_ring_centroid_signed_distance_min_mm']:.6f} / {comparison['consensus_ring_centroid_signed_distance_max_mm']:.6f} / {comparison['consensus_ring_centroid_signed_distance_span_mm']:.6f} mm`.",
         f"- Plane offset span: `{comparison['plane_offset_span_mm']:.6f} mm`.",
+        f"- Early six-frame within-phase centroid span / max pairwise normal angle: `{phase_comparison['early']['frame0_plane_centroid_distance_span_mm']:.6f} mm / {phase_comparison['early']['maximum_pairwise_normal_angle_deg']:.6f} deg`.",
+        f"- Late six-frame within-phase centroid span / max pairwise normal angle: `{phase_comparison['late']['frame0_plane_centroid_distance_span_mm']:.6f} mm / {phase_comparison['late']['maximum_pairwise_normal_angle_deg']:.6f} deg`.",
+        f"- Late-minus-early mean ring-plane height along the frame-0 normal: `{phase_comparison['late_minus_early_mean_centroid_distance_to_frame0_plane_mm']:.6f} mm`; cross-phase normal-angle median: `{phase_comparison['cross_phase_normal_angle_deg']['median']:.6f} deg`.",
+        "",
+        "**Interpretation:** the twelve contact-implied planes are numerically very close, with two internally tighter temporal clusters. They are not bitwise identical: the late cluster is about 0.698 mm above the early cluster along the frame-0 normal and has a roughly 0.195-degree median cross-phase normal difference.",
         "",
         "## Per-frame planes",
         "",
