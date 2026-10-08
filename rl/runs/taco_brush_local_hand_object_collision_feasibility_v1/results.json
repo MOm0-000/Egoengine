@@ -1,0 +1,782 @@
+{
+  "classification": "LOCAL_OBJECT_COLLISION_CONSTRAINT_HAS_GEOMETRIC_SIDE_EFFECTS",
+  "frozen_contract": {
+    "frame_displacement_limit": true,
+    "joint_limits": true,
+    "native_support": true,
+    "object_dofs_frozen": true,
+    "object_pose": "OFFICIAL_FROZEN_IN_EXISTING_QPOS",
+    "original_reference_modified": false,
+    "self_collision": true,
+    "table_simulator_z_m": 0.7173599392270725,
+    "task_weights": "taco_bimanual_mink_local_v1"
+  },
+  "local_solver_contract": {
+    "collision_depenetration_step_m": 0.002,
+    "collision_gain": 0.85,
+    "collision_validation_tolerance_m": 1e-06,
+    "damping": 1e-05,
+    "maximum_feasibility_iterations": 128,
+    "native_material_penetration_tolerance_m": 5e-05,
+    "object_collision_detection_distance_m": 0.03,
+    "object_collision_minimum_distance_m": 0.0,
+    "parameter_provenance": "EXISTING_MINK_VALUES_NO_SWEEP",
+    "solver": "daqp",
+    "tracking_iterations": 8,
+    "unreasonable_native_gap_diagnostic_m": 0.002
+  },
+  "mutations": {
+    "full_trajectory_retarget": 0,
+    "object_pose": 0,
+    "physics_steps": 0,
+    "reference": 0,
+    "source_files": 0,
+    "table_contract": 0,
+    "training_steps": 0
+  },
+  "repository_head": "c7ed7c6f6b4899b9afb0aab4c95d80d70942bdd3",
+  "rows": [
+    {
+      "baseline": {
+        "fingertip_error_m": [
+          [
+            0.041786894158037304,
+            0.02080974009199054,
+            0.003655587951663155,
+            0.012951777617372156,
+            0.04041007456676077
+          ],
+          [
+            0.01560850064170622,
+            0.014942960484765178,
+            0.02046056436509624,
+            0.010666134505647693,
+            0.024465055593649226
+          ]
+        ],
+        "fingertip_max_error_m": 0.041786894158037304,
+        "fingertip_mean_error_m": 0.020575728997668845,
+        "frame_displacement_minimum_margin": 0.02017873709933571,
+        "frame_displacement_pass": true,
+        "joint_limit_minimum_margin": -4.865991875428608e-17,
+        "joint_limits_pass": true,
+        "native_hand_object_by_object": {
+          "bowl": {
+            "distance_m": 0.018882395056726856,
+            "minimum_pair": {
+              "body1": "left_hand_index_rota_link2",
+              "body2": "left_object",
+              "classification": "CLEARANCE",
+              "contact_count": 0,
+              "containment_followup": [],
+              "containment_penetration": false,
+              "distance_m": 0.018882395056726856,
+              "native_visual_geom1": "left_index_rota2_visual",
+              "native_visual_geom2": "left_object_visual",
+              "nearest_points_sim_m": [
+                [
+                  0.44497553872696854,
+                  -0.12054347136814016,
+                  0.7646541403613074
+                ],
+                [
+                  0.45362498249627364,
+                  -0.10509024816184671,
+                  0.7712062284327855
+                ]
+              ],
+              "reported_penetration_depth_m": 0.0,
+              "surface_intersection": false
+            },
+            "penetrating_pair_count": 0,
+            "status": "CLEARANCE",
+            "unknown_pair_count": 0
+          },
+          "brush": {
+            "distance_m": -0.0024165109313739608,
+            "minimum_pair": {
+              "body1": "right_hand_index_rota_link1",
+              "body2": "right_object",
+              "classification": "PENETRATION",
+              "contact_count": 64,
+              "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+              "deepest_contact_normal": [
+                0.2948804670088886,
+                0.07859566088580701,
+                0.9522962943677472
+              ],
+              "deepest_contact_position_sim_m": [
+                0.719293973140563,
+                0.017164714143648896,
+                0.7938600722059438
+              ],
+              "distance_m": -0.0024165109313739608,
+              "native_visual_geom1": "right_index_rota1_visual",
+              "native_visual_geom2": "right_object_visual",
+              "reported_penetration_depth_m": 0.0024165109313739608,
+              "surface_intersection": true
+            },
+            "penetrating_pair_count": 2,
+            "status": "PENETRATION",
+            "unknown_pair_count": 0
+          }
+        },
+        "native_support_minimum_distance_m": 7.089881580712998e-07,
+        "native_support_pass": true,
+        "object_proxy_by_object_m": {
+          "bowl": 0.019365215018611256,
+          "brush": -0.007351590268838665
+        },
+        "object_proxy_minimum_distance_m": -0.007351590268838665,
+        "self_collision_minimum_distance_m": -6.938893903907228e-17,
+        "self_collision_pass": true,
+        "wrist_orientation_error_rad": [
+          0.105975634184152,
+          0.09859322118533974
+        ]
+      },
+      "candidate": {
+        "fingertip_error_m": [
+          [
+            0.04779002473636008,
+            0.009840128412664725,
+            0.010234215296305187,
+            0.020094517930775865,
+            0.04528546411865018
+          ],
+          [
+            0.01509837936836391,
+            0.015273797909578554,
+            0.020863157867611542,
+            0.011057777773581657,
+            0.024216375166506852
+          ]
+        ],
+        "fingertip_max_error_m": 0.04779002473636008,
+        "fingertip_mean_error_m": 0.021975383858039856,
+        "frame_displacement_minimum_margin": 0.0,
+        "frame_displacement_pass": true,
+        "joint_limit_minimum_margin": 6.607548400209333e-18,
+        "joint_limits_pass": true,
+        "native_hand_object_by_object": {
+          "bowl": {
+            "distance_m": 0.019018150275403985,
+            "minimum_pair": {
+              "body1": "left_hand_index_rota_link2",
+              "body2": "left_object",
+              "classification": "CLEARANCE",
+              "contact_count": 0,
+              "containment_followup": [],
+              "containment_penetration": false,
+              "distance_m": 0.019018150275403985,
+              "native_visual_geom1": "left_index_rota2_visual",
+              "native_visual_geom2": "left_object_visual",
+              "nearest_points_sim_m": [
+                [
+                  0.4448651905404259,
+                  -0.12080425741736672,
+                  0.7650384572377662
+                ],
+                [
+                  0.4537266926384641,
+                  -0.10515727035893899,
+                  0.7712300334876163
+                ]
+              ],
+              "reported_penetration_depth_m": 0.0,
+              "surface_intersection": false
+            },
+            "penetrating_pair_count": 0,
+            "status": "CLEARANCE",
+            "unknown_pair_count": 0
+          },
+          "brush": {
+            "distance_m": 0.001161336176537159,
+            "minimum_pair": {
+              "body1": "right_hand_index_rota_link2",
+              "body2": "right_object",
+              "classification": "CLEARANCE",
+              "contact_count": 0,
+              "containment_followup": [
+                {
+                  "inside_vertex_count_over_tolerance": 0,
+                  "maximum_inside_depth_m": 0.0,
+                  "maximum_inside_point_sim_m": [
+                    0.6972407965685035,
+                    0.03362093736729044,
+                    0.7966543214507917
+                  ],
+                  "source": "right_index_rota2_visual",
+                  "status": "FULL_VERTEX_WATERTIGHT_CONTAINMENT_TEST",
+                  "target": "right_object_visual"
+                }
+              ],
+              "containment_penetration": false,
+              "distance_m": 0.001161336176537159,
+              "native_visual_geom1": "right_index_rota2_visual",
+              "native_visual_geom2": "right_object_visual",
+              "nearest_points_sim_m": [
+                [
+                  0.6971008189597538,
+                  0.03435793003936215,
+                  0.7964329997700268
+                ],
+                [
+                  0.6975483737460499,
+                  0.0347432293712877,
+                  0.797432970196097
+                ]
+              ],
+              "reported_penetration_depth_m": 0.0,
+              "surface_intersection": false
+            },
+            "penetrating_pair_count": 0,
+            "status": "CLEARANCE",
+            "unknown_pair_count": 0
+          }
+        },
+        "native_support_minimum_distance_m": 9.061343708705039e-08,
+        "native_support_pass": true,
+        "object_proxy_by_object_m": {
+          "bowl": 0.019554830747201393,
+          "brush": -5.575143538442268e-07
+        },
+        "object_proxy_minimum_distance_m": -5.575143538442268e-07,
+        "self_collision_minimum_distance_m": 1.7347979832313398e-06,
+        "self_collision_pass": true,
+        "wrist_orientation_error_rad": [
+          0.11836934475780839,
+          0.09819504829541031
+        ]
+      },
+      "classification": "NATIVE_PENETRATION_CLEARED_WITHOUT_GAP_OVER_2MM",
+      "frame": 40,
+      "object_qpos_maximum_absolute_change": 3.519406988061746e-14,
+      "per_object_change": {
+        "bowl": {
+          "baseline_was_penetrating": false,
+          "baseline_xhand_native_distance_m": 0.018882395056726856,
+          "candidate_excess_distance_over_official_mano_m": -0.0152417763870001,
+          "candidate_gap_over_2mm_after_baseline_penetration": false,
+          "candidate_gap_over_2mm_reference": true,
+          "candidate_xhand_native_distance_m": 0.019018150275403985,
+          "native_distance_change_m": 0.00013575521867712978,
+          "official_mano_native_distance_m": 0.034259926662404086
+        },
+        "brush": {
+          "baseline_was_penetrating": true,
+          "baseline_xhand_native_distance_m": -0.0024165109313739608,
+          "candidate_excess_distance_over_official_mano_m": 0.0009945542928297408,
+          "candidate_gap_over_2mm_after_baseline_penetration": false,
+          "candidate_gap_over_2mm_reference": false,
+          "candidate_xhand_native_distance_m": 0.001161336176537159,
+          "native_distance_change_m": 0.0035778471079111196,
+          "official_mano_native_distance_m": 0.0001667818837074183
+        }
+      },
+      "solver": {
+        "closure_iterations_completed": 4,
+        "solver_error": null,
+        "tracking_iterations_completed": 8
+      }
+    },
+    {
+      "baseline": {
+        "fingertip_error_m": [
+          [
+            0.02840040613467966,
+            0.020562648420977065,
+            0.01240279932774262,
+            0.007408406474424858,
+            0.008450298001089757
+          ],
+          [
+            0.031307003407035766,
+            0.011938176069357119,
+            0.009921603993473188,
+            0.00615078127470968,
+            0.02983542368475273
+          ]
+        ],
+        "fingertip_max_error_m": 0.031307003407035766,
+        "fingertip_mean_error_m": 0.01663775467882424,
+        "frame_displacement_minimum_margin": 0.04263869336271342,
+        "frame_displacement_pass": true,
+        "joint_limit_minimum_margin": -5.551115123125783e-17,
+        "joint_limits_pass": true,
+        "native_hand_object_by_object": {
+          "bowl": {
+            "distance_m": -0.0010544359905849676,
+            "minimum_pair": {
+              "body1": "left_hand_index_rota_link2",
+              "body2": "left_object",
+              "classification": "PENETRATION",
+              "contact_count": 64,
+              "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+              "deepest_contact_normal": [
+                0.2877865996325107,
+                -0.5350561974591697,
+                -0.794288196206195
+              ],
+              "deepest_contact_position_sim_m": [
+                0.471053955966267,
+                -0.0991195608668562,
+                0.8239952422348857
+              ],
+              "distance_m": -0.0010544359905849676,
+              "native_visual_geom1": "left_index_rota2_visual",
+              "native_visual_geom2": "left_object_visual",
+              "reported_penetration_depth_m": 0.0010544359905849676,
+              "surface_intersection": true
+            },
+            "penetrating_pair_count": 2,
+            "status": "PENETRATION",
+            "unknown_pair_count": 0
+          },
+          "brush": {
+            "distance_m": -0.0032531396474357877,
+            "minimum_pair": {
+              "body1": "right_hand_thumb_rota_link2",
+              "body2": "right_object",
+              "classification": "PENETRATION",
+              "contact_count": 64,
+              "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+              "deepest_contact_normal": [
+                -0.8862335156212964,
+                0.23415759993211985,
+                -0.3997003554958974
+              ],
+              "deepest_contact_position_sim_m": [
+                0.6283368740777022,
+                -0.08561507144839883,
+                0.8453150553861412
+              ],
+              "distance_m": -0.0032531396474357877,
+              "native_visual_geom1": "right_thumb_rota2_visual",
+              "native_visual_geom2": "right_object_visual",
+              "reported_penetration_depth_m": 0.0032531396474357877,
+              "surface_intersection": true
+            },
+            "penetrating_pair_count": 5,
+            "status": "PENETRATION",
+            "unknown_pair_count": 0
+          }
+        },
+        "native_support_minimum_distance_m": 0.056949480080354165,
+        "native_support_pass": true,
+        "object_proxy_by_object_m": {
+          "bowl": -0.011034761244124072,
+          "brush": -0.014730485688318787
+        },
+        "object_proxy_minimum_distance_m": -0.014730485688318787,
+        "self_collision_minimum_distance_m": -9.367506770274758e-17,
+        "self_collision_pass": true,
+        "wrist_orientation_error_rad": [
+          0.029879564877272453,
+          0.11578125195719578
+        ]
+      },
+      "candidate": {
+        "fingertip_error_m": [
+          [
+            0.03919892893175099,
+            0.028675332578742538,
+            0.02962775073727441,
+            0.03457101625221862,
+            0.03655063797009431
+          ],
+          [
+            0.0383322555031875,
+            0.022844945947786712,
+            0.00883741765817376,
+            0.006928800058038164,
+            0.025239827325578747
+          ]
+        ],
+        "fingertip_max_error_m": 0.03919892893175099,
+        "fingertip_mean_error_m": 0.027080691296284577,
+        "frame_displacement_minimum_margin": -2.220446049250313e-16,
+        "frame_displacement_pass": true,
+        "joint_limit_minimum_margin": 0.0,
+        "joint_limits_pass": true,
+        "native_hand_object_by_object": {
+          "bowl": {
+            "distance_m": -0.0012015941219029047,
+            "minimum_pair": {
+              "body1": "left_hand_index_rota_link2",
+              "body2": "left_object",
+              "classification": "PENETRATION",
+              "contact_count": 64,
+              "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+              "deepest_contact_normal": [
+                -0.5858038651831294,
+                0.5302415626528599,
+                -0.6129255393373318
+              ],
+              "deepest_contact_position_sim_m": [
+                0.47659805390734106,
+                -0.10471650372536487,
+                0.8363765572449053
+              ],
+              "distance_m": -0.0012015941219029047,
+              "native_visual_geom1": "left_index_rota2_visual",
+              "native_visual_geom2": "left_object_visual",
+              "reported_penetration_depth_m": 0.0012015941219029047,
+              "surface_intersection": true
+            },
+            "penetrating_pair_count": 1,
+            "status": "PENETRATION",
+            "unknown_pair_count": 0
+          },
+          "brush": {
+            "distance_m": 0.0037104587279970435,
+            "minimum_pair": {
+              "body1": "right_hand_mid_link2",
+              "body2": "right_object",
+              "classification": "CLEARANCE",
+              "contact_count": 0,
+              "containment_followup": [],
+              "containment_penetration": false,
+              "distance_m": 0.0037104587279970435,
+              "native_visual_geom1": "right_middle_link2_visual",
+              "native_visual_geom2": "right_object_visual",
+              "nearest_points_sim_m": [
+                [
+                  0.668608041172732,
+                  -0.07899297407559865,
+                  0.8240588712703116
+                ],
+                [
+                  0.6664177672193579,
+                  -0.08039976026374085,
+                  0.8267029508081079
+                ]
+              ],
+              "reported_penetration_depth_m": 0.0,
+              "surface_intersection": false
+            },
+            "penetrating_pair_count": 0,
+            "status": "CLEARANCE",
+            "unknown_pair_count": 0
+          }
+        },
+        "native_support_minimum_distance_m": 0.03142322452905777,
+        "native_support_pass": true,
+        "object_proxy_by_object_m": {
+          "bowl": -9.003423036869906e-07,
+          "brush": 0.004815506708146046
+        },
+        "object_proxy_minimum_distance_m": -9.003423036869906e-07,
+        "self_collision_minimum_distance_m": -6.938893903907228e-18,
+        "self_collision_pass": true,
+        "wrist_orientation_error_rad": [
+          0.24054264311128842,
+          0.11588914060895156
+        ]
+      },
+      "classification": "PROXY_CLEAR_BUT_NATIVE_PENETRATION_REMAINS",
+      "frame": 80,
+      "object_qpos_maximum_absolute_change": 1.9872992140790302e-13,
+      "per_object_change": {
+        "bowl": {
+          "baseline_was_penetrating": true,
+          "baseline_xhand_native_distance_m": -0.0010544359905849676,
+          "candidate_excess_distance_over_official_mano_m": 0.00016773235288958244,
+          "candidate_gap_over_2mm_after_baseline_penetration": false,
+          "candidate_gap_over_2mm_reference": false,
+          "candidate_xhand_native_distance_m": -0.0012015941219029047,
+          "native_distance_change_m": -0.0001471581313179371,
+          "official_mano_native_distance_m": -0.0013693264747924871
+        },
+        "brush": {
+          "baseline_was_penetrating": true,
+          "baseline_xhand_native_distance_m": -0.0032531396474357877,
+          "candidate_excess_distance_over_official_mano_m": 0.0063666342330859415,
+          "candidate_gap_over_2mm_after_baseline_penetration": true,
+          "candidate_gap_over_2mm_reference": true,
+          "candidate_xhand_native_distance_m": 0.0037104587279970435,
+          "native_distance_change_m": 0.006963598375432831,
+          "official_mano_native_distance_m": -0.002656175505088898
+        }
+      },
+      "solver": {
+        "closure_iterations_completed": 17,
+        "solver_error": null,
+        "tracking_iterations_completed": 8
+      }
+    },
+    {
+      "baseline": {
+        "fingertip_error_m": [
+          [
+            0.00911302963629384,
+            0.013826292783397571,
+            0.008043907851572366,
+            0.007760053210926038,
+            0.019602426794675467
+          ],
+          [
+            0.01945883267678293,
+            0.02067459014012107,
+            0.010489065994085826,
+            0.002825518243539535,
+            0.028866851605614027
+          ]
+        ],
+        "fingertip_max_error_m": 0.028866851605614027,
+        "fingertip_mean_error_m": 0.014066056893700867,
+        "frame_displacement_minimum_margin": 0.04185139174881014,
+        "frame_displacement_pass": true,
+        "joint_limit_minimum_margin": 0.0,
+        "joint_limits_pass": true,
+        "native_hand_object_by_object": {
+          "bowl": {
+            "distance_m": -0.0010360537090711164,
+            "minimum_pair": {
+              "body1": "left_hand_index_rota_link2",
+              "body2": "left_object",
+              "classification": "PENETRATION",
+              "contact_count": 64,
+              "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+              "deepest_contact_normal": [
+                0.599277460763182,
+                0.05603819063149582,
+                -0.7985776394390097
+              ],
+              "deepest_contact_position_sim_m": [
+                0.4687732923568203,
+                -0.0984217038224349,
+                0.8071645400797177
+              ],
+              "distance_m": -0.0010360537090711164,
+              "native_visual_geom1": "left_index_rota2_visual",
+              "native_visual_geom2": "left_object_visual",
+              "reported_penetration_depth_m": 0.0010360537090711164,
+              "surface_intersection": true
+            },
+            "penetrating_pair_count": 1,
+            "status": "PENETRATION",
+            "unknown_pair_count": 0
+          },
+          "brush": {
+            "distance_m": -0.002176760605673067,
+            "minimum_pair": {
+              "body1": "right_hand_ring_link2",
+              "body2": "right_object",
+              "classification": "PENETRATION",
+              "contact_count": 64,
+              "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+              "deepest_contact_normal": [
+                -0.6485812344458141,
+                0.6564299523074394,
+                0.38528184493743883
+              ],
+              "deepest_contact_position_sim_m": [
+                0.7213725072020238,
+                -0.03614632895866948,
+                0.7897571083989127
+              ],
+              "distance_m": -0.002176760605673067,
+              "native_visual_geom1": "right_ring_link2_visual",
+              "native_visual_geom2": "right_object_visual",
+              "reported_penetration_depth_m": 0.002176760605673067,
+              "surface_intersection": true
+            },
+            "penetrating_pair_count": 6,
+            "status": "PENETRATION",
+            "unknown_pair_count": 0
+          }
+        },
+        "native_support_minimum_distance_m": 0.03696232766798624,
+        "native_support_pass": true,
+        "object_proxy_by_object_m": {
+          "bowl": -0.0069070072585503016,
+          "brush": -0.01104560968548757
+        },
+        "object_proxy_minimum_distance_m": -0.01104560968548757,
+        "self_collision_minimum_distance_m": 2.000001969770099e-06,
+        "self_collision_pass": true,
+        "wrist_orientation_error_rad": [
+          0.079343380876417,
+          0.13964130877882633
+        ]
+      },
+      "candidate": {
+        "fingertip_error_m": [
+          [
+            0.025885428670522383,
+            0.034046230803342015,
+            0.032338439770746054,
+            0.04590253039080478,
+            0.049361185396648896
+          ],
+          [
+            0.021151814326539706,
+            0.02525833208816817,
+            0.014208949124390122,
+            0.0032173360135673316,
+            0.024866121759166034
+          ]
+        ],
+        "fingertip_max_error_m": 0.049361185396648896,
+        "fingertip_mean_error_m": 0.027623636834389547,
+        "frame_displacement_minimum_margin": -1.1102230246251565e-16,
+        "frame_displacement_pass": true,
+        "joint_limit_minimum_margin": 9.214472991098122e-06,
+        "joint_limits_pass": true,
+        "native_hand_object_by_object": {
+          "bowl": {
+            "distance_m": -0.0006453139191277546,
+            "minimum_pair": {
+              "body1": "left_hand_index_rota_link2",
+              "body2": "left_object",
+              "classification": "PENETRATION",
+              "contact_count": 64,
+              "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+              "deepest_contact_normal": [
+                0.6626816521337701,
+                0.3601817591993686,
+                -0.6565989097350869
+              ],
+              "deepest_contact_position_sim_m": [
+                0.47149829244484076,
+                -0.10346593578660038,
+                0.8159501728894403
+              ],
+              "distance_m": -0.0006453139191277546,
+              "native_visual_geom1": "left_index_rota2_visual",
+              "native_visual_geom2": "left_object_visual",
+              "reported_penetration_depth_m": 0.0006453139191277546,
+              "surface_intersection": true
+            },
+            "penetrating_pair_count": 1,
+            "status": "PENETRATION",
+            "unknown_pair_count": 0
+          },
+          "brush": {
+            "distance_m": 0.003948637113833584,
+            "minimum_pair": {
+              "body1": "right_hand_mid_link2",
+              "body2": "right_object",
+              "classification": "CLEARANCE",
+              "contact_count": 0,
+              "containment_followup": [],
+              "containment_penetration": false,
+              "distance_m": 0.003948637113833584,
+              "native_visual_geom1": "right_middle_link2_visual",
+              "native_visual_geom2": "right_object_visual",
+              "nearest_points_sim_m": [
+                [
+                  0.7332450791463778,
+                  -0.014485041542027574,
+                  0.7687515295025547
+                ],
+                [
+                  0.730233100243196,
+                  -0.013696935410356137,
+                  0.7663228247307157
+                ]
+              ],
+              "reported_penetration_depth_m": 0.0,
+              "surface_intersection": false
+            },
+            "penetrating_pair_count": 0,
+            "status": "CLEARANCE",
+            "unknown_pair_count": 0
+          }
+        },
+        "native_support_minimum_distance_m": 0.019441664559166627,
+        "native_support_pass": true,
+        "object_proxy_by_object_m": {
+          "bowl": -4.4195684603329233e-07,
+          "brush": 0.005358494885408497
+        },
+        "object_proxy_minimum_distance_m": -4.4195684603329233e-07,
+        "self_collision_minimum_distance_m": -4.163336342344337e-17,
+        "self_collision_pass": true,
+        "wrist_orientation_error_rad": [
+          0.11336410153593734,
+          0.13904661781480315
+        ]
+      },
+      "classification": "PROXY_CLEAR_BUT_NATIVE_PENETRATION_REMAINS",
+      "frame": 120,
+      "object_qpos_maximum_absolute_change": 8.182343691487404e-14,
+      "per_object_change": {
+        "bowl": {
+          "baseline_was_penetrating": true,
+          "baseline_xhand_native_distance_m": -0.0010360537090711164,
+          "candidate_excess_distance_over_official_mano_m": 0.0010588939945407883,
+          "candidate_gap_over_2mm_after_baseline_penetration": false,
+          "candidate_gap_over_2mm_reference": false,
+          "candidate_xhand_native_distance_m": -0.0006453139191277546,
+          "native_distance_change_m": 0.0003907397899433618,
+          "official_mano_native_distance_m": -0.0017042079136685429
+        },
+        "brush": {
+          "baseline_was_penetrating": true,
+          "baseline_xhand_native_distance_m": -0.002176760605673067,
+          "candidate_excess_distance_over_official_mano_m": 0.007434165518886812,
+          "candidate_gap_over_2mm_after_baseline_penetration": true,
+          "candidate_gap_over_2mm_reference": true,
+          "candidate_xhand_native_distance_m": 0.003948637113833584,
+          "native_distance_change_m": 0.006125397719506651,
+          "official_mano_native_distance_m": -0.0034855284050532287
+        }
+      },
+      "solver": {
+        "closure_iterations_completed": 8,
+        "solver_error": null,
+        "tracking_iterations_completed": 8
+      }
+    }
+  ],
+  "schema": "taco_brush_local_hand_object_collision_feasibility_v1",
+  "selected_frames": [
+    40,
+    80,
+    120
+  ],
+  "source_artifacts": {
+    "candidate_support": {
+      "bytes": 492,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_issue14_candidate_support_v1.yaml",
+      "sha256": "c70752b1eb871d62c4d7d6526137438eb80a66bbb03a81052f1d7f4d61637edf"
+    },
+    "config": {
+      "bytes": 2620,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_local_hand_object_collision_feasibility_v1.yaml",
+      "sha256": "31fa7f77be28a7f182287a5859c90a30cb901502922fca2136b1e5bf97f82d23"
+    },
+    "human_reference": {
+      "bytes": 351067,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_brush_bowl_paper_baseline_v1/human_reference.npz",
+      "sha256": "1c2fe4bcb1ff4e55b959ed1395aa868bdff00fc1516a21d3ee97f242566dc4b3"
+    },
+    "prior_attribution": {
+      "bytes": 25594,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_mano_xhand_object_penetration_attribution_v1/results.json",
+      "sha256": "cbf1dfaae4f7cf38e8ed68cf18551c1cbb96a5495cdce71cfbd4598a9a751421"
+    },
+    "retarget_settings": {
+      "bytes": 554,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_bimanual_mink_local_v1.yaml",
+      "sha256": "bb10b6c92ca2a2a106035ab3b21ee735e3b70e8007153fac874523d690d988ed"
+    },
+    "robot_reference": {
+      "bytes": 229812,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_issue14_mink_candidate_v1/robot_reference.npz",
+      "sha256": "f468a5b3b2dc9ce28260d3bd42a766f0bcd162a5d8bea689236badac53307aa2"
+    },
+    "scene": {
+      "bytes": 301296,
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_brush_brush_bowl_20230927_027/scene_source_contacts_mass.xml",
+      "sha256": "8bd258147a6782a32c02cce66aecc898e8272e749cd240314ab22e69581d1bfc"
+    },
+    "script": {
+      "bytes": 30009,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/scripts/audit_taco_brush_local_hand_object_collision_feasibility_v1.py",
+      "sha256": "97d2f4bef8591ca9542e6743600cb278e7df67fabee8ffe7f8184a5ab7ed9964"
+    }
+  }
+}
