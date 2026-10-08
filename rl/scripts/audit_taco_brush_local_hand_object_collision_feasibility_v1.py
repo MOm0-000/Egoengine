@@ -556,7 +556,8 @@ def main() -> int:
         fields = (
             "frame", "object", "classification", "solver_error",
             "baseline_native_mm", "candidate_native_mm", "candidate_proxy_mm",
-            "official_mano_native_mm", "candidate_gap_over_2mm",
+            "official_mano_native_mm", "candidate_gap_over_2mm_reference",
+            "candidate_gap_over_2mm_after_baseline_penetration",
             "baseline_tip_mean_mm", "candidate_tip_mean_mm",
             "candidate_joint_margin", "candidate_self_mm", "candidate_support_mm",
         )
@@ -574,7 +575,10 @@ def main() -> int:
                     "candidate_native_mm": change["candidate_xhand_native_distance_m"] * 1000,
                     "candidate_proxy_mm": row["candidate"]["object_proxy_by_object_m"][name] * 1000,
                     "official_mano_native_mm": change["official_mano_native_distance_m"] * 1000,
-                    "candidate_gap_over_2mm": change["candidate_gap_over_2mm_reference"],
+                    "candidate_gap_over_2mm_reference": change["candidate_gap_over_2mm_reference"],
+                    "candidate_gap_over_2mm_after_baseline_penetration": (
+                        change["candidate_gap_over_2mm_after_baseline_penetration"]
+                    ),
                     "baseline_tip_mean_mm": row["baseline"]["fingertip_mean_error_m"] * 1000,
                     "candidate_tip_mean_mm": row["candidate"]["fingertip_mean_error_m"] * 1000,
                     "candidate_joint_margin": row["candidate"]["joint_limit_minimum_margin"],
@@ -586,7 +590,7 @@ def main() -> int:
         f"- Classification: `{overall}`",
         "- Full 209-frame retarget: `NOT RUN`",
         "- Physics/training: `NOT RUN`", "",
-        "| frame | object | baseline native (mm) | candidate native (mm) | candidate proxy (mm) | tip mean before/after (mm) | gap >2mm | frame result |",
+        "| frame | object | baseline native (mm) | candidate native (mm) | candidate proxy (mm) | tip mean before/after (mm) | caused >2mm gap while clearing penetration | frame result |",
         "|---:|---|---:|---:|---:|---:|---|---|",
     ]
     for row in rows:
@@ -600,10 +604,53 @@ def main() -> int:
                 f"{row['candidate']['object_proxy_by_object_m'][name]*1000:.6f} | "
                 f"{row['baseline']['fingertip_mean_error_m']*1000:.6f} / "
                 f"{row['candidate']['fingertip_mean_error_m']*1000:.6f} | "
-                f"{change['candidate_gap_over_2mm_reference']} | "
+                f"{change['candidate_gap_over_2mm_after_baseline_penetration']} | "
                 f"`{row['classification']}` |"
             )
-    lines += ["", "The 2 mm value is a predeclared diagnostic reference only; it did not alter the zero-clearance solve. No threshold was changed after observing the result.", ""]
+    lines += [
+        "", "## Preserved constraints", "",
+        "| frame | tip max before/after (mm) | joint limits | frame displacement | self collision | table support | object pose max change |",
+        "|---:|---:|---|---|---|---|---:|",
+    ]
+    for row in rows:
+        lines.append(
+            f"| {row['frame']} | "
+            f"{row['baseline']['fingertip_max_error_m']*1000:.6f} / "
+            f"{row['candidate']['fingertip_max_error_m']*1000:.6f} | "
+            f"{row['candidate']['joint_limits_pass']} | "
+            f"{row['candidate']['frame_displacement_pass']} | "
+            f"{row['candidate']['self_collision_pass']} | "
+            f"{row['candidate']['native_support_pass']} | "
+            f"{row['object_qpos_maximum_absolute_change']:.3e} |"
+        )
+    proxy_native_mismatches = [
+        str(row["frame"]) for row in rows
+        if row["classification"] == "PROXY_CLEAR_BUT_NATIVE_PENETRATION_REMAINS"
+    ]
+    introduced_large_gaps = [
+        f"frame {row['frame']} {name}"
+        for row in rows
+        for name, change in row["per_object_change"].items()
+        if change["candidate_gap_over_2mm_after_baseline_penetration"]
+    ]
+    lines += [
+        "", "## Decision", "",
+        (
+            "- Proxy/native mismatch frames: "
+            + (", ".join(proxy_native_mismatches) if proxy_native_mismatches else "none")
+            + "."
+        ),
+        (
+            "- Newly introduced gaps over 2 mm while clearing a baseline penetration: "
+            + (", ".join(introduced_large_gaps) if introduced_large_gaps else "none")
+            + "."
+        ),
+        "- The existing MINK collision proxies are therefore not accepted as a reliable native-mesh hand-object correction for these three frames.",
+        "- Candidate promotion and the full 209-frame retarget remain forbidden.",
+        "",
+        "The 2 mm value is a predeclared diagnostic reference only; it did not alter the zero-clearance solve. No threshold was changed after observing the result.",
+        "",
+    ]
     (output / "summary.md").write_text("\n".join(lines), encoding="utf-8")
     checksums = []
     for path in sorted(output.rglob("*")):
