@@ -1,0 +1,59 @@
+schema: taco_brush_bowl_contact_ring_multiframe_plane_consistency_v1
+status: READ_ONLY_MESH_POSE_CONTACT_RING_PLANE_COMPARISON
+minimum_baseline: 7993d8be523cae25ec8978f933b457032cd143c4
+paper_faithful: false
+
+sample:
+  triplet: "(brush, brush, bowl)"
+  sequence: "20230927_027"
+  target_role: bowl
+  target_object_id: 146
+  total_frames: 209
+  eligible_ranges_inclusive: [[0, 9], [152, 208]]
+  selected_frames: [0, 2, 4, 6, 8, 9, 152, 163, 174, 185, 196, 208]
+  selection_rule: SIX_EVENLY_SPREAD_EARLY_AND_SIX_EVENLY_SPREAD_LATE_FRAMES_FROZEN_BEFORE_RESULTS
+
+inputs:
+  mesh: /data_all/zzx/3.2RL/data/taco_v1/dev4/object_models/object_models_released/146_cm.obj
+  official_pose: /data_all/zzx/3.2RL/data/taco_v1/dev4/object_poses/Object_Poses/(brush, brush, bowl)/20230927_027/target_146.npy
+  frozen_support_points: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_bowl_frame0_support_plane_v1/support_points.npz
+  frozen_support_audit: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_bowl_frame0_support_plane_v1/results.json
+  active_support_contract: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_camera_table_infra_repair_v1/support_surface_contract.yaml
+
+mesh:
+  source_unit: centimetre
+  scale_to_metres: 0.01
+
+contact_ring_contract:
+  source: FRAME0_GEOMETRY_ONLY_VALIDATED_ANNULAR_SUPPORT_REGION
+  expected_classification: SUPPORT_PLANE_WELL_DEFINED
+  expected_geometry: ANNULAR_CONTACT_REGION
+  expected_vertex_count: 216
+  same_mesh_vertex_indices_for_every_frame: true
+  pose_application: WORLD_POINT_EQUALS_ROTATION_TIMES_LOCAL_POINT_PLUS_TRANSLATION
+
+fit_contract:
+  method: UNCONSTRAINED_ORTHOGONAL_SVD
+  normal_sign_only: POSITIVE_WORLD_Z
+  horizontal_prior: false
+  robust_loss: false
+  point_rejection: false
+  depth_used: false
+  historical_table_plane_used: false
+  calibration_used: false
+  comparison_reference: FRAME0_CONTACT_RING_PLANE_DESCRIPTIVE_ONLY
+  consensus_plane: ALL_12_TRANSFORMED_CONTACT_RING_POINT_SETS
+
+authorization:
+  modify_source_data: false
+  modify_active_support_contract: false
+  depth: false
+  table_estimation: false
+  calibration: false
+  mink: false
+  physics: false
+  replay: false
+  mpc: false
+  reinforcement_learning: false
+
+output: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_bowl_contact_ring_multiframe_plane_consistency_v1
