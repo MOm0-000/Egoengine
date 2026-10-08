@@ -1,0 +1,83 @@
+schema: taco_brush_controlled_physics_replay_v1
+status: BOUNDED_FAIL_CLOSED_PHYSICS_REPLAY
+minimum_baseline: 0c6e71d
+paper_faithful: false
+
+sample:
+  sequence: "(brush, brush, bowl)/20230927_027"
+  reference_frames: 209
+  replay_source_endpoint: 0
+  replay_outcome_endpoint: 80
+  control_hz: 30.0
+  rationale: COVERS_INITIALIZATION_BOTH_FIRST_10MM_REFERENCE_LIFTS_AND_KNOWN_FRAME40_80_PROXY_MISMATCHES
+
+runtime:
+  backend: mujoco_cpu
+  source_timestep: INHERIT_UNMODIFIED
+  command_timing: reference_ctrl_outcome_endpoint
+  initial_qpos: reference_endpoint_0
+  initial_qvel: zero
+  initial_ctrl: reference_endpoint_0
+  reset_during_replay: false
+  object_assistance: false
+  residual_policy: false
+  mpc: false
+  reinforcement_learning: false
+  source_scene_mutation: false
+  experiment_local_floor_only: true
+
+support:
+  provenance: taco_brush_issue14_candidate_support_v1
+  simulator_z_m: 0.7173599392270725
+  active_support_contract_modified: false
+
+native_geometry_audit:
+  tolerance_m: 0.00005
+  endpoints: [0, 5, 10, 15, 20, 25, 30, 35, 37, 38, 39, 40, 41, 42, 45, 50, 55, 56, 57, 58, 59, 60, 61, 62, 65, 70, 75, 80]
+  interaction_pairs:
+    - {hand: right, object: brush, role: tool, object_side: right}
+    - {hand: left, object: bowl, role: target, object_side: left}
+
+hard_stop:
+  fail_on_any_mujoco_warning: true
+  maximum_contact_force_n: 1000.0
+  maximum_proxy_penetration_m: 0.02
+  maximum_object_linear_speed_m_s: 5.0
+  maximum_object_angular_speed_rad_s: 50.0
+  maximum_object_translation_per_substep_m: 0.02
+  maximum_object_rotation_per_substep_rad: 0.5
+  maximum_physics_steps: 1400
+
+strict_pickup_gate:
+  object_lift_delta_m: 0.01
+  stable_consecutive_control_intervals: 5
+  requires_hand_object_force: true
+  requires_no_object_floor_force: true
+  requires_all_native_samples_nonpenetrating: true
+  requires_zero_proxy_native_mismatches: true
+  requires_both_objects: true
+  unknown_is_failure: true
+
+paths:
+  scene: /data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_brush_brush_bowl_20230927_027/scene_source_contacts_mass.xml
+  robot_reference: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_issue14_mink_candidate_v1/robot_reference.npz
+  support_contract: /data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_issue14_candidate_support_v1.yaml
+  prior_collision_audit: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_collision_model_accuracy_audit_v1/results.json
+  output: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_controlled_physics_replay_v1
+
+authorization:
+  experiment_local_scene: true
+  bounded_cpu_physics_replay: true
+  native_mesh_audit: true
+  render_diagnostic_plots: true
+  modify_source_scene: false
+  modify_reference: false
+  modify_active_support_contract: false
+  modify_collision_geometry: false
+  mink: false
+  full_209_frame_replay: false
+  mpc: false
+  reinforcement_learning: false
+  promotion: false
+  chunk_commit: false
+
