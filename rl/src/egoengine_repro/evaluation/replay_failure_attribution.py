@@ -10,6 +10,8 @@ import numpy as np
 
 def semantic_finger(name: str) -> str:
     lowered = name.lower()
+    if "_mid_" in lowered or lowered.endswith("_mid"):
+        return "middle"
     for value in ("thumb", "index", "middle", "ring", "pinky", "palm"):
         if value in lowered:
             return value

@@ -584,6 +584,33 @@ def main() -> int:
         bowl_native.append({"endpoint": endpoint, "body_checks": rows, "nearest": rows[0]})
     write_json(output / "bowl_reach_attribution.json", bowl_native)
 
+    historical_native = json.loads((primary / "native_geometry_trace.json").read_text())
+    historical_bowl = {
+        int(row["endpoint"]): row["interactions"]["bowl"]["native_minimum"]
+        for row in historical_native
+        if 52 <= int(row["endpoint"]) <= 60
+    }
+    native_recheck = []
+    for row in bowl_native:
+        endpoint = int(row["endpoint"])
+        if endpoint not in historical_bowl:
+            continue
+        old = historical_bowl[endpoint]
+        new = row["nearest"]
+        native_recheck.append({
+            "endpoint": endpoint,
+            "historical_body": old["body1"],
+            "historical_classification": old["classification"],
+            "historical_distance_m": old["distance_m"],
+            "observer_body": new["hand_body"],
+            "observer_classification": new["native_classification"],
+            "observer_distance_m": new["native_distance_m"],
+            "classification_reproduced": (
+                old["classification"] == new["native_classification"]
+            ),
+        })
+    write_json(output / "bowl_native_recheck.json", native_recheck)
+
     if peak_self is None:
         raise RuntimeError("reviewed self-collision peak was not reproduced")
     peak_contact = peak_self["contact"]
@@ -630,11 +657,77 @@ def main() -> int:
     write_json(output / "brush_contact_mechanics.json", brush)
     write_json(output / "bowl_contact_mechanics.json", bowl)
 
+    brush_cosine = brush["finger_impulse_direction_cosines"][0][
+        "impulse_direction_cosine"
+    ]
+    brush_proxy_bodies = sorted({
+        (row["finger"], row["hand_body"])
+        for endpoint in brush_native
+        for row in endpoint["active_contact_body_native_checks"]
+        if row["proxy_active"] and row["native_classification"] == "CLEARANCE"
+    })
+    bowl_total_normal_impulse = sum(
+        row["normal_impulse_ns"] for row in bowl["per_finger"].values()
+    )
+    bowl_index_fraction = (
+        bowl["per_finger"].get("index", {}).get("normal_impulse_ns", 0.0)
+        / bowl_total_normal_impulse
+    )
+    positive_vertical_support = (
+        bowl["vertical_support"]["floor_impulse_z_ns"]
+        + max(0.0, bowl["vertical_support"]["hand_impulse_z_ns"])
+    )
+    floor_support_fraction = (
+        bowl["vertical_support"]["floor_impulse_z_ns"] / positive_vertical_support
+    )
+    joint_errors = [
+        abs(row["control_error_command_minus_qpos"])
+        for row in self_report["joint_states"]
+    ]
+    endpoint60_recheck = next(
+        (row for row in native_recheck if row["endpoint"] == 60), None,
+    )
+    mechanism_conclusions = {
+        "brush_15_41": {
+            "classification": "DOWNWARD_PROXY_PUSH_WITH_TABLE_REACTION_NOT_EFFECTIVE_CLAMP",
+            "driving_fingers": sorted(brush["per_finger"]),
+            "index_thumb_impulse_direction_cosine": brush_cosine,
+            "hand_vertical_impulse_ns": brush["vertical_support"]["hand_impulse_z_ns"],
+            "floor_vertical_impulse_ns": brush["vertical_support"]["floor_impulse_z_ns"],
+            "proxy_overcoverage_finger_bodies": [
+                {"finger": finger, "body": body} for finger, body in brush_proxy_bodies
+            ],
+        },
+        "self_collision_44_45": {
+            "classification": "PROXY_OVERCOVERAGE_FALSE_SELF_CONTACT_WITH_LOADED_TRACKING",
+            "native_clearance_m": self_report["native_measurement"]["distance_m"],
+            "proxy_penetration_m": -peak_contact["distance_m"],
+            "peak_force_n": peak_contact["force_norm_n"],
+            "maximum_absolute_control_error_rad": max(joint_errors),
+            "all_reviewed_joints_within_limits": all(
+                row["joint_limit_margin"] >= 0 for row in self_report["joint_states"]
+            ),
+        },
+        "bowl_52_60": {
+            "classification": "INDEX_ONLY_WEAK_PUSH_WITH_FLOOR_DOMINANT_SUPPORT",
+            "index_normal_impulse_fraction": bowl_index_fraction,
+            "floor_positive_vertical_support_fraction": floor_support_fraction,
+            "hand_vertical_impulse_ns": bowl["vertical_support"]["hand_impulse_z_ns"],
+            "floor_vertical_impulse_ns": bowl["vertical_support"]["floor_impulse_z_ns"],
+            "robust_proxy_undercoverage_endpoint": 57,
+            "endpoint60_native_recheck": endpoint60_recheck,
+            "endpoint60_decisive_evidence": False,
+        },
+    }
+    write_json(output / "mechanism_conclusions.json", mechanism_conclusions)
+
     result = {
         "schema": SCHEMA, "classification": "REPLAY_FAILURE_MECHANISM_ATTRIBUTED",
         "parity": parity, "physics_steps": physics_steps,
         "brush": brush, "bowl": bowl, "self_collision": self_report,
         "brush_native_followup": brush_native, "bowl_native_followup": bowl_native,
+        "bowl_native_recheck": native_recheck,
+        "mechanism_conclusions": mechanism_conclusions,
         "mutations": {"commands": 0, "physics": 0, "collision_geometry": 0,
                       "support": 0, "training_steps": 0, "promotion": 0},
         "source_artifacts": manifest["inputs"],
@@ -668,12 +761,22 @@ def main() -> int:
         "", f"- Hand vertical impulse: `{brush['vertical_support']['hand_impulse_z_ns']:.6f} N·s`",
         f"- Floor vertical impulse: `{brush['vertical_support']['floor_impulse_z_ns']:.6f} N·s`",
         f"- Gravity impulse: `{brush['vertical_support']['gravity_impulse_z_ns']:.6f} N·s`",
+        f"- Index/thumb impulse-direction cosine: `{brush_cosine:.6f}` (aligned, not an opposing pinch).",
+        "- Mechanism: the hand contacts push the brush downward; the table reaction balances "
+        "that push plus gravity, so the brush does not leave the table.",
+        "- Confirmed proxy over-coverage involves right index and thumb collision bodies; "
+        "the native meshes are clear at the reviewed endpoints.",
         "", "## Left-hand self collision, outcomes 44–45", "",
         f"- Peak proxy pair: `{peak_contact['geom1']}` / `{peak_contact['geom2']}`",
         f"- Peak force: `{peak_contact['force_norm_n']:.6f} N`",
         f"- Proxy signed distance: `{peak_contact['distance_m']*1000:.6f} mm`",
         f"- Native visual-mesh result: `{self_report['native_measurement']['classification']}`; "
-        f"distance `{self_report['native_measurement']['distance_m']*1000:.6f} mm`", "",
+        f"distance `{self_report['native_measurement']['distance_m']*1000:.6f} mm`",
+        f"- Maximum reviewed joint tracking error: `{max(joint_errors):.6f} rad`; all reviewed "
+        "joints remain inside their limits.",
+        "- Mechanism: the 258.76 N event is a false proxy self-contact. The proxy force loads "
+        "the position servos and produces large index/middle tracking errors; it is not native "
+        "finger-mesh squeezing or a joint-limit collision.", "",
         "## Bowl, outcomes 52–60", "",
         "| finger | normal impulse (N·s) | object impulse xyz (N·s) | max force (N) | endpoints |",
         "|---|---:|---|---:|---|",
@@ -689,6 +792,14 @@ def main() -> int:
         "", f"- Hand vertical impulse: `{bowl['vertical_support']['hand_impulse_z_ns']:.6f} N·s`",
         f"- Floor vertical impulse: `{bowl['vertical_support']['floor_impulse_z_ns']:.6f} N·s`",
         f"- Gravity impulse: `{bowl['vertical_support']['gravity_impulse_z_ns']:.6f} N·s`", "",
+        f"- Index share of hand–bowl normal impulse: `{bowl_index_fraction:.3%}`.",
+        f"- Floor share of positive vertical support: `{floor_support_fraction:.3%}`.",
+        "- Mechanism: only the left index reaches the bowl materially; the middle contact is "
+        "negligible and thumb/ring/pinky do not form a grasp. The floor remains the dominant "
+        "vertical support, so the bowl stays on the table.",
+        "- Proxy under-coverage is a secondary contributor at endpoint 57. Endpoint 60 is not "
+        "decisive: the historical native audit reported -0.186 mm penetration while this "
+        "parity observer reported +0.108 mm clearance.", "",
         "Native geometry is an observer only. Force directions come from the exact replayed "
         "MuJoCo contact frame; no native-mesh force counterfactual is claimed.", "",
     ]

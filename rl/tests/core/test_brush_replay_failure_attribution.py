@@ -9,6 +9,7 @@ from egoengine_repro.evaluation.replay_failure_attribution import (
 
 def test_semantic_finger_uses_collision_names():
     assert semantic_finger("collision_hand_left_middle_0") == "middle"
+    assert semantic_finger("left_hand_mid_link2") == "middle"
     assert semantic_finger("right_hand_pinky_link2") == "pinky"
     assert semantic_finger("right_object_0") == "other"
 
