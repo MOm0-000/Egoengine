@@ -1,0 +1,692 @@
+{
+  "classification": "READ_ONLY_ATTRIBUTION_COMPLETE",
+  "material_penetration_tolerance_m": 5e-05,
+  "mink_collision_avoidance_assessment": {
+    "drop_in_reliability_verdict": "NOT_RELIABLE_AS_DROP_IN_NATIVE_HAND_OBJECT_GATE",
+    "effective_contract_has_hand_object_collision_limit": false,
+    "effective_contract_has_native_support_limit": true,
+    "effective_contract_has_self_collision_limit": true,
+    "proxy_fixed_frame_sign_assessment": "MATCHES_NATIVE_ON_ALL_SIX_FIXED_FRAMES",
+    "reasons": [
+      "The active taco_bimanual MINK contract contains no hand-object collision limit.",
+      "The proxy agrees with native penetration sign on this fixed sample but materially exaggerates penetration depth.",
+      "Official MANO geometry itself penetrates the official objects at some frames, so a blanket zero-penetration proxy constraint would also suppress source-geometry interactions.",
+      "Six frames do not establish whole-trajectory proxy/native equivalence."
+    ]
+  },
+  "mutations": {
+    "mink": 0,
+    "object_pose": 0,
+    "physics_steps": 0,
+    "retarget": 0,
+    "source_trajectory": 0,
+    "table": 0,
+    "training_steps": 0
+  },
+  "origin_classification_counts": {
+    "NO_MATERIAL_PENETRATION": 7,
+    "OFFICIAL_GEOMETRY_PENETRATION_RETAINED_AFTER_RETARGET": 4,
+    "RETARGET_ADDED_PENETRATION": 1
+  },
+  "proxy_vs_native_summary": {
+    "maximum_absolute_distance_error_m": 0.011477346040883,
+    "mean_absolute_distance_error_m": 0.00433301512632205,
+    "observation_count": 12,
+    "penetrating_observation_count": 5,
+    "proxy_to_native_penetration_depth_ratio_max": 10.4650840284789,
+    "proxy_to_native_penetration_depth_ratio_min": 3.042233400805994,
+    "scope": "SIX_PREDECLARED_FRAMES_ONLY",
+    "sign_agreement_count": 12,
+    "sign_agreement_fraction": 1.0,
+    "sign_disagreement_count": 0,
+    "tolerance_m": 5e-05
+  },
+  "repository_head": "f02c90ca227b3614761d162144c8a7c486c1c71d",
+  "rows": [
+    {
+      "frame": 0,
+      "hand": "right",
+      "object": "brush",
+      "official_mano_distance_m": 0.0383490115796896,
+      "official_mano_status": "CLEARANCE",
+      "official_measurement": {
+        "contact_count": 0,
+        "distance_m": 0.0383490115796896,
+        "hand_mesh_watertight": false,
+        "object_mesh_watertight": true,
+        "reported_penetration_depth_m": 0.0,
+        "status": "CLEARANCE",
+        "surface_intersection": false
+      },
+      "origin_classification": "NO_MATERIAL_PENETRATION",
+      "proxy_distance_m": 0.033107896374711794,
+      "proxy_native_sign_agreement": true,
+      "proxy_status": "CLEARANCE",
+      "xhand_native_distance_m": 0.03268985964670449,
+      "xhand_native_minimum_pair": {
+        "body1": "right_hand_index_rota_link2",
+        "body2": "right_object",
+        "classification": "CLEARANCE",
+        "contact_count": 0,
+        "containment_followup": [],
+        "containment_penetration": false,
+        "distance_m": 0.03268985964670449,
+        "native_visual_geom1": "right_index_rota2_visual",
+        "native_visual_geom2": "right_object_visual",
+        "nearest_points_sim_m": [
+          [
+            0.770031132262818,
+            -0.034352330395862905,
+            0.7357914904249151
+          ],
+          [
+            0.7467815850501257,
+            -0.011815974360609632,
+            0.7312972569220437
+          ]
+        ],
+        "reported_penetration_depth_m": 0.0,
+        "surface_intersection": false
+      },
+      "xhand_native_status": "CLEARANCE"
+    },
+    {
+      "frame": 0,
+      "hand": "left",
+      "object": "bowl",
+      "official_mano_distance_m": 0.04442121339781875,
+      "official_mano_status": "CLEARANCE",
+      "official_measurement": {
+        "contact_count": 0,
+        "distance_m": 0.04442121339781875,
+        "hand_mesh_watertight": false,
+        "object_mesh_watertight": true,
+        "reported_penetration_depth_m": 0.0,
+        "status": "CLEARANCE",
+        "surface_intersection": false
+      },
+      "origin_classification": "NO_MATERIAL_PENETRATION",
+      "proxy_distance_m": 0.028078568999900834,
+      "proxy_native_sign_agreement": true,
+      "proxy_status": "CLEARANCE",
+      "xhand_native_distance_m": 0.025286616415971512,
+      "xhand_native_minimum_pair": {
+        "body1": "left_hand_index_rota_link2",
+        "body2": "left_object",
+        "classification": "CLEARANCE",
+        "contact_count": 0,
+        "containment_followup": [],
+        "containment_penetration": false,
+        "distance_m": 0.025286616415971512,
+        "native_visual_geom1": "left_index_rota2_visual",
+        "native_visual_geom2": "left_object_visual",
+        "nearest_points_sim_m": [
+          [
+            0.48931524338099475,
+            -0.13236925238530234,
+            0.7488917532646099
+          ],
+          [
+            0.48981937183836943,
+            -0.10976032023055754,
+            0.7602052412806504
+          ]
+        ],
+        "reported_penetration_depth_m": 0.0,
+        "surface_intersection": false
+      },
+      "xhand_native_status": "CLEARANCE"
+    },
+    {
+      "frame": 40,
+      "hand": "right",
+      "object": "brush",
+      "official_mano_distance_m": 0.0001667818837074183,
+      "official_mano_status": "CLEARANCE",
+      "official_measurement": {
+        "contact_count": 0,
+        "distance_m": 0.0001667818837074183,
+        "hand_mesh_watertight": false,
+        "object_mesh_watertight": true,
+        "reported_penetration_depth_m": 0.0,
+        "status": "CLEARANCE",
+        "surface_intersection": false
+      },
+      "origin_classification": "RETARGET_ADDED_PENETRATION",
+      "proxy_distance_m": -0.007351590268838665,
+      "proxy_native_sign_agreement": true,
+      "proxy_status": "PENETRATION",
+      "xhand_native_distance_m": -0.0024165109313739608,
+      "xhand_native_minimum_pair": {
+        "body1": "right_hand_index_rota_link1",
+        "body2": "right_object",
+        "classification": "PENETRATION",
+        "contact_count": 64,
+        "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+        "deepest_contact_normal": [
+          0.2948804670088886,
+          0.07859566088580701,
+          0.9522962943677472
+        ],
+        "deepest_contact_position_sim_m": [
+          0.719293973140563,
+          0.017164714143648896,
+          0.7938600722059438
+        ],
+        "distance_m": -0.0024165109313739608,
+        "native_visual_geom1": "right_index_rota1_visual",
+        "native_visual_geom2": "right_object_visual",
+        "reported_penetration_depth_m": 0.0024165109313739608,
+        "surface_intersection": true
+      },
+      "xhand_native_status": "PENETRATION"
+    },
+    {
+      "frame": 40,
+      "hand": "left",
+      "object": "bowl",
+      "official_mano_distance_m": 0.034259926662404086,
+      "official_mano_status": "CLEARANCE",
+      "official_measurement": {
+        "contact_count": 0,
+        "distance_m": 0.034259926662404086,
+        "hand_mesh_watertight": false,
+        "object_mesh_watertight": true,
+        "reported_penetration_depth_m": 0.0,
+        "status": "CLEARANCE",
+        "surface_intersection": false
+      },
+      "origin_classification": "NO_MATERIAL_PENETRATION",
+      "proxy_distance_m": 0.019365215018611256,
+      "proxy_native_sign_agreement": true,
+      "proxy_status": "CLEARANCE",
+      "xhand_native_distance_m": 0.018882395056726856,
+      "xhand_native_minimum_pair": {
+        "body1": "left_hand_index_rota_link2",
+        "body2": "left_object",
+        "classification": "CLEARANCE",
+        "contact_count": 0,
+        "containment_followup": [],
+        "containment_penetration": false,
+        "distance_m": 0.018882395056726856,
+        "native_visual_geom1": "left_index_rota2_visual",
+        "native_visual_geom2": "left_object_visual",
+        "nearest_points_sim_m": [
+          [
+            0.44497553872696854,
+            -0.12054347136814016,
+            0.7646541403613074
+          ],
+          [
+            0.45362498249627364,
+            -0.10509024816184671,
+            0.7712062284327855
+          ]
+        ],
+        "reported_penetration_depth_m": 0.0,
+        "surface_intersection": false
+      },
+      "xhand_native_status": "CLEARANCE"
+    },
+    {
+      "frame": 80,
+      "hand": "right",
+      "object": "brush",
+      "official_mano_distance_m": -0.002656175505088898,
+      "official_mano_status": "PENETRATION",
+      "official_measurement": {
+        "contact_count": 64,
+        "distance_m": -0.002656175505088898,
+        "hand_mesh_watertight": false,
+        "object_mesh_watertight": true,
+        "reported_penetration_depth_m": 0.002656175505088898,
+        "status": "PENETRATION",
+        "surface_intersection": true
+      },
+      "origin_classification": "OFFICIAL_GEOMETRY_PENETRATION_RETAINED_AFTER_RETARGET",
+      "proxy_distance_m": -0.014730485688318787,
+      "proxy_native_sign_agreement": true,
+      "proxy_status": "PENETRATION",
+      "xhand_native_distance_m": -0.0032531396474357877,
+      "xhand_native_minimum_pair": {
+        "body1": "right_hand_thumb_rota_link2",
+        "body2": "right_object",
+        "classification": "PENETRATION",
+        "contact_count": 64,
+        "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+        "deepest_contact_normal": [
+          -0.8862335156212964,
+          0.23415759993211985,
+          -0.3997003554958974
+        ],
+        "deepest_contact_position_sim_m": [
+          0.6283368740777022,
+          -0.08561507144839883,
+          0.8453150553861412
+        ],
+        "distance_m": -0.0032531396474357877,
+        "native_visual_geom1": "right_thumb_rota2_visual",
+        "native_visual_geom2": "right_object_visual",
+        "reported_penetration_depth_m": 0.0032531396474357877,
+        "surface_intersection": true
+      },
+      "xhand_native_status": "PENETRATION"
+    },
+    {
+      "frame": 80,
+      "hand": "left",
+      "object": "bowl",
+      "official_mano_distance_m": -0.0013693264747924871,
+      "official_mano_status": "PENETRATION",
+      "official_measurement": {
+        "contact_count": 64,
+        "distance_m": -0.0013693264747924871,
+        "hand_mesh_watertight": false,
+        "object_mesh_watertight": true,
+        "reported_penetration_depth_m": 0.0013693264747924871,
+        "status": "PENETRATION",
+        "surface_intersection": true
+      },
+      "origin_classification": "OFFICIAL_GEOMETRY_PENETRATION_RETAINED_AFTER_RETARGET",
+      "proxy_distance_m": -0.011034761244124072,
+      "proxy_native_sign_agreement": true,
+      "proxy_status": "PENETRATION",
+      "xhand_native_distance_m": -0.0010544359905849676,
+      "xhand_native_minimum_pair": {
+        "body1": "left_hand_index_rota_link2",
+        "body2": "left_object",
+        "classification": "PENETRATION",
+        "contact_count": 64,
+        "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+        "deepest_contact_normal": [
+          0.2877865996325107,
+          -0.5350561974591697,
+          -0.794288196206195
+        ],
+        "deepest_contact_position_sim_m": [
+          0.471053955966267,
+          -0.0991195608668562,
+          0.8239952422348857
+        ],
+        "distance_m": -0.0010544359905849676,
+        "native_visual_geom1": "left_index_rota2_visual",
+        "native_visual_geom2": "left_object_visual",
+        "reported_penetration_depth_m": 0.0010544359905849676,
+        "surface_intersection": true
+      },
+      "xhand_native_status": "PENETRATION"
+    },
+    {
+      "frame": 120,
+      "hand": "right",
+      "object": "brush",
+      "official_mano_distance_m": -0.0034855284050532287,
+      "official_mano_status": "PENETRATION",
+      "official_measurement": {
+        "contact_count": 64,
+        "distance_m": -0.0034855284050532287,
+        "hand_mesh_watertight": false,
+        "object_mesh_watertight": true,
+        "reported_penetration_depth_m": 0.0034855284050532287,
+        "status": "PENETRATION",
+        "surface_intersection": true
+      },
+      "origin_classification": "OFFICIAL_GEOMETRY_PENETRATION_RETAINED_AFTER_RETARGET",
+      "proxy_distance_m": -0.01104560968548757,
+      "proxy_native_sign_agreement": true,
+      "proxy_status": "PENETRATION",
+      "xhand_native_distance_m": -0.002176760605673067,
+      "xhand_native_minimum_pair": {
+        "body1": "right_hand_ring_link2",
+        "body2": "right_object",
+        "classification": "PENETRATION",
+        "contact_count": 64,
+        "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+        "deepest_contact_normal": [
+          -0.6485812344458141,
+          0.6564299523074394,
+          0.38528184493743883
+        ],
+        "deepest_contact_position_sim_m": [
+          0.7213725072020238,
+          -0.03614632895866948,
+          0.7897571083989127
+        ],
+        "distance_m": -0.002176760605673067,
+        "native_visual_geom1": "right_ring_link2_visual",
+        "native_visual_geom2": "right_object_visual",
+        "reported_penetration_depth_m": 0.002176760605673067,
+        "surface_intersection": true
+      },
+      "xhand_native_status": "PENETRATION"
+    },
+    {
+      "frame": 120,
+      "hand": "left",
+      "object": "bowl",
+      "official_mano_distance_m": -0.0017042079136685429,
+      "official_mano_status": "PENETRATION",
+      "official_measurement": {
+        "contact_count": 64,
+        "distance_m": -0.0017042079136685429,
+        "hand_mesh_watertight": false,
+        "object_mesh_watertight": true,
+        "reported_penetration_depth_m": 0.0017042079136685429,
+        "status": "PENETRATION",
+        "surface_intersection": true
+      },
+      "origin_classification": "OFFICIAL_GEOMETRY_PENETRATION_RETAINED_AFTER_RETARGET",
+      "proxy_distance_m": -0.0069070072585503016,
+      "proxy_native_sign_agreement": true,
+      "proxy_status": "PENETRATION",
+      "xhand_native_distance_m": -0.0010360537090711164,
+      "xhand_native_minimum_pair": {
+        "body1": "left_hand_index_rota_link2",
+        "body2": "left_object",
+        "classification": "PENETRATION",
+        "contact_count": 64,
+        "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+        "deepest_contact_normal": [
+          0.599277460763182,
+          0.05603819063149582,
+          -0.7985776394390097
+        ],
+        "deepest_contact_position_sim_m": [
+          0.4687732923568203,
+          -0.0984217038224349,
+          0.8071645400797177
+        ],
+        "distance_m": -0.0010360537090711164,
+        "native_visual_geom1": "left_index_rota2_visual",
+        "native_visual_geom2": "left_object_visual",
+        "reported_penetration_depth_m": 0.0010360537090711164,
+        "surface_intersection": true
+      },
+      "xhand_native_status": "PENETRATION"
+    },
+    {
+      "frame": 160,
+      "hand": "right",
+      "object": "brush",
+      "official_mano_distance_m": 0.027498697185643774,
+      "official_mano_status": "CLEARANCE",
+      "official_measurement": {
+        "contact_count": 0,
+        "distance_m": 0.027498697185643774,
+        "hand_mesh_watertight": false,
+        "object_mesh_watertight": true,
+        "reported_penetration_depth_m": 0.0,
+        "status": "CLEARANCE",
+        "surface_intersection": false
+      },
+      "origin_classification": "NO_MATERIAL_PENETRATION",
+      "proxy_distance_m": 0.023413893966103903,
+      "proxy_native_sign_agreement": true,
+      "proxy_status": "CLEARANCE",
+      "xhand_native_distance_m": 0.023157930532299337,
+      "xhand_native_minimum_pair": {
+        "body1": "right_hand_index_rota_link2",
+        "body2": "right_object",
+        "classification": "CLEARANCE",
+        "contact_count": 0,
+        "containment_followup": [],
+        "containment_penetration": false,
+        "distance_m": 0.023157930532299337,
+        "native_visual_geom1": "right_index_rota2_visual",
+        "native_visual_geom2": "right_object_visual",
+        "nearest_points_sim_m": [
+          [
+            0.7702023171019708,
+            -0.05630591732951305,
+            0.7272772816477667
+          ],
+          [
+            0.7529270836217334,
+            -0.04139907471981543,
+            0.7233222723997637
+          ]
+        ],
+        "reported_penetration_depth_m": 0.0,
+        "surface_intersection": false
+      },
+      "xhand_native_status": "CLEARANCE"
+    },
+    {
+      "frame": 160,
+      "hand": "left",
+      "object": "bowl",
+      "official_mano_distance_m": 0.03696898546664427,
+      "official_mano_status": "CLEARANCE",
+      "official_measurement": {
+        "contact_count": 0,
+        "distance_m": 0.03696898546664427,
+        "hand_mesh_watertight": false,
+        "object_mesh_watertight": true,
+        "reported_penetration_depth_m": 0.0,
+        "status": "CLEARANCE",
+        "surface_intersection": false
+      },
+      "origin_classification": "NO_MATERIAL_PENETRATION",
+      "proxy_distance_m": 0.024930308995249388,
+      "proxy_native_sign_agreement": true,
+      "proxy_status": "CLEARANCE",
+      "xhand_native_distance_m": 0.022030558812859678,
+      "xhand_native_minimum_pair": {
+        "body1": "left_hand_index_rota_link2",
+        "body2": "left_object",
+        "classification": "CLEARANCE",
+        "contact_count": 0,
+        "containment_followup": [],
+        "containment_penetration": false,
+        "distance_m": 0.022030558812859678,
+        "native_visual_geom1": "left_index_rota2_visual",
+        "native_visual_geom2": "left_object_visual",
+        "nearest_points_sim_m": [
+          [
+            0.4876234675572501,
+            -0.10909684615581128,
+            0.7397732786847953
+          ],
+          [
+            0.4879671171111433,
+            -0.09130326164467457,
+            0.7527584924618578
+          ]
+        ],
+        "reported_penetration_depth_m": 0.0,
+        "surface_intersection": false
+      },
+      "xhand_native_status": "CLEARANCE"
+    },
+    {
+      "frame": 208,
+      "hand": "right",
+      "object": "brush",
+      "official_mano_distance_m": 0.028166251426626272,
+      "official_mano_status": "CLEARANCE",
+      "official_measurement": {
+        "contact_count": 0,
+        "distance_m": 0.028166251426626272,
+        "hand_mesh_watertight": false,
+        "object_mesh_watertight": true,
+        "reported_penetration_depth_m": 0.0,
+        "status": "CLEARANCE",
+        "surface_intersection": false
+      },
+      "origin_classification": "NO_MATERIAL_PENETRATION",
+      "proxy_distance_m": 0.02188471393719394,
+      "proxy_native_sign_agreement": true,
+      "proxy_status": "CLEARANCE",
+      "xhand_native_distance_m": 0.020578151000272802,
+      "xhand_native_minimum_pair": {
+        "body1": "right_hand_index_rota_link2",
+        "body2": "right_object",
+        "classification": "CLEARANCE",
+        "contact_count": 0,
+        "containment_followup": [],
+        "containment_penetration": false,
+        "distance_m": 0.020578151000272802,
+        "native_visual_geom1": "right_index_rota2_visual",
+        "native_visual_geom2": "right_object_visual",
+        "nearest_points_sim_m": [
+          [
+            0.7661986890334409,
+            -0.05784106191320176,
+            0.7249114698970479
+          ],
+          [
+            0.7501445396923213,
+            -0.04525341293012533,
+            0.7222141229408866
+          ]
+        ],
+        "reported_penetration_depth_m": 0.0,
+        "surface_intersection": false
+      },
+      "xhand_native_status": "CLEARANCE"
+    },
+    {
+      "frame": 208,
+      "hand": "left",
+      "object": "bowl",
+      "official_mano_distance_m": 0.03937944423161585,
+      "official_mano_status": "CLEARANCE",
+      "official_measurement": {
+        "contact_count": 0,
+        "distance_m": 0.03937944423161585,
+        "hand_mesh_watertight": false,
+        "object_mesh_watertight": true,
+        "reported_penetration_depth_m": 0.0,
+        "status": "CLEARANCE",
+        "surface_intersection": false
+      },
+      "origin_classification": "NO_MATERIAL_PENETRATION",
+      "proxy_distance_m": 0.028213046329559524,
+      "proxy_native_sign_agreement": true,
+      "proxy_status": "CLEARANCE",
+      "xhand_native_distance_m": 0.02550450390181186,
+      "xhand_native_minimum_pair": {
+        "body1": "left_hand_index_rota_link2",
+        "body2": "left_object",
+        "classification": "CLEARANCE",
+        "contact_count": 0,
+        "containment_followup": [],
+        "containment_penetration": false,
+        "distance_m": 0.02550450390181186,
+        "native_visual_geom1": "left_index_rota2_visual",
+        "native_visual_geom2": "left_object_visual",
+        "nearest_points_sim_m": [
+          [
+            0.4885719813464548,
+            -0.11144258761986878,
+            0.7369452430035462
+          ],
+          [
+            0.48894228927441513,
+            -0.09104524503467663,
+            0.752251810442993
+          ]
+        ],
+        "reported_penetration_depth_m": 0.0,
+        "surface_intersection": false
+      },
+      "xhand_native_status": "CLEARANCE"
+    }
+  ],
+  "schema": "taco_brush_mano_xhand_object_penetration_attribution_v1",
+  "selected_frames": [
+    0,
+    40,
+    80,
+    120,
+    160,
+    208
+  ],
+  "source_artifacts": {
+    "config": {
+      "bytes": 2184,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_mano_xhand_object_penetration_attribution_v1.yaml",
+      "sha256": "2ae33bc6de67b8ddbbfc53926bcfd36d857f83102b4b9e023c72d296d83fe2d9"
+    },
+    "effective_mink_contract": {
+      "bytes": 1757,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_issue14_mink_candidate_v1/effective_retarget_contract.json",
+      "sha256": "3fbc01b11bfaf1e055d4fd4512548f66612c8651d3b1ef0d7a7c68a59c8ae4e2"
+    },
+    "official_bowl_mesh": {
+      "bytes": 7012259,
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/object_models/object_models_released/146_cm.obj",
+      "sha256": "2bc69db147f598ae3260313dc02892f7e76764c0af6addfcb375cae569f699d9"
+    },
+    "official_bowl_pose": {
+      "bytes": 13504,
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/object_poses/Object_Poses/(brush, brush, bowl)/20230927_027/target_146.npy",
+      "sha256": "1a62b6a0ec520877f813d507b26d8ac864453803ec8dae5fe5aa928a843a36fb"
+    },
+    "official_brush_mesh": {
+      "bytes": 7080688,
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/object_models/object_models_released/071_cm.obj",
+      "sha256": "31a9c07102ea7fd6263fdf6f54f0103c463733be4d49a7244b018bbc257ca124"
+    },
+    "official_brush_pose": {
+      "bytes": 13504,
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/object_poses/Object_Poses/(brush, brush, bowl)/20230927_027/tool_071.npy",
+      "sha256": "a81de0fb26606379d095ef6af6718d0f97b0655b2d8b6a8aca85c3f861a87504"
+    },
+    "official_left_mano_model": {
+      "bytes": 3821391,
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/hand_poses_v1/mano_v1_2/models/MANO_LEFT.pkl",
+      "sha256": "c4022f7083f2ca7c78b2b3d595abbab52debd32b09d372b16923a801f0ea6a30"
+    },
+    "official_left_pose": {
+      "bytes": 9031452,
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/hand_poses/Hand_Poses/(brush, brush, bowl)/20230927_027/left_hand.pkl",
+      "sha256": "25ca95b4406610ae52a5bbaa7d000404211da107f9f0535b1da3ba82e65859c2"
+    },
+    "official_left_shape": {
+      "bytes": 445,
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/hand_poses/Hand_Poses/(brush, brush, bowl)/20230927_027/left_hand_shape.pkl",
+      "sha256": "97956334eea23cc859c937102d9ba26b8dead9f64913d54ea6cb90a2cc50531c"
+    },
+    "official_right_mano_model": {
+      "bytes": 3821356,
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/hand_poses_v1/mano_v1_2/models/MANO_RIGHT.pkl",
+      "sha256": "45d60aa3b27ef9107a7afd4e00808f307fd91111e1cfa35afd5c4a62de264767"
+    },
+    "official_right_pose": {
+      "bytes": 9031452,
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/hand_poses/Hand_Poses/(brush, brush, bowl)/20230927_027/right_hand.pkl",
+      "sha256": "98ad60497fb69f9052848af9bd88b2f6c7e43e09b46493c7ae7bca52c64bc313"
+    },
+    "official_right_shape": {
+      "bytes": 445,
+      "path": "/data_all/zzx/3.2RL/data/taco_v1/dev4/hand_poses/Hand_Poses/(brush, brush, bowl)/20230927_027/right_hand_shape.pkl",
+      "sha256": "ae8bd692a12c2b18bdae4e8f031f364930e9bad7c0a4d78afc2d8eb9d03d5d13"
+    },
+    "prior_native_audit": {
+      "bytes": 28654,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_issue14_mink_candidate_v1/selected_frame_native_hand_object_audit.json",
+      "sha256": "3c147657c4f4fcfa6844a15113337872bd637b41ca8ade6e0337d732fcb232c6"
+    },
+    "prior_proxy_trace": {
+      "bytes": 18836,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_issue14_mink_candidate_v1/kinematic_pickup_alignment.csv",
+      "sha256": "25fc69830fe6a68f877cf9fcfa46e4533d1b81d9b2af64096233b301095041df"
+    },
+    "robot_reference": {
+      "bytes": 229812,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_issue14_mink_candidate_v1/robot_reference.npz",
+      "sha256": "f468a5b3b2dc9ce28260d3bd42a766f0bcd162a5d8bea689236badac53307aa2"
+    },
+    "scene": {
+      "bytes": 301296,
+      "path": "/data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_brush_brush_bowl_20230927_027/scene_source_contacts_mass.xml",
+      "sha256": "8bd258147a6782a32c02cce66aecc898e8272e749cd240314ab22e69581d1bfc"
+    },
+    "script": {
+      "bytes": 19975,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/scripts/audit_taco_brush_mano_xhand_object_penetration_attribution_v1.py",
+      "sha256": "be18d335f7a541fef6a899dfceac7ee0269cf240f81de5a15e3a7ac392def89a"
+    }
+  }
+}
