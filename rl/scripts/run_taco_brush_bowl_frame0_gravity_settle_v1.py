@@ -409,6 +409,8 @@ def assess_variant(
     final_horizontal_range = float(np.hypot(np.ptp(x[final]), np.ptp(y[final])))
     final_orientation_range = float(np.ptp(orientation[final]))
     metrics = {
+        "initial_native_visual_clearance_m": float(native_clearance[0]),
+        "initial_collision_minimum_distance_m": float(collision_distance[0]),
         "first_contact_s": first_contact_s,
         "final_contact_fraction": float(np.mean(contact[final])),
         "final_linear_speed_p95_m_s": float(np.quantile(linear[final], 0.95)),
@@ -423,6 +425,7 @@ def assess_variant(
         "post_contact_max_collision_separation_m": post_contact_max_separation,
         "obvious_rebound": obvious_rebound,
         "maximum_contact_force_N": float(np.max(force)),
+        "final_normal_force_median_N": float(np.median(force[final])),
         "maximum_collision_penetration_m": float(np.max(penetration)),
         "maximum_horizontal_displacement_m": float(np.max(
             [row["horizontal_displacement_m"] for row in rows])),
@@ -580,6 +583,15 @@ def main() -> int:
         all_rows[variant] = rows
         assessments[variant] = assess_variant(
             rows, cfg["frozen_stability_criteria"], warnings)
+    static_weight = float(
+        isolated_model.body_mass[isolated_model.body("left_object").id]
+        * np.linalg.norm(isolated_model.opt.gravity)
+    )
+    for assessment in assessments.values():
+        assessment["metrics"]["expected_static_weight_N"] = static_weight
+        assessment["metrics"]["final_normal_force_to_weight_ratio"] = (
+            assessment["metrics"]["final_normal_force_median_N"] / static_weight
+        )
 
     if any(assessment["metrics"]["simulation_warnings"] for assessment in assessments.values()):
         verdict = "INDETERMINATE"
@@ -661,7 +673,24 @@ def main() -> int:
             f"{'YES' if metric['obvious_rebound'] else 'NO'} | "
             f"{'YES' if result['stable'] else 'NO'} |"
         )
-    lines += ["", "## Scope", "",
+    lines += ["", "## Contact and net motion", "",
+              "| variant | initial visual gap (mm) | peak force (N) | final force / weight | max transient penetration (mm) | settled visual distance (mm) | final XY displacement (mm) | final orientation change (deg) |",
+              "|---|---:|---:|---:|---:|---:|---:|---:|"]
+    for variant in expected_variants:
+        metric = assessments[variant]["metrics"]
+        lines.append(
+            f"| {variant} | {metric['initial_native_visual_clearance_m']*1000:.6f} | "
+            f"{metric['maximum_contact_force_N']:.6f} | "
+            f"{metric['final_normal_force_to_weight_ratio']:.6f} | "
+            f"{metric['maximum_collision_penetration_m']*1000:.6f} | "
+            f"{metric['final_native_visual_clearance_median_m']*1000:.6f} | "
+            f"{metric['final_horizontal_displacement_m']*1000:.6f} | "
+            f"{math.degrees(metric['final_orientation_change_rad']):.6f} |"
+        )
+    lines += ["", "The settled median normal force is compared with `mass * |gravity|`; a ratio "
+              "near 1 is the expected static weight balance. Negative settled visual distance "
+              "denotes the soft-contact overlap retained by the unchanged MuJoCo parameters.",
+              "", "## Scope", "",
               "No source asset, active SupportSurfaceContract, MINK v2 trajectory, or formal "
               "scene was modified. No auxiliary constraint or external force was applied, and "
               "no parameter was tuned. Replay, MPC, and RL did not run. Passing this isolated "
