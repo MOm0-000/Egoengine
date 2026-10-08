@@ -1,0 +1,70 @@
+schema: taco_brush_multiframe_static_table_world_consistency_v1
+status: READ_ONLY_MULTIFRAME_RAW_DEPTH_PLANE_CONSISTENCY
+minimum_baseline: 3edb8a500eb08d6670d1e62a230eb099f6d335bd
+paper_faithful: false
+
+sample:
+  triplet: "(brush, brush, bowl)"
+  sequence: "20230927_027"
+  total_frames: 209
+  selected_frames: [0, 19, 38, 57, 76, 95, 114, 133, 152, 171, 190, 208]
+
+inputs:
+  rgb_video: /data_all/zzx/3.2RL/data/taco_v1/dev4/rgb/taco_brush_brush_bowl_20230927_027.mp4
+  depth_video: /data_all/zzx/3.2RL/data/taco_v1/dev4/depth_original/taco_brush_brush_bowl_20230927_027.avi
+  intrinsic: /data_all/zzx/3.2RL/data/taco_v1/dev4/camera/Egocentric_Camera_Parameters/(brush, brush, bowl)/20230927_027/egocentric_intrinsic.txt
+  extrinsic: /data_all/zzx/3.2RL/data/taco_v1/dev4/camera/Egocentric_Camera_Parameters/(brush, brush, bowl)/20230927_027/egocentric_frame_extrinsic.npy
+
+depth:
+  width: 1920
+  height: 1080
+  scale_raw_units_per_metre: 4000.0
+  frame_mapping: INDEX_ALIGNED
+  invalid_raw_value: 0
+  spatial_stride_px: 1
+
+manual_rgb_selection:
+  basis: EACH_SELECTED_RGB_FRAME_VISUALLY_INSPECTED_BEFORE_DEPTH_PLANE_RESULTS
+  image_size_px: [1920, 1080]
+  policy: >-
+    The same four conservative polygons were visually confirmed as pure
+    turquoise table in every listed frame. They remain inside the table and
+    avoid bowl, brush, both hands, shadows and shadow boundaries, table edge,
+    and uncertain narrow gaps. Selection was frozen before any selected-frame
+    depth plane was computed.
+  visually_approved_frames: [0, 19, 38, 57, 76, 95, 114, 133, 152, 171, 190, 208]
+  polygons_xy_px:
+    T1_top_left: [[520, 145], [700, 125], [710, 215], [535, 230]]
+    T2_top_mid: [[800, 115], [990, 120], [985, 215], [800, 215]]
+    T3_top_right: [[1090, 145], [1240, 165], [1260, 235], [1120, 225]]
+    L_left_mid: [[360, 535], [455, 530], [465, 680], [350, 690]]
+
+fit_contract:
+  points: ALL_VALID_RAW_DEPTH_PIXELS_INSIDE_PRESELECTED_RGB_POLYGONS
+  method: UNCONSTRAINED_ORTHOGONAL_SVD_IN_WORLD_FRAME
+  normal_sign_only: POSITIVE_WORLD_Z
+  robust_loss: false
+  ransac: false
+  horizontal_prior: false
+  distance_based_point_rejection: false
+  residual_truncation: false
+  spatial_subsampling: false
+  calibration_algorithm: false
+  comparison_reference: FRAME0_FITTED_PLANE_ONLY_NOT_A_STANDARD_ANSWER
+
+authorization:
+  read_raw_rgb: true
+  read_raw_depth: true
+  read_official_camera_parameters: true
+  modify_source_data: false
+  modify_active_support_contract: false
+  use_bowl_support_plane: false
+  table_plane_estimation_from_selected_raw_points: true
+  calibration: false
+  mink: false
+  physics: false
+  replay: false
+  mpc: false
+  reinforcement_learning: false
+
+output: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_multiframe_static_table_world_consistency_v1
