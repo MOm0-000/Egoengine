@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fit unconstrained world planes to frozen RGB-selected raw table depth."""
+"""Fit world table planes from independently frozen per-frame RGB regions."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ from egoengine_repro.scene.support_surface_estimation import (  # noqa: E402
 )
 
 
-DEFAULT_CONFIG = RL_ROOT / "configs/taco_brush_multiframe_static_table_world_consistency_v1.yaml"
+DEFAULT_CONFIG = RL_ROOT / "configs/taco_brush_multiframe_static_table_world_consistency_v2.yaml"
 
 
 def sha256(path: Path) -> str:
@@ -117,13 +117,82 @@ def decode_rgb_frames(path: Path, selected: list[int]) -> dict[int, np.ndarray]:
     return result
 
 
+def validate_per_frame_polygons(
+    raw: dict[str, dict[str, list[list[int]]]], selected: list[int], height: int, width: int,
+) -> dict[int, dict[str, list[list[int]]]]:
+    if set(raw) != {str(frame) for frame in selected}:
+        raise ValueError("per-frame polygon keys do not exactly match selected frames")
+    result: dict[int, dict[str, list[list[int]]]] = {}
+    fingerprints: set[str] = set()
+    for frame in selected:
+        polygons = raw[str(frame)]
+        if len(polygons) < 3:
+            raise ValueError(f"frame {frame} requires at least three spatially dispersed polygons")
+        fingerprint = json.dumps(polygons, sort_keys=True, separators=(",", ":"))
+        if fingerprint in fingerprints:
+            raise ValueError("a polygon set was reused across frames; selection must be independent")
+        fingerprints.add(fingerprint)
+        for name, points in polygons.items():
+            vertices = np.asarray(points, dtype=np.int32)
+            if vertices.ndim != 2 or vertices.shape[0] < 3 or vertices.shape[1] != 2:
+                raise ValueError(f"invalid polygon {name!r} in frame {frame}")
+            if np.any(vertices[:, 0] < 0) or np.any(vertices[:, 0] >= width):
+                raise ValueError(f"polygon {name!r} in frame {frame} leaves image width")
+            if np.any(vertices[:, 1] < 0) or np.any(vertices[:, 1] >= height):
+                raise ValueError(f"polygon {name!r} in frame {frame} leaves image height")
+        polygon_union(polygons, height, width)
+        result[frame] = polygons
+    return result
+
+
+def render_selection_review(
+    rgb: dict[int, np.ndarray],
+    selected: list[int],
+    polygons_by_frame: dict[int, dict[str, list[list[int]]]],
+    output: Path,
+) -> None:
+    output.mkdir(parents=True, exist_ok=True)
+    palette = [(0, 255, 0), (255, 255, 0), (255, 0, 255), (0, 255, 255)]
+    thumbnails: list[np.ndarray] = []
+    for frame in selected:
+        image = rgb[frame].copy()
+        tint = image.copy()
+        for index, (name, points) in enumerate(polygons_by_frame[frame].items()):
+            vertices = np.asarray(points, dtype=np.int32)
+            color = palette[index % len(palette)]
+            cv2.fillPoly(tint, [vertices], color)
+            cv2.polylines(image, [vertices], True, color, 5)
+            label_y = max(30, int(vertices[0, 1]) - 10)
+            cv2.putText(
+                image, name, (int(vertices[0, 0]), label_y),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2, cv2.LINE_AA,
+            )
+        image = cv2.addWeighted(image, 0.72, tint, 0.28, 0)
+        cv2.rectangle(image, (0, 0), (205, 48), (0, 0, 0), -1)
+        cv2.putText(
+            image, f"frame {frame}", (10, 34), cv2.FONT_HERSHEY_SIMPLEX,
+            0.9, (255, 255, 255), 2, cv2.LINE_AA,
+        )
+        cv2.imwrite(str(output / f"frame_{frame:03d}_selection.png"), image)
+        thumbnails.append(cv2.resize(image, (640, 360), interpolation=cv2.INTER_AREA))
+    montage = np.vstack([
+        np.hstack(thumbnails[index:index + 3])
+        for index in range(0, len(thumbnails), 3)
+    ])
+    cv2.imwrite(str(output / "rgb_selection_montage.png"), montage)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
+    parser.add_argument(
+        "--selection-preview-dir", type=Path,
+        help="render RGB overlays and exit before opening Depth or camera arrays",
+    )
     args = parser.parse_args()
     config_path = args.config.resolve(strict=True)
     cfg = yaml.safe_load(config_path.read_text(encoding="utf-8"))
-    if cfg["schema"] != "taco_brush_multiframe_static_table_world_consistency_v1":
+    if cfg["schema"] != "taco_brush_multiframe_static_table_world_consistency_v2":
         raise ValueError("unexpected schema")
     subprocess.run(
         ["git", "merge-base", "--is-ancestor", cfg["minimum_baseline"], "HEAD"],
@@ -133,7 +202,7 @@ def main() -> int:
     if selected != sorted(set(selected)) or selected != [int(v) for v in cfg["manual_rgb_selection"]["visually_approved_frames"]]:
         raise ValueError("selected frames are not exactly the visually approved frames")
     frozen_fit = {
-        "points": "ALL_VALID_RAW_DEPTH_PIXELS_INSIDE_PRESELECTED_RGB_POLYGONS",
+        "points": "ALL_VALID_RAW_DEPTH_PIXELS_INSIDE_PER_FRAME_PRESELECTED_RGB_POLYGONS",
         "method": "UNCONSTRAINED_ORTHOGONAL_SVD_IN_WORLD_FRAME",
         "normal_sign_only": "POSITIVE_WORLD_Z",
         "robust_loss": False,
@@ -154,14 +223,21 @@ def main() -> int:
     if any(cfg["authorization"][key] for key in forbidden):
         raise ValueError("forbidden operation was authorized")
 
+    width, height = int(cfg["depth"]["width"]), int(cfg["depth"]["height"])
+    polygons_by_frame = validate_per_frame_polygons(
+        cfg["manual_rgb_selection"]["polygons_xy_px_by_frame"], selected, height, width,
+    )
+    rgb_path = Path(cfg["inputs"]["rgb_video"]).resolve(strict=True)
+    rgb = decode_rgb_frames(rgb_path, selected)
+    if args.selection_preview_dir is not None:
+        render_selection_review(rgb, selected, polygons_by_frame, args.selection_preview_dir.resolve())
+        return 0
+
     paths = {key: Path(value).resolve(strict=True) for key, value in cfg["inputs"].items()}
     output = Path(cfg["output"]).resolve()
     if output.exists():
         raise FileExistsError(output)
     output.mkdir(parents=True)
-    width, height = int(cfg["depth"]["width"]), int(cfg["depth"]["height"])
-    selector = polygon_union(cfg["manual_rgb_selection"]["polygons_xy_px"], height, width)
-    rgb = decode_rgb_frames(paths["rgb_video"], selected)
     intrinsic = np.loadtxt(paths["intrinsic"])
     extrinsic = np.load(paths["extrinsic"], allow_pickle=False)
     if extrinsic.shape != (cfg["sample"]["total_frames"], 4, 4):
@@ -177,6 +253,7 @@ def main() -> int:
     for frame, raw in enumerate(iter_depth_frames(paths["depth_video"], spec)):
         if frame not in selected_set:
             continue
+        selector = polygon_union(polygons_by_frame[frame], height, width)
         depth_m = raw_depth_to_metres(raw, scale=float(cfg["depth"]["scale_raw_units_per_metre"]))
         valid_selected = selector & (raw != int(cfg["depth"]["invalid_raw_value"]))
         camera, pixels = backproject_metric_depth(
@@ -251,9 +328,13 @@ def main() -> int:
         "selection": {
             "basis": cfg["manual_rgb_selection"]["basis"],
             "policy": cfg["manual_rgb_selection"]["policy"],
-            "polygons_xy_px": cfg["manual_rgb_selection"]["polygons_xy_px"],
-            "selected_polygon_pixel_count_per_frame": int(selector.sum()),
+            "polygons_xy_px_by_frame": cfg["manual_rgb_selection"]["polygons_xy_px_by_frame"],
+            "selected_polygon_pixel_count_by_frame": {
+                str(frame): int(polygon_union(polygons_by_frame[frame], height, width).sum())
+                for frame in selected
+            },
             "selected_frames": selected,
+            "shared_polygon_sets_forbidden": True,
         },
         "fit_contract": cfg["fit_contract"],
         "per_frame": frame_data,
@@ -304,24 +385,11 @@ def main() -> int:
                 compare["offset_delta_mm"], compare["signed_separation_at_frame0_centroid_mm"],
             ])
 
-    palette = [(0, 255, 0), (255, 255, 0), (255, 0, 255), (0, 255, 255)]
-    thumbnails = []
-    for frame in selected:
-        image = rgb[frame].copy()
-        tint = image.copy()
-        for index, (name, points) in enumerate(cfg["manual_rgb_selection"]["polygons_xy_px"].items()):
-            vertices = np.asarray(points, dtype=np.int32)
-            color = palette[index % len(palette)]
-            cv2.fillPoly(tint, [vertices], color)
-            cv2.polylines(image, [vertices], True, color, 5)
-            cv2.putText(image, name, tuple(vertices[0] + [0, -10]), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2, cv2.LINE_AA)
-        image = cv2.addWeighted(image, 0.72, tint, 0.28, 0)
-        image = cv2.resize(image, (640, 360), interpolation=cv2.INTER_AREA)
-        cv2.rectangle(image, (0, 0), (175, 40), (0, 0, 0), -1)
-        cv2.putText(image, f"frame {frame}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2, cv2.LINE_AA)
-        thumbnails.append(image)
-    montage = np.vstack([np.hstack(thumbnails[i:i + 3]) for i in range(0, len(thumbnails), 3)])
-    cv2.imwrite(str(output / "rgb_selection_montage.png"), montage)
+    visuals = output / "visuals"
+    render_selection_review(rgb, selected, polygons_by_frame, visuals)
+    montage = cv2.imread(str(visuals / "rgb_selection_montage.png"), cv2.IMREAD_COLOR)
+    if montage is None or not cv2.imwrite(str(output / "rgb_selection_montage.png"), montage):
+        raise RuntimeError("failed to copy selection montage into run root")
 
     figure, axes = plt.subplots(2, 1, figsize=(10, 8), constrained_layout=True)
     frames = np.asarray(selected)
@@ -342,7 +410,7 @@ def main() -> int:
     lines = [
         "# Brush multiframe raw-Depth table planes in world coordinates",
         "",
-        "Twelve frames spanning the full video were fixed before reading their plane results. Each frame uses all valid raw-depth pixels in the RGB-approved polygons. Fits are unconstrained orthogonal SVD planes in world coordinates; there is no robust loss, RANSAC, horizontal prior, distance rejection, truncation, subsampling, bowl plane, or calibration.",
+        "Twelve frames spanning the full video were independently selected in RGB and their full-resolution overlays were reviewed before reading Depth. No pixel polygon set is shared across frames. Each frame uses all valid raw-depth pixels in its own RGB-approved polygons. Fits are unconstrained orthogonal SVD planes in world coordinates; there is no robust loss, RANSAC, horizontal prior, distance rejection, truncation, subsampling, bowl plane, or calibration.",
         "",
         "## Cross-frame consistency",
         "",

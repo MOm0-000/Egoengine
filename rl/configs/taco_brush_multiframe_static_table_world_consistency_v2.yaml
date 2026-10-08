@@ -1,0 +1,127 @@
+schema: taco_brush_multiframe_static_table_world_consistency_v2
+status: READ_ONLY_PER_FRAME_RGB_SELECTED_RAW_DEPTH_PLANE_CONSISTENCY
+minimum_baseline: d578d1d55feddf530ff6fcd93040eb8c51f3e22b
+paper_faithful: false
+
+sample:
+  triplet: "(brush, brush, bowl)"
+  sequence: "20230927_027"
+  total_frames: 209
+  selected_frames: [0, 19, 38, 57, 76, 95, 114, 133, 152, 171, 190, 208]
+
+inputs:
+  rgb_video: /data_all/zzx/3.2RL/data/taco_v1/dev4/rgb/taco_brush_brush_bowl_20230927_027.mp4
+  depth_video: /data_all/zzx/3.2RL/data/taco_v1/dev4/depth_original/taco_brush_brush_bowl_20230927_027.avi
+  intrinsic: /data_all/zzx/3.2RL/data/taco_v1/dev4/camera/Egocentric_Camera_Parameters/(brush, brush, bowl)/20230927_027/egocentric_intrinsic.txt
+  extrinsic: /data_all/zzx/3.2RL/data/taco_v1/dev4/camera/Egocentric_Camera_Parameters/(brush, brush, bowl)/20230927_027/egocentric_frame_extrinsic.npy
+
+depth:
+  width: 1920
+  height: 1080
+  scale_raw_units_per_metre: 4000.0
+  frame_mapping: INDEX_ALIGNED
+  invalid_raw_value: 0
+  spatial_stride_px: 1
+
+manual_rgb_selection:
+  basis: EACH_FRAME_INDEPENDENTLY_SELECTED_AND_OVERLAY_REVIEWED_BEFORE_READING_DEPTH
+  image_size_px: [1920, 1080]
+  policy: >-
+    Every selected RGB frame has its own conservative polygons. Polygons were
+    drawn inside the visible turquoise tabletop after inspecting that frame,
+    with clearance from the moving table boundary, bowl, brush, both hands,
+    sleeves, cast-shadow boundaries, and uncertain narrow gaps. No polygon set
+    is reused between frames. Full-resolution overlays are reviewed and the
+    coordinates are frozen before any selected-frame Depth is read.
+  visually_approved_frames: [0, 19, 38, 57, 76, 95, 114, 133, 152, 171, 190, 208]
+  polygons_xy_px_by_frame:
+    "0":
+      upper_left: [[520, 220], [750, 190], [760, 315], [550, 335]]
+      left_mid: [[350, 540], [470, 530], [480, 700], [340, 710]]
+      lower_mid: [[760, 720], [980, 720], [970, 880], [770, 880]]
+      right_mid: [[1220, 400], [1310, 420], [1320, 560], [1200, 570]]
+    "19":
+      upper_left: [[570, 220], [720, 190], [740, 315], [590, 335]]
+      upper_mid: [[850, 205], [1000, 205], [1000, 315], [850, 315]]
+      left_mid: [[450, 470], [550, 460], [560, 640], [445, 650]]
+      lower_mid: [[820, 730], [950, 730], [950, 865], [820, 865]]
+    "38":
+      upper_left: [[540, 195], [710, 165], [730, 290], [560, 315]]
+      upper_mid: [[850, 180], [1000, 180], [1000, 295], [850, 295]]
+      left_mid: [[430, 445], [545, 435], [555, 625], [425, 635]]
+      lower_mid: [[800, 715], [945, 715], [950, 860], [805, 860]]
+    "57":
+      upper_left: [[545, 145], [720, 115], [730, 220], [565, 240]]
+      upper_right: [[1070, 120], [1230, 145], [1235, 230], [1070, 215]]
+      left_mid: [[410, 380], [520, 365], [525, 560], [405, 570]]
+      lower_mid: [[790, 720], [965, 720], [965, 865], [800, 865]]
+    "76":
+      upper_left: [[590, 105], [755, 80], [765, 185], [605, 205]]
+      upper_right: [[1060, 90], [1220, 115], [1225, 205], [1060, 190]]
+      left_mid: [[420, 360], [535, 345], [540, 545], [415, 555]]
+      lower_mid: [[790, 705], [965, 705], [965, 850], [800, 850]]
+    "95":
+      upper_left: [[590, 110], [750, 85], [765, 185], [605, 205]]
+      upper_right: [[1090, 105], [1240, 135], [1245, 220], [1085, 200]]
+      left_mid: [[405, 350], [525, 335], [530, 545], [400, 555]]
+      lower_mid: [[790, 700], [960, 700], [960, 845], [800, 845]]
+    "114":
+      upper_left: [[595, 105], [760, 80], [770, 185], [610, 205]]
+      upper_right: [[1080, 100], [1235, 130], [1240, 215], [1080, 195]]
+      left_mid: [[405, 350], [525, 335], [530, 545], [400, 555]]
+      lower_mid: [[790, 700], [965, 700], [965, 845], [800, 845]]
+    "133":
+      upper_left: [[590, 105], [750, 80], [765, 185], [605, 205]]
+      upper_right: [[1030, 95], [1190, 115], [1200, 205], [1035, 195]]
+      left_mid: [[390, 380], [505, 365], [510, 570], [385, 580]]
+      lower_mid: [[770, 720], [960, 720], [960, 865], [780, 865]]
+    "152":
+      upper_left: [[590, 115], [750, 85], [765, 195], [605, 215]]
+      upper_mid: [[865, 105], [1010, 105], [1010, 215], [865, 215]]
+      left_mid: [[395, 395], [510, 380], [515, 575], [390, 585]]
+      lower_mid: [[805, 675], [990, 675], [990, 815], [815, 815]]
+    "171":
+      upper_mid: [[795, 105], [960, 95], [970, 205], [800, 215]]
+      upper_right: [[1045, 115], [1195, 140], [1200, 225], [1045, 210]]
+      left_mid: [[400, 390], [520, 375], [525, 570], [395, 580]]
+      lower_mid: [[815, 660], [990, 660], [990, 805], [825, 805]]
+    "190":
+      upper_mid: [[790, 120], [965, 105], [975, 220], [800, 230]]
+      upper_right: [[1050, 135], [1200, 165], [1205, 245], [1050, 230]]
+      left_mid: [[405, 420], [520, 405], [525, 585], [400, 595]]
+      lower_mid: [[825, 650], [1000, 650], [1000, 795], [835, 795]]
+    "208":
+      upper_mid: [[700, 155], [860, 120], [875, 235], [715, 260]]
+      upper_right: [[915, 125], [1055, 135], [1060, 240], [920, 230]]
+      left_mid: [[410, 430], [525, 415], [530, 595], [405, 605]]
+      lower_mid: [[825, 660], [1000, 660], [1000, 805], [835, 805]]
+
+fit_contract:
+  points: ALL_VALID_RAW_DEPTH_PIXELS_INSIDE_PER_FRAME_PRESELECTED_RGB_POLYGONS
+  method: UNCONSTRAINED_ORTHOGONAL_SVD_IN_WORLD_FRAME
+  normal_sign_only: POSITIVE_WORLD_Z
+  robust_loss: false
+  ransac: false
+  horizontal_prior: false
+  distance_based_point_rejection: false
+  residual_truncation: false
+  spatial_subsampling: false
+  calibration_algorithm: false
+  comparison_reference: FRAME0_FITTED_PLANE_ONLY_NOT_A_STANDARD_ANSWER
+
+authorization:
+  read_raw_rgb: true
+  read_raw_depth: true
+  read_official_camera_parameters: true
+  modify_source_data: false
+  modify_active_support_contract: false
+  use_bowl_support_plane: false
+  table_plane_estimation_from_selected_raw_points: true
+  calibration: false
+  mink: false
+  physics: false
+  replay: false
+  mpc: false
+  reinforcement_learning: false
+
+output: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_multiframe_static_table_world_consistency_v2
