@@ -1,0 +1,43 @@
+schema: taco_brush_replay_failure_attribution_v1
+status: READ_ONLY_OBSERVER_PARITY_ATTRIBUTION
+minimum_baseline: 77c131d
+paper_faithful: false
+
+sample:
+  sequence: "(brush, brush, bowl)/20230927_027"
+  replay_window: [0, 80]
+  brush_contact_window_outcomes: [15, 41]
+  self_collision_window_outcomes: [44, 45]
+  bowl_contact_window_outcomes: [52, 60]
+
+parity_gate:
+  object_endpoint_states_bitwise: true
+  contact_identity_order_exact: true
+  contact_scalar_fields_bitwise: true
+  no_attribution_if_parity_fails: true
+
+native_followup:
+  material_tolerance_m: 0.00005
+  brush_proxy_overcoverage_endpoints: [20, 25, 30, 40, 41]
+  bowl_contact_endpoints: [52, 53, 54, 55, 56, 57, 58, 59, 60]
+
+paths:
+  controlled_replay: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_controlled_physics_replay_v1
+  controlled_replay_config: /data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_controlled_physics_replay_v1.yaml
+  source_reference: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_issue14_mink_candidate_v1/robot_reference.npz
+  output: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_replay_failure_attribution_v1
+
+authorization:
+  deterministic_observer_parity_replay: true
+  native_mesh_queries: true
+  change_commands: false
+  change_physics: false
+  change_collision_geometry: false
+  change_support: false
+  mink: false
+  mpc: false
+  reinforcement_learning: false
+  full_replay: false
+  promotion: false
+  chunk_commit: false
+
