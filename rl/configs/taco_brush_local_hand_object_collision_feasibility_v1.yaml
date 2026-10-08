@@ -1,0 +1,72 @@
+schema: taco_brush_local_hand_object_collision_feasibility_v1
+status: ISOLATED_READ_ONLY_MINK_CAPABILITY_COMPARISON
+minimum_baseline: 2d6be46a2739795b7d9f639ec3ebcb07082872bb
+paper_faithful: false
+
+sample:
+  sequence: "(brush, brush, bowl)/20230927_027"
+  frames: 209
+  selected_frames: [40, 80, 120]
+  interaction_pairs:
+    - {hand: right, object: brush, role: tool, object_side: right}
+    - {hand: left, object: bowl, role: target, object_side: left}
+
+local_solver:
+  tracking_iterations: 8
+  maximum_feasibility_iterations: 128
+  solver: daqp
+  damping: 1.0e-5
+  object_collision_minimum_distance_m: 0.0
+  object_collision_detection_distance_m: 0.03
+  collision_validation_tolerance_m: 1.0e-6
+  collision_depenetration_step_m: 0.002
+  collision_gain: 0.85
+  native_material_penetration_tolerance_m: 0.00005
+  unreasonable_native_gap_diagnostic_m: 0.002
+  parameter_provenance: EXISTING_MINK_VALUES_NO_SWEEP
+
+native_support:
+  minimum_clearance_m: 0.0
+  activation_distance_m: null
+  gain: 0.85
+  depenetration_step_m: 0.002
+  validation_tolerance_m: 0.00005
+
+frozen_contract:
+  table_simulator_z_m: 0.7173599392270725
+  object_pose: OFFICIAL_FROZEN_IN_EXISTING_QPOS
+  task_weights: taco_bimanual_mink_local_v1
+  joint_limits: true
+  frame_displacement_limit: true
+  self_collision: true
+  native_support: true
+  object_dofs_frozen: true
+  original_reference_modified: false
+
+visual_evidence:
+  views: [front, top]
+
+paths:
+  scene: /data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_brush_brush_bowl_20230927_027/scene_source_contacts_mass.xml
+  human_reference: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_brush_bowl_paper_baseline_v1/human_reference.npz
+  robot_reference: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_issue14_mink_candidate_v1/robot_reference.npz
+  retarget_settings: /data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_bimanual_mink_local_v1.yaml
+  candidate_support: /data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_issue14_candidate_support_v1.yaml
+  prior_attribution: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_mano_xhand_object_penetration_attribution_v1/results.json
+  output: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_local_hand_object_collision_feasibility_v1
+
+authorization:
+  isolated_mink_queries: true
+  write_candidate_artifacts: true
+  modify_table_contract: false
+  modify_object_pose: false
+  modify_task_weights: false
+  modify_reference: false
+  full_trajectory_retarget: false
+  physics: false
+  replay: false
+  mpc: false
+  reinforcement_learning: false
+  training_search: false
+  promotion: false
+  chunk_commit: false
