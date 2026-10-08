@@ -4,15 +4,29 @@ from pathlib import Path
 import sys
 
 import numpy as np
+import trimesh
 
 RL_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RL_ROOT / "scripts"))
 
 from audit_taco_brush_issue14_frame0_static_penetration_v1 import (  # noqa: E402
     classify_distance,
+    native_pair_measurement,
     object_global_minimum,
+    triangle_object,
     transform_world_horizontal_plane_to_sim,
 )
+
+
+def _native_entry(name: str, mesh: trimesh.Trimesh) -> dict:
+    vertices = np.asarray(mesh.vertices, dtype=np.float64)
+    faces = np.asarray(mesh.faces, dtype=np.int32)
+    return {
+        "geom": name,
+        "vertices_sim_m": vertices,
+        "mesh": mesh,
+        "fcl": triangle_object(vertices, faces),
+    }
 
 
 def test_object_global_minimum_uses_every_frame_and_vertex() -> None:
@@ -43,3 +57,15 @@ def test_penetration_threshold_is_not_relaxed() -> None:
     assert classify_distance(-tolerance, tolerance) == "CONTACT_WITHIN_TOLERANCE"
     assert classify_distance(tolerance, tolerance) == "CONTACT_WITHIN_TOLERANCE"
     assert classify_distance(tolerance + 1e-12, tolerance) == "CLEARANCE"
+
+
+def test_native_pair_measurement_detects_closed_mesh_containment() -> None:
+    outer = trimesh.creation.box(extents=[2.0, 2.0, 2.0])
+    inner = trimesh.creation.box(extents=[0.2, 0.2, 0.2])
+    result = native_pair_measurement(
+        _native_entry("inner", inner), _native_entry("outer", outer), 5e-5,
+    )
+    assert result["surface_intersection"] is False
+    assert result["containment_penetration"] is True
+    assert result["reported_penetration_depth_m"] > 0.8
+    assert result["distance_m"] < -0.8

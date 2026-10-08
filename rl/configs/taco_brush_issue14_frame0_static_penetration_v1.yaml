@@ -14,6 +14,7 @@ sample:
 
 candidate_support:
   source: TACO_INSTRUCTIONS_ISSUE_14_SCHEME_A
+  source_url: https://github.com/leolyliu/TACO-Instructions/issues/14
   definition: HORIZONTAL_WORLD_PLANE_AT_GLOBAL_MINIMUM_Z_OF_ALL_OFFICIAL_OBJECT_MESH_VERTICES_OVER_ALL_FRAMES
   mesh_scale_to_m: 0.01
   normal_world: [0.0, 0.0, 1.0]
@@ -23,7 +24,7 @@ audit:
   official_object_pose_max_abs_tolerance: 1.0e-7
   contact_definition: ABS_SIGNED_DISTANCE_AT_OR_BELOW_TOLERANCE
   table_geometry: ALL_NATIVE_VISUAL_MESH_VERTICES
-  mesh_pair_geometry: NATIVE_TRIANGLE_SURFACES_WITH_FCL
+  mesh_pair_geometry: NATIVE_TRIANGLE_SURFACES_WITH_FCL_AND_WATERTIGHT_CONTAINMENT_FOLLOWUP
   shell_diagnostic: MUJOCO_EXPLICIT_COLLISION_PAIRS
   unknown_is_reported: true
 

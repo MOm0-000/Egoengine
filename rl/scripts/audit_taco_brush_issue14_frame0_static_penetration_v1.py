@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
 import json
 from pathlib import Path
@@ -31,6 +32,7 @@ from egoengine_repro.retarget.support_plane_limit import (  # noqa: E402
     build_native_support_geoms,
     geom_world_vertices,
 )
+from egoengine_repro.retarget.mesh_distance import closed_mesh_signed_distance  # noqa: E402
 from egoengine_repro.scene.support_surface import Plane  # noqa: E402
 
 
@@ -116,11 +118,11 @@ def triangle_object(vertices: np.ndarray, faces: np.ndarray) -> fcl.CollisionObj
 
 
 def native_pair_measurement(
-    object_a: fcl.CollisionObject, object_b: fcl.CollisionObject,
+    first: dict[str, Any], second: dict[str, Any], tolerance_m: float,
 ) -> dict[str, Any]:
     collision = fcl.CollisionResult()
     fcl.collide(
-        object_a, object_b,
+        first["fcl"], second["fcl"],
         fcl.CollisionRequest(num_max_contacts=64, enable_contact=True), collision,
     )
     if collision.is_collision:
@@ -141,10 +143,52 @@ def native_pair_measurement(
             "deepest_contact_position_sim_m": point,
             "deepest_contact_normal": normal,
             "distance_m": None if depth is None else -depth,
+            "containment_followup": "NOT_NEEDED_SURFACE_INTERSECTION",
+        }
+    bounds = [entry["mesh"].bounds for entry in (first, second)]
+    containment_possible = [
+        bool(np.all(bounds[target][0] <= bounds[source][0])
+             and np.all(bounds[target][1] >= bounds[source][1]))
+        for source, target in ((0, 1), (1, 0))
+    ]
+    containment_rows = []
+    entries = (first, second)
+    for (source_index, target_index), possible in zip(((0, 1), (1, 0)), containment_possible):
+        if not possible:
+            continue
+        source, target = entries[source_index], entries[target_index]
+        if not target["mesh"].is_watertight:
+            containment_rows.append({
+                "source": source["geom"], "target": target["geom"],
+                "status": "UNKNOWN_TARGET_NATIVE_MESH_OPEN",
+            })
+            continue
+        signed = closed_mesh_signed_distance(target["mesh"], source["vertices_sim_m"])
+        index = int(np.argmax(signed))
+        containment_rows.append({
+            "source": source["geom"], "target": target["geom"],
+            "status": "FULL_VERTEX_WATERTIGHT_CONTAINMENT_TEST",
+            "inside_vertex_count_over_tolerance": int((signed > tolerance_m).sum()),
+            "maximum_inside_depth_m": float(max(0.0, signed[index])),
+            "maximum_inside_point_sim_m": source["vertices_sim_m"][index].tolist(),
+        })
+    contained = [row for row in containment_rows
+                 if row.get("inside_vertex_count_over_tolerance", 0) > 0]
+    if contained:
+        worst = max(contained, key=lambda row: row["maximum_inside_depth_m"])
+        return {
+            "surface_intersection": False,
+            "containment_penetration": True,
+            "reported_penetration_depth_m": worst["maximum_inside_depth_m"],
+            "contact_count": 0,
+            "deepest_contact_position_sim_m": worst["maximum_inside_point_sim_m"],
+            "deepest_contact_normal": None,
+            "distance_m": -worst["maximum_inside_depth_m"],
+            "containment_followup": containment_rows,
         }
     result = fcl.DistanceResult()
     distance = float(fcl.distance(
-        object_a, object_b, fcl.DistanceRequest(enable_nearest_points=True), result,
+        first["fcl"], second["fcl"], fcl.DistanceRequest(enable_nearest_points=True), result,
     ))
     nearest = None
     if result.nearest_points is not None:
@@ -155,6 +199,8 @@ def native_pair_measurement(
         "contact_count": 0,
         "nearest_points_sim_m": nearest,
         "distance_m": distance,
+        "containment_penetration": False,
+        "containment_followup": containment_rows,
     }
 
 
@@ -192,6 +238,7 @@ def native_world_objects(
             raise ValueError(f"multiple native visual meshes for body {model.body(body_id).name}")
         vertices = geom_world_vertices(data, geom, full=True)
         faces = mesh_faces(model, geom_id)
+        world_mesh = trimesh.Trimesh(vertices=vertices, faces=faces, process=False)
         result[body_id] = {
             "geom_id": int(geom_id),
             "geom": model.geom(geom_id).name,
@@ -199,6 +246,7 @@ def native_world_objects(
             "vertices_sim_m": vertices,
             "faces": faces,
             "fcl": triangle_object(vertices, faces),
+            "mesh": world_mesh,
         }
     return result
 
@@ -282,14 +330,25 @@ def pair_group_audit(
                             "reason": "NATIVE_VISUAL_MESH_MISSING"})
             continue
         first, second = native[body_a], native[body_b]
-        measured = native_pair_measurement(first["fcl"], second["fcl"])
+        measured = native_pair_measurement(first, second, tolerance_m)
         depth = measured["reported_penetration_depth_m"]
-        if measured["surface_intersection"] and depth is None:
+        containment_followup = measured["containment_followup"]
+        containment_unknown = bool(
+            isinstance(containment_followup, list)
+            and any(row.get("status", "").startswith("UNKNOWN")
+                    for row in containment_followup)
+        )
+        material_intersection = bool(
+            measured["surface_intersection"] or measured.get("containment_penetration", False)
+        )
+        if material_intersection and depth is None:
             classification = "UNKNOWN_INTERSECTION_DEPTH"
-        elif measured["surface_intersection"] and depth > tolerance_m:
+        elif material_intersection and depth > tolerance_m:
             classification = "PENETRATION"
-        elif measured["surface_intersection"]:
+        elif material_intersection:
             classification = "CONTACT_WITHIN_TOLERANCE"
+        elif containment_unknown:
+            classification = "UNKNOWN_CONTAINMENT_OPEN_MESH"
         else:
             classification = classify_distance(float(measured["distance_m"]), tolerance_m)
         native_rows.append({
@@ -298,6 +357,7 @@ def pair_group_audit(
             "classification": classification, **measured,
         })
     rank = {"PENETRATION": 0, "UNKNOWN_INTERSECTION_DEPTH": 1,
+            "UNKNOWN_CONTAINMENT_OPEN_MESH": 1,
             "CONTACT_WITHIN_TOLERANCE": 2, "CLEARANCE": 3}
     native_sorted = sorted(native_rows, key=lambda row: (
         rank[row["classification"]],
@@ -316,7 +376,7 @@ def pair_group_audit(
         "native_contact_pairs": [row for row in native_rows
                                  if row["classification"] == "CONTACT_WITHIN_TOLERANCE"],
         "unknown_pairs": unknown + [row for row in native_rows
-                                    if row["classification"] == "UNKNOWN_INTERSECTION_DEPTH"],
+                                    if row["classification"].startswith("UNKNOWN")],
         "native_pairs": native_rows,
     }
 
@@ -424,6 +484,7 @@ def main() -> int:
         "sample": cfg["sample"],
         "candidate_support": {
             "definition": cfg["candidate_support"]["definition"],
+            "source_url": cfg["candidate_support"]["source_url"],
             "per_object_minima": minima,
             "global_origin": origin,
             "world_plane": {"normal": [0.0, 0.0, 1.0],
@@ -469,6 +530,33 @@ def main() -> int:
     }
     write_json(output / "results.json", report)
 
+    with (output / "frame0_table_distances.csv").open(
+        "w", encoding="utf-8", newline="",
+    ) as stream:
+        writer = csv.DictWriter(stream, fieldnames=(
+            "support", "entity", "minimum_signed_distance_mm", "classification",
+            "penetration_depth_mm", "native_visual_geom", "body", "vertex_index",
+            "point_sim_x_m", "point_sim_y_m", "point_sim_z_m",
+        ))
+        writer.writeheader()
+        for support, audit in tables.items():
+            for entity, value in audit["entities"].items():
+                location = value["worst_location"]
+                point = location["point_sim_m"]
+                writer.writerow({
+                    "support": support,
+                    "entity": entity,
+                    "minimum_signed_distance_mm": value["minimum_signed_distance_mm"],
+                    "classification": value["classification"],
+                    "penetration_depth_mm": value["penetration_depth_mm"],
+                    "native_visual_geom": location["native_visual_geom"],
+                    "body": location["body"],
+                    "vertex_index": location["vertex_index"],
+                    "point_sim_x_m": point[0],
+                    "point_sim_y_m": point[1],
+                    "point_sim_z_m": point[2],
+                })
+
     lines = [
         "# Brush frame-0 static penetration audit (Issue #14 scheme A)", "",
         f"The candidate horizontal source-world table is `Z={origin['minimum_world_z_m']:.9f} m`, "
@@ -505,6 +593,8 @@ def main() -> int:
     lines += ["", "## Conclusion", "",
               f"- Issue #14 candidate table initialization penetration: `{'YES' if candidate_pen else 'NO'}`.",
               f"- Active support initialization penetration: `{'YES' if active_pen else 'NO'}`.",
+              f"- Active-support deepest material penetration is the brush at `{tables['active_support']['entities']['brush']['minimum_signed_distance_mm']:.6f} mm`, native point `{tables['active_support']['entities']['brush']['worst_location']['point_sim_m']}` in simulator coordinates.",
+              "- Every non-table native mesh-pair check completed with zero unknown results; MuJoCo shell overlap is reported separately and is not relabelled as native material penetration.",
               "- This is a static geometry audit only. The candidate support is not promoted, the active contract is unchanged, and no MINK, physics step, Replay, MPC, or RL ran.", ""]
     (output / "summary.md").write_text("\n".join(lines), encoding="utf-8")
     print(json.dumps(report["decision"], indent=2))
