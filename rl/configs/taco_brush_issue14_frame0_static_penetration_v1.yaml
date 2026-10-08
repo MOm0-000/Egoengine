@@ -1,0 +1,51 @@
+schema: taco_brush_issue14_frame0_static_penetration_v1
+status: READ_ONLY_FRAME0_STATIC_GEOMETRY_AUDIT
+minimum_baseline: 85715ff60e01d2835ee19b3e5cf3e963c7d93e61
+paper_faithful: false
+
+sample:
+  triplet: "(brush, brush, bowl)"
+  sequence: "(brush, brush, bowl)/20230927_027"
+  frames: 209
+  audited_frame: 0
+  objects:
+    tool: {name: brush, id: "071"}
+    target: {name: bowl, id: "146"}
+
+candidate_support:
+  source: TACO_INSTRUCTIONS_ISSUE_14_SCHEME_A
+  definition: HORIZONTAL_WORLD_PLANE_AT_GLOBAL_MINIMUM_Z_OF_ALL_OFFICIAL_OBJECT_MESH_VERTICES_OVER_ALL_FRAMES
+  mesh_scale_to_m: 0.01
+  normal_world: [0.0, 0.0, 1.0]
+
+audit:
+  material_penetration_tolerance_m: 0.00005
+  contact_definition: ABS_SIGNED_DISTANCE_AT_OR_BELOW_TOLERANCE
+  table_geometry: ALL_NATIVE_VISUAL_MESH_VERTICES
+  mesh_pair_geometry: NATIVE_TRIANGLE_SURFACES_WITH_FCL
+  shell_diagnostic: MUJOCO_EXPLICIT_COLLISION_PAIRS
+  unknown_is_reported: true
+
+paths:
+  scene: /data_all/zzx/3.2RL/models/taco_xhand/xhand/bimanual/taco_brush_brush_bowl_20230927_027/scene_source_contacts_mass.xml
+  robot_reference: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_environment_aware_mink_v2/robot_reference.npz
+  human_reference: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_brush_bowl_paper_baseline_v1/human_reference.npz
+  active_support_contract: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_camera_table_infra_repair_v1/support_surface_contract.yaml
+  object_model_root: /data_all/zzx/3.2RL/data/taco_v1/dev4/object_models/object_models_released
+  object_pose_root: /data_all/zzx/3.2RL/data/taco_v1/dev4/object_poses/Object_Poses/(brush, brush, bowl)/20230927_027
+  output: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_issue14_frame0_static_penetration_v1
+
+authorization:
+  read_official_object_meshes_and_poses: true
+  read_saved_mink_v2_state: true
+  static_mujoco_forward_kinematics: true
+  modify_raw_data: false
+  modify_robot_trajectory: false
+  modify_object_pose: false
+  modify_active_support_contract: false
+  run_mink: false
+  physics_step: false
+  replay: false
+  mpc: false
+  reinforcement_learning: false
+  promotion: false
