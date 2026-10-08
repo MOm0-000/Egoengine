@@ -395,7 +395,8 @@ def main() -> int:
         actual[:3, :3] = data.xmat[body].reshape(3, 3)
         actual[:3, 3] = data.xpos[body]
         object_pose_errors[side] = float(np.max(np.abs(actual - expected)))
-    if max(object_pose_errors.values()) > 1e-12:
+    pose_tolerance = float(cfg["audit"]["official_object_pose_max_abs_tolerance"])
+    if max(object_pose_errors.values()) > pose_tolerance:
         raise ValueError("saved frame-0 object state differs from official transformed pose")
 
     native = native_world_objects(model, data)
@@ -439,6 +440,7 @@ def main() -> int:
             "qpos_modified": False,
             "object_pose_modified": False,
             "object_pose_max_abs_errors": object_pose_errors,
+            "object_pose_max_abs_tolerance": pose_tolerance,
             "mink_rerun": False,
             "physics_steps": 0,
         },
