@@ -35,7 +35,7 @@ from egoengine_repro.scene.support_surface_estimation import (  # noqa: E402
 )
 
 
-DEFAULT_CONFIG = RL_ROOT / "configs/taco_brush_multiframe_static_table_world_consistency_v2.yaml"
+DEFAULT_CONFIG = RL_ROOT / "configs/taco_brush_multiframe_static_table_world_consistency_v3.yaml"
 
 
 def sha256(path: Path) -> str:
@@ -192,7 +192,7 @@ def main() -> int:
     args = parser.parse_args()
     config_path = args.config.resolve(strict=True)
     cfg = yaml.safe_load(config_path.read_text(encoding="utf-8"))
-    if cfg["schema"] != "taco_brush_multiframe_static_table_world_consistency_v2":
+    if cfg["schema"] != "taco_brush_multiframe_static_table_world_consistency_v3":
         raise ValueError("unexpected schema")
     subprocess.run(
         ["git", "merge-base", "--is-ancestor", cfg["minimum_baseline"], "HEAD"],
@@ -434,9 +434,9 @@ def main() -> int:
         "",
         "## Interpretation",
         "",
-        "**Direct answer under the frozen all-point contract: the twelve Depth-derived world planes are not one stable numerical plane.** Ten of twelve frames (including frame 0) are within about 1.04 degrees of the frame-0 normal, while frames 19 and 38 deviate by 2.36 and 5.45 degrees. All frame-0-centroid separations remain within 4.92 mm.",
+        "This v3 run uses only the independently reviewed, conservative per-frame selections. Interpretation must be based on the numerical table above; no archived v1/v2 plane estimate is used as evidence or as a comparison baseline.",
         "",
-        "The corrected per-frame selections do not reproduce the large drift reported by the invalid fixed-polygon v1 experiment. Most fitted world planes form a much tighter cluster, but the twelve raw-Depth fits are still not one stable numerical plane: frames 19 and especially 38 have larger normal deviations, and the all-point clouds have sizeable residuals to their own unconstrained fits. Under the mandated no-rejection contract, this is evidence of remaining cross-frame inconsistency and non-planar/raw-depth contamination, but it does not by itself assign the cause to depth noise, RGB/depth registration, timebase, or camera extrinsics.",
+        "The plane-to-plane statistics describe whether the selected raw-Depth tabletop regions map to one stable world plane under the official camera parameters. They do not by themselves assign any observed inconsistency to depth noise, RGB/depth registration, timebase, or camera extrinsics.",
         "",
         "Frame 0 is only the comparison reference; it is not treated as a standard-answer plane.",
         "",

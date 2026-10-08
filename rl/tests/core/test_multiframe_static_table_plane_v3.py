@@ -8,7 +8,7 @@ import numpy as np
 RL_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(RL_ROOT / "scripts"))
 
-from audit_taco_brush_multiframe_static_table_world_consistency_v2 import (  # noqa: E402
+from audit_taco_brush_multiframe_static_table_world_consistency_v3 import (  # noqa: E402
     fit_all_points_plane,
     validate_per_frame_polygons,
 )
