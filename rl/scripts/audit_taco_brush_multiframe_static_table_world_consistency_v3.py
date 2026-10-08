@@ -434,6 +434,8 @@ def main() -> int:
         "",
         "## Interpretation",
         "",
+        f"**Direct numerical answer: the twelve fitted world planes are not identical.** Their maximum pairwise normal angle is `{consistency['maximum_pairwise_normal_angle_deg']:.3f} deg`, and their signed separation span at the frame-0 plane centroid is `{consistency['frame0_centroid_separation_span_mm']:.3f} mm`. No pass/fail stability tolerance was introduced after seeing the result.",
+        "",
         "This v3 run uses only the independently reviewed, conservative per-frame selections. Interpretation must be based on the numerical table above; no archived v1/v2 plane estimate is used as evidence or as a comparison baseline.",
         "",
         "The plane-to-plane statistics describe whether the selected raw-Depth tabletop regions map to one stable world plane under the official camera parameters. They do not by themselves assign any observed inconsistency to depth noise, RGB/depth registration, timebase, or camera extrinsics.",
