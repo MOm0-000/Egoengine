@@ -1,0 +1,36 @@
+protocol: taco_brush_replay_then_controlled_residual_ppo_v1
+paper_deviation: >-
+  Local controlled reproduction of Replay then RL. MPC is omitted; Brush
+  position/objective weights and PPO hyperparameters are not published.
+training_ready: true
+
+tracking:
+  lambda_p: null
+  lambda_R: null
+  C: null
+contact:
+  coefficient: null
+  reduction: null
+lift:
+  coefficient: null
+  object_role: null
+
+runtime_contract:
+  fail_closed: true
+  paper_faithful_run_ready: false
+  active_local_objective_profile: taco_brush_local_tracking_pickup_proxy_v1
+  local_objective_profiles:
+    taco_brush_local_tracking_pickup_proxy_v1:
+      objective_ready: true
+      run_ready: true
+      profile_sha256: e4ca2876d74eb22b4642d466bf44126b49acbe6f625691279a84275c105ac106
+      blocked_by: []
+  observation:
+    status: resolved_local_unpublished
+    active_profile: taco_pour_transition_aligned_236d_v1
+    formal_run_ready: true
+    blocked_by: []
+    local_profiles:
+      taco_pour_transition_aligned_236d_v1:
+        run_ready: true
+        profile_sha256: 8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7

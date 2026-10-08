@@ -111,7 +111,14 @@ class RolloutBatch:
     ppo_flat_index: torch.Tensor
     normalization_version: int
 
-    def validate(self, *, worlds: int, horizon: int) -> None:
+    def validate(
+        self,
+        *,
+        worlds: int,
+        horizon: int,
+        window_start: int = 40,
+        window_end: int = 80,
+    ) -> None:
         batch = worlds * horizon
         vector_names = {
             "actions": 36,
@@ -143,7 +150,11 @@ class RolloutBatch:
         ):
             if getattr(self, name).shape != (batch,):
                 raise ValueError(f"{name} has the wrong shape")
-        if self.assistance_wrench.shape != (batch, 10, 6):
+        if (
+            self.assistance_wrench.ndim != 3
+            or self.assistance_wrench.shape[0] != batch
+            or self.assistance_wrench.shape[2] != 6
+        ):
             raise ValueError("assistance_wrench has the wrong world-major shape")
         if self.contact_flags.ndim != 4 or self.contact_flags.shape[0] != batch:
             raise ValueError("contact_flags has the wrong world-major shape")
@@ -157,7 +168,11 @@ class RolloutBatch:
             raise ValueError("next observation goal is not one endpoint ahead")
         if not torch.equal(self.done_after, self.terminated | self.timeout):
             raise ValueError("done_after must equal terminated | timeout")
-        expected_phase = (self.source_endpoint - 40).to(torch.float32) / 40.0
+        if window_end <= window_start:
+            raise ValueError("rollout validation window is empty")
+        expected_phase = (self.source_endpoint - window_start).to(torch.float32) / float(
+            window_end - window_start
+        )
         if not torch.equal(self.critic_phase, expected_phase):
             raise ValueError("critic phase does not match the physical source endpoint")
         if self.critic_observations.shape[1] not in (
@@ -508,5 +523,10 @@ class FixedBoundaryCollector:
         flat["ppo_flat_index"] = torch.arange(worlds * self.horizon, dtype=torch.int64)
         flat["normalization_version"] = int(self.policy.normalization_version)
         batch = RolloutBatch(**flat)
-        batch.validate(worlds=worlds, horizon=self.horizon)
+        batch.validate(
+            worlds=worlds,
+            horizon=self.horizon,
+            window_start=self.start_endpoint,
+            window_end=self.end_endpoint,
+        )
         return batch

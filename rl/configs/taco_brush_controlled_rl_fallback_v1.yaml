@@ -1,0 +1,90 @@
+schema: taco_brush_controlled_rl_fallback_v1
+status: AUTHORIZED_BOUNDED_DIAGNOSTIC
+paper_faithful: false
+
+sample:
+  sequence: "(brush, brush, bowl)/20230927_027"
+  replay_source_endpoint: 0
+  committed_boundary_endpoint: 20
+  training_outcome_endpoint: 60
+  control_hz: 30.0
+
+trigger:
+  replay_result: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_controlled_physics_replay_v1/results.json
+  required_replay_classification: CONTROLLED_REPLAY_FAILED_CLOSED
+  required_replay_hard_stop: null
+
+training:
+  backend: cpu_mujoco_warp
+  worlds: 4
+  horizon: 40
+  sequence_length: 4
+  epochs: 8
+  seed: 0
+  actor_learning_rate: 0.0001
+  actor_updates: 1
+  critic_learning_rate: 0.00005
+  critic_updates: 4
+  fresh_actor_critic_optimizer_rms: true
+  baseline_preserving_zero_mean_initialization: true
+  warm_start: false
+  evaluation_stochastic: false
+
+acceptance:
+  backend: mujoco_cpu
+  replay_prefix_end_endpoint: 20
+  policy_end_endpoint: 60
+  object_lift_delta_m: 0.01
+  stable_consecutive_control_intervals: 5
+  requires_hand_object_force: true
+  requires_no_object_floor_force: true
+  requires_both_objects: true
+  requires_all_native_samples_nonpenetrating: true
+  requires_zero_proxy_native_geometry_mismatches: true
+  requires_zero_proxy_force_while_native_clear_exposures: true
+  requires_tracking_window_40_of_40: true
+  unknown_is_failure: true
+  promotion_authorized: false
+  chunk_commit_allowed: false
+
+hard_stop:
+  fail_on_any_mujoco_warning: true
+  maximum_contact_force_n: 1000.0
+  maximum_proxy_penetration_m: 0.02
+  maximum_object_linear_speed_m_s: 5.0
+  maximum_object_angular_speed_rad_s: 50.0
+  maximum_object_translation_per_substep_m: 0.02
+  maximum_object_rotation_per_substep_rad: 0.5
+  maximum_training_physics_steps: 24000
+  maximum_validation_physics_steps: 1000
+
+native_geometry_audit:
+  tolerance_m: 0.00005
+  dynamic_object_floor_penetration_limit_m: 0.0005
+  endpoints: [20, 25, 30, 35, 40, 41, 42, 43, 45, 50, 52, 55, 56, 57, 58, 59, 60]
+
+paths:
+  simulator_config: /data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_controlled_rl_simulator_v1.yaml
+  protocol: /data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_replay_rl_protocol_v1.yaml
+  objective: /data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_local_tracking_pickup_proxy_v1.yaml
+  observation: /data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_pour_observation_local_236d_v1.yaml
+  action: /data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_residual_action_scaled_v1.yaml
+  scene: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_controlled_physics_replay_v1/experiment_local_scene.xml
+  reference: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_issue14_mink_candidate_v1/robot_reference.npz
+  support_contract: /data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_issue14_candidate_support_v1.yaml
+  prior_collision_audit: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_collision_model_accuracy_audit_v1/results.json
+  output: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_controlled_rl_fallback_v1
+
+authorization:
+  bounded_fresh_rl_training: true
+  cpu_contact_validation: true
+  native_mesh_audit: true
+  modify_reference: false
+  modify_scene: false
+  modify_collision_geometry: false
+  parameter_sweep: false
+  seed_sweep: false
+  warm_start: false
+  promotion: false
+  chunk_commit: false
+

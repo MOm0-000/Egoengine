@@ -1,0 +1,183 @@
+{
+  "chunk_commit_allowed": false,
+  "classification": "CONTROLLED_RL_FAILED_CLOSED",
+  "cpu_acceptance": {
+    "chunk_commit_allowed": false,
+    "classification": "CONTROLLED_RL_FAILED_CLOSED",
+    "completed_endpoint": 48,
+    "hard_stop": null,
+    "maximum_contact_force_n": 257.499742184248,
+    "maximum_proxy_penetration_m": 0.006144562515756458,
+    "native_blockers": [
+      {
+        "classification": "PENETRATION",
+        "endpoint": 35,
+        "entity": "hand_brush"
+      },
+      {
+        "classification": "PENETRATION",
+        "endpoint": 40,
+        "entity": "hand_brush"
+      },
+      {
+        "distance_m": -0.0006500678363419166,
+        "endpoint": 40,
+        "entity": "left_xhand_table",
+        "limit_m": 5e-05
+      },
+      {
+        "classification": "PENETRATION",
+        "endpoint": 41,
+        "entity": "hand_brush"
+      },
+      {
+        "distance_m": -0.0003080287966422679,
+        "endpoint": 41,
+        "entity": "left_xhand_table",
+        "limit_m": 5e-05
+      },
+      {
+        "distance_m": -0.0006250001994366761,
+        "endpoint": 42,
+        "entity": "left_xhand_table",
+        "limit_m": 5e-05
+      },
+      {
+        "distance_m": -0.0010903146953801235,
+        "endpoint": 43,
+        "entity": "left_xhand_table",
+        "limit_m": 5e-05
+      },
+      {
+        "distance_m": -0.0010977796567910314,
+        "endpoint": 45,
+        "entity": "left_xhand_table",
+        "limit_m": 5e-05
+      }
+    ],
+    "physics_steps": 800,
+    "pickup": {
+      "bowl": {
+        "maximum_actual_lift_m": 0.0,
+        "passed": false,
+        "stable_run": 0
+      },
+      "brush": {
+        "maximum_actual_lift_m": 0.03369046116060259,
+        "passed": false,
+        "stable_run": 4
+      }
+    },
+    "promotion_authorized": false,
+    "proxy_error_dynamic_exposure": {
+      "bowl": {
+        "causal_interpretation": "DYNAMIC_EXPOSURE_NOT_A_TRUE_GEOMETRY_COUNTERFACTUAL",
+        "mismatch_impulse_fraction": null,
+        "mismatch_normal_impulse_ns": 0.0,
+        "sampled_normal_impulse_ns": 0.0
+      },
+      "brush": {
+        "causal_interpretation": "DYNAMIC_EXPOSURE_NOT_A_TRUE_GEOMETRY_COUNTERFACTUAL",
+        "mismatch_impulse_fraction": 0.39016047553193944,
+        "mismatch_normal_impulse_ns": 1.5967039899558473,
+        "sampled_normal_impulse_ns": 4.092428859635059
+      }
+    },
+    "proxy_native_force_exposure_mismatches": [
+      {
+        "classification": "PROXY_FORCE_WHILE_NATIVE_CLEAR",
+        "endpoint": 20,
+        "normal_impulse_ns": 0.39653047889850196,
+        "object": "brush"
+      },
+      {
+        "classification": "PROXY_FORCE_WHILE_NATIVE_CLEAR",
+        "endpoint": 25,
+        "normal_impulse_ns": 0.4164525563556638,
+        "object": "brush"
+      },
+      {
+        "classification": "PROXY_FORCE_WHILE_NATIVE_CLEAR",
+        "endpoint": 30,
+        "normal_impulse_ns": 0.6014161339255585,
+        "object": "brush"
+      },
+      {
+        "classification": "PROXY_FORCE_WHILE_NATIVE_CLEAR",
+        "endpoint": 43,
+        "normal_impulse_ns": 0.18230482077612284,
+        "object": "brush"
+      }
+    ],
+    "proxy_native_geometry_mismatches": [
+      {
+        "classification": "PROXY_OVERCOVERAGE_PENETRATION_WHILE_NATIVE_CLEAR",
+        "endpoint": 20,
+        "normal_impulse_ns": 0.39653047889850196,
+        "object": "brush"
+      },
+      {
+        "classification": "PROXY_OVERCOVERAGE_PENETRATION_WHILE_NATIVE_CLEAR",
+        "endpoint": 25,
+        "normal_impulse_ns": 0.4164525563556638,
+        "object": "brush"
+      },
+      {
+        "classification": "PROXY_OVERCOVERAGE_PENETRATION_WHILE_NATIVE_CLEAR",
+        "endpoint": 30,
+        "normal_impulse_ns": 0.6014161339255585,
+        "object": "brush"
+      },
+      {
+        "classification": "PROXY_OVERCOVERAGE_PENETRATION_WHILE_NATIVE_CLEAR",
+        "endpoint": 43,
+        "normal_impulse_ns": 0.18230482077612284,
+        "object": "brush"
+      }
+    ],
+    "strict_gate_passed": false,
+    "tracking": {
+      "failure": {
+        "endpoint": 48,
+        "objects": [
+          "brush"
+        ],
+        "scores": {
+          "bowl": 0.053166699447311956,
+          "brush": 1.1528668873633556
+        }
+      },
+      "passed_40_of_40": false
+    }
+  },
+  "paper_faithful": false,
+  "promotion_authorized": false,
+  "replay_trigger": "CONTROLLED_REPLAY_FAILED_CLOSED",
+  "schema": "taco_brush_controlled_rl_fallback_v1",
+  "strict_gate_passed": false,
+  "training": {
+    "epoch0_mjwp": {
+      "bound_fraction": 0.0,
+      "first_failure_endpoint": 44,
+      "mean_action_rms": 0.0,
+      "strict_40_of_40": false,
+      "valid_intervals": 23
+    },
+    "epoch8_mjwp": {
+      "bound_fraction": 0.0,
+      "first_failure_endpoint": 57,
+      "mean_action_rms": 0.10746146738529205,
+      "strict_40_of_40": false,
+      "valid_intervals": 36
+    },
+    "epochs": 8,
+    "maxima": {
+      "constraint_force_component_n": 164.0001220703125,
+      "object_angular_speed_rad_s": 18.547155380249023,
+      "object_linear_speed_m_s": 0.7941225171089172,
+      "proxy_penetration_m": 0.006875477731227875
+    },
+    "physics_steps_upper_accounting": 21760,
+    "samples": 1280
+  }
+}

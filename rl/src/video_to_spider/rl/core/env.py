@@ -30,6 +30,20 @@ def load_ego_config(path: str | Path, *, device: str = "cpu") -> Config:
     if data.get("noise_scale") is None:
         data.pop("noise_scale", None)
     data["device"] = device
+    # Spider's planning-oriented config historically required a fixed integer
+    # number of simulator steps per control interval.  The Brush source scene
+    # is authored at 2 ms while its TACO reference is 30 Hz, so preserving both
+    # clocks requires the deterministic 17/17/16 schedule implemented by
+    # MJWPVectorEnv.step.  Let process_config populate all derived fields using
+    # the nearest integral placeholder, then restore the exact control period.
+    control_dt = float(data.get("ctrl_dt", Config.ctrl_dt))
+    simulation_dt = float(data.get("sim_dt", Config.sim_dt))
+    ratio = control_dt / simulation_dt
+    if not np.isclose(ratio, round(ratio), rtol=0.0, atol=1.0e-12):
+        data["ctrl_dt"] = round(ratio) * simulation_dt
+        config = process_config(Config(**data))
+        config.ctrl_dt = control_dt
+        return config
     return process_config(Config(**data))
 
 
@@ -158,10 +172,20 @@ def make_startup_world(
 class IndependentWorlds:
     """Four actual single-world instances; no packed contact buffer."""
 
-    def __init__(self, worlds: list[MJWPVectorEnv]) -> None:
+    def __init__(
+        self,
+        worlds: list[MJWPVectorEnv],
+        *,
+        substep_observers: list[Any] | None = None,
+    ) -> None:
         if not worlds or any(world.num_envs != 1 for world in worlds):
             raise ValueError("IndependentWorlds requires single-world environments")
         self.worlds = tuple(worlds)
+        if substep_observers is None:
+            substep_observers = [None] * len(worlds)
+        if len(substep_observers) != len(worlds):
+            raise ValueError("one substep observer is required per independent world")
+        self.substep_observers = tuple(substep_observers)
 
     def current_observation(self) -> dict[str, np.ndarray] | np.ndarray:
         rows = [world.current_observation() for world in self.worlds]
@@ -210,7 +234,11 @@ class IndependentWorlds:
         if actions.shape[0] != len(self.worlds):
             raise ValueError("one action row is required per world")
         rows = [
-            world.step(actions[index : index + 1], auto_reset=auto_reset)
+            world.step(
+                actions[index : index + 1],
+                auto_reset=auto_reset,
+                substep_observer=self.substep_observers[index],
+            )
             for index, world in enumerate(self.worlds)
         ]
         observations = rows[0][0]

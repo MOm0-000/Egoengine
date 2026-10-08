@@ -48,6 +48,31 @@ from egoengine_repro.action.paper_rewards import (
 
 _XHAND_FINGERS = ("thumb", "index", "middle", "ring", "pinky")
 _MJWP_SNAPSHOT_SCHEMA = "egoengine_mjwp_snapshot_v3_reward_aligned"
+
+
+def control_substeps_at_sources(
+    source_endpoints: np.ndarray, *, control_dt: float, simulation_dt: float
+) -> np.ndarray:
+    """Native physics steps needed to reach each next reference endpoint.
+
+    This is the vector form of the bounded CPU Replay clock contract.  It is
+    intentionally based on absolute reference endpoints so a restored chunk
+    boundary keeps the same 16/17-step phase as the uninterrupted rollout.
+    """
+    sources = np.asarray(source_endpoints, dtype=np.float64)
+    if sources.ndim != 1 or np.any(sources < 0):
+        raise ValueError("source endpoints must be a nonnegative vector")
+    if not np.isfinite(control_dt) or not np.isfinite(simulation_dt):
+        raise ValueError("control and simulation periods must be finite")
+    if control_dt <= 0.0 or simulation_dt <= 0.0:
+        raise ValueError("control and simulation periods must be positive")
+    ratio = float(control_dt) / float(simulation_dt)
+    before = np.ceil(sources * ratio - 1.0e-12).astype(np.int64)
+    after = np.ceil((sources + 1.0) * ratio - 1.0e-12).astype(np.int64)
+    result = after - before
+    if np.any(result <= 0):
+        raise RuntimeError("control interval contains no native physics step")
+    return result
 _WP_STATE_FIELDS = (
     "solver_niter", "ne", "nf", "nl", "nefc", "nisland", "nidof",
     "ntree_awake", "nbody_awake", "nv_awake", "time", "energy", "qpos",
@@ -487,9 +512,27 @@ class MJWPVectorEnv:
         reference_ctrls = self._reference_ctrls(self.time_indices, offset=1)
         delta = torch.as_tensor(actions, dtype=torch.float32, device=str(self.ego_cfg.device))
         full_ctrl = self._apply_residual(reference_ctrls, delta)
-        substeps = max(int(self.ego_cfg.ctrl_steps), 1)
+        # TACO references are sampled at 30 Hz while some authored scenes use
+        # a 2 ms physics step.  A fixed round(ctrl_dt / sim_dt) would drift
+        # from the reference clock (17 steps is 34 ms).  Match the bounded CPU
+        # Replay contract instead: advance to the first native simulator tick
+        # at or after each absolute reference endpoint.  Integer-ratio scenes
+        # retain their former constant step count exactly.
+        ratio = float(self.ego_cfg.ctrl_dt) / float(self.ego_cfg.sim_dt)
+        scheduled = control_substeps_at_sources(
+            source_endpoints,
+            control_dt=float(self.ego_cfg.ctrl_dt),
+            simulation_dt=float(self.ego_cfg.sim_dt),
+        )
+        if not np.all(scheduled == scheduled[0]):
+            raise RuntimeError(
+                "packed worlds require one common native-step schedule; use "
+                "independent single-world environments for divergent cursors"
+            )
+        substeps = int(scheduled[0])
+        padded_substeps = max(int(np.ceil(ratio - 1.0e-12)), 1)
         self._last_assistance_wrenches = np.zeros(
-            (self.num_envs, substeps, 6), dtype=np.float32
+            (self.num_envs, padded_substeps, 6), dtype=np.float32
         )
         self._last_assistance_force_cap_count = np.zeros(self.num_envs, dtype=np.int64)
         self._last_assistance_torque_cap_count = np.zeros(self.num_envs, dtype=np.int64)
@@ -776,6 +819,54 @@ class MJWPVectorEnv:
             raise ValueError("exact chunk comparison requires disabled reset/domain noise")
         self.episode_lengths[:] = end
         self._chunk_reset_state = self.get_env_state()
+
+    def set_exact_initial_state(
+        self,
+        *,
+        qpos: np.ndarray,
+        qvel: np.ndarray,
+        ctrl: np.ndarray,
+    ) -> None:
+        """Install a declared endpoint-0 state before any control transition.
+
+        TACO exports kinematic finite-difference velocities, while the bounded
+        Brush physics Replay explicitly starts with zero velocity.  This method
+        prevents an environment constructor default from silently changing that
+        reset contract.  It is intentionally limited to fresh single-world
+        environments with every reset/domain noise source disabled.
+        """
+        if self.num_envs != 1 or np.any(self.start_indices != 0) or np.any(self.time_indices != 0):
+            raise ValueError("exact initialization requires one fresh source-0 world")
+        if any((self.env_cfg.reset_hand_noise_std, self.env_cfg.reset_object_pos_noise_std,
+                self.env_cfg.reset_object_rot_noise_std, self.env_cfg.domain.action_noise_std,
+                self.env_cfg.domain.obs_noise_std)):
+            raise ValueError("exact initialization requires all reset/domain noise disabled")
+        qpos_array = np.asarray(qpos, dtype=np.float32).reshape(1, -1)
+        qvel_array = np.asarray(qvel, dtype=np.float32).reshape(1, -1)
+        ctrl_array = np.asarray(ctrl, dtype=np.float32).reshape(1, -1)
+        if qpos_array.shape[1] != int(self.ego_cfg.nq):
+            raise ValueError("exact initial qpos has the wrong width")
+        if qvel_array.shape[1] != int(self.ego_cfg.nv):
+            raise ValueError("exact initial qvel has the wrong width")
+        if ctrl_array.shape[1] != int(self.ego_cfg.nu):
+            raise ValueError("exact initial ctrl has the wrong width")
+        if not all(np.isfinite(value).all() for value in (qpos_array, qvel_array, ctrl_array)):
+            raise ValueError("exact initial state contains non-finite values")
+        self._last_ctrl[:] = torch.as_tensor(ctrl_array, device=str(self.ego_cfg.device))
+        self._last_action.zero_()
+        n_objects = 2 if int(self.ego_cfg.nq_obj) in (12, 14) else 1
+        object_width = int(self.ego_cfg.nq_obj) // n_objects
+        object_start = qpos_array.shape[1] - int(self.ego_cfg.nq_obj)
+        for object_index in range(n_objects):
+            self._initial_object_heights[:, object_index] = float(
+                qpos_array[0, object_start + object_index * object_width + 2]
+            )
+        self._write_state(
+            torch.as_tensor(qpos_array),
+            torch.as_tensor(qvel_array),
+            torch.as_tensor(ctrl_array),
+            np.ones(1, dtype=bool),
+        )
 
     def get_env_state(self) -> Any:
         state: dict[str, Any] = {

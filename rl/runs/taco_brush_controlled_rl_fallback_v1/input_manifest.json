@@ -1,0 +1,122 @@
+{
+  "acceptance": {
+    "backend": "mujoco_cpu",
+    "chunk_commit_allowed": false,
+    "object_lift_delta_m": 0.01,
+    "policy_end_endpoint": 60,
+    "promotion_authorized": false,
+    "replay_prefix_end_endpoint": 20,
+    "requires_all_native_samples_nonpenetrating": true,
+    "requires_both_objects": true,
+    "requires_hand_object_force": true,
+    "requires_no_object_floor_force": true,
+    "requires_tracking_window_40_of_40": true,
+    "requires_zero_proxy_force_while_native_clear_exposures": true,
+    "requires_zero_proxy_native_geometry_mismatches": true,
+    "stable_consecutive_control_intervals": 5,
+    "unknown_is_failure": true
+  },
+  "authorization": {
+    "bounded_fresh_rl_training": true,
+    "chunk_commit": false,
+    "cpu_contact_validation": true,
+    "modify_collision_geometry": false,
+    "modify_reference": false,
+    "modify_scene": false,
+    "native_mesh_audit": true,
+    "parameter_sweep": false,
+    "promotion": false,
+    "seed_sweep": false,
+    "warm_start": false
+  },
+  "config": {
+    "bytes": 3348,
+    "path": "/data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_controlled_rl_fallback_v1.yaml",
+    "sha256": "a999298a9d872b8405255322761790ac59632cd16a15cb12f19cb05a69f27be3"
+  },
+  "hard_stop": {
+    "fail_on_any_mujoco_warning": true,
+    "maximum_contact_force_n": 1000.0,
+    "maximum_object_angular_speed_rad_s": 50.0,
+    "maximum_object_linear_speed_m_s": 5.0,
+    "maximum_object_rotation_per_substep_rad": 0.5,
+    "maximum_object_translation_per_substep_m": 0.02,
+    "maximum_proxy_penetration_m": 0.02,
+    "maximum_training_physics_steps": 24000,
+    "maximum_validation_physics_steps": 1000
+  },
+  "inputs": {
+    "action": {
+      "bytes": 645,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_residual_action_scaled_v1.yaml",
+      "sha256": "fa3adfd1ccb320423e6ac88f98a842db87a060647a6afaceff2c3cc5f6751c94"
+    },
+    "objective": {
+      "bytes": 1397,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_local_tracking_pickup_proxy_v1.yaml",
+      "sha256": "e4ca2876d74eb22b4642d466bf44126b49acbe6f625691279a84275c105ac106"
+    },
+    "observation": {
+      "bytes": 2581,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_pour_observation_local_236d_v1.yaml",
+      "sha256": "8a455624fcec4af27e9c88f24da8a434f982913f944c7f3d3f1eb93073248da7"
+    },
+    "prior_collision_audit": {
+      "bytes": 101791,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_collision_model_accuracy_audit_v1/results.json",
+      "sha256": "7ecad8234051143723c1114676423e533a732dbda81c8c05afbf640ff321e904"
+    },
+    "protocol": {
+      "bytes": 1110,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_replay_rl_protocol_v1.yaml",
+      "sha256": "2151a78a78fa4f58388499ff2af942ec4cedd63fafa8e7123b9677190756cb86"
+    },
+    "reference": {
+      "bytes": 229812,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_issue14_mink_candidate_v1/robot_reference.npz",
+      "sha256": "f468a5b3b2dc9ce28260d3bd42a766f0bcd162a5d8bea689236badac53307aa2"
+    },
+    "scene": {
+      "bytes": 301378,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_controlled_physics_replay_v1/experiment_local_scene.xml",
+      "sha256": "209febf9ddf5856e0d8cb5eb61614bcdd6854c8e98daea15c2c44559ba48cb9a"
+    },
+    "simulator_config": {
+      "bytes": 821,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_controlled_rl_simulator_v1.yaml",
+      "sha256": "bf7367cd8c6c63d4b14af89be080b971bd311ca836f9b0aeea44704af5fde4ca"
+    },
+    "support_contract": {
+      "bytes": 492,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_issue14_candidate_support_v1.yaml",
+      "sha256": "c70752b1eb871d62c4d7d6526137438eb80a66bbb03a81052f1d7f4d61637edf"
+    }
+  },
+  "repository_head": "b28e54a0475c5c9c30a05d168ece154146cbfbe0",
+  "schema": "taco_brush_controlled_rl_fallback_v1",
+  "training": {
+    "actor_learning_rate": 0.0001,
+    "actor_updates": 1,
+    "backend": "cpu_mujoco_warp",
+    "baseline_preserving_zero_mean_initialization": true,
+    "critic_learning_rate": 5e-05,
+    "critic_updates": 4,
+    "epochs": 8,
+    "evaluation_stochastic": false,
+    "fresh_actor_critic_optimizer_rms": true,
+    "horizon": 40,
+    "seed": 0,
+    "sequence_length": 4,
+    "warm_start": false,
+    "worlds": 4
+  },
+  "trigger": {
+    "classification": "CONTROLLED_REPLAY_FAILED_CLOSED",
+    "hard_stop": null,
+    "replay_result": {
+      "bytes": 10208,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_controlled_physics_replay_v1/results.json",
+      "sha256": "25aacd9e790c6945dce20da9d858a559b29cf5f637c957b4a12e65aa77a7a00f"
+    }
+  }
+}
