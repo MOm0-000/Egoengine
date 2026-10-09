@@ -1,0 +1,74 @@
+schema: taco_brush_20231006_145_natural_seating_extension_v1
+status: READ_ONLY_FIXED_DURATION_NATURAL_SEATING_EXTENSION
+minimum_baseline: 60abb1d
+paper_faithful: false
+
+sample:
+  triplet: "(brush, brush, bowl)"
+  sequence: "(brush, brush, bowl)/20231006_145"
+  frames: 122
+  audited_frame: 0
+  objects:
+    - {role: tool, name: brush, id: "171"}
+    - {role: target, name: bowl, id: "180"}
+
+candidate_support:
+  source: TACO_INSTRUCTIONS_ISSUE_14_SCHEME_A
+  source_url: https://github.com/leolyliu/TACO-Instructions/issues/14
+  definition: HORIZONTAL_WORLD_PLANE_AT_GLOBAL_MINIMUM_Z_OF_ALL_OFFICIAL_OBJECT_MESH_VERTICES_OVER_ALL_FRAMES
+  mesh_scale_to_m: 0.01
+  normal_world: [0.0, 0.0, 1.0]
+
+static_audit:
+  material_penetration_tolerance_m: 0.00005
+  mesh_pair_geometry: NATIVE_TRIANGLE_SURFACES_WITH_FCL
+  table_geometry: ALL_NATIVE_VISUAL_MESH_VERTICES
+
+physics:
+  duration_s: 10.0
+  timestep_s: 0.002
+  gravity_m_s2: [0.0, 0.0, -9.81]
+  integrator: Euler
+  solver: Newton
+  iterations: 100
+  tolerance: 1.0e-8
+  cone: pyramidal
+  impratio: 1.0
+  density_kg_m3: 1000.0
+  floor_friction: [1.0, 0.1, 0.0]
+  pair_friction: [1.0, 1.0, 0.1, 0.0, 0.0]
+  variants: [official_frame0_to_1_velocity, zero_initial_velocity]
+  collision_model: COACD_32_PARTS_FIXED_EXISTING_PIPELINE
+  extension_contract: ONE_FIXED_10_SECOND_RUN_NO_DURATION_OR_PARAMETER_SWEEP
+  density_provenance: MATCH_GENERATED_XHAND_SCENE_NOMINAL_UNMEASURED_DENSITY
+
+frozen_stability_criteria:
+  final_window_s: 0.5
+  first_contact_deadline_s: 1.0
+  final_contact_fraction_min: 0.99
+  final_linear_speed_p95_max_m_s: 0.005
+  final_angular_speed_p95_max_rad_s: 0.05
+  final_horizontal_range_max_m: 0.0005
+  final_orientation_range_max_rad: 0.008726646259971648
+  final_collision_penetration_p95_max_m: 0.0005
+  obvious_rebound_upward_speed_m_s: 0.05
+  obvious_rebound_separation_m: 0.001
+  overall_requires_all_variants: true
+
+paths:
+  data_root: /data_all/zzx/3.2RL/data/taco_v1/brush_brush_bowl_20231006_145
+  collision_source: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_issue14_initialization_v1/collision
+  output: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_natural_seating_extension_v1
+
+authorization:
+  read_official_mesh_pose_and_mano: true
+  run_isolated_object_table_physics: true
+  generate_new_read_only_evidence: true
+  modify_original_data: false
+  modify_official_pose: false
+  modify_active_support_contract: false
+  run_mink: false
+  replay: false
+  mpc: false
+  reinforcement_learning: false
+  promotion: false

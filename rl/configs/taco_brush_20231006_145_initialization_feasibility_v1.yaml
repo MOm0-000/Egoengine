@@ -1,0 +1,45 @@
+schema: taco_brush_20231006_145_initialization_feasibility_v1
+status: READ_ONLY_SEQUENTIAL_INITIALIZATION_FEASIBILITY_STUDY
+paper_faithful: false
+
+sample:
+  triplet: "(brush, brush, bowl)"
+  sequence: "(brush, brush, bowl)/20231006_145"
+  frames: 122
+  fps: 30.0
+  initial_action_last_frame_inclusive: 30
+  objects:
+    - {role: tool, name: brush, id: "171"}
+    - {role: target, name: bowl, id: "180"}
+
+geometry_contract:
+  support_source: TACO_INSTRUCTIONS_ISSUE_14_OBJECT_VERTEX_GLOBAL_MINIMUM
+  support_results: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_issue14_initialization_v1/results.json
+  material_penetration_tolerance_m: 0.00005
+  legal_start_consecutive_frames: 3
+  fingertip_proximity_radius_m: 0.012
+  mano_regions: [palm, thumb, index, middle, ring, pinky]
+  legal_start_requires:
+    - both official MANO surfaces not materially below the Issue-14 table
+    - both official object surfaces not materially below the Issue-14 table
+    - no material MANO-object surface penetration
+    - no material MANO-MANO surface penetration
+    - no material object-object surface penetration
+
+paths:
+  data_root: /data_all/zzx/3.2RL/data/taco_v1/brush_brush_bowl_20231006_145
+  output: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_initialization_feasibility_v1
+
+authorization:
+  read_official_mano_meshes: true
+  read_official_object_meshes_and_poses: true
+  generate_read_only_geometry_evidence: true
+  construct_safe_entry_candidate_after_geometry_gate: false
+  run_mink: false
+  physics: false
+  replay: false
+  mpc: false
+  reinforcement_learning: false
+  modify_original_data: false
+  modify_active_support_contract: false
+  promotion: false

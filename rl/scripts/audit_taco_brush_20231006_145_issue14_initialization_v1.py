@@ -37,6 +37,10 @@ from egoengine_repro.evaluation.taco_surface import reconstruct_taco_mano  # noq
 
 
 SCHEMA = "taco_brush_20231006_145_issue14_initialization_v1"
+SUPPORTED_SCHEMAS = {
+    SCHEMA,
+    "taco_brush_20231006_145_natural_seating_extension_v1",
+}
 DEFAULT_CONFIG = RL_ROOT / "configs/taco_brush_20231006_145_issue14_initialization_v1.yaml"
 
 
@@ -392,7 +396,7 @@ def main() -> int:
     args = parser.parse_args()
     config_path = args.config.resolve(strict=True)
     cfg = yaml.safe_load(config_path.read_text(encoding="utf-8"))
-    if cfg.get("schema") != SCHEMA:
+    if cfg.get("schema") not in SUPPORTED_SCHEMAS:
         raise ValueError("unexpected schema")
     subprocess.run(["git", "merge-base", "--is-ancestor", cfg["minimum_baseline"], "HEAD"], cwd=REPO_ROOT, check=True)
     forbidden = ("modify_original_data", "modify_official_pose", "modify_active_support_contract", "run_mink", "replay", "mpc", "reinforcement_learning", "promotion")
@@ -470,8 +474,11 @@ def main() -> int:
     settling = {}
     scene_artifacts = {}
     collision_provenance = {}
+    collision_root = Path(
+        cfg["paths"].get("collision_source", output / "collision")
+    ).resolve(strict=True)
     for name, entry in objects.items():
-        collision_dir = output / "collision" / entry["spec"]["id"]
+        collision_dir = collision_root / entry["spec"]["id"]
         collision_provenance[name] = artifact(collision_dir / "provenance.json")
         scene_path = output / f"isolated_{name}_table_scene.xml"
         props = build_scene(scene_path, entry, collision_dir, table_z, cfg)
@@ -523,7 +530,7 @@ def main() -> int:
     else:
         verdict = "SOURCE_INITIALIZATION_GEOMETRY_PASSES_CHECKED_CONTRACT"
     report = {
-        "schema": SCHEMA,
+        "schema": cfg["schema"],
         "sample": cfg["sample"],
         "candidate_support": {
             **cfg["candidate_support"],
@@ -544,6 +551,7 @@ def main() -> int:
             "object_meshes": {name: artifact(entry["mesh_path"]) for name, entry in objects.items()},
             "object_poses": {name: artifact(entry["pose_path"]) for name, entry in objects.items()},
             "collision_provenance": collision_provenance,
+            "collision_source_root": str(collision_root),
             "isolated_scenes": scene_artifacts,
         },
         "limitations": [

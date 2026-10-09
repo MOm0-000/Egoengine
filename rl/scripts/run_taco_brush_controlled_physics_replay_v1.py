@@ -52,6 +52,10 @@ from run_taco_brush_issue14_mink_candidate_v1 import relevant_pairs  # noqa: E40
 
 
 SCHEMA = "taco_brush_controlled_physics_replay_v1"
+SUPPORTED_SCHEMAS = {
+    SCHEMA,
+    "taco_brush_20231006_145_initialization_controlled_replay_v1",
+}
 DEFAULT_CONFIG = RL_ROOT / "configs/taco_brush_controlled_physics_replay_v1.yaml"
 CONTACT_GROUPS = (
     "right_hand_brush", "left_hand_bowl", "cross_hand_object",
@@ -308,13 +312,52 @@ def hash_tree(output: Path) -> None:
     target.write_text("\n".join(rows) + "\n", encoding="utf-8")
 
 
+def settled_object_qpos(
+    *, csv_path: Path, variants: dict[str, str], transform: np.ndarray,
+    expected_final_time_s: float,
+) -> dict[str, np.ndarray]:
+    """Load the final natural-seating poses and map world coordinates to sim."""
+    selected: dict[str, dict[str, str]] = {}
+    with csv_path.open(newline="", encoding="utf-8") as stream:
+        for row in csv.DictReader(stream):
+            for name, variant in variants.items():
+                if row["object_variant"] == f"{name}__{variant}":
+                    selected[name] = row
+    missing = sorted(set(variants) - set(selected))
+    if missing:
+        raise ValueError(f"missing settled object rows: {missing}")
+    if any(not np.isclose(float(row["time_s"]), expected_final_time_s,
+                          rtol=0.0, atol=1.0e-9)
+           for row in selected.values()):
+        raise ValueError("natural-seating timeseries does not end at frozen time")
+    rotation = np.asarray(transform[:3, :3], dtype=np.float64)
+    translation = np.asarray(transform[:3, 3], dtype=np.float64)
+    transform_quat = np.empty(4, dtype=np.float64)
+    mujoco.mju_mat2Quat(transform_quat, rotation.reshape(-1))
+    result = {}
+    for name, row in selected.items():
+        world_position = np.asarray([
+            row["position_x_m"], row["position_y_m"], row["position_z_m"],
+        ], dtype=np.float64)
+        world_quaternion = np.asarray([
+            row["quaternion_w"], row["quaternion_x"],
+            row["quaternion_y"], row["quaternion_z"],
+        ], dtype=np.float64)
+        simulator_quaternion = np.empty(4, dtype=np.float64)
+        mujoco.mju_mulQuat(simulator_quaternion, transform_quat, world_quaternion)
+        simulator_quaternion /= np.linalg.norm(simulator_quaternion)
+        result[name] = np.concatenate((rotation @ world_position + translation,
+                                       simulator_quaternion))
+    return result
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     args = parser.parse_args()
     config_path = args.config.resolve(strict=True)
     cfg = yaml.safe_load(config_path.read_text(encoding="utf-8"))
-    if cfg.get("schema") != SCHEMA:
+    if cfg.get("schema") not in SUPPORTED_SCHEMAS:
         raise ValueError("unexpected controlled Replay schema")
     forbidden = (
         "modify_source_scene", "modify_reference", "modify_active_support_contract",
@@ -323,9 +366,10 @@ def main() -> int:
     )
     if any(cfg["authorization"].get(key) is not False for key in forbidden):
         raise ValueError("authorization is not fail-closed")
-    if cfg["sample"]["replay_source_endpoint"] != 0 \
-            or cfg["sample"]["replay_outcome_endpoint"] != 80:
-        raise ValueError("v1 is frozen to endpoint 0->80")
+    source_endpoint = int(cfg["sample"]["replay_source_endpoint"])
+    outcome_endpoint = int(cfg["sample"]["replay_outcome_endpoint"])
+    if source_endpoint != 0 or outcome_endpoint <= source_endpoint:
+        raise ValueError("controlled Replay requires a positive endpoint-0 window")
 
     paths = {
         key: Path(value).resolve(strict=(key != "output"))
@@ -346,18 +390,19 @@ def main() -> int:
         reference = {name: np.asarray(archive[name]).copy()
                      for name in ("qpos", "qvel", "ctrl")}
         frequency = float(np.asarray(archive["frequency"]))
-    if reference["qpos"].shape != (209, model.nq) \
-            or reference["qvel"].shape != (209, model.nv) \
-            or reference["ctrl"].shape != (209, model.nu):
+    reference_frames = int(cfg["sample"]["reference_frames"])
+    if reference["qpos"].shape != (reference_frames, model.nq) \
+            or reference["qvel"].shape != (reference_frames, model.nv) \
+            or reference["ctrl"].shape != (reference_frames, model.nu):
         raise ValueError("reference dimensions changed")
     if frequency != float(cfg["sample"]["control_hz"]):
         raise ValueError("reference frequency changed")
-    controls = reference["ctrl"][:81]
+    controls = reference["ctrl"][:outcome_endpoint + 1]
     if not controls_within_range(model, controls):
         raise ValueError("Replay reference contains out-of-range controls")
 
     schedule = control_substep_schedule(
-        control_endpoints=80, control_hz=frequency,
+        control_endpoints=outcome_endpoint, control_hz=frequency,
         simulation_dt_s=float(model.opt.timestep),
     )
     if int(schedule.sum()) > int(cfg["hard_stop"]["maximum_physics_steps"]):
@@ -372,7 +417,7 @@ def main() -> int:
         raise ValueError("support contract and Replay contract disagree")
 
     manifest = {
-        "schema": SCHEMA,
+        "schema": cfg["schema"],
         "status": "FROZEN_BEFORE_PHYSICS",
         "repository_head": subprocess.check_output(
             ["git", "rev-parse", "HEAD"], cwd=REPO_ROOT, text=True,
@@ -400,12 +445,61 @@ def main() -> int:
 
     data = mujoco.MjData(model)
     data.qpos[:] = reference["qpos"][0]
+    initial_state_provenance: dict[str, Any] = {
+        "robot": "robot_reference_endpoint_0",
+        "objects": "robot_reference_endpoint_0",
+        "object_velocity": "ZERO",
+    }
+    if "initial_state" in cfg:
+        initialization = cfg["initial_state"]
+        robot_results_path = Path(initialization["robot_results"]).resolve(strict=True)
+        transform_report = json.loads(robot_results_path.read_text(encoding="utf-8"))
+        candidate_name = str(initialization["robot_candidate"])
+        candidate = transform_report["mink_candidates"][candidate_name]
+        if candidate["status"] != "MINK_PASS":
+            raise ValueError("selected robot initialization did not pass MINK gate")
+        if candidate["robot_reference"]["sha256"] != sha256(paths["robot_reference"]):
+            raise ValueError("robot reference does not match selected passing candidate")
+        seating_results_path = Path(
+            initialization["natural_seating_results"]
+        ).resolve(strict=True)
+        seating_results = json.loads(seating_results_path.read_text(encoding="utf-8"))
+        if not seating_results["decision"]["object_settling_passed_all_variants"]:
+            raise ValueError("natural-seating gate did not pass all frozen variants")
+        transform = np.asarray(transform_report["T_sim_world"], dtype=np.float64)
+        if transform.shape != (4, 4):
+            raise ValueError("initial-state transform must be 4x4")
+        settled = settled_object_qpos(
+            csv_path=Path(initialization["natural_seating_timeseries"]).resolve(strict=True),
+            variants=dict(initialization["object_variants"]), transform=transform,
+            expected_final_time_s=float(initialization["expected_final_time_s"]),
+        )
+        for name, joint_name in (("brush", "right_object_joint"),
+                                 ("bowl", "left_object_joint")):
+            joint = model.joint(joint_name)
+            qadr = int(joint.qposadr[0])
+            data.qpos[qadr:qadr + 7] = settled[name]
+        initial_state_provenance = {
+            "robot": initialization["robot"],
+            "objects": initialization["objects"],
+            "object_velocity": "ZERO",
+            "natural_seating_timeseries": artifact(
+                Path(initialization["natural_seating_timeseries"])
+            ),
+            "natural_seating_results": artifact(seating_results_path),
+            "robot_results": artifact(robot_results_path),
+            "robot_candidate": candidate_name,
+            "object_variants": initialization["object_variants"],
+            "settled_object_qpos_simulator": settled,
+        }
     data.qvel[:] = 0.0
     data.ctrl[:] = reference["ctrl"][0]
     mujoco.mj_forward(model, data)
     initial_warning = warning_counts(data)
     if any(initial_warning):
         raise RuntimeError(f"MuJoCo warning during initialization: {initial_warning}")
+    manifest["initial_state_provenance"] = initial_state_provenance
+    write_json(output / "input_manifest.json", manifest)
 
     object_specs = {
         "brush": {"joint": "right_object_joint", "contact": "right_hand_brush",
@@ -453,6 +547,13 @@ def main() -> int:
                 f"{name}_hand_contact_substeps": interval[spec["contact"]]["contact_substeps"],
                 f"{name}_floor_contact_substeps": interval[spec["floor"]]["contact_substeps"],
             })
+            if "strict_tracking_gate" in cfg:
+                position_scale = float(cfg["strict_tracking_gate"]["position_scale_m"])
+                rotation_scale = float(cfg["strict_tracking_gate"]["rotation_scale_rad"])
+                row[f"{name}_tracking_score"] = float(np.sqrt(
+                    (row[f"{name}_position_error_m"] / position_scale) ** 2
+                    + (row[f"{name}_rotation_error_rad"] / rotation_scale) ** 2
+                ))
         row["interval_groups"] = copy.deepcopy(interval)
         endpoint_rows.append(row)
         if endpoint in audit_endpoints:
@@ -570,6 +671,10 @@ def main() -> int:
             "floor_max_force_n", "hand_contact_substeps", "floor_contact_substeps",
         )],
     ]
+    if "strict_tracking_gate" in cfg:
+        scalar_fields.extend(
+            f"{name}_tracking_score" for name in object_specs
+        )
     with (output / "endpoint_trace.csv").open("w", newline="", encoding="utf-8") as stream:
         writer = csv.DictWriter(stream, fieldnames=scalar_fields)
         writer.writeheader()
@@ -691,13 +796,27 @@ def main() -> int:
                     "limit_m": limit,
                 })
 
+    tracking_failures = []
+    if "strict_tracking_gate" in cfg:
+        for row in endpoint_rows:
+            for name in object_specs:
+                score = float(row[f"{name}_tracking_score"])
+                if score > float(cfg["strict_tracking_gate"]["maximum_score"]):
+                    tracking_failures.append({
+                        "endpoint": int(row["endpoint"]), "object": name,
+                        "score": score,
+                        "position_error_m": float(row[f"{name}_position_error_m"]),
+                        "rotation_error_rad": float(row[f"{name}_rotation_error_rad"]),
+                    })
+
     strict_pass = bool(
         hard_stop is None
         and all(row["stable_pickup_pass"] for row in pickup.values())
         and not native_blockers
         and not force_exposure_mismatches
         and not geometry_mismatches
-        and endpoint_rows[-1]["endpoint"] == 80
+        and not tracking_failures
+        and endpoint_rows[-1]["endpoint"] == outcome_endpoint
     )
     if hard_stop is not None:
         classification = "CONTROLLED_REPLAY_HARD_STOP"
@@ -721,12 +840,13 @@ def main() -> int:
         for name in object_specs
     }
     result = {
-        "schema": SCHEMA, "classification": classification,
+        "schema": cfg["schema"], "classification": classification,
         "strict_gate_passed": strict_pass, "promotion_authorized": False,
         "chunk_commit_allowed": False, "reinforcement_learning_runs": 0,
         "completed_outcome_endpoint": int(endpoint_rows[-1]["endpoint"]),
         "physics_steps": physics_steps, "hard_stop": hard_stop,
         "pickup": pickup, "native_blockers": native_blockers,
+        "tracking_failures": tracking_failures,
         "proxy_native_force_exposure_mismatches": force_exposure_mismatches,
         "proxy_native_geometry_mismatches": geometry_mismatches,
         "proxy_error_dynamic_exposure": proxy_impact,
@@ -773,7 +893,7 @@ def main() -> int:
         "# Brush controlled physics Replay v1", "",
         f"- Classification: `{classification}`",
         f"- Strict gate: `{'PASS' if strict_pass else 'FAIL'}`",
-        f"- Completed: endpoint `0→{endpoint_rows[-1]['endpoint']}` / planned `0→80`",
+        f"- Completed: endpoint `0→{endpoint_rows[-1]['endpoint']}` / planned `0→{outcome_endpoint}`",
         f"- CPU MuJoCo physics steps: `{physics_steps}`",
         f"- Hard stop: `{hard_stop['reasons'] if hard_stop else 'NONE'}`",
         "- RL / MPC / MINK: `NOT RUN`",
@@ -790,6 +910,9 @@ def main() -> int:
             f"{'PASS' if row['stable_pickup_pass'] else 'FAIL'} |"
         )
     lines += [
+        "", "## Tracking gate", "",
+        f"- Tracking failures: `{len(tracking_failures)}`",
+        f"- First tracking failure: `{tracking_failures[0] if tracking_failures else 'NONE'}`",
         "", "## Collision/proxy evidence", "",
         f"- Native blocking observations: `{len(native_blockers)}`",
         f"- Endpoint proxy/native geometry mismatch observations: `{len(geometry_mismatches)}`",
@@ -817,6 +940,7 @@ def main() -> int:
         "completed_outcome_endpoint": endpoint_rows[-1]["endpoint"],
         "physics_steps": physics_steps, "hard_stop": hard_stop,
         "pickup": pickup, "native_blockers": len(native_blockers),
+        "tracking_failures": len(tracking_failures),
         "proxy_native_geometry_mismatches": len(geometry_mismatches),
         "proxy_native_force_exposure_mismatches": len(force_exposure_mismatches),
     }, indent=2, default=json_default))

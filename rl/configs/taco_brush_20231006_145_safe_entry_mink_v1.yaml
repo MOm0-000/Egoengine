@@ -1,0 +1,56 @@
+schema: taco_brush_20231006_145_safe_entry_mink_v1
+status: READ_ONLY_DEXTRACK_STYLE_ENTRY_AND_XHAND_KINEMATIC_FEASIBILITY
+paper_faithful: false
+
+sample:
+  sequence: "(brush, brush, bowl)/20231006_145"
+  frames: 122
+  fps: 30.0
+  tool: {name: brush, id: "171", role: tool}
+  target: {name: bowl, id: "180", role: target}
+
+entry_contract:
+  join_source_frame: 11
+  replaced_source_frames: [0, 10]
+  construction: HOLD_SOURCE_FRAME_11_ARTICULATION_WITH_SMOOTH_VERTICAL_RETREAT
+  initial_vertical_retreat_m: 0.03
+  interpolation: cubic_smoothstep_to_exact_source_frame_11
+  object_reference: OFFICIAL_UNMODIFIED_PER_SOURCE_FRAME
+  issue14_world_table_z_m: 0.5486731875342141
+  simulator_table_z_m: 0.72
+  material_penetration_tolerance_m: 0.00005
+  direct_crop_comparator_start_frame: 11
+
+mink_contract:
+  settings: /data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_bimanual_mink_local_v1.yaml
+  final_feasibility_algorithm: UNIFIED_SELF_AND_NATIVE_SUPPORT_FEASIBILITY
+  native_support:
+    minimum_clearance_m: 0.0
+    validation_tolerance_m: 0.00005
+    gain: 0.85
+    depenetration_step_m: 0.002
+    activation_distance_m: null
+  hand_object_collision_limit: ABSENT
+  rationale: PRESERVE_NECESSARY_INTERACTION;_NATIVE_MESH_IS_POST_HOC_AUDIT_NOT_ZERO_MARGIN_PROXY_CONSTRAINT
+
+paths:
+  data_root: /data_all/zzx/3.2RL/data/taco_v1/brush_brush_bowl_20231006_145
+  source_template: /data_all/zzx/3.2RL/models/taco_xhand/templates/xhand_bimanual_source.xml
+  source_robot_assets: /data_all/zzx/3.2RL/models/taco_xhand/assets/robots
+  collision_source: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_issue14_initialization_v1/collision
+  source_geometry_audit: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_initialization_feasibility_v1/results.json
+  output: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1
+
+authorization:
+  construct_generated_scene: true
+  construct_safe_entry_reference: true
+  run_fresh_mink_candidates: 2
+  static_native_geometry_audit: true
+  physics: false
+  replay: false
+  mpc: false
+  reinforcement_learning: false
+  modify_original_data: false
+  modify_active_support_contract: false
+  reuse_old_brush_hand_object_zero_margin_proxy_fix: false
+  promotion: false

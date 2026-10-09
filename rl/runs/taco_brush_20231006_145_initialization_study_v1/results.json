@@ -1,0 +1,377 @@
+{
+  "artifacts": {
+    "natural_seating": {
+      "bytes": 20582,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_natural_seating_extension_v1/results.json",
+      "sha256": "5779be198ee2cb6aea2fb6bc92ce04d58325cc70cf8d3c93b12d34911e5380ff"
+    },
+    "replay": {
+      "bytes": 22516,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_initialization_controlled_replay_v1/results.json",
+      "sha256": "8bebd00d01f38e3faac1558e15c407a3a1ea959ad01c27dbc1407a7598c8972c"
+    },
+    "source_geometry": {
+      "bytes": 3703,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_initialization_feasibility_v1/results.json",
+      "sha256": "686d0f0ef2d17f211e06ac0520aa9a6b5744d869dd62cf4ef12836fde0fcf1fd"
+    },
+    "xhand_kinematics": {
+      "bytes": 8058,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/results.json",
+      "sha256": "da9a3c3b6464e920541787fed789e924e20592eb7397fecec9688a5a3bfa2bd2"
+    }
+  },
+  "classification": "STATIC_INITIALIZATION_FEASIBLE_EARLY_PHYSICS_EXECUTION_INVALID_REPLAY_FAILED_CLOSED",
+  "config": {
+    "bytes": 1006,
+    "path": "/data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_20231006_145_initialization_study_v1.yaml",
+    "sha256": "c939c847765abd02cb078042d229d02d4e3f85111be46e97a4d7fd96deb5d3b9"
+  },
+  "decision": {
+    "bowl_stable_pickup": true,
+    "brush_stable_pickup": false,
+    "controlled_replay_strict_pass": false,
+    "replay_or_rl_promotion_authorized": false,
+    "static_initialization_feasible": true
+  },
+  "ordered_gates": {
+    "1_mano_penetration_scope": {
+      "frame0": {
+        "bowl_table_min_m": 3.1920534940721446e-05,
+        "brush_table_min_m": 0.003457720727134239,
+        "frame": 0,
+        "fully_geometry_legal": false,
+        "hand_hand_material_penetration": false,
+        "hand_object_material_penetration": false,
+        "hand_table_legal": false,
+        "left_mano_table_min_m": -0.0009500134390603154,
+        "object_object_material_penetration": false,
+        "object_table_legal": true,
+        "right_mano_table_min_m": -0.00495914105594264,
+        "time_s": 0.0
+      },
+      "initial_action": {
+        "frames": [
+          0,
+          30
+        ],
+        "fully_legal_frames": [
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17
+        ],
+        "left_table_penetrating_frames": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "penetrating_surface_regions": {
+          "left": [
+            "pinky"
+          ],
+          "right": [
+            "middle",
+            "pinky",
+            "ring",
+            "thumb"
+          ]
+        },
+        "right_table_penetrating_frames": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ]
+      },
+      "interpretation": "Frame-0 penetration is on fingers, not palm/wrist; left clears after frame 5 and right after frame 10.",
+      "status": "LOCAL_FINGER_TABLE_PENETRATION_CONFIRMED"
+    },
+    "2_direct_legal_start": {
+      "contract": {
+        "discarded_duration_s_if_used": 0.36666666666666664,
+        "discarded_original_frames_if_used": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ],
+        "first_single_legal_frame": 11,
+        "first_stable_legal_frame": 11,
+        "required_consecutive_legal_frames": 3
+      },
+      "fresh_mink_status": {
+        "failure": "QP failed at frame 90: QP solver daqp failed to find a solution.",
+        "human_reference": {
+          "bytes": 191562,
+          "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/direct_crop/human_reference.npz",
+          "sha256": "13a4aba7eb526b1931bddaa42ad1d3d2f4de3848446a332e3bb02e741dd50138"
+        },
+        "status": "MINK_FAIL"
+      },
+      "status": "SOURCE_FRAME_11_LEGAL_BUT_CROPPED_NOT_COMPLETE_REPRODUCTION"
+    },
+    "3_safe_entry": {
+      "candidate": {
+        "fingertip_error_max_m": 0.04252716820689523,
+        "fingertip_error_mean_m": 0.016635730286001894,
+        "frames": 122,
+        "human_reference": {
+          "bytes": 197027,
+          "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/safe_entry/human_reference.npz",
+          "sha256": "c66f4861a403c2024e355929404c52b437240a70e4140afb9d6b614b6be04d00"
+        },
+        "initialization_native_geometry": {
+          "bytes": 2594177,
+          "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/safe_entry/initialization_native_geometry.json",
+          "sha256": "86857c12897ec8a271ad88825d01c978a2fadb048e4fb38b07bfdb24383eeaec"
+        },
+        "initialization_native_geometry_pass": true,
+        "interaction_native_hand_object_observations": {
+          "artifact": {
+            "bytes": 38197,
+            "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/safe_entry/interaction_native_hand_object_audit.json",
+            "sha256": "f634840c06d6dee4be0a695ec2165955320b9e2bbf7a3b27f2f88f0fd79a883a"
+          },
+          "interpretation": "POST_HOC_INTERACTION_GEOMETRY;_NOT_A_ZERO_MARGIN_MINK_CONSTRAINT",
+          "penetrating_pair_observation_count": 29,
+          "source_frames": [
+            18,
+            30,
+            60,
+            90,
+            121
+          ],
+          "unknown_pair_observation_count": 0
+        },
+        "native_hand_table_minimum_m": -1.3259951705202333e-05,
+        "retarget_report": {
+          "effective_retarget_contract": {
+            "action_optimization_config_dependencies": [],
+            "algorithm": "MINK",
+            "constraints": {
+              "frozen_dof_count": 12,
+              "object_dofs_frozen": true
+            },
+            "final_feasibility": {
+              "algorithm": "UNIFIED_SELF_AND_NATIVE_SUPPORT_FEASIBILITY",
+              "direct_qpos_edit": false,
+              "max_iterations": 128,
+              "tracking_tasks_during_closure": false
+            },
+            "hard_limits": {
+              "configuration_limit": "ConfigurationLimit",
+              "frame_displacement_limit": "FrameDisplacementLimit",
+              "native_support": {
+                "activation_distance_m": null,
+                "depenetration_step_m": 0.002,
+                "frame": "simulator",
+                "gain": 0.85,
+                "implementation": "NativeSupportPlaneLimit",
+                "minimum_clearance_m": 0.0,
+                "native_geom_count": 26,
+                "normal": [
+                  0.0,
+                  0.0,
+                  1.0
+                ],
+                "offset_m": 0.72,
+                "present": true,
+                "validation_tolerance_m": 5e-05
+              },
+              "self_collision": {
+                "acceptance_slack_m": 1e-12,
+                "explicit_pair_count": 174,
+                "implementation": "StrictCollisionLimit",
+                "minimum_accepted_distance_m": -1e-06,
+                "present": true
+              }
+            },
+            "schema": "taco_bimanual_effective_retarget_contract_v1",
+            "solver": {
+              "damping": 1e-05,
+              "dual_tolerance": 1e-06,
+              "name": "daqp",
+              "primal_tolerance": 1e-06
+            },
+            "tasks": {
+              "fingertips": {
+                "count": 10,
+                "count_per_hand": 5,
+                "orientation_cost": 1.0,
+                "position_cost": 10.0
+              },
+              "posture": "ABSENT",
+              "wrist": {
+                "count": 2,
+                "orientation_cost": 3.0,
+                "position": "ABSENT"
+              }
+            },
+            "timeline": {
+              "first_frame_iterations": 80,
+              "iterations_per_frame": 8,
+              "qp_integration_dt_s": 0.004166666666666667,
+              "source_dt_s": 0.03333333333333333
+            }
+          },
+          "fingertip_max_error_m": [
+            0.03157754335063618,
+            0.04252716820689523
+          ],
+          "fingertip_mean_error_m": [
+            0.01584943375364605,
+            0.01742202681835773
+          ],
+          "frame_velocity_max_ratio": 0.9999962500000009,
+          "frame_velocity_violating_intervals": 0,
+          "frames": 122,
+          "human_reference": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/safe_entry/human_reference.npz",
+          "human_reference_sha256": "c66f4861a403c2024e355929404c52b437240a70e4140afb9d6b614b6be04d00",
+          "joint_limit_min_margin": -2.761671902424286e-16,
+          "joint_limit_violating_frames": 0,
+          "native_support_minimum_distance_m": -1.3259951705202333e-05,
+          "rl_validation_completed": false,
+          "scene": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/generated_scene.xml",
+          "scene_sha256": "bab703cbd3a83b01c6d04bc0a9a29e44eec204c6eb9b7035099b58582049cb6a",
+          "self_collision_min_distance_m": -1.491862189340054e-16,
+          "source_total_frames": 122,
+          "status": "MINK_kinematic_candidate_not_physics_validated",
+          "strict_gate_passed": false,
+          "wrist_mean_error_rad": [
+            0.08292255388761557,
+            0.07245992606648206
+          ]
+        },
+        "robot_reference": {
+          "bytes": 130846,
+          "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/safe_entry/robot_reference.npz",
+          "sha256": "9216e8e72ff824c5ddf5bfdf530212d214273e0a23df4e9433a89b38a25c39ea"
+        },
+        "source_frame_start": 0,
+        "status": "MINK_PASS"
+      },
+      "contract": {
+        "all_entry_frames_native_geometry_legal": true,
+        "exact_source_join": true,
+        "initial_vertical_retreat_m": 0.03,
+        "join_frame": 11,
+        "objects_modified": false,
+        "replaced_frames": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ]
+      },
+      "status": "SAFE_ENTRY_REFERENCE_AND_MINK_PASS"
+    },
+    "4_xhand_environment_constraints": {
+      "native_initialization_pass": true,
+      "selected_interaction_observations": {
+        "artifact": {
+          "bytes": 38197,
+          "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/safe_entry/interaction_native_hand_object_audit.json",
+          "sha256": "f634840c06d6dee4be0a695ec2165955320b9e2bbf7a3b27f2f88f0fd79a883a"
+        },
+        "interpretation": "POST_HOC_INTERACTION_GEOMETRY;_NOT_A_ZERO_MARGIN_MINK_CONSTRAINT",
+        "penetrating_pair_observation_count": 29,
+        "source_frames": [
+          18,
+          30,
+          60,
+          90,
+          121
+        ],
+        "unknown_pair_observation_count": 0
+      },
+      "status": "INITIALIZATION_PASS_WITH_LATER_INTERACTION_GEOMETRY_RISK"
+    },
+    "5_physics_replay": {
+      "completed_endpoint": 121,
+      "deepest_xhand_table_blocker": {
+        "classification": "PENETRATION",
+        "distance_m": -0.0033714710526857594,
+        "endpoint": 20,
+        "entity": "right_xhand_table",
+        "limit_m": 5e-05
+      },
+      "earliest_xhand_table_blocker_endpoint": 5,
+      "first_tracking_failure": {
+        "endpoint": 35,
+        "object": "brush",
+        "position_error_m": 0.11204202373056109,
+        "rotation_error_rad": 0.6927199976330201,
+        "score": 1.0416508482269609
+      },
+      "hard_stop": null,
+      "maximums": {
+        "bowl_position_error_m": 0.054009584017533106,
+        "brush_position_error_m": 0.139922117679561,
+        "contact_force_n": 278.7172352587395,
+        "proxy_penetration_m": 0.002416868842332578
+      },
+      "native_blocker_count": 36,
+      "object_settling_passed_all_variants": true,
+      "pickup": {
+        "bowl": {
+          "lifted_hand_contact_no_floor_longest_run": 6,
+          "maximum_actual_lift_m": 0.013316802867367583,
+          "maximum_reference_lift_m": 0.037358224391937256,
+          "stable_pickup_pass": true
+        },
+        "brush": {
+          "lifted_hand_contact_no_floor_longest_run": 0,
+          "maximum_actual_lift_m": 0.00408662341303534,
+          "maximum_reference_lift_m": 0.10893261432647705,
+          "stable_pickup_pass": false
+        }
+      },
+      "proxy_native_force_exposure_mismatch_count": 3,
+      "proxy_native_geometry_mismatch_count": 2,
+      "status": "CONTROLLED_REPLAY_FAILED_CLOSED",
+      "tracking_failure_count": 59
+    }
+  },
+  "provenance_contract": {
+    "active_support_modified": false,
+    "mpc_runs": 0,
+    "object_initial_state": "10-second isolated natural seating, zero-initial-velocity variant",
+    "original_data_modified": false,
+    "promotion_authorized": false,
+    "reference_actions": "safe-entry MINK controls; official per-frame object reference unmodified",
+    "rl_runs": 0,
+    "robot_initial_state": "safe-entry fresh MINK endpoint 0",
+    "support": "Issue #14 global official-object minimum; unpromoted candidate"
+  },
+  "repository_head": "60abb1dfc6ac940df844fa563dd35f2adb23694d",
+  "sample": "(brush, brush, bowl)/20231006_145",
+  "schema": "taco_brush_20231006_145_initialization_study_v1"
+}

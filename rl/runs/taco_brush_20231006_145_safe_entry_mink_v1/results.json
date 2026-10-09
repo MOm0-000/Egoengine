@@ -1,0 +1,245 @@
+{
+  "T_sim_world": [
+    [
+      1.0,
+      0.0,
+      0.0,
+      0.5353639644104987
+    ],
+    [
+      0.0,
+      1.0,
+      0.0,
+      0.06017493223771453
+    ],
+    [
+      0.0,
+      0.0,
+      1.0,
+      0.17132681246578585
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "classification": "XHAND_KINEMATIC_INITIALIZATION_PASS",
+  "forbidden_runtime_counts": {
+    "mpc": 0,
+    "physics": 0,
+    "replay": 0,
+    "rl": 0
+  },
+  "generated_scene": {
+    "bytes": 410567,
+    "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/generated_scene.xml",
+    "sha256": "bab703cbd3a83b01c6d04bc0a9a29e44eec204c6eb9b7035099b58582049cb6a"
+  },
+  "kinematically_eligible_candidates": [
+    "safe_entry"
+  ],
+  "mink_candidates": {
+    "direct_crop": {
+      "failure": "QP failed at frame 90: QP solver daqp failed to find a solution.",
+      "human_reference": {
+        "bytes": 191562,
+        "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/direct_crop/human_reference.npz",
+        "sha256": "13a4aba7eb526b1931bddaa42ad1d3d2f4de3848446a332e3bb02e741dd50138"
+      },
+      "status": "MINK_FAIL"
+    },
+    "safe_entry": {
+      "fingertip_error_max_m": 0.04252716820689523,
+      "fingertip_error_mean_m": 0.016635730286001894,
+      "frames": 122,
+      "human_reference": {
+        "bytes": 197027,
+        "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/safe_entry/human_reference.npz",
+        "sha256": "c66f4861a403c2024e355929404c52b437240a70e4140afb9d6b614b6be04d00"
+      },
+      "initialization_native_geometry": {
+        "bytes": 2594177,
+        "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/safe_entry/initialization_native_geometry.json",
+        "sha256": "86857c12897ec8a271ad88825d01c978a2fadb048e4fb38b07bfdb24383eeaec"
+      },
+      "initialization_native_geometry_pass": true,
+      "interaction_native_hand_object_observations": {
+        "artifact": {
+          "bytes": 38197,
+          "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/safe_entry/interaction_native_hand_object_audit.json",
+          "sha256": "f634840c06d6dee4be0a695ec2165955320b9e2bbf7a3b27f2f88f0fd79a883a"
+        },
+        "interpretation": "POST_HOC_INTERACTION_GEOMETRY;_NOT_A_ZERO_MARGIN_MINK_CONSTRAINT",
+        "penetrating_pair_observation_count": 29,
+        "source_frames": [
+          18,
+          30,
+          60,
+          90,
+          121
+        ],
+        "unknown_pair_observation_count": 0
+      },
+      "native_hand_table_minimum_m": -1.3259951705202333e-05,
+      "retarget_report": {
+        "effective_retarget_contract": {
+          "action_optimization_config_dependencies": [],
+          "algorithm": "MINK",
+          "constraints": {
+            "frozen_dof_count": 12,
+            "object_dofs_frozen": true
+          },
+          "final_feasibility": {
+            "algorithm": "UNIFIED_SELF_AND_NATIVE_SUPPORT_FEASIBILITY",
+            "direct_qpos_edit": false,
+            "max_iterations": 128,
+            "tracking_tasks_during_closure": false
+          },
+          "hard_limits": {
+            "configuration_limit": "ConfigurationLimit",
+            "frame_displacement_limit": "FrameDisplacementLimit",
+            "native_support": {
+              "activation_distance_m": null,
+              "depenetration_step_m": 0.002,
+              "frame": "simulator",
+              "gain": 0.85,
+              "implementation": "NativeSupportPlaneLimit",
+              "minimum_clearance_m": 0.0,
+              "native_geom_count": 26,
+              "normal": [
+                0.0,
+                0.0,
+                1.0
+              ],
+              "offset_m": 0.72,
+              "present": true,
+              "validation_tolerance_m": 5e-05
+            },
+            "self_collision": {
+              "acceptance_slack_m": 1e-12,
+              "explicit_pair_count": 174,
+              "implementation": "StrictCollisionLimit",
+              "minimum_accepted_distance_m": -1e-06,
+              "present": true
+            }
+          },
+          "schema": "taco_bimanual_effective_retarget_contract_v1",
+          "solver": {
+            "damping": 1e-05,
+            "dual_tolerance": 1e-06,
+            "name": "daqp",
+            "primal_tolerance": 1e-06
+          },
+          "tasks": {
+            "fingertips": {
+              "count": 10,
+              "count_per_hand": 5,
+              "orientation_cost": 1.0,
+              "position_cost": 10.0
+            },
+            "posture": "ABSENT",
+            "wrist": {
+              "count": 2,
+              "orientation_cost": 3.0,
+              "position": "ABSENT"
+            }
+          },
+          "timeline": {
+            "first_frame_iterations": 80,
+            "iterations_per_frame": 8,
+            "qp_integration_dt_s": 0.004166666666666667,
+            "source_dt_s": 0.03333333333333333
+          }
+        },
+        "fingertip_max_error_m": [
+          0.03157754335063618,
+          0.04252716820689523
+        ],
+        "fingertip_mean_error_m": [
+          0.01584943375364605,
+          0.01742202681835773
+        ],
+        "frame_velocity_max_ratio": 0.9999962500000009,
+        "frame_velocity_violating_intervals": 0,
+        "frames": 122,
+        "human_reference": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/safe_entry/human_reference.npz",
+        "human_reference_sha256": "c66f4861a403c2024e355929404c52b437240a70e4140afb9d6b614b6be04d00",
+        "joint_limit_min_margin": -2.761671902424286e-16,
+        "joint_limit_violating_frames": 0,
+        "native_support_minimum_distance_m": -1.3259951705202333e-05,
+        "rl_validation_completed": false,
+        "scene": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/generated_scene.xml",
+        "scene_sha256": "bab703cbd3a83b01c6d04bc0a9a29e44eec204c6eb9b7035099b58582049cb6a",
+        "self_collision_min_distance_m": -1.491862189340054e-16,
+        "source_total_frames": 122,
+        "status": "MINK_kinematic_candidate_not_physics_validated",
+        "strict_gate_passed": false,
+        "wrist_mean_error_rad": [
+          0.08292255388761557,
+          0.07245992606648206
+        ]
+      },
+      "robot_reference": {
+        "bytes": 130846,
+        "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/safe_entry/robot_reference.npz",
+        "sha256": "9216e8e72ff824c5ddf5bfdf530212d214273e0a23df4e9433a89b38a25c39ea"
+      },
+      "source_frame_start": 0,
+      "status": "MINK_PASS"
+    }
+  },
+  "provenance": {
+    "config": {
+      "bytes": 2263,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_20231006_145_safe_entry_mink_v1.yaml",
+      "sha256": "15f3525901c351406d0637b7547971ca0847012293c2eec72da529ccb5bef588"
+    },
+    "repository_head": "60abb1dfc6ac940df844fa563dd35f2adb23694d",
+    "source_geometry_gate": {
+      "bytes": 3703,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_initialization_feasibility_v1/results.json",
+      "sha256": "686d0f0ef2d17f211e06ac0520aa9a6b5744d869dd62cf4ef12836fde0fcf1fd"
+    }
+  },
+  "replay_authorization": "NOT_DECIDED_BY_THIS_KINEMATIC_STAGE",
+  "safe_entry": {
+    "all_entry_frames_native_geometry_legal": true,
+    "exact_source_join": true,
+    "initial_vertical_retreat_m": 0.03,
+    "join_frame": 11,
+    "objects_modified": false,
+    "replaced_frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ]
+  },
+  "schema": "taco_brush_20231006_145_safe_entry_mink_v1",
+  "source_direct_start": {
+    "deleted_duration_s": 0.36666666666666664,
+    "deleted_frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "frame": 11
+  }
+}
