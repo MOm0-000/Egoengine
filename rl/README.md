@@ -13,12 +13,13 @@ OMP_NUM_THREADS=4 \
 Use `scripts/run_rl.py verify --physics` only for the bounded structural
 verification. It has no long-training mode and cannot commit a chunk. The
 retired Candidate/PpoAgent orchestration is recoverable under
-`TRASH/rl_core_refactor_r1_legacy_2026-10-01/`. `runs/` now retains current
-inputs and decision evidence rather than every superseded source-by-source
-diagnostic; retired server artifacts remain recoverable from dated `TRASH/`
-batches and Git history.
+`TRASH/rl_core_refactor_r1_legacy_2026-10-01/`. `runs/` now retains only the
+current `20231006_145` task chain, active-runtime audits, and immutable test
+fixtures. The 135 completed older run directories are recoverable under
+`TRASH/retired_runs_2026-10-13/`; no evidence was deleted or rewritten.
 
-See [`docs/ACTIVE_RUNTIME.md`](docs/ACTIVE_RUNTIME.md) and
+See [`docs/ACTIVE_RUNTIME.md`](docs/ACTIVE_RUNTIME.md),
+[`runs/README.md`](runs/README.md), and
 [`runs/rl_core_refactor_r1/summary.md`](runs/rl_core_refactor_r1/summary.md).
 
 The default test command now selects only the fixture-free active surface:
@@ -61,8 +62,8 @@ archives; they are not active runtime contracts.
 
 - `src/`, `scripts/`, `tests/`, `configs/`, `diagnostics/`: implementation and checks.
 - `models/`: the local XHand/MuJoCo model snapshot used by the audits.
-- `runs/`: compact references, geometry candidates and audit reports. PPO checkpoints
-  and smoke-training weights are excluded.
+- `runs/`: the active task evidence, runtime audits, and test fixtures listed in
+  `runs/README.md`. Completed historical runs live in dated `TRASH/` archives.
 - `external/mink/`: the MINK runtime and unit-test subset based on commit
   `ab45779fea46933832dee1c240f94103633347a1`, including the three local compatibility
   and explicit-pair changes used by this project. Upstream documentation examples

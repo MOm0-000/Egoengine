@@ -1,27 +1,24 @@
 # Active RL runtime
 
-## Next primary TACO sample
+## Current primary TACO sample
 
-New reproduction work is now directed at the exact EgoEngine showcase sample
-`(brush, brush, bowl)/20230927_027`.  The frozen selection contract is
-`configs/taco_primary_sample_brush_brush_bowl_v1.yaml`.
+New reproduction work is directed at
+`(brush, brush, bowl)/20231006_145`. Its complete official package is stored
+outside Git at
+`/data_all/zzx/3.2RL/data/taco_v1/brush_brush_bowl_20231006_145`, with tracked
+acquisition provenance in `runs/taco_brush_20231006_145_acquisition_v1/`.
 
-This selection is a stronger source-data prior, not a claim that the local
-robot trajectory is already valid.  The released row is complete and marked
-`good`, and the exact sequence appears in both the website's visual-generation
-and action-generation showcases.  Locally, however, the current bimanual MINK
-result remains a kinematic candidate: its collision audit is not a strict pass
-and it has not been physics validated.  Brush training and chunk commit remain
-disabled until the sample-specific promotion gates in the selection contract
-pass.
+The current seven-run evidence chain is listed in `runs/README.md`. The latest
+classification is
+`STATIC_INITIALIZATION_FEASIBLE_EARLY_PHYSICS_EXECUTION_INVALID_REPLAY_FAILED_CLOSED`:
+the DexTrack-style safe entry is kinematically feasible, but controlled Replay
+still fails on early native hand/table collision and missing brush pickup.
+RL, MPC, promotion, and chunk commit remain forbidden by this evidence.
 
-The first from-scratch paper-baseline rebuild is recorded in
-`runs/taco_brush_brush_bowl_paper_baseline_v1/`.  The released inputs and
-official 209-frame projection pass, the bowl cavity remains free, and the one
-authorized MINK candidate is kinematically feasible.  The run stops before
-physics with `BRUSH_INITIALIZATION_STATIC_BLOCKER`: endpoint 0 has native
-hand/brush material below the 0.72 m table plane.  Replay, MPC, RL and chunk
-commit were not run.
+The former `20230927_027` Brush work and all completed Pour investigations are
+historical. Their run directories now live under
+`TRASH/retired_runs_2026-10-13/`; they must not be treated as inputs to the
+current sample.
 
 The Pour runtime below is retained only to reproduce and inspect immutable
 historical evidence.  It is no longer the default target for new experiments,
@@ -57,8 +54,8 @@ The only authorized `taco_pour_control_aware_startup_v1` execution is complete.
 It used two frozen full-state starts, four replans per start and no network
 forward or RL update. A_PLAN passed the bounded numerical and visual gates;
 L_PLAN remained a trade-off. This result does not authorize rerunning the
-search, promoting a reset, training RL or committing a chunk. See
-`runs/taco_pour_control_aware_startup_v1/summary.md`.
+search, promoting a reset, training RL or committing a chunk. See the archived
+`TRASH/retired_runs_2026-10-13/taco_pour_control_aware_startup_v1/summary.md`.
 
 The training command is fail-closed on a successful real two-epoch/cold-resume
 verification report. Its fixed task is TACO `20230927_017`, `tool_only`, CPU,
@@ -73,8 +70,8 @@ privileged extra. It consumed the full formal budget and ended
 `COMPLETED_NO_STRICT_WINDOW_SUCCESS`; the five fixed evaluations validated
 `20/18/20/19/19` intervals. This is a bounded negative result, not
 authorization to run another seed, extend the budget, select an intermediate
-checkpoint, or commit a chunk. See
-`runs/taco_pour_rl_task_informed_critic_v2/summary.md`.
+checkpoint, or commit a chunk. See the archived
+`TRASH/retired_runs_2026-10-13/taco_pour_rl_task_informed_critic_v2/summary.md`.
 
 The collector uses raw-reward critic values, post-action `done_after`,
 pre-forward `episode_start`, real environment reference cursors/timeouts and a
@@ -103,6 +100,6 @@ in `docs/runner_surface_audit_r1.md` describes the R1 verification-only surface;
 the subsequently authorized training path is kept in the same core rather than
 reintroducing a Candidate-specific trainer.
 
-Immutable checkpoints, batches and trajectories stay in `runs/` because the
-new verifier consumes them by SHA-256. They are evidence, not alternate
-runtime implementations.
+Only immutable checkpoints, batches, and trajectories consumed by the active
+verifier or tests stay in `runs/`. Completed historical evidence lives in the
+dated archive and is not an alternate runtime implementation.

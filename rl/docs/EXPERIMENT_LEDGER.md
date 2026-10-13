@@ -1,5 +1,10 @@
 # RL experiment ledger
 
+> Archive note (2026-10-13): completed historical run directories referenced
+> below with the old `runs/<name>` spelling now reside under
+> `TRASH/retired_runs_2026-10-13/<name>`. The active `runs/` surface is defined
+> by `runs/README.md`. This relocation did not rewrite any experiment evidence.
+
 ## `rl_core_refactor_r1`
 
 - Type: behavior-preserving structural refactor and bounded verification.

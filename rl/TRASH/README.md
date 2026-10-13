@@ -6,6 +6,16 @@ of the formal Replay-to-RL input chain. Do not place active models, references,
 GT, reports, or reproducibility evidence here without first recording why they
 were superseded.
 
+`retired_runs_2026-10-13` contains the 135 completed or superseded run
+directories removed from the default `rl/runs/` surface after the active task
+moved to the explicit `20231006_145` initialization chain. Nothing was deleted;
+the archive README records its scope and recovery boundary.
+
+The six `taco_brush_20231006_145_*` pre-contract/failed-schema directories and
+the generated Candidate-G `ppo`, `validation_agents`, and shadow directories
+are server-local and ignored by Git. They are retained only for local recovery;
+none is accepted evidence and none is uploaded to GitHub.
+
 `retired_tail_source_diagnostics_2026-10-03` indexes the 23 obsolete
 endpoint-44--58/source-by-source/Gate A--L run records removed from the active
 Git `runs/` surface after the investigation moved to the startup transition.
