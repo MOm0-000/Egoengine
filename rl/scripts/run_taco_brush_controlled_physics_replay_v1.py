@@ -40,13 +40,24 @@ from audit_taco_brush_issue14_frame0_static_penetration_v1 import (  # noqa: E40
     table_audit,
 )
 from egoengine_repro.evaluation.controlled_physics_replay import (  # noqa: E402
+    REFERENCE_CTRL_LINEAR_SUBSTEP_INTERPOLATION,
+    REFERENCE_CTRL_OUTCOME_ENDPOINT,
+    SUPPORTED_COMMAND_TIMINGS,
     control_substep_schedule,
+    integrate_freejoint_pose,
     longest_true_run,
     proxy_native_geometry_relation,
     proxy_native_mismatch,
     quaternion_distance_rad,
+    reference_control_target,
+    synchronized_forward_snapshot,
 )
 from egoengine_repro.retarget.collision_audit import collision_families  # noqa: E402
+from egoengine_repro.retarget.support_plane_limit import (  # noqa: E402
+    build_native_support_geoms,
+    geom_world_vertices,
+    native_hand_visual_geom_ids,
+)
 from egoengine_repro.scene.support_surface import Plane  # noqa: E402
 from run_taco_brush_issue14_mink_candidate_v1 import relevant_pairs  # noqa: E402
 
@@ -55,6 +66,8 @@ SCHEMA = "taco_brush_controlled_physics_replay_v1"
 SUPPORTED_SCHEMAS = {
     SCHEMA,
     "taco_brush_20231006_145_initialization_controlled_replay_v1",
+    "taco_brush_20231006_145_initialization_controlled_replay_interpolated_v1",
+    "taco_brush_20231006_145_endpoint_1_4_hand_table_capture_v1",
 }
 DEFAULT_CONFIG = RL_ROOT / "configs/taco_brush_controlled_physics_replay_v1.yaml"
 CONTACT_GROUPS = (
@@ -182,6 +195,7 @@ def empty_interval() -> dict[str, dict[str, Any]]:
 def sample_contacts(
     model: mujoco.MjModel, data: mujoco.MjData, dt: float,
     interval: dict[str, dict[str, Any]], *, source: int, substep: int,
+    interval_start_time_s: float,
 ) -> tuple[list[dict[str, Any]], dict[str, float]]:
     rows: list[dict[str, Any]] = []
     seen_groups: set[str] = set()
@@ -213,7 +227,9 @@ def sample_contacts(
             "source_endpoint": source,
             "outcome_endpoint": source + 1,
             "substep": substep,
-            "time_s": float(data.time),
+            "contact_state_time_s": interval_start_time_s,
+            "interval_start_time_s": interval_start_time_s,
+            "interval_end_time_s": float(data.time),
             "contact_index": index,
             "group": group,
             "geom1": model.geom(first).name,
@@ -290,6 +306,129 @@ def native_audit(
     }
 
 
+def native_hand_table_minima(
+    data: mujoco.MjData,
+    plane: Plane,
+    hand_geoms: tuple[Any, ...],
+) -> dict[str, float]:
+    """Return exact native mesh-to-plane minima for each hand."""
+    result = {"left": np.inf, "right": np.inf}
+    for geom in hand_geoms:
+        side = geom.name.split("_", 1)[0]
+        if side not in result:
+            continue
+        signed = plane.signed_distance(geom_world_vertices(data, geom, full=False))
+        result[side] = min(result[side], float(np.min(signed)))
+    if not all(np.isfinite(value) for value in result.values()):
+        raise RuntimeError("native hand/table audit did not produce both hands")
+    return result
+
+
+def summarize_substep_native_hand_table(
+    rows: list[dict[str, Any]], tolerance_m: float,
+) -> dict[str, Any] | None:
+    if not rows:
+        return None
+
+    def compact(row: dict[str, Any] | None) -> dict[str, Any] | None:
+        if row is None:
+            return None
+        return {
+            key: row[key]
+            for key in (
+                "source_endpoint", "outcome_endpoint", "substep", "substeps",
+                "control_alpha", "state_time_s", "reference_minimum_distance_m",
+                "actual_minimum_distance_m", "robot_qpos_error_max_abs",
+                "preceding_interval_actuator_force_max_abs_n",
+                "control_range_minimum_margin",
+            )
+        }
+
+    def summarize_scope(scope: list[dict[str, Any]]) -> dict[str, Any]:
+        reference_safe = [
+            row["reference_minimum_distance_m"] >= -tolerance_m for row in scope
+        ]
+        actual_safe = [
+            row["actual_minimum_distance_m"] >= -tolerance_m for row in scope
+        ]
+        reference_strict = [
+            row["reference_minimum_distance_m"] >= 0.0 for row in scope
+        ]
+        actual_strict = [
+            row["actual_minimum_distance_m"] >= 0.0 for row in scope
+        ]
+        first_actual_penetration = next((
+            row for row, safe in zip(scope, actual_safe, strict=True) if not safe
+        ), None)
+        first_reference_safe_actual_penetration = next((
+            row for row, ref_ok, actual_ok in zip(
+                scope, reference_safe, actual_safe, strict=True,
+            ) if ref_ok and not actual_ok
+        ), None)
+        return {
+            "sample_count": len(scope),
+            "reference_minimum_distance_m": min(
+                row["reference_minimum_distance_m"] for row in scope
+            ),
+            "actual_minimum_distance_m": min(
+                row["actual_minimum_distance_m"] for row in scope
+            ),
+            "reference_penetration_beyond_tolerance_count": int(
+                len(scope) - sum(reference_safe)
+            ),
+            "actual_penetration_beyond_tolerance_count": int(
+                len(scope) - sum(actual_safe)
+            ),
+            "reference_safe_actual_penetration_count": int(sum(
+                ref_ok and not actual_ok
+                for ref_ok, actual_ok in zip(reference_safe, actual_safe, strict=True)
+            )),
+            "reference_and_actual_safe_count": int(sum(
+                ref_ok and actual_ok
+                for ref_ok, actual_ok in zip(reference_safe, actual_safe, strict=True)
+            )),
+            "all_reference_and_actual_safe_within_tolerance": bool(
+                all(ref_ok and actual_ok for ref_ok, actual_ok in zip(
+                    reference_safe, actual_safe, strict=True,
+                ))
+            ),
+            "strict_reference_negative_count": int(
+                len(scope) - sum(reference_strict)
+            ),
+            "strict_actual_negative_count": int(len(scope) - sum(actual_strict)),
+            "all_reference_and_actual_strictly_nonnegative": bool(
+                all(ref_ok and actual_ok for ref_ok, actual_ok in zip(
+                    reference_strict, actual_strict, strict=True,
+                ))
+            ),
+            "maximum_robot_qpos_error_max_abs": max(
+                row["robot_qpos_error_max_abs"] for row in scope
+            ),
+            "maximum_actuator_force_abs_n": max(
+                row["preceding_interval_actuator_force_max_abs_n"] for row in scope
+            ),
+            "minimum_control_range_margin": min(
+                row["control_range_minimum_margin"] for row in scope
+                if row["control_range_minimum_margin"] is not None
+            ),
+            "first_actual_penetration_beyond_tolerance": compact(
+                first_actual_penetration
+            ),
+            "first_reference_safe_actual_penetration": compact(
+                first_reference_safe_actual_penetration
+            ),
+        }
+
+    interval_4_to_5 = [row for row in rows if row["source_endpoint"] == 4]
+    return {
+        "tolerance_m": tolerance_m,
+        "whole_replay": summarize_scope(rows),
+        "interval_4_to_5": (
+            summarize_scope(interval_4_to_5) if interval_4_to_5 else None
+        ),
+    }
+
+
 def controls_within_range(model: mujoco.MjModel, controls: np.ndarray) -> bool:
     limited = np.asarray(model.actuator_ctrllimited, dtype=bool)
     low, high = model.actuator_ctrlrange[:, 0], model.actuator_ctrlrange[:, 1]
@@ -314,9 +453,10 @@ def hash_tree(output: Path) -> None:
 
 def settled_object_qpos(
     *, csv_path: Path, variants: dict[str, str], transform: np.ndarray,
-    expected_final_time_s: float,
-) -> dict[str, np.ndarray]:
-    """Load the final natural-seating poses and map world coordinates to sim."""
+    expected_final_time_s: float, isolated_scenes: dict[str, Path],
+    timestep_s: float,
+) -> tuple[dict[str, np.ndarray], dict[str, Any]]:
+    """Recover final post-step poses and map world coordinates to simulator."""
     selected: dict[str, dict[str, str]] = {}
     with csv_path.open(newline="", encoding="utf-8") as stream:
         for row in csv.DictReader(stream):
@@ -335,20 +475,48 @@ def settled_object_qpos(
     transform_quat = np.empty(4, dtype=np.float64)
     mujoco.mju_mat2Quat(transform_quat, rotation.reshape(-1))
     result = {}
+    reconstruction: dict[str, Any] = {}
     for name, row in selected.items():
-        world_position = np.asarray([
+        pre_integration_position = np.asarray([
             row["position_x_m"], row["position_y_m"], row["position_z_m"],
         ], dtype=np.float64)
-        world_quaternion = np.asarray([
+        pre_integration_quaternion = np.asarray([
             row["quaternion_w"], row["quaternion_x"],
             row["quaternion_y"], row["quaternion_z"],
         ], dtype=np.float64)
+        post_integration_velocity = np.asarray([
+            row["linear_velocity_x_m_s"], row["linear_velocity_y_m_s"],
+            row["linear_velocity_z_m_s"], row["angular_velocity_x_rad_s"],
+            row["angular_velocity_y_rad_s"], row["angular_velocity_z_rad_s"],
+        ], dtype=np.float64)
+        isolated_model = mujoco.MjModel.from_xml_path(str(isolated_scenes[name]))
+        world_pose = integrate_freejoint_pose(
+            mujoco, isolated_model,
+            np.concatenate((pre_integration_position, pre_integration_quaternion)),
+            post_integration_velocity,
+            timestep_s,
+        )
+        world_position = world_pose[:3]
+        world_quaternion = world_pose[3:7]
         simulator_quaternion = np.empty(4, dtype=np.float64)
         mujoco.mju_mulQuat(simulator_quaternion, transform_quat, world_quaternion)
         simulator_quaternion /= np.linalg.norm(simulator_quaternion)
         result[name] = np.concatenate((rotation @ world_position + translation,
                                        simulator_quaternion))
-    return result
+        reconstruction[name] = {
+            "source_record_time_s": float(row["time_s"]),
+            "source_geometry_state_time_s": float(row["time_s"]) - timestep_s,
+            "source_velocity_state_time_s": float(row["time_s"]),
+            "reconstructed_pose_time_s": float(row["time_s"]),
+            "timestep_s": timestep_s,
+            "pre_integration_world_pose": np.concatenate((
+                pre_integration_position, pre_integration_quaternion,
+            )),
+            "post_integration_world_velocity": post_integration_velocity,
+            "reconstructed_world_pose": world_pose,
+            "simulator_pose": result[name],
+        }
+    return result, reconstruction
 
 
 def main() -> int:
@@ -366,6 +534,15 @@ def main() -> int:
     )
     if any(cfg["authorization"].get(key) is not False for key in forbidden):
         raise ValueError("authorization is not fail-closed")
+    command_timing = str(cfg["runtime"]["command_timing"])
+    if command_timing not in SUPPORTED_COMMAND_TIMINGS:
+        raise ValueError(f"unsupported command timing: {command_timing}")
+    trace_substep_native = bool(
+        cfg.get("diagnostics", {}).get("substep_native_hand_table_trace", False)
+    )
+    trace_substep_state = bool(
+        cfg.get("diagnostics", {}).get("substep_state_trace", False)
+    )
     source_endpoint = int(cfg["sample"]["replay_source_endpoint"])
     outcome_endpoint = int(cfg["sample"]["replay_outcome_endpoint"])
     if source_endpoint != 0 or outcome_endpoint <= source_endpoint:
@@ -415,6 +592,9 @@ def main() -> int:
     )
     if plane.offset != float(cfg["support"]["simulator_z_m"]):
         raise ValueError("support contract and Replay contract disagree")
+    hand_support_geoms = build_native_support_geoms(
+        model, mujoco, native_hand_visual_geom_ids(model, mujoco),
+    )
 
     manifest = {
         "schema": cfg["schema"],
@@ -435,7 +615,23 @@ def main() -> int:
             "authored_timestep_s": float(model.opt.timestep),
             "control_hz": frequency, "substeps_per_interval": schedule.tolist(),
             "total_planned_physics_steps": int(schedule.sum()),
-            "initial_qvel": "ZERO", "command_timing": "ctrl[outcome_endpoint]",
+            "initial_qvel": "ZERO", "command_timing": command_timing,
+            "control_target_rule": (
+                "ctrl[outcome_endpoint] for every physics substep"
+                if command_timing == REFERENCE_CTRL_OUTCOME_ENDPOINT
+                else "ctrl[source] + ((substep + 1) / substeps) * "
+                     "(ctrl[outcome] - ctrl[source])"
+            ),
+            "substep_native_hand_table_trace": trace_substep_native,
+            "substep_state_trace": trace_substep_state,
+            "native_geometry_state_alignment": (
+                "copy post-step integration state into independent MjData, then mj_forward"
+            ),
+            "force_time_alignment": (
+                "contact and actuator forces are the forces solved at interval_start_time_s "
+                "and applied over [interval_start_time_s, interval_end_time_s]; post-step "
+                "qpos/qvel and refreshed native geometry are at state_time_s=interval_end_time_s"
+            ),
         },
         "hard_stop": cfg["hard_stop"],
         "strict_pickup_gate": cfg["strict_pickup_gate"],
@@ -469,10 +665,24 @@ def main() -> int:
         transform = np.asarray(transform_report["T_sim_world"], dtype=np.float64)
         if transform.shape != (4, 4):
             raise ValueError("initial-state transform must be 4x4")
-        settled = settled_object_qpos(
+        seating_config_path = Path(
+            seating_results["source_artifacts"]["config"]["path"]
+        ).resolve(strict=True)
+        seating_config = yaml.safe_load(
+            seating_config_path.read_text(encoding="utf-8")
+        )
+        isolated_scenes = {
+            name: Path(
+                seating_results["source_artifacts"]["isolated_scenes"][name]["path"]
+            ).resolve(strict=True)
+            for name in initialization["object_variants"]
+        }
+        settled, seating_state_reconstruction = settled_object_qpos(
             csv_path=Path(initialization["natural_seating_timeseries"]).resolve(strict=True),
             variants=dict(initialization["object_variants"]), transform=transform,
             expected_final_time_s=float(initialization["expected_final_time_s"]),
+            isolated_scenes=isolated_scenes,
+            timestep_s=float(seating_config["physics"]["timestep_s"]),
         )
         for name, joint_name in (("brush", "right_object_joint"),
                                  ("bowl", "left_object_joint")):
@@ -490,6 +700,11 @@ def main() -> int:
             "robot_results": artifact(robot_results_path),
             "robot_candidate": candidate_name,
             "object_variants": initialization["object_variants"],
+            "natural_seating_state_alignment": (
+                "reconstructed post-step freejoint pose from the recorded pre-integration "
+                "xpos/xquat and post-integration qvel with mj_integratePos"
+            ),
+            "natural_seating_state_reconstruction": seating_state_reconstruction,
             "settled_object_qpos_simulator": settled,
         }
     data.qvel[:] = 0.0
@@ -515,6 +730,17 @@ def main() -> int:
     native_rows: list[dict[str, Any]] = []
     endpoint_rows: list[dict[str, Any]] = []
     contact_rows: list[dict[str, Any]] = []
+    substep_native_rows: list[dict[str, Any]] = []
+    substep_state_rows: list[dict[str, Any]] = []
+    reference_data = (
+        mujoco.MjData(model)
+        if trace_substep_native or trace_substep_state else None
+    )
+    actual_trace_data = mujoco.MjData(model) if trace_substep_native else None
+    endpoint_audit_data = mujoco.MjData(model)
+    initial_actual_qpos = data.qpos.copy()
+    initial_actual_qvel = data.qvel.copy()
+    initial_actual_ctrl = data.ctrl.copy()
     hard_stop: dict[str, Any] | None = None
 
     def append_endpoint(endpoint: int, interval: dict[str, dict[str, Any]]) -> None:
@@ -557,8 +783,11 @@ def main() -> int:
         row["interval_groups"] = copy.deepcopy(interval)
         endpoint_rows.append(row)
         if endpoint in audit_endpoints:
+            synchronized_forward_snapshot(
+                mujoco, model, data, endpoint_audit_data,
+            )
             audited = native_audit(
-                model, data, plane,
+                model, endpoint_audit_data, plane,
                 list(cfg["native_geometry_audit"]["interaction_pairs"]),
                 float(cfg["native_geometry_audit"]["hand_object_and_hand_table_tolerance_m"]),
             )
@@ -606,19 +835,109 @@ def main() -> int:
     for source, substeps in enumerate(schedule):
         outcome = source + 1
         interval = empty_interval()
-        data.ctrl[:] = reference["ctrl"][outcome]
+        reference_tangent = np.empty(model.nv, dtype=np.float64)
+        mujoco.mj_differentiatePos(
+            model, reference_tangent, 1.0,
+            reference["qpos"][source], reference["qpos"][outcome],
+        )
+        reference_tangent[model.nu:] = 0.0
         for substep in range(int(substeps)):
+            target, control_alpha = reference_control_target(
+                reference["ctrl"], source_endpoint=source,
+                outcome_endpoint=outcome, substep=substep,
+                substeps=int(substeps), command_timing=command_timing,
+            )
+            data.ctrl[:] = target
+            interval_start_time_s = float(data.time)
             mujoco.mj_step(model, data)
             physics_steps += 1
             rows, maxima = sample_contacts(
                 model, data, float(model.opt.timestep), interval,
                 source=source, substep=substep,
+                interval_start_time_s=interval_start_time_s,
             )
             contact_rows.extend(rows)
             states = {
                 name: object_state(model, data, spec["joint"])
                 for name, spec in object_specs.items()
             }
+            reference_qpos_at_substep = None
+            if trace_substep_native or trace_substep_state:
+                if reference_data is None:
+                    raise RuntimeError("reference trace data was not initialized")
+                reference_data.qpos[:] = reference["qpos"][source]
+                mujoco.mj_integratePos(
+                    model, reference_data.qpos,
+                    reference_tangent, control_alpha,
+                )
+                reference_data.qvel[:] = 0.0
+                mujoco.mj_forward(model, reference_data)
+                reference_qpos_at_substep = reference_data.qpos.copy()
+            if trace_substep_native:
+                if actual_trace_data is None:
+                    raise RuntimeError("actual trace data was not initialized")
+                synchronized_forward_snapshot(
+                    mujoco, model, data, actual_trace_data,
+                )
+                actual_table = native_hand_table_minima(
+                    actual_trace_data, plane, hand_support_geoms,
+                )
+                reference_table = native_hand_table_minima(
+                    reference_data, plane, hand_support_geoms,
+                )
+                qpos_error = np.empty(model.nv, dtype=np.float64)
+                mujoco.mj_differentiatePos(
+                    model, qpos_error, 1.0,
+                    reference_data.qpos, data.qpos,
+                )
+                limited = np.asarray(model.actuator_ctrllimited, dtype=bool)
+                control_margin = np.minimum(
+                    data.ctrl[limited] - model.actuator_ctrlrange[limited, 0],
+                    model.actuator_ctrlrange[limited, 1] - data.ctrl[limited],
+                )
+                substep_native_rows.append({
+                    "source_endpoint": source,
+                    "outcome_endpoint": outcome,
+                    "substep": substep,
+                    "substeps": int(substeps),
+                    "control_alpha": control_alpha,
+                    "state_time_s": float(data.time),
+                    "force_interval_start_time_s": interval_start_time_s,
+                    "force_interval_end_time_s": float(data.time),
+                    "reference_left_distance_m": reference_table["left"],
+                    "reference_right_distance_m": reference_table["right"],
+                    "reference_minimum_distance_m": min(reference_table.values()),
+                    "actual_left_distance_m": actual_table["left"],
+                    "actual_right_distance_m": actual_table["right"],
+                    "actual_minimum_distance_m": min(actual_table.values()),
+                    "robot_qpos_error_max_abs": float(
+                        np.max(np.abs(qpos_error[:model.nu]))
+                    ),
+                    "preceding_interval_actuator_force_max_abs_n": float(
+                        np.max(np.abs(data.actuator_force))
+                    ),
+                    "control_range_minimum_margin": (
+                        float(np.min(control_margin)) if len(control_margin) else None
+                    ),
+                })
+            if trace_substep_state:
+                if reference_qpos_at_substep is None:
+                    raise RuntimeError("reference substep state was not initialized")
+                substep_state_rows.append({
+                    "source_endpoint": source,
+                    "outcome_endpoint": outcome,
+                    "substep": substep,
+                    "substeps": int(substeps),
+                    "control_alpha": control_alpha,
+                    "state_time_s": float(data.time),
+                    "force_interval_start_time_s": interval_start_time_s,
+                    "force_interval_end_time_s": float(data.time),
+                    "reference_qpos": reference_qpos_at_substep,
+                    "actual_qpos": data.qpos.copy(),
+                    "actual_qvel": data.qvel.copy(),
+                    "control_target": data.ctrl.copy(),
+                    "preceding_interval_actuator_force": data.actuator_force.copy(),
+                })
             failures = []
             arrays = [data.qpos, data.qvel, data.ctrl, data.qacc]
             if not all(np.isfinite(value).all() for value in arrays):
@@ -676,19 +995,65 @@ def main() -> int:
             f"{name}_tracking_score" for name in object_specs
         )
     with (output / "endpoint_trace.csv").open("w", newline="", encoding="utf-8") as stream:
-        writer = csv.DictWriter(stream, fieldnames=scalar_fields)
+        writer = csv.DictWriter(
+            stream, fieldnames=scalar_fields, lineterminator="\n",
+        )
         writer.writeheader()
         for row in endpoint_rows:
             writer.writerow({key: row[key] for key in scalar_fields})
     with gzip.open(output / "contact_trace.csv.gz", "wt", newline="", encoding="utf-8") as stream:
         fields = [
-            "source_endpoint", "outcome_endpoint", "substep", "time_s", "contact_index",
+            "source_endpoint", "outcome_endpoint", "substep",
+            "contact_state_time_s", "interval_start_time_s", "interval_end_time_s",
+            "contact_index",
             "group", "geom1", "geom2", "distance_m", "normal_force_n", "force_norm_n",
             "efc_address",
         ]
-        writer = csv.DictWriter(stream, fieldnames=fields)
+        writer = csv.DictWriter(stream, fieldnames=fields, lineterminator="\n")
         writer.writeheader()
         writer.writerows(contact_rows)
+    if trace_substep_native:
+        with gzip.open(
+            output / "substep_native_hand_table_trace.csv.gz",
+            "wt", newline="", encoding="utf-8",
+        ) as stream:
+            fields = [
+                "source_endpoint", "outcome_endpoint", "substep", "substeps",
+                "control_alpha", "state_time_s",
+                "force_interval_start_time_s", "force_interval_end_time_s",
+                "reference_left_distance_m", "reference_right_distance_m",
+                "reference_minimum_distance_m",
+                "actual_left_distance_m", "actual_right_distance_m",
+                "actual_minimum_distance_m", "robot_qpos_error_max_abs",
+                "preceding_interval_actuator_force_max_abs_n",
+                "control_range_minimum_margin",
+            ]
+            writer = csv.DictWriter(
+                stream, fieldnames=fields, lineterminator="\n",
+            )
+            writer.writeheader()
+            writer.writerows(substep_native_rows)
+    if trace_substep_state:
+        scalar_names = (
+            "source_endpoint", "outcome_endpoint", "substep", "substeps",
+            "control_alpha", "state_time_s",
+            "force_interval_start_time_s", "force_interval_end_time_s",
+        )
+        array_names = (
+            "reference_qpos", "actual_qpos", "actual_qvel",
+            "control_target", "preceding_interval_actuator_force",
+        )
+        np.savez_compressed(
+            output / "substep_state_trace.npz",
+            **{
+                name: np.asarray([row[name] for row in substep_state_rows])
+                for name in (*scalar_names, *array_names)
+            },
+            initial_actual_qpos=initial_actual_qpos,
+            initial_actual_qvel=initial_actual_qvel,
+            initial_actual_ctrl=initial_actual_ctrl,
+            initial_reference_qpos=reference["qpos"][0],
+        )
     np.savez_compressed(
         output / "endpoint_states.npz",
         endpoint=np.asarray([row["endpoint"] for row in endpoint_rows], dtype=np.int64),
@@ -809,6 +1174,11 @@ def main() -> int:
                         "rotation_error_rad": float(row[f"{name}_rotation_error_rad"]),
                     })
 
+    substep_native_summary = summarize_substep_native_hand_table(
+        substep_native_rows,
+        float(cfg["native_geometry_audit"]["hand_object_and_hand_table_tolerance_m"]),
+    )
+
     strict_pass = bool(
         hard_stop is None
         and all(row["stable_pickup_pass"] for row in pickup.values())
@@ -816,6 +1186,12 @@ def main() -> int:
         and not force_exposure_mismatches
         and not geometry_mismatches
         and not tracking_failures
+        and (
+            substep_native_summary is None
+            or substep_native_summary["whole_replay"][
+                "actual_penetration_beyond_tolerance_count"
+            ] == 0
+        )
         and endpoint_rows[-1]["endpoint"] == outcome_endpoint
     )
     if hard_stop is not None:
@@ -847,6 +1223,7 @@ def main() -> int:
         "physics_steps": physics_steps, "hard_stop": hard_stop,
         "pickup": pickup, "native_blockers": native_blockers,
         "tracking_failures": tracking_failures,
+        "substep_native_hand_table": substep_native_summary,
         "proxy_native_force_exposure_mismatches": force_exposure_mismatches,
         "proxy_native_geometry_mismatches": geometry_mismatches,
         "proxy_error_dynamic_exposure": proxy_impact,
@@ -895,6 +1272,7 @@ def main() -> int:
         f"- Strict gate: `{'PASS' if strict_pass else 'FAIL'}`",
         f"- Completed: endpoint `0→{endpoint_rows[-1]['endpoint']}` / planned `0→{outcome_endpoint}`",
         f"- CPU MuJoCo physics steps: `{physics_steps}`",
+        f"- Control target timing: `{command_timing}`",
         f"- Hard stop: `{hard_stop['reasons'] if hard_stop else 'NONE'}`",
         "- RL / MPC / MINK: `NOT RUN`",
         "- Promotion / chunk commit: `FORBIDDEN`", "",
@@ -920,6 +1298,22 @@ def main() -> int:
         f"- Maximum runtime contact force: `{result['maximums']['contact_force_n']:.6f} N`",
         f"- Maximum runtime proxy penetration: `{result['maximums']['proxy_penetration_m']*1000:.6f} mm`",
     ]
+    if substep_native_summary is not None:
+        whole = substep_native_summary["whole_replay"]
+        early = substep_native_summary["interval_4_to_5"]
+        lines += [
+            f"- Substep native hand/table actual minimum: "
+            f"`{whole['actual_minimum_distance_m']*1000:.6f} mm`",
+            f"- Substep native hand/table reference minimum: "
+            f"`{whole['reference_minimum_distance_m']*1000:.6f} mm`",
+            f"- Reference-safe / actual-penetrating substeps: "
+            f"`{whole['reference_safe_actual_penetration_count']}`",
+        ]
+        if early is not None:
+            lines.append(
+                f"- Interval 4->5 both reference and actual safe: "
+                f"`{early['all_reference_and_actual_safe_within_tolerance']}`"
+            )
     for name, row in proxy_impact.items():
         fraction = row["mismatch_impulse_fraction"]
         lines.append(

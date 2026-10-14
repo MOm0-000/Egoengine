@@ -1,0 +1,121 @@
+schema: taco_brush_20231006_145_endpoint_1_4_hand_table_capture_v1
+status: FROZEN_ENDPOINT_0_TO_4_STATE_CAPTURE
+paper_faithful: false
+
+comparison_contract:
+  parent_run: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_initialization_controlled_replay_interpolated_v1
+  purpose: save complete states for endpoint 1-4 hand-table diagnosis and rendering
+  expected_parity: exact_prefix_through_endpoint_4
+  changed:
+    - replay_outcome_endpoint_truncated_from_121_to_4
+    - complete_substep_state_trace_enabled
+  unchanged:
+    - initial_state
+    - robot_and_object_reference
+    - mujoco_model
+    - physics_timestep_and_control_schedule_prefix
+    - actuator_gains_and_limits
+    - collision_geometry_and_parameters
+    - support_plane_and_native_tolerance
+    - linear_substep_control_interpolation
+
+sample:
+  sequence: "(brush, brush, bowl)/20231006_145"
+  reference_frames: 122
+  replay_source_endpoint: 0
+  replay_outcome_endpoint: 4
+  control_hz: 30.0
+
+runtime:
+  backend: mujoco_cpu
+  command_timing: reference_ctrl_linear_substep_interpolation
+  robot_initial_qpos: safe_entry_mink_endpoint_0
+  object_initial_qpos: isolated_natural_seating_zero_velocity_10s
+  initial_qvel: zero
+  initial_ctrl: safe_entry_mink_endpoint_0
+  reset_during_replay: false
+  object_assistance: false
+  residual_policy: false
+  mpc: false
+  reinforcement_learning: false
+
+initial_state:
+  robot: SAFE_ENTRY_MINK_V1_ENDPOINT_0
+  robot_results: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/results.json
+  robot_candidate: safe_entry
+  objects: NATURAL_SEATING_EXTENSION_V1_ZERO_INITIAL_VELOCITY_FINAL_STATE
+  natural_seating_results: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_natural_seating_extension_v1/results.json
+  natural_seating_timeseries: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_natural_seating_extension_v1/timeseries.csv
+  expected_final_time_s: 10.0
+  object_variants:
+    brush: zero_initial_velocity
+    bowl: zero_initial_velocity
+  reference_actions: SAFE_ENTRY_MINK_V1_CTRL_WITH_OFFICIAL_UNMODIFIED_OBJECT_REFERENCE
+
+support:
+  provenance: taco_brush_20231006_145_issue14_support_candidate_v1
+  simulator_z_m: 0.72
+  active_support_contract_modified: false
+
+native_geometry_audit:
+  hand_object_and_hand_table_tolerance_m: 0.00005
+  dynamic_object_floor_penetration_limit_m: 0.0005
+  endpoints: [0, 1, 2, 3, 4]
+  interaction_pairs:
+    - {hand: right, object: brush, role: tool, object_side: right}
+    - {hand: left, object: bowl, role: target, object_side: left}
+
+diagnostics:
+  substep_native_hand_table_trace: true
+  substep_state_trace: true
+
+hard_stop:
+  fail_on_any_mujoco_warning: true
+  maximum_contact_force_n: 1000.0
+  maximum_proxy_penetration_m: 0.02
+  maximum_object_linear_speed_m_s: 5.0
+  maximum_object_angular_speed_rad_s: 50.0
+  maximum_object_translation_per_substep_m: 0.02
+  maximum_object_rotation_per_substep_rad: 0.5
+  maximum_physics_steps: 100
+
+strict_tracking_gate:
+  definition: AXIS_INTERCEPT_NORMALIZED_ELLIPSE
+  position_scale_m: 0.12
+  rotation_scale_rad: 1.5
+  maximum_score: 1.0
+  requires_both_objects_at_all_completed_endpoints: true
+
+strict_pickup_gate:
+  object_lift_delta_m: 0.01
+  stable_consecutive_control_intervals: 5
+  requires_hand_object_force: true
+  requires_no_object_floor_force: true
+  requires_all_native_samples_nonpenetrating: true
+  requires_zero_proxy_native_geometry_mismatches: true
+  requires_zero_proxy_force_while_native_clear_exposures: true
+  requires_both_objects: true
+  unknown_is_failure: true
+
+paths:
+  scene: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/generated_scene.xml
+  robot_reference: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/safe_entry/robot_reference.npz
+  support_contract: /data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_20231006_145_issue14_support_candidate_v1.yaml
+  prior_collision_audit: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/safe_entry/interaction_native_hand_object_audit.json
+  output: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_endpoint_1_4_hand_table_capture_v1
+
+authorization:
+  experiment_local_scene: true
+  bounded_cpu_physics_replay: true
+  native_mesh_audit: true
+  render_diagnostic_plots: true
+  modify_source_scene: false
+  modify_reference: false
+  modify_active_support_contract: false
+  modify_collision_geometry: false
+  mink: false
+  full_209_frame_replay: false
+  mpc: false
+  reinforcement_learning: false
+  promotion: false
+  chunk_commit: false

@@ -284,6 +284,7 @@ def run_variant(
     data.qpos[:] = initial_qpos
     data.qvel[:] = initial_qvel
     mujoco.mj_forward(model, data)
+    sample_data = mujoco.MjData(model)
     body_id = model.body("object").id
     initial_position = np.asarray(data.xpos[body_id], dtype=np.float64).copy()
     initial_quaternion = np.asarray(data.xquat[body_id], dtype=np.float64).copy()
@@ -293,7 +294,14 @@ def run_variant(
     rows = [sample_state(model, data, raw_vertices, table_z, initial_position, initial_quaternion)]
     for _ in range(count):
         mujoco.mj_step(model, data)
-        rows.append(sample_state(model, data, raw_vertices, table_z, initial_position, initial_quaternion))
+        sample_data.time = data.time
+        sample_data.qpos[:] = data.qpos
+        sample_data.qvel[:] = data.qvel
+        mujoco.mj_forward(model, sample_data)
+        rows.append(sample_state(
+            model, sample_data, raw_vertices, table_z,
+            initial_position, initial_quaternion,
+        ))
     return rows, warnings(data)
 
 

@@ -31,6 +31,93 @@
       "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_natural_seating_extension_v1/results.json",
       "sha256": "5779be198ee2cb6aea2fb6bc92ce04d58325cc70cf8d3c93b12d34911e5380ff"
     },
+    "natural_seating_state_alignment": "reconstructed post-step freejoint pose from the recorded pre-integration xpos/xquat and post-integration qvel with mj_integratePos",
+    "natural_seating_state_reconstruction": {
+      "bowl": {
+        "post_integration_world_velocity": [
+          -0.0012639839509338876,
+          -0.00014618591850674807,
+          -1.1045975340098572e-05,
+          0.035157066717921424,
+          -0.030957542523035005,
+          0.00024096127969129452
+        ],
+        "pre_integration_world_pose": [
+          0.005158018881787082,
+          -0.10822620064057573,
+          0.5783665013423532,
+          0.9333777756182776,
+          0.0021293604635213696,
+          -0.0025975932705416117,
+          -0.35887971009112896
+        ],
+        "reconstructed_pose_time_s": 10.000000000000009,
+        "reconstructed_world_pose": [
+          0.0051554909138852145,
+          -0.10822649301241274,
+          0.5783664792504025,
+          0.9333777057930958,
+          0.002151064626102285,
+          -0.0026391060208598516,
+          -0.35887945938546173
+        ],
+        "simulator_pose": [
+          0.540519455324384,
+          -0.048051560774698215,
+          0.7496932917161884,
+          0.9333777057930962,
+          0.0021510646261022857,
+          -0.002639106020859853,
+          -0.3588794593854619
+        ],
+        "source_geometry_state_time_s": 9.998000000000008,
+        "source_record_time_s": 10.000000000000009,
+        "source_velocity_state_time_s": 10.000000000000009,
+        "timestep_s": 0.002
+      },
+      "brush": {
+        "post_integration_world_velocity": [
+          -7.809269279919863e-13,
+          1.742462094718178e-14,
+          2.3146079783819174e-12,
+          -8.742897239251474e-11,
+          6.101506388958433e-11,
+          -1.0816406779564236e-11
+        ],
+        "pre_integration_world_pose": [
+          0.12873284082970513,
+          -0.010367377978251597,
+          0.5734491679736997,
+          0.468418421527279,
+          0.017524114193799654,
+          0.051933367983580836,
+          0.8818049745184574
+        ],
+        "reconstructed_pose_time_s": 10.000000000000009,
+        "reconstructed_world_pose": [
+          0.12873284082970357,
+          -0.010367377978251562,
+          0.5734491679737044,
+          0.46841842152728697,
+          0.017524114193704334,
+          0.05193336798353251,
+          0.881804974518458
+        ],
+        "simulator_pose": [
+          0.6640968052402023,
+          0.04980755425946297,
+          0.7447759804394902,
+          0.46841842152728685,
+          0.01752411419370433,
+          0.05193336798353249,
+          0.8818049745184577
+        ],
+        "source_geometry_state_time_s": 9.998000000000008,
+        "source_record_time_s": 10.000000000000009,
+        "source_velocity_state_time_s": 10.000000000000009,
+        "timestep_s": 0.002
+      }
+    },
     "natural_seating_timeseries": {
       "bytes": 10947888,
       "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_natural_seating_extension_v1/timeseries.csv",
@@ -51,22 +138,22 @@
     },
     "settled_object_qpos_simulator": {
       "bowl": [
-        0.5405219832922858,
-        -0.0480512684028612,
-        0.7496933138081391,
-        0.933377775618278,
-        0.0021293604635213704,
-        -0.0025975932705416126,
-        -0.35887971009112907
+        0.540519455324384,
+        -0.048051560774698215,
+        0.7496932917161884,
+        0.9333777057930962,
+        0.0021510646261022857,
+        -0.002639106020859853,
+        -0.3588794593854619
       ],
       "brush": [
-        0.6640968052402039,
-        0.049807554259462934,
-        0.7447759804394856,
-        0.468418421527279,
-        0.017524114193799654,
-        0.051933367983580836,
-        0.8818049745184574
+        0.6640968052402023,
+        0.04980755425946297,
+        0.7447759804394902,
+        0.46841842152728685,
+        0.01752411419370433,
+        0.05193336798353249,
+        0.8818049745184577
       ]
     }
   },
@@ -92,9 +179,9 @@
       "sha256": "9216e8e72ff824c5ddf5bfdf530212d214273e0a23df4e9433a89b38a25c39ea"
     },
     "script": {
-      "bytes": 44405,
+      "bytes": 62671,
       "path": "/data_all/zzx/Egoengine_upload_3_2/rl/scripts/run_taco_brush_controlled_physics_replay_v1.py",
-      "sha256": "e3c3c1606f79de2e80d35b346ac75d4e2498bba39140069af2113afb67098c32"
+      "sha256": "e913838b15df303c75a4e616464dc437bae4cd4956546da3e4b585be6c6d3ad1"
     },
     "source_scene": {
       "bytes": 410567,
@@ -110,10 +197,15 @@
   "physics": {
     "authored_timestep_s": 0.002,
     "backend": "mujoco_cpu",
-    "command_timing": "ctrl[outcome_endpoint]",
+    "command_timing": "reference_ctrl_outcome_endpoint",
     "control_hz": 30.0,
+    "control_target_rule": "ctrl[outcome_endpoint] for every physics substep",
+    "force_time_alignment": "contact and actuator forces are the forces solved at interval_start_time_s and applied over [interval_start_time_s, interval_end_time_s]; post-step qpos/qvel and refreshed native geometry are at state_time_s=interval_end_time_s",
     "initial_qvel": "ZERO",
     "mujoco_version": "3.12.0",
+    "native_geometry_state_alignment": "copy post-step integration state into independent MjData, then mj_forward",
+    "substep_native_hand_table_trace": false,
+    "substep_state_trace": false,
     "substeps_per_interval": [
       17,
       17,
@@ -239,7 +331,7 @@
     ],
     "total_planned_physics_steps": 2017
   },
-  "repository_head": "60abb1dfc6ac940df844fa563dd35f2adb23694d",
+  "repository_head": "b865fcc1fd28a9cd28cfeeefadf783396f2bbc36",
   "schema": "taco_brush_20231006_145_initialization_controlled_replay_v1",
   "status": "FROZEN_BEFORE_PHYSICS",
   "strict_pickup_gate": {

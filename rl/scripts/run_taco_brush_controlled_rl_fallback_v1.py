@@ -43,6 +43,7 @@ from egoengine_repro.evaluation.controlled_physics_replay import (  # noqa: E402
     proxy_native_geometry_relation,
     proxy_native_mismatch,
     quaternion_distance_rad,
+    synchronized_forward_snapshot,
 )
 from egoengine_repro.retarget.collision_audit import collision_families  # noqa: E402
 from egoengine_repro.scene.support_surface import Plane  # noqa: E402
@@ -400,6 +401,7 @@ def cpu_validate(
     tracking_failure = None
     previous_objects = copy.deepcopy(initial_objects)
     physics_steps = 0
+    endpoint_audit_data = mujoco.MjData(model)
 
     def append_endpoint(endpoint: int, interval: dict[str, dict[str, Any]]) -> None:
         row: dict[str, Any] = {"endpoint": endpoint, "time_s": float(data.time)}
@@ -432,8 +434,11 @@ def cpu_validate(
         row["aggregate_score"] = float(np.mean(scores))
         endpoint_rows.append(row)
         if endpoint in audit_endpoints:
+            synchronized_forward_snapshot(
+                mujoco, model, data, endpoint_audit_data,
+            )
             audited = native_audit(
-                model, data, plane,
+                model, endpoint_audit_data, plane,
                 [
                     {"hand": "right", "object": "brush", "role": "tool", "object_side": "right"},
                     {"hand": "left", "object": "bowl", "role": "target", "object_side": "left"},
@@ -463,11 +468,13 @@ def cpu_validate(
         data.ctrl[:] = base + np.clip(0.05 * action_np, -0.05, 0.05)
         interval = empty_interval()
         for substep in range(int(substeps)):
+            interval_start_time_s = float(data.time)
             mujoco.mj_step(model, data)
             physics_steps += 1
             new_contacts, maxima = sample_contacts(
                 model, data, float(model.opt.timestep), interval,
                 source=source, substep=substep,
+                interval_start_time_s=interval_start_time_s,
             )
             contact_rows.extend(new_contacts)
             current = {
@@ -531,7 +538,9 @@ def cpu_validate(
         writer.writerows({key: row[key] for key in scalar_fields} for row in endpoint_rows)
     with gzip.open(output / "cpu_contact_trace.csv.gz", "wt", newline="", encoding="utf-8") as stream:
         fields = [
-            "source_endpoint", "outcome_endpoint", "substep", "time_s", "contact_index",
+            "source_endpoint", "outcome_endpoint", "substep",
+            "contact_state_time_s", "interval_start_time_s", "interval_end_time_s",
+            "contact_index",
             "group", "geom1", "geom2", "distance_m", "normal_force_n", "force_norm_n",
             "efc_address",
         ]

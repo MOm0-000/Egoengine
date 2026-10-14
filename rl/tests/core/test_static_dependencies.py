@@ -87,6 +87,24 @@ def test_mjwp_environment_exposes_only_the_active_or_reusable_surface():
     assert methods.isdisjoint(retired)
 
 
+def test_mjwp_setup_populates_derived_state_without_advancing_initial_state():
+    root = Path(__file__).resolve().parents[2]
+    source = root / "external/spider_compat/spider/simulators/mjwp.py"
+    tree = ast.parse(source.read_text())
+    setup = next(
+        node
+        for node in tree.body
+        if isinstance(node, ast.FunctionDef) and node.name == "setup_env"
+    )
+    calls = {
+        ast.unparse(node.func)
+        for node in ast.walk(setup)
+        if isinstance(node, ast.Call)
+    }
+    assert "mujoco.mj_forward" in calls
+    assert "mujoco.mj_step" not in calls
+
+
 def test_default_test_surface_is_explicit_and_fixture_free():
     root = Path(__file__).resolve().parents[2]
     pytest_ini = (root / "pytest.ini").read_text()

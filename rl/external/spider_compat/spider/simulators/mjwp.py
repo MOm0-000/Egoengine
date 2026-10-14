@@ -154,7 +154,9 @@ def setup_env(config: Config, ref_data: tuple[torch.Tensor, ...]) -> MJWPEnv:
     data_cpu.qpos[:] = arrs[0].detach().cpu().numpy()
     data_cpu.qvel[:] = arrs[1].detach().cpu().numpy()
     data_cpu.ctrl[:] = arrs[2].detach().cpu().numpy()
-    mujoco.mj_step(model_cpu, data_cpu)
+    # Populate geometry, contacts and forces without advancing the reference
+    # initial state by one simulator timestep.
+    mujoco.mj_forward(model_cpu, data_cpu)
 
     # Move to Warp (batched worlds)
     # Set Warp default device to match config to ensure kernels/modules load on it
