@@ -651,6 +651,9 @@ def main() -> int:
     command_timing = str(cfg["runtime"]["command_timing"])
     if command_timing not in SUPPORTED_COMMAND_TIMINGS:
         raise ValueError(f"unsupported command timing: {command_timing}")
+    reference_time_scale = float(cfg["runtime"].get("reference_time_scale", 1.0))
+    if not np.isfinite(reference_time_scale) or reference_time_scale < 1.0:
+        raise ValueError("reference time scale must be finite and at least one")
     controller_cfg = cfg.get("controller")
     if controller_cfg is None:
         controller_mode = "position_servo_only"
@@ -762,12 +765,13 @@ def main() -> int:
         raise ValueError("reference dimensions changed")
     if frequency != float(cfg["sample"]["control_hz"]):
         raise ValueError("reference frequency changed")
+    execution_control_hz = frequency / reference_time_scale
     controls = reference["ctrl"][:outcome_endpoint + 1]
     if not controls_within_range(model, controls):
         raise ValueError("Replay reference contains out-of-range controls")
 
     schedule = control_substep_schedule(
-        control_endpoints=outcome_endpoint, control_hz=frequency,
+        control_endpoints=outcome_endpoint, control_hz=execution_control_hz,
         simulation_dt_s=float(model.opt.timestep),
     )
     if int(schedule.sum()) > int(cfg["hard_stop"]["maximum_physics_steps"]):
@@ -808,7 +812,10 @@ def main() -> int:
         "physics": {
             "backend": "mujoco_cpu", "mujoco_version": mujoco.__version__,
             "authored_timestep_s": float(model.opt.timestep),
-            "control_hz": frequency, "substeps_per_interval": schedule.tolist(),
+            "authored_reference_hz": frequency,
+            "reference_time_scale": reference_time_scale,
+            "execution_control_hz": execution_control_hz,
+            "substeps_per_interval": schedule.tolist(),
             "total_planned_physics_steps": int(schedule.sum()),
             "initial_qvel": "ZERO", "command_timing": command_timing,
             "control_target_rule": (
