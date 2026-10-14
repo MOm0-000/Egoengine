@@ -5,15 +5,38 @@ import mujoco
 from egoengine_repro.evaluation.controlled_physics_replay import (
     REFERENCE_CTRL_LINEAR_SUBSTEP_INTERPOLATION,
     REFERENCE_CTRL_OUTCOME_ENDPOINT,
+    controlled_feedforward_forces,
     control_substep_schedule,
+    direct_joint_position_actuators,
+    gravity_bias_at_state,
     integrate_freejoint_pose,
     longest_true_run,
     proxy_native_geometry_relation,
     proxy_native_mismatch,
     quaternion_distance_rad,
     reference_control_target,
+    reference_velocity_between_endpoints,
     synchronized_forward_snapshot,
 )
+
+
+def vertical_slide_model():
+    return mujoco.MjModel.from_xml_string(
+        """
+        <mujoco>
+          <option timestep="0.002" gravity="0 0 -10"/>
+          <worldbody>
+            <body>
+              <joint name="vertical" type="slide" axis="0 0 1"/>
+              <geom type="sphere" size="0.05" mass="2"/>
+            </body>
+          </worldbody>
+          <actuator>
+            <position name="vertical_position" joint="vertical" kp="100" kv="5"/>
+          </actuator>
+        </mujoco>
+        """
+    )
 
 
 def test_native_timestep_schedule_is_bounded_and_nonaccumulating():
@@ -69,6 +92,89 @@ def test_control_target_rejects_unknown_timing():
             substeps=1,
             command_timing="unknown",
         )
+
+
+def test_reference_velocity_uses_actual_substep_interval_duration():
+    model = vertical_slide_model()
+    source = np.array([0.1])
+    outcome = np.array([0.2])
+    velocity = reference_velocity_between_endpoints(
+        mujoco, model, source, outcome, duration_s=5 * model.opt.timestep,
+    )
+    assert velocity == pytest.approx([10.0])
+
+
+def test_vertical_feedforward_uses_compiled_gain_and_gravity_bias():
+    model = vertical_slide_model()
+    data = mujoco.MjData(model)
+    data.qpos[0] = 0.3
+    data.qvel[0] = -0.7
+    data.ctrl[0] = 0.25
+    mujoco.mj_forward(model, data)
+
+    contracts = direct_joint_position_actuators(
+        mujoco, model, ["vertical_position"],
+    )
+    assert contracts[0].qpos_address == 0
+    assert contracts[0].dof_address == 0
+    assert contracts[0].position_gain == pytest.approx(100.0)
+    assert contracts[0].velocity_gain == pytest.approx(5.0)
+
+    gravity = gravity_bias_at_state(
+        mujoco, model, data, mujoco.MjData(model),
+    )
+    forces = controlled_feedforward_forces(
+        nv=model.nv,
+        contracts=contracts,
+        gravity_bias=gravity,
+        reference_velocity=np.array([-0.25]),
+        gravity_feedforward=True,
+        reference_velocity_feedback=True,
+    )
+    assert gravity == pytest.approx([20.0])
+    assert forces.gravity == pytest.approx([20.0])
+    assert forces.reference_velocity == pytest.approx([-1.25])
+    assert forces.total == pytest.approx([18.75])
+
+
+def test_disabled_feedforward_is_exact_position_servo_baseline():
+    model = vertical_slide_model()
+    baseline = mujoco.MjData(model)
+    candidate = mujoco.MjData(model)
+    for data in (baseline, candidate):
+        data.qpos[0] = 0.3
+        data.qvel[0] = -0.7
+        data.ctrl[0] = 0.25
+        mujoco.mj_forward(model, data)
+
+    contracts = direct_joint_position_actuators(
+        mujoco, model, ["vertical_position"],
+    )
+    gravity = gravity_bias_at_state(
+        mujoco, model, candidate, mujoco.MjData(model),
+    )
+    forces = controlled_feedforward_forces(
+        nv=model.nv,
+        contracts=contracts,
+        gravity_bias=gravity,
+        reference_velocity=np.array([-0.25]),
+        gravity_feedforward=False,
+        reference_velocity_feedback=False,
+    )
+    candidate.qfrc_applied[:] += forces.total
+    mujoco.mj_step(model, baseline)
+    mujoco.mj_step(model, candidate)
+
+    assert np.array_equal(forces.total, np.zeros(model.nv))
+    assert np.array_equal(candidate.qpos, baseline.qpos)
+    assert np.array_equal(candidate.qvel, baseline.qvel)
+
+
+def test_gravity_bias_rejects_live_data_as_scratch_buffer():
+    model = vertical_slide_model()
+    data = mujoco.MjData(model)
+    with pytest.raises(ValueError, match="independent MjData"):
+        gravity_bias_at_state(mujoco, model, data, data)
 
 
 def test_post_step_geometry_requires_an_independent_forward_snapshot():

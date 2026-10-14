@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Iterable
+from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
@@ -17,6 +18,177 @@ SUPPORTED_COMMAND_TIMINGS = frozenset({
     REFERENCE_CTRL_OUTCOME_ENDPOINT,
     REFERENCE_CTRL_LINEAR_SUBSTEP_INTERPOLATION,
 })
+
+
+@dataclass(frozen=True)
+class DirectJointPositionActuator:
+    """Compiled contract for one unit-gear joint position actuator."""
+
+    actuator_name: str
+    actuator_id: int
+    joint_name: str
+    joint_id: int
+    qpos_address: int
+    dof_address: int
+    position_gain: float
+    velocity_gain: float
+
+
+@dataclass(frozen=True)
+class FeedforwardForces:
+    """Generalized-force terms applied in addition to position actuators."""
+
+    gravity: np.ndarray
+    reference_velocity: np.ndarray
+    total: np.ndarray
+
+
+def direct_joint_position_actuators(
+    mujoco_api: Any,
+    model: Any,
+    actuator_names: Iterable[str],
+) -> tuple[DirectJointPositionActuator, ...]:
+    """Validate and describe direct, unit-gear position actuators."""
+    names = tuple(str(name) for name in actuator_names)
+    if not names or len(set(names)) != len(names):
+        raise ValueError("controlled actuator names must be unique and nonempty")
+
+    contracts = []
+    dof_addresses = set()
+    for name in names:
+        actuator_id = int(model.actuator(name).id)
+        if int(model.actuator_trntype[actuator_id]) != int(
+            mujoco_api.mjtTrn.mjTRN_JOINT
+        ):
+            raise ValueError(f"{name} is not a direct joint actuator")
+        joint_id = int(model.actuator_trnid[actuator_id, 0])
+        joint_type = int(model.jnt_type[joint_id])
+        if joint_type not in {
+            int(mujoco_api.mjtJoint.mjJNT_HINGE),
+            int(mujoco_api.mjtJoint.mjJNT_SLIDE),
+        }:
+            raise ValueError(f"{name} does not control a scalar hinge/slide joint")
+        if int(model.actuator_dyntype[actuator_id]) != int(
+            mujoco_api.mjtDyn.mjDYN_NONE
+        ):
+            raise ValueError(f"{name} has unsupported actuator dynamics")
+        if int(model.actuator_gaintype[actuator_id]) != int(
+            mujoco_api.mjtGain.mjGAIN_FIXED
+        ) or int(model.actuator_biastype[actuator_id]) != int(
+            mujoco_api.mjtBias.mjBIAS_AFFINE
+        ):
+            raise ValueError(f"{name} is not an affine position actuator")
+
+        gear = np.asarray(model.actuator_gear[actuator_id], dtype=np.float64)
+        if not np.allclose(gear, [1.0, 0.0, 0.0, 0.0, 0.0, 0.0]):
+            raise ValueError(f"{name} must have direct unit transmission")
+        position_gain = float(model.actuator_gainprm[actuator_id, 0])
+        velocity_gain = float(-model.actuator_biasprm[actuator_id, 2])
+        if not math.isfinite(position_gain) or position_gain <= 0.0:
+            raise ValueError(f"{name} has an invalid position gain")
+        if not math.isfinite(velocity_gain) or velocity_gain < 0.0:
+            raise ValueError(f"{name} has an invalid velocity gain")
+        if not np.isclose(
+            model.actuator_biasprm[actuator_id, 1], -position_gain,
+            rtol=0.0, atol=1.0e-12,
+        ):
+            raise ValueError(f"{name} does not implement position error feedback")
+
+        dof_address = int(model.jnt_dofadr[joint_id])
+        if dof_address in dof_addresses:
+            raise ValueError("controlled actuators must map to distinct DOFs")
+        dof_addresses.add(dof_address)
+        contracts.append(DirectJointPositionActuator(
+            actuator_name=name,
+            actuator_id=actuator_id,
+            joint_name=model.joint(joint_id).name,
+            joint_id=joint_id,
+            qpos_address=int(model.jnt_qposadr[joint_id]),
+            dof_address=dof_address,
+            position_gain=position_gain,
+            velocity_gain=velocity_gain,
+        ))
+    return tuple(contracts)
+
+
+def reference_velocity_between_endpoints(
+    mujoco_api: Any,
+    model: Any,
+    source_qpos: np.ndarray,
+    outcome_qpos: np.ndarray,
+    duration_s: float,
+) -> np.ndarray:
+    """Differentiate adjacent endpoint poses over their actual step duration."""
+    source = np.asarray(source_qpos, dtype=np.float64)
+    outcome = np.asarray(outcome_qpos, dtype=np.float64)
+    if source.shape != (int(model.nq),) or outcome.shape != (int(model.nq),):
+        raise ValueError("reference endpoint qpos arrays have the wrong shape")
+    if not np.isfinite(source).all() or not np.isfinite(outcome).all():
+        raise ValueError("reference endpoint qpos arrays must be finite")
+    if not math.isfinite(duration_s) or duration_s <= 0.0:
+        raise ValueError("reference interval duration must be positive and finite")
+    velocity = np.empty(int(model.nv), dtype=np.float64)
+    mujoco_api.mj_differentiatePos(
+        model, velocity, float(duration_s), source, outcome,
+    )
+    return velocity
+
+
+def gravity_bias_at_state(
+    mujoco_api: Any,
+    model: Any,
+    live_data: Any,
+    scratch_data: Any,
+) -> np.ndarray:
+    """Return gravity bias at live qpos using an independent zero-velocity buffer."""
+    if live_data is scratch_data:
+        raise ValueError("gravity calculation requires independent MjData")
+    scratch_data.time = float(live_data.time)
+    scratch_data.qpos[:] = live_data.qpos
+    scratch_data.qvel[:] = 0.0
+    for name in ("act", "ctrl", "mocap_pos", "mocap_quat", "eq_active"):
+        source = getattr(live_data, name, None)
+        destination = getattr(scratch_data, name, None)
+        if source is not None and destination is not None:
+            destination[...] = source
+    scratch_data.qfrc_applied[:] = 0.0
+    scratch_data.xfrc_applied[:] = 0.0
+    mujoco_api.mj_forward(model, scratch_data)
+    return np.asarray(scratch_data.qfrc_bias, dtype=np.float64).copy()
+
+
+def controlled_feedforward_forces(
+    *,
+    nv: int,
+    contracts: Iterable[DirectJointPositionActuator],
+    gravity_bias: np.ndarray,
+    reference_velocity: np.ndarray,
+    gravity_feedforward: bool,
+    reference_velocity_feedback: bool,
+) -> FeedforwardForces:
+    """Build sparse gravity and reference-velocity generalized forces."""
+    gravity_bias = np.asarray(gravity_bias, dtype=np.float64)
+    reference_velocity = np.asarray(reference_velocity, dtype=np.float64)
+    if gravity_bias.shape != (nv,) or reference_velocity.shape != (nv,):
+        raise ValueError("gravity and reference velocity must have shape (nv,)")
+    if not np.isfinite(gravity_bias).all() or not np.isfinite(
+        reference_velocity
+    ).all():
+        raise ValueError("feedforward inputs must be finite")
+
+    gravity = np.zeros(nv, dtype=np.float64)
+    velocity = np.zeros(nv, dtype=np.float64)
+    for contract in contracts:
+        dof = contract.dof_address
+        if gravity_feedforward:
+            gravity[dof] = gravity_bias[dof]
+        if reference_velocity_feedback:
+            velocity[dof] = contract.velocity_gain * reference_velocity[dof]
+    return FeedforwardForces(
+        gravity=gravity,
+        reference_velocity=velocity,
+        total=gravity + velocity,
+    )
 
 
 def synchronized_forward_snapshot(

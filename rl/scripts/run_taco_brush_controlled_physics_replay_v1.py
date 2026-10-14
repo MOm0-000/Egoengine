@@ -43,13 +43,17 @@ from egoengine_repro.evaluation.controlled_physics_replay import (  # noqa: E402
     REFERENCE_CTRL_LINEAR_SUBSTEP_INTERPOLATION,
     REFERENCE_CTRL_OUTCOME_ENDPOINT,
     SUPPORTED_COMMAND_TIMINGS,
+    controlled_feedforward_forces,
     control_substep_schedule,
+    direct_joint_position_actuators,
+    gravity_bias_at_state,
     integrate_freejoint_pose,
     longest_true_run,
     proxy_native_geometry_relation,
     proxy_native_mismatch,
     quaternion_distance_rad,
     reference_control_target,
+    reference_velocity_between_endpoints,
     synchronized_forward_snapshot,
 )
 from egoengine_repro.retarget.collision_audit import collision_families  # noqa: E402
@@ -68,8 +72,13 @@ SUPPORTED_SCHEMAS = {
     "taco_brush_20231006_145_initialization_controlled_replay_v1",
     "taco_brush_20231006_145_initialization_controlled_replay_interpolated_v1",
     "taco_brush_20231006_145_endpoint_1_4_hand_table_capture_v1",
+    "taco_brush_20231006_145_vertical_feedforward_replay_v1",
 }
 DEFAULT_CONFIG = RL_ROOT / "configs/taco_brush_controlled_physics_replay_v1.yaml"
+VERTICAL_FEEDFORWARD_MODE = "vertical_gravity_reference_velocity_feedforward_v1"
+VERTICAL_FEEDFORWARD_ACTUATORS = (
+    "R_forearm_tz_position", "L_forearm_tz_position",
+)
 CONTACT_GROUPS = (
     "right_hand_brush", "left_hand_bowl", "cross_hand_object",
     "brush_floor", "bowl_floor", "hand_floor", "brush_bowl",
@@ -537,6 +546,42 @@ def main() -> int:
     command_timing = str(cfg["runtime"]["command_timing"])
     if command_timing not in SUPPORTED_COMMAND_TIMINGS:
         raise ValueError(f"unsupported command timing: {command_timing}")
+    controller_cfg = cfg.get("controller")
+    if controller_cfg is None:
+        controller_mode = "position_servo_only"
+        gravity_feedforward = False
+        reference_velocity_feedback = False
+        controlled_actuator_names: tuple[str, ...] = ()
+        maximum_extra_force_n = 0.0
+    else:
+        if controller_cfg.get("mode") != VERTICAL_FEEDFORWARD_MODE:
+            raise ValueError("unsupported experimental controller mode")
+        controller_mode = str(controller_cfg["mode"])
+        for key in ("gravity_feedforward", "reference_velocity_feedback"):
+            if not isinstance(controller_cfg.get(key), bool):
+                raise ValueError(f"controller {key} must be a YAML boolean")
+        gravity_feedforward = controller_cfg["gravity_feedforward"]
+        reference_velocity_feedback = controller_cfg[
+            "reference_velocity_feedback"
+        ]
+        controlled_actuator_names = tuple(
+            str(name) for name in controller_cfg["controlled_actuators"]
+        )
+        if controlled_actuator_names != VERTICAL_FEEDFORWARD_ACTUATORS:
+            raise ValueError(
+                "vertical experiment must control only the frozen wrist actuators"
+            )
+        maximum_extra_force_n = float(
+            controller_cfg["maximum_abs_extra_generalized_force_n"]
+        )
+        if not np.isfinite(maximum_extra_force_n) or maximum_extra_force_n <= 0.0:
+            raise ValueError("controller force hard stop must be positive and finite")
+        if reference_velocity_feedback and command_timing != (
+            REFERENCE_CTRL_LINEAR_SUBSTEP_INTERPOLATION
+        ):
+            raise ValueError(
+                "reference velocity feedback requires linear substep targets"
+            )
     trace_substep_native = bool(
         cfg.get("diagnostics", {}).get("substep_native_hand_table_trace", False)
     )
@@ -562,6 +607,17 @@ def main() -> int:
     if not np.isclose(model.geom("floor").pos[2], cfg["support"]["simulator_z_m"],
                       rtol=0.0, atol=0.0):
         raise ValueError("experiment-local floor height did not compile exactly")
+    controlled_actuators = direct_joint_position_actuators(
+        mujoco, model, controlled_actuator_names,
+    ) if controlled_actuator_names else ()
+    if gravity_feedforward:
+        if np.any(np.asarray(model.body_gravcomp) != 0.0):
+            raise ValueError("model already contains body gravity compensation")
+        for contract in controlled_actuators:
+            if bool(model.jnt_actgravcomp[contract.joint_id]):
+                raise ValueError(
+                    f"{contract.actuator_name} already has gravity compensation"
+                )
 
     with np.load(paths["robot_reference"], allow_pickle=False) as archive:
         reference = {name: np.asarray(archive[name]).copy()
@@ -631,6 +687,50 @@ def main() -> int:
                 "contact and actuator forces are the forces solved at interval_start_time_s "
                 "and applied over [interval_start_time_s, interval_end_time_s]; post-step "
                 "qpos/qvel and refreshed native geometry are at state_time_s=interval_end_time_s"
+            ),
+        },
+        "controller": {
+            "mode": controller_mode,
+            "gravity_feedforward": gravity_feedforward,
+            "reference_velocity_feedback": reference_velocity_feedback,
+            "controlled_actuators": [
+                {
+                    "actuator_name": contract.actuator_name,
+                    "actuator_id": contract.actuator_id,
+                    "joint_name": contract.joint_name,
+                    "joint_id": contract.joint_id,
+                    "qpos_address": contract.qpos_address,
+                    "dof_address": contract.dof_address,
+                    "position_gain": contract.position_gain,
+                    "velocity_gain": contract.velocity_gain,
+                    "transmission": "direct_joint_unit_gear",
+                    "force_limited": bool(
+                        model.actuator_forcelimited[contract.actuator_id]
+                    ),
+                    "joint_actuator_gravity_compensation": bool(
+                        model.jnt_actgravcomp[contract.joint_id]
+                    ),
+                    "body_gravity_compensation": float(
+                        model.body_gravcomp[model.jnt_bodyid[contract.joint_id]]
+                    ),
+                }
+                for contract in controlled_actuators
+            ],
+            "maximum_abs_extra_generalized_force_n": maximum_extra_force_n,
+            "reference_velocity_rule": (
+                "mj_differentiatePos(qpos[source], qpos[outcome], "
+                "substeps * model.opt.timestep)"
+                if controlled_actuators else "NONE"
+            ),
+            "gravity_rule": (
+                "independent MjModel and MjData at live qpos with qvel=0; "
+                "use qfrc_bias"
+                if gravity_feedforward else "DISABLED"
+            ),
+            "application_rule": (
+                "restore initial qfrc_applied each substep, then add sparse "
+                "feedforward generalized force"
+                if controlled_actuators else "NONE"
             ),
         },
         "hard_stop": cfg["hard_stop"],
@@ -714,6 +814,10 @@ def main() -> int:
     if any(initial_warning):
         raise RuntimeError(f"MuJoCo warning during initialization: {initial_warning}")
     manifest["initial_state_provenance"] = initial_state_provenance
+    initial_qfrc_applied = data.qfrc_applied.copy()
+    manifest["controller"]["preserved_initial_qfrc_applied"] = (
+        initial_qfrc_applied
+    )
     write_json(output / "input_manifest.json", manifest)
 
     object_specs = {
@@ -732,12 +836,20 @@ def main() -> int:
     contact_rows: list[dict[str, Any]] = []
     substep_native_rows: list[dict[str, Any]] = []
     substep_state_rows: list[dict[str, Any]] = []
+    controller_rows: list[dict[str, Any]] = []
     reference_data = (
         mujoco.MjData(model)
         if trace_substep_native or trace_substep_state else None
     )
     actual_trace_data = mujoco.MjData(model) if trace_substep_native else None
     endpoint_audit_data = mujoco.MjData(model)
+    gravity_model = (
+        mujoco.MjModel.from_xml_path(str(local_scene))
+        if gravity_feedforward else None
+    )
+    gravity_data = (
+        mujoco.MjData(gravity_model) if gravity_model is not None else None
+    )
     initial_actual_qpos = data.qpos.copy()
     initial_actual_qvel = data.qvel.copy()
     initial_actual_ctrl = data.ctrl.copy()
@@ -835,6 +947,13 @@ def main() -> int:
     for source, substeps in enumerate(schedule):
         outcome = source + 1
         interval = empty_interval()
+        reference_interval_velocity = reference_velocity_between_endpoints(
+            mujoco,
+            model,
+            reference["qpos"][source],
+            reference["qpos"][outcome],
+            float(substeps) * float(model.opt.timestep),
+        )
         reference_tangent = np.empty(model.nv, dtype=np.float64)
         mujoco.mj_differentiatePos(
             model, reference_tangent, 1.0,
@@ -849,6 +968,100 @@ def main() -> int:
             )
             data.ctrl[:] = target
             interval_start_time_s = float(data.time)
+            controller_step_rows: list[dict[str, Any]] = []
+            applied_feedforward = np.zeros(model.nv, dtype=np.float64)
+            if controlled_actuators:
+                gravity_bias = np.zeros(model.nv, dtype=np.float64)
+                if gravity_feedforward:
+                    if gravity_model is None or gravity_data is None:
+                        raise RuntimeError(
+                            "gravity calculation buffer was not initialized"
+                        )
+                    gravity_bias = gravity_bias_at_state(
+                        mujoco, gravity_model, data, gravity_data,
+                    )
+                feedforward = controlled_feedforward_forces(
+                    nv=model.nv,
+                    contracts=controlled_actuators,
+                    gravity_bias=gravity_bias,
+                    reference_velocity=reference_interval_velocity,
+                    gravity_feedforward=gravity_feedforward,
+                    reference_velocity_feedback=reference_velocity_feedback,
+                )
+                applied_feedforward = feedforward.total
+                controlled_extra = np.asarray([
+                    applied_feedforward[contract.dof_address]
+                    for contract in controlled_actuators
+                ])
+                if np.max(np.abs(controlled_extra)) > maximum_extra_force_n:
+                    hard_stop = {
+                        "reasons": ["CONTROLLER_EXTRA_FORCE_LIMIT"],
+                        "source_endpoint": source,
+                        "planned_outcome_endpoint": outcome,
+                        "substep": substep,
+                        "physics_step": physics_steps,
+                        "time_s": float(data.time),
+                        "maximum_abs_extra_generalized_force_n": float(
+                            np.max(np.abs(controlled_extra))
+                        ),
+                        "configured_limit_n": maximum_extra_force_n,
+                    }
+                    break
+                if gravity_feedforward or reference_velocity_feedback:
+                    data.qfrc_applied[:] = initial_qfrc_applied
+                    data.qfrc_applied[:] += applied_feedforward
+                for contract in controlled_actuators:
+                    actuator = contract.actuator_id
+                    qpos_address = contract.qpos_address
+                    dof = contract.dof_address
+                    position_force = contract.position_gain * (
+                        data.ctrl[actuator] - data.qpos[qpos_address]
+                    )
+                    damping_force = -contract.velocity_gain * data.qvel[dof]
+                    controller_step_rows.append({
+                        "source_endpoint": source,
+                        "outcome_endpoint": outcome,
+                        "substep": substep,
+                        "substeps": int(substeps),
+                        "control_alpha": control_alpha,
+                        "interval_start_time_s": interval_start_time_s,
+                        "interval_end_time_s": (
+                            interval_start_time_s + float(model.opt.timestep)
+                        ),
+                        "actuator_name": contract.actuator_name,
+                        "actuator_id": actuator,
+                        "joint_name": contract.joint_name,
+                        "dof_address": dof,
+                        "reference_position_target": float(data.ctrl[actuator]),
+                        "reference_velocity": float(
+                            reference_interval_velocity[dof]
+                        ),
+                        "actual_position_start": float(data.qpos[qpos_address]),
+                        "actual_velocity_start": float(data.qvel[dof]),
+                        "target_minus_actual_start_m": float(
+                            data.ctrl[actuator] - data.qpos[qpos_address]
+                        ),
+                        "position_servo_force_n": float(position_force),
+                        "velocity_damping_force_n": float(damping_force),
+                        "original_actuator_force_n": float(
+                            position_force + damping_force
+                        ),
+                        "gravity_bias_n": float(gravity_bias[dof]),
+                        "gravity_feedforward_n": float(feedforward.gravity[dof]),
+                        "reference_velocity_force_n": float(
+                            feedforward.reference_velocity[dof]
+                        ),
+                        "extra_generalized_force_n": float(
+                            applied_feedforward[dof]
+                        ),
+                        "preserved_initial_applied_force_n": float(
+                            initial_qfrc_applied[dof]
+                        ),
+                        "total_commanded_generalized_force_n": float(
+                            position_force + damping_force
+                            + data.qfrc_applied[dof]
+                        ),
+                    })
             mujoco.mj_step(model, data)
             physics_steps += 1
             rows, maxima = sample_contacts(
@@ -862,6 +1075,8 @@ def main() -> int:
                 for name, spec in object_specs.items()
             }
             reference_qpos_at_substep = None
+            actual_table = None
+            reference_table = None
             if trace_substep_native or trace_substep_state:
                 if reference_data is None:
                     raise RuntimeError("reference trace data was not initialized")
@@ -936,8 +1151,36 @@ def main() -> int:
                     "actual_qpos": data.qpos.copy(),
                     "actual_qvel": data.qvel.copy(),
                     "control_target": data.ctrl.copy(),
+                    "reference_qvel": reference_interval_velocity.copy(),
+                    "applied_feedforward_force": applied_feedforward.copy(),
+                    "qfrc_applied": data.qfrc_applied.copy(),
                     "preceding_interval_actuator_force": data.actuator_force.copy(),
                 })
+            for controller_row, contract in zip(
+                controller_step_rows, controlled_actuators, strict=True,
+            ):
+                dof = contract.dof_address
+                qpos_address = contract.qpos_address
+                side = "right" if contract.actuator_name.startswith("R_") else "left"
+                controller_row.update({
+                    "actual_position_end": float(data.qpos[qpos_address]),
+                    "actual_velocity_end": float(data.qvel[dof]),
+                    "reference_minus_actual_end_m": float(
+                        data.ctrl[contract.actuator_id] - data.qpos[qpos_address]
+                    ),
+                    "solved_actuator_force_n": float(
+                        data.actuator_force[contract.actuator_id]
+                    ),
+                    "solved_constraint_force_n": float(data.qfrc_constraint[dof]),
+                    "reference_hand_table_distance_m": (
+                        None if reference_table is None
+                        else float(reference_table[side])
+                    ),
+                    "actual_hand_table_distance_m": (
+                        None if actual_table is None else float(actual_table[side])
+                    ),
+                })
+                controller_rows.append(controller_row)
             failures = []
             arrays = [data.qpos, data.qvel, data.ctrl, data.qacc]
             if not all(np.isfinite(value).all() for value in arrays):
@@ -1012,6 +1255,32 @@ def main() -> int:
         writer = csv.DictWriter(stream, fieldnames=fields, lineterminator="\n")
         writer.writeheader()
         writer.writerows(contact_rows)
+    if controlled_actuators:
+        with (output / "controller_trace.csv").open(
+            "w", newline="", encoding="utf-8",
+        ) as stream:
+            fields = [
+                "source_endpoint", "outcome_endpoint", "substep", "substeps",
+                "control_alpha", "interval_start_time_s", "interval_end_time_s",
+                "actuator_name", "actuator_id", "joint_name", "dof_address",
+                "reference_position_target", "reference_velocity",
+                "actual_position_start", "actual_velocity_start",
+                "target_minus_actual_start_m", "position_servo_force_n",
+                "velocity_damping_force_n", "original_actuator_force_n",
+                "gravity_bias_n", "gravity_feedforward_n",
+                "reference_velocity_force_n", "extra_generalized_force_n",
+                "preserved_initial_applied_force_n",
+                "total_commanded_generalized_force_n",
+                "actual_position_end", "actual_velocity_end",
+                "reference_minus_actual_end_m", "solved_actuator_force_n",
+                "solved_constraint_force_n", "reference_hand_table_distance_m",
+                "actual_hand_table_distance_m",
+            ]
+            writer = csv.DictWriter(
+                stream, fieldnames=fields, lineterminator="\n",
+            )
+            writer.writeheader()
+            writer.writerows(controller_rows)
     if trace_substep_native:
         with gzip.open(
             output / "substep_native_hand_table_trace.csv.gz",
@@ -1041,7 +1310,8 @@ def main() -> int:
         )
         array_names = (
             "reference_qpos", "actual_qpos", "actual_qvel",
-            "control_target", "preceding_interval_actuator_force",
+            "control_target", "reference_qvel", "applied_feedforward_force",
+            "qfrc_applied", "preceding_interval_actuator_force",
         )
         np.savez_compressed(
             output / "substep_state_trace.npz",
@@ -1178,6 +1448,49 @@ def main() -> int:
         substep_native_rows,
         float(cfg["native_geometry_audit"]["hand_object_and_hand_table_tolerance_m"]),
     )
+    controller_evidence: dict[str, Any] = {
+        "mode": controller_mode,
+        "gravity_feedforward": gravity_feedforward,
+        "reference_velocity_feedback": reference_velocity_feedback,
+        "maximum_abs_extra_generalized_force_n": max(
+            (abs(row["extra_generalized_force_n"]) for row in controller_rows),
+            default=0.0,
+        ),
+        "actuators": {},
+    }
+    for contract in controlled_actuators:
+        rows = [
+            row for row in controller_rows
+            if row["actuator_name"] == contract.actuator_name
+        ]
+        endpoint_4 = next((
+            row for row in reversed(rows) if row["outcome_endpoint"] == 4
+        ), None)
+        endpoint_5 = next((
+            row for row in reversed(rows) if row["outcome_endpoint"] == 5
+        ), None)
+        controller_evidence["actuators"][contract.actuator_name] = {
+            "maximum_abs_reference_tracking_error_m": max(
+                (abs(row["reference_minus_actual_end_m"]) for row in rows),
+                default=0.0,
+            ),
+            "endpoint_4_reference_minus_actual_m": (
+                None if endpoint_4 is None
+                else endpoint_4["reference_minus_actual_end_m"]
+            ),
+            "endpoint_5_reference_minus_actual_m": (
+                None if endpoint_5 is None
+                else endpoint_5["reference_minus_actual_end_m"]
+            ),
+            "endpoint_4_actual_hand_table_distance_m": (
+                None if endpoint_4 is None
+                else endpoint_4["actual_hand_table_distance_m"]
+            ),
+            "endpoint_5_actual_hand_table_distance_m": (
+                None if endpoint_5 is None
+                else endpoint_5["actual_hand_table_distance_m"]
+            ),
+        }
 
     strict_pass = bool(
         hard_stop is None
@@ -1223,6 +1536,7 @@ def main() -> int:
         "physics_steps": physics_steps, "hard_stop": hard_stop,
         "pickup": pickup, "native_blockers": native_blockers,
         "tracking_failures": tracking_failures,
+        "controller": controller_evidence,
         "substep_native_hand_table": substep_native_summary,
         "proxy_native_force_exposure_mismatches": force_exposure_mismatches,
         "proxy_native_geometry_mismatches": geometry_mismatches,
@@ -1273,11 +1587,34 @@ def main() -> int:
         f"- Completed: endpoint `0→{endpoint_rows[-1]['endpoint']}` / planned `0→{outcome_endpoint}`",
         f"- CPU MuJoCo physics steps: `{physics_steps}`",
         f"- Control target timing: `{command_timing}`",
+        f"- Controller mode: `{controller_mode}`",
+        f"- Gravity feedforward: `{gravity_feedforward}`",
+        f"- Reference velocity feedback: `{reference_velocity_feedback}`",
+        f"- Maximum applied extra generalized force: "
+        f"`{controller_evidence['maximum_abs_extra_generalized_force_n']:.6f} N`",
         f"- Hard stop: `{hard_stop['reasons'] if hard_stop else 'NONE'}`",
         "- RL / MPC / MINK: `NOT RUN`",
         "- Promotion / chunk commit: `FORBIDDEN`", "",
-        "## Physical pickup gate", "",
-        "| object | max actual/reference lift (mm) | longest lifted + hand-force + no-floor run | result |",
+    ]
+    if controlled_actuators:
+        lines += [
+            "", "## Vertical wrist tracking", "",
+            "| actuator | endpoint 4 below reference (mm) | "
+            "endpoint 5 below reference (mm) |",
+            "|---|---:|---:|",
+        ]
+        for name, evidence in controller_evidence["actuators"].items():
+            endpoint_4_error = evidence["endpoint_4_reference_minus_actual_m"]
+            endpoint_5_error = evidence["endpoint_5_reference_minus_actual_m"]
+            lines.append(
+                f"| {name} | "
+                f"{'N/A' if endpoint_4_error is None else f'{endpoint_4_error * 1000:.6f}'} | "
+                f"{'N/A' if endpoint_5_error is None else f'{endpoint_5_error * 1000:.6f}'} |"
+            )
+    lines += [
+        "", "## Physical pickup gate", "",
+        "| object | max actual/reference lift (mm) | "
+        "longest lifted + hand-force + no-floor run | result |",
         "|---|---:|---:|---|",
     ]
     for name, row in pickup.items():
