@@ -1,0 +1,214 @@
+{
+  "chunk_commit_allowed": false,
+  "classification": "CONTROLLED_REPLAY_HARD_STOP",
+  "completed_outcome_endpoint": 19,
+  "controller": {
+    "actuators": {
+      "L_forearm_tz_position": {
+        "endpoint_4_actual_hand_table_distance_m": 0.007524213322858353,
+        "endpoint_4_reference_minus_actual_m": -0.0012375294579506368,
+        "endpoint_5_actual_hand_table_distance_m": 0.003385939101536284,
+        "endpoint_5_reference_minus_actual_m": -0.0010501020757620605,
+        "maximum_abs_reference_tracking_error_m": 0.010155315618689986
+      },
+      "R_forearm_tz_position": {
+        "endpoint_4_actual_hand_table_distance_m": 0.01145793875339518,
+        "endpoint_4_reference_minus_actual_m": -0.0012380184455335064,
+        "endpoint_5_actual_hand_table_distance_m": 0.007322530759594215,
+        "endpoint_5_reference_minus_actual_m": -0.001051070220885686,
+        "maximum_abs_reference_tracking_error_m": 0.004472541519813467
+      }
+    },
+    "gravity_feedforward": true,
+    "maximum_abs_extra_generalized_force_n": 42.406006595993574,
+    "mode": "vertical_gravity_reference_velocity_feedforward_v1",
+    "reference_velocity_feedback": true
+  },
+  "hard_stop": {
+    "configured_limit_n": 50.0,
+    "maximum_abs_extra_generalized_force_n": 52.403375568026505,
+    "physics_step": 317,
+    "planned_outcome_endpoint": 20,
+    "reasons": [
+      "CONTROLLER_EXTRA_FORCE_LIMIT"
+    ],
+    "source_endpoint": 19,
+    "substep": 0,
+    "time_s": 0.6340000000000005
+  },
+  "maximums": {
+    "bowl_position_error_m": 0.0013332811035380492,
+    "brush_position_error_m": 0.009285547217970001,
+    "contact_force_n": 52.40155156848514,
+    "proxy_penetration_m": 0.0014304843086628775
+  },
+  "native_blockers": [
+    {
+      "classification": "PENETRATION",
+      "distance_m": -0.0009232801197737173,
+      "endpoint": 10,
+      "entity": "right_xhand_table",
+      "limit_m": 5e-05
+    },
+    {
+      "classification": "PENETRATION",
+      "distance_m": -0.0020928075320748585,
+      "endpoint": 10,
+      "entity": "left_xhand_table",
+      "limit_m": 5e-05
+    },
+    {
+      "classification": "PENETRATION",
+      "distance_m": -0.0009369483483748775,
+      "endpoint": 11,
+      "entity": "right_xhand_table",
+      "limit_m": 5e-05
+    },
+    {
+      "classification": "PENETRATION",
+      "distance_m": -0.0019401712792672665,
+      "endpoint": 11,
+      "entity": "left_xhand_table",
+      "limit_m": 5e-05
+    }
+  ],
+  "physics_steps": 317,
+  "pickup": {
+    "bowl": {
+      "lifted_hand_contact_no_floor_longest_run": 0,
+      "maximum_actual_lift_m": 0.0003357349279149435,
+      "maximum_reference_lift_m": 0.00019699335098266602,
+      "stable_pickup_pass": false
+    },
+    "brush": {
+      "lifted_hand_contact_no_floor_longest_run": 0,
+      "maximum_actual_lift_m": 1.6653345369377348e-15,
+      "maximum_reference_lift_m": 0.00013202428817749023,
+      "stable_pickup_pass": false
+    }
+  },
+  "promotion_authorized": false,
+  "proxy_error_dynamic_exposure": {
+    "bowl": {
+      "causal_interpretation": "DYNAMIC_EXPOSURE_NOT_A_TRUE_GEOMETRY_COUNTERFACTUAL",
+      "mismatch_impulse_fraction": null,
+      "mismatch_normal_impulse_ns": 0.0,
+      "sampled_hand_object_normal_impulse_ns": 0.0,
+      "sum_object_displacement_during_mismatch_intervals_m": 0.0
+    },
+    "brush": {
+      "causal_interpretation": "DYNAMIC_EXPOSURE_NOT_A_TRUE_GEOMETRY_COUNTERFACTUAL",
+      "mismatch_impulse_fraction": null,
+      "mismatch_normal_impulse_ns": 0.0,
+      "sampled_hand_object_normal_impulse_ns": 0.0,
+      "sum_object_displacement_during_mismatch_intervals_m": 0.0
+    }
+  },
+  "proxy_native_force_exposure_mismatches": [],
+  "proxy_native_geometry_mismatches": [],
+  "reinforcement_learning_runs": 0,
+  "repository_head": "64625a903458c179f235c74fd099923eced2d62f",
+  "schema": "taco_brush_20231006_145_vertical_feedforward_replay_v1",
+  "source_artifacts": {
+    "config": {
+      "bytes": 5262,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_20231006_145_vertical_feedforward_d_full_replay_v1.yaml",
+      "sha256": "fae2ce945a11c9c5a862e7d5b88b306853c70dde2f6bf8427b175edc74abc432"
+    },
+    "local_scene": {
+      "bytes": 410703,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_vertical_feedforward_d_full_replay_v1/experiment_local_scene.xml",
+      "sha256": "fa226dab9bfd80284c1eb7c84e697243c224768444a3320aecbafd9e1f4e3c6c"
+    },
+    "prior_collision_audit": {
+      "bytes": 38197,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/safe_entry/interaction_native_hand_object_audit.json",
+      "sha256": "f634840c06d6dee4be0a695ec2165955320b9e2bbf7a3b27f2f88f0fd79a883a"
+    },
+    "robot_reference": {
+      "bytes": 130846,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/safe_entry/robot_reference.npz",
+      "sha256": "9216e8e72ff824c5ddf5bfdf530212d214273e0a23df4e9433a89b38a25c39ea"
+    },
+    "script": {
+      "bytes": 79162,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/scripts/run_taco_brush_controlled_physics_replay_v1.py",
+      "sha256": "6a599b56a2e610ab39d2908560370994ed58415eec941564da89fafa4065fa28"
+    },
+    "source_scene": {
+      "bytes": 410567,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/generated_scene.xml",
+      "sha256": "bab703cbd3a83b01c6d04bc0a9a29e44eec204c6eb9b7035099b58582049cb6a"
+    },
+    "support_contract": {
+      "bytes": 515,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_20231006_145_issue14_support_candidate_v1.yaml",
+      "sha256": "27c2828818743028ddde7a18de67ddd4616345aba288b0cf240aef08758e41fb"
+    }
+  },
+  "strict_gate_passed": false,
+  "substep_native_hand_table": {
+    "interval_4_to_5": {
+      "actual_minimum_distance_m": 0.003385939101536284,
+      "actual_penetration_beyond_tolerance_count": 0,
+      "all_reference_and_actual_safe_within_tolerance": true,
+      "all_reference_and_actual_strictly_nonnegative": true,
+      "first_actual_penetration_beyond_tolerance": null,
+      "first_reference_safe_actual_penetration": null,
+      "maximum_actuator_force_abs_n": 11.076442814526331,
+      "maximum_robot_qpos_error_max_abs": 0.001242815413802556,
+      "minimum_control_range_margin": -3.469446951953614e-18,
+      "reference_and_actual_safe_count": 17,
+      "reference_minimum_distance_m": 0.002433537767203786,
+      "reference_penetration_beyond_tolerance_count": 0,
+      "reference_safe_actual_penetration_count": 0,
+      "sample_count": 17,
+      "strict_actual_negative_count": 0,
+      "strict_reference_negative_count": 0
+    },
+    "tolerance_m": 5e-05,
+    "whole_replay": {
+      "actual_minimum_distance_m": -0.0029787721015690494,
+      "actual_penetration_beyond_tolerance_count": 136,
+      "all_reference_and_actual_safe_within_tolerance": false,
+      "all_reference_and_actual_strictly_nonnegative": false,
+      "first_actual_penetration_beyond_tolerance": {
+        "actual_minimum_distance_m": -0.00014165046047487362,
+        "control_alpha": 0.8125,
+        "control_range_minimum_margin": -3.469446951953614e-18,
+        "outcome_endpoint": 6,
+        "preceding_interval_actuator_force_max_abs_n": 12.78087361160783,
+        "reference_minimum_distance_m": 0.0004444652327797449,
+        "robot_qpos_error_max_abs": 0.0501609935211238,
+        "source_endpoint": 5,
+        "state_time_s": 0.19400000000000014,
+        "substep": 12,
+        "substeps": 16
+      },
+      "first_reference_safe_actual_penetration": {
+        "actual_minimum_distance_m": -0.00014165046047487362,
+        "control_alpha": 0.8125,
+        "control_range_minimum_margin": -3.469446951953614e-18,
+        "outcome_endpoint": 6,
+        "preceding_interval_actuator_force_max_abs_n": 12.78087361160783,
+        "reference_minimum_distance_m": 0.0004444652327797449,
+        "robot_qpos_error_max_abs": 0.0501609935211238,
+        "source_endpoint": 5,
+        "state_time_s": 0.19400000000000014,
+        "substep": 12,
+        "substeps": 16
+      },
+      "maximum_actuator_force_abs_n": 63.79932334074556,
+      "maximum_robot_qpos_error_max_abs": 0.5349617273793876,
+      "minimum_control_range_margin": -2.3592239273284576e-16,
+      "reference_and_actual_safe_count": 181,
+      "reference_minimum_distance_m": -0.00026021263157172125,
+      "reference_penetration_beyond_tolerance_count": 49,
+      "reference_safe_actual_penetration_count": 87,
+      "sample_count": 317,
+      "strict_actual_negative_count": 136,
+      "strict_reference_negative_count": 114
+    }
+  },
+  "tracking_failures": []
+}
