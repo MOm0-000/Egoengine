@@ -84,6 +84,7 @@ CONTACT_GROUPS = (
     "brush_floor", "bowl_floor", "hand_floor", "brush_bowl",
     "intrahand", "interhand", "other",
 )
+FINGER_JOINT_PREFIXES = ("left_hand_", "right_hand_")
 
 
 def sha256(path: Path) -> str:
@@ -118,7 +119,37 @@ def write_json(path: Path, value: Any) -> None:
     )
 
 
-def build_local_scene(source: Path, destination: Path, floor_z_m: float) -> None:
+def is_finger_joint_name(name: str) -> bool:
+    return name.startswith(FINGER_JOINT_PREFIXES)
+
+
+def urdf_finger_effort_limits(paths: tuple[Path, ...]) -> dict[str, float]:
+    limits: dict[str, float] = {}
+    for path in paths:
+        root = ET.parse(path).getroot()
+        for joint in root.findall("joint"):
+            name = joint.attrib.get("name", "")
+            if not is_finger_joint_name(name) or joint.attrib.get("type") == "fixed":
+                continue
+            limit = joint.find("limit")
+            if limit is None or "effort" not in limit.attrib:
+                raise ValueError(f"URDF finger joint has no effort limit: {name}")
+            if name in limits:
+                raise ValueError(f"duplicate URDF finger joint: {name}")
+            limits[name] = float(limit.attrib["effort"])
+    if len(limits) != 24:
+        raise ValueError(f"expected 24 URDF finger effort limits, found {len(limits)}")
+    return limits
+
+
+def build_local_scene(
+    source: Path,
+    destination: Path,
+    floor_z_m: float,
+    *,
+    finger_dynamics: dict[str, Any] | None = None,
+    finger_effort_limits: dict[str, float] | None = None,
+) -> None:
     tree = ET.parse(source)
     root = tree.getroot()
     compiler = root.find("compiler")
@@ -136,8 +167,82 @@ def build_local_scene(source: Path, destination: Path, floor_z_m: float) -> None
         raise ValueError("floor position is malformed")
     position[2] = floor_z_m
     floor.set("pos", " ".join(f"{value:.17g}" for value in position))
+    if finger_dynamics is not None:
+        if finger_effort_limits is None:
+            raise ValueError("finger dynamics require URDF effort limits")
+        if finger_dynamics.get("effort_limit_scope") != "joint_actuatorfrcrange":
+            raise ValueError("finger effort limits must use joint actuatorfrcrange")
+        armature_mode = str(finger_dynamics["armature_mode"])
+        if armature_mode not in {"preserve_source", "uniform_explicit"}:
+            raise ValueError(f"unsupported finger armature mode: {armature_mode}")
+        armature = None
+        if armature_mode == "uniform_explicit":
+            armature = float(finger_dynamics["uniform_armature_kg_m2"])
+            if not np.isfinite(armature) or armature <= 0.0:
+                raise ValueError("finger armature must be positive and finite")
+        applied: set[str] = set()
+        for joint in root.findall(".//joint"):
+            name = joint.attrib.get("name", "")
+            if name not in finger_effort_limits:
+                continue
+            limit = finger_effort_limits[name]
+            joint.set("actuatorfrclimited", "true")
+            joint.set("actuatorfrcrange", f"{-limit:.17g} {limit:.17g}")
+            if armature is not None:
+                joint.set("armature", f"{armature:.17g}")
+            applied.add(name)
+        missing = set(finger_effort_limits) - applied
+        if missing:
+            raise ValueError(f"scene is missing finger joints: {sorted(missing)}")
     ET.indent(tree, space="  ")
     tree.write(destination, encoding="utf-8", xml_declaration=True)
+
+
+def compiled_finger_contracts(
+    model: mujoco.MjModel,
+    effort_limits: dict[str, float],
+) -> list[dict[str, Any]]:
+    contracts: list[dict[str, Any]] = []
+    for name, effort_limit in sorted(effort_limits.items()):
+        joint_id = int(model.joint(name).id)
+        if int(model.jnt_type[joint_id]) != int(mujoco.mjtJoint.mjJNT_HINGE):
+            raise ValueError(f"finger joint is not a hinge: {name}")
+        actuator_ids = np.flatnonzero(model.actuator_trnid[:, 0] == joint_id)
+        if len(actuator_ids) != 1:
+            raise ValueError(f"finger joint {name} has {len(actuator_ids)} actuators")
+        actuator_id = int(actuator_ids[0])
+        gear = np.asarray(model.actuator_gear[actuator_id], dtype=np.float64)
+        if not np.isclose(gear[0], 1.0) or np.any(gear[1:] != 0.0):
+            raise ValueError(f"finger actuator is not direct unit gear: {name}")
+        if not bool(model.jnt_actfrclimited[joint_id]):
+            raise ValueError(f"finger joint force limit did not compile: {name}")
+        force_range = np.asarray(model.jnt_actfrcrange[joint_id], dtype=np.float64)
+        expected_range = np.asarray([-effort_limit, effort_limit])
+        if not np.allclose(force_range, expected_range, rtol=0.0, atol=1e-12):
+            raise ValueError(f"compiled finger effort limit changed: {name}")
+        dof = int(model.jnt_dofadr[joint_id])
+        contracts.append({
+            "joint_name": name,
+            "joint_id": joint_id,
+            "qpos_address": int(model.jnt_qposadr[joint_id]),
+            "dof_address": dof,
+            "actuator_name": model.actuator(actuator_id).name,
+            "actuator_id": actuator_id,
+            "transmission": "direct_joint_unit_gear",
+            "urdf_effort_limit_nm": effort_limit,
+            "compiled_joint_actuator_force_range_nm": force_range,
+            "compiled_armature_kg_m2": float(model.dof_armature[dof]),
+            "compiled_position_gain_nm_rad": float(
+                model.actuator_gainprm[actuator_id, 0]
+            ),
+            "compiled_velocity_gain_nm_s_rad": float(
+                -model.actuator_biasprm[actuator_id, 2]
+            ),
+            "actuator_force_limited_separately": bool(
+                model.actuator_forcelimited[actuator_id]
+            ),
+        })
+    return contracts
 
 
 def is_descendant(model: mujoco.MjModel, body_id: int, root_id: int) -> bool:
@@ -597,12 +702,26 @@ def main() -> int:
         key: Path(value).resolve(strict=(key != "output"))
         for key, value in cfg["paths"].items()
     }
+    finger_dynamics = cfg.get("finger_dynamics")
+    finger_effort_limits: dict[str, float] = {}
+    if finger_dynamics is not None:
+        if not bool(finger_dynamics.get("require_zero_finger_qfrc_applied")):
+            raise ValueError("finger experiment must forbid external finger forces")
+        finger_effort_limits = urdf_finger_effort_limits((
+            paths["left_hand_urdf"], paths["right_hand_urdf"],
+        ))
     output = paths["output"]
     if output.exists():
         raise FileExistsError(output)
     output.mkdir(parents=True)
     local_scene = output / "experiment_local_scene.xml"
-    build_local_scene(paths["scene"], local_scene, float(cfg["support"]["simulator_z_m"]))
+    build_local_scene(
+        paths["scene"], local_scene, float(cfg["support"]["simulator_z_m"]),
+        finger_dynamics=finger_dynamics,
+        finger_effort_limits=(
+            finger_effort_limits if finger_dynamics is not None else None
+        ),
+    )
     model = mujoco.MjModel.from_xml_path(str(local_scene))
     if not np.isclose(model.geom("floor").pos[2], cfg["support"]["simulator_z_m"],
                       rtol=0.0, atol=0.0):
@@ -610,6 +729,19 @@ def main() -> int:
     controlled_actuators = direct_joint_position_actuators(
         mujoco, model, controlled_actuator_names,
     ) if controlled_actuator_names else ()
+    finger_contracts = (
+        compiled_finger_contracts(model, finger_effort_limits)
+        if finger_dynamics is not None else []
+    )
+    if finger_dynamics is not None:
+        expected_armature = float(finger_dynamics["expected_compiled_armature_kg_m2"])
+        compiled_armatures = np.asarray([
+            contract["compiled_armature_kg_m2"] for contract in finger_contracts
+        ])
+        if not np.allclose(
+            compiled_armatures, expected_armature, rtol=0.0, atol=1e-12,
+        ):
+            raise ValueError("compiled finger armature does not match frozen contract")
     if gravity_feedforward:
         if np.any(np.asarray(model.body_gravcomp) != 0.0):
             raise ValueError("model already contains body gravity compensation")
@@ -665,6 +797,13 @@ def main() -> int:
             "support_contract": artifact(paths["support_contract"]),
             "prior_collision_audit": artifact(paths["prior_collision_audit"]),
             "script": artifact(Path(__file__)),
+            **({
+                "left_hand_urdf": artifact(paths["left_hand_urdf"]),
+                "right_hand_urdf": artifact(paths["right_hand_urdf"]),
+                "finger_dynamics_ab_contract": artifact(
+                    paths["finger_dynamics_ab_contract"]
+                ),
+            } if finger_dynamics is not None else {}),
         },
         "physics": {
             "backend": "mujoco_cpu", "mujoco_version": mujoco.__version__,
@@ -733,6 +872,14 @@ def main() -> int:
                 if controlled_actuators else "NONE"
             ),
         },
+        "finger_dynamics": ({
+            **finger_dynamics,
+            "compiled_contracts": finger_contracts,
+            "external_generalized_force_rule": (
+                "qfrc_applied must remain exactly zero at every finger DOF; "
+                "joint actuatorfrcrange limits qfrc_actuator after transmission"
+            ),
+        } if finger_dynamics is not None else None),
         "hard_stop": cfg["hard_stop"],
         "strict_pickup_gate": cfg["strict_pickup_gate"],
         "authorization": cfg["authorization"],
@@ -815,6 +962,11 @@ def main() -> int:
         raise RuntimeError(f"MuJoCo warning during initialization: {initial_warning}")
     manifest["initial_state_provenance"] = initial_state_provenance
     initial_qfrc_applied = data.qfrc_applied.copy()
+    finger_dofs = np.asarray([
+        contract["dof_address"] for contract in finger_contracts
+    ], dtype=np.int64)
+    if len(finger_dofs) and np.any(initial_qfrc_applied[finger_dofs] != 0.0):
+        raise ValueError("initial qfrc_applied is nonzero on a finger DOF")
     manifest["controller"]["preserved_initial_qfrc_applied"] = (
         initial_qfrc_applied
     )
@@ -1062,8 +1214,22 @@ def main() -> int:
                             + data.qfrc_applied[dof]
                         ),
                     })
+            if len(finger_dofs) and np.any(data.qfrc_applied[finger_dofs] != 0.0):
+                raise RuntimeError(
+                    "external generalized force bypassed a finger effort limit"
+                )
             mujoco.mj_step(model, data)
             physics_steps += 1
+            if finger_contracts:
+                for contract in finger_contracts:
+                    dof = contract["dof_address"]
+                    limit = contract["urdf_effort_limit_nm"]
+                    total = float(data.qfrc_actuator[dof] + data.qfrc_applied[dof])
+                    if abs(total) > limit + 1e-10:
+                        raise RuntimeError(
+                            "finger commanded generalized force exceeded URDF limit: "
+                            f"{contract['joint_name']} {total} vs {limit}"
+                        )
             rows, maxima = sample_contacts(
                 model, data, float(model.opt.timestep), interval,
                 source=source, substep=substep,
@@ -1155,6 +1321,8 @@ def main() -> int:
                     "applied_feedforward_force": applied_feedforward.copy(),
                     "qfrc_applied": data.qfrc_applied.copy(),
                     "preceding_interval_actuator_force": data.actuator_force.copy(),
+                    "preceding_interval_qfrc_actuator": data.qfrc_actuator.copy(),
+                    "preceding_interval_qfrc_constraint": data.qfrc_constraint.copy(),
                 })
             for controller_row, contract in zip(
                 controller_step_rows, controlled_actuators, strict=True,
@@ -1312,6 +1480,8 @@ def main() -> int:
             "reference_qpos", "actual_qpos", "actual_qvel",
             "control_target", "reference_qvel", "applied_feedforward_force",
             "qfrc_applied", "preceding_interval_actuator_force",
+            "preceding_interval_qfrc_actuator",
+            "preceding_interval_qfrc_constraint",
         )
         np.savez_compressed(
             output / "substep_state_trace.npz",

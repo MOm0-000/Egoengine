@@ -1,0 +1,68 @@
+schema: taco_brush_20231006_145_finger_effort_armature_ab_contract_v1
+status: FROZEN_BEFORE_PHYSICS
+sample: "(brush, brush, bowl)/20231006_145"
+window:
+  source_endpoint: 0
+  outcome_endpoint: 8
+  original_control_hz: 30.0
+  physics_timestep_s: 0.002
+
+fixed_conditions:
+  - safe_entry_mink_reference
+  - isolated_natural_seating_initial_object_state
+  - linear_substep_position_targets
+  - wrist_gravity_and_reference_velocity_feedforward
+  - support_plane
+  - collision_geometry_and_parameters
+  - actuator_position_gain
+  - physics_timestep_and_control_schedule
+  - zero_external_generalized_force_on_all_finger_dofs
+
+effort_limit_contract:
+  source: xhand_left_and_xhand_right_urdf_joint_limit_effort
+  application: joint_actuatorfrcrange
+  reason: clamp_total_actuator_generalized_force_after_transmission
+  excluded_from_limit: qfrc_applied
+  runtime_requirement: qfrc_applied_is_exactly_zero_on_all_finger_dofs
+
+experiment_a:
+  armature_kg_m2: 1.0
+  purpose: quantify_tracking_conflict_with_urdf_effort_limits
+
+experiment_b:
+  candidate_selection: geometric_mean_of_stability_lower_and_effort_upper_bounds
+  parameter_scan: false
+  position_gain_nm_rad: 300.0
+  damping_ratio: 1.0
+  euler_critical_damping_stability_boundary_h_omega: 0.8284271247461903
+  stability_lower_armature_kg_m2: 0.001748528137423856
+  limiting_joint: left_hand_pinky_joint2
+  limiting_interval: "6_to_7"
+  limiting_reference_acceleration_rad_s2: 74.293104
+  limiting_body_only_inverse_dynamics_torque_nm: -0.002105768
+  limiting_urdf_effort_nm: 0.4
+  effort_upper_armature_kg_m2: 0.00541242384076518
+  selected_armature_kg_m2: 0.0030763249791336436
+  selected_natural_frequency_rad_s: 312.280252
+  selected_inverse_natural_frequency_s: 0.00320225
+  selected_euler_h_omega: 0.6245605
+  selected_critical_damping_t95_s: 0.015191
+  shortest_original_control_interval_s: 0.032
+
+tracking_decision_after_b:
+  evaluated_at: interval_terminal_substep_for_endpoints_1_through_8
+  moving_reference_speed_threshold_rad_s: 0.5
+  maximum_position_lag: one_physics_substep_of_that_interval_reference_motion_plus_0.0001_rad
+  maximum_velocity_relative_error: 0.10
+  requires_same_velocity_direction: true
+  experiment_c_trigger: any_moving_finger_violates_position_or_velocity_rule_or_a_hard_stop_occurs
+  collision_is_not_a_tracking_trigger_by_itself: true
+
+experiment_c_if_triggered:
+  operation: extend_physical_time_for_every_robot_and_object_reference_endpoint
+  forbidden:
+    - finger_only_slowdown
+    - position_smoothing_without_time_extension
+    - parameter_scan
+    - collision_outcome_driven_time_scale_selection
+  note: retiming_preserves_the_geometric_reference_path_and_cannot_remove_reference_geometry_penetration
