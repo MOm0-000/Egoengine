@@ -47,7 +47,19 @@ from egoengine_repro.action.paper_rewards import (
 )
 
 _XHAND_FINGERS = ("thumb", "index", "middle", "ring", "pinky")
-_MJWP_SNAPSHOT_SCHEMA = "egoengine_mjwp_snapshot_v3_reward_aligned"
+_MJWP_SNAPSHOT_SCHEMA = "egoengine_mjwp_snapshot_v4_post_state_observation"
+
+
+@dataclass(frozen=True)
+class MJWPSubstepObservation:
+    """Two-time substep view: post-state poses and completed-interval forces."""
+
+    substep: int
+    state_time_s: torch.Tensor
+    force_interval_start_time_s: torch.Tensor
+    force_interval_end_time_s: torch.Tensor
+    post_state: mjwarp.Data
+    last_step_dynamics: mjwarp.Data
 
 
 def control_substeps_at_sources(
@@ -490,7 +502,7 @@ class MJWPVectorEnv:
         actions: np.ndarray,
         *,
         auto_reset: bool = True,
-        substep_observer: Callable[[int], None] | None = None,
+        substep_observer: Callable[[MJWPSubstepObservation], None] | None = None,
     ) -> tuple[np.ndarray | dict[str, np.ndarray], np.ndarray, np.ndarray, dict[str, Any]]:
         actions = np.asarray(actions, dtype=np.float32)
         if actions.shape != (self.num_envs, self.env_cfg.residual.hand_dof):
@@ -536,7 +548,10 @@ class MJWPVectorEnv:
         )
         self._last_assistance_force_cap_count = np.zeros(self.num_envs, dtype=np.int64)
         self._last_assistance_torque_cap_count = np.zeros(self.num_envs, dtype=np.int64)
+        last_force_interval_start_time_s: torch.Tensor | None = None
+        last_force_interval_end_time_s: torch.Tensor | None = None
         for substep in range(substeps):
+            force_interval_start_time_s = wp.to_torch(self.env.data_wp.time).clone()
             if self._assistance_alpha == 0.0:
                 # Exact original call path: no pose read, wrench construction or
                 # backend optional argument at zero assistance.
@@ -558,12 +573,33 @@ class MJWPVectorEnv:
                 self._mjwp.step_env(
                     self.ego_cfg, self.env, full_ctrl, external_wrench=external
                 )
+            force_interval_end_time_s = wp.to_torch(self.env.data_wp.time).clone()
+            state_time_s = wp.to_torch(
+                self.env.data_wp_observation.time
+            ).clone()
+            if not torch.equal(state_time_s, force_interval_end_time_s):
+                raise RuntimeError(
+                    "post-state observation time does not match the completed physics step"
+                )
+            last_force_interval_start_time_s = force_interval_start_time_s
+            last_force_interval_end_time_s = force_interval_end_time_s
             self.simulation_physics_steps += self.num_envs
             self._check_capacity()
             if substep_observer is not None:
-                substep_observer(substep)
+                substep_observer(
+                    MJWPSubstepObservation(
+                        substep=substep,
+                        state_time_s=state_time_s,
+                        force_interval_start_time_s=force_interval_start_time_s,
+                        force_interval_end_time_s=force_interval_end_time_s,
+                        post_state=self.env.data_wp_observation,
+                        last_step_dynamics=self.env.data_wp,
+                    )
+                )
         if str(self.ego_cfg.device).startswith("cuda") and torch.cuda.is_available():
             torch.cuda.synchronize(self.ego_cfg.device)
+        assert last_force_interval_start_time_s is not None
+        assert last_force_interval_end_time_s is not None
 
         self._last_action = delta.detach().clone()
         self._last_ctrl = full_ctrl.detach().clone()
@@ -604,6 +640,13 @@ class MJWPVectorEnv:
             obs, next_privileged = self._build_observations()
         else:
             next_privileged = privileged
+        returned_observation_state_time_s = (
+            wp.to_torch(self.env.data_wp_observation.time)
+            .detach()
+            .cpu()
+            .numpy()
+            .copy()
+        )
 
         infos: dict[str, Any] = {
             "reward": reward.cpu().numpy(),
@@ -629,6 +672,16 @@ class MJWPVectorEnv:
             "reward_reference_endpoint": reward_reference_endpoints.copy(),
             "next_observation_goal_reference_endpoint": (
                 next_observation_goal_reference_endpoints.copy()
+            ),
+            "outcome_post_state_time_s": (
+                last_force_interval_end_time_s.detach().cpu().numpy().copy()
+            ),
+            "returned_observation_state_time_s": returned_observation_state_time_s,
+            "last_step_force_interval_start_time_s": (
+                last_force_interval_start_time_s.detach().cpu().numpy().copy()
+            ),
+            "last_step_force_interval_end_time_s": (
+                last_force_interval_end_time_s.detach().cpu().numpy().copy()
             ),
             "assistance_alpha": np.full(
                 self.num_envs, self._assistance_alpha, dtype=np.float32
@@ -1028,6 +1081,7 @@ class MJWPVectorEnv:
                     continue
                 target = self._warp_state_target(key)
                 _copy_from_torch(target, value.to(str(self.env.device)))
+            self._mjwp.refresh_post_state_kinematics(self.env)
         wp.synchronize()
 
     # ------------------------------------------------------------------
@@ -1145,6 +1199,8 @@ class MJWPVectorEnv:
                     current = wp.to_torch(getattr(self.env.data_wp.efc, name)).clone()
                     current[rows] = 0
                     _copy_from_torch(getattr(self.env.data_wp.efc, name), current)
+            # A reset intentionally starts a new solver state. This live forward
+            # is not used after an ordinary physics step.
             mjwarp.forward(self.env.model_wp, self.env.data_wp)
             for key, value in preserved.items():
                 owner, name = (
@@ -1155,6 +1211,7 @@ class MJWPVectorEnv:
                 current = wp.to_torch(getattr(owner, name)).clone()
                 current[~rows] = value
                 _copy_from_torch(getattr(owner, name), current)
+            self._mjwp.refresh_post_state_kinematics(self.env)
         wp.synchronize()
 
     def _resolve_sites(self) -> None:
@@ -1181,7 +1238,7 @@ class MJWPVectorEnv:
             self.ego_cfg.force_closure_geom_hand_group_map = maps[1]
             self.ego_cfg.force_closure_geom_object_group_map = maps[2]
 
-    def _live_contact_features(self) -> tuple[torch.Tensor, torch.Tensor]:
+    def _last_step_contact_features(self) -> tuple[torch.Tensor, torch.Tensor]:
         num_hands = len(self.env_cfg.palm_site_ids)
         num_objects = 2 if int(self.ego_cfg.nq_obj) in (12, 14) else 1
         shape = (self.num_envs, num_hands, num_objects, 5)
@@ -1328,12 +1385,13 @@ class MJWPVectorEnv:
         )
 
     def _build_observations(self) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
-        qpos = self._mjwp.get_qpos(self.ego_cfg, self.env)
-        qvel = self._mjwp.get_qvel(self.ego_cfg, self.env)
-        site_xpos = wp.to_torch(self.env.data_wp.site_xpos)
+        post_state = self.env.data_wp_observation
+        qpos = wp.to_torch(post_state.qpos)
+        qvel = wp.to_torch(post_state.qvel)
+        site_xpos = wp.to_torch(post_state.site_xpos)
         fingertip = site_xpos[:, list(self.env_cfg.fingertip_site_ids)]
         palm = site_xpos[:, list(self.env_cfg.palm_site_ids)]
-        contact_flags, contact_forces = self._live_contact_features()
+        contact_flags, contact_forces = self._last_step_contact_features()
 
         current_objects = _object_pose_parts(qpos, int(self.ego_cfg.nq_obj))
         goal_indices = np.minimum(
@@ -1384,6 +1442,8 @@ class MJWPVectorEnv:
         object_angular = object_velocities[:, :, 3:].reshape(self.num_envs, -1)
         joint_forces = torch.zeros(self.num_envs, self.env_cfg.hand_qpos_dof, device=qpos.device)
         try:
+            # This is the force applied during the completed physics interval,
+            # not a quantity recomputed in the post-state observation buffer.
             joint_forces = wp.to_torch(self.env.data_wp.qfrc_actuator)[:, : self.env_cfg.hand_qpos_dof]
         except AttributeError:
             # Some mjwarp builds expose actuator forces under a different name;

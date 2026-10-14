@@ -39,9 +39,12 @@ except RuntimeError:
 class MJWPEnv:
     model_cpu: mujoco.MjModel
     data_cpu: mujoco.MjData
-    # Unified data sink always reflecting last step's state
+    # The live solver buffer retains the dynamics produced by the last step.
     model_wp: mjwarp.Model
     data_wp: mjwarp.Data
+    # Independent forward buffer whose derived poses match live qpos/qvel.
+    data_wp_observation: mjwarp.Data
+    # Rollback storage. It must never be borrowed for observation refreshes.
     data_wp_prev: mjwarp.Data
     graph: wp.ScopedCapture.Graph
     # Device alias used for Warp allocations/launches (e.g., "cuda:1" or "cpu")
@@ -188,6 +191,13 @@ def setup_env(config: Config, ref_data: tuple[torch.Tensor, ...]) -> MJWPEnv:
             nconmax=int(config.nconmax_per_env),
             njmax=int(config.njmax_per_env),
         )
+        data_wp_observation = mjwarp.put_data(
+            model_cpu,
+            data_cpu,
+            nworld=int(config.num_samples),
+            nconmax=int(config.nconmax_per_env),
+            njmax=int(config.njmax_per_env),
+        )
         default_graph = _compile_step(default_model_wp, default_data_wp)
 
     # Initialize env; default active is main
@@ -196,11 +206,54 @@ def setup_env(config: Config, ref_data: tuple[torch.Tensor, ...]) -> MJWPEnv:
         data_cpu=data_cpu,
         model_wp=default_model_wp,
         data_wp=default_data_wp,
+        data_wp_observation=data_wp_observation,
         data_wp_prev=data_wp_prev,
         graph=default_graph,
         device=dev,
         num_worlds=int(config.num_samples),
     )
+
+
+_FORWARD_INPUT_FIELDS = (
+    "time",
+    "qpos",
+    "qvel",
+    "act",
+    "history",
+    "qacc_warmstart",
+    "ctrl",
+    "qfrc_applied",
+    "xfrc_applied",
+    "eq_active",
+    "mocap_pos",
+    "mocap_quat",
+    "userdata",
+)
+
+
+def refresh_post_state_kinematics(env: MJWPEnv) -> MJWPEnv:
+    """Refresh post-step derived poses without touching last-step dynamics.
+
+    ``mjwarp.step`` advances the integration state in ``data_wp``, while some
+    position-dependent caches can still describe the state at the beginning of
+    that step.  Copy only the forward inputs into a dedicated data object and
+    run a full forward pass there.  Contacts and forces in ``data_wp`` remain
+    the solver output for the completed physics interval.
+    """
+    if (
+        env.data_wp_observation is env.data_wp
+        or env.data_wp_observation is env.data_wp_prev
+    ):
+        raise RuntimeError("post-state observation data must be an independent buffer")
+    with wp.ScopedDevice(env.device):
+        for name in _FORWARD_INPUT_FIELDS:
+            if hasattr(env.data_wp, name) and hasattr(env.data_wp_observation, name):
+                wp.copy(
+                    getattr(env.data_wp_observation, name),
+                    getattr(env.data_wp, name),
+                )
+        mjwarp.forward(env.model_wp, env.data_wp_observation)
+    return env
 
 
 def _weight_diff_qpos(config: Config) -> torch.Tensor:
@@ -1324,6 +1377,7 @@ def set_qpos(config: Config, env: MJWPEnv, qpos: torch.Tensor):
             torch.zeros(env.num_worlds, dtype=torch.float32, device=config.device)
         ),
     )
+    refresh_post_state_kinematics(env)
 
 
 def get_qvel(config: Config, env: MJWPEnv) -> torch.Tensor:
@@ -1369,7 +1423,7 @@ def get_trace(config: Config, env: MJWPEnv) -> torch.Tensor:
     """Return per-world trace points used for visualization. Minimal default returns
     an empty trace set of shape (N, 0, 3) when not configured.
     """
-    site_xpos = wp.to_torch(env.data_wp.site_xpos)  # (N, nsite, 3)
+    site_xpos = wp.to_torch(env.data_wp_observation.site_xpos)  # (N, nsite, 3)
     return site_xpos[:, config.trace_site_ids, :]
 
 
@@ -1413,6 +1467,7 @@ def save_state(env: MJWPEnv):
 
 def load_state(env: MJWPEnv, state):
     _copy_state(env.data_wp_prev, env.data_wp)
+    refresh_post_state_kinematics(env)
     return env
     # (
     #     qpos,
@@ -1517,6 +1572,7 @@ def step_env(
                         baseline_xfrc, dtype=env.data_wp.xfrc_applied.dtype
                     ),
                 )
+        refresh_post_state_kinematics(env)
 
 
 def save_env_params(config: Config, env: MJWPEnv):
@@ -1637,6 +1693,7 @@ def load_env_params(config: Config, env: MJWPEnv, env_param: dict):
                         "MJWarp model has no actuator_gainprm/biasprm; updated CPU model only."
                     )
 
+    refresh_post_state_kinematics(env)
     return env
 
 
@@ -1719,6 +1776,7 @@ def sync_env(config: Config, env: MJWPEnv, mj_data: mujoco.MjData):
     Uses safe copying with buffer size validation to avoid mismatches.
     """
     _broadcast_state(env.data_wp, env.num_worlds)
+    refresh_post_state_kinematics(env)
 
 
 def sync_env_mujoco(config: Config, env: MJWPEnv, mj_data: mujoco.MjData):
@@ -1884,6 +1942,7 @@ def sync_env_mujoco(config: Config, env: MJWPEnv, mj_data: mujoco.MjData):
                 dst_obj = getattr(dst_obj, attr)
             wp.copy(dst_obj, wp.from_torch(tensor))
 
+    refresh_post_state_kinematics(env)
     return env
 
 
@@ -2000,6 +2059,7 @@ def copy_sample_state(
     wp.copy(env.data_wp.actuator_force, wp.from_torch(actuator_force))
     wp.copy(env.data_wp.ten_length, wp.from_torch(ten_length))
     wp.copy(env.data_wp.ten_velocity, wp.from_torch(ten_velocity))
+    refresh_post_state_kinematics(env)
 
 
 def _copy_state(src: mjwarp.Data, dst: mjwarp.Data):

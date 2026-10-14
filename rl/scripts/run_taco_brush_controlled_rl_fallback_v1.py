@@ -68,7 +68,11 @@ from video_to_spider.rl.core.policy import (  # noqa: E402
 )
 from video_to_spider.rl.core.ppo import PPOConfig, PPOTrainer  # noqa: E402
 from video_to_spider.rl.core.rollout import FixedBoundaryCollector  # noqa: E402
-from video_to_spider.rl.mjwp_env import MJWPVectorEnv, MJWPVectorEnvConfig  # noqa: E402
+from video_to_spider.rl.mjwp_env import (  # noqa: E402
+    MJWPSubstepObservation,
+    MJWPVectorEnv,
+    MJWPVectorEnvConfig,
+)
 from video_to_spider.rl.objective_contract import load_runtime_objective  # noqa: E402
 from video_to_spider.rl.observation_contract import load_runtime_observation  # noqa: E402
 from run_taco_brush_issue14_mink_candidate_v1 import relevant_pairs  # noqa: E402
@@ -185,9 +189,9 @@ def initialize_zero_mean_actor(policy: PolicyBundle) -> None:
 
 
 def mjwp_safety_observer(world: MJWPVectorEnv, limits: dict[str, Any], maxima: dict[str, float]):
-    def observe(_substep: int) -> None:
-        qpos = world._mjwp.get_qpos(world.ego_cfg, world.env)
-        qvel = world._mjwp.get_qvel(world.ego_cfg, world.env)
+    def observe(observation: MJWPSubstepObservation) -> None:
+        qpos = wp.to_torch(observation.post_state.qpos)
+        qvel = wp.to_torch(observation.post_state.qvel)
         if not bool(torch.isfinite(qpos).all()) or not bool(torch.isfinite(qvel).all()):
             raise RuntimeError("TRAINING_NONFINITE_STATE")
         object_velocity = qvel[:, -12:].reshape(1, 2, 6)
@@ -195,8 +199,9 @@ def mjwp_safety_observer(world: MJWPVectorEnv, limits: dict[str, Any], maxima: d
         angular = float(torch.linalg.vector_norm(object_velocity[..., 3:], dim=-1).max())
         maxima["object_linear_speed_m_s"] = max(maxima["object_linear_speed_m_s"], linear)
         maxima["object_angular_speed_rad_s"] = max(maxima["object_angular_speed_rad_s"], angular)
-        contact = world.env.data_wp.contact
-        count = int(world.env.data_wp.nacon.numpy()[0])
+        dynamics = observation.last_step_dynamics
+        contact = dynamics.contact
+        count = int(dynamics.nacon.numpy()[0])
         if count:
             distances = wp.to_torch(contact.dist)[:count]
             penetration = float(torch.clamp_min(-distances, 0.0).max())
@@ -204,7 +209,7 @@ def mjwp_safety_observer(world: MJWPVectorEnv, limits: dict[str, Any], maxima: d
             if penetration > float(limits["maximum_proxy_penetration_m"]):
                 raise RuntimeError("TRAINING_PROXY_PENETRATION_LIMIT")
             addresses = wp.to_torch(contact.efc_address)[:count].long()
-            forces = wp.to_torch(world.env.data_wp.efc.force)[0]
+            forces = wp.to_torch(dynamics.efc.force)[0]
             valid = (addresses >= 0) & (addresses < forces.shape[0])
             if bool(valid.any()):
                 sampled = torch.where(valid, forces[addresses.clamp(0, forces.shape[0] - 1)], 0.0)

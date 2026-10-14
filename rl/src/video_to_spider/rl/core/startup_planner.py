@@ -25,6 +25,7 @@ import torch
 import warp as wp
 import yaml
 
+from video_to_spider.rl.mjwp_env import MJWPSubstepObservation
 from video_to_spider.rl.replay_contact_trace import (
     canonical_contact_group,
     classify_geom_role,
@@ -405,12 +406,13 @@ def support_table(world: Any, *, end: int = HORIZON) -> tuple[np.ndarray, np.nda
 
 
 def _world_row(world: Any) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    qpos = _numpy(world._mjwp.get_qpos(world.ego_cfg, world.env)).reshape(1, -1)[0].copy()
-    qvel = _numpy(world._mjwp.get_qvel(world.ego_cfg, world.env)).reshape(1, -1)[0].copy()
+    post_state = world.env.data_wp_observation
+    qpos = _numpy(wp.to_torch(post_state.qpos)).reshape(1, -1)[0].copy()
+    qvel = _numpy(wp.to_torch(post_state.qvel)).reshape(1, -1)[0].copy()
     # Read the simulator's post-ctrlrange target, not the pre-clip request
     # cached in ``_last_ctrl``.
     ctrl = wp.to_torch(world.env.data_wp.ctrl).cpu().numpy().reshape(1, -1)[0].copy()
-    site_xpos = wp.to_torch(world.env.data_wp.site_xpos).cpu().numpy()
+    site_xpos = wp.to_torch(post_state.site_xpos).cpu().numpy()
     tips = site_xpos[0, list(world.env_cfg.fingertip_site_ids)].copy()
     return qpos, qvel, ctrl, tips
 
@@ -575,9 +577,10 @@ class StartupObserver:
         self.source = int(source)
         self.substep_base = len(self.rows)
 
-    def observer(self, substep: int) -> None:
+    def observer(self, observation: MJWPSubstepObservation) -> None:
+        substep = observation.substep
         qpos, qvel, ctrl, _ = _world_row(self.world)
-        data = self.world.env.data_wp
+        data = observation.last_step_dynamics
         nacon = int(wp.to_torch(data.nacon).cpu().numpy()[0])
         local = np.zeros((nacon, 6), dtype=np.float32)
         world_force = np.zeros((nacon, 6), dtype=np.float32)
@@ -604,6 +607,13 @@ class StartupObserver:
             self.contacts.append({
                 "global_substep": global_substep, "source_endpoint": self.source,
                 "outcome_endpoint": self.source + 1, "substep": int(substep) + 1,
+                "state_time_s": float(_numpy(observation.state_time_s)[0]),
+                "force_interval_start_time_s": float(
+                    _numpy(observation.force_interval_start_time_s)[0]
+                ),
+                "force_interval_end_time_s": float(
+                    _numpy(observation.force_interval_end_time_s)[0]
+                ),
                 "contact_id": contact_id, "geom1": geom1, "geom2": geom2,
                 "geom1_name": self.roles["geom_names"][geom1], "geom2_name": self.roles["geom_names"][geom2],
                 "role1": role1, "role2": role2, "group": canonical_contact_group(role1, role2),
@@ -614,6 +624,13 @@ class StartupObserver:
         self.rows.append({
             "global_substep": global_substep, "source_endpoint": self.source,
             "outcome_endpoint": self.source + 1, "substep": int(substep) + 1,
+            "state_time_s": _numpy(observation.state_time_s)[0],
+            "force_interval_start_time_s": _numpy(
+                observation.force_interval_start_time_s
+            )[0],
+            "force_interval_end_time_s": _numpy(
+                observation.force_interval_end_time_s
+            )[0],
             "qpos": qpos, "qvel": qvel, "ctrl": ctrl, "nacon": nacon,
         })
 

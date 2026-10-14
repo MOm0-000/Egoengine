@@ -1,0 +1,101 @@
+{
+  "cuda_graph_capture_probe": {
+    "capture_qpos_unchanged": true,
+    "capture_time_unchanged": true,
+    "cuda_available": true,
+    "device": "cuda:0",
+    "first_launch_advanced_one_timestep": true,
+    "qpos_after_capture": 0.0,
+    "qpos_after_first_launch": 0.009999999776482582,
+    "qpos_before_capture": 0.0,
+    "time_after_capture_s": 0.0,
+    "time_after_first_launch_s": 0.009999999776482582,
+    "time_before_capture_s": 0.0
+  },
+  "repository_head_before_commit": "7322d0f97ab05e6a31c4f2cab658e786e09c5f16",
+  "sample": "20231006_145",
+  "sample_level_validation": {
+    "checkpoint_compatibility": "未验证",
+    "checkpoint_compatibility_checked": false,
+    "cold_replay_executed": false,
+    "sample_cpu_warp_comparison_executed": false,
+    "training_chain_regression_executed": false,
+    "updated_observation_replay_executed": false
+  },
+  "schema": "taco_brush_20231006_145_mjwp_post_state_timing_v2",
+  "source_checks": {
+    "关节状态和手部位姿来自步后观测缓冲区": true,
+    "启动规划日志按两类数据源读取": true,
+    "子步回调显式提供状态时刻和力区间": true,
+    "子步跟踪日志按两类数据源读取": true,
+    "快照恢复后重建观测缓冲区": true,
+    "接触和执行器力保留刚完成区间的求解结果": true,
+    "普通物理步后刷新独立观测缓冲区": true,
+    "普通物理步没有对正式缓冲区额外执行完整前向计算": true,
+    "正式缓冲区完整前向计算只保留在状态重置路径": true,
+    "独立缓冲区执行步后前向计算": true,
+    "观测刷新拒绝复用正式或回滚缓冲区": true,
+    "训练安全观察器按两类数据源读取": true
+  },
+  "source_files": {
+    "rl/external/spider_compat/spider/simulators/mjwp.py": {
+      "bytes": 88054,
+      "sha256": "8711e1dc348f318c24a6bd59a1dc4d247bf314bb7ad1ad39a895ee706b1ac93e"
+    },
+    "rl/scripts/run_taco_brush_controlled_rl_fallback_v1.py": {
+      "bytes": 39958,
+      "sha256": "b7846e9671126566b8c018ba4c33cd1acd822a9d89548bb7cbfee13abaddcb76"
+    },
+    "rl/scripts/trace_replay_0_20.py": {
+      "bytes": 85380,
+      "sha256": "76d4a3f5e7e920a325c39ed64a198e9ca9d11cb324feb4b49fffd777436681ab"
+    },
+    "rl/src/video_to_spider/rl/core/startup_planner.py": {
+      "bytes": 114979,
+      "sha256": "be19b519f5515d5a549eddf1503a15f1effddb8298f182a139b926b8f40d9513"
+    },
+    "rl/src/video_to_spider/rl/mjwp_env.py": {
+      "bytes": 78566,
+      "sha256": "076d1bd614bf901ef338cc8c231fe5f81bc4805d5ada574c23bc04e54b1f1e43"
+    }
+  },
+  "source_lines": {
+    "independent_buffer_allocation": 194,
+    "independent_forward": 255,
+    "last_step_contact_read": 1247,
+    "post_state_site_read": 1391,
+    "substep_time_view": 590
+  },
+  "synthetic_runtime_probe": {
+    "active_contact_count": 1,
+    "all_live_fields_unchanged": true,
+    "cpu_warp_post_state_geom_max_error_m": 8.940696724635266e-10,
+    "cpu_warp_post_state_site_max_error_m": 0.0,
+    "live_fields_unchanged_by_observation_refresh": {
+      "actuator_force": true,
+      "contact.dist": true,
+      "contact.efc_address": true,
+      "contact.geom": true,
+      "contact.worldid": true,
+      "efc.force": true,
+      "geom_xpos": true,
+      "nacon": true,
+      "nefc": true,
+      "qfrc_actuator": true,
+      "qfrc_constraint": true,
+      "qpos": true,
+      "qvel": true,
+      "site_xpos": true,
+      "time": true
+    },
+    "live_geom_cache_x_after_step": 0.0,
+    "live_qpos_after_step": 0.0004761904419865459,
+    "maximum_constraint_force_component": 90.3831558227539,
+    "observation_geom_x_after_refresh": 0.0004761904419865459,
+    "observation_qpos_after_refresh": 0.0004761904419865459,
+    "observation_qpos_geometry_error_m": 0.0,
+    "physics_timestep_s": 0.01,
+    "rollback_buffer_unchanged": true,
+    "rollback_qpos_after_refresh": 7.0
+  }
+}

@@ -32,7 +32,11 @@ import yaml
 
 from video_to_spider.rl.action_contract import load_residual_action_profile
 from video_to_spider.rl.core.env import load_ego_config, load_reference
-from video_to_spider.rl.mjwp_env import MJWPVectorEnv, MJWPVectorEnvConfig
+from video_to_spider.rl.mjwp_env import (
+    MJWPSubstepObservation,
+    MJWPVectorEnv,
+    MJWPVectorEnvConfig,
+)
 from video_to_spider.rl.objective_contract import load_runtime_objective
 from video_to_spider.rl.observation_contract import load_runtime_observation
 from video_to_spider.rl.replay_contact_trace import (
@@ -395,13 +399,15 @@ class Observer:
         self.before_qvel = array(self.world, "qvel")[0]
         self.before_time = float(array(self.world, "time")[0])
 
-    def __call__(self, substep: int) -> None:
+    def __call__(self, observation: MJWPSubstepObservation) -> None:
+        substep = observation.substep
         index = transition_indices(self.source, substep)
-        after_qpos = array(self.world, "qpos")[0]
-        after_qvel = array(self.world, "qvel")[0]
-        after_time = float(array(self.world, "time")[0])
-        data = self.world.env.data_wp
-        nacon = int(array(self.world, "nacon")[0])
+        post_state = observation.post_state
+        data = observation.last_step_dynamics
+        after_qpos = wp.to_torch(post_state.qpos).cpu().numpy().copy()[0]
+        after_qvel = wp.to_torch(post_state.qvel).cpu().numpy().copy()[0]
+        after_time = float(observation.state_time_s.cpu().numpy()[0])
+        nacon = int(wp.to_torch(data.nacon).cpu().numpy()[0])
         if nacon < 0 or nacon > int(self.world.ego_cfg.nconmax_per_env):
             raise RuntimeError(f"invalid active contact count {nacon}")
         local = np.zeros((nacon, 6), dtype=np.float32)
@@ -419,7 +425,9 @@ class Observer:
             name: wp.to_torch(getattr(data.contact, name)).cpu().numpy().copy()[:nacon]
             for name in ("worldid", "geom", "pos", "frame", "dist", "dim", "friction", "efc_address", "adhesion")
         }
-        self.efc_force.append(array(self.world, "force", owner="efc")[0])
+        self.efc_force.append(
+            wp.to_torch(data.efc.force).cpu().numpy().copy()[0]
+        )
         for contact_id in range(nacon):
             geom1, geom2 = (int(value) for value in contact_arrays["geom"][contact_id])
             kwargs = dict(
@@ -431,7 +439,15 @@ class Observer:
             role1 = classify_geom_role(geom1, **kwargs)
             role2 = classify_geom_role(geom2, **kwargs)
             self.contacts.append({
-                **index, "contact_id": contact_id, "worldid": int(contact_arrays["worldid"][contact_id]),
+                **index,
+                "state_time_s": after_time,
+                "force_interval_start_time_s": float(
+                    observation.force_interval_start_time_s.cpu().numpy()[0]
+                ),
+                "force_interval_end_time_s": float(
+                    observation.force_interval_end_time_s.cpu().numpy()[0]
+                ),
+                "contact_id": contact_id, "worldid": int(contact_arrays["worldid"][contact_id]),
                 "geom1": geom1, "geom2": geom2, "geom1_name": self.roles["geom_names"][geom1],
                 "geom2_name": self.roles["geom_names"][geom2], "role1": role1, "role2": role2,
                 "group": canonical_contact_group(role1, role2), "pos": contact_arrays["pos"][contact_id].copy(),
@@ -442,11 +458,25 @@ class Observer:
                 "wrench_world_force_torque_on_geom2": world_force[contact_id].copy(),
             })
         selected = {}
-        for name in ("ctrl", "actuator_force", "qfrc_actuator", "qfrc_constraint", "qfrc_applied", "xfrc_applied", "qfrc_passive", "qfrc_bias", "qacc", "cvel", "xpos", "xipos", "subtree_linvel", "overflow"):
+        for name in ("ctrl", "actuator_force", "qfrc_actuator", "qfrc_constraint", "qfrc_applied", "xfrc_applied", "qfrc_passive", "qfrc_bias", "qacc", "overflow"):
             if hasattr(data, name):
-                selected[name] = array(self.world, name)[0]
+                selected[name] = wp.to_torch(getattr(data, name)).cpu().numpy().copy()[0]
+        for name in ("cvel", "xpos", "xipos", "subtree_linvel"):
+            if hasattr(post_state, name):
+                selected[name] = (
+                    wp.to_torch(getattr(post_state, name)).cpu().numpy().copy()[0]
+                )
         self.rows.append({
-            **index, "time_before": self.before_time, "time_after": after_time,
+            **index,
+            "time_before": self.before_time,
+            "time_after": after_time,
+            "state_time_s": after_time,
+            "force_interval_start_time_s": float(
+                observation.force_interval_start_time_s.cpu().numpy()[0]
+            ),
+            "force_interval_end_time_s": float(
+                observation.force_interval_end_time_s.cpu().numpy()[0]
+            ),
             "qpos_before": self.before_qpos.copy(), "qvel_before": self.before_qvel.copy(),
             "qpos_after": after_qpos.copy(), "qvel_after": after_qvel.copy(), "nacon": nacon, **selected,
         })
