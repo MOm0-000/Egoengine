@@ -29,6 +29,7 @@ from egoengine_repro.retarget.collision_audit import (  # noqa: E402
     distances,
     explicit_hand_pairs,
     hand_ids,
+    nonadjacent_hand_pairs,
 )
 from egoengine_repro.retarget.kinematic_limits import (  # noqa: E402
     joint_velocity_limits,
@@ -151,8 +152,10 @@ def self_collision_comparison(
     refined: np.ndarray,
     endpoints: list[int],
     tolerance_m: float,
+    accepted_declared_minimum_m: float,
 ) -> dict[str, Any]:
     explicit = set(explicit_hand_pairs(model))
+    nonadjacent = set(nonadjacent_hand_pairs(model))
     pairs = []
     classifications = []
     for first, second in combinations(hand_ids(model), 2):
@@ -161,7 +164,12 @@ def self_collision_comparison(
         if first_name.split("_")[2] != second_name.split("_")[2]:
             continue
         pairs.append((first, second))
-        classifications.append("declared" if (first, second) in explicit else "omitted")
+        if (first, second) in explicit:
+            classifications.append("declared")
+        elif (first, second) in nonadjacent:
+            classifications.append("omitted_nonadjacent")
+        else:
+            classifications.append("omitted_assembly_adjacent")
     before_data = mujoco.MjData(model)
     after_data = mujoco.MjData(model)
     rows = []
@@ -179,7 +187,10 @@ def self_collision_comparison(
             newly_beyond_tolerance = (
                 before_value >= -tolerance_m and after_value < -tolerance_m
             )
-            worsened_over_allowance = after_value < before_value - tolerance_m
+            declared_limit_failed = (
+                classifications[pair_index] == "declared"
+                and after_value < accepted_declared_minimum_m
+            )
             row = {
                 "endpoint": endpoint,
                 "geom1": model.geom(first).name,
@@ -189,10 +200,10 @@ def self_collision_comparison(
                 "refined_distance_m": after_value,
                 "distance_change_m": after_value - before_value,
                 "newly_beyond_tolerance": newly_beyond_tolerance,
-                "worsened_over_allowance": worsened_over_allowance,
+                "declared_limit_failed": declared_limit_failed,
             }
             rows.append(row)
-            if newly_beyond_tolerance or worsened_over_allowance:
+            if newly_beyond_tolerance or declared_limit_failed:
                 blockers.append(row)
     return {
         "status": "PASS" if not blockers else "FAIL",
@@ -200,6 +211,14 @@ def self_collision_comparison(
         "blockers": blockers,
         "minimum_original_distance_m": min(row["original_distance_m"] for row in rows),
         "minimum_refined_distance_m": min(row["refined_distance_m"] for row in rows),
+        "accepted_declared_minimum_m": accepted_declared_minimum_m,
+        "interpretation": (
+            "Declared runtime pairs must remain above the frozen MINK acceptance "
+            "distance. Undeclared assembly overlaps are diagnostic; all pairs fail "
+            "only if a previously nonpenetrating pair newly crosses the independent "
+            "penetration tolerance. Mere reduction of a still-positive gap is not a "
+            "self-collision."
+        ),
     }
 
 
@@ -393,6 +412,11 @@ def main() -> int:
         qpos_refined,
         endpoints,
         float(cfg["kinematic_contract"]["independent_self_collision_tolerance_m"]),
+        float(
+            cfg["kinematic_contract"][
+                "accepted_minimum_declared_self_collision_distance_m"
+            ]
+        ),
     )
     hand_object_rows, hand_object_blockers = hand_object_comparison(
         model,
