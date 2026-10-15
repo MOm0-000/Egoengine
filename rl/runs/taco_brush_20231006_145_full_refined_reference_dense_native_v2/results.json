@@ -1,0 +1,162 @@
+{
+  "decision": {
+    "completely_nonpenetrating": false,
+    "local_5_to_8_core_nonpenetrating": true,
+    "passes_0p05mm_tolerance": false,
+    "scope": "full 122-endpoint refined reference; kinematic native hand/table audit only"
+  },
+  "endpoint_cross_check": {
+    "below_tolerance_endpoint_count": 0,
+    "maximum_absolute_error_m": 0.0,
+    "strictly_negative_endpoint_count": 20
+  },
+  "inputs": {
+    "config": {
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_20231006_145_full_refined_reference_dense_native_v2.yaml",
+      "sha256": "d436ebc2ad57751aa4dd3e9470a3ce1c6509eacfb3512aa5eae6199c77fcd63d"
+    },
+    "local_refinement_audit": {
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_continuous_ref_refinement_v2/native_geometry_audit.json",
+      "sha256": "9cd20c4f58b25067c37b6e618139b5b3759219cf0e3720f06ccaecc25fd51315"
+    },
+    "local_refinement_results": {
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_continuous_ref_refinement_v2/results.json",
+      "sha256": "03fd22350ba0afabc57be0826383f7969c33c306e20b9fffff63769378c05c54"
+    },
+    "refined_reference": {
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_continuous_ref_refinement_v2/robot_reference_refined_v2.npz",
+      "sha256": "c561570456efd171748a3aea9c107a9dac401f77bfb1edb6467b2486d6563bbd"
+    },
+    "scene": {
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/generated_scene.xml",
+      "sha256": "bab703cbd3a83b01c6d04bc0a9a29e44eec204c6eb9b7035099b58582049cb6a"
+    },
+    "script": {
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/scripts/audit_taco_brush_20231006_145_full_refined_reference_v2.py",
+      "sha256": "06dcbf1d2efee35288feba5225afad062f7ed0a71ecedefdcb77490887785dd8"
+    }
+  },
+  "method": {
+    "controls_applied": false,
+    "full_vertex_witness_cross_check": true,
+    "geometry": "all native hand visual mesh support vertices",
+    "interpolation": "mj_integratePos(q[i], alpha*mj_differentiatePos(q[i],q[i+1]))",
+    "object_dofs": "frozen at each interval source endpoint",
+    "phase_offset_samples_per_interval": 10001,
+    "physics_steps": 0,
+    "primary_samples_per_interval": 10001,
+    "table_z_m": 0.72,
+    "tolerance_m": 5e-05,
+    "total_distinct_samples_across_both_grids": 2420122
+  },
+  "repository_head": "4665d3ce4113741a11ac0d874b670ee3ab54e61c",
+  "sample": {
+    "endpoint_count": 122,
+    "interval_count": 121,
+    "robot_dof_stop": 36,
+    "robot_qpos_stop": 36,
+    "sequence": "(brush, brush, bowl)/20231006_145"
+  },
+  "schema": "taco_brush_20231006_145_full_refined_reference_dense_native_v2",
+  "whole_path": {
+    "beyond_tolerance_sample_count_across_both_grids": 303537,
+    "first_beyond_tolerance": {
+      "alpha": 0.051800000000000006,
+      "distance_m": -5.001722017694554e-05,
+      "grid": "primary",
+      "outcome_endpoint": 12,
+      "reference_time_s": 0.3683933333333333,
+      "side": "right",
+      "source_endpoint": 11
+    },
+    "first_strict_negative": {
+      "alpha": 4.999500049995001e-05,
+      "distance_m": -6.854689038604533e-10,
+      "grid": "phase_offset",
+      "outcome_endpoint": 10,
+      "reference_time_s": 0.30000166650001664,
+      "side": "left",
+      "source_endpoint": 9
+    },
+    "intervals_beyond_tolerance": [
+      11,
+      12,
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110,
+      111,
+      112,
+      113,
+      114
+    ],
+    "intervals_with_strict_negative_samples": [
+      9,
+      10,
+      11,
+      12,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      96,
+      97,
+      98,
+      99,
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110,
+      111,
+      112,
+      113,
+      114,
+      115,
+      116,
+      117,
+      118,
+      119,
+      120
+    ],
+    "minimum_alpha": 0.5128987101289871,
+    "minimum_distance_m": -0.0009788082498419781,
+    "minimum_full_vertex_witness": {
+      "body": "left_hand_pinky_link2",
+      "distance_m": -0.0009788082498419781,
+      "geom": "left_pinky_link2_visual",
+      "point_sim_m": [
+        0.48720664749824,
+        -0.10593988409380808,
+        0.719021191750158
+      ],
+      "vertex_index": 333
+    },
+    "minimum_grid": "phase_offset",
+    "minimum_outcome_endpoint": 108,
+    "minimum_reference_time_s": 3.583763290337633,
+    "minimum_side": "left",
+    "minimum_source_endpoint": 107,
+    "strict_negative_sample_count_across_both_grids": 567156
+  }
+}
