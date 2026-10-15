@@ -8,6 +8,7 @@ import csv
 from itertools import combinations
 import json
 from pathlib import Path
+import subprocess
 import sys
 from typing import Any
 
@@ -457,6 +458,27 @@ def main() -> int:
         "candidate_reference": {
             "path": str(candidate_path),
             "sha256": file_sha256(candidate_path),
+        },
+        "repository_head": subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=RL_ROOT.parent, text=True
+        ).strip(),
+        "source_artifacts": {
+            "config": {
+                "path": str(config_path),
+                "sha256": file_sha256(config_path),
+            },
+            "script": {
+                "path": str(Path(__file__).resolve()),
+                "sha256": file_sha256(Path(__file__).resolve()),
+            },
+            "scene": {
+                "path": str(paths["scene"]),
+                "sha256": file_sha256(paths["scene"]),
+            },
+            "original_reference": {
+                "path": str(paths["robot_reference"]),
+                "sha256": file_sha256(paths["robot_reference"]),
+            },
         },
         "method": {
             "geometry": "full native hand visual mesh vertices",

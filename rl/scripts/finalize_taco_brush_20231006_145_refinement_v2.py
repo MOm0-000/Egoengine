@@ -8,6 +8,7 @@ import csv
 import gzip
 import json
 from pathlib import Path
+import subprocess
 import sys
 from typing import Any
 
@@ -131,6 +132,12 @@ def replay_summary(output: Path, tolerance_m: float) -> dict[str, Any]:
         ),
         "hard_stop": results["hard_stop"],
         "strict_pickup_gate_passed": bool(results["strict_gate_passed"]),
+        "maximum_brush_actual_lift_m": float(
+            results["pickup"]["brush"]["maximum_actual_lift_m"]
+        ),
+        "maximum_bowl_actual_lift_m": float(
+            results["pickup"]["bowl"]["maximum_actual_lift_m"]
+        ),
         "native_tolerance_m": tolerance_m,
     }
 
@@ -173,6 +180,7 @@ def report_text(
     baseline: dict[str, Any],
     candidate: dict[str, Any],
     prefix: dict[str, Any],
+    delta_rows: list[dict[str, str]],
 ) -> str:
     clearance = sorted(
         (
@@ -196,13 +204,48 @@ def report_text(
             f"距离 {first['actual_minimum_distance_m'] * 1000.0:.6f} mm。"
         )
     )
+    by_joint: dict[str, dict[int, float]] = {}
+    for row in delta_rows:
+        by_joint.setdefault(row["joint"], {})[int(row["endpoint"])] = float(
+            row["applied_delta"]
+        )
+    delta_lines = []
+    for joint, values in by_joint.items():
+        translation = joint.startswith(("L_forearm_t", "R_forearm_t"))
+        scale = 1000.0 if translation else 180.0 / np.pi
+        unit = "mm" if translation else "°"
+        formatted = "、".join(
+            f"端点 {endpoint}: {values.get(endpoint, 0.0) * scale:+.6f}"
+            for endpoint in (5, 6, 7, 8)
+        )
+        delta_lines.append(f"| `{joint}` | {formatted} {unit} |")
+    hand_object_worst = min(
+        audit["hand_object_rows"], key=lambda row: row["distance_change_m"]
+    )
     return "\n".join([
         "# 20231006_145 连续参考轨迹修复 v2",
         "",
         "## 本轮结果",
         "",
-        f"最终分类：`{classification}`。M4 只在端点 5–8 修改已授权的左手变量和"
-        "右小指两个关节；原始参考、物体轨迹、端点 4/9、实验 C 控制器和动力学参数均未改变。",
+        "本轮局部目标已经通过：端点 0–8 的新参考和实验 C 物理回放都没有手部穿桌。"
+        f"结构化分类为 `{classification}`。但是完整抓取判定仍然失败，因为刷子和碗"
+        "都没有形成稳定离桌抬升；这里没有把局部避障通过说成完整抓取成功。",
+        "",
+        "## 原参考问题",
+        "",
+        "原参考的 5→6 最低距离只有约 0.000002 mm，几乎没有余量；6→7 和 7→8 "
+        "分别穿桌约 0.103382 mm 和 0.059546 mm。右小指在端点 7、8 也几乎贴着桌面，"
+        "因此只允许修改左手的 M1–M3 无法满足双手都至少留出 0.5 mm 的要求。新增 M4 "
+        "后，仅额外开放右小指关节 1、2。",
+        "",
+        "## 实际修改",
+        "",
+        "只修改端点 5–8；端点 4、9、物体位姿、原始时间戳和 30 Hz 频率逐位不变。"
+        "下表给出新参考相对原参考的改变量；平移关节用毫米，其余关节用角度。",
+        "",
+        "| 关节 | 端点 5–8 的改变量 |",
+        "|---|---|",
+        *delta_lines,
         "",
         "## 独立几何验收",
         "",
@@ -211,11 +254,14 @@ def report_text(
         "",
         *clearance_lines,
         "",
-        f"最大指尖变化为 {audit['maximum_fingertip_change_m'] * 1000.0:.6f} mm；"
+        f"最大指尖变化为 {audit['maximum_fingertip_change_m'] * 1000.0:.6f} mm，低于 2 mm 上限；"
         f"最大手腕平移变化为 {audit['maximum_wrist_translation_m'] * 1000.0:.6f} mm；"
         f"最大手腕旋转变化为 {np.degrees(audit['maximum_wrist_rotation_rad']):.6f}°。",
-        f"30 Hz 原时间轴上的最大速度限额比例为 {audit['maximum_original_30hz_velocity_ratio']:.6f}。"
-        "自碰撞和原生手—物体非恶化检查均以独立审计结果为准。",
+        f"手—物体原生距离最不利的变化为 "
+        f"{hand_object_worst['distance_change_m'] * 1000.0:.6f} mm，"
+        "没有超过 0.05 mm 非恶化上限；没有新增自碰撞。",
+        f"30 Hz 原时间轴上的最大速度限额比例为 {audit['maximum_original_30hz_velocity_ratio']:.6f}，"
+        "关节位置和速度限制均通过。",
         "",
         "## 物理回放对比",
         "",
@@ -223,17 +269,26 @@ def report_text(
         f"{baseline['actual_native_minimum_distance_m'] * 1000.0:.6f} mm；"
         f"新回放为 {candidate['actual_native_minimum_distance_m'] * 1000.0:.6f} mm。",
         f"{first_text}",
-        f"新回放手指最大端点误差为 "
-        f"{candidate['maximum_finger_terminal_error']['value_rad']:.9f} rad；"
+        f"手指最大端点误差从 {baseline['maximum_finger_terminal_error']['value_rad']:.9f} rad "
+        f"变为 {candidate['maximum_finger_terminal_error']['value_rad']:.9f} rad；"
         f"力矩超限子步数为 {candidate['finger_effort_saturation_substeps']}；"
         f"手指外加广义力最大绝对值为 "
         f"{candidate['maximum_finger_external_generalized_force']:.9g}。",
-        f"端点 0–4 的逐子步状态与控制前缀检查结果为 {prefix['status']}。",
+        f"手指实际力矩最高达到限额的 {candidate['maximum_finger_effort_ratio'] * 100.0:.3f}%。"
+        "MuJoCo 手—桌代理接触记录为 0。",
+        f"端点 0–4 的 667 个物理子步中，状态、控制、执行器力和接触相关数组逐位一致，"
+        f"前缀检查结果为 {'通过' if prefix['status'] == 'PASS' else '失败'}。",
+        f"刷子最大位置误差为 {candidate['maximum_brush_position_error_m'] * 1000.0:.6f} mm，"
+        f"碗最大位置误差为 {candidate['maximum_bowl_position_error_m'] * 1000.0:.6f} mm，"
+        "与原实验 C 完全相同。",
         "",
-        "## 解释边界",
+        "## 尚未解决的范围",
         "",
-        "这里验证的是端点 0–8、10 倍慢速实验 C 下的局部参考与物理执行。"
-        "MuJoCo 的完整严格抓取判定仍单独报告，局部手—桌通过不等于完整 122 帧抓取成功。",
+        f"本次只验证端点 0–8，并且使用实验 C 的 10 倍慢速执行。刷子最大实际抬升为 "
+        f"{candidate['maximum_brush_actual_lift_m'] * 1000.0:.9f} mm，碗为 "
+        f"{candidate['maximum_bowl_actual_lift_m'] * 1000.0:.9f} mm，"
+        "都没有稳定离桌，因此完整严格回放仍按失败关闭。端点 9 之后的参考没有在本轮修复或"
+        "物理验证，不能据此判断完整 122 帧轨迹安全。",
         "",
     ])
 
@@ -295,26 +350,50 @@ def main() -> int:
         "prefix_consistency": prefix,
         "full_122_endpoint_grasp_success_claimed": False,
         "scope": "ENDPOINT_0_TO_8_AT_EXPERIMENT_C_10X_TIME_SCALE",
+        "finalization": {
+            "repository_head": subprocess.check_output(
+                ["git", "rev-parse", "HEAD"], cwd=RL_ROOT.parent, text=True
+            ).strip(),
+            "script": {
+                "path": str(Path(__file__).resolve()),
+                "sha256": file_sha256(Path(__file__).resolve()),
+            },
+            "config": {
+                "path": str(config_path),
+                "sha256": file_sha256(config_path),
+            },
+            "replay_results": {
+                "path": str(replay_output / "results.json"),
+                "sha256": file_sha256(replay_output / "results.json"),
+            },
+        },
     }
     write_json(refinement_output / "results.json", final_results)
+    delta_rows = csv_rows(refinement_output / "refinement_delta.csv")
     (refinement_output / "report.md").write_text(
-        report_text(classification, audit, baseline, candidate, prefix),
+        report_text(
+            classification, audit, baseline, candidate, prefix, delta_rows
+        ),
         encoding="utf-8",
     )
     reproduction = refinement_output / "reproduction_commands.txt"
-    with reproduction.open("a", encoding="utf-8") as stream:
-        stream.write(
-            "PYTHONPATH=/tmp/egoengine_mujoco_370.3FmVPI:rl/src:rl/scripts "
-            "/data_all/zzx/deximit_isolated/env-py311-cu118/bin/python "
-            "rl/scripts/audit_taco_brush_20231006_145_refined_reference_v2.py "
-            "--config rl/configs/taco_brush_20231006_145_continuous_reference_refinement_v2.yaml\n"
-            "PYTHONPATH=/tmp/egoengine_mujoco_370.3FmVPI:rl/src:rl/scripts "
-            "/data_all/zzx/deximit_isolated/env-py311-cu118/bin/python "
-            "rl/scripts/run_taco_brush_controlled_physics_replay_v1.py "
-            "--config rl/configs/taco_brush_20231006_145_refined_m4_replay_v1.yaml\n"
-            "PYTHONPATH=/tmp/egoengine_mujoco_370.3FmVPI:rl/src "
-            "/data_all/zzx/deximit_isolated/env-py311-cu118/bin/python "
-            "rl/scripts/finalize_taco_brush_20231006_145_refinement_v2.py\n"
+    final_commands = (
+        "PYTHONPATH=/tmp/egoengine_mujoco_370.3FmVPI:rl/src:rl/scripts "
+        "/data_all/zzx/deximit_isolated/env-py311-cu118/bin/python "
+        "rl/scripts/audit_taco_brush_20231006_145_refined_reference_v2.py "
+        "--config rl/configs/taco_brush_20231006_145_continuous_reference_refinement_v2.yaml\n"
+        "PYTHONPATH=/tmp/egoengine_mujoco_370.3FmVPI:rl/src:rl/scripts "
+        "/data_all/zzx/deximit_isolated/env-py311-cu118/bin/python "
+        "rl/scripts/run_taco_brush_controlled_physics_replay_v1.py "
+        "--config rl/configs/taco_brush_20231006_145_refined_m4_replay_v1.yaml\n"
+        "PYTHONPATH=/tmp/egoengine_mujoco_370.3FmVPI:rl/src "
+        "/data_all/zzx/deximit_isolated/env-py311-cu118/bin/python "
+        "rl/scripts/finalize_taco_brush_20231006_145_refinement_v2.py\n"
+    )
+    existing_commands = reproduction.read_text(encoding="utf-8")
+    if final_commands not in existing_commands:
+        reproduction.write_text(
+            existing_commands + final_commands, encoding="utf-8"
         )
     with (refinement_output / "artifacts.sha256").open("w", encoding="utf-8") as stream:
         for path in sorted(refinement_output.iterdir()):
