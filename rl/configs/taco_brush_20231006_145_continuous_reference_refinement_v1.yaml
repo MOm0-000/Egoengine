@@ -1,0 +1,147 @@
+schema: taco_brush_20231006_145_continuous_reference_refinement_v1
+status: FROZEN_BEFORE_OPTIMIZATION
+base_commit: 6b48e1f3d991b0eee7c33f32a7794e5c78ba3c46
+random_seed: 0
+
+sample:
+  sequence: "(brush, brush, bowl)/20231006_145"
+  endpoint_count: 122
+  robot_qpos_stop: 36
+  object_qpos_start: 36
+  original_frequency_hz: 30.0
+
+geometry_contract:
+  table_z_m: 0.72
+  numerical_penetration_tolerance_m: 0.00005
+  core_intervals: [5, 6, 7]
+  core_endpoints: [5, 6, 7, 8]
+  core_minimum_clearance_m: 0.0005
+  transition_intervals: [4, 8]
+  fixed_boundary_endpoints: [4, 9]
+  unchanged_neighbor_intervals: [3, 9]
+  transition_floor_m: -0.00005
+  transition_nonworsening_allowance_m: 0.00005
+  optimization_samples_per_interval: 201
+  nonlinear_check_samples_per_interval: 1001
+  independent_audit_samples_per_interval: 10001
+  independent_phase_offset_samples_per_interval: 10001
+  support_geometry: all_native_hand_visual_meshes
+  collision_proxy_is_acceptance_geometry: false
+
+candidate_order:
+  - id: M1
+    authorized_joints:
+      - left_hand_pinky_joint1
+      - left_hand_pinky_joint2
+  - id: M2
+    authorized_joints:
+      - left_hand_pinky_joint1
+      - left_hand_pinky_joint2
+      - L_forearm_tz_link_joint
+  - id: M3
+    authorized_joints:
+      - left_hand_pinky_joint1
+      - left_hand_pinky_joint2
+      - L_forearm_tx_link_joint
+      - L_forearm_ty_link_joint
+      - L_forearm_tz_link_joint
+      - L_forearm_roll_link_joint
+      - L_forearm_pitch_link_joint
+      - L_forearm_yaw_link_joint
+      - left_hand_ring_joint1
+      - left_hand_ring_joint2
+modified_endpoints: [5, 6, 7, 8]
+
+modification_budgets:
+  finger_joint_rad: 0.05
+  wrist_translation_m: 0.002
+  wrist_rotation_rad: 0.017453292519943295
+  fingertip_position_m: 0.002
+  hand_object_native_penetration_nonworsening_m: 0.00005
+
+optimizer:
+  algorithm: sequential_convex_qp_with_native_geometry_recheck
+  qp_solver: daqp
+  maximum_iterations: 40
+  feasibility_tolerance_m: 0.000001
+  initial_trust_region_fraction_of_budget: 0.25
+  minimum_trust_region_fraction_of_budget: 0.015625
+  maximum_trust_region_fraction_of_budget: 0.5
+  trust_region_shrink: 0.5
+  trust_region_grow: 1.5
+  accepted_actual_to_predicted_improvement: 0.1
+  finite_difference_step: 1.0e-7
+  weights:
+    reference_fidelity: 1.0
+    second_difference_smoothness: 0.25
+    fingertip_preservation: 1.0
+    object_relative_fingertip_preservation: 1.0
+  normalization:
+    joint_delta: per_joint_modification_budget
+    second_difference: per_joint_modification_budget
+    fingertip_position_m: 0.002
+    object_relative_fingertip_position_m: 0.002
+
+kinematic_contract:
+  joint_position_limits: compiled_mujoco_model
+  velocity_limits:
+    base_translation_m_s: 1.5
+    base_rotation_rad_s: 4.0
+    finger_rad_s: 8.0
+  accepted_minimum_declared_self_collision_distance_m: -0.000001
+  independent_self_collision_tolerance_m: 0.00005
+  object_qpos_exactly_frozen: true
+  original_timestamps_exactly_frozen: true
+
+preservation_contract:
+  all_fingertips_checked: true
+  fingertip_position_max_change_m: 0.002
+  wrist_translation_max_change_m: 0.002
+  wrist_rotation_max_change_rad: 0.017453292519943295
+  hand_object_contact_status: UNKNOWN_UNLESS_SUPPORTED_BY_EXISTING_NATIVE_EVIDENCE
+  native_hand_object_penetration_may_not_worsen_by_more_than_m: 0.00005
+
+physics_validation:
+  prerequisite: independent_local_geometry_audit_passed
+  baseline: taco_brush_20231006_145_finger_effort_armature_c_retime_v1
+  source_endpoint: 0
+  outcome_endpoint: 8
+  reference_time_scale: 10.0
+  physics_timestep_s: 0.002
+  expected_physics_steps: 1334
+  allow_parameter_retuning_after_replay: false
+
+expected_inputs:
+  robot_reference_sha256: 9216e8e72ff824c5ddf5bfdf530212d214273e0a23df4e9433a89b38a25c39ea
+  scene_sha256: bab703cbd3a83b01c6d04bc0a9a29e44eec204c6eb9b7035099b58582049cb6a
+  finger_dynamics_contract_sha256: 16cabe0961aa3a5f8194029b71d4df735ce1a154906617fb3bada3d9da19a65a
+
+paths:
+  scene: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/generated_scene.xml
+  robot_reference: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/safe_entry/robot_reference.npz
+  human_reference: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/safe_entry/human_reference.npz
+  prior_dense_samples: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_full_reference_dense_native_v1/dense_samples.npz
+  prior_dense_interval_summary: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_full_reference_dense_native_v1/interval_summary.csv
+  prior_dense_report: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_full_reference_dense_native_v1/report.md
+  prior_hand_object_audit: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/safe_entry/interaction_native_hand_object_audit.json
+  finger_dynamics_contract: /data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_20231006_145_finger_effort_armature_ab_contract_v1.yaml
+  baseline_physics_manifest: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_finger_effort_armature_c_retime_v1/input_manifest.json
+  baseline_physics_results: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_finger_effort_armature_c_retime_v1/results.json
+  baseline_physics_state_trace: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_finger_effort_armature_c_retime_v1/substep_state_trace.npz
+  baseline_physics_native_trace: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_finger_effort_armature_c_retime_v1/substep_native_hand_table_trace.csv.gz
+  baseline_physics_contact_trace: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_finger_effort_armature_c_retime_v1/contact_trace.csv.gz
+  baseline_physics_endpoint_trace: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_finger_effort_armature_c_retime_v1/endpoint_trace.csv
+  output: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_continuous_ref_refinement_v1
+
+authorization:
+  modify_new_reference_authorized_robot_joints_only: true
+  modify_original_reference: false
+  modify_object_reference: false
+  modify_table_or_support_plane: false
+  modify_collision_geometry_or_proxy: false
+  modify_dynamics_or_force_limits: false
+  rerun_mink: false
+  mpc: false
+  reinforcement_learning: false
+  full_122_endpoint_optimization: false
+  expand_beyond_m3: false
