@@ -798,6 +798,9 @@ def main() -> int:
             "config": artifact(config_path), "source_scene": artifact(paths["scene"]),
             "local_scene": artifact(local_scene),
             "robot_reference": artifact(paths["robot_reference"]),
+            **({
+                "base_robot_reference": artifact(paths["base_robot_reference"]),
+            } if "base_robot_reference" in paths else {}),
             "support_contract": artifact(paths["support_contract"]),
             "prior_collision_audit": artifact(paths["prior_collision_audit"]),
             "script": artifact(Path(__file__)),
@@ -908,8 +911,19 @@ def main() -> int:
         candidate = transform_report["mink_candidates"][candidate_name]
         if candidate["status"] != "MINK_PASS":
             raise ValueError("selected robot initialization did not pass MINK gate")
-        if candidate["robot_reference"]["sha256"] != sha256(paths["robot_reference"]):
-            raise ValueError("robot reference does not match selected passing candidate")
+        initialization_reference = paths.get(
+            "base_robot_reference", paths["robot_reference"]
+        )
+        if candidate["robot_reference"]["sha256"] != sha256(initialization_reference):
+            raise ValueError("robot initialization base does not match selected passing candidate")
+        if "base_robot_reference" in paths:
+            with np.load(initialization_reference, allow_pickle=False) as archive:
+                base_qpos0 = np.asarray(archive["qpos"][0], dtype=np.float64)
+                base_ctrl0 = np.asarray(archive["ctrl"][0], dtype=np.float64)
+            if not np.array_equal(reference["qpos"][0, :36], base_qpos0[:36]):
+                raise ValueError("refined reference changed the passing endpoint-0 robot state")
+            if not np.array_equal(reference["ctrl"][0], base_ctrl0):
+                raise ValueError("refined reference changed the passing endpoint-0 control")
         seating_results_path = Path(
             initialization["natural_seating_results"]
         ).resolve(strict=True)

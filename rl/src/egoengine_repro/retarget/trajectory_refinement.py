@@ -342,6 +342,478 @@ def path_minimum_clearance(
     return best
 
 
+def interval_clearance_minima(
+    model: Any,
+    mujoco: Any,
+    qpos: np.ndarray,
+    geoms: Iterable[NativeSupportGeom],
+    *,
+    intervals: Sequence[int],
+    alphas: np.ndarray,
+    plane_z_m: float,
+    freeze_dofs_from: int | None = 36,
+) -> list[dict[str, Any]]:
+    """Return one full-native-mesh minimum for every requested interval."""
+    return [
+        path_minimum_clearance(
+            model,
+            mujoco,
+            qpos,
+            geoms,
+            intervals=(int(interval),),
+            alphas=alphas,
+            plane_z_m=plane_z_m,
+            freeze_dofs_from=freeze_dofs_from,
+        )
+        for interval in intervals
+    ]
+
+
+def fingertip_positions(
+    model: Any,
+    mujoco: Any,
+    qpos: np.ndarray,
+    *,
+    endpoints: Sequence[int],
+    site_names: Sequence[str],
+) -> np.ndarray:
+    """Evaluate named fingertip sites at selected trajectory endpoints."""
+    trajectory = np.asarray(qpos, dtype=np.float64)
+    result = np.empty((len(endpoints), len(site_names), 3), dtype=np.float64)
+    site_ids = [int(model.site(name).id) for name in site_names]
+    data = mujoco.MjData(model)
+    for endpoint_index, endpoint in enumerate(endpoints):
+        data.qpos[:] = trajectory[int(endpoint)]
+        data.qvel[:] = 0.0
+        mujoco.mj_forward(model, data)
+        result[endpoint_index] = np.asarray(data.site_xpos[site_ids], dtype=np.float64)
+    return result
+
+
+def _objective_terms(
+    model: Any,
+    mujoco: Any,
+    reference_qpos: np.ndarray,
+    current_qpos: np.ndarray,
+    variables: Sequence[TrajectoryVariable],
+    delta: np.ndarray,
+    *,
+    modified_endpoints: Sequence[int],
+    site_names: Sequence[str],
+    reference_weight: float,
+    smoothness_weight: float,
+    fingertip_weight: float,
+    object_relative_fingertip_weight: float,
+    fingertip_scale_m: float,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Build the local quadratic objective for a delta update."""
+    count = len(variables)
+    hessian = np.zeros((count, count), dtype=np.float64)
+    gradient = np.zeros(count, dtype=np.float64)
+    budgets = np.asarray([item.budget for item in variables], dtype=np.float64)
+
+    reference_hessian = 2.0 * float(reference_weight) * np.diag(1.0 / budgets**2)
+    hessian += reference_hessian
+    gradient += reference_hessian @ delta
+
+    variable_index = {
+        (item.endpoint, item.joint_name): index
+        for index, item in enumerate(variables)
+    }
+    joint_names = tuple(dict.fromkeys(item.joint_name for item in variables))
+    for joint_name in joint_names:
+        budget = next(item.budget for item in variables if item.joint_name == joint_name)
+        for endpoint in modified_endpoints:
+            row = np.zeros(count, dtype=np.float64)
+            for neighbor, coefficient in (
+                (int(endpoint) - 1, 1.0),
+                (int(endpoint), -2.0),
+                (int(endpoint) + 1, 1.0),
+            ):
+                index = variable_index.get((neighbor, joint_name))
+                if index is not None:
+                    row[index] = coefficient / budget
+            hessian_add = 2.0 * float(smoothness_weight) * np.outer(row, row)
+            hessian += hessian_add
+            gradient += hessian_add @ delta
+
+    reference_data = mujoco.MjData(model)
+    current_data = mujoco.MjData(model)
+    site_ids = [int(model.site(name).id) for name in site_names]
+    tip_weight = float(fingertip_weight) + float(object_relative_fingertip_weight)
+    tip_factor = 2.0 * tip_weight / float(fingertip_scale_m) ** 2
+    for endpoint in modified_endpoints:
+        reference_data.qpos[:] = reference_qpos[int(endpoint)]
+        reference_data.qvel[:] = 0.0
+        current_data.qpos[:] = current_qpos[int(endpoint)]
+        current_data.qvel[:] = 0.0
+        mujoco.mj_forward(model, reference_data)
+        mujoco.mj_forward(model, current_data)
+        for site_id in site_ids:
+            residual = (
+                np.asarray(current_data.site_xpos[site_id], dtype=np.float64)
+                - np.asarray(reference_data.site_xpos[site_id], dtype=np.float64)
+            )
+            point_jacobian = np.zeros((3, int(model.nv)), dtype=np.float64)
+            mujoco.mj_jacSite(model, current_data, point_jacobian, None, site_id)
+            local = np.zeros((3, count), dtype=np.float64)
+            for variable_index_value, variable in enumerate(variables):
+                if variable.endpoint == int(endpoint):
+                    local[:, variable_index_value] = point_jacobian[
+                        :, variable.dof_address
+                    ]
+            hessian += tip_factor * (local.T @ local)
+            gradient += tip_factor * (local.T @ residual)
+
+    hessian += np.eye(count, dtype=np.float64) * 1.0e-12
+    return hessian, gradient
+
+
+def _clearance_linearization_rows(
+    model: Any,
+    mujoco: Any,
+    current_qpos: np.ndarray,
+    variables: Sequence[TrajectoryVariable],
+    geoms: Sequence[NativeSupportGeom],
+    *,
+    sample_alphas: Mapping[int, Sequence[float]],
+    thresholds_m: Mapping[int, float],
+    plane_z_m: float,
+    activation_margin_m: float,
+    feasibility_tolerance_m: float,
+    freeze_dofs_from: int | None,
+) -> tuple[list[np.ndarray], list[float], list[dict[str, Any]]]:
+    rows: list[np.ndarray] = []
+    bounds: list[float] = []
+    immutable: list[dict[str, Any]] = []
+    data = mujoco.MjData(model)
+    point_jacobian = np.zeros((3, int(model.nv)), dtype=np.float64)
+    for interval, alpha_values in sample_alphas.items():
+        threshold = float(thresholds_m[int(interval)])
+        for alpha in alpha_values:
+            alpha = float(alpha)
+            data.qpos[:] = interpolate_qpos(
+                model,
+                mujoco,
+                current_qpos,
+                int(interval),
+                alpha,
+                freeze_dofs_from=freeze_dofs_from,
+            )
+            data.qvel[:] = 0.0
+            mujoco.mj_forward(model, data)
+            for geom in geoms:
+                world = geom_world_vertices(data, geom, full=True)
+                vertex = int(np.argmin(world[:, 2]))
+                distance = float(world[vertex, 2] - plane_z_m)
+                if distance > threshold + float(activation_margin_m):
+                    continue
+                point_jacobian.fill(0.0)
+                mujoco.mj_jac(
+                    model,
+                    data,
+                    point_jacobian,
+                    None,
+                    world[vertex],
+                    geom.body_id,
+                )
+                normal_gradient = np.zeros(len(variables), dtype=np.float64)
+                for index, variable in enumerate(variables):
+                    if variable.endpoint == int(interval):
+                        normal_gradient[index] = (
+                            (1.0 - alpha)
+                            * point_jacobian[2, variable.dof_address]
+                        )
+                    elif variable.endpoint == int(interval) + 1:
+                        normal_gradient[index] = (
+                            alpha * point_jacobian[2, variable.dof_address]
+                        )
+                if np.linalg.norm(normal_gradient) <= 1.0e-14:
+                    if distance < threshold - float(feasibility_tolerance_m):
+                        immutable.append({
+                            "source_endpoint": int(interval),
+                            "alpha": alpha,
+                            "geom": geom.name,
+                            "vertex_index": vertex,
+                            "distance_m": distance,
+                            "required_m": threshold,
+                        })
+                    continue
+                rows.append(-normal_gradient)
+                bounds.append(
+                    distance - threshold + float(feasibility_tolerance_m)
+                )
+    return rows, bounds, immutable
+
+
+def _velocity_constraint_rows(
+    model: Any,
+    reference_qpos: np.ndarray,
+    variables: Sequence[TrajectoryVariable],
+    delta: np.ndarray,
+    *,
+    intervals: Sequence[int],
+    velocity_limits: Mapping[str, float],
+    dt_s: float,
+) -> tuple[list[np.ndarray], list[float]]:
+    count = len(variables)
+    index = {
+        (item.endpoint, item.joint_name): variable_index
+        for variable_index, item in enumerate(variables)
+    }
+    joint_names = tuple(dict.fromkeys(item.joint_name for item in variables))
+    rows: list[np.ndarray] = []
+    bounds: list[float] = []
+    for joint_name in joint_names:
+        limit = float(velocity_limits[joint_name])
+        qpos_address = int(model.joint(joint_name).qposadr[0])
+        for interval in intervals:
+            row = np.zeros(count, dtype=np.float64)
+            source_index = index.get((int(interval), joint_name))
+            outcome_index = index.get((int(interval) + 1, joint_name))
+            if source_index is not None:
+                row[source_index] -= 1.0
+            if outcome_index is not None:
+                row[outcome_index] += 1.0
+            baseline = float(
+                reference_qpos[int(interval) + 1, qpos_address]
+                - reference_qpos[int(interval), qpos_address]
+            )
+            rows.extend((row, -row))
+            bounds.extend((
+                limit * dt_s - baseline - float(row @ delta),
+                limit * dt_s + baseline + float(row @ delta),
+            ))
+    return rows, bounds
+
+
+def refine_native_support_path(
+    model: Any,
+    mujoco: Any,
+    reference_qpos: np.ndarray,
+    variables: Sequence[TrajectoryVariable],
+    geoms: Sequence[NativeSupportGeom],
+    *,
+    intervals: Sequence[int],
+    thresholds_m: Mapping[int, float],
+    plane_z_m: float,
+    modified_endpoints: Sequence[int],
+    site_names: Sequence[str],
+    velocity_limits: Mapping[str, float],
+    dt_s: float,
+    optimization_samples_per_interval: int,
+    nonlinear_check_samples_per_interval: int,
+    activation_margin_m: float,
+    maximum_iterations: int,
+    feasibility_tolerance_m: float,
+    initial_trust_region_fraction: float,
+    minimum_trust_region_fraction: float,
+    maximum_trust_region_fraction: float,
+    trust_region_shrink: float,
+    trust_region_grow: float,
+    weights: Mapping[str, float],
+    fingertip_scale_m: float,
+    qp_solver: str,
+    freeze_dofs_from: int | None = 36,
+) -> dict[str, Any]:
+    """Refine a short trajectory with sequential native-geometry QPs."""
+    from qpsolvers import solve_qp
+
+    if set(int(value) for value in intervals) != set(thresholds_m):
+        raise ValueError("every optimized interval needs one clearance threshold")
+    if optimization_samples_per_interval < 2 or nonlinear_check_samples_per_interval < 2:
+        raise ValueError("path sampling requires at least two points per interval")
+    delta = np.zeros(len(variables), dtype=np.float64)
+    budgets = np.asarray([item.budget for item in variables], dtype=np.float64)
+    sample_alphas: dict[int, set[float]] = {
+        int(interval): set(np.linspace(0.0, 1.0, optimization_samples_per_interval))
+        for interval in intervals
+    }
+    check_alphas = np.linspace(0.0, 1.0, nonlinear_check_samples_per_interval)
+    trust_fraction = float(initial_trust_region_fraction)
+    trace: list[dict[str, Any]] = []
+
+    def nonlinear_minima(values: np.ndarray) -> tuple[np.ndarray, list[dict[str, Any]]]:
+        trajectory = apply_delta(reference_qpos, variables, values)
+        minima = interval_clearance_minima(
+            model,
+            mujoco,
+            trajectory,
+            geoms,
+            intervals=intervals,
+            alphas=check_alphas,
+            plane_z_m=plane_z_m,
+            freeze_dofs_from=freeze_dofs_from,
+        )
+        return trajectory, minima
+
+    current_qpos, current_minima = nonlinear_minima(delta)
+    for iteration in range(int(maximum_iterations)):
+        violations = {
+            int(row["source_endpoint"]): (
+                float(thresholds_m[int(row["source_endpoint"])])
+                - float(row["distance_m"])
+            )
+            for row in current_minima
+        }
+        maximum_violation = max(violations.values())
+        trace.append({
+            "iteration": iteration,
+            "stage": "nonlinear_state",
+            "status": "FEASIBLE" if maximum_violation <= feasibility_tolerance_m else "INFEASIBLE",
+            "maximum_violation_m": maximum_violation,
+            "trust_region_fraction": trust_fraction,
+            "qp_step_maximum_budget_fraction": 0.0,
+            "interval_minima": current_minima,
+        })
+        if maximum_violation <= feasibility_tolerance_m:
+            return {
+                "status": "SOLVED",
+                "delta": delta,
+                "qpos": current_qpos,
+                "interval_minima": current_minima,
+                "trace": trace,
+                "iterations": iteration,
+            }
+
+        hessian, gradient = _objective_terms(
+            model,
+            mujoco,
+            reference_qpos,
+            current_qpos,
+            variables,
+            delta,
+            modified_endpoints=modified_endpoints,
+            site_names=site_names,
+            reference_weight=float(weights["reference_fidelity"]),
+            smoothness_weight=float(weights["second_difference_smoothness"]),
+            fingertip_weight=float(weights["fingertip_preservation"]),
+            object_relative_fingertip_weight=float(
+                weights["object_relative_fingertip_preservation"]
+            ),
+            fingertip_scale_m=fingertip_scale_m,
+        )
+        rows, bounds, immutable = _clearance_linearization_rows(
+            model,
+            mujoco,
+            current_qpos,
+            variables,
+            geoms,
+            sample_alphas={
+                interval: sorted(values)
+                for interval, values in sample_alphas.items()
+            },
+            thresholds_m=thresholds_m,
+            plane_z_m=plane_z_m,
+            activation_margin_m=activation_margin_m,
+            feasibility_tolerance_m=feasibility_tolerance_m,
+            freeze_dofs_from=freeze_dofs_from,
+        )
+        if immutable:
+            return {
+                "status": "IMMUTABLE_LINEARIZED_CONSTRAINT",
+                "delta": delta,
+                "qpos": current_qpos,
+                "interval_minima": current_minima,
+                "trace": trace,
+                "immutable": immutable,
+                "iterations": iteration,
+            }
+        velocity_rows, velocity_bounds = _velocity_constraint_rows(
+            model,
+            reference_qpos,
+            variables,
+            delta,
+            intervals=intervals,
+            velocity_limits=velocity_limits,
+            dt_s=dt_s,
+        )
+        rows.extend(velocity_rows)
+        bounds.extend(velocity_bounds)
+        lower = np.maximum(-budgets - delta, -trust_fraction * budgets)
+        upper = np.minimum(budgets - delta, trust_fraction * budgets)
+        for index, variable in enumerate(variables):
+            if not bool(model.jnt_limited[variable.joint_id]):
+                continue
+            joint_lower, joint_upper = np.asarray(
+                model.jnt_range[variable.joint_id], dtype=np.float64
+            )
+            current = float(current_qpos[variable.endpoint, variable.qpos_address])
+            lower[index] = max(lower[index], joint_lower - current)
+            upper[index] = min(upper[index], joint_upper - current)
+        step = solve_qp(
+            hessian,
+            gradient,
+            G=np.asarray(rows, dtype=np.float64),
+            h=np.asarray(bounds, dtype=np.float64),
+            lb=lower,
+            ub=upper,
+            solver=qp_solver,
+            primal_tol=1.0e-9,
+            dual_tol=1.0e-9,
+        )
+        if step is None or not np.isfinite(step).all():
+            trace.append({
+                "iteration": iteration,
+                "stage": "qp",
+                "status": "NO_SOLUTION",
+                "maximum_violation_m": maximum_violation,
+                "trust_region_fraction": trust_fraction,
+                "qp_step_maximum_budget_fraction": None,
+                "interval_minima": current_minima,
+            })
+            trust_fraction *= float(trust_region_shrink)
+            if trust_fraction < float(minimum_trust_region_fraction):
+                break
+            continue
+
+        candidate_delta = delta + np.asarray(step, dtype=np.float64)
+        candidate_qpos, candidate_minima = nonlinear_minima(candidate_delta)
+        candidate_violations = [
+            float(thresholds_m[int(row["source_endpoint"])])
+            - float(row["distance_m"])
+            for row in candidate_minima
+        ]
+        candidate_maximum_violation = max(candidate_violations)
+        step_fraction = float(np.max(np.abs(step) / budgets))
+        accepted = (
+            candidate_maximum_violation < maximum_violation - 1.0e-9
+            or candidate_maximum_violation <= feasibility_tolerance_m
+        )
+        trace.append({
+            "iteration": iteration,
+            "stage": "nonlinear_candidate",
+            "status": "ACCEPTED" if accepted else "REJECTED",
+            "maximum_violation_m": candidate_maximum_violation,
+            "trust_region_fraction": trust_fraction,
+            "qp_step_maximum_budget_fraction": step_fraction,
+            "interval_minima": candidate_minima,
+        })
+        for row in candidate_minima:
+            sample_alphas[int(row["source_endpoint"])].add(float(row["alpha"]))
+        if accepted:
+            delta = candidate_delta
+            current_qpos = candidate_qpos
+            current_minima = candidate_minima
+            trust_fraction = min(
+                float(maximum_trust_region_fraction),
+                trust_fraction * float(trust_region_grow),
+            )
+        else:
+            trust_fraction *= float(trust_region_shrink)
+            if trust_fraction < float(minimum_trust_region_fraction):
+                break
+
+    return {
+        "status": "MAXIMUM_ITERATIONS_OR_TRUST_REGION_EXHAUSTED",
+        "delta": delta,
+        "qpos": current_qpos,
+        "interval_minima": current_minima,
+        "trace": trace,
+        "iterations": int(maximum_iterations),
+    }
+
+
 def file_sha256(path: Path) -> str:
     import hashlib
 

@@ -1,0 +1,148 @@
+schema: taco_brush_20231006_145_vertical_feedforward_replay_v1
+status: FROZEN_M4_REFINED_REFERENCE_ENDPOINT_0_TO_8_EXPERIMENT_C
+paper_faithful: false
+
+comparison_contract:
+  parent_experiment: taco_brush_20231006_145_finger_effort_armature_c_retime_v1
+  trigger: independently_audited_m4_continuous_reference_candidate
+  selected_candidate: M4
+  parameter_scan: false
+  collision_result_used_to_select_reference: false
+  changed:
+    - authorized_robot_reference_joints_at_endpoints_5_to_8
+    - qvel_recomputed_from_refined_qpos
+  unchanged:
+    - endpoint_0_to_4_robot_position_and_control_reference
+    - every_object_reference_endpoint_value
+    - experiment_c_armature_and_compiled_critical_damping
+    - urdf_effort_limits
+    - initial_complete_state
+    - physics_timestep
+    - uniform_10x_reference_time_scale
+    - support_plane
+    - collision_geometry_and_parameters
+    - wrist_controller
+
+sample:
+  sequence: "(brush, brush, bowl)/20231006_145"
+  reference_frames: 122
+  replay_source_endpoint: 0
+  replay_outcome_endpoint: 8
+  control_hz: 30.0
+
+runtime:
+  backend: mujoco_cpu
+  command_timing: reference_ctrl_linear_substep_interpolation
+  reference_time_scale: 10.0
+  robot_initial_qpos: refined_reference_endpoint_0_exactly_equal_to_safe_entry_mink
+  object_initial_qpos: isolated_natural_seating_zero_velocity_10s
+  initial_qvel: zero
+  initial_ctrl: refined_reference_endpoint_0_exactly_equal_to_safe_entry_mink
+  reset_during_replay: false
+  object_assistance: false
+  residual_policy: false
+  mpc: false
+  reinforcement_learning: false
+
+controller:
+  mode: vertical_gravity_reference_velocity_feedforward_v1
+  gravity_feedforward: true
+  reference_velocity_feedback: true
+  controlled_actuators: [R_forearm_tz_position, L_forearm_tz_position]
+  maximum_abs_extra_generalized_force_n: 50.0
+
+finger_dynamics:
+  experiment_id: C_uniform_10x_retiming_of_experiment_B
+  effort_limit_scope: joint_actuatorfrcrange
+  armature_mode: uniform_explicit
+  uniform_armature_kg_m2: 0.0030763249791336436
+  expected_compiled_armature_kg_m2: 0.0030763249791336436
+  require_zero_finger_qfrc_applied: true
+  damping_ratio_recompiled_from_source_marker: 1.0
+  parameter_scan: false
+
+initial_state:
+  robot: REFINED_M4_ENDPOINT_0_EQUALS_SAFE_ENTRY_MINK_V1_ENDPOINT_0
+  robot_results: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/results.json
+  robot_candidate: safe_entry
+  objects: NATURAL_SEATING_EXTENSION_V1_ZERO_INITIAL_VELOCITY_FINAL_STATE
+  natural_seating_results: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_natural_seating_extension_v1/results.json
+  natural_seating_timeseries: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_natural_seating_extension_v1/timeseries.csv
+  expected_final_time_s: 10.0
+  object_variants: {brush: zero_initial_velocity, bowl: zero_initial_velocity}
+  reference_actions: REFINED_M4_ROBOT_CTRL_WITH_OFFICIAL_UNMODIFIED_OBJECT_REFERENCE
+
+support:
+  provenance: taco_brush_20231006_145_issue14_support_candidate_v1
+  simulator_z_m: 0.72
+  active_support_contract_modified: false
+
+native_geometry_audit:
+  hand_object_and_hand_table_tolerance_m: 0.00005
+  dynamic_object_floor_penetration_limit_m: 0.0005
+  endpoints: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+  interaction_pairs:
+    - {hand: right, object: brush, role: tool, object_side: right}
+    - {hand: left, object: bowl, role: target, object_side: left}
+
+diagnostics:
+  substep_native_hand_table_trace: true
+  substep_state_trace: true
+
+hard_stop:
+  fail_on_any_mujoco_warning: true
+  maximum_contact_force_n: 1000.0
+  maximum_proxy_penetration_m: 0.02
+  maximum_object_linear_speed_m_s: 5.0
+  maximum_object_angular_speed_rad_s: 50.0
+  maximum_object_translation_per_substep_m: 0.02
+  maximum_object_rotation_per_substep_rad: 0.5
+  maximum_physics_steps: 1500
+
+strict_tracking_gate:
+  definition: AXIS_INTERCEPT_NORMALIZED_ELLIPSE
+  position_scale_m: 0.12
+  rotation_scale_rad: 1.5
+  maximum_score: 1.0
+  requires_both_objects_at_all_completed_endpoints: true
+
+strict_pickup_gate:
+  object_lift_delta_m: 0.01
+  stable_consecutive_control_intervals: 5
+  requires_hand_object_force: true
+  requires_no_object_floor_force: true
+  requires_all_native_samples_nonpenetrating: true
+  requires_zero_proxy_native_geometry_mismatches: true
+  requires_zero_proxy_force_while_native_clear_exposures: true
+  requires_both_objects: true
+  unknown_is_failure: true
+
+paths:
+  scene: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/generated_scene.xml
+  robot_reference: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_continuous_ref_refinement_v2/robot_reference_refined_v2.npz
+  base_robot_reference: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/safe_entry/robot_reference.npz
+  support_contract: /data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_20231006_145_issue14_support_candidate_v1.yaml
+  prior_collision_audit: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/safe_entry/interaction_native_hand_object_audit.json
+  left_hand_urdf: /data_all/zzx/Egoengine_upload_3_2/rl/models/taco_xhand/assets/robots/xhand/xhand_left.urdf
+  right_hand_urdf: /data_all/zzx/Egoengine_upload_3_2/rl/models/taco_xhand/assets/robots/xhand/xhand_right.urdf
+  finger_dynamics_ab_contract: /data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_20231006_145_finger_effort_armature_ab_contract_v1.yaml
+  output: /data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_continuous_ref_refinement_m4_replay_v1
+
+authorization:
+  experiment_local_scene: true
+  experiment_local_finger_effort_limits: true
+  experiment_local_finger_armature_change: true
+  uniform_reference_retiming: true
+  bounded_cpu_physics_replay: true
+  native_mesh_audit: true
+  render_diagnostic_plots: true
+  modify_source_scene: false
+  modify_reference: false
+  modify_active_support_contract: false
+  modify_collision_geometry: false
+  mink: false
+  full_209_frame_replay: false
+  mpc: false
+  reinforcement_learning: false
+  promotion: false
+  chunk_commit: false

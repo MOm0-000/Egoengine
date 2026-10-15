@@ -18,6 +18,7 @@ from egoengine_repro.retarget.trajectory_refinement import (
     interpolate_qpos,
     interpolated_support_linearization,
     path_minimum_clearance,
+    refine_native_support_path,
     resolve_variables,
     validate_scalar_joint_ranges,
 )
@@ -32,6 +33,10 @@ REFERENCE = (
 CONFIG = (
     REPO
     / "rl/configs/taco_brush_20231006_145_continuous_reference_refinement_v1.yaml"
+)
+CONFIG_V2 = (
+    REPO
+    / "rl/configs/taco_brush_20231006_145_continuous_reference_refinement_v2.yaml"
 )
 
 
@@ -231,6 +236,39 @@ def test_each_frozen_candidate_is_blocked_before_qp(model, reference, geoms):
         assert any(row["geom"].startswith("right_") for row in blockers)
 
 
+def test_m4_right_pinky_authorization_removes_immutable_blocker(
+    model, reference, geoms,
+):
+    cfg = yaml.safe_load(CONFIG_V2.read_text(encoding="utf-8"))
+    candidate = cfg["candidate_order"][-1]
+    assert candidate["id"] == "M4"
+    budgets = {
+        name: (
+            0.002 if name.startswith("L_forearm_t")
+            else np.deg2rad(1.0) if name.startswith("L_forearm_")
+            else 0.05
+        )
+        for name in candidate["authorized_joints"]
+    }
+    variables = resolve_variables(
+        model,
+        endpoints=cfg["modified_endpoints"],
+        joint_names=candidate["authorized_joints"],
+        budgets=budgets,
+    )
+    blockers = immutable_clearance_blockers(
+        model,
+        mujoco,
+        reference["qpos"],
+        variables,
+        geoms,
+        endpoints=cfg["geometry_contract"]["core_endpoints"],
+        plane_z_m=cfg["geometry_contract"]["table_z_m"],
+        minimum_clearance_m=cfg["geometry_contract"]["core_minimum_clearance_m"],
+    )
+    assert blockers == []
+
+
 def test_dense_checker_detects_safe_endpoints_and_unsafe_midpoint():
     xml = """
     <mujoco>
@@ -267,6 +305,69 @@ def test_dense_checker_detects_safe_endpoints_and_unsafe_midpoint():
     )
     assert minimum["alpha"] == pytest.approx(0.5)
     assert minimum["distance_m"] < 1e-9
+
+
+def test_sequential_qp_rechecks_and_lifts_native_mesh():
+    xml = """
+    <mujoco>
+      <asset>
+        <mesh name="tetra" vertex="0 0 0  .01 0 .01  -.01 0 .01  0 .01 .01"/>
+      </asset>
+      <worldbody>
+        <body name="left_test_body">
+          <joint name="lift" type="slide" axis="0 0 1" range="-.1 .1"/>
+          <geom name="left_test_visual" type="mesh" mesh="tetra"/>
+          <site name="left_test_tip"/>
+        </body>
+      </worldbody>
+    </mujoco>
+    """
+    synthetic = mujoco.MjModel.from_xml_string(xml)
+    synthetic_geoms = build_native_support_geoms(
+        synthetic, mujoco, native_hand_visual_geom_ids(synthetic, mujoco),
+    )
+    variables = resolve_variables(
+        synthetic,
+        endpoints=(0, 1),
+        joint_names=("lift",),
+        budgets={"lift": 0.02},
+        robot_qpos_stop=1,
+    )
+    result = refine_native_support_path(
+        synthetic,
+        mujoco,
+        np.zeros((2, 1), dtype=np.float64),
+        variables,
+        synthetic_geoms,
+        intervals=(0,),
+        thresholds_m={0: 0.005},
+        plane_z_m=0.0,
+        modified_endpoints=(0, 1),
+        site_names=("left_test_tip",),
+        velocity_limits={"lift": 10.0},
+        dt_s=1.0,
+        optimization_samples_per_interval=5,
+        nonlinear_check_samples_per_interval=21,
+        activation_margin_m=0.01,
+        maximum_iterations=8,
+        feasibility_tolerance_m=1e-7,
+        initial_trust_region_fraction=0.5,
+        minimum_trust_region_fraction=0.01,
+        maximum_trust_region_fraction=1.0,
+        trust_region_shrink=0.5,
+        trust_region_grow=1.5,
+        weights={
+            "reference_fidelity": 1.0,
+            "second_difference_smoothness": 0.25,
+            "fingertip_preservation": 1.0,
+            "object_relative_fingertip_preservation": 1.0,
+        },
+        fingertip_scale_m=0.02,
+        qp_solver="daqp",
+        freeze_dofs_from=None,
+    )
+    assert result["status"] == "SOLVED"
+    assert result["interval_minima"][0]["distance_m"] >= 0.005 - 1e-7
 
 
 def test_existing_dense_path_minimum_is_negative(model, reference, geoms):
