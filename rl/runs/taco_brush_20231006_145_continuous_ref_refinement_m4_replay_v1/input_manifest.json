@@ -1,0 +1,794 @@
+{
+  "authorization": {
+    "bounded_cpu_physics_replay": true,
+    "chunk_commit": false,
+    "experiment_local_finger_armature_change": true,
+    "experiment_local_finger_effort_limits": true,
+    "experiment_local_scene": true,
+    "full_209_frame_replay": false,
+    "mink": false,
+    "modify_active_support_contract": false,
+    "modify_collision_geometry": false,
+    "modify_reference": false,
+    "modify_source_scene": false,
+    "mpc": false,
+    "native_mesh_audit": true,
+    "promotion": false,
+    "reinforcement_learning": false,
+    "render_diagnostic_plots": true,
+    "uniform_reference_retiming": true
+  },
+  "controller": {
+    "application_rule": "restore initial qfrc_applied each substep, then add sparse feedforward generalized force",
+    "controlled_actuators": [
+      {
+        "actuator_id": 2,
+        "actuator_name": "R_forearm_tz_position",
+        "body_gravity_compensation": 0.0,
+        "dof_address": 2,
+        "force_limited": false,
+        "joint_actuator_gravity_compensation": false,
+        "joint_id": 2,
+        "joint_name": "R_forearm_tz_link_joint",
+        "position_gain": 1000.0,
+        "qpos_address": 2,
+        "transmission": "direct_joint_unit_gear",
+        "velocity_gain": 98.43545885502846
+      },
+      {
+        "actuator_id": 20,
+        "actuator_name": "L_forearm_tz_position",
+        "body_gravity_compensation": 0.0,
+        "dof_address": 20,
+        "force_limited": false,
+        "joint_actuator_gravity_compensation": false,
+        "joint_id": 20,
+        "joint_name": "L_forearm_tz_link_joint",
+        "position_gain": 1000.0,
+        "qpos_address": 20,
+        "transmission": "direct_joint_unit_gear",
+        "velocity_gain": 98.43279006509975
+      }
+    ],
+    "gravity_feedforward": true,
+    "gravity_rule": "independent MjModel and MjData at live qpos with qvel=0; use qfrc_bias",
+    "maximum_abs_extra_generalized_force_n": 50.0,
+    "mode": "vertical_gravity_reference_velocity_feedforward_v1",
+    "preserved_initial_qfrc_applied": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "reference_velocity_feedback": true,
+    "reference_velocity_rule": "mj_differentiatePos(qpos[source], qpos[outcome], substeps * model.opt.timestep)"
+  },
+  "finger_dynamics": {
+    "armature_mode": "uniform_explicit",
+    "compiled_contracts": [
+      {
+        "actuator_force_limited_separately": false,
+        "actuator_id": 27,
+        "actuator_name": "left_index_bend_position",
+        "compiled_armature_kg_m2": 0.0030763249791336436,
+        "compiled_joint_actuator_force_range_nm": [
+          -0.4,
+          0.4
+        ],
+        "compiled_position_gain_nm_rad": 300.0,
+        "compiled_velocity_gain_nm_s_rad": 2.0402514429069116,
+        "dof_address": 27,
+        "joint_id": 27,
+        "joint_name": "left_hand_index_bend_joint",
+        "qpos_address": 27,
+        "transmission": "direct_joint_unit_gear",
+        "urdf_effort_limit_nm": 0.4
+      },
+      {
+        "actuator_force_limited_separately": false,
+        "actuator_id": 28,
+        "actuator_name": "left_index_joint1_position",
+        "compiled_armature_kg_m2": 0.0030763249791336436,
+        "compiled_joint_actuator_force_range_nm": [
+          -1.1,
+          1.1
+        ],
+        "compiled_position_gain_nm_rad": 300.0,
+        "compiled_velocity_gain_nm_s_rad": 1.9875281142093981,
+        "dof_address": 28,
+        "joint_id": 28,
+        "joint_name": "left_hand_index_joint1",
+        "qpos_address": 28,
+        "transmission": "direct_joint_unit_gear",
+        "urdf_effort_limit_nm": 1.1
+      },
+      {
+        "actuator_force_limited_separately": false,
+        "actuator_id": 29,
+        "actuator_name": "left_index_joint2_position",
+        "compiled_armature_kg_m2": 0.0030763249791336436,
+        "compiled_joint_actuator_force_range_nm": [
+          -0.4,
+          0.4
+        ],
+        "compiled_position_gain_nm_rad": 300.0,
+        "compiled_velocity_gain_nm_s_rad": 1.9252962339143196,
+        "dof_address": 29,
+        "joint_id": 29,
+        "joint_name": "left_hand_index_joint2",
+        "qpos_address": 29,
+        "transmission": "direct_joint_unit_gear",
+        "urdf_effort_limit_nm": 0.4
+      },
+      {
+        "actuator_force_limited_separately": false,
+        "actuator_id": 30,
+        "actuator_name": "left_middle_joint1_position",
+        "compiled_armature_kg_m2": 0.0030763249791336436,
+        "compiled_joint_actuator_force_range_nm": [
+          -1.1,
+          1.1
+        ],
+        "compiled_position_gain_nm_rad": 300.0,
+        "compiled_velocity_gain_nm_s_rad": 1.9875280283848737,
+        "dof_address": 30,
+        "joint_id": 30,
+        "joint_name": "left_hand_mid_joint1",
+        "qpos_address": 30,
+        "transmission": "direct_joint_unit_gear",
+        "urdf_effort_limit_nm": 1.1
+      },
+      {
+        "actuator_force_limited_separately": false,
+        "actuator_id": 31,
+        "actuator_name": "left_middle_joint2_position",
+        "compiled_armature_kg_m2": 0.0030763249791336436,
+        "compiled_joint_actuator_force_range_nm": [
+          -0.4,
+          0.4
+        ],
+        "compiled_position_gain_nm_rad": 300.0,
+        "compiled_velocity_gain_nm_s_rad": 1.9252962078904987,
+        "dof_address": 31,
+        "joint_id": 31,
+        "joint_name": "left_hand_mid_joint2",
+        "qpos_address": 31,
+        "transmission": "direct_joint_unit_gear",
+        "urdf_effort_limit_nm": 0.4
+      },
+      {
+        "actuator_force_limited_separately": false,
+        "actuator_id": 34,
+        "actuator_name": "left_pinky_joint1_position",
+        "compiled_armature_kg_m2": 0.0030763249791336436,
+        "compiled_joint_actuator_force_range_nm": [
+          -1.1,
+          1.1
+        ],
+        "compiled_position_gain_nm_rad": 300.0,
+        "compiled_velocity_gain_nm_s_rad": 1.98752802843279,
+        "dof_address": 34,
+        "joint_id": 34,
+        "joint_name": "left_hand_pinky_joint1",
+        "qpos_address": 34,
+        "transmission": "direct_joint_unit_gear",
+        "urdf_effort_limit_nm": 1.1
+      },
+      {
+        "actuator_force_limited_separately": false,
+        "actuator_id": 35,
+        "actuator_name": "left_pinky_joint2_position",
+        "compiled_armature_kg_m2": 0.0030763249791336436,
+        "compiled_joint_actuator_force_range_nm": [
+          -0.4,
+          0.4
+        ],
+        "compiled_position_gain_nm_rad": 300.0,
+        "compiled_velocity_gain_nm_s_rad": 1.9252962079404683,
+        "dof_address": 35,
+        "joint_id": 35,
+        "joint_name": "left_hand_pinky_joint2",
+        "qpos_address": 35,
+        "transmission": "direct_joint_unit_gear",
+        "urdf_effort_limit_nm": 0.4
+      },
+      {
+        "actuator_force_limited_separately": false,
+        "actuator_id": 32,
+        "actuator_name": "left_ring_joint1_position",
+        "compiled_armature_kg_m2": 0.0030763249791336436,
+        "compiled_joint_actuator_force_range_nm": [
+          -1.1,
+          1.1
+        ],
+        "compiled_position_gain_nm_rad": 300.0,
+        "compiled_velocity_gain_nm_s_rad": 1.9875281142122303,
+        "dof_address": 32,
+        "joint_id": 32,
+        "joint_name": "left_hand_ring_joint1",
+        "qpos_address": 32,
+        "transmission": "direct_joint_unit_gear",
+        "urdf_effort_limit_nm": 1.1
+      },
+      {
+        "actuator_force_limited_separately": false,
+        "actuator_id": 33,
+        "actuator_name": "left_ring_joint2_position",
+        "compiled_armature_kg_m2": 0.0030763249791336436,
+        "compiled_joint_actuator_force_range_nm": [
+          -0.4,
+          0.4
+        ],
+        "compiled_position_gain_nm_rad": 300.0,
+        "compiled_velocity_gain_nm_s_rad": 1.9252962339143196,
+        "dof_address": 33,
+        "joint_id": 33,
+        "joint_name": "left_hand_ring_joint2",
+        "qpos_address": 33,
+        "transmission": "direct_joint_unit_gear",
+        "urdf_effort_limit_nm": 0.4
+      },
+      {
+        "actuator_force_limited_separately": false,
+        "actuator_id": 24,
+        "actuator_name": "left_thumb_bend_position",
+        "compiled_armature_kg_m2": 0.0030763249791336436,
+        "compiled_joint_actuator_force_range_nm": [
+          -1.1,
+          1.1
+        ],
+        "compiled_position_gain_nm_rad": 300.0,
+        "compiled_velocity_gain_nm_s_rad": 2.2110994021824943,
+        "dof_address": 24,
+        "joint_id": 24,
+        "joint_name": "left_hand_thumb_bend_joint",
+        "qpos_address": 24,
+        "transmission": "direct_joint_unit_gear",
+        "urdf_effort_limit_nm": 1.1
+      },
+      {
+        "actuator_force_limited_separately": false,
+        "actuator_id": 25,
+        "actuator_name": "left_thumb_rota1_position",
+        "compiled_armature_kg_m2": 0.0030763249791336436,
+        "compiled_joint_actuator_force_range_nm": [
+          -1.1,
+          1.1
+        ],
+        "compiled_position_gain_nm_rad": 300.0,
+        "compiled_velocity_gain_nm_s_rad": 2.0428545234051807,
+        "dof_address": 25,
+        "joint_id": 25,
+        "joint_name": "left_hand_thumb_rota_joint1",
+        "qpos_address": 25,
+        "transmission": "direct_joint_unit_gear",
+        "urdf_effort_limit_nm": 1.1
+      },
+      {
+        "actuator_force_limited_separately": false,
+        "actuator_id": 26,
+        "actuator_name": "left_thumb_rota2_position",
+        "compiled_armature_kg_m2": 0.0030763249791336436,
+        "compiled_joint_actuator_force_range_nm": [
+          -0.4,
+          0.4
+        ],
+        "compiled_position_gain_nm_rad": 300.0,
+        "compiled_velocity_gain_nm_s_rad": 1.9299017482828253,
+        "dof_address": 26,
+        "joint_id": 26,
+        "joint_name": "left_hand_thumb_rota_joint2",
+        "qpos_address": 26,
+        "transmission": "direct_joint_unit_gear",
+        "urdf_effort_limit_nm": 0.4
+      },
+      {
+        "actuator_force_limited_separately": false,
+        "actuator_id": 9,
+        "actuator_name": "right_index_bend_position",
+        "compiled_armature_kg_m2": 0.0030763249791336436,
+        "compiled_joint_actuator_force_range_nm": [
+          -0.4,
+          0.4
+        ],
+        "compiled_position_gain_nm_rad": 300.0,
+        "compiled_velocity_gain_nm_s_rad": 2.0402514175963558,
+        "dof_address": 9,
+        "joint_id": 9,
+        "joint_name": "right_hand_index_bend_joint",
+        "qpos_address": 9,
+        "transmission": "direct_joint_unit_gear",
+        "urdf_effort_limit_nm": 0.4
+      },
+      {
+        "actuator_force_limited_separately": false,
+        "actuator_id": 10,
+        "actuator_name": "right_index_joint1_position",
+        "compiled_armature_kg_m2": 0.0030763249791336436,
+        "compiled_joint_actuator_force_range_nm": [
+          -1.1,
+          1.1
+        ],
+        "compiled_position_gain_nm_rad": 300.0,
+        "compiled_velocity_gain_nm_s_rad": 1.9875281142101349,
+        "dof_address": 10,
+        "joint_id": 10,
+        "joint_name": "right_hand_index_joint1",
+        "qpos_address": 10,
+        "transmission": "direct_joint_unit_gear",
+        "urdf_effort_limit_nm": 1.1
+      },
+      {
+        "actuator_force_limited_separately": false,
+        "actuator_id": 11,
+        "actuator_name": "right_index_joint2_position",
+        "compiled_armature_kg_m2": 0.0030763249791336436,
+        "compiled_joint_actuator_force_range_nm": [
+          -0.4,
+          0.4
+        ],
+        "compiled_position_gain_nm_rad": 300.0,
+        "compiled_velocity_gain_nm_s_rad": 1.9252962339143196,
+        "dof_address": 11,
+        "joint_id": 11,
+        "joint_name": "right_hand_index_joint2",
+        "qpos_address": 11,
+        "transmission": "direct_joint_unit_gear",
+        "urdf_effort_limit_nm": 0.4
+      },
+      {
+        "actuator_force_limited_separately": false,
+        "actuator_id": 12,
+        "actuator_name": "right_middle_joint1_position",
+        "compiled_armature_kg_m2": 0.0030763249791336436,
+        "compiled_joint_actuator_force_range_nm": [
+          -1.1,
+          1.1
+        ],
+        "compiled_position_gain_nm_rad": 300.0,
+        "compiled_velocity_gain_nm_s_rad": 1.9875281142099428,
+        "dof_address": 12,
+        "joint_id": 12,
+        "joint_name": "right_hand_mid_joint1",
+        "qpos_address": 12,
+        "transmission": "direct_joint_unit_gear",
+        "urdf_effort_limit_nm": 1.1
+      },
+      {
+        "actuator_force_limited_separately": false,
+        "actuator_id": 13,
+        "actuator_name": "right_middle_joint2_position",
+        "compiled_armature_kg_m2": 0.0030763249791336436,
+        "compiled_joint_actuator_force_range_nm": [
+          -0.4,
+          0.4
+        ],
+        "compiled_position_gain_nm_rad": 300.0,
+        "compiled_velocity_gain_nm_s_rad": 1.9252962339143196,
+        "dof_address": 13,
+        "joint_id": 13,
+        "joint_name": "right_hand_mid_joint2",
+        "qpos_address": 13,
+        "transmission": "direct_joint_unit_gear",
+        "urdf_effort_limit_nm": 0.4
+      },
+      {
+        "actuator_force_limited_separately": false,
+        "actuator_id": 16,
+        "actuator_name": "right_pinky_joint1_position",
+        "compiled_armature_kg_m2": 0.0030763249791336436,
+        "compiled_joint_actuator_force_range_nm": [
+          -1.1,
+          1.1
+        ],
+        "compiled_position_gain_nm_rad": 300.0,
+        "compiled_velocity_gain_nm_s_rad": 1.9875281142087864,
+        "dof_address": 16,
+        "joint_id": 16,
+        "joint_name": "right_hand_pinky_joint1",
+        "qpos_address": 16,
+        "transmission": "direct_joint_unit_gear",
+        "urdf_effort_limit_nm": 1.1
+      },
+      {
+        "actuator_force_limited_separately": false,
+        "actuator_id": 17,
+        "actuator_name": "right_pinky_joint2_position",
+        "compiled_armature_kg_m2": 0.0030763249791336436,
+        "compiled_joint_actuator_force_range_nm": [
+          -0.4,
+          0.4
+        ],
+        "compiled_position_gain_nm_rad": 300.0,
+        "compiled_velocity_gain_nm_s_rad": 1.9252962339138284,
+        "dof_address": 17,
+        "joint_id": 17,
+        "joint_name": "right_hand_pinky_joint2",
+        "qpos_address": 17,
+        "transmission": "direct_joint_unit_gear",
+        "urdf_effort_limit_nm": 0.4
+      },
+      {
+        "actuator_force_limited_separately": false,
+        "actuator_id": 14,
+        "actuator_name": "right_ring_joint1_position",
+        "compiled_armature_kg_m2": 0.0030763249791336436,
+        "compiled_joint_actuator_force_range_nm": [
+          -1.1,
+          1.1
+        ],
+        "compiled_position_gain_nm_rad": 300.0,
+        "compiled_velocity_gain_nm_s_rad": 1.9875280283978316,
+        "dof_address": 14,
+        "joint_id": 14,
+        "joint_name": "right_hand_ring_joint1",
+        "qpos_address": 14,
+        "transmission": "direct_joint_unit_gear",
+        "urdf_effort_limit_nm": 1.1
+      },
+      {
+        "actuator_force_limited_separately": false,
+        "actuator_id": 15,
+        "actuator_name": "right_ring_joint2_position",
+        "compiled_armature_kg_m2": 0.0030763249791336436,
+        "compiled_joint_actuator_force_range_nm": [
+          -0.4,
+          0.4
+        ],
+        "compiled_position_gain_nm_rad": 300.0,
+        "compiled_velocity_gain_nm_s_rad": 1.9252962079035367,
+        "dof_address": 15,
+        "joint_id": 15,
+        "joint_name": "right_hand_ring_joint2",
+        "qpos_address": 15,
+        "transmission": "direct_joint_unit_gear",
+        "urdf_effort_limit_nm": 0.4
+      },
+      {
+        "actuator_force_limited_separately": false,
+        "actuator_id": 6,
+        "actuator_name": "right_thumb_bend_position",
+        "compiled_armature_kg_m2": 0.0030763249791336436,
+        "compiled_joint_actuator_force_range_nm": [
+          -1.1,
+          1.1
+        ],
+        "compiled_position_gain_nm_rad": 300.0,
+        "compiled_velocity_gain_nm_s_rad": 2.211179743721735,
+        "dof_address": 6,
+        "joint_id": 6,
+        "joint_name": "right_hand_thumb_bend_joint",
+        "qpos_address": 6,
+        "transmission": "direct_joint_unit_gear",
+        "urdf_effort_limit_nm": 1.1
+      },
+      {
+        "actuator_force_limited_separately": false,
+        "actuator_id": 7,
+        "actuator_name": "right_thumb_rota1_position",
+        "compiled_armature_kg_m2": 0.0030763249791336436,
+        "compiled_joint_actuator_force_range_nm": [
+          -1.1,
+          1.1
+        ],
+        "compiled_position_gain_nm_rad": 300.0,
+        "compiled_velocity_gain_nm_s_rad": 2.04288461650122,
+        "dof_address": 7,
+        "joint_id": 7,
+        "joint_name": "right_hand_thumb_rota_joint1",
+        "qpos_address": 7,
+        "transmission": "direct_joint_unit_gear",
+        "urdf_effort_limit_nm": 1.1
+      },
+      {
+        "actuator_force_limited_separately": false,
+        "actuator_id": 8,
+        "actuator_name": "right_thumb_rota2_position",
+        "compiled_armature_kg_m2": 0.0030763249791336436,
+        "compiled_joint_actuator_force_range_nm": [
+          -0.4,
+          0.4
+        ],
+        "compiled_position_gain_nm_rad": 300.0,
+        "compiled_velocity_gain_nm_s_rad": 1.9299017198411927,
+        "dof_address": 8,
+        "joint_id": 8,
+        "joint_name": "right_hand_thumb_rota_joint2",
+        "qpos_address": 8,
+        "transmission": "direct_joint_unit_gear",
+        "urdf_effort_limit_nm": 0.4
+      }
+    ],
+    "damping_ratio_recompiled_from_source_marker": 1.0,
+    "effort_limit_scope": "joint_actuatorfrcrange",
+    "expected_compiled_armature_kg_m2": 0.0030763249791336436,
+    "experiment_id": "C_uniform_10x_retiming_of_experiment_B",
+    "external_generalized_force_rule": "qfrc_applied must remain exactly zero at every finger DOF; joint actuatorfrcrange limits qfrc_actuator after transmission",
+    "parameter_scan": false,
+    "require_zero_finger_qfrc_applied": true,
+    "uniform_armature_kg_m2": 0.0030763249791336436
+  },
+  "hard_stop": {
+    "fail_on_any_mujoco_warning": true,
+    "maximum_contact_force_n": 1000.0,
+    "maximum_object_angular_speed_rad_s": 50.0,
+    "maximum_object_linear_speed_m_s": 5.0,
+    "maximum_object_rotation_per_substep_rad": 0.5,
+    "maximum_object_translation_per_substep_m": 0.02,
+    "maximum_physics_steps": 1500,
+    "maximum_proxy_penetration_m": 0.02
+  },
+  "initial_state_provenance": {
+    "natural_seating_results": {
+      "bytes": 20582,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_natural_seating_extension_v1/results.json",
+      "sha256": "5779be198ee2cb6aea2fb6bc92ce04d58325cc70cf8d3c93b12d34911e5380ff"
+    },
+    "natural_seating_state_alignment": "reconstructed post-step freejoint pose from the recorded pre-integration xpos/xquat and post-integration qvel with mj_integratePos",
+    "natural_seating_state_reconstruction": {
+      "bowl": {
+        "post_integration_world_velocity": [
+          -0.0012639839509338876,
+          -0.00014618591850674807,
+          -1.1045975340098572e-05,
+          0.035157066717921424,
+          -0.030957542523035005,
+          0.00024096127969129452
+        ],
+        "pre_integration_world_pose": [
+          0.005158018881787082,
+          -0.10822620064057573,
+          0.5783665013423532,
+          0.9333777756182776,
+          0.0021293604635213696,
+          -0.0025975932705416117,
+          -0.35887971009112896
+        ],
+        "reconstructed_pose_time_s": 10.000000000000009,
+        "reconstructed_world_pose": [
+          0.0051554909138852145,
+          -0.10822649301241274,
+          0.5783664792504025,
+          0.9333777057930958,
+          0.002151064626102285,
+          -0.0026391060208598516,
+          -0.35887945938546173
+        ],
+        "simulator_pose": [
+          0.540519455324384,
+          -0.048051560774698215,
+          0.7496932917161884,
+          0.9333777057930962,
+          0.0021510646261022857,
+          -0.002639106020859853,
+          -0.3588794593854619
+        ],
+        "source_geometry_state_time_s": 9.998000000000008,
+        "source_record_time_s": 10.000000000000009,
+        "source_velocity_state_time_s": 10.000000000000009,
+        "timestep_s": 0.002
+      },
+      "brush": {
+        "post_integration_world_velocity": [
+          -7.809269279919863e-13,
+          1.742462094718178e-14,
+          2.3146079783819174e-12,
+          -8.742897239251474e-11,
+          6.101506388958433e-11,
+          -1.0816406779564236e-11
+        ],
+        "pre_integration_world_pose": [
+          0.12873284082970513,
+          -0.010367377978251597,
+          0.5734491679736997,
+          0.468418421527279,
+          0.017524114193799654,
+          0.051933367983580836,
+          0.8818049745184574
+        ],
+        "reconstructed_pose_time_s": 10.000000000000009,
+        "reconstructed_world_pose": [
+          0.12873284082970357,
+          -0.010367377978251562,
+          0.5734491679737044,
+          0.46841842152728697,
+          0.017524114193704334,
+          0.05193336798353251,
+          0.881804974518458
+        ],
+        "simulator_pose": [
+          0.6640968052402023,
+          0.04980755425946297,
+          0.7447759804394902,
+          0.46841842152728685,
+          0.01752411419370433,
+          0.05193336798353249,
+          0.8818049745184577
+        ],
+        "source_geometry_state_time_s": 9.998000000000008,
+        "source_record_time_s": 10.000000000000009,
+        "source_velocity_state_time_s": 10.000000000000009,
+        "timestep_s": 0.002
+      }
+    },
+    "natural_seating_timeseries": {
+      "bytes": 10947888,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_natural_seating_extension_v1/timeseries.csv",
+      "sha256": "f9c00c9194a53e18dd5d88093c19ba1827daca597f3af9beda8b1bdcd3861e82"
+    },
+    "object_variants": {
+      "bowl": "zero_initial_velocity",
+      "brush": "zero_initial_velocity"
+    },
+    "object_velocity": "ZERO",
+    "objects": "NATURAL_SEATING_EXTENSION_V1_ZERO_INITIAL_VELOCITY_FINAL_STATE",
+    "robot": "REFINED_M4_ENDPOINT_0_EQUALS_SAFE_ENTRY_MINK_V1_ENDPOINT_0",
+    "robot_candidate": "safe_entry",
+    "robot_results": {
+      "bytes": 8058,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/results.json",
+      "sha256": "da9a3c3b6464e920541787fed789e924e20592eb7397fecec9688a5a3bfa2bd2"
+    },
+    "settled_object_qpos_simulator": {
+      "bowl": [
+        0.540519455324384,
+        -0.048051560774698215,
+        0.7496932917161884,
+        0.9333777057930962,
+        0.0021510646261022857,
+        -0.002639106020859853,
+        -0.3588794593854619
+      ],
+      "brush": [
+        0.6640968052402023,
+        0.04980755425946297,
+        0.7447759804394902,
+        0.46841842152728685,
+        0.01752411419370433,
+        0.05193336798353249,
+        0.8818049745184577
+      ]
+    }
+  },
+  "inputs": {
+    "base_robot_reference": {
+      "bytes": 130846,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/safe_entry/robot_reference.npz",
+      "sha256": "9216e8e72ff824c5ddf5bfdf530212d214273e0a23df4e9433a89b38a25c39ea"
+    },
+    "config": {
+      "bytes": 6130,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_20231006_145_refined_m4_replay_v1.yaml",
+      "sha256": "5fe3b4361db13ce9e6691155efb180bccefdcde29114800a558c54a2a2cbb0a6"
+    },
+    "finger_dynamics_ab_contract": {
+      "bytes": 2698,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_20231006_145_finger_effort_armature_ab_contract_v1.yaml",
+      "sha256": "16cabe0961aa3a5f8194029b71d4df735ce1a154906617fb3bada3d9da19a65a"
+    },
+    "left_hand_urdf": {
+      "bytes": 24733,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/models/taco_xhand/assets/robots/xhand/xhand_left.urdf",
+      "sha256": "39be1ec748743867953ad6af09a2681133341bb92e488530febcfe554aff2a0e"
+    },
+    "local_scene": {
+      "bytes": 413535,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_continuous_ref_refinement_m4_replay_v1/experiment_local_scene.xml",
+      "sha256": "ee318f6f96b38612e17170524ab39d4fb92c350a4aea3be5d960a8f160c4d690"
+    },
+    "prior_collision_audit": {
+      "bytes": 38197,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/safe_entry/interaction_native_hand_object_audit.json",
+      "sha256": "f634840c06d6dee4be0a695ec2165955320b9e2bbf7a3b27f2f88f0fd79a883a"
+    },
+    "right_hand_urdf": {
+      "bytes": 22593,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/models/taco_xhand/assets/robots/xhand/xhand_right.urdf",
+      "sha256": "bd596ccb96612f4ce933f1d6b0f40c3e9e354367cd7ca58a3ff4909f63f6c213"
+    },
+    "robot_reference": {
+      "bytes": 131624,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_continuous_ref_refinement_v2/robot_reference_refined_v2.npz",
+      "sha256": "c561570456efd171748a3aea9c107a9dac401f77bfb1edb6467b2486d6563bbd"
+    },
+    "script": {
+      "bytes": 88703,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/scripts/run_taco_brush_controlled_physics_replay_v1.py",
+      "sha256": "84e6c5a393d32a3dd53f29aba1e6dd62d3ccce60150044c64a45fdd0c26c78cb"
+    },
+    "source_scene": {
+      "bytes": 410567,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/runs/taco_brush_20231006_145_safe_entry_mink_v1/generated_scene.xml",
+      "sha256": "bab703cbd3a83b01c6d04bc0a9a29e44eec204c6eb9b7035099b58582049cb6a"
+    },
+    "support_contract": {
+      "bytes": 515,
+      "path": "/data_all/zzx/Egoengine_upload_3_2/rl/configs/taco_brush_20231006_145_issue14_support_candidate_v1.yaml",
+      "sha256": "27c2828818743028ddde7a18de67ddd4616345aba288b0cf240aef08758e41fb"
+    }
+  },
+  "physics": {
+    "authored_reference_hz": 30.0,
+    "authored_timestep_s": 0.002,
+    "backend": "mujoco_cpu",
+    "command_timing": "reference_ctrl_linear_substep_interpolation",
+    "control_target_rule": "ctrl[source] + ((substep + 1) / substeps) * (ctrl[outcome] - ctrl[source])",
+    "execution_control_hz": 3.0,
+    "force_time_alignment": "contact and actuator forces are the forces solved at interval_start_time_s and applied over [interval_start_time_s, interval_end_time_s]; post-step qpos/qvel and refreshed native geometry are at state_time_s=interval_end_time_s",
+    "initial_qvel": "ZERO",
+    "mujoco_version": "3.7.0",
+    "native_geometry_state_alignment": "copy post-step integration state into independent MjData, then mj_forward",
+    "reference_time_scale": 10.0,
+    "substep_native_hand_table_trace": true,
+    "substep_state_trace": true,
+    "substeps_per_interval": [
+      167,
+      167,
+      166,
+      167,
+      167,
+      166,
+      167,
+      167
+    ],
+    "total_planned_physics_steps": 1334
+  },
+  "repository_head": "c9b1836c6dd3ae91f873df989d4c289df431771b",
+  "schema": "taco_brush_20231006_145_vertical_feedforward_replay_v1",
+  "status": "FROZEN_BEFORE_PHYSICS",
+  "strict_pickup_gate": {
+    "object_lift_delta_m": 0.01,
+    "requires_all_native_samples_nonpenetrating": true,
+    "requires_both_objects": true,
+    "requires_hand_object_force": true,
+    "requires_no_object_floor_force": true,
+    "requires_zero_proxy_force_while_native_clear_exposures": true,
+    "requires_zero_proxy_native_geometry_mismatches": true,
+    "stable_consecutive_control_intervals": 5,
+    "unknown_is_failure": true
+  }
+}
